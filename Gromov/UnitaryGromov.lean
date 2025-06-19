@@ -99,7 +99,10 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgrou
     add_left := by
       sorry
     smul_left := by
-      sorry
+      intro x y z
+      simp [integrand]
+      rw [integral_mul_const_of_integrable (integrable_on x y)]
+      rw [mul_comm]
     definite := by
       intro x hx
       simp [integrand] at hx
