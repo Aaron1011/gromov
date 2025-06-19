@@ -51,7 +51,8 @@ noncomputable def toComplexEuclidean {E: Type*} [AddCommGroup E] [TopologicalSpa
 
 attribute [-simp] PiLp.inner_apply
 --  [NormedAddCommGroup V]  [CompleteSpace V] [InnerProductSpace ℂ V]
-lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgroup G) [MeasurableSpace H] [T2Space H] [BorelSpace H] [IsTopologicalGroup H] [LocallyCompactSpace H] (V: Type*)  [AddCommGroup V] [TopologicalSpace V]  [Module ℂ V] [T2Space V] [ContinuousSMul ℂ V] [FiniteDimensional ℂ V]  [IsTopologicalAddGroup V] (h_compact: IsCompact (Set.univ : Set H)) (rep: H →* (V →L[ℂ] V)ˣ) (h_cont: Continuous rep): True := by
+-- [MeasurableSpace H] [T2Space H] [BorelSpace H] [IsTopologicalGroup H] [LocallyCompactSpace H]
+lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] [IsTopologicalGroup G] [MeasurableSpace G] [BorelSpace G]  [LocallyCompactSpace G] (H: Subgroup G) [BorelSpace H] [LocallyCompactSpace H] [T2Space H] (V: Type*)  [AddCommGroup V] [TopologicalSpace V]  [Module ℂ V] [T2Space V] [ContinuousSMul ℂ V] [FiniteDimensional ℂ V]  [IsTopologicalAddGroup V] (h_compact: IsCompact (Set.univ : Set H)) (rep: H → (V →L[ℂ] V)ˣ) (h_cont: Continuous rep): True := by
   let integrand := fun (v w: V) (h: H) => ⟪toComplexEuclidean ((rep h).val v), toComplexEuclidean ((rep h).val w)⟫
   have continuous_integrand: ∀ v w: V, Continuous fun h: H => integrand v w h := by
     intro v w
@@ -74,7 +75,7 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgrou
         . exact Units.continuous_val
       . exact h_cont
 
-  have integrable_on: ∀ v w: V, MeasureTheory.Integrable (integrand v w) (MeasureTheory.Measure.haar) := by
+  have integrable_on: ∀ v w: V, MeasureTheory.Integrable (integrand v w) (MeasureTheory.Measure.haar (G := H)) := by
     intro v w
     rw [← MeasureTheory.integrableOn_univ]
     apply ContinuousOn.integrableOn_compact h_compact
@@ -211,7 +212,7 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgrou
         lhs
         arg 2
         intro f
-        rw [← ContinuousLinearMap.adjoint_inner_right]
+        --rw [← ContinuousLinearMap.adjoint_inner_right]
       --simp_rw [← ContinuousLinearMap.mul_apply]
       simp_rw [← ContinuousLinearMap.smul_def]
       --simp_rw [inner_smul_left]
