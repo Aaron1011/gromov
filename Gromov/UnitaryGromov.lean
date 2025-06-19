@@ -59,25 +59,30 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgrou
         . exact Units.continuous_val
       . exact h_cont
 
-  -- have integrable_on: ∀ v w: V, MeasureTheory.Integrable (integrand v w) (MeasureTheory.Measure.haar) := by
-  --   intro v w
-  --   dsimp [MeasureTheory.Integrable]
-  --   refine ⟨?_, ?_⟩
-  --   .
-  --     simp [integrand]
-  --     apply Measurable.aestronglyMeasurable
-  --     apply Measurable.inner (f := fun h => (rep h).val v) (g := fun h => (rep h).val w)
-  --     . apply Measurable.comp (g := fun q => q v) (f := fun h => (rep h).val)
-  --       . exact Measurable.of_comap_le fun s a ↦ a
-  --       . apply Measurable.comp (g := fun q => q.val) (f := fun x => (rep x))
-  --         . exact Measurable.of_comap_le fun s a ↦ a
-  --         . apply h_rep
-  --         exact h_rep
-  --     . apply Measurable.comp (g := fun q => q w) (f := fun h => (rep h).val)
-
+  have integrable_on: ∀ v w: V, MeasureTheory.Integrable (integrand v w) (MeasureTheory.Measure.haar) := by
+    intro v w
+    rw [← MeasureTheory.integrableOn_univ]
     apply ContinuousOn.integrableOn_compact h_compact
-    specialize continuous_integrand v w
-    exact continuous_integrand.continuousOn
+    apply (continuous_integrand v w).continuousOn
+
+    -- dsimp [MeasureTheory.Integrable]
+    -- refine ⟨?_, ?_⟩
+    -- .
+    --   simp [integrand]
+    --   apply Measurable.aestronglyMeasurable
+    --   apply Measurable.inner (f := fun h => (rep h).val v) (g := fun h => (rep h).val w)
+    --   . apply Measurable.comp (g := fun q => q v) (f := fun h => (rep h).val)
+    --     . exact Measurable.of_comap_le fun s a ↦ a
+    --     . apply Measurable.comp (g := fun q => q.val) (f := fun x => (rep x))
+    --       . exact Measurable.of_comap_le fun s a ↦ a
+    --       . apply h_rep
+    --       exact h_rep
+    --   . apply Measurable.comp (g := fun q => q w) (f := fun h => (rep h).val)
+
+
+    -- apply ContinuousOn.integrableOn_compact h_compact
+    -- specialize continuous_integrand v w
+    -- exact continuous_integrand.continuousOn
 
 
   have compact_image: IsCompact (Set.range (rep)) := by
