@@ -93,7 +93,10 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgrou
   let inner_product_core: InnerProductSpace.Core ℂ (FreshInnerProduct V) := {
     inner := fun v w => MeasureTheory.integral (MeasureTheory.Measure.haar) (integrand v w)
     conj_inner_symm := by
-      sorry
+      intro x y
+      simp [integrand]
+      rw [← integral_conj]
+      simp
     re_inner_nonneg := by
       intro x
       simp [integrand]
