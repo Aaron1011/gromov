@@ -1,7 +1,8 @@
 import Mathlib
 
-open scoped Matrix.L2OpNorm
+open scoped Matrix.L2OpNorm ComplexInnerProductSpace
 
+-- Lemma 3.29 (Shrinking Conjugators)
 lemma shrinking_conjugators (n: ℕ) (g h: Matrix.unitaryGroup (Fin n) ℂ):
   ‖⁅g, h⁆.val - 1‖ ≤ 2 * ‖g.val - 1‖ * ‖h.val - 1‖ := by
   dsimp only [Bracket.bracket]
@@ -36,3 +37,112 @@ lemma shrinking_conjugators (n: ℕ) (g h: Matrix.unitaryGroup (Fin n) ℂ):
       have norm_sub_h := Matrix.l2_opNorm_mul (h.val - 1) (g.val - 1)
       rw [mul_comm] at norm_sub_h
       linarith
+set_option diagnostics true
+lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgroup G) [MeasurableSpace H] [T2Space H] [BorelSpace H] [IsTopologicalGroup H] [LocallyCompactSpace H] (V: Type*) [NormedAddCommGroup V] [InnerProductSpace ℂ V] (h_compact: IsCompact (Set.univ : Set H)) (rep: H →* (V →L[ℂ] V)ˣ) (h_cont: Continuous rep): True := by
+  let integrand := fun (v w: V) (h: H) => ⟪(rep h).val v, (rep h).val w⟫
+  have continuous_integrand: ∀ v w: V, Continuous fun h: H => integrand v w h := by
+    intro v w
+    simp [integrand]
+    -- TODO - how do we prove that the representation is continuous?
+    refine Continuous.inner ?_ ?_
+    .
+      apply Continuous.comp (g := fun g => g.val v) (f := fun h => (rep h))
+      .
+        apply Continuous.comp (g := fun (r: V →L[ℂ] V) => r v) (f := fun (g: (V →L[ℂ] V)ˣ) => g.val)
+        . exact Continuous.clm_apply continuous_id' continuous_const
+        . exact Units.continuous_val
+      . exact h_cont
+    . apply Continuous.comp (g := fun g => g.val w) (f := fun h => (rep h))
+      .
+        apply Continuous.comp (g := fun (r: V →L[ℂ] V) => r w) (f := fun (g: (V →L[ℂ] V)ˣ) => g.val)
+        . exact Continuous.clm_apply continuous_id' continuous_const
+        . exact Units.continuous_val
+      . exact h_cont
+
+  -- have integrable_on: ∀ v w: V, MeasureTheory.Integrable (integrand v w) (MeasureTheory.Measure.haar) := by
+  --   intro v w
+  --   dsimp [MeasureTheory.Integrable]
+  --   refine ⟨?_, ?_⟩
+  --   .
+  --     simp [integrand]
+  --     apply Measurable.aestronglyMeasurable
+  --     apply Measurable.inner (f := fun h => (rep h).val v) (g := fun h => (rep h).val w)
+  --     . apply Measurable.comp (g := fun q => q v) (f := fun h => (rep h).val)
+  --       . exact Measurable.of_comap_le fun s a ↦ a
+  --       . apply Measurable.comp (g := fun q => q.val) (f := fun x => (rep x))
+  --         . exact Measurable.of_comap_le fun s a ↦ a
+  --         . apply h_rep
+  --         exact h_rep
+  --     . apply Measurable.comp (g := fun q => q w) (f := fun h => (rep h).val)
+
+    apply ContinuousOn.integrableOn_compact h_compact
+    specialize continuous_integrand v w
+    exact continuous_integrand.continuousOn
+
+
+  have compact_image: IsCompact (Set.range (rep)) := by
+    sorry
+
+
+  let new_inner_prod := fun (v w: V) => MeasureTheory.integral (MeasureTheory.Measure.haar) (integrand v w)
+  sorry
+
+-- A product of k unitary groups U(n_1) × U(n_2) × ... × U(n_k), where n_i < n for each n_i
+abbrev UnitaryProd (k: ℕ) (n: ℕ) (n_i: Fin k → Fin n) := (i: Fin k) → Matrix.unitaryGroup (Fin (n_i i)) ℂ
+
+lemma inductive_lemma (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) (g_not_multiple_I: ∀ z: ℂ, g.val.val ≠ z • 1):
+  ∃ k n, ∃ n_i, Nonempty (Subgroup.centralizer {g} ≃* UnitaryProd k n n_i) := by
+
+  -- TODO - this must already exist somewhere
+  have nontrivial_fin_n_c: Nontrivial ((Fin n) → ℂ) := by
+    use (fun n => 1)
+    use (fun n => 2)
+    by_contra!
+    have foo := congrFun this ⟨0, by omega⟩
+    simp at foo
+
+  -- View g as a linear endomorphism
+  let g': Module.End _ _ := g.val.val.toLin'
+  have exists_eigenvalue := Module.End.exists_eigenvalue g'
+
+  have nonempty_eigenvalues: Nonempty g'.Eigenvalues := by
+    obtain ⟨c, hc⟩ := exists_eigenvalue
+    use c
+
+  have two_eigenvalues: 2 ≤ Nat.card g'.Eigenvalues := by
+    by_contra!
+    have card_ne_zero: 0 < Nat.card g'.Eigenvalues := by
+      rw [Nat.card_pos_iff]
+      refine ⟨nonempty_eigenvalues, ?_⟩
+      exact Finite.of_fintype g'.Eigenvalues
+
+    have card_eq_one: Nat.card g'.Eigenvalues = 1 := by
+      omega
+
+    -- TODO - there must be a simpler way of proving this
+    have unique_eigenvalues: Unique g'.Eigenvalues := {
+      uniq := by
+        intro x
+        rw [Nat.card_eq_one_iff_exists] at card_eq_one
+        obtain ⟨z, hz⟩ := card_eq_one
+        have first := hz default
+        have second := hz x
+        rw [second, first]
+    }
+
+
+    -- obtain ⟨c, hc⟩ := exists_eigenvalue
+    -- obtain ⟨v, hv⟩ := Module.End.HasEigenvalue.exists_hasEigenvector hc
+    -- have has_eigenvalue_iff_c: ∀ z: ℂ, g'.HasEigenvalue z ↔ z = c := by
+    --   sorry
+
+
+
+    -- have eigenspace_iff := fun μ => Module.End.hasEigenvalue_iff (f := g') (μ := μ)
+    -- simp_rw [has_eigenvalue_iff_c] at eigenspace_iff
+    -- simp at ei
+
+
+  -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/DirectSum/LinearMap.html#LinearMap.toMatrix_directSum_collectedBasis_eq_blockDiagonal'
+  let a := g.val.val.eigenvalues_conjTranspose_mul_self_nonneg
+  sorry

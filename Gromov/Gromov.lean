@@ -1024,7 +1024,7 @@ instance const_isClosed: IsClosed (ConstF (G := G) : Set (LipschitzH (G := G))) 
 abbrev GL_W := (W (G := G) →L[ℂ] W (G := G))ˣ
 
 #synth LieGroup (modelWithCornersSelf ℂ ((W (G := G) →L[ℂ] W (G := G)))) 1 (GL_W (G := G))
-
+#synth TopologicalSpace ((W (G := G) →L[ℂ] W (G := G)))
 #synth TopologicalSpace ((W (G := G) →L[ℂ] W (G := G)))ˣ
 
 
@@ -1304,6 +1304,7 @@ noncomputable instance GL_W_opNorm : Norm (GL_W (G := G)) where
 --#synth MetricSpace (LinearMap.GeneralLinearGroup ℝ ℝ)
 
 #synth NormedRing (W (G := G) →L[ℂ] W (G := G))
+#synth TopologicalSpace (W (G := G) →L[ℂ] W (G := G))ˣ
 
 lemma GLW_preseves_norm (g: G) (w: W (G := G)): ‖(GRepW (G := G) (GRepW_base g)).val w‖ = ‖w‖ := by
   unfold GL_W
@@ -1319,6 +1320,24 @@ lemma GLW_preseves_norm (g: G) (w: W (G := G)): ‖(GRepW (G := G) (GRepW_base g
   rw [GRep_preserves_norm]
   rw [← hv]
   rw [quotient_norm_eq_norm]
+
+lemma measurable_GRepW: Measurable (fun g => GRepW (G := G) (GRepW_base (G := G) g)) := by
+  simp [GRepW_base, GRepW]
+  apply Measurable.comp (g := GRepW (G := G)) (f := fun g => ((GRepW_non_invertible (G := G)).asGroupHom g))
+  . simp [GRepW]
+    sorry
+  . sorry
+  . infer_instancez
+
+lemma continuous_GRepW : Continuous (fun g => GRepW (G := G) (GRepW_base (G := G) g)) := by
+  fun_prop
+
+set_option synthInstance.maxHeartbeats 50000
+
+lemma continous_of_map (v: W (G := G)): Continuous (fun (r: (W (G := G) →L[ℂ] W (G := G))ˣ) => r.val v) := by
+  apply Continuous.comp (g := (fun r => r v)) (f := (fun (r : (W (G := G) →L[ℂ] W (G := G))ˣ) => r.val))
+  . exact Continuous.clm_apply continuous_id' continuous_const
+  . apply Units.continuous_val
 
 -- We want the topology to come from our metric space 'GL_W_psuedoMetric', not from the units
 --attribute [-instance] Units.instTopologicalSpaceUnits
