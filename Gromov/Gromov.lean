@@ -1348,6 +1348,7 @@ lemma continous_of_map (v: W (G := G)): Continuous (fun (r: (W (G := G) →L[ℂ
 -- The image of G under our representation: ρ(G) in the Vikman paper
 noncomputable def rho_g := ((GRepW (G := G)).restrict ((GRepW_base (G := G)).range)).range
 
+
 def rho_g_closure := _root_.closure (rho_g (G := G)).carrier
 
 -- instance GL_W_proper: ProperSpace (GL_W (G := G)) := by
@@ -1578,13 +1579,32 @@ theorem compact_rho_g: IsCompact (rho_g_closure (G := G)) := by
 
 
 
-def try_apply_unitarian := weyl_unitarian_trick
-
 -- Section 3.3 in Vikmanm, "Construction of a representation"
 -- This is a combination of Cartan's Theorem and Theorem 3.6, giving us the conclusion that
 -- ρ(G) contains an abelian subgroup of finite index
+
+#synth MeasurableSpace (W (G := G) →L[ℂ] W (G := G))ˣ
+
+-- instance units_borel: BorelSpace (GL_W (G := G)) := {
+--   measurable_eq := by
+--     rw [borel_comap]
+--     simp [Units.instMeasurableSpace]
+--     sorry
+-- }
+
+-- instance rho_g_local_compact: LocallyCompactSpace (rho_g (G := G)) := by
+--   sorry
+-- instance rho_g_borel: BorelSpace (rho_g (G := G)) := by
+--   sorry
+
+-- instance w_map_inner_prod: InnerProductSpace ℂ (W (G := G)) := by sorry
+--   --apply Subgroup.instBorelSpace_subgroup
+--   --apply units_borel
+
 lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutative M ∧ M.FiniteIndex := by
-  sorry
+  let my_map := Subgroup.subtype (rho_g (G := G))
+  simp [GL_W] at my_map
+  have my_weyl_trick := weyl_unitarian_trick (H := rho_g (G := G)) (G := GL_W (G := G)) (V := (W (G := G))) (rep := my_map)
 
 -- We need this to work with Finset
 noncomputable instance GL_W_DecidableEq: DecidableEq (GL_W (G := G)) := by

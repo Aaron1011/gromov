@@ -44,24 +44,33 @@ def FreshInnerProduct (V: Type*) := V
 instance (V: Type*) [base_comm: AddCommGroup V]: AddCommGroup (FreshInnerProduct V) := base_comm
 instance (V: Type*) [AddCommGroup V] [base_module: Module ℂ V]: Module ℂ (FreshInnerProduct V) := base_module
 
-lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgroup G) [MeasurableSpace H] [T2Space H] [BorelSpace H] [IsTopologicalGroup H] [LocallyCompactSpace H] (V: Type*)  [NormedAddCommGroup V]  [CompleteSpace V] [InnerProductSpace ℂ V] (h_compact: IsCompact (Set.univ : Set H)) (rep: H →* (V →L[ℂ] V)ˣ) (h_cont: Continuous rep): True := by
-  let integrand := fun (v w: V) (h: H) => ⟪(rep h).val v, (rep h).val w⟫
+#synth InnerProductSpace ℂ (EuclideanSpace ℂ (Fin 2))
+
+noncomputable def toComplexEuclidean {E: Type*} [AddCommGroup E] [TopologicalSpace E] [IsTopologicalAddGroup E] [T2Space E]
+  [Module ℂ E] [ContinuousSMul ℂ E] [FiniteDimensional ℂ E] : E ≃L[ℂ] EuclideanSpace ℂ (Fin <| Module.finrank ℂ E) := ContinuousLinearEquiv.ofFinrankEq finrank_euclideanSpace_fin.symm
+
+attribute [-simp] PiLp.inner_apply
+--  [NormedAddCommGroup V]  [CompleteSpace V] [InnerProductSpace ℂ V]
+lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgroup G) [MeasurableSpace H] [T2Space H] [BorelSpace H] [IsTopologicalGroup H] [LocallyCompactSpace H] (V: Type*)  [AddCommGroup V] [TopologicalSpace V]  [Module ℂ V] [T2Space V] [ContinuousSMul ℂ V] [FiniteDimensional ℂ V]  [IsTopologicalAddGroup V] (h_compact: IsCompact (Set.univ : Set H)) (rep: H →* (V →L[ℂ] V)ˣ) (h_cont: Continuous rep): True := by
+  let integrand := fun (v w: V) (h: H) => ⟪toComplexEuclidean ((rep h).val v), toComplexEuclidean ((rep h).val w)⟫
   have continuous_integrand: ∀ v w: V, Continuous fun h: H => integrand v w h := by
     intro v w
-    simp [integrand]
+    simp only [integrand, toComplexEuclidean]
     -- TODO - how do we prove that the representation is continuous?
     refine Continuous.inner ?_ ?_
     .
+      apply Continuous.comp (by fun_prop)
       apply Continuous.comp (g := fun g => g.val v) (f := fun h => (rep h))
       .
         apply Continuous.comp (g := fun (r: V →L[ℂ] V) => r v) (f := fun (g: (V →L[ℂ] V)ˣ) => g.val)
-        . exact Continuous.clm_apply continuous_id' continuous_const
+        . fun_prop
         . exact Units.continuous_val
       . exact h_cont
-    . apply Continuous.comp (g := fun g => g.val w) (f := fun h => (rep h))
+    . apply Continuous.comp (by fun_prop)
+      apply Continuous.comp (g := fun g => g.val w) (f := fun h => (rep h))
       .
         apply Continuous.comp (g := fun (r: V →L[ℂ] V) => r w) (f := fun (g: (V →L[ℂ] V)ˣ) => g.val)
-        . exact Continuous.clm_apply continuous_id' continuous_const
+        . fun_prop
         . exact Units.continuous_val
       . exact h_cont
 
@@ -94,7 +103,7 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgrou
     inner := fun v w => MeasureTheory.integral (MeasureTheory.Measure.haar) (integrand v w)
     conj_inner_symm := by
       intro x y
-      simp [integrand]
+      simp only [integrand]
       rw [← integral_conj]
       simp
     re_inner_nonneg := by
@@ -127,7 +136,7 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgrou
       rw [mul_comm]
     definite := by
       intro x hx
-      simp [integrand] at hx
+      simp only [integrand] at hx
       conv at hx =>
         lhs
         arg 2
@@ -139,7 +148,7 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgrou
       norm_cast at hx
       rw [MeasureTheory.integral_eq_zero_iff_of_nonneg ?_] at hx
       .
-        dsimp [Filter.EventuallyEq] at hx
+        dsimp only [Filter.EventuallyEq] at hx
         conv at hx =>
           pattern MeasureTheory.Measure.haar
           rw [← MeasureTheory.Measure.restrict_univ (μ := MeasureTheory.Measure.haar)]
@@ -147,7 +156,7 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgrou
 
         obtain ⟨q, _, inner_q_zero⟩ := MeasureTheory.Measure.exists_mem_of_measure_ne_zero_of_ae ?_ hx
         conv at inner_q_zero =>
-          equals ⟪(rep q).val x, (rep q).val x⟫ = 0 =>
+          equals ⟪toComplexEuclidean ((rep q).val x), toComplexEuclidean ((rep q).val x)⟫ = 0 =>
             rw [← inner_self_ofReal_re]
             field_simp
 
@@ -177,7 +186,7 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgrou
         rw [Pi.le_def]
         intro y
         simp
-        have foo := inner_self_nonneg (𝕜 := ℂ) (E := V) (x := (rep y).val x)
+        have foo := inner_self_nonneg (𝕜 := ℂ) (x := toComplexEuclidean ((rep y).val x))
         simp at foo
         exact foo
   }
