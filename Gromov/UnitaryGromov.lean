@@ -113,7 +113,34 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgrou
       rw [integral_complex_ofReal] at hx
       norm_cast at hx
       rw [MeasureTheory.integral_eq_zero_iff_of_nonneg ?_] at hx
-      . sorry
+      .
+        dsimp [Filter.EventuallyEq] at hx
+        conv at hx =>
+          pattern MeasureTheory.Measure.haar
+          rw [← MeasureTheory.Measure.restrict_univ (μ := MeasureTheory.Measure.haar)]
+
+
+        obtain ⟨q, _, inner_q_zero⟩ := MeasureTheory.Measure.exists_mem_of_measure_ne_zero_of_ae ?_ hx
+        conv at inner_q_zero =>
+          equals ⟪(rep q).val x, (rep q).val x⟫ = 0 =>
+            sorry
+
+        simp at inner_q_zero
+        unfold DFunLike.coe at inner_q_zero
+        have map_iff_zero := LinearMap.map_eq_zero_iff (f := (rep q).val.toLinearMap) (x := x) ?_
+        .
+          simp at map_iff_zero
+          rw [← map_iff_zero]
+          exact inner_q_zero
+        .
+          -- TODO - find a better way of doing this
+          let my_map := (ContinuousLinearMap.toLinearMapRingHom (R₁ := ℂ) (M₁ := V)).toMonoidHom
+          let f_map := (Units.map my_map) (rep q)
+          let f_as_equiv := fun f => (LinearMap.GeneralLinearGroup.toLinearEquiv (R := ℂ) (M := V) f)
+          simp [LinearMap.GeneralLinearGroup] at f_as_equiv
+          have injective_f := (f_as_equiv f_map).injective
+          simp [f_as_equiv, f_map] at injective_f
+          exact injective_f
       .
         have foo := integrable_on x x
         simp [integrand] at foo
@@ -128,12 +155,14 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgrou
         simp at foo
         exact foo
   }
-  have compact_image: IsCompact (Set.range (rep)) := by
+  . exact Ne.symm (NeZero.ne' (MeasureTheory.Measure.haar Set.univ))
+  .
+    have compact_image: IsCompact (Set.range (rep)) := by
+      sorry
+
+
+    let new_inner_prod := fun (v w: V) => MeasureTheory.integral (MeasureTheory.Measure.haar) (integrand v w)
     sorry
-
-
-  let new_inner_prod := fun (v w: V) => MeasureTheory.integral (MeasureTheory.Measure.haar) (integrand v w)
-  sorry
 
 -- A product of k unitary groups U(n_1) × U(n_2) × ... × U(n_k), where n_i < n for each n_i
 abbrev UnitaryProd (k: ℕ) (n: ℕ) (n_i: Fin k → Fin n) := (i: Fin k) → Matrix.unitaryGroup (Fin (n_i i)) ℂ
