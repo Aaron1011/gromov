@@ -95,7 +95,22 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgrou
     conj_inner_symm := by
       sorry
     re_inner_nonneg := by
-      sorry
+      intro x
+      simp [integrand]
+      conv =>
+        rhs
+        arg 1
+        arg 2
+        intro h
+        rw [← inner_self_ofReal_re]
+      simp
+      rw [integral_complex_ofReal]
+      apply MeasureTheory.integral_nonneg
+      rw [Pi.le_def]
+      intro y
+      simp
+      rw [← RCLike.re_to_complex]
+      apply inner_self_nonneg
     add_left := by
       intro a b c
       simp [integrand]
