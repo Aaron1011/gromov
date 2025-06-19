@@ -37,14 +37,14 @@ lemma shrinking_conjugators (n: ℕ) (g h: Matrix.unitaryGroup (Fin n) ℂ):
       have norm_sub_h := Matrix.l2_opNorm_mul (h.val - 1) (g.val - 1)
       rw [mul_comm] at norm_sub_h
       linarith
-set_option diagnostics true
+
 
 def FreshInnerProduct (V: Type*) := V
 
 instance (V: Type*) [base_comm: AddCommGroup V]: AddCommGroup (FreshInnerProduct V) := base_comm
 instance (V: Type*) [AddCommGroup V] [base_module: Module ℂ V]: Module ℂ (FreshInnerProduct V) := base_module
 
-lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgroup G) [MeasurableSpace H] [T2Space H] [BorelSpace H] [IsTopologicalGroup H] [LocallyCompactSpace H] (V: Type*) [NormedAddCommGroup V] [InnerProductSpace ℂ V] (h_compact: IsCompact (Set.univ : Set H)) (rep: H →* (V →L[ℂ] V)ˣ) (h_cont: Continuous rep): True := by
+lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgroup G) [MeasurableSpace H] [T2Space H] [BorelSpace H] [IsTopologicalGroup H] [LocallyCompactSpace H] (V: Type*)  [NormedAddCommGroup V] [InnerProductSpace ℂ V] [CompleteSpace V] (h_compact: IsCompact (Set.univ : Set H)) (rep: H →* (V →L[ℂ] V)ˣ) (h_cont: Continuous rep): True := by
   let integrand := fun (v w: V) (h: H) => ⟪(rep h).val v, (rep h).val w⟫
   have continuous_integrand: ∀ v w: V, Continuous fun h: H => integrand v w h := by
     intro v w
@@ -186,6 +186,29 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgrou
     have compact_image: IsCompact (Set.range (rep)) := by
       sorry
 
+    let new_inner := InnerProductSpace.ofCore inner_product_core
+
+    let apply_rep (h: H) (v: FreshInnerProduct V): FreshInnerProduct V := (rep h).val v
+
+    have v_preserves_inner: ∀ h: H, ∀ v w: FreshInnerProduct V, ⟪(apply_rep h v), (apply_rep h w)⟫ = ⟪v, w⟫ := by
+      intro h v w
+      unfold inner
+      simp [InnerProductSpace.toInner, new_inner]
+      dsimp [inner_product_core]
+      simp [InnerProductSpace.ofCore]
+      simp [apply_rep]
+      simp [integrand]
+      conv =>
+        lhs
+        arg 2
+        intro f
+        rw [← ContinuousLinearMap.adjoint_inner_right]
+      --simp_rw [← ContinuousLinearMap.mul_apply]
+      simp_rw [← ContinuousLinearMap.smul_def]
+      --simp_rw [inner_smul_left]
+      sorry
+
+
 
     let new_inner_prod := fun (v w: V) => MeasureTheory.integral (MeasureTheory.Measure.haar) (integrand v w)
     sorry
@@ -232,6 +255,7 @@ lemma inductive_lemma (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (
         have second := hz x
         rw [second, first]
     }
+    sorry
 
 
     -- obtain ⟨c, hc⟩ := exists_eigenvalue

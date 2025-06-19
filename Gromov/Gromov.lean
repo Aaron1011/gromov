@@ -1,4 +1,5 @@
 import Mathlib
+import Mathlib.Algebra.Group.Gromov.UnitaryGromov
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false
@@ -1321,6 +1322,8 @@ lemma GLW_preseves_norm (g: G) (w: W (G := G)): ‖(GRepW (G := G) (GRepW_base g
   rw [← hv]
   rw [quotient_norm_eq_norm]
 
+#synth CompleteSpace (W (G := G))
+
 lemma measurable_GRepW: Measurable (fun g => GRepW (G := G) (GRepW_base (G := G) g)) := by
   simp [GRepW_base, GRepW]
   apply Measurable.comp (g := GRepW (G := G)) (f := fun g => ((GRepW_non_invertible (G := G)).asGroupHom g))
@@ -1336,6 +1339,7 @@ set_option synthInstance.maxHeartbeats 50000
 
 lemma continous_of_map (v: W (G := G)): Continuous (fun (r: (W (G := G) →L[ℂ] W (G := G))ˣ) => r.val v) := by
   apply Continuous.comp (g := (fun r => r v)) (f := (fun (r : (W (G := G) →L[ℂ] W (G := G))ˣ) => r.val))
+  -- TODO - how does this work???
   . exact Continuous.clm_apply continuous_id' continuous_const
   . apply Units.continuous_val
 
@@ -1574,7 +1578,7 @@ theorem compact_rho_g: IsCompact (rho_g_closure (G := G)) := by
 
 
 
-
+def try_apply_unitarian := weyl_unitarian_trick
 
 -- Section 3.3 in Vikmanm, "Construction of a representation"
 -- This is a combination of Cartan's Theorem and Theorem 3.6, giving us the conclusion that
