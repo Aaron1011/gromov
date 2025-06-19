@@ -148,7 +148,8 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgrou
         obtain ⟨q, _, inner_q_zero⟩ := MeasureTheory.Measure.exists_mem_of_measure_ne_zero_of_ae ?_ hx
         conv at inner_q_zero =>
           equals ⟪(rep q).val x, (rep q).val x⟫ = 0 =>
-            sorry
+            rw [← inner_self_ofReal_re]
+            field_simp
 
         simp at inner_q_zero
         unfold DFunLike.coe at inner_q_zero
