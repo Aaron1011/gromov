@@ -38,6 +38,12 @@ lemma shrinking_conjugators (n: ℕ) (g h: Matrix.unitaryGroup (Fin n) ℂ):
       rw [mul_comm] at norm_sub_h
       linarith
 set_option diagnostics true
+
+def FreshInnerProduct (V: Type*) := V
+
+instance (V: Type*) [base_comm: AddCommGroup V]: AddCommGroup (FreshInnerProduct V) := base_comm
+instance (V: Type*) [AddCommGroup V] [base_module: Module ℂ V]: Module ℂ (FreshInnerProduct V) := base_module
+
 lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgroup G) [MeasurableSpace H] [T2Space H] [BorelSpace H] [IsTopologicalGroup H] [LocallyCompactSpace H] (V: Type*) [NormedAddCommGroup V] [InnerProductSpace ℂ V] (h_compact: IsCompact (Set.univ : Set H)) (rep: H →* (V →L[ℂ] V)ˣ) (h_cont: Continuous rep): True := by
   let integrand := fun (v w: V) (h: H) => ⟪(rep h).val v, (rep h).val w⟫
   have continuous_integrand: ∀ v w: V, Continuous fun h: H => integrand v w h := by
@@ -84,7 +90,44 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgrou
     -- specialize continuous_integrand v w
     -- exact continuous_integrand.continuousOn
 
+  let inner_product_core: InnerProductSpace.Core ℂ (FreshInnerProduct V) := {
+    inner := fun v w => MeasureTheory.integral (MeasureTheory.Measure.haar) (integrand v w)
+    conj_inner_symm := by
+      sorry
+    re_inner_nonneg := by
+      sorry
+    add_left := by
+      sorry
+    smul_left := by
+      sorry
+    definite := by
+      intro x hx
+      simp [integrand] at hx
+      conv at hx =>
+        lhs
+        arg 2
+        intro h
+        rw [← inner_self_ofReal_re]
 
+      simp at hx
+      rw [integral_complex_ofReal] at hx
+      norm_cast at hx
+      rw [MeasureTheory.integral_eq_zero_iff_of_nonneg ?_] at hx
+      . sorry
+      .
+        have foo := integrable_on x x
+        simp [integrand] at foo
+        have re_integrable := MeasureTheory.Integrable.re foo
+        simp at re_integrable
+        exact re_integrable
+      .
+        rw [Pi.le_def]
+        intro y
+        simp
+        have foo := inner_self_nonneg (𝕜 := ℂ) (E := V) (x := (rep y).val x)
+        simp at foo
+        exact foo
+  }
   have compact_image: IsCompact (Set.range (rep)) := by
     sorry
 
