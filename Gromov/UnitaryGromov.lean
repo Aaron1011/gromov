@@ -44,7 +44,7 @@ def FreshInnerProduct (V: Type*) := V
 instance (V: Type*) [base_comm: AddCommGroup V]: AddCommGroup (FreshInnerProduct V) := base_comm
 instance (V: Type*) [AddCommGroup V] [base_module: Module ℂ V]: Module ℂ (FreshInnerProduct V) := base_module
 
-lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgroup G) [MeasurableSpace H] [T2Space H] [BorelSpace H] [IsTopologicalGroup H] [LocallyCompactSpace H] (V: Type*)  [NormedAddCommGroup V] [InnerProductSpace ℂ V] [CompleteSpace V] (h_compact: IsCompact (Set.univ : Set H)) (rep: H →* (V →L[ℂ] V)ˣ) (h_cont: Continuous rep): True := by
+lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgroup G) [MeasurableSpace H] [T2Space H] [BorelSpace H] [IsTopologicalGroup H] [LocallyCompactSpace H] (V: Type*)  [NormedAddCommGroup V]  [CompleteSpace V] [InnerProductSpace ℂ V] (h_compact: IsCompact (Set.univ : Set H)) (rep: H →* (V →L[ℂ] V)ˣ) (h_cont: Continuous rep): True := by
   let integrand := fun (v w: V) (h: H) => ⟪(rep h).val v, (rep h).val w⟫
   have continuous_integrand: ∀ v w: V, Continuous fun h: H => integrand v w h := by
     intro v w
