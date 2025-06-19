@@ -97,7 +97,11 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] (H: Subgrou
     re_inner_nonneg := by
       sorry
     add_left := by
-      sorry
+      intro a b c
+      simp [integrand]
+      rw [MeasureTheory.integral_add]
+      . exact integrable_on a c
+      . exact integrable_on b c
     smul_left := by
       intro x y z
       simp [integrand]
