@@ -1348,14 +1348,14 @@ lemma continous_of_map (v: W (G := G)): Continuous (fun (r: (W (G := G) →L[ℂ
 -- WRONG: We want the topology to come from our metric space 'GL_W_psuedoMetric', not from the units
 
 -- We actualy want the topology to be the induced topology from the space of (not necessarily invertible) linear maps from W to W
-attribute [-instance] Units.instTopologicalSpaceUnits
+--attribute [-instance] Units.instTopologicalSpaceUnits
 
 
 -- The image of G under our representation: ρ(G) in the Vikman paper
 noncomputable def rho_g := ((GRepW (G := G)).restrict ((GRepW_base (G := G)).range)).range
 
-noncomputable instance GL_W_TopologicalSpace: TopologicalSpace (GL_W (G := G)) := TopologicalSpace.induced Units.val (by infer_instance)
-noncomputable instance GL_W_PseudoMetricSpace: PseudoMetricSpace (GL_W (G := G)) := Topology.IsInducing.comapPseudoMetricSpace (f := Units.val) (by apply Topology.IsInducing.induced)
+--noncomputable instance GL_W_TopologicalSpace: TopologicalSpace (GL_W (G := G)) := TopologicalSpace.induced Units.val (by infer_instance)
+--noncomputable instance GL_W_PseudoMetricSpace: PseudoMetricSpace (GL_W (G := G)) := Topology.IsInducing.comapPseudoMetricSpace (f := Units.val) (by apply Topology.IsInducing.induced)
 
 
 def rho_g_closure := _root_.closure (rho_g (G := G)).carrier
@@ -1423,6 +1423,18 @@ noncomputable instance GL_W_psuedo: PseudoMetricSpace (GL_W (G := G)) := Topolog
 
 -- }
 
+
+instance GL_W_Proper: ProperSpace (GL_W (G := G)) := {
+  isCompact_closedBall := by
+    intro w r
+    have ball_closed: IsClosed (Metric.closedBall (w) r) := by
+      apply Metric.isClosed_closedBall
+    rw [Topology.IsInducing.isClosed_iff units_val_inducing] at ball_closed
+    obtain ⟨w_ball, w_ball_closed, inv_ball⟩ := ball_closed
+    rw [← inv_ball]
+    rw [Topology.IsInducing.isCompact_iff units_val_inducing]
+    rw [Set.image_preimage_eq_range_inter]
+}
 
 --#synth Bornology (GL_W (G := G))
 
@@ -1615,15 +1627,29 @@ theorem compact_rho_g: IsCompact (rho_g_closure (G := G)) := by
 --   --apply Subgroup.instBorelSpace_subgroup
 --   --apply units_borel
 
-instance GL_W_IsTopologicalGroup: IsTopologicalGroup (GL_W (G := G)) := {
-  continuous_mul := by
-    apply (Topology.IsInducing.continuousMul (f := Units.coeHom _) (by apply Topology.IsInducing.induced)).continuous_mul
-  continuous_inv := by
-    apply Continuous.inv₀
+-- instance GL_W_IsTopologicalGroup: IsTopologicalGroup (GL_W (G := G)) := {
+--   continuous_mul := by
+--     apply (Topology.IsInducing.continuousMul (f := Units.coeHom _) (by apply Topology.IsInducing.induced)).continuous_mul
+--   continuous_inv := by
+--     apply Continuous.inv₀
 
 
-    sorry
-}
+--     sorry
+-- }
+
+
+instance Borel_GL_W: BorelSpace (GL_W (G := G)) := by
+  sorry
+
+instance Borel_rho_g: BorelSpace ↥(rho_g (G := G)) := by
+  apply Subtype.borelSpace
+
+instance LocallyCompact_GL_W: LocallyCompactSpace (GL_W (G := G)) := by
+  apply Topology.IsInducing.locallyCompactSpace (isembedding_units_val (G := G).isInducing)
+  --apply Topology.IsEmbedding.locallyCompactSpace (isembedding_units_val (G := G))
+
+instance LocallyCompact_rho_g: LocallyCompactSpace (rho_g (G := G)) := by
+  apply IsOpen.locallyCompactSpace
 
 lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutative M ∧ M.FiniteIndex := by
   let my_map := Subgroup.subtype (rho_g (G := G))
