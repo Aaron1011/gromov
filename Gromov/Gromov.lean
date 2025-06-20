@@ -1343,10 +1343,19 @@ lemma continous_of_map (v: W (G := G)): Continuous (fun (r: (W (G := G) →L[ℂ
   . exact Continuous.clm_apply continuous_id' continuous_const
   . apply Units.continuous_val
 
--- We want the topology to come from our metric space 'GL_W_psuedoMetric', not from the units
---attribute [-instance] Units.instTopologicalSpaceUnits
+
+
+-- WRONG: We want the topology to come from our metric space 'GL_W_psuedoMetric', not from the units
+
+-- We actualy want the topology to be the induced topology from the space of (not necessarily invertible) linear maps from W to W
+attribute [-instance] Units.instTopologicalSpaceUnits
+
+
 -- The image of G under our representation: ρ(G) in the Vikman paper
 noncomputable def rho_g := ((GRepW (G := G)).restrict ((GRepW_base (G := G)).range)).range
+
+noncomputable instance GL_W_TopologicalSpace: TopologicalSpace (GL_W (G := G)) := TopologicalSpace.induced Units.val (by infer_instance)
+noncomputable instance GL_W_PseudoMetricSpace: PseudoMetricSpace (GL_W (G := G)) := Topology.IsInducing.comapPseudoMetricSpace (f := Units.val) (by apply Topology.IsInducing.induced)
 
 
 def rho_g_closure := _root_.closure (rho_g (G := G)).carrier
@@ -1584,6 +1593,11 @@ theorem compact_rho_g: IsCompact (rho_g_closure (G := G)) := by
 -- ρ(G) contains an abelian subgroup of finite index
 
 #synth MeasurableSpace (W (G := G) →L[ℂ] W (G := G))ˣ
+#synth TopologicalSpace (W (G := G) →L[ℂ] W (G := G))ˣ
+#synth BorelSpace (W (G := G) →L[ℂ] W (G := G))
+#synth BorelSpace (Units.val '' (rho_g (G := G)).carrier)
+
+#synth ContinuousMul (W (G := G) →L[ℂ] W (G := G))
 
 -- instance units_borel: BorelSpace (GL_W (G := G)) := {
 --   measurable_eq := by
@@ -1601,9 +1615,19 @@ theorem compact_rho_g: IsCompact (rho_g_closure (G := G)) := by
 --   --apply Subgroup.instBorelSpace_subgroup
 --   --apply units_borel
 
+instance GL_W_IsTopologicalGroup: IsTopologicalGroup (GL_W (G := G)) := {
+  continuous_mul := by
+    apply (Topology.IsInducing.continuousMul (f := Units.coeHom _) (by apply Topology.IsInducing.induced)).continuous_mul
+  continuous_inv := by
+    apply Continuous.inv₀
+
+
+    sorry
+}
+
 lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutative M ∧ M.FiniteIndex := by
   let my_map := Subgroup.subtype (rho_g (G := G))
-  simp [GL_W] at my_map
+  unfold GL_W at my_map
   have my_weyl_trick := weyl_unitarian_trick (H := rho_g (G := G)) (G := GL_W (G := G)) (V := (W (G := G))) (rep := my_map)
 
 -- We need this to work with Finset
