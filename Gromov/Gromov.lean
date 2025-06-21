@@ -2292,6 +2292,26 @@ lemma f_conv_mu (f: G → ℝ) (hf: ConvExists f (mu (S := S))) (g: G): (Conv (S
         . field_simp
   . exact hf
 
+
+-- Copied from https://github.com/leanprover/lean4/blob/6741444a63eec253a7eae7a83f1beb3de015023d/src/Init/Data/List/OfFn.lean#L81
+theorem ofFn_succ_last (α: Type*) {n} {f : Fin (n + 1) → α} :
+    List.ofFn f = (List.ofFn fun i => f i.castSucc) ++ [f (Fin.last n)] := by
+  induction n with
+  | zero => simp [List.ofFn_succ]
+  | succ n ih =>
+    rw [List.ofFn_succ]
+    conv => rhs; rw [List.ofFn_succ]
+    rw [ih]
+    simp
+    rfl
+
+
+lemma list_prod_eq {T : Type*} [Mul T] [One T] (f g: List T) (hfg: f = g): f.prod = g.prod := by
+  rw [hfg]
+
+lemma list_unattach_eq {T : Type*}  {p : T → Prop} (f g : List { x : T // p x }) (h: f = g): f.unattach = g.unattach := by
+  rw [h]
+
 -- The expression 'Σ s_1, ..., s_n ∈ S, f(s_1 * ... * s_n)'
 -- This is a sum over all n-tuples of elements in S, where each term in is f (s_1 * ... * s_n)
 -- TODO - is there aless horrible way to write in in mathlib?
@@ -2376,7 +2396,7 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
         rhs
         arg 2
         intro s
-        simp [NTupleSum]
+        simp only [NTupleSum]
 
       rw [← mul_assoc]
       conv =>
@@ -2393,48 +2413,152 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
       left
       rw [← Finset.sum_attach]
       rw [← Finset.sum_product']
-      apply Finset.sum_bijective (e := fun (x) => (fun (i: Fin (n + 1 + 1)) => if hi: i = 0 then x.fst else x.snd (i.pred hi)))
+      apply Fintype.sum_bijective (e := fun (x) => (fun (i: Fin (n + 1 + 1)) => if hi: i.val = n + 1 then x.fst else x.snd i))
       .
         refine ⟨?_, ?_⟩
-        . intro a b hab
+        .
+          intro a b hab
           simp at hab
           ext p
           .
-            have fst_eq := congrFun hab 0
-            simp at fst_eq
+            have fst_eq := congrFun hab (n + 1)
+            have vals_eq : ↑((n : Fin (n + 1 + 1)) + 1) = n + 1 := by
+              norm_cast
+              rw [Fin.val_cast_of_lt (by omega)]
+            simp [vals_eq] at fst_eq
             rw [fst_eq]
+
           .
-            have snd_eq := congrFun hab (p + 1)
-            simp at snd_eq
+            have p_lt_n_plus := p.prop
+            have p_val_neq: p.val ≠ n + 1 := by omega
+
+            have cast_succ_ne: p.castSucc.val ≠ n + 1 := by
+              simp
+              omega
+
+            have snd_eq := congrFun hab (p)
+            norm_cast at snd_eq
+            simp [cast_succ_ne] at snd_eq
+            simp [p_val_neq] at snd_eq
             rw [snd_eq]
         .
           intro f
-          use ((f 0), fun i => f (i + 1))
+          use ((f (n + 1)), fun i => f (i))
           funext i
           simp
           split_ifs
           .
-            rename _ => i_eq_zero
-            rw [i_eq_zero]
+            rename _ => i_neq_n_succ
+            norm_cast
+            simp_rw [← i_neq_n_succ]
+            norm_cast
           .
-            rename _ => i_neq_zero
-            conv =>
-              lhs
-              arg 1
-              equals i =>
-                norm_cast
-                have i_val_ne: i.val ≠ 0 := by simp [i_neq_zero]
-                have eq_self: i.val - 1 + 1 = i.val := by omega
-                rw [eq_self]
-                norm_cast
+            rename _ => i_neq_n_succ
+            norm_cast
+            have i_lt: i.val < n + 1 := by omega
+            have mod_eq := Nat.mod_eq_of_lt i_lt
+            rw [mod_eq]
+            norm_cast
+      .
+        intro x
+        simp only [delta]
+        rw [Pi.single_apply]
+        rw [Pi.single_apply]
 
 
-      have foo := fun (s: S) (x) => (delta (g * s⁻¹) (↑(x 0) * (List.ofFn fun i ↦ x i.succ).unattach.prod))
-      simp
-      conv =>
-        lhs
-        rhs
-        rhs
+        split_ifs
+        .
+          rename _ => hi
+          simp [hi]
+        .
+          rename_i g_eq g_mul_neq
+          apply_fun (fun y => y * (x.fst.val)) at g_eq
+          simp only [inv_mul_cancel_right] at g_eq
+          rw [← g_eq] at g_mul_neq
+          rw [ofFn_succ_last] at g_mul_neq
+          simp at g_mul_neq
+          conv at g_mul_neq =>
+            arg 1
+            lhs
+            rhs
+            lhs
+            arg 1
+            arg 1
+            arg 1
+            intro i
+            equals x.2 i.succ =>
+              have i_neq_n: i.val ≠ n := by omega
+              simp [i_neq_n]
+
+          rw [mul_assoc] at g_mul_neq
+          contradiction
+        . rename_i g_mul_neq g_eq
+
+          rw [ofFn_succ_last] at g_eq
+          simp [-List.ofFn_succ] at g_eq
+          rw [← g_eq] at g_mul_neq
+          simp at g_mul_neq
+
+          have i_neq_n: ∀ i: Fin n, i.val ≠ n := by
+            intro i
+            omega
+          simp [i_neq_n] at g_mul_neq
+        . rfl
+
+
+
+
+      --     simp at g_eq
+      --     conv at g_neq =>
+      --       arg 1
+      --       lhs
+      --       rhs
+      --       rhs
+      --       equals (List.ofFn fun (i : Fin (n - 1)) ↦ x.2 (i.succ + 1)).unattach.prod * x.1 =>
+      --         rw [List.ofFn_congr (n := n - 1 +1)]
+      --         .
+      --           rw [ofFn_succ_last]
+      --           simp
+      --           have n_sub_eq: n - 1 + 1 = n := by
+      --             omega
+      --           simp [n_sub_eq]
+      --           apply list_prod_eq
+      --           apply list_unattach_eq
+      --           simp
+      --           funext i
+      --           have i_prop := i.prop
+      --           have i_succ_neq: i.val + 1 ≠ n := by omega
+      --           simp [i_succ_neq]
+      --           conv =>
+      --             lhs
+      --             arg 2
+      --             equals ((i : Fin (n + 1 )) + 1 + 1)=>
+      --               norm_cast
+      --               simp
+      --               sorry
+
+      --         . omega
+      --     apply_fun (fun y => y * (x.fst.val)) at g_mul_eq
+      --     simp at g_mul_eq
+
+      --     contradiction
+      --     rw [← g_neq] at g_mul_neq
+      --     rw [eq_comm] at n_eq_zero
+      --     simp [n_eq_zero] at g_neq
+      --     simp [n_eq_zero] at g_mul_eq
+      --     apply_fun (fun y => y * (x.snd (n + 1))) at g_mul_eq
+      --     simp at g_mul_eq
+      --     contradiction
+
+      --   by_cases g_eq_prod: g = (List.ofFn (fun (i: Fin (n + 1 + 1)) => if hi: i = 0 then x.fst else x.snd (i.pred hi))).unattach.prod
+      --   . simp [g_eq_prod]
+
+      -- have foo := fun (s: S) (x) => (delta (g * s⁻¹) (↑(x 0) * (List.ofFn fun i ↦ x i.succ).unattach.prod))
+      -- simp
+      -- conv =>
+      --   lhs
+      --   rhs
+      --   rhs
 
     unfold muConv at ih
     rw [ih]
