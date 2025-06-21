@@ -2560,22 +2560,10 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
       --   rhs
       --   rhs
 
-    unfold muConv at ih
-    rw [ih]
-    rw [conv_eq_sum]
-    .
-      simp
-    simp
-
-    rw [Nat.iterate]
-    conv =>
-      lhs
-      equals ((1 : ℝ) / (#(S) : ℝ)) * ∑ s ∈ S, muConv (n)   =>
-        rw [Nat.iterate_succ']
-        rw [muConv]
-        simp only [Nat.iterate, Function.comp_apply, muConv, mu]
-        rw [NTupleSum]
-
+    . intro s hs
+      sorry
+    . sorry
+    . sorry
 -- structure ListPrefix {T: Type*} (n: ℕ) (head: T) (suffix target: List T): Prop where
 --   suffix_neq: suffix ≠ []
 --   suffix_head: suffix.head suffix_neq ≠ head
