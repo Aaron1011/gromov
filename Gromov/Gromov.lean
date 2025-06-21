@@ -1427,6 +1427,7 @@ noncomputable instance GL_W_psuedo: PseudoMetricSpace (GL_W (G := G)) := Topolog
 instance GL_W_Proper: ProperSpace (GL_W (G := G)) := {
   isCompact_closedBall := by
     intro w r
+    --have foo := _root_.Submonoid.units_isCompact (α := (W (G := G) →L[ℂ] W (G := G)))
     have ball_closed: IsClosed (Metric.closedBall (w) r) := by
       apply Metric.isClosed_closedBall
     rw [Topology.IsInducing.isClosed_iff units_val_inducing] at ball_closed
@@ -2107,7 +2108,7 @@ lemma conv_exists (p q : ℝ) (hp: 0 < p) (hq: 0 < q) (hpq: p.HolderConjugate q)
 noncomputable def mu: G → ℝ := ((1 : ℝ) / (#(S) : ℝ)) • ∑ s ∈ S, Pi.single s (1 : ℝ)
 
 -- Definition 3.11 in Vikman - the m-fold convolution of μ with itself
-noncomputable def muConv (n: ℕ): G → ℝ := (Nat.iterate (Conv (S := S) (mu (S := S))) n) (mu (S := S))
+noncomputable def muConv (n: ℕ): G → ℝ := (Nat.iterate (fun f => Conv (S := S) f (mu (S := S))) n) (mu (S := S))
 
 
 
@@ -2153,8 +2154,8 @@ lemma conv_eq_sum {f h: G → ℝ} (hconv: ConvExists f h) (g: G): Conv f h g = 
     --     simp
 
 -- Proposition 3.12, item 1, in Vikman
-lemma f_conv_delta (f: G → ℝ) (g s: G): (Conv (S := S) f (Pi.single s 1)) g = f (g * s⁻¹) := by
-
+lemma f_conv_delta (f: G → ℝ) (g s: G): (Conv (S := S) f (delta s)) g = f (g * s⁻¹) := by
+  unfold delta
   rw [conv_eq_sum]
   .
     rw [tsum_eq_sum (s := {opAdd ((g * s⁻¹))}) ?_]
@@ -2299,9 +2300,10 @@ def NTupleSum (n: ℕ) (f: G → ℝ): ℝ := ∑ s : (Fin n → S), f ((List.of
 
 -- Proposition 3.12, item 3, in Vikman
 -- The 'm + 1' terms are due to the fact that 'muConv 0' still applies mu once (without any convolution)
-theorem mu_conv_eq_sum (m: ℕ) (g: G): muConv m g = (((1 : ℝ) / (#(S) : ℝ)) ^ (m + 1)) * (NTupleSum (S := S) (m + 1) (delta g))  := by
+theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ)) ^ (m + 1)) * (NTupleSum (S := S) (m + 1) (delta g))  := by
   induction m with
   | zero =>
+    funext g
     simp [muConv, NTupleSum, mu, delta, Pi.single, Function.update]
     by_cases g_in_s: g ∈ S
     .
@@ -2337,6 +2339,111 @@ theorem mu_conv_eq_sum (m: ℕ) (g: G): muConv m g = (((1 : ℝ) / (#(S) : ℝ))
         rw [← hx] at g_in_s
         simp at g_in_s
   | succ n ih =>
+    unfold muConv
+    rw [Function.iterate_succ_apply']
+    nth_rw 3 [mu]
+    funext g
+    nth_rw 1 [conv_eq_sum]
+    simp [-Finset.sum_pi_single]
+    simp_rw [mul_comm]
+    simp_rw [mul_assoc]
+    rw [Summable.tsum_mul_left]
+    simp_rw [Finset.sum_mul]
+    rw [Summable.tsum_finsetSum]
+    .
+      conv =>
+        lhs
+        rhs
+        arg 2
+        intro x
+        equals (Conv (muConv n) (delta x) ) g =>
+          rw [conv_eq_sum]
+          .
+            unfold muConv
+            unfold delta
+            simp_rw [mul_comm]
+          .
+            sorry
+
+
+
+      simp_rw [f_conv_delta]
+      simp_rw [ih]
+      rw [← Finset.mul_sum]
+      conv =>
+        lhs
+        rhs
+        rhs
+        arg 2
+        intro s
+        simp [NTupleSum]
+
+      rw [← mul_assoc]
+      conv =>
+        lhs
+        lhs
+        simp
+        equals (↑(#S) ^ (n + 1 + 1))⁻¹ =>
+          field_simp
+          nth_rw 2 [pow_succ]
+          simp
+          rw [mul_comm]
+      simp only [mul_eq_mul_left_iff, inv_eq_zero, ne_eq, Nat.add_eq_zero, one_ne_zero, and_false,
+        and_self, not_false_eq_true, pow_eq_zero_iff, Nat.cast_eq_zero, Finset.card_eq_zero]
+      left
+      rw [← Finset.sum_attach]
+      rw [← Finset.sum_product']
+      apply Finset.sum_bijective (e := fun (x) => (fun (i: Fin (n + 1 + 1)) => if hi: i = 0 then x.fst else x.snd (i.pred hi)))
+      .
+        refine ⟨?_, ?_⟩
+        . intro a b hab
+          simp at hab
+          ext p
+          .
+            have fst_eq := congrFun hab 0
+            simp at fst_eq
+            rw [fst_eq]
+          .
+            have snd_eq := congrFun hab (p + 1)
+            simp at snd_eq
+            rw [snd_eq]
+        .
+          intro f
+          use ((f 0), fun i => f (i + 1))
+          funext i
+          simp
+          split_ifs
+          .
+            rename _ => i_eq_zero
+            rw [i_eq_zero]
+          .
+            rename _ => i_neq_zero
+            conv =>
+              lhs
+              arg 1
+              equals i =>
+                norm_cast
+                have i_val_ne: i.val ≠ 0 := by simp [i_neq_zero]
+                have eq_self: i.val - 1 + 1 = i.val := by omega
+                rw [eq_self]
+                norm_cast
+
+
+      have foo := fun (s: S) (x) => (delta (g * s⁻¹) (↑(x 0) * (List.ofFn fun i ↦ x i.succ).unattach.prod))
+      simp
+      conv =>
+        lhs
+        rhs
+        rhs
+
+    unfold muConv at ih
+    rw [ih]
+    rw [conv_eq_sum]
+    .
+      simp
+    simp
+
+    rw [Nat.iterate]
     conv =>
       lhs
       equals ((1 : ℝ) / (#(S) : ℝ)) * ∑ s ∈ S, muConv (n)   =>
