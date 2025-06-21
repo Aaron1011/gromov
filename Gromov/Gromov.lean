@@ -2318,6 +2318,85 @@ lemma list_unattach_eq {T : Type*}  {p : T → Prop} (f g : List { x : T // p x 
 def NTupleSum (n: ℕ) (f: G → ℝ): ℝ := ∑ s : (Fin n → S), f ((List.ofFn s).unattach.prod)
 --∑ s ∈ (Finset.pi (Finset.range (n + 1))) (fun _ => S), f (List.ofFn (n := n + 1) (fun m => s m.val (by simp))).prod
 
+lemma mu_finsupp: (mu (S := S)).support.Finite := by
+  simp [mu]
+  rw [Function.support_const_smul_of_ne_zero]
+  .
+    apply Set.Finite.subset (s := ⋃ i ∈ S, Function.support (Pi.single i (1 : ℝ)))
+    .
+      simp
+      exact Set.toFinite (⋃ i ∈ S, {i})
+    .
+      conv =>
+        lhs
+        arg 1
+        equals fun (x: G) => ∑ s ∈ S, Pi.single s (1 : ℝ) x =>
+          funext a
+          simp
+      apply Finset.support_sum (s := S) (f := fun i => Pi.single i (1: ℝ))
+  . simp
+    simp at hS
+    exact Finset.nonempty_iff_ne_empty.mp hS
+
+lemma mu_conv_finsupp (m: ℕ): (muConv (S := S) m).support.Finite := by
+  induction m with
+  | zero =>
+    simp [muConv]
+    apply mu_finsupp
+  | succ n ih =>
+    unfold muConv
+    rw [Function.iterate_succ_apply']
+    unfold muConv at ih
+    eta_expand
+    conv =>
+      arg 1
+      intro a
+      arg 1
+      intro x
+      rw [conv_eq_sum (by
+        apply conv_exists_fin_supp
+        right
+        apply mu_finsupp
+      )]
+
+      rw [tsum_eq_sum' (s := (Finset.image Additive.ofMul (Finset.image MulOpposite.op ((mu_finsupp (S := S))).toFinset))) (by
+        sorry
+      )]
+    apply Set.Finite.subset (ht := Finset.support_sum _ _)
+    .
+
+      simp [-Function.mem_support]
+      apply Set.Finite.biUnion'
+      . apply mu_finsupp (S := S)
+      .
+        intro i hi
+        apply Set.Finite.inter_of_right
+        apply Set.Finite.of_injOn (f := fun x => i⁻¹ * x) (t := (mu_finsupp (S := S)).toFinset)
+        .
+          intro x hx
+          simp at hx
+          simp
+          exact hx
+        .
+          intro y hy z hz
+          simp
+        . simp
+          apply (mu_finsupp (S := S))
+
+
+
+
+
+
+    -- simp_rw [tsum_eq_sum]
+
+    -- simp_rw [conv_eq_sum]
+    -- rw [conv_eq_sum]
+
+    -- nth_rw 3 [mu]
+    -- apply Finite.support_conv
+    -- exact ih
+
 -- Proposition 3.12, item 3, in Vikman
 -- The 'm + 1' terms are due to the fact that 'muConv 0' still applies mu once (without any convolution)
 theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ)) ^ (m + 1)) * (NTupleSum (S := S) (m + 1) (delta g))  := by
@@ -2383,7 +2462,9 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
             unfold delta
             simp_rw [mul_comm]
           .
-            sorry
+            apply conv_exists_fin_supp
+            right
+            simp [delta]
 
 
 
@@ -2505,6 +2586,24 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
           simp [i_neq_n] at g_mul_neq
         . rfl
     . intro s hs
+      simp [Pi.single_apply]
+      apply Summable.of_nnnorm
+      apply NNReal.summable_of_le (f := fun a => ‖(fun f ↦ Conv f mu)^[n] mu (MulOpposite.unop (Additive.toMul a))‖₊)
+      . intro x
+        split_ifs
+        . rfl
+        . simp
+      .
+
+        apply conv_exists_fin_supp
+      conv =>
+        arg 1
+        intro i
+        arg 1
+        equals i = Additive.ofMul (MulOpposite.op (s * g⁻¹ )) =>
+          sorry
+
+
       sorry
     . sorry
     . sorry
