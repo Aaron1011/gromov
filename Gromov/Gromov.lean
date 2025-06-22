@@ -2677,8 +2677,7 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
       simp
       exact Set.toFinite (⋃ i ∈ S, {i})
 
-lemma mu_norm_one (m: ℕ): MeasureTheory.eLpNorm (muConv (S := S) m) 1 = 1 := by
-  simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm']
+lemma lintegral_g_eq_add (f: G → ENNReal): (∫⁻ (g: G), f g) = (∑' (g : G), f g) := by
   rw [MeasureTheory.lintegral_countable']
   simp [MeasureTheory.volume]
   unfold myHaar
@@ -2691,6 +2690,10 @@ lemma mu_norm_one (m: ℕ): MeasureTheory.eLpNorm (muConv (S := S) m) 1 = 1 := b
     rw [← mul_singleton_carrier]
     simp [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
     simp [MeasureTheory.Measure.haarMeasure_self]
+
+lemma mu_norm_one (m: ℕ): MeasureTheory.eLpNorm (muConv (S := S) m) 1 = 1 := by
+  simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm']
+  rw [lintegral_g_eq_add]
   simp [mu_conv_eq_sum]
   rw [ENNReal.tsum_mul_left]
   simp [NTupleSum, delta]
@@ -2722,6 +2725,40 @@ lemma mu_norm_one (m: ℕ): MeasureTheory.eLpNorm (muConv (S := S) m) 1 = 1 := b
     simp at hS
     exact Finset.nonempty_iff_ne_empty.mp hS
   . simp
+
+-- Defintion 3.14 from Vikman
+noncomputable def f_n (n: ℕ) (g: G): ℝ := ((1: ℝ) / (n: ℝ)) * ∑ m: Fin n, muConv (S := S) (m.val + 1) g
+
+theorem f_n_norm_one (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm (f_n (S := S) n) 1 = 1 := by
+  unfold f_n
+  simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm']
+  rw [lintegral_g_eq_add]
+  rw [ENNReal.tsum_mul_left]
+  conv =>
+    lhs
+    arg 2
+    arg 1
+    intro g
+    equals ∑ m: Fin (n), ‖muConv (↑m + 1) g‖ₑ =>
+      sorry
+
+  rw [Summable.tsum_finsetSum]
+  .
+    have mu_norm := mu_norm_one (S := S)
+    simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm'] at mu_norm
+    simp_rw [lintegral_g_eq_add] at mu_norm
+    simp_rw [mu_norm]
+    simp
+    norm_cast
+    rw [Real.enorm_of_nonneg (by simp)]
+    rw [← ENNReal.ofReal_natCast]
+    rw [← ENNReal.ofReal_mul]
+    .
+      field_simp
+    . simp
+  .
+    intro i hi
+    simp
 
 
 #print axioms mu_conv_eq_sum
