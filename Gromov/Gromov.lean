@@ -2961,10 +2961,26 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
     nth_rw 1 [muConv]
     simp
     calc
-      _ ≤ ‖(↑n)⁻¹‖ₑ * MeasureTheory.eLpNorm ((mu - muConv n)) 1 MeasureTheory.volume := by
+      _ ≤ ‖(n: ℝ)⁻¹‖ₑ * MeasureTheory.eLpNorm ((mu - muConv n)) 1 MeasureTheory.volume := by
         apply MeasureTheory.eLpNorm_const_smul_le
-      _ ≤ 2 / ↑n := by
-        apply MeasureTheory.eLpNorm_sub_le
+      _ ≤ ‖(n: ℝ)⁻¹‖ₑ * (MeasureTheory.eLpNorm ((mu)) 1 MeasureTheory.volume + (MeasureTheory.eLpNorm ((muConv n)) 1 MeasureTheory.volume)) := by
+        have sub_le := MeasureTheory.eLpNorm_sub_le (p := 1) (f := mu (S := S)) (g := muConv (S := S) n) (μ := MeasureTheory.volume) ?_ ?_ (by simp)
+        expose_names
+        apply mul_le_mul_left' sub_le
+      _ ≤ ENNReal.ofReal ((2: ℝ) / (n: ℝ)) := by
+        rw [mu_norm_one]
+        have mu_single_norm := mu_norm_one (S := S) 0
+        simp [muConv] at mu_single_norm
+        rw [mu_single_norm]
+        field_simp
+        norm_cast
+        rw [Real.enorm_of_nonneg (by simp)]
+        rw [← ENNReal.ofReal_natCast]
+        rw [← ENNReal.ofReal_mul]
+        simp
+        rw [mul_comm]
+        field_simp
+        simp
   --   MeasureTheory.eLpNorm_add_le
   --   rw [MeasureTheory.eLpNorm_nsmul]
   --   rw [Finset.sum_range_sub]
