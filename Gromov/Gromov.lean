@@ -2698,6 +2698,8 @@ lemma mu_norm_one (m: ℕ): MeasureTheory.eLpNorm (muConv (S := S) m) 1 = 1 := b
     lhs
     rhs
     equals (∑ x : (Fin (m + 1) → { x // x ∈ S }), (1 : ENNReal)) =>
+
+      simp [-List.ofFn_succ, Pi.single_apply]
       sorry
 
   simp
