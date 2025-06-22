@@ -3385,6 +3385,17 @@ open scoped RealInnerProductSpace
 
 #print axioms laplace_bounded
 
+lemma f_n_fin_supp (n: ℕ): (f_n (S := S) n).support.Finite := by
+  unfold f_n
+  simp
+  apply Set.Finite.inter_of_right
+  apply Set.Finite.subset (hs := ?_) (ht := Finset.support_sum _ _)
+  refine Set.Finite.biUnion' ?_ ?_
+  . exact Set.toFinite (Membership.mem Finset.univ.val)
+  . intro m hm
+    apply mu_conv_finsupp
+
+
 -- Case two of Theorem 3.6
 lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℤ, F ≠ ConstLipschitzH z := by
   obtain ⟨s, hs⟩ := f_n_limit
@@ -3429,6 +3440,28 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     simp at h_norm_one
     simp_rw [h_norm_one]
     simp
+
+  have H_n_diff_pos: ∀ n: ℕ,  ∀ (i : G), 0 ≤ H_n n i⁻¹ * f_n n i - H_n n i⁻¹ * f_n n (i * (↑s)⁻¹) := by
+    intro n g
+    simp [H_n]
+    simp [f_conv_delta]
+    split_ifs
+    . linarith
+    .
+      rename_i diff_zero
+      by_cases val_pos: 0 ≤ f_n n g - f_n n (g * (↑s)⁻¹)
+      .
+        rw [abs_of_nonneg val_pos]
+        rw [div_self]
+        . linarith
+        . assumption
+      .
+        rw [abs_of_neg]
+        . rw [div_neg_self]
+          . linarith
+          . assumption
+        .
+          simpa using val_pos
 
   have fn_sub_norm: ∀ n: ℕ, eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 = ENNReal.ofReal |((Conv (H_n n) (f_n n)) 1) - ((Conv (H_n n) (f_n n)) s⁻¹)| := by
     intro n
@@ -3542,26 +3575,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     rw [abs_of_nonneg]
     .
       apply tsum_nonneg
-      intro g
-      simp [H_n]
-      simp [f_conv_delta]
-      split_ifs
-      . linarith
-      .
-        rename_i diff_zero
-        by_cases val_pos: 0 ≤ f_n n g - f_n n (g * (↑s)⁻¹)
-        .
-          rw [abs_of_nonneg val_pos]
-          rw [div_self]
-          . linarith
-          . assumption
-        .
-          rw [abs_of_neg]
-          . rw [div_neg_self]
-            . linarith
-            . assumption
-          .
-            simpa using val_pos
+      exact H_n_diff_pos n
     .
       simp
       apply Function.Injective.comp
@@ -3569,11 +3583,33 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
       . apply Function.Injective.comp
         . exact Additive.toMul.injective
         . exact MulOpposite.op_injective
-    . sorry
-    . sorry
-    . sorry
-    . sorry
-    . sorry
+    .
+      simp
+      intro g hg
+      use g⁻¹
+      simp
+    .
+      apply tsum_nonneg
+      apply H_n_diff_pos n
+    . simp
+    . apply H_n_diff_pos n
+    .
+      simp_rw [← mul_sub]
+      apply summable_of_finite_support
+      simp
+      apply Set.Finite.inter_of_right
+      apply Set.Finite.subset (hs := ?_) (ht := Function.support_sub _ _)
+      simp
+      refine ⟨?_, ?_⟩
+      . apply f_n_fin_supp
+      .
+        apply Set.Finite.of_injOn (f := fun a => a * s.val⁻¹) (ht := f_n_fin_supp n)
+        . intro a ha
+          simpa using ha
+        . simp
+
+
+
   sorry
 
 -- structure ListPrefix {T: Type*} (n: ℕ) (head: T) (suffix target: List T): Prop where
