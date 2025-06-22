@@ -1341,7 +1341,7 @@ lemma measurable_GRepW: Measurable (fun g => GRepW (G := G) (GRepW_base (G := G)
   . simp [GRepW]
     sorry
   . sorry
-  . infer_instancez
+  . infer_instance
 
 lemma continuous_GRepW : Continuous (fun g => GRepW (G := G) (GRepW_base (G := G) g)) := by
   fun_prop
@@ -2632,7 +2632,7 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
       left
       rw [← Finset.sum_attach]
       rw [← Finset.sum_product']
-      apply Fintype.sum_bijective (e := fun (x) => (fun (i: Fin (n + 1 + 1)) => if hi: i.val = n + 1 then x.fst else x.snd i))
+      apply Fintype.sum_bijective (e := fun (x) => (fun (i: Fin (n + 1 + 1)) => if hi: i.val = n + 1 then x.fst else x.snd ⟨i, by omega⟩))
       .
         refine ⟨?_, ?_⟩
         .
@@ -2640,11 +2640,8 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
           simp at hab
           ext p
           .
-            have fst_eq := congrFun hab (n + 1)
-            have vals_eq : ↑((n : Fin (n + 1 + 1)) + 1) = n + 1 := by
-              norm_cast
-              rw [Fin.val_cast_of_lt (by omega)]
-            simp [vals_eq] at fst_eq
+            have fst_eq := congrFun hab (⟨(n + 1), by omega⟩)
+            simp at fst_eq
             rw [fst_eq]
 
           .
@@ -2655,29 +2652,18 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
               simp
               omega
 
-            have snd_eq := congrFun hab (p)
+            have snd_eq := congrFun hab (⟨p, by omega⟩)
             norm_cast at snd_eq
             simp [cast_succ_ne] at snd_eq
             simp [p_val_neq] at snd_eq
             rw [snd_eq]
         .
           intro f
-          use ((f (n + 1)), fun i => f (i))
+          use ((f (⟨n + 1, by omega⟩)), fun i => f (⟨i, by omega⟩))
           funext i
           simp
-          split_ifs
-          .
-            rename _ => i_neq_n_succ
-            norm_cast
-            simp_rw [← i_neq_n_succ]
-            norm_cast
-          .
-            rename _ => i_neq_n_succ
-            norm_cast
-            have i_lt: i.val < n + 1 := by omega
-            have mod_eq := Nat.mod_eq_of_lt i_lt
-            rw [mod_eq]
-            norm_cast
+          intro hi
+          simp_rw [← hi]
       .
         intro x
         simp only [delta]
