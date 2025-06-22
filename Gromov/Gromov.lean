@@ -2071,6 +2071,92 @@ lemma conv_exists_fin_supp (f g: G → ℝ) (hfg: f.support.Finite ∨ g.support
       .
         simp [myFun, opAdd]
 
+lemma lt_top_mul {a b c : ENNReal} (hab: a ≤ b * c) (hb: b < ⊤) (hc: c < ⊤) : a < ⊤ := by
+  have b_c_not_top: b * c < ⊤ := by
+    apply WithTop.mul_lt_top (hb) (hc)
+  grw [hab]
+  exact b_c_not_top
+
+
+instance my_add_haar_left_invariant: (myHaarAddOpp.IsAddLeftInvariant (G := Additive (MulOpposite G))) := by
+  rw [my_add_haar_eq_count]
+  infer_instance
+
+instance my_add_haar_right_invariant: (myHaarAddOpp.IsAddRightInvariant (G := Additive (MulOpposite G))) := by
+  rw [my_add_haar_eq_count]
+  infer_instance
+
+lemma conv_exists_lp1 (f g: G → ℝ)
+  (hf: MeasureTheory.MemLp ((fun x => f x.toMul.unop)) 1 myHaarAddOpp)
+  (hg: ∀ y: G, MeasureTheory.MemLp ((fun x => g x.toMul.unop)) 1 myHaarAddOpp)
+  : ConvExists f g := by
+
+  apply ENNReal.ConvolutionExists.of_memLp_memLp (p := 1) (q := 1) (μ := myHaarAddOpp) (by
+    simp [ENNReal.HolderConjugate]
+    exact {
+      inv_add_inv_eq_inv := by field_simp
+    }
+  )
+    -- (f := fun a => f (MulOpposite.unop (Additive.toMul a)))
+    -- (g := fun a => g ((MulOpposite.unop (Additive.toMul a))))
+    -- (hf := AEMeasurable.of_discrete)
+    -- (hg := AEMeasurable.of_discrete)
+    -- (by simp [ENNReal.HolderConjugate])
+    -- (by simp [ENNReal.HolderConjugate])
+
+  have young_bound := ENNReal.eLpNorm_convolution_le_enorm_mul
+    (f := fun a => f (MulOpposite.unop (Additive.toMul a)))
+    (g := fun a => g ((MulOpposite.unop (Additive.toMul a))))
+    (L := (ContinuousLinearMap.mul ℝ ℝ))
+    (r := 1)
+    (p := 1)
+    (q := 1)
+    (μ := myHaarAddOpp)
+    (by simp)
+    (by simp)
+    (by simp)
+    (by simp)
+    (by apply AEMeasurable.of_discrete)
+    (by apply AEMeasurable.of_discrete)
+
+  have young_lt_top := lt_top_mul young_bound ?_ ?_
+  .
+    simp [eLpNorm, eLpNorm'] at young_lt_top
+    --
+
+    unfold ConvExists MeasureTheory.ConvolutionExists MeasureTheory.ConvolutionExistsAt MeasureTheory.Integrable
+    intro z
+    refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
+    unfold MeasureTheory.HasFiniteIntegral
+    simp [MeasureTheory.convolution] at young_lt_top
+    simp
+
+    rw [WithTop.lt_top_iff_ne_top] at young_lt_top
+    apply MeasureTheory.measure_eq_top_of_lintegral_ne_top _ at young_lt_top
+    rw [my_add_haar_eq_count] at young_lt_top
+    rw [MeasureTheory.Measure.count_eq_zero_iff] at young_lt_top
+    simp only [enorm_ne_top] at young_lt_top
+
+
+
+
+  unfold ConvExists MeasureTheory.ConvolutionExists MeasureTheory.ConvolutionExistsAt MeasureTheory.Integrable
+  intro g
+  refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
+  unfold MeasureTheory.HasFiniteIntegral
+  simp [eLpNorm, eLpNorm'] at young_bound
+  --simp [MeasureTheory.convolution] at young_bound
+  grw [young_bound]
+
+
+
+  unfold ConvExists MeasureTheory.ConvolutionExists MeasureTheory.ConvolutionExistsAt MeasureTheory.Integrable
+  intro x
+  simp only [toMul_sub, MulOpposite.unop_div, ContinuousLinearMap.mul_apply']
+  refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
+  unfold MeasureTheory.HasFiniteIntegral
+  grw [ENNReal.eLpNorm_convolution_le_enorm_mul]
+
 
 lemma conv_exists (p q : ℝ) (hp: 0 < p) (hq: 0 < q) (hpq: p.HolderConjugate q) (f g: G → ℝ)
   (hf: MeasureTheory.MemLp ((fun x => f x.toMul.unop)) (ENNReal.ofReal p) myHaarAddOpp)
@@ -3287,15 +3373,15 @@ lemma laplace_bounded (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G
 #print axioms laplace_bounded
 
 open scoped RealInnerProductSpace
-lemma laplace_self_adjoint (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume G))): ⟪(Laplace (S := S) f), f⟫ = ⟪f, (Laplace (S := S) f)⟫ := by
-  unfold Laplace
-  rw [f_conv_mu]
-  rw [conv_self_adjoint]
-  simp_rw [MeasureTheory.volume]
-  simp_rw [my_haar_eq_count]
-  simp_rw [MeasureTheory.Measure.haarMeasure_self]
-  simp_rw [MeasureTheory.Measure.haarMeasure_self]
-  simp_rw [MeasureTheory.Measure.haarMeasure_self]
+-- lemma laplace_self_adjoint (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume G))): ⟪(Laplace (S := S) f), f⟫ = ⟪f, (Laplace (S := S) f)⟫ := by
+--   unfold Laplace
+--   rw [f_conv_mu]
+--   rw [conv_self_adjoint]
+--   simp_rw [MeasureTheory.volume]
+--   simp_rw [my_haar_eq_count]
+--   simp_rw [MeasureTheory.Measure.haarMeasure_self]
+--   simp_rw [MeasureTheory.Measure.haarMeasure_self]
+--   simp_rw [MeasureTheory.Measure.haarMeasure_self]
 
 #print axioms laplace_bounded
 
@@ -3344,6 +3430,150 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     simp_rw [h_norm_one]
     simp
 
+  have fn_sub_norm: ∀ n: ℕ, eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 = ENNReal.ofReal |((Conv (H_n n) (f_n n)) 1) - ((Conv (H_n n) (f_n n)) s⁻¹)| := by
+    intro n
+    simp [eLpNorm, eLpNorm']
+    rw [lintegral_g_eq_add]
+    conv =>
+      lhs
+      arg 1
+      intro g
+      rw [Real.enorm_eq_ofReal_abs]
+      arg 1
+      equals (H_n n g⁻¹) * (f_n n g - (Conv (f_n n) (delta s.val)) g) =>
+        simp [H_n]
+        split_ifs
+        .
+          rename_i diff_eq_zero
+          simp [diff_eq_zero]
+        .
+          rename_i diff_ne_zero
+          by_cases val_pos: 0 ≤ ((f_n n g) - (Conv (f_n n) (delta s.val)) g)
+          .
+            rw [abs_of_nonneg]
+            .
+             rw [div_self]
+             simp
+             apply diff_ne_zero
+            . exact val_pos
+          .
+            rw [abs_of_neg]
+            .
+              rw [div_neg_self]
+              simp
+              exact diff_ne_zero
+            .
+              simpa using val_pos
+
+    rw [conv_eq_sum (by
+      apply conv_exists_fin_supp
+      right
+      unfold f_n
+      simp
+      apply Set.Finite.inter_of_right
+      apply Set.Finite.subset (hs := ?_) (ht := Finset.support_sum _ _)
+      refine Set.Finite.biUnion' ?_ ?_
+      . exact Set.toFinite (Membership.mem Finset.univ.val)
+      . intro m hm
+        apply mu_conv_finsupp
+    )]
+
+    rw [conv_eq_sum (by
+      apply conv_exists_fin_supp
+      right
+      unfold f_n
+      simp
+      apply Set.Finite.inter_of_right
+      apply Set.Finite.subset (hs := ?_) (ht := Finset.support_sum _ _)
+      refine Set.Finite.biUnion' ?_ ?_
+      . exact Set.toFinite (Membership.mem Finset.univ.val)
+      . intro m hm
+        apply mu_conv_finsupp
+    )]
+
+
+    conv =>
+      rhs
+      arg 1
+      arg 1
+      rw [← Summable.tsum_sub (by
+        apply summable_of_finite_support
+        simp
+        apply Set.Finite.inter_of_right
+        unfold f_n
+        simp
+        apply Set.Finite.inter_of_right
+        apply Set.Finite.subset (hs := ?_) (ht := Finset.support_sum _ _)
+        refine Set.Finite.biUnion' ?_ ?_
+        . exact Set.toFinite (Membership.mem Finset.univ.val)
+        .
+          intro m hm
+          apply Set.Finite.of_injOn (f := fun a => (MulOpposite.unop (Additive.toMul a))⁻¹) (ht := mu_conv_finsupp (S := S) m)
+          .
+            intro a ha
+            exact ha
+          . intro a ha b hb
+            simp
+      ) (by
+        apply summable_of_finite_support
+        simp
+        apply Set.Finite.inter_of_right
+        unfold f_n
+        simp
+        apply Set.Finite.inter_of_right
+        apply Set.Finite.subset (hs := ?_) (ht := Finset.support_sum _ _)
+        refine Set.Finite.biUnion' ?_ ?_
+        . exact Set.toFinite (Membership.mem Finset.univ.val)
+        .
+          intro m hm
+          apply Set.Finite.of_injOn (f := fun a => (MulOpposite.unop (Additive.toMul a))⁻¹ * s.val⁻¹) (ht := mu_conv_finsupp (S := S) m)
+          .
+            intro a ha
+            exact ha
+          . intro a ha b hb
+            simp
+      )]
+    simp_rw [mul_sub]
+    simp_rw [f_conv_delta]
+    rw [← ENNReal.ofReal_tsum_of_nonneg]
+    rw [ENNReal.ofReal_eq_ofReal_iff]
+    rw [← Function.Injective.tsum_eq (γ := G) (β := Additive (MulOpposite G)) (g := fun a => Additive.ofMul (MulOpposite.op a⁻¹))]
+    simp
+    rw [abs_of_nonneg]
+    .
+      apply tsum_nonneg
+      intro g
+      simp [H_n]
+      simp [f_conv_delta]
+      split_ifs
+      . linarith
+      .
+        rename_i diff_zero
+        by_cases val_pos: 0 ≤ f_n n g - f_n n (g * (↑s)⁻¹)
+        .
+          rw [abs_of_nonneg val_pos]
+          rw [div_self]
+          . linarith
+          . assumption
+        .
+          rw [abs_of_neg]
+          . rw [div_neg_self]
+            . linarith
+            . assumption
+          .
+            simpa using val_pos
+    .
+      simp
+      apply Function.Injective.comp
+      . exact neg_injective
+      . apply Function.Injective.comp
+        . exact Additive.toMul.injective
+        . exact MulOpposite.op_injective
+    . sorry
+    . sorry
+    . sorry
+    . sorry
+    . sorry
   sorry
 
 -- structure ListPrefix {T: Type*} (n: ℕ) (head: T) (suffix target: List T): Prop where

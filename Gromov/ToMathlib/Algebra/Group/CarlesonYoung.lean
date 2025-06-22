@@ -163,3 +163,23 @@ theorem eLpNorm_top_convolution_le' [AddGroup G]  [IsTopologicalAddGroup G] [μ.
     (hL : ∀ (x y : G), ‖L (f x) (g y)‖ ≤ c * ‖f x‖ * ‖g y‖) :
     eLpNorm (f ⋆[L, μ] g) ∞ μ ≤ ENNReal.ofReal c * eLpNorm f p μ * eLpNorm g q μ := by
   sorry
+
+
+/-- **Young's convolution inequality**: the `L^r` seminorm of a convolution `(f ⋆[L, μ] g)` is
+bounded by `‖L‖ₑ` times the product of the `L^p` and `L^q` seminorms, where
+`1 / p + 1 / q = 1 / r + 1`. -/
+theorem eLpNorm_convolution_le_enorm_mul [AddGroup G]  [IsTopologicalAddGroup G] [MeasurableSpace E] [OpensMeasurableSpace E]
+    [MeasurableSpace E'] [OpensMeasurableSpace E'] {p q r : ℝ≥0∞}
+    (hp : 1 ≤ p) (hq : 1 ≤ q) (hr : 1 ≤ r) (hpqr : p⁻¹ + q⁻¹ = r⁻¹ + 1)
+    {f : G → E} {g : G → E'} (hf : AEMeasurable f μ) (hg : AEMeasurable g μ) :
+    eLpNorm (f ⋆[L, μ] g) r μ ≤ ‖L‖ₑ * eLpNorm f p μ * eLpNorm g q μ := by
+  sorry
+
+
+theorem ConvolutionExists.of_memLp_memLp [AddGroup G] [MeasurableAdd₂ G]
+    [MeasurableNeg G] (μ : Measure G) [SFinite μ] [μ.IsNegInvariant] [μ.IsAddLeftInvariant]
+    [μ.IsAddRightInvariant] {p q : ENNReal} (hpq : p.HolderConjugate q)
+    (hL : ∀ (x y : G), ‖L (f x) (g y)‖ ≤ ‖f x‖ * ‖g y‖) (hf : AEStronglyMeasurable f μ)
+    (hg : AEStronglyMeasurable g μ) (hfp : MemLp f p μ) (hgq : MemLp g q μ) :
+    ConvolutionExists f g L μ := by
+sorry
