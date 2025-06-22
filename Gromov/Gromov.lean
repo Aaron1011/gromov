@@ -2766,7 +2766,17 @@ theorem f_n_norm_one (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm (f_n (S := S) n
         intro i hi
         apply mu_conv_nonneg
       )]
-      sorry
+      rw [ENNReal.ofReal_sum_of_nonneg (by
+        intro i hi
+        apply mu_conv_nonneg
+      )]
+      conv =>
+        lhs
+        arg 2
+        intro i
+        rw [← Real.enorm_of_nonneg (by
+          apply mu_conv_nonneg
+        )]
 
   rw [Summable.tsum_finsetSum]
   .
