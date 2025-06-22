@@ -2047,11 +2047,6 @@ lemma conv_exists_fin_supp (f g: G → ℝ) (hfg: f.support.Finite ∨ g.support
         exact hg
       .
         simp [myFun, opAdd]
-        apply Set.injOn_of_injective
-        intro a b hab
-        simp only [add_left_inj, neg_inj, EmbeddingLike.apply_eq_iff_eq, MulOpposite.op_inj,
-          myFun] at hab
-        exact hab
 
 
 lemma conv_exists (p q : ℝ) (hp: 0 < p) (hq: 0 < q) (hpq: p.HolderConjugate q) (f g: G → ℝ)
@@ -2321,17 +2316,17 @@ lemma f_conv_delta (f: G → ℝ) (g s: G): (Conv (S := S) f (delta s)) g = f (g
 
 lemma f_mul_mu_summable (f: G → ℝ) (g: G) (s: G):
   Summable fun a ↦
-    (f (MulOpposite.unop (Additive.toMul a))) * (Pi.single (f := (fun s ↦ ℝ) ) s (1 : ℝ) (((MulOpposite.unop (Additive.toMul a))⁻¹ * g))) := by
+    (f (MulOpposite.unop (Additive.toMul a))) * (if s = (((MulOpposite.unop (Additive.toMul a))⁻¹ * g)) then 1 else 0) := by
   apply summable_of_finite_support
   simp only [one_div, Function.support_mul, Function.support_inv]
   apply Set.Finite.inter_of_right
-  simp [Pi.single, Function.update]
   apply Set.Finite.subset (s := {(opAdd (g * s⁻¹))})
   . simp
   . intro a ha
     simp at ha
     simp [opAdd]
-    simp [← ha]
+    rw [ha]
+    simp
 
 
 lemma mu_finsupp: (mu (S := S)).support.Finite := by
@@ -2403,7 +2398,17 @@ lemma f_conv_mu (f: G → ℝ): (Conv (S := S) f (mu (S := S))) = fun g => ((1 :
         rhs
         intro x
         rw [Summable.tsum_mul_left (hf := by (
-          apply f_mul_mu_summable
+          simp [Pi.single_apply]
+          apply summable_of_finite_support
+          apply Set.Finite.subset (s := {(opAdd (g * x⁻¹ ))})
+          . simp
+          . intro z hz
+            simp
+            simp at hz
+            rw [← hz.1]
+            simp
+            rfl
+          --apply f_mul_mu_summable
         ))]
         rw [delta_conv x]
 
@@ -2431,7 +2436,19 @@ lemma f_conv_mu (f: G → ℝ): (Conv (S := S) f (mu (S := S))) = fun g => ((1 :
         exact hasSum_zero
       .
         rw [summable_mul_left_iff]
-        . apply f_mul_mu_summable
+        .
+          -- TODO - deduplicate this
+          simp [Pi.single_apply]
+          apply summable_of_finite_support
+          apply Set.Finite.subset (s := {(opAdd (g * s⁻¹ ))})
+          . simp
+          . intro z hz
+            simp
+            simp at hz
+            rw [← hz.1]
+            simp
+            rfl
+          --apply f_mul_mu_summable
         . field_simp
   . apply conv_exists_fin_supp
     right
@@ -2448,7 +2465,6 @@ theorem ofFn_succ_last (α: Type*) {n} {f : Fin (n + 1) → α} :
     conv => rhs; rw [List.ofFn_succ]
     rw [ih]
     simp
-    rfl
 
 
 lemma list_prod_eq {T : Type*} [Mul T] [One T] (f g: List T) (hfg: f = g): f.prod = g.prod := by
@@ -2772,6 +2788,7 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
       apply Set.Finite.subset (ht := supp_sum)
       simp
       exact Set.toFinite (⋃ i ∈ S, {i})
+
 
 lemma lintegral_g_eq_add (f: G → ENNReal): (∫⁻ (g: G), f g) = (∑' (g : G), f g) := by
   rw [MeasureTheory.lintegral_countable']
