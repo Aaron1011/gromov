@@ -2589,24 +2589,27 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
         . rfl
     . intro s hs
       simp [Pi.single_apply]
-      apply Summable.of_nnnorm
-      apply NNReal.summable_of_le (f := fun a => ‖(fun f ↦ Conv f mu)^[n] mu (MulOpposite.unop (Additive.toMul a))‖₊)
+      rw [← summable_norm_iff]
+      apply Summable.of_nonneg_of_le (f := fun a => ‖(fun f ↦ Conv f mu)^[n] mu (MulOpposite.unop (Additive.toMul a))‖)
+      .
+        intro x
+        simp
       . intro x
         split_ifs
         . rfl
         . simp
       .
+        rw [summable_norm_iff]
+        have conv_finsupp := mu_conv_finsupp (S := S) n
+        unfold muConv at conv_finsupp
 
-        apply conv_exists_fin_supp
-      conv =>
-        arg 1
-        intro i
-        arg 1
-        equals i = Additive.ofMul (MulOpposite.op (s * g⁻¹ )) =>
-          sorry
-
-
-      sorry
+        apply summable_of_finite_support
+        apply Set.Finite.of_injOn (f := fun a => (MulOpposite.unop (Additive.toMul a))) (ht := conv_finsupp)
+        .
+          intro a ha
+          exact ha
+        . intro a ha b hb
+          simp
     . sorry
     . sorry
 -- structure ListPrefix {T: Type*} (n: ℕ) (head: T) (suffix target: List T): Prop where
