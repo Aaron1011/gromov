@@ -2767,6 +2767,8 @@ lemma mu_conv_nonneg (n: ℕ): ∀ g, 0 ≤ muConv (S := S) n g := by
       . simp
       . simp
 
+--set_option pp.analyze true
+
 -- Proposition 3.15.1 from Vikman
 theorem f_n_norm_one (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm (f_n (S := S) n) 1 = 1 := by
   unfold f_n
@@ -2822,8 +2824,81 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
 
 
   rw [f_conv_mu]
+  conv =>
+    lhs
+    arg 1
+    arg 1
+    equals ((1: ℝ) / n) • ∑ m: Fin n, muConv (↑m + 1) =>
+      funext p
+      simp
+  simp_rw [← smul_eq_mul]
+  simp_rw [← Finset.smul_sum]
+  simp_rw [← smul_assoc]
+  rw [← Pi.smul_def]
+  conv =>
+    lhs
+    arg 1
+    rhs
+    arg 1
+    equals (1 / (n : ℝ)) • (1 / (#S : ℝ)) =>
+      simp
+      rw [mul_comm]
 
 
+
+  rw [smul_assoc]
+  rw [← smul_sub]
+
+  conv =>
+    lhs
+    arg 1
+    rhs
+    rhs
+    rhs
+    intro g
+    rw [Finset.sum_comm]
+
+  conv =>
+    lhs
+    arg 1
+    rhs
+    rhs
+    simp [Pi.smul_def]
+    intro i
+    rw [Finset.mul_sum]
+    arg 2
+    intro j
+    rw [Finset.mul_sum]
+
+  conv =>
+    lhs
+    arg 1
+    rhs
+    rhs
+    equals ∑ j: Fin n, ∑ i_1 ∈ S, fun i => (↑(#S))⁻¹ * muConv (↑j + 1) (i * i_1) =>
+      funext a
+      simp
+
+  rw [← Finset.sum_sub_distrib]
+  conv =>
+    lhs
+    arg 1
+    rhs
+    arg 2
+    intro x
+
+  rw [Finset.sub_sum]
+  simp_rw [mul_comm]
+
+  conv =>
+    lhs
+    arg 1
+    rhs
+    intro g
+    rhs
+
+
+  rw [conv_const_mul]
 #print axioms mu_conv_eq_sum
 
 -- structure ListPrefix {T: Type*} (n: ℕ) (head: T) (suffix target: List T): Prop where
