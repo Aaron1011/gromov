@@ -3151,6 +3151,41 @@ noncomputable def Laplace (f: G → ℝ) := f - (Conv f (mu (S := S)))
 lemma laplace_bounded (f: G → ℝ): MeasureTheory.eLpNorm (Laplace (S := S) f) 2 MeasureTheory.volume ≤ 2 *  MeasureTheory.eLpNorm f 2 := by
   unfold Laplace
   rw [f_conv_mu]
+  grw [MeasureTheory.eLpNorm_sub_le]
+  simp_rw [← smul_eq_mul]
+  rw [← Pi.smul_def]
+  rw [MeasureTheory.eLpNorm_const_smul]
+  conv =>
+    lhs
+    rhs
+    rhs
+    arg 1
+    equals ∑ x ∈ S, fun g => f (g • x) =>
+      funext g
+      simp
+  grw [MeasureTheory.eLpNorm_sum_le]
+  simp_rw [← Function.comp_def]
+  conv =>
+    lhs
+    rhs
+    rhs
+    arg 2
+    intro x
+    rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := MeasureTheory.volume) (by sorry) (by sorry)]
+  simp
+  rw [Real.enorm_of_nonneg (by simp)]
+  rw [← mul_assoc]
+  rw [← ENNReal.ofReal_natCast]
+  rw [← ENNReal.ofReal_mul]
+  field_simp
+  rw [div_self (by
+    simp at hS
+    simp
+    exact Finset.nonempty_iff_ne_empty.mp hS
+  )]
+  field_simp
+  rw [two_mul]
+
 
 
 
