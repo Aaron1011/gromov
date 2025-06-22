@@ -2145,7 +2145,8 @@ lemma conv_eq_sum {f h: G → ℝ} (hconv: ConvExists f h) (g: G): Conv f h g = 
   . exact (hconv (opAdd g))
 
 
-lemma conv_const_mul {f h: G → ℝ} (k: ℝ) (g: G): Conv (k • f) h g = k * Conv f h g := by
+lemma conv_smul {f h: G → ℝ} (k: ℝ): Conv (k • f) h = fun g => k * Conv f h g := by
+  funext g
   unfold Conv
   conv =>
     arg 1
@@ -2823,7 +2824,7 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
     arg 1
 
 
-  rw [f_conv_mu]
+  --rw [f_conv_mu]
   conv =>
     lhs
     arg 1
@@ -2832,20 +2833,20 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
       funext p
       simp
   simp_rw [← smul_eq_mul]
-  simp_rw [← Finset.smul_sum]
-  simp_rw [← smul_assoc]
-  rw [← Pi.smul_def]
+  --simp_rw [← Finset.smul_sum]
+  --simp_rw [← smul_assoc]
+  --rw [← Pi.smul_def]
   conv =>
     lhs
     arg 1
     rhs
     arg 1
-    equals (1 / (n : ℝ)) • (1 / (#S : ℝ)) =>
-      simp
-      rw [mul_comm]
+    rw [← Pi.smul_def]
 
 
 
+  rw [conv_smul]
+  rw [← Pi.smul_def]
   rw [smul_assoc]
   rw [← smul_sub]
 
