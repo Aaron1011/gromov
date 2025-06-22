@@ -2346,8 +2346,8 @@ lemma mu_conv_finsupp (m: ℕ): (muConv (S := S) m).support.Finite := by
   | succ n ih =>
     unfold muConv
     rw [Function.iterate_succ_apply']
-    unfold muConv at ih
-    eta_expand
+
+    --let other := (fun (g:  Additive Gᵐᵒᵖ) => (g))
     conv =>
       arg 1
       intro p
@@ -2359,17 +2359,27 @@ lemma mu_conv_finsupp (m: ℕ): (muConv (S := S) m).support.Finite := by
         apply mu_finsupp
       )]
 
+
       -- + (Additive.ofMul (MulOpposite.op q⁻¹))
-      rw [tsum_eq_sum' (s := Finset.image (fun g => (g  )) (Finset.image Additive.ofMul (Finset.image MulOpposite.op ((mu_finsupp (S := S))).toFinset))) (by
-        sorry
+      rw [tsum_eq_sum' (s := Finset.image (fun (g:  Additive Gᵐᵒᵖ) => (g)) (Finset.image Additive.ofMul (Finset.image MulOpposite.op (ih).toFinset))) (by
+        intro a ha
+        simp at ha
+        simp
+        use (MulOpposite.unop (Additive.toMul a))
+        simp
+        exact ha.1
       )]
+
+
+
+
 
     apply Set.Finite.subset (ht := Finset.support_sum _ _)
     .
 
       simp [-Function.mem_support]
       apply Set.Finite.biUnion'
-      . apply mu_finsupp (S := S)
+      . exact ih
       .
         intro i hi
         apply Set.Finite.inter_of_right
@@ -2651,6 +2661,7 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
       simp
       exact Set.toFinite (⋃ i ∈ S, {i})
 
+#print axioms mu_conv_eq_sum
 
 -- structure ListPrefix {T: Type*} (n: ℕ) (head: T) (suffix target: List T): Prop where
 --   suffix_neq: suffix ≠ []
