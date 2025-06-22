@@ -2788,7 +2788,7 @@ lemma mu_norm_one (m: ℕ): MeasureTheory.eLpNorm (muConv (S := S) m) 1 = 1 := b
   . simp
 
 -- Defintion 3.14 from Vikman
-noncomputable def f_n (n: ℕ) (g: G): ℝ := ((1: ℝ) / (n: ℝ)) * ∑ m: Fin n, muConv (S := S) (m.val + 1) g
+noncomputable def f_n (n: ℕ) (g: G): ℝ := ((1: ℝ) / (n: ℝ)) * ∑ m: Fin n, muConv (S := S) (m.val) g
 
 lemma mu_conv_nonneg (n: ℕ): ∀ g, 0 ≤ muConv (S := S) n g := by
   intro g
@@ -2824,7 +2824,7 @@ theorem f_n_norm_one (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm (f_n (S := S) n
     arg 2
     arg 1
     intro g
-    equals ∑ m: Fin (n), ‖muConv (↑m + 1) g‖ₑ =>
+    equals ∑ m: Fin (n), ‖muConv (↑m) g‖ₑ =>
       rw [Real.enorm_of_nonneg (by
         apply Finset.sum_nonneg
         intro i hi
@@ -2872,7 +2872,7 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
     lhs
     arg 1
     arg 1
-    equals ((1: ℝ) / n) • ∑ m: Fin n, muConv (↑m + 1) =>
+    equals ((1: ℝ) / n) • ∑ m: Fin n, muConv (↑m) =>
       funext p
       simp
   simp_rw [← smul_eq_mul]
@@ -2893,14 +2893,14 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
     lhs
     arg 1
     rhs
-    equals ((1 : ℝ) / (n : ℝ)) • (Conv (∑ m: Fin n, muConv (m.val + 1)) (mu (S := S))) =>
+    equals ((1 : ℝ) / (n : ℝ)) • (Conv (∑ m: Fin n, muConv (m)) (mu (S := S))) =>
       funext g
       simp
       left
       conv =>
         lhs
         arg 1
-        equals ∑ m: Fin n, muConv (S := S) (↑m + 1) =>
+        equals ∑ m: Fin n, muConv (S := S) (m) =>
           funext y
           simp
 
@@ -2914,14 +2914,14 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
       arg 2
       intro x
       rhs
-      equals muConv (↑x + 1 + 1) =>
+      equals muConv (↑x + 1) =>
         unfold muConv
-        nth_rw 2 [Function.iterate_succ_apply']
+        rw [Function.iterate_succ_apply']
     conv =>
       lhs
       arg 1
       rhs
-      equals -∑ x: Fin n, ((muConv (S := S) (↑x + 1 + 1)) - (muConv (S := S) (x.val + 1))) =>
+      equals -∑ x: Fin n, ((muConv (S := S) (↑x + 1)) - (muConv (S := S) (x.val))) =>
         simp
 
 
@@ -2930,7 +2930,7 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
       arg 1
       rhs
       rhs
-      equals (muConv (n + 1)) - muConv (1) =>
+      equals (muConv (n)) - muConv (0) =>
         induction n, hn using Nat.le_induction with
         | base => simp
         | succ y y_ge iy =>
@@ -2943,7 +2943,7 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
           conv =>
             lhs
             rhs
-            rw [Finset.sum_congr (s₂ := Finset.range y) rfl (g := fun x => if x < y then muConv (x + 1 + 1) - muConv (x + 1) else 0) (by
+            rw [Finset.sum_congr (s₂ := Finset.range y) rfl (g := fun x => if x < y then muConv (x + 1) - muConv (x) else 0) (by
               intro x hx
               simp
               simp at hx
