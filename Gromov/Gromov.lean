@@ -2796,26 +2796,38 @@ lemma mu_norm_one (m: ℕ): MeasureTheory.eLpNorm (muConv (S := S) m) 1 = 1 := b
           simp
           simp at ha
           rw [ha]
-  simp
-  norm_cast
-  rw [← ofReal_norm_eq_enorm]
-  conv =>
-    arg 1
-    rhs
-    equals ENNReal.ofReal (#(S) ^ (m + 1)) =>
-      norm_cast
-  rw [← ENNReal.ofReal_mul]
+  rw [Summable.tsum_finsetSum]
   .
+    conv =>
+      lhs
+      rhs
+      rhs
+      arg 2
+      intro i
+      simp only [eq_comm]
+      rw [tsum_ite_eq]
     simp
-
-    norm_cast
-    field_simp
-    norm_cast
-    apply div_self
-    simp
-    simp at hS
-    exact Finset.nonempty_iff_ne_empty.mp hS
-  . simp
+    rw [Real.enorm_of_nonneg (by
+      simp
+    )]
+    rw [← ENNReal.ofReal_mul]
+    .
+      field_simp
+      apply div_self
+      simp
+      simp at hS
+      exact Finset.nonempty_iff_ne_empty.mp hS
+    . simp
+  .
+    -- TODO - deduplicate this with the above goal
+    intro a ha
+    apply summable_of_finite_support
+    apply Set.Finite.subset (s := {(List.ofFn a).unattach.prod})
+    . simp
+    . intro a ha
+      simp
+      simp at ha
+      rw [ha]
 
 -- Defintion 3.14 from Vikman
 noncomputable def f_n (n: ℕ) (g: G): ℝ := ((1: ℝ) / (n: ℝ)) * ∑ m: Fin n, muConv (S := S) (m.val) g
