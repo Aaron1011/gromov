@@ -2761,11 +2761,41 @@ lemma mu_norm_one (m: ℕ): MeasureTheory.eLpNorm (muConv (S := S) m) 1 = 1 := b
   conv =>
     lhs
     rhs
-    equals (∑ x : (Fin (m + 1) → { x // x ∈ S }), (1 : ENNReal)) =>
+    equals ENNReal.ofReal (∑' (i : G), (∑ x : (Fin (m + 1) → { x // x ∈ S }), if (List.ofFn x).unattach.prod = i then 1 else 0 )) =>
+      conv =>
+        lhs
+        arg 1
+        intro i
+        rw [Real.enorm_of_nonneg (by
+          apply Finset.sum_nonneg
+          intro x hx
+          simp [delta, Pi.single_apply]
+          split_ifs
+          . simp
+          . simp
+        )]
 
-      simp [-List.ofFn_succ, Pi.single_apply]
-      sorry
 
+      rw [← ENNReal.ofReal_tsum_of_nonneg]
+      simp [Pi.single_apply]
+      . intro g
+        apply Finset.sum_nonneg
+        intro i
+        simp [Pi.single_apply]
+        split_ifs
+        . simp
+        . simp
+      .
+        apply summable_sum
+        intro i hi
+        simp only [Pi.single_apply]
+        apply summable_of_finite_support
+        apply Set.Finite.subset (s := {(List.ofFn i).unattach.prod})
+        . simp
+        . intro a ha
+          simp
+          simp at ha
+          rw [ha]
   simp
   norm_cast
   rw [← ofReal_norm_eq_enorm]
