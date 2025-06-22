@@ -2610,8 +2610,48 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
           exact ha
         . intro a ha b hb
           simp
-    . sorry
-    . sorry
+    -- TODO - deduplicate this with the above goal
+    .
+      simp [Pi.single_apply]
+      rw [← summable_norm_iff]
+      apply Summable.of_nonneg_of_le (f := fun a => ‖(fun f ↦ Conv f mu)^[n] mu (MulOpposite.unop (Additive.toMul a))‖)
+      .
+        intro x
+        simp
+      . intro x
+        split_ifs
+        . rfl
+        . simp
+      .
+        rw [summable_norm_iff]
+        have conv_finsupp := mu_conv_finsupp (S := S) n
+        unfold muConv at conv_finsupp
+
+        apply summable_of_finite_support
+        apply Set.Finite.of_injOn (f := fun a => (MulOpposite.unop (Additive.toMul a))) (ht := conv_finsupp)
+        .
+          intro a ha
+          exact ha
+        . intro a ha b hb
+          simp
+    .
+      apply conv_exists_fin_supp
+      right
+      simp [delta]
+      apply Set.Finite.subset (ht := Function.support_const_smul_subset _ _)
+      have supp_sum := Finset.support_sum (s := S) (f := fun s => Pi.single s (1: ℝ))
+      conv =>
+        arg 1
+        arg 1
+        equals fun x => ∑ s ∈ S, Pi.single s (1 : ℝ) x =>
+          funext a
+          simp
+
+      apply Set.Finite.subset (ht := supp_sum)
+      simp
+      exact Set.toFinite (⋃ i ∈ S, {i})
+
+
 -- structure ListPrefix {T: Type*} (n: ℕ) (head: T) (suffix target: List T): Prop where
 --   suffix_neq: suffix ≠ []
 --   suffix_head: suffix.head suffix_neq ≠ head
