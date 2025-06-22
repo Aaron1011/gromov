@@ -1346,7 +1346,7 @@ lemma measurable_GRepW: Measurable (fun g => GRepW (G := G) (GRepW_base (G := G)
 lemma continuous_GRepW : Continuous (fun g => GRepW (G := G) (GRepW_base (G := G) g)) := by
   fun_prop
 
-set_option synthInstance.maxHeartbeats 50000
+--set_option synthInstance.maxHeartbeats 50000
 
 lemma continous_of_map (v: W (G := G)): Continuous (fun (r: (W (G := G) →L[ℂ] W (G := G))ˣ) => r.val v) := by
   apply Continuous.comp (g := (fun r => r v)) (f := (fun (r : (W (G := G) →L[ℂ] W (G := G))ˣ) => r.val))
@@ -1450,8 +1450,8 @@ instance GL_W_Proper: ProperSpace (GL_W (G := G)) := {
 
 --#synth Bornology (GL_W (G := G))
 
-set_option maxHeartbeats 500000
-set_option synthInstance.maxHeartbeats 40000
+--set_option maxHeartbeats 500000
+--set_option synthInstance.maxHeartbeats 40000
 
 -- instance GL_Star_Mul: StarMul (W (G := G) →L[ℂ] W (G := G)) := {
 --   star := fun f => star f.toLinearMap
@@ -1977,6 +1977,25 @@ lemma count_ae_everywhere (p: G → Prop): (∀ᵐ g ∂(MeasureTheory.Measure.c
     specialize h a
     simp at ha
     contradiction
+
+@[simp]
+lemma ae_eq_everywhere {f g: G → ℝ}: (f =ᶠ[MeasureTheory.ae MeasureTheory.volume (α := G)] g) ↔ (f = g) := by
+  simp [Filter.EventuallyEq]
+  simp [MeasureTheory.volume]
+  simp_rw [my_haar_eq_count]
+  have foo := count_ae_everywhere (p := fun a => f a = g a)
+  conv at foo =>
+    rhs
+    equals f = g =>
+      have my_ext := funext_iff (f := f) (g := g)
+      simp at my_ext
+      simp
+      exact id (Iff.symm my_ext)
+
+  simp
+  simp at foo
+  exact foo
+
 
 -- Use the fact that our measure is the counting measure (since we have the discrete topology),
 -- and negating a finite set of points in an additive group leaves the cardinality unchanged
@@ -2899,6 +2918,8 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
       exact Set.toFinite (⋃ i ∈ S, {i})
 
 
+
+
 lemma lintegral_g_eq_add (f: G → ENNReal): (∫⁻ (g: G), f g) = (∑' (g : G), f g) := by
   rw [MeasureTheory.lintegral_countable']
   simp [MeasureTheory.volume]
@@ -2912,6 +2933,7 @@ lemma lintegral_g_eq_add (f: G → ENNReal): (∫⁻ (g: G), f g) = (∑' (g : G
     rw [← mul_singleton_carrier]
     simp [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
     simp [MeasureTheory.Measure.haarMeasure_self]
+
 
 lemma mu_norm_one (m: ℕ): MeasureTheory.eLpNorm (muConv (S := S) m) 1 = 1 := by
   simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm']
@@ -3437,16 +3459,178 @@ lemma laplace_bounded (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G
 
 #print axioms laplace_bounded
 
+-- The only measure-zero sets are empty sets, so we can evaluate a MemLp function by evaluating any function
+-- from the equivalence class
+lemma tolp_apply (f: G → ℝ) {p: ENNReal}  (hf: MeasureTheory.MemLp f p) (g: G): (MeasureTheory.MemLp.toLp f hf) g = f g := by
+  have eq_fun := MeasureTheory.AEEqFun.coeFn_mk f (μ := MeasureTheory.volume (α := G)) (by apply MeasureTheory.AEStronglyMeasurable.of_discrete)
+  rw [ae_eq_everywhere] at eq_fun
+  nth_rw 2 [← eq_fun]
+  rfl
+
+instance volume_mul_left_invariant: (volume (α := G)).IsMulLeftInvariant := by
+  simp [volume]
+  rw [my_haar_eq_count]
+  infer_instance
+
+instance volume_mul_right_invariant: (volume (α := G)).IsMulRightInvariant := by
+  simp [volume]
+  rw [my_haar_eq_count]
+  infer_instance
+
+
 open scoped RealInnerProductSpace
--- lemma laplace_self_adjoint (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume G))): ⟪(Laplace (S := S) f), f⟫ = ⟪f, (Laplace (S := S) f)⟫ := by
---   unfold Laplace
---   rw [f_conv_mu]
---   rw [conv_self_adjoint]
---   simp_rw [MeasureTheory.volume]
---   simp_rw [my_haar_eq_count]
---   simp_rw [MeasureTheory.Measure.haarMeasure_self]
---   simp_rw [MeasureTheory.Measure.haarMeasure_self]
---   simp_rw [MeasureTheory.Measure.haarMeasure_self]
+lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))): ⟪f, (Laplace (S := S) h)⟫ = ⟪(Laplace (S := S) f), h⟫ := by
+
+  simp [MeasureTheory.L2.inner_def]
+
+  have my_eq := ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub h (conv_mu_lp2 h))
+
+  --simp only [AddSubgroupClass.coe_sub, ae_eq_everywhere] at my_eq
+
+  -- MeasureTheory.Lp.coeFn_smul
+
+
+  conv =>
+    lhs
+    arg 2
+    intro g
+    rw [mul_comm]
+    rw [Laplace]
+    rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)]
+    simp
+    rw [mul_sub]
+    rhs
+    equals (f g • (conv_mu_lp2 h)) g =>
+      rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_smul _ _)]
+      simp
+
+  conv =>
+    lhs
+    arg 2
+    intro g
+    rhs
+    unfold conv_mu_lp2
+    rw [← MeasureTheory.MemLp.toLp_const_smul]
+
+  simp_rw [f_conv_mu]
+  simp_rw [Pi.smul_def]
+  simp
+  simp_rw [← mul_assoc]
+  simp_rw [mul_comm]
+  simp_rw [mul_assoc]
+  simp_rw [Finset.mul_sum]
+
+
+  --simp_rw [← smul_eq_mul]
+
+  conv =>
+    lhs
+    arg 2
+    intro g
+    rhs
+    arg 1
+    rhs
+    arg 1
+    intro i
+    --rw [← Finset.mul_sum]
+
+
+  simp_rw [tolp_apply]
+  rw [integral_sub]
+  rw [MeasureTheory.integral_finset_sum]
+  conv =>
+    lhs
+    rhs
+    arg 2
+    intro s
+    rw [← MeasureTheory.integral_mul_right_eq_self (g := s⁻¹)]
+    simp
+  rw [← MeasureTheory.integral_finset_sum]
+  conv =>
+    lhs
+    rhs
+    arg 2
+    intro g
+    rw [← Finset.mul_sum]
+    rw [Finset.sum_bijective (s := S) (t := S) (e := fun s => s⁻¹) (g := fun i => (f (g * i) * (h g))) (by
+      refine ⟨?_, ?_⟩
+      . exact inv_injective
+      . exact inv_surjective
+    ) (by
+      intro a
+      simp
+      have foo := hGS.has_inv a
+      refine ⟨?_, ?_⟩
+      . apply hGS.has_inv a
+      . simpa using (hGS.has_inv a⁻¹)
+    ) (by
+      simp
+    )]
+
+  simp_rw [Finset.mul_sum]
+  rw [← integral_sub]
+  simp_rw [← mul_assoc]
+  simp_rw [← Finset.sum_mul]
+  simp_rw [mul_comm]
+  conv =>
+    lhs
+    arg 2
+    intro a
+    rw [mul_comm]
+    rw [← mul_sub]
+
+
+
+  conv =>
+    rhs
+    arg 2
+    intro g
+    rw [Laplace]
+    rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)]
+    unfold conv_mu_lp2
+    simp [f_conv_mu]
+    rw [tolp_apply]
+    --rw [← MeasureTheory.MemLp.toLp_const_smul]
+
+
+  simp_rw [Finset.mul_sum]
+  sorry
+    -- rw [mul_sub]
+    -- rhs
+    -- equals (f g • (conv_mu_lp2 h)) g =>
+    --   rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_smul _ _)]
+    --   simp
+
+
+  rw [tolp_apply]
+
+
+
+
+  simp
+  simp [smul_assoc]
+  sorry
+    -- rw [← Pi.mul_apply]
+    -- unfold conv_mu_lp2
+    -- simp [f_conv_mu]
+    -- rw [← smul_eq_mul]
+    -- rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_smul _ _).symm]
+    -- rw [← Pi.smul_def]
+    -- rw [MeasureTheory.Lp.coeFn_mul]
+
+
+
+
+
+
+  -- unfold Laplace
+  -- rw [f_conv_mu]
+  -- rw [conv_self_adjoint]
+  -- simp_rw [MeasureTheory.volume]
+  -- simp_rw [my_haar_eq_count]
+  -- simp_rw [MeasureTheory.Measure.haarMeasure_self]
+  -- simp_rw [MeasureTheory.Measure.haarMeasure_self]
+  -- simp_rw [MeasureTheory.Measure.haarMeasure_self]
 
 #print axioms laplace_bounded
 
@@ -4001,7 +4185,7 @@ noncomputable def three_two_B_n_single_s (φ: (Additive G) →+ ℤ) (γ: G) (n:
 
 
 
-set_option maxHeartbeats 600000
+--set_option maxHeartbeats 600000
 
 -- If G has polynomial growth, than we can find an N such that S_n ⊆ B_n * B_n⁻¹
 lemma new_three_two_poly_growth (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD d (S := S)) (γ: G) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ) (hγ: φ γ = 1) (s: G) (s_mem: s ∈ S): ∃ n, three_two_S_n (S := {s}) φ γ (n + 1) ⊆ ((three_two_B_n (S := {s}) φ γ n) * (three_two_B_n (S := {s}) φ γ n)⁻¹)  := by
