@@ -2350,18 +2350,20 @@ lemma mu_conv_finsupp (m: ℕ): (muConv (S := S) m).support.Finite := by
     eta_expand
     conv =>
       arg 1
-      intro a
+      intro p
       arg 1
-      intro x
+      intro q
       rw [conv_eq_sum (by
         apply conv_exists_fin_supp
         right
         apply mu_finsupp
       )]
 
-      rw [tsum_eq_sum' (s := (Finset.image Additive.ofMul (Finset.image MulOpposite.op ((mu_finsupp (S := S))).toFinset))) (by
+      -- + (Additive.ofMul (MulOpposite.op q⁻¹))
+      rw [tsum_eq_sum' (s := Finset.image (fun g => (g  )) (Finset.image Additive.ofMul (Finset.image MulOpposite.op ((mu_finsupp (S := S))).toFinset))) (by
         sorry
       )]
+
     apply Set.Finite.subset (ht := Finset.support_sum _ _)
     .
 
