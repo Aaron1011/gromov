@@ -2157,6 +2157,51 @@ lemma conv_smul {f h: G → ℝ} (k: ℝ): Conv (k • f) h = fun g => k * Conv 
 
   rw [MeasureTheory.smul_convolution]
   simp
+
+
+
+-- TODO - figure out why we need this
+instance Real.t2Space: T2Space ℝ := TopologicalSpace.t2Space_of_metrizableSpace
+
+lemma conv_sum {T: Type*} (H: Finset T) (f: T → G → ℝ) (h: G → ℝ) (h_finsupp: h.support.Finite): Conv (∑ t ∈ H, f t) h = ∑ t ∈ H, (Conv (f t) h) := by
+  funext g
+  rw [conv_eq_sum]
+  .
+    simp
+    conv =>
+      rhs
+      arg 2
+      intro t
+      rw [conv_eq_sum (by
+        apply conv_exists_fin_supp
+        right
+        exact h_finsupp
+      )]
+
+    conv =>
+      lhs
+      arg 1
+      intro a
+      rw [Finset.sum_mul]
+
+    rw [Summable.tsum_finsetSum]
+    intro s hs
+    apply summable_of_finite_support
+    simp
+    apply Set.Finite.inter_of_right
+    rw [← Function.comp_def]
+    rw [Function.support_comp_eq_preimage]
+    apply Set.Finite.preimage
+    .
+      intro y hy z hz
+      simp
+    . exact h_finsupp
+  . apply conv_exists_fin_supp
+    right
+    exact h_finsupp
+
+
+
 -- Old stuff for two LP_2 function - might be useful later
     -- unfold ConvExists MeasureTheory.ConvolutionExists MeasureTheory.ConvolutionExistsAt
     -- have my_exists := conv_exists (S := S) (p := 2) (q := 2) (by simp) (by simp) (by exact Real.HolderConjugate.two_two) f (delta s) hf ?_
@@ -2224,8 +2269,6 @@ lemma f_conv_delta (f: G → ℝ) (g s: G): (Conv (S := S) f (delta s)) g = f (g
     right
     simp
 
--- TODO - figure out why we need this
-instance Real.t2Space: T2Space ℝ := TopologicalSpace.t2Space_of_metrizableSpace
 
 lemma f_mul_mu_summable (f: G → ℝ) (g: G) (s: G):
   Summable fun a ↦
