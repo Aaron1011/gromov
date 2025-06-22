@@ -2144,6 +2144,18 @@ lemma conv_eq_sum {f h: G → ℝ} (hconv: ConvExists f h) (g: G): Conv f h g = 
     simp [MeasureTheory.Measure.addHaarMeasure_self]
   . exact (hconv (opAdd g))
 
+
+lemma conv_const_mul {f h: G → ℝ} (k: ℝ) (g: G): Conv (k • f) h g = k * Conv f h g := by
+  unfold Conv
+  conv =>
+    arg 1
+    arg 1
+    equals k • (fun x => f (MulOpposite.unop (Additive.toMul x))) =>
+      funext p
+      simp
+
+  rw [MeasureTheory.smul_convolution]
+  simp
 -- Old stuff for two LP_2 function - might be useful later
     -- unfold ConvExists MeasureTheory.ConvolutionExists MeasureTheory.ConvolutionExistsAt
     -- have my_exists := conv_exists (S := S) (p := 2) (q := 2) (by simp) (by simp) (by exact Real.HolderConjugate.two_two) f (delta s) hf ?_
@@ -2228,8 +2240,30 @@ lemma f_mul_mu_summable (f: G → ℝ) (g: G) (s: G):
     simp [opAdd]
     simp [← ha]
 
+
+lemma mu_finsupp: (mu (S := S)).support.Finite := by
+  simp [mu]
+  rw [Function.support_const_smul_of_ne_zero]
+  .
+    apply Set.Finite.subset (s := ⋃ i ∈ S, Function.support (Pi.single i (1 : ℝ)))
+    .
+      simp
+      exact Set.toFinite (⋃ i ∈ S, {i})
+    .
+      conv =>
+        lhs
+        arg 1
+        equals fun (x: G) => ∑ s ∈ S, Pi.single s (1 : ℝ) x =>
+          funext a
+          simp
+      apply Finset.support_sum (s := S) (f := fun i => Pi.single i (1: ℝ))
+  . simp
+    simp at hS
+    exact Finset.nonempty_iff_ne_empty.mp hS
+
 -- Proposition 3.12, item 2, in Vikman
-lemma f_conv_mu (f: G → ℝ) (hf: ConvExists f (mu (S := S))) (g: G): (Conv (S := S) f (mu (S := S))) g = ((1 : ℝ) / (#(S) : ℝ)) * ∑ s ∈ S, f (g * s) := by
+lemma f_conv_mu (f: G → ℝ): (Conv (S := S) f (mu (S := S))) = fun g => ((1 : ℝ) / (#(S) : ℝ)) * ∑ s ∈ S, f (g * s) := by
+  funext g
   rw [conv_eq_sum]
   .
 
@@ -2306,7 +2340,9 @@ lemma f_conv_mu (f: G → ℝ) (hf: ConvExists f (mu (S := S))) (g: G): (Conv (S
         rw [summable_mul_left_iff]
         . apply f_mul_mu_summable
         . field_simp
-  . exact hf
+  . apply conv_exists_fin_supp
+    right
+    apply mu_finsupp
 
 
 -- Copied from https://github.com/leanprover/lean4/blob/6741444a63eec253a7eae7a83f1beb3de015023d/src/Init/Data/List/OfFn.lean#L81
@@ -2334,25 +2370,6 @@ lemma list_unattach_eq {T : Type*}  {p : T → Prop} (f g : List { x : T // p x 
 def NTupleSum (n: ℕ) (f: G → ℝ): ℝ := ∑ s : (Fin n → S), f ((List.ofFn s).unattach.prod)
 --∑ s ∈ (Finset.pi (Finset.range (n + 1))) (fun _ => S), f (List.ofFn (n := n + 1) (fun m => s m.val (by simp))).prod
 
-lemma mu_finsupp: (mu (S := S)).support.Finite := by
-  simp [mu]
-  rw [Function.support_const_smul_of_ne_zero]
-  .
-    apply Set.Finite.subset (s := ⋃ i ∈ S, Function.support (Pi.single i (1 : ℝ)))
-    .
-      simp
-      exact Set.toFinite (⋃ i ∈ S, {i})
-    .
-      conv =>
-        lhs
-        arg 1
-        equals fun (x: G) => ∑ s ∈ S, Pi.single s (1 : ℝ) x =>
-          funext a
-          simp
-      apply Finset.support_sum (s := S) (f := fun i => Pi.single i (1: ℝ))
-  . simp
-    simp at hS
-    exact Finset.nonempty_iff_ne_empty.mp hS
 
 lemma mu_conv_finsupp (m: ℕ): (muConv (S := S) m).support.Finite := by
   induction m with
@@ -2750,6 +2767,7 @@ lemma mu_conv_nonneg (n: ℕ): ∀ g, 0 ≤ muConv (S := S) n g := by
       . simp
       . simp
 
+-- Proposition 3.15.1 from Vikman
 theorem f_n_norm_one (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm (f_n (S := S) n) 1 = 1 := by
   unfold f_n
   simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm']
@@ -2794,6 +2812,16 @@ theorem f_n_norm_one (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm (f_n (S := S) n
     . simp
   .
     simp
+
+-- Proposition 3.15.2 from Vikman
+theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) n) - (Conv (f_n (S := S) n) (mu (S := S)))) 1 ≤ (2 : ENNReal) / (n : ENNReal) := by
+  unfold f_n
+  conv =>
+    lhs
+    arg 1
+
+
+  rw [f_conv_mu]
 
 
 #print axioms mu_conv_eq_sum
