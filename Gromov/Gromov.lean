@@ -2889,6 +2889,80 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
 
 
   rw [conv_smul]
+  conv =>
+    lhs
+    arg 1
+    rhs
+    equals ((1 : ℝ) / (n : ℝ)) • (Conv (∑ m: Fin n, muConv (m.val + 1)) (mu (S := S))) =>
+      funext g
+      simp
+      left
+      conv =>
+        lhs
+        arg 1
+        equals ∑ m: Fin n, muConv (S := S) (↑m + 1) =>
+          funext y
+          simp
+
+  rw [conv_sum]
+  . rw [← smul_sub]
+    rw [← Finset.sum_sub_distrib]
+    conv =>
+      lhs
+      arg 1
+      rhs
+      arg 2
+      intro x
+      rhs
+      equals muConv (↑x + 1 + 1) =>
+        unfold muConv
+        nth_rw 2 [Function.iterate_succ_apply']
+    conv =>
+      lhs
+      arg 1
+      rhs
+      equals -∑ x: Fin n, ((muConv (S := S) (↑x + 1 + 1)) - (muConv (S := S) (x.val + 1))) =>
+        simp
+
+
+    conv =>
+      lhs
+      arg 1
+      rhs
+      rhs
+      equals (muConv (n + 1)) - muConv (1) =>
+        induction n, hn using Nat.le_induction with
+        | base => simp
+        | succ y y_ge iy =>
+          simp at y_ge
+          rw [Finset.sum_fin_eq_sum_range]
+          rw [Finset.sum_range_succ_comm]
+          rw [Finset.sum_fin_eq_sum_range] at iy
+          simp at iy
+          simp
+          conv =>
+            lhs
+            rhs
+            rw [Finset.sum_congr (s₂ := Finset.range y) rfl (g := fun x => if x < y then muConv (x + 1 + 1) - muConv (x + 1) else 0) (by
+              intro x hx
+              simp
+              simp at hx
+              split_ifs
+              . simp
+              . omega
+            )]
+
+
+
+          rw [iy]
+          simp
+
+    rw [Finset.sum_range_sub]
+    have telescope := Finset.sum_range_sub (f := fun (x: Fin n) => muConv (S := S) (x + 1)) (by sorry)
+    rw [telescope]
+    nth_rw 1 [muConv]
+    sorry
+  . apply mu_finsupp
   rw [← Pi.smul_def]
   rw [smul_assoc]
   rw [← smul_sub]
