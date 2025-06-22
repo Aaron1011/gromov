@@ -1989,10 +1989,33 @@ instance myNegInvariant: MeasureTheory.Measure.IsNegInvariant (myHaarAddOpp (G :
 -- TODO - I don't think we can use this, as `MeasureTheory.convolution' would require our group to be commutative
 -- (via `NormedAddCommGroup`)
 open scoped Convolution
+open MeasureTheory
+-- TODO - should we define this using 'Lp'?
 noncomputable def Conv (f g: G → ℝ) (x: G) : ℝ :=
   (MeasureTheory.convolution (G := Additive (MulOpposite G)) (fun x => f x.toMul.unop) (fun x => g x.toMul.unop) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp (Additive.ofMul (MulOpposite.op x)))
 
 def ConvExists (f g: G → ℝ) := MeasureTheory.ConvolutionExists (G := Additive (MulOpposite G)) (fun x => f x.toMul.unop) (fun x => g x.toMul.unop) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp
+
+-- lemma conv_lp2 (f g: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): MemLp (Conv f g) 2 := by
+--   unfold Conv
+--   have foo := ENNReal.eLpNorm_top_convolution_le
+--     (L := (ContinuousLinearMap.mul ℝ ℝ))
+--     (f := fun (x: Additive (MulOpposite G)) => f x.toMul.unop)
+--     (g := fun (x: Additive (MulOpposite G)) => g x.toMul.unop)
+--     (p := 2) (q := 2)
+--     (μ := myHaarAddOpp)
+--     (by
+--       simp [ENNReal.HolderConjugate]
+--       exact {
+--         inv_add_inv_eq_inv := by field_simp
+--       }
+--     )
+--     (by apply AEMeasurable.of_discrete)
+--     (by apply AEMeasurable.of_discrete) 1
+--     (by simp)
+--   simp at foo
+
+
 
 
 abbrev opAdd (g : G) := Additive.ofMul (MulOpposite.op g)
@@ -3145,12 +3168,101 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
 #print axioms f_n_norm_one
 #print axioms f_n_sub_conv
 
-noncomputable def Laplace (f: G → ℝ) := f - (Conv f (mu (S := S)))
+noncomputable def Laplace (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := MeasureTheory.MemLp.toLp (f - (Conv f (mu (S := S)))) (by
+  apply MeasureTheory.MemLp.sub
+  . exact MeasureTheory.Lp.memLp f
+  .
+    rw [MeasureTheory.MemLp]
+    refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
+    simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm']
+    rw [f_conv_mu]
+    apply ENNReal.rpow_lt_top_of_nonneg
+    . simp
+    .
+      simp_rw [Finset.mul_sum]
+      --  (1 : ℝ) / (#(S) : ℝ) * f (a * s)
+      have other := MeasureTheory.memLp_finset_sum (μ := MeasureTheory.volume (α := G)) (s := S) (p := 2) (f := fun s a => ((1 : ℝ) / (#(S) : ℝ)) * f (a * s)) (by
+        intro s hs
+        simp
+        apply MeasureTheory.MemLp.const_mul
+        rw [← Function.comp_def]
+        apply MeasureTheory.MemLp.comp_of_map
+        .
+          simp [MeasureTheory.volume]
+          simp_rw [my_haar_eq_count]
+          rw [MeasureTheory.Measure.IsMulRightInvariant.map_mul_right_eq_self s]
+          have mem_f := Lp.memLp f
+          simp [volume, my_haar_eq_count] at mem_f
+          exact mem_f
+      )
+      have sum_norm := other.2
+      simp [eLpNorm, eLpNorm'] at sum_norm
+      field_simp at sum_norm
+      field_simp
+      exact sum_norm
+      --have other := Memℓp.finset_sum (α := ℕ) (E := fun _ => ℝ) (s := S) (f := fun s _ => (1: ℝ))) (p := 2)
 
--- Proposition 3.17 from Vikman
-lemma laplace_bounded (f: G → ℝ): MeasureTheory.eLpNorm (Laplace (S := S) f) 2 MeasureTheory.volume ≤ 2 *  MeasureTheory.eLpNorm f 2 := by
+      --simp at other
+      --have lp_sum := Memℓp.finset_sum (s := S) (f := fun s => ((1 : ℝ) / (#(S) : ℝ)) * f (a * s)))
+
+      --apply Memℓp.finset_sum _
+      --simp_rw [pow_two]
+
+      --grw [enorm_sum_le]
+      -- MeasureTheory.lintegral_finset_sum
+
+    unfold Conv
+    sorry
+    -- TODO - use Young's convolution inequality here
+    -- eLpNorm_top_convolution_le'
+
+
+
+    -- conv =>
+    --   lhs
+    --   lhs
+    --   arg 2
+    --   intro g
+    --   rw [f_conv_mu]
+    -- rw [lintegral_g_eq_add]
+    -- simp
+    -- simp_rw [mul_pow]
+    -- apply ENNReal.rpow_lt_top_of_nonneg
+    -- . simp
+    -- .
+    --   rw [ENNReal.tsum_mul_left]
+    --   apply WithTop.mul_ne_top
+    --   .
+    --     rw [Real.enorm_of_nonneg (by
+    --       simp
+    --     )]
+    --     rw [← ENNReal.ofReal_pow]
+    --     .
+    --       -- TODO - why doesn't simp find this?
+    --       apply ENNReal.ofReal_ne_top
+    --     . simp
+    --   . conv =>
+    --       lhs
+    --       arg 1
+    --       intro g
+    --       rw [enorm_eq_nnnorm]
+    --       rw [pow_two]
+    --       rw [← ENNReal.coe_mul]
+
+
+    --     rw [ENNReal.tsum_coe_ne_top_iff_summable]
+    --     apply Summable.mul_of_nonneg
+    --     rw [summable_nnorm_iff]
+    --     apply ENNReal.ofReal_tsum_of_nonneg
+)
+
+-- Proposition 3.17.1: "∆ is bounded" from Vikman
+-- The paper also proves that the Laplace operator is self-adjoint as part of this step,
+-- but we split it out
+lemma laplace_bounded (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): ‖(Laplace (S := S) f)‖ₑ ≤ 2 * ‖f‖ₑ := by
   unfold Laplace
-  rw [f_conv_mu]
+  simp_rw [f_conv_mu]
+  grw [norm_add_le]
   grw [MeasureTheory.eLpNorm_sub_le]
   simp_rw [← smul_eq_mul]
   rw [← Pi.smul_def]
@@ -3207,6 +3319,16 @@ lemma laplace_bounded (f: G → ℝ): MeasureTheory.eLpNorm (Laplace (S := S) f)
   . apply MeasureTheory.AEStronglyMeasurable.of_discrete
   . simp
 
+open scoped RealInnerProductSpace
+lemma laplace_self_adjoint (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume G))): ⟪(Laplace (S := S) f), f⟫ = ⟪f, (Laplace (S := S) f)⟫ := by
+  unfold Laplace
+  rw [f_conv_mu]
+  rw [conv_self_adjoint]
+  simp_rw [MeasureTheory.volume]
+  simp_rw [my_haar_eq_count]
+  simp_rw [MeasureTheory.Measure.haarMeasure_self]
+  simp_rw [MeasureTheory.Measure.haarMeasure_self]
+  simp_rw [MeasureTheory.Measure.haarMeasure_self]
 
 #print axioms laplace_bounded
 
