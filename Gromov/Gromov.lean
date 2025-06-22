@@ -3142,6 +3142,15 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
 #print axioms f_n_norm_one
 #print axioms f_n_sub_conv
 
+noncomputable def Laplace (f: G → ℝ) := f - (Conv f (mu (S := S)))
+
+-- Proposition 3.17 from Vikman
+lemma laplace_bounded (f: G → ℝ): MeasureTheory.eLpNorm (Laplace (S := S) f) 2 MeasureTheory.volume ≤ 2 *  MeasureTheory.eLpNorm f 2 := by
+  unfold Laplace
+  rw [f_conv_mu]
+
+
+
 -- Case two of Theorem 3.6
 lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℤ, F ≠ ConstLipschitzH z := by
   obtain ⟨s, hs⟩ := f_n_limit
