@@ -2957,6 +2957,9 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
           rw [iy]
           simp
 
+    simp
+    nth_rw 1 [muConv]
+    simp
     rw [Finset.sum_range_sub]
     have telescope := Finset.sum_range_sub (f := fun (x: Fin n) => muConv (S := S) (x + 1)) (by sorry)
     rw [telescope]
