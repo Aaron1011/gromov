@@ -3186,6 +3186,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     simp at h_norm_one
     simp_rw [h_norm_one]
     simp
+
   sorry
 
 -- structure ListPrefix {T: Type*} (n: ℕ) (head: T) (suffix target: List T): Prop where
