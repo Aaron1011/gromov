@@ -3176,85 +3176,33 @@ noncomputable def Laplace (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α 
     refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
     simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm']
     rw [f_conv_mu]
-    apply ENNReal.rpow_lt_top_of_nonneg
-    . simp
-    .
-      simp_rw [Finset.mul_sum]
-      --  (1 : ℝ) / (#(S) : ℝ) * f (a * s)
-      have other := MeasureTheory.memLp_finset_sum (μ := MeasureTheory.volume (α := G)) (s := S) (p := 2) (f := fun s a => ((1 : ℝ) / (#(S) : ℝ)) * f (a * s)) (by
-        intro s hs
-        simp
-        apply MeasureTheory.MemLp.const_mul
-        rw [← Function.comp_def]
-        apply MeasureTheory.MemLp.comp_of_map
-        .
-          simp [MeasureTheory.volume]
-          simp_rw [my_haar_eq_count]
-          rw [MeasureTheory.Measure.IsMulRightInvariant.map_mul_right_eq_self s]
-          have mem_f := Lp.memLp f
-          simp [volume, my_haar_eq_count] at mem_f
-          exact mem_f
-      )
-      have sum_norm := other.2
-      simp [eLpNorm, eLpNorm'] at sum_norm
-      field_simp at sum_norm
-      field_simp
-      exact sum_norm
-      --have other := Memℓp.finset_sum (α := ℕ) (E := fun _ => ℝ) (s := S) (f := fun s _ => (1: ℝ))) (p := 2)
-
-      --simp at other
-      --have lp_sum := Memℓp.finset_sum (s := S) (f := fun s => ((1 : ℝ) / (#(S) : ℝ)) * f (a * s)))
-
-      --apply Memℓp.finset_sum _
-      --simp_rw [pow_two]
-
-      --grw [enorm_sum_le]
-      -- MeasureTheory.lintegral_finset_sum
-
-    unfold Conv
-    sorry
-    -- TODO - use Young's convolution inequality here
-    -- eLpNorm_top_convolution_le'
-
-
-
-    -- conv =>
-    --   lhs
-    --   lhs
-    --   arg 2
-    --   intro g
-    --   rw [f_conv_mu]
-    -- rw [lintegral_g_eq_add]
-    -- simp
-    -- simp_rw [mul_pow]
-    -- apply ENNReal.rpow_lt_top_of_nonneg
-    -- . simp
-    -- .
-    --   rw [ENNReal.tsum_mul_left]
-    --   apply WithTop.mul_ne_top
-    --   .
-    --     rw [Real.enorm_of_nonneg (by
-    --       simp
-    --     )]
-    --     rw [← ENNReal.ofReal_pow]
-    --     .
-    --       -- TODO - why doesn't simp find this?
-    --       apply ENNReal.ofReal_ne_top
-    --     . simp
-    --   . conv =>
-    --       lhs
-    --       arg 1
-    --       intro g
-    --       rw [enorm_eq_nnnorm]
-    --       rw [pow_two]
-    --       rw [← ENNReal.coe_mul]
-
-
-    --     rw [ENNReal.tsum_coe_ne_top_iff_summable]
-    --     apply Summable.mul_of_nonneg
-    --     rw [summable_nnorm_iff]
-    --     apply ENNReal.ofReal_tsum_of_nonneg
+    --apply ENNReal.rpow_lt_top_of_nonneg
+    --. simp
+    --.
+    simp_rw [Finset.mul_sum]
+    --  (1 : ℝ) / (#(S) : ℝ) * f (a * s)
+    have other := MeasureTheory.memLp_finset_sum (μ := MeasureTheory.volume (α := G)) (s := S) (p := 2) (f := fun s a => ((1 : ℝ) / (#(S) : ℝ)) * f (a * s)) (by
+      intro s hs
+      simp
+      apply MeasureTheory.MemLp.const_mul
+      rw [← Function.comp_def]
+      apply MeasureTheory.MemLp.comp_of_map
+      .
+        simp [MeasureTheory.volume]
+        simp_rw [my_haar_eq_count]
+        rw [MeasureTheory.Measure.IsMulRightInvariant.map_mul_right_eq_self s]
+        have mem_f := Lp.memLp f
+        simp [volume, my_haar_eq_count] at mem_f
+        exact mem_f
+      . apply AEMeasurable.of_discrete
+    )
+    have sum_norm := other.2
+    simp [eLpNorm, eLpNorm'] at sum_norm
+    field_simp at sum_norm
+    field_simp
+    exact sum_norm
 )
+
 
 -- Proposition 3.17.1: "∆ is bounded" from Vikman
 -- The paper also proves that the Laplace operator is self-adjoint as part of this step,
