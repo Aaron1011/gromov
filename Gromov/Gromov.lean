@@ -229,6 +229,7 @@ noncomputable instance WordDist.instMeasureableSpaceOpp: MeasurableSpace (Additi
 noncomputable instance WordDist.instBorelSpace: BorelSpace G where
   measurable_eq := rfl
 
+
 noncomputable instance WordDist.instBorelSpaceAddOpp: BorelSpace (Additive (MulOpposite G)) where
   measurable_eq := rfl
 
@@ -265,7 +266,7 @@ instance IsTopologicalGroupAddOpp: IsTopologicalAddGroup (Additive (MulOpposite 
 
 -- Define Haar measure so that singleton sets have measure 1 -
 -- I think this is what we want in order to be able to nicely convert integrals to sums
-noncomputable def myHaar := MeasureTheory.Measure.haarMeasure (G := G) {
+noncomputable def haarSingleton: TopologicalSpace.PositiveCompacts G := {
   carrier := {1}
   isCompact' := by
     simp
@@ -276,6 +277,16 @@ noncomputable def myHaar := MeasureTheory.Measure.haarMeasure (G := G) {
       simp
     apply Set.nonempty_def.mpr
     exact ⟨1, one_mem⟩
+}
+
+lemma mul_singleton_carrier: (haarSingleton.carrier) = ({1} : (Set G)) := by
+  unfold haarSingleton
+  rfl
+
+noncomputable abbrev myHaar := MeasureTheory.Measure.haarMeasure (G := G) haarSingleton
+
+noncomputable instance WordDist.measureSpace: MeasureTheory.MeasureSpace G := {
+  volume := myHaar
 }
 
 noncomputable def addHaarSingleton: TopologicalSpace.PositiveCompacts (Additive (MulOpposite G)) := {
@@ -1815,13 +1826,18 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
 
 
 
-
-
-
+instance countable_G: Countable G := by
+  apply Function.Surjective.countable (f := fun (x: List S) => x.unattach.prod)
+  intro g
+  obtain ⟨l, hl⟩ := mem_S_prod_list (S := S) g
+  use l
+  simp only
+  unfold ProdS at hl
+  rw [hl]
 
 
 -- TODO - use the fact that G is finitely generated
-instance countableG: Countable (Additive (MulOpposite G)) := by
+instance countable_add_G: Countable (Additive (MulOpposite G)) := by
   apply Function.Surjective.countable (f := fun (x: List S) => (Additive.ofMul (MulOpposite.op (x.unattach.prod))))
   intro g
   obtain ⟨l, hl⟩ := mem_S_prod_list (S := S) g.toMul.unop
@@ -2660,6 +2676,51 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
       apply Set.Finite.subset (ht := supp_sum)
       simp
       exact Set.toFinite (⋃ i ∈ S, {i})
+
+lemma mu_norm_one (m: ℕ): MeasureTheory.eLpNorm (muConv (S := S) m) 1 = 1 := by
+  simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm']
+  rw [MeasureTheory.lintegral_countable']
+  simp [MeasureTheory.volume]
+  unfold myHaar
+  conv =>
+    arg 1
+    arg 1
+    intro a
+    rw [MeasureTheory.Measure.haar_singleton]
+    simp [MeasureTheory.Measure.haarMeasure_self]
+    rw [← mul_singleton_carrier]
+    simp [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
+    simp [MeasureTheory.Measure.haarMeasure_self]
+  simp [mu_conv_eq_sum]
+  rw [ENNReal.tsum_mul_left]
+  simp [NTupleSum, delta]
+  conv =>
+    lhs
+    rhs
+    equals (∑ x : (Fin (m + 1) → { x // x ∈ S }), (1 : ENNReal)) =>
+      sorry
+
+  simp
+  norm_cast
+  rw [← ofReal_norm_eq_enorm]
+  conv =>
+    arg 1
+    rhs
+    equals ENNReal.ofReal (#(S) ^ (m + 1)) =>
+      norm_cast
+  rw [← ENNReal.ofReal_mul]
+  .
+    simp
+
+    norm_cast
+    field_simp
+    norm_cast
+    apply div_self
+    simp
+    simp at hS
+    exact Finset.nonempty_iff_ne_empty.mp hS
+  . simp
+
 
 #print axioms mu_conv_eq_sum
 
