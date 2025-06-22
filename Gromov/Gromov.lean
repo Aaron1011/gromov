@@ -2729,6 +2729,27 @@ lemma mu_norm_one (m: ℕ): MeasureTheory.eLpNorm (muConv (S := S) m) 1 = 1 := b
 -- Defintion 3.14 from Vikman
 noncomputable def f_n (n: ℕ) (g: G): ℝ := ((1: ℝ) / (n: ℝ)) * ∑ m: Fin n, muConv (S := S) (m.val + 1) g
 
+lemma mu_conv_nonneg (n: ℕ): ∀ g, 0 ≤ muConv (S := S) n g := by
+  intro g
+  induction n with
+  | zero =>
+    simp [muConv, mu]
+    split_ifs
+    . simp
+    . simp
+  | succ n ih =>
+    rw [mu_conv_eq_sum]
+    apply mul_nonneg
+    . simp
+    .
+      simp [NTupleSum]
+      apply Finset.sum_nonneg
+      intro i hi
+      simp [delta, Pi.single_apply]
+      split_ifs
+      . simp
+      . simp
+
 theorem f_n_norm_one (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm (f_n (S := S) n) 1 = 1 := by
   unfold f_n
   simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm']
@@ -2740,6 +2761,11 @@ theorem f_n_norm_one (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm (f_n (S := S) n
     arg 1
     intro g
     equals ∑ m: Fin (n), ‖muConv (↑m + 1) g‖ₑ =>
+      rw [Real.enorm_of_nonneg (by
+        apply Finset.sum_nonneg
+        intro i hi
+        apply mu_conv_nonneg
+      )]
       sorry
 
   rw [Summable.tsum_finsetSum]
@@ -2757,7 +2783,6 @@ theorem f_n_norm_one (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm (f_n (S := S) n
       field_simp
     . simp
   .
-    intro i hi
     simp
 
 
