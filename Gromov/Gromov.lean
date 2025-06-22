@@ -3594,43 +3594,22 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
 
 
   simp_rw [Finset.mul_sum]
-  sorry
+  . sorry
+  .
+    apply MeasureTheory.integrable_finset_sum
+    intro s hs
+    sorry
+  . sorry
+  . sorry
+  . sorry
+  . sorry
     -- rw [mul_sub]
     -- rhs
     -- equals (f g • (conv_mu_lp2 h)) g =>
     --   rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_smul _ _)]
-    --   simp
+    --   sim
 
 
-  rw [tolp_apply]
-
-
-
-
-  simp
-  simp [smul_assoc]
-  sorry
-    -- rw [← Pi.mul_apply]
-    -- unfold conv_mu_lp2
-    -- simp [f_conv_mu]
-    -- rw [← smul_eq_mul]
-    -- rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_smul _ _).symm]
-    -- rw [← Pi.smul_def]
-    -- rw [MeasureTheory.Lp.coeFn_mul]
-
-
-
-
-
-
-  -- unfold Laplace
-  -- rw [f_conv_mu]
-  -- rw [conv_self_adjoint]
-  -- simp_rw [MeasureTheory.volume]
-  -- simp_rw [my_haar_eq_count]
-  -- simp_rw [MeasureTheory.Measure.haarMeasure_self]
-  -- simp_rw [MeasureTheory.Measure.haarMeasure_self]
-  -- simp_rw [MeasureTheory.Measure.haarMeasure_self]
 
 #print axioms laplace_bounded
 
