@@ -3168,40 +3168,39 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
 #print axioms f_n_norm_one
 #print axioms f_n_sub_conv
 
-noncomputable def Laplace (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := MeasureTheory.MemLp.toLp (f - (Conv f (mu (S := S)))) (by
-  apply MeasureTheory.MemLp.sub
-  . exact MeasureTheory.Lp.memLp f
-  .
-    rw [MeasureTheory.MemLp]
-    refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
-    simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm']
-    rw [f_conv_mu]
-    --apply ENNReal.rpow_lt_top_of_nonneg
-    --. simp
-    --.
-    simp_rw [Finset.mul_sum]
-    --  (1 : ℝ) / (#(S) : ℝ) * f (a * s)
-    have other := MeasureTheory.memLp_finset_sum (μ := MeasureTheory.volume (α := G)) (s := S) (p := 2) (f := fun s a => ((1 : ℝ) / (#(S) : ℝ)) * f (a * s)) (by
-      intro s hs
-      simp
-      apply MeasureTheory.MemLp.const_mul
-      rw [← Function.comp_def]
-      apply MeasureTheory.MemLp.comp_of_map
-      .
-        simp [MeasureTheory.volume]
-        simp_rw [my_haar_eq_count]
-        rw [MeasureTheory.Measure.IsMulRightInvariant.map_mul_right_eq_self s]
-        have mem_f := Lp.memLp f
-        simp [volume, my_haar_eq_count] at mem_f
-        exact mem_f
-      . apply AEMeasurable.of_discrete
-    )
-    have sum_norm := other.2
-    simp [eLpNorm, eLpNorm'] at sum_norm
-    field_simp at sum_norm
-    field_simp
-    exact sum_norm
+noncomputable def conv_mu_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := MeasureTheory.MemLp.toLp (Conv f (mu (S := S))) (by
+  rw [MeasureTheory.MemLp]
+  refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
+  simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm']
+  rw [f_conv_mu]
+  --apply ENNReal.rpow_lt_top_of_nonneg
+  --. simp
+  --.
+  simp_rw [Finset.mul_sum]
+  --  (1 : ℝ) / (#(S) : ℝ) * f (a * s)
+  have other := MeasureTheory.memLp_finset_sum (μ := MeasureTheory.volume (α := G)) (s := S) (p := 2) (f := fun s a => ((1 : ℝ) / (#(S) : ℝ)) * f (a * s)) (by
+    intro s hs
+    simp
+    apply MeasureTheory.MemLp.const_mul
+    rw [← Function.comp_def]
+    apply MeasureTheory.MemLp.comp_of_map
+    .
+      simp [MeasureTheory.volume]
+      simp_rw [my_haar_eq_count]
+      rw [MeasureTheory.Measure.IsMulRightInvariant.map_mul_right_eq_self s]
+      have mem_f := Lp.memLp f
+      simp [volume, my_haar_eq_count] at mem_f
+      exact mem_f
+    . apply AEMeasurable.of_discrete
+  )
+  have sum_norm := other.2
+  simp [eLpNorm, eLpNorm'] at sum_norm
+  field_simp at sum_norm
+  field_simp
+  exact sum_norm
 )
+
+noncomputable def Laplace (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := f - (conv_mu_lp2 f)
 
 
 -- Proposition 3.17.1: "∆ is bounded" from Vikman
@@ -3209,20 +3208,28 @@ noncomputable def Laplace (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α 
 -- but we split it out
 lemma laplace_bounded (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): ‖(Laplace (S := S) f)‖ₑ ≤ 2 * ‖f‖ₑ := by
   unfold Laplace
+  unfold conv_mu_lp2
   simp_rw [f_conv_mu]
-  grw [norm_add_le]
-  grw [MeasureTheory.eLpNorm_sub_le]
+  grw [enorm_sub_le]
+  --grw [norm_sub_le]
+  --grw [norm_add_le]
+  --grw [MeasureTheory.eLpNorm_sub_le]
   simp_rw [← smul_eq_mul]
-  rw [← Pi.smul_def]
-  rw [MeasureTheory.eLpNorm_const_smul]
+  simp_rw [← Pi.smul_def]
+  rw [MeasureTheory.MemLp.toLp_const_smul]
+  rw [enorm_smul]
+  --rw [MeasureTheory.eLpNorm_const_smul]
   conv =>
     lhs
     rhs
     rhs
     arg 1
+    arg 1
     equals ∑ x ∈ S, fun g => f (g • x) =>
       funext g
       simp
+
+  rw [MeasureTheory.Lp.enorm_toLp]
   grw [MeasureTheory.eLpNorm_sum_le]
   simp_rw [← Function.comp_def]
   conv =>
@@ -3263,9 +3270,21 @@ lemma laplace_bounded (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G
     intro i hs
     apply MeasureTheory.AEStronglyMeasurable.of_discrete
   . simp
-  . apply MeasureTheory.AEStronglyMeasurable.of_discrete
-  . apply MeasureTheory.AEStronglyMeasurable.of_discrete
-  . simp
+  .
+    apply MeasureTheory.memLp_finset_sum
+    intro s hs
+    rw [← Function.comp_def]
+    apply MeasureTheory.MemLp.comp_of_map
+    .
+      simp [MeasureTheory.volume]
+      simp_rw [my_haar_eq_count]
+      rw [MeasureTheory.Measure.IsMulRightInvariant.map_mul_right_eq_self s]
+      have mem_f := Lp.memLp f
+      simp [volume, my_haar_eq_count] at mem_f
+      exact mem_f
+    . apply AEMeasurable.of_discrete
+
+#print axioms laplace_bounded
 
 open scoped RealInnerProductSpace
 lemma laplace_self_adjoint (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume G))): ⟪(Laplace (S := S) f), f⟫ = ⟪f, (Laplace (S := S) f)⟫ := by
