@@ -3288,6 +3288,71 @@ noncomputable def conv_mu_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume 
 
 noncomputable def Laplace (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := f - (conv_mu_lp2 f)
 
+lemma measure_preserving_unop_tomul: MeasurePreserving (fun (x: Additive (MulOpposite G)) ↦ MulOpposite.unop (Additive.toMul x)) myHaarAddOpp volume := by
+  exact {
+    measurable := by
+      apply Measurable.of_discrete
+    map_eq := by
+      simp [MeasureTheory.volume]
+      rw [my_haar_eq_count]
+      rw [my_add_haar_eq_count]
+      ext g hg
+      rw [MeasureTheory.Measure.map_apply_of_aemeasurable]
+      rw [← MeasureTheory.Measure.count_injective_image (f := fun g =>  MulOpposite.unop (Additive.toMul g))]
+      conv =>
+        arg 1
+        arg 2
+        equals g =>
+          ext a
+          refine ⟨?_, ?_⟩
+          . simp
+          . simp
+
+      .
+        rw [← Function.comp_def]
+        apply Function.Injective.comp
+        . exact MulOpposite.unop_injective
+        . exact fun ⦃a₁ a₂⦄ a ↦ a
+      . apply AEMeasurable.of_discrete
+      . exact hg
+  }
+
+lemma measure_preserving_op_add: MeasurePreserving (fun (x: G) ↦ Additive.ofMul (MulOpposite.op x)) volume myHaarAddOpp := by
+  exact {
+    measurable := by
+      apply Measurable.of_discrete
+    map_eq := by
+      simp [MeasureTheory.volume]
+      rw [my_haar_eq_count]
+      rw [my_add_haar_eq_count]
+      ext g hg
+      rw [MeasureTheory.Measure.map_apply_of_aemeasurable]
+      rw [← MeasureTheory.Measure.count_injective_image (f := fun g => Additive.ofMul (MulOpposite.op g))]
+      conv =>
+        arg 1
+        arg 2
+        equals g =>
+          ext a
+          refine ⟨?_, ?_⟩
+          .
+            intro ha
+            simp at ha
+            obtain ⟨x, mem_g, a_eq⟩ := ha
+            rw [← a_eq]
+            exact mem_g
+          .
+            intro ha
+            simp
+            use MulOpposite.unop (Additive.toMul a)
+            simpa using ha
+      .
+        rw [← Function.comp_def]
+        apply Function.Injective.comp
+        . exact fun ⦃a₁ a₂⦄ a ↦ a
+        . exact MulOpposite.op_injective
+      . apply AEMeasurable.of_discrete
+      . exact hg
+  }
 
 -- Proposition 3.17.1: "∆ is bounded" from Vikman
 -- The paper also proves that the Laplace operator is self-adjoint as part of this step,
@@ -3610,6 +3675,32 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
 
 
 
+  have h_conv_f_bounded (n: ℕ) (hn: 0 < n): eLpNorm (Conv (H_n n) (f_n n)) ⊤ ≤ 1 := by
+    unfold Conv
+    rw [← Function.comp_def]
+    rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := myHaarAddOpp)]
+    .
+      grw [ENNReal.eLpNorm_convolution_le_enorm_mul (p := ⊤) (q := 1)]
+      rw [← Function.comp_def]
+      rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := volume)]
+      rw [H_n_norm]
+      rw [← Function.comp_def]
+      rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := volume)]
+      rw [f_n_norm_one]
+      simp [enorm]
+      . exact hn
+      . apply MeasureTheory.AEStronglyMeasurable.of_discrete
+      . exact measure_preserving_unop_tomul (S := S)
+      . apply MeasureTheory.AEStronglyMeasurable.of_discrete
+      . exact measure_preserving_unop_tomul (S := S)
+      . simp
+      . simp
+      . simp
+      . simp
+      . apply AEMeasurable.of_discrete
+      . apply AEMeasurable.of_discrete
+    . apply AEStronglyMeasurable.of_discrete
+    . exact measure_preserving_op_add (S := S)
   sorry
 
 -- structure ListPrefix {T: Type*} (n: ℕ) (head: T) (suffix target: List T): Prop where
