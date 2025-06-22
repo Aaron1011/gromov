@@ -1847,7 +1847,8 @@ instance countable_add_G: Countable (Additive (MulOpposite G)) := by
   rw [hl]
   simp
 
-lemma singleton_pairwise_disjoint (s: Set (Additive (MulOpposite G))) : s.PairwiseDisjoint Set.singleton := by
+
+lemma singleton_pairwise_disjoint {T: Type*} (s: Set (T)) : s.PairwiseDisjoint Set.singleton := by
   refine Set.pairwiseDisjoint_iff.mpr ?_
   intro a ha b hb hab
   unfold Set.singleton at hab
@@ -1895,6 +1896,54 @@ lemma my_add_haar_eq_count: (myHaarAddOpp (G := G)) = MeasureTheory.Measure.coun
       simp_rw [← singleton_carrier]
       simp_rw [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
       rw [MeasureTheory.Measure.addHaarMeasure_self]
+      simp only [ENNReal.tsum_one, ENat.toENNReal_eq_top, ENat.card_eq_top]
+      exact Set.infinite_coe_iff.mpr s_finite
+    . exact Set.to_countable s
+    . apply singleton_pairwise_disjoint
+    .
+      intro a ha
+      apply IsOpen.measurableSet
+      simp
+
+lemma my_haar_eq_count: (myHaar (G := G)) = MeasureTheory.Measure.count := by
+  ext s hs
+  by_cases s_finite: Set.Finite s
+  .
+    have eq_singletons := Set.biUnion_of_singleton (s := s)
+    nth_rw 1 [← eq_singletons]
+    rw [MeasureTheory.Measure.count_apply_finite s s_finite]
+    rw [MeasureTheory.measure_biUnion]
+    .
+      -- TODO - extract 'measure {a} = 1' to a lemma
+      simp_rw [MeasureTheory.Measure.haar_singleton]
+      unfold myHaar
+      simp_rw [← mul_singleton_carrier]
+      simp_rw [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
+      rw [MeasureTheory.Measure.haarMeasure_self]
+      rw [ENNReal.tsum_set_const]
+      simp
+      norm_cast
+      rw [Set.Finite.encard_eq_coe_toFinset_card s_finite]
+    . exact Set.Finite.countable s_finite
+    .
+      apply singleton_pairwise_disjoint
+    .
+      intro a ha
+      apply IsOpen.measurableSet
+      simp
+  .
+    have s_infinite: s.Infinite := by
+      exact s_finite
+    rw [MeasureTheory.Measure.count_apply_infinite s_infinite]
+    have eq_singletons := Set.biUnion_of_singleton (s := s)
+    nth_rw 1 [← eq_singletons]
+    rw [MeasureTheory.measure_biUnion]
+    .
+      simp_rw [MeasureTheory.Measure.haar_singleton]
+      unfold myHaar
+      simp_rw [← mul_singleton_carrier]
+      simp_rw [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
+      rw [MeasureTheory.Measure.haarMeasure_self]
       simp only [ENNReal.tsum_one, ENat.toENNReal_eq_top, ENat.card_eq_top]
       exact Set.infinite_coe_iff.mpr s_finite
     . exact Set.to_countable s
@@ -3090,7 +3139,54 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
 
   -- rw [conv_const_mul]
 #print axioms mu_conv_eq_sum
+#print axioms f_n_norm_one
 #print axioms f_n_sub_conv
+
+-- Case two of Theorem 3.6
+lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℤ, F ≠ ConstLipschitzH z := by
+  obtain ⟨s, hs⟩ := f_n_limit
+  rw [ENNReal.tendsto_nhds_zero] at hs
+  simp at hs
+  obtain ⟨eps, eps_gt_zero, hx⟩ := hs
+  let H_n := fun n g => if  ((f_n n g⁻¹) - (Conv (f_n n) (delta s.val)) g⁻¹) ≠ 0 then ((f_n n g⁻¹) - (Conv (f_n n) (delta s.val)) g⁻¹) / |((f_n n g⁻¹) - (Conv (f_n n) (delta s.val)) g⁻¹)| else 1
+
+  -- TODO - why can't we write '∞' here
+  have H_n_norm: ∀ n: ℕ, MeasureTheory.eLpNorm (H_n n) (p := ⊤) MeasureTheory.volume = 1 := by
+    intro n
+    simp [H_n]
+    simp [MeasureTheory.eLpNormEssSup]
+    --rw [essSup_eq_sInf]
+    simp [MeasureTheory.volume]
+    rw [my_haar_eq_count]
+    simp
+    have h_norm_one: ∀ x, ‖H_n n x‖ₑ = 1 := by
+      simp [H_n]
+      intro g
+      split_ifs
+      . simp
+      .
+
+        rename_i foo
+        by_cases val_pos: 0 ≤ ((f_n n g⁻¹) - (Conv (f_n n) (delta s.val)) g⁻¹)
+        .
+          rw [abs_of_nonneg val_pos]
+          rw [div_self]
+          . simp
+          . exact foo
+        .
+          rw [abs_of_neg]
+          .
+            rw [div_neg_self]
+            .
+              simp
+            . exact foo
+          . linarith
+
+    unfold H_n at h_norm_one
+    simp at h_norm_one
+    simp_rw [h_norm_one]
+    simp
+  sorry
 
 -- structure ListPrefix {T: Type*} (n: ℕ) (head: T) (suffix target: List T): Prop where
 --   suffix_neq: suffix ≠ []
