@@ -3171,7 +3171,19 @@ lemma laplace_bounded (f: G → ℝ): MeasureTheory.eLpNorm (Laplace (S := S) f)
     rhs
     arg 2
     intro x
-    rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := MeasureTheory.volume) (by sorry) (by sorry)]
+    rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := MeasureTheory.volume) (by
+      apply MeasureTheory.AEStronglyMeasurable.of_discrete
+    ) (by
+    simp
+    exact {
+      measurable := by
+        apply Measurable.of_discrete
+      map_eq := by
+        simp [MeasureTheory.volume]
+        rw [my_haar_eq_count]
+        exact MeasureTheory.Measure.IsMulRightInvariant.map_mul_right_eq_self x
+    }
+  )]
   simp
   rw [Real.enorm_of_nonneg (by simp)]
   rw [← mul_assoc]
@@ -3185,9 +3197,18 @@ lemma laplace_bounded (f: G → ℝ): MeasureTheory.eLpNorm (Laplace (S := S) f)
   )]
   field_simp
   rw [two_mul]
+  . simp
+  -- TODO - inline these in the right places
+  .
+    intro i hs
+    apply MeasureTheory.AEStronglyMeasurable.of_discrete
+  . simp
+  . apply MeasureTheory.AEStronglyMeasurable.of_discrete
+  . apply MeasureTheory.AEStronglyMeasurable.of_discrete
+  . simp
 
 
-
+#print axioms laplace_bounded
 
 -- Case two of Theorem 3.6
 lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℤ, F ≠ ConstLipschitzH z := by
