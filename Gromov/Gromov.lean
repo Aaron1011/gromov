@@ -2860,7 +2860,7 @@ theorem f_n_norm_one (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm (f_n (S := S) n
     simp
 
 -- Proposition 3.15.2 from Vikman
-theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) n) - (Conv (f_n (S := S) n) (mu (S := S)))) 1 ≤ (2 : ENNReal) / (n : ENNReal) := by
+theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) n) - (Conv (f_n (S := S) n) (mu (S := S)))) 1 ≤ ENNReal.ofReal ((2 : ℝ) / (n : ℝ)) := by
   unfold f_n
   conv =>
     lhs
@@ -2905,7 +2905,8 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
           simp
 
   rw [conv_sum]
-  . rw [← smul_sub]
+  .
+    rw [← smul_sub]
     rw [← Finset.sum_sub_distrib]
     conv =>
       lhs
@@ -2965,8 +2966,10 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
         apply MeasureTheory.eLpNorm_const_smul_le
       _ ≤ ‖(n: ℝ)⁻¹‖ₑ * (MeasureTheory.eLpNorm ((mu)) 1 MeasureTheory.volume + (MeasureTheory.eLpNorm ((muConv n)) 1 MeasureTheory.volume)) := by
         have sub_le := MeasureTheory.eLpNorm_sub_le (p := 1) (f := mu (S := S)) (g := muConv (S := S) n) (μ := MeasureTheory.volume) ?_ ?_ (by simp)
-        expose_names
-        apply mul_le_mul_left' sub_le
+        .
+          apply mul_le_mul_left' sub_le
+        . apply MeasureTheory.AEStronglyMeasurable.of_discrete
+        . apply MeasureTheory.AEStronglyMeasurable.of_discrete
       _ ≤ ENNReal.ofReal ((2: ℝ) / (n: ℝ)) := by
         rw [mu_norm_one]
         have mu_single_norm := mu_norm_one (S := S) 0
@@ -2981,6 +2984,7 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
         rw [mul_comm]
         field_simp
         simp
+  . exact mu_finsupp
   --   MeasureTheory.eLpNorm_add_le
   --   rw [MeasureTheory.eLpNorm_nsmul]
   --   rw [Finset.sum_range_sub]
@@ -3044,6 +3048,7 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
 
   -- rw [conv_const_mul]
 #print axioms mu_conv_eq_sum
+#print axioms f_n_sub_conv
 
 -- structure ListPrefix {T: Type*} (n: ℕ) (head: T) (suffix target: List T): Prop where
 --   suffix_neq: suffix ≠ []
