@@ -2960,66 +2960,73 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
     simp
     nth_rw 1 [muConv]
     simp
-    rw [Finset.sum_range_sub]
-    have telescope := Finset.sum_range_sub (f := fun (x: Fin n) => muConv (S := S) (x + 1)) (by sorry)
-    rw [telescope]
-    nth_rw 1 [muConv]
-    sorry
-  . apply mu_finsupp
-  rw [← Pi.smul_def]
-  rw [smul_assoc]
-  rw [← smul_sub]
+    calc
+      _ ≤ ‖(↑n)⁻¹‖ₑ * MeasureTheory.eLpNorm ((mu - muConv n)) 1 MeasureTheory.volume := by
+        apply MeasureTheory.eLpNorm_const_smul_le
+      _ ≤ 2 / ↑n := by
+        apply MeasureTheory.eLpNorm_sub_le
+  --   MeasureTheory.eLpNorm_add_le
+  --   rw [MeasureTheory.eLpNorm_nsmul]
+  --   rw [Finset.sum_range_sub]
+  --   have telescope := Finset.sum_range_sub (f := fun (x: Fin n) => muConv (S := S) (x + 1)) (by sorry)
+  --   rw [telescope]
+  --   nth_rw 1 [muConv]
+  --   sorry
+  -- . apply mu_finsupp
+  -- rw [← Pi.smul_def]
+  -- rw [smul_assoc]
+  -- rw [← smul_sub]
 
-  conv =>
-    lhs
-    arg 1
-    rhs
-    rhs
-    rhs
-    intro g
-    rw [Finset.sum_comm]
+  -- conv =>
+  --   lhs
+  --   arg 1
+  --   rhs
+  --   rhs
+  --   rhs
+  --   intro g
+  --   rw [Finset.sum_comm]
 
-  conv =>
-    lhs
-    arg 1
-    rhs
-    rhs
-    simp [Pi.smul_def]
-    intro i
-    rw [Finset.mul_sum]
-    arg 2
-    intro j
-    rw [Finset.mul_sum]
+  -- conv =>
+  --   lhs
+  --   arg 1
+  --   rhs
+  --   rhs
+  --   simp [Pi.smul_def]
+  --   intro i
+  --   rw [Finset.mul_sum]
+  --   arg 2
+  --   intro j
+  --   rw [Finset.mul_sum]
 
-  conv =>
-    lhs
-    arg 1
-    rhs
-    rhs
-    equals ∑ j: Fin n, ∑ i_1 ∈ S, fun i => (↑(#S))⁻¹ * muConv (↑j + 1) (i * i_1) =>
-      funext a
-      simp
+  -- conv =>
+  --   lhs
+  --   arg 1
+  --   rhs
+  --   rhs
+  --   equals ∑ j: Fin n, ∑ i_1 ∈ S, fun i => (↑(#S))⁻¹ * muConv (↑j + 1) (i * i_1) =>
+  --     funext a
+  --     simp
 
-  rw [← Finset.sum_sub_distrib]
-  conv =>
-    lhs
-    arg 1
-    rhs
-    arg 2
-    intro x
+  -- rw [← Finset.sum_sub_distrib]
+  -- conv =>
+  --   lhs
+  --   arg 1
+  --   rhs
+  --   arg 2
+  --   intro x
 
-  rw [Finset.sub_sum]
-  simp_rw [mul_comm]
+  -- rw [Finset.sub_sum]
+  -- simp_rw [mul_comm]
 
-  conv =>
-    lhs
-    arg 1
-    rhs
-    intro g
-    rhs
+  -- conv =>
+  --   lhs
+  --   arg 1
+  --   rhs
+  --   intro g
+  --   rhs
 
 
-  rw [conv_const_mul]
+  -- rw [conv_const_mul]
 #print axioms mu_conv_eq_sum
 
 -- structure ListPrefix {T: Type*} (n: ℕ) (head: T) (suffix target: List T): Prop where
