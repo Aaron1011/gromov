@@ -3659,10 +3659,10 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
 
 -- Note - this might only true because our measure is equivalen to the counting measure,
 -- so a.e. is the same thing as everywhere.
-lemma lp_finset_sum {S: Finset G} (f: G → (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))) (g: G): (∑ s ∈ S, (f s) g) = ((∑ s ∈ S, f s) : (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))) g := by
-  have foo := Finset.sum_induction (p := fun (m: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))) => m g = (∑ s ∈ S, f s g)) (s := S)
+lemma lp_finset_sum {R: Finset G} (f: G → (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))) (g: G): (∑ s ∈ R, (f s) g) = ((∑ s ∈ R, f s) : (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))) g := by
+  -- have foo := Finset.sum_induction (p := fun (m: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))) => m g = (∑ s ∈ S, f s g)) (s := S)
   rw [eq_comm]
-  refine Finset.induction_on S ?_ ?_
+  refine Finset.induction_on R ?_ ?_
   .
     simp only [Finset.sum_empty]
     rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)]
@@ -3677,7 +3677,7 @@ lemma lp_finset_sum {S: Finset G} (f: G → (MeasureTheory.Lp ℝ 2 (μ := volum
 
 
 
-
+set_option maxHeartbeats 200000 in
 lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))): 0 ≤ ⟪f, (Laplace (S := S) f)⟫ := by
   unfold Laplace
   rw [inner_sub_right]
@@ -3687,6 +3687,13 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
   simp_rw [← smul_eq_mul]
   simp_rw [← Pi.smul_def]
   rw [MemLp.toLp_const_smul]
+
+  have comp_mul_mem_lp (i: G) (f: MeasureTheory.Lp ℝ 2 (μ := volume)): MemLp (f ∘ (fun x => i * x)) 2 (μ := volume) := by
+    apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
+    . apply MeasureTheory.Lp.memLp f
+    . exact measurePreserving_mul_left volume i
+
+
   conv =>
     rhs
     rhs
@@ -3695,8 +3702,15 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
     arg 1
     intro i
     rhs
-    equals fun x => (f ∘ (fun a => i * a)) x =>
+    equals fun x => (MemLp.toLp _  (comp_mul_mem_lp i f)) x =>
+      funext x
       simp
+      rw [tolp_apply]
+      simp
+
+
+
+
 
   conv =>
     rhs
@@ -3705,7 +3719,7 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
     rhs
     arg 1
     intro i
-    rw [lp_finset_sum]
+    rw [lp_finset_sum (g := i)]
     tactic =>
       nth_rw 2 [← Function.comp_def]
 
