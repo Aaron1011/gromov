@@ -3470,6 +3470,12 @@ lemma tolp_apply (f: G → ℝ) {p: ENNReal}  (hf: MeasureTheory.MemLp f p) (g: 
   nth_rw 2 [← eq_fun]
   rfl
 
+lemma tolp_val_apply (f: G → ℝ) {p: ENNReal}  (hf: MeasureTheory.MemLp f p) (g: G): (MeasureTheory.MemLp.toLp f hf).val g = f g := by
+  have eq_fun := MeasureTheory.AEEqFun.coeFn_mk f (μ := MeasureTheory.volume (α := G)) (by apply MeasureTheory.AEStronglyMeasurable.of_discrete)
+  rw [ae_eq_everywhere] at eq_fun
+  nth_rw 2 [← eq_fun]
+  rfl
+
 --lemma lp_apply (f: Lp ℝ 2 (μ := volume (α := G)):
 
 instance volume_mul_left_invariant: (volume (α := G)).IsMulLeftInvariant := by
@@ -3691,10 +3697,10 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
   simp_rw [← Pi.smul_def]
   rw [MemLp.toLp_const_smul]
 
-  have comp_mul_mem_lp (i: G) (f: MeasureTheory.Lp ℝ 2 (μ := volume)): MemLp (f ∘ (fun x => i * x)) 2 (μ := volume) := by
-    apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
-    . apply MeasureTheory.Lp.memLp f
-    . exact measurePreserving_mul_left volume i
+  -- have comp_mul_mem_lp (i: G) (f: MeasureTheory.Lp ℝ 2 (μ := volume)): MemLp (f ∘ (fun x => i * x)) 2 (μ := volume) := by
+  --   apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
+  --   . apply MeasureTheory.Lp.memLp f
+  --   . exact measurePreserving_mul_left volume i
 
 
   conv =>
@@ -3702,13 +3708,32 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
     rhs
     rhs
     arg 2
-    equals ∑ x ∈ S, MemLp.toLp (fun i => f (i • x)) sorry =>
+    equals ∑ x ∈ S, MemLp.toLp (fun i => f (i • x)) (by
+      apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
+      . apply MeasureTheory.Lp.memLp f
+      . exact measurePreserving_mul_right volume x
+    ) =>
+      apply Lp.ext
       sorry
+      -- rw [ae_eq_everywhere]
+      -- funext a
+      -- --simp
+      -- rw [tolp_apply]
+      -- conv =>
+      --   rhs
+      -- sorry
+
+
+
+
 
   rw [inner_smul_right]
   rw [inner_sum]
 
-  let conv_f_delta_lp (i: G) :=  MemLp.toLp (Conv (f) (delta i⁻¹)) (μ := volume) (p := 2) sorry
+  let conv_f_delta_lp (i: G) :=  MemLp.toLp (Conv (f) (delta i⁻¹)) (μ := volume) (p := 2) (
+
+    sorry
+  )
 
   conv =>
     rhs
@@ -3771,8 +3796,12 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
       rw [← mul_assoc]
       simp [s_card_ne_zero]
       rw [pow_two]
-  . sorry
-
+  .
+    apply MeasureTheory.memLp_finset_sum
+    intro s hs
+    apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
+    . apply MeasureTheory.Lp.memLp f
+    . exact measurePreserving_mul_right volume s
 
 
 
