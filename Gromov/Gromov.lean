@@ -3467,6 +3467,8 @@ lemma tolp_apply (f: G → ℝ) {p: ENNReal}  (hf: MeasureTheory.MemLp f p) (g: 
   nth_rw 2 [← eq_fun]
   rfl
 
+--lemma lp_apply (f: Lp ℝ 2 (μ := volume (α := G)):
+
 instance volume_mul_left_invariant: (volume (α := G)).IsMulLeftInvariant := by
   simp [volume]
   rw [my_haar_eq_count]
@@ -3654,6 +3656,67 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
     -- equals (f g • (conv_mu_lp2 h)) g =>
     --   rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_smul _ _)]
     --   sim
+
+-- Note - this might only true because our measure is equivalen to the counting measure,
+-- so a.e. is the same thing as everywhere.
+lemma lp_finset_sum {S: Finset G} (f: G → (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))) (g: G): (∑ s ∈ S, (f s) g) = ((∑ s ∈ S, f s) : (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))) g := by
+  have foo := Finset.sum_induction (p := fun (m: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))) => m g = (∑ s ∈ S, f s g)) (s := S)
+  rw [eq_comm]
+  refine Finset.induction_on S ?_ ?_
+  .
+    simp only [Finset.sum_empty]
+    rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)]
+    simp
+  .
+    intro a s ha sum_eq
+    rw [Finset.sum_insert ha]
+    rw [Finset.sum_insert ha]
+    rw [← sum_eq]
+    rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_add _ _)]
+    simp
+
+
+
+
+lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))): 0 ≤ ⟪f, (Laplace (S := S) f)⟫ := by
+  unfold Laplace
+  rw [inner_sub_right]
+  rw [real_inner_self_eq_norm_sq]
+  rw [conv_mu_lp2]
+  simp_rw [f_conv_mu]
+  simp_rw [← smul_eq_mul]
+  simp_rw [← Pi.smul_def]
+  rw [MemLp.toLp_const_smul]
+  conv =>
+    rhs
+    rhs
+    rhs
+    arg 2
+    arg 1
+    intro i
+    rhs
+    equals fun x => (f ∘ (fun a => i * a)) x =>
+      simp
+
+  conv =>
+    rhs
+    rhs
+    rhs
+    rhs
+    arg 1
+    intro i
+    rw [lp_finset_sum]
+    tactic =>
+      nth_rw 2 [← Function.comp_def]
+
+  rw [inner_sum]
+
+  conv =>
+    rhs
+    arg 2
+    intro a
+    --rw [tolp_apply]
+
 
 
 
