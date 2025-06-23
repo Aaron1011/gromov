@@ -3756,16 +3756,22 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
         intro x
         rhs
         equals ‖f‖ =>
-          sorry
-
+          simp
+          rw [← Function.comp_def]
+          rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := volume)]
+          . simp [norm]
+          . apply MeasureTheory.AEStronglyMeasurable.of_discrete
+          . exact measurePreserving_mul_right volume x
       simp
       have s_card_ne_zero: (#S : ℝ) ≠ 0 := by
-        sorry
+        simp
+        simp at hS
+        exact Finset.nonempty_iff_ne_empty.mp hS
 
       rw [← mul_assoc]
       simp [s_card_ne_zero]
       rw [pow_two]
-    . sorry
+  . sorry
 
 
 
