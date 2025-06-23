@@ -2013,6 +2013,7 @@ open MeasureTheory
 noncomputable def Conv (f g: G → ℝ) (x: G) : ℝ :=
   (MeasureTheory.convolution (G := Additive (MulOpposite G)) (fun x => f x.toMul.unop) (fun x => g x.toMul.unop) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp (Additive.ofMul (MulOpposite.op x)))
 
+
 def ConvExists (f g: G → ℝ) := MeasureTheory.ConvolutionExists (G := Additive (MulOpposite G)) (fun x => f x.toMul.unop) (fun x => g x.toMul.unop) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp
 
 -- lemma conv_lp2 (f g: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): MemLp (Conv f g) 2 := by
@@ -2316,8 +2317,42 @@ lemma conv_eq_sum {f h: G → ℝ} (hconv: ConvExists f h) (g: G): Conv f h g = 
     simp [MeasureTheory.Measure.addHaarMeasure_self]
   . exact (hconv (opAdd g))
 
+lemma conv_eq_sum'  {f h: G → ℝ} (hconv: ConvExists f h): Conv f h = fun g => ∑' (a : Additive Gᵐᵒᵖ), f (MulOpposite.unop (Additive.toMul a)) * h ((MulOpposite.unop (Additive.toMul a))⁻¹ * g) := by
+  funext g
+  exact conv_eq_sum hconv g
 
-lemma conv_smul {f h: G → ℝ} (k: ℝ): Conv (k • f) h = fun g => k * Conv f h g := by
+
+-- Linearity lemmas for convolution - this is basically just wrapping the MeasureTheory.ConvolutionExists lemmas,
+-- specialized for our own Additive/MulOpposite wrappers
+lemma conv_add_right {f g h: G → ℝ} (h_fg: ConvExists f g) (h_fh : ConvExists f h):  Conv f (g + h) = Conv f g + Conv f h := by
+  unfold Conv
+  conv =>
+    lhs
+    intro x
+    arg 2
+    equals (fun x => g (MulOpposite.unop (Additive.toMul x))) + (fun x => h (MulOpposite.unop (Additive.toMul x))) =>
+      rfl
+
+  rw [MeasureTheory.ConvolutionExists.distrib_add]
+  . rfl
+  . exact h_fg
+  . exact h_fh
+
+lemma conv_add_left {f g h: G → ℝ} (h_fh: ConvExists f h) (h_gh : ConvExists g h):  Conv (f + g) h = Conv f h + Conv g h := by
+  unfold Conv
+  conv =>
+    lhs
+    intro x
+    arg 1
+    equals (fun x => f (MulOpposite.unop (Additive.toMul x))) + (fun x => g (MulOpposite.unop (Additive.toMul x))) =>
+      rfl
+
+  rw [MeasureTheory.ConvolutionExists.add_distrib]
+  . rfl
+  . exact h_fh
+  . exact h_gh
+
+lemma conv_smul {f h: G → ℝ} (k: ℝ): Conv (k • f) h = k • Conv f h := by
   funext g
   unfold Conv
   conv =>
@@ -3311,6 +3346,100 @@ noncomputable def conv_mu_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume 
   exact sum_norm
 )
 
+instance volume_finite_compact: IsFiniteMeasureOnCompacts (volume (α := G)) := by
+  simp [volume]
+  rw [my_haar_eq_count]
+  exact {
+    lt_top_of_isCompact := by
+      intro k hk
+      have finite := IsCompact.finite hk (by infer_instance)
+      exact Measure.count_apply_lt_top.mpr finite
+  }
+
+
+-- The convolution of an Lp2 function with a finitely-supported function is LP2
+noncomputable def conv_finsupp_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))) (g: G → ℝ) (hg: g.support.Finite): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := MeasureTheory.MemLp.toLp (Conv f g) (by
+  apply Continuous.memLp_of_hasCompactSupport
+  . exact continuous_of_discreteTopology
+  .
+    unfold HasCompactSupport
+    rw [isCompact_iff_finite]
+    dsimp [tsupport]
+    rw [closure_discrete]
+    unfold Conv
+    unfold MeasureTheory.convolution
+    simp
+    simp only [Function.support_mul]
+    match hfg with
+    | .inl hf =>
+      apply Set.Finite.inter_of_left
+      apply Set.Finite.subset (s := opAdd '' f.support)
+      . unfold opAdd
+        exact Set.Finite.image (fun g ↦ Additive.ofMul (MulOpposite.op g)) hf
+      . intro a ha
+        simp at ha
+        simp [opAdd]
+        use a.toMul.unop
+        simp only [MulOpposite.op_unop, ofMul_toMul, and_true]
+        exact ha
+    | .inr hg =>
+      apply Set.Finite.inter_of_right
+      let myFun := fun a => -(opAdd a) + x
+      have finite_image := Set.finite_image_iff (f := myFun) (s := g.support) ?_
+      .
+        conv =>
+          arg 1
+          equals (myFun '' Function.support g) =>
+            ext a
+            simp
+            refine ⟨?_, ?_⟩
+            . intro ha
+              use (MulOpposite.unop (Additive.toMul a))⁻¹ * MulOpposite.unop (Additive.toMul x)
+              refine ⟨ha, ?_⟩
+              simp [myFun, opAdd]
+            . intro ha
+              simp [myFun, opAdd] at ha
+              obtain ⟨b, b_zero, a_eq⟩ := ha
+              rw [← a_eq]
+              simp [b_zero]
+        rw [finite_image]
+        exact hg
+      .
+        simp [myFun, opAdd]
+
+  rw [f_conv_mu]
+  --apply ENNReal.rpow_lt_top_of_nonneg
+  --. simp
+  --.
+  simp_rw [Finset.mul_sum]
+  --  (1 : ℝ) / (#(S) : ℝ) * f (a * s)
+  have other := MeasureTheory.memLp_finset_sum (μ := MeasureTheory.volume (α := G)) (s := S) (p := 2) (f := fun s a => ((1 : ℝ) / (#(S) : ℝ)) * f (a * s)) (by
+    intro s hs
+    simp
+    apply MeasureTheory.MemLp.const_mul
+    rw [← Function.comp_def]
+    apply MeasureTheory.MemLp.comp_of_map
+    .
+      simp [MeasureTheory.volume]
+      simp_rw [my_haar_eq_count]
+      rw [MeasureTheory.Measure.IsMulRightInvariant.map_mul_right_eq_self s]
+      have mem_f := Lp.memLp f
+      simp [volume, my_haar_eq_count] at mem_f
+      exact mem_f
+    . apply AEMeasurable.of_discrete
+  )
+  have sum_norm := other.2
+  simp [eLpNorm, eLpNorm'] at sum_norm
+  field_simp at sum_norm
+  field_simp
+  exact sum_norm
+)
+
+-- The Vikman paper defines the Laplace operator as a function ' ∆ : ℓ2(G) → ℓ2(G)'
+-- However, we later have '∆ H_n', where H_n is only known to be in L∞
+-- We should eventually refactor this, but for we, we just define it twice, once with just plain functions
+-- The 'b' is for 'base' (we should come up with a better name)
+noncomputable def Laplace_b (f: G → ℝ): G → ℝ := f - (Conv f (mu (S := S)))
 noncomputable def Laplace (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := f - (conv_mu_lp2 f)
 
 lemma measure_preserving_unop_tomul: MeasurePreserving (fun (x: Additive (MulOpposite G)) ↦ MulOpposite.unop (Additive.toMul x)) myHaarAddOpp volume := by
@@ -3686,6 +3815,7 @@ lemma lp_finset_sum {R: Finset G} (f: G → (MeasureTheory.Lp ℝ 2 (μ := volum
 
 
 
+-- Proposition 3.17.2: "∆ is positive semidefinite" from Vikman
 set_option maxHeartbeats 200000 in
 lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))): 0 ≤ ⟪f, (Laplace (S := S) f)⟫ := by
   unfold Laplace
@@ -3890,6 +4020,23 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
 
 
 
+noncomputable def Laplace_linear: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) →ₗ[ℝ] (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) := {
+  toFun := Laplace
+  map_add' := by
+    sorry
+  map_smul' := by
+    intro c f
+    simp
+    nth_rw 1 [Laplace]
+    sorry
+}
+-- spectrum.norm_le_norm_mul_of_mem
+lemma laplce_spectrum_real (z: ℂ) (hz: z ∈ spectrum ℂ (Laplace_linear (S := S))): z.im = 0 := by
+  sorry
+
+lemma laplace_spectrum_contains_zero: 0 ∈ spectrum ℝ (Laplace_linear (S := S)) := by
+  sorry
+
 #print axioms laplace_bounded
 #print axioms laplace_self_adjoint
 #print axioms laplace_positive_semidefinite
@@ -3904,6 +4051,20 @@ lemma f_n_fin_supp (n: ℕ): (f_n (S := S) n).support.Finite := by
   . intro m hm
     apply mu_conv_finsupp
 
+lemma laplace_conv_eq_laplace_right (f g: G → ℝ): Laplace_b (Conv f g) = Conv f (Laplace_b g) := by
+  simp_rw [Laplace_b]
+  rw [sub_eq_add_neg]
+  conv =>
+    lhs
+    rhs
+    equals (-1 : ℝ) • Conv (Conv f g) (mu (S := S)) =>
+      sorry
+  rw [neg_eq_neg_one_mul]
+  rw [← smul_eq_mul]
+  have foo := conv_smul (k := -1) (f := (Conv f g)) (h := mu (S := S))
+  rw [← foo]
+
+  rw [← conv_add_left]
 
 -- Case two of Theorem 3.6
 lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℤ, F ≠ ConstLipschitzH z := by
@@ -4145,6 +4306,17 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
       . apply AEMeasurable.of_discrete
     . apply AEStronglyMeasurable.of_discrete
     . exact measure_preserving_op_add (S := S)
+
+  have conv_laplce_norm (n: ℕ): eLpNorm ((Conv (S := S) (Laplace_b (H_n n)) (f_n n))) ⊤ = eLpNorm (Conv (S := S) (H_n n) (Laplace_b (f_n n))) ⊤ := by
+    rw [conv_eq_sum']
+    . rw [conv_eq_sum']
+      .
+        simp_rw [Laplace_b]
+        simp_rw [f_conv_mu]
+        sorry
+      . sorry
+    . sorry
+
   sorry
 
 -- structure ListPrefix {T: Type*} (n: ℕ) (head: T) (suffix target: List T): Prop where
