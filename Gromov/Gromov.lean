@@ -3692,6 +3692,9 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
   rw [inner_sub_right]
   rw [real_inner_self_eq_norm_sq]
   rw [conv_mu_lp2]
+  rw [MeasureTheory.L2.inner_def]
+  simp_rw [tolp_apply]
+  rw [← MeasureTheory.L2.inner_def]
   simp_rw [f_conv_mu]
   simp_rw [← smul_eq_mul]
   simp_rw [← Pi.smul_def]
@@ -3713,15 +3716,29 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
       . apply MeasureTheory.Lp.memLp f
       . exact measurePreserving_mul_right volume x
     ) =>
+
       apply Lp.ext
-      sorry
-      -- rw [ae_eq_everywhere]
-      -- funext a
-      -- --simp
-      -- rw [tolp_apply]
-      -- conv =>
-      --   rhs
-      -- sorry
+      rw [ae_eq_everywhere]
+      funext a
+      --simp
+      rw [tolp_apply]
+      conv =>
+        rhs
+      rw [Finsupp.sum_apply'']
+
+      rw [eq_comm]
+      refine Finset.induction_on S ?_ ?_
+      .
+        simp only [Finset.sum_empty]
+        rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)]
+        simp
+      .
+        intro a s ha sum_eq
+        rw [Finset.sum_insert ha]
+        rw [Finset.sum_insert ha]
+        rw [← sum_eq]
+        rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_add _ _)]
+        simp
 
 
 
