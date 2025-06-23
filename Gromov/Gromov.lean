@@ -2441,6 +2441,9 @@ lemma f_conv_delta (f: G → ℝ) (g s: G): (Conv (S := S) f (delta s)) g = f (g
     right
     simp
 
+lemma f_conv_delta_helper (f: G → ℝ) (s: G): (Conv (S := S) f (delta s)) = fun g => f (g * s⁻¹) := by
+  funext g
+  exact f_conv_delta f g s
 
 lemma f_mul_mu_summable (f: G → ℝ) (g: G) (s: G):
   Summable fun a ↦
@@ -3699,37 +3702,70 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
     rhs
     rhs
     arg 2
-    arg 1
-    intro i
-    rhs
-    equals fun x => (MemLp.toLp _  (comp_mul_mem_lp i f)) x =>
-      funext x
-      simp
-      rw [tolp_apply]
-      simp
+    equals ∑ x ∈ S, MemLp.toLp (fun i => f (i • x)) sorry =>
+      sorry
 
-
-
-
-
-  conv =>
-    rhs
-    rhs
-    rhs
-    rhs
-    arg 1
-    intro i
-    rw [lp_finset_sum (g := i)]
-    tactic =>
-      nth_rw 2 [← Function.comp_def]
-
+  rw [inner_smul_right]
   rw [inner_sum]
 
+  let conv_f_delta_lp (i: G) :=  MemLp.toLp (Conv (f) (delta i⁻¹)) (μ := volume) (p := 2) sorry
+
   conv =>
     rhs
+    rhs
+    rhs
     arg 2
-    intro a
-    --rw [tolp_apply]
+    intro i
+    rhs
+    equals conv_f_delta_lp i =>
+      unfold conv_f_delta_lp
+      rw [f_conv_delta_helper]
+      simp
+    -- arg 1
+    -- intro i
+    -- rhs
+    -- equals fun x => (fun i => (MemLp.toLp _  (comp_mul_mem_lp i f)) x) i =>
+    --   funext x
+    --   simp
+    --   rw [tolp_apply]
+    --   simp
+  have sum_le := Finset.sum_le_sum (g := fun i => ‖f‖ * ‖conv_f_delta_lp i‖) (f := fun i => ⟪f, conv_f_delta_lp i⟫) (s := S) (by
+    intro s hs
+    simp
+    have foo := norm_inner_le_norm (x := f) (y := conv_f_delta_lp s) (𝕜 := ℝ)
+    rw [Real.norm_eq_abs] at foo
+    exact real_inner_le_norm f (conv_f_delta_lp s)
+  )
+  rw [← ge_iff_le]
+
+  calc
+    _ ≥ ‖f‖ ^ 2 - 1 / ↑(#S) * ∑ i ∈ S, ‖f‖ * ‖conv_f_delta_lp i‖ := by
+      apply sub_le_sub_left
+      simp
+      rw [mul_le_mul_left]
+      . exact sum_le
+      . simpa using hS
+    _ ≥ 0 := by
+      unfold conv_f_delta_lp
+      simp_rw [f_conv_delta_helper]
+      conv =>
+        lhs
+        rhs
+        rhs
+        arg 2
+        intro x
+        rhs
+        equals ‖f‖ =>
+          sorry
+
+      simp
+      have s_card_ne_zero: (#S : ℝ) ≠ 0 := by
+        sorry
+
+      rw [← mul_assoc]
+      simp [s_card_ne_zero]
+      rw [pow_two]
+    . sorry
 
 
 
