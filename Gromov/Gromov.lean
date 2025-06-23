@@ -203,10 +203,10 @@ noncomputable instance WordDist.instMetricSpace: MetricSpace G where
         refine ⟨rfl, hl⟩
       simp only [Set.mem_empty_iff_false] at len_in_set
 
--- TODO - is there an easier way to transfer all of the theorems/instances from `G` to `Additive (MulOpposite G)`?
+-- TODO - is there an easier way to transfer all of the theorems/instances from `G` to `Additive G`?
 
-noncomputable instance WordDist.instPseudoMetricSpaceAddOpp: PseudoMetricSpace (Additive (MulOpposite G)) where
-  dist x y := dist x.toMul.unop y.toMul.unop
+noncomputable instance WordDist.instPseudoMetricSpaceAddOpp: PseudoMetricSpace (Additive G) where
+  dist x y := dist x.toMul y.toMul
   dist_self x := by
     apply PseudoMetricSpace.dist_self
   dist_comm x y := by
@@ -214,23 +214,22 @@ noncomputable instance WordDist.instPseudoMetricSpaceAddOpp: PseudoMetricSpace (
   dist_triangle x y z := by
     apply PseudoMetricSpace.dist_triangle
 
-noncomputable instance WordDist.instMetricSpaceAddOpp: MetricSpace (Additive (MulOpposite G)) where
+noncomputable instance WordDist.instMetricSpaceAddOpp: MetricSpace (Additive G) where
   eq_of_dist_eq_zero := by
     intro x y hxy
-    have := MetricSpace.eq_of_dist_eq_zero (x := x.toMul.unop) (y := y.toMul.unop) hxy
-    simp only [MulOpposite.unop_inj, EmbeddingLike.apply_eq_iff_eq] at this
+    have := MetricSpace.eq_of_dist_eq_zero (x := x.toMul) (y := y.toMul) hxy
     exact this
 
 --def WordMetricSpace := MetricSpace.ofDistTopology ()
 noncomputable instance WordDist.instMeasurableSpace: MeasurableSpace G := borel G
 
-noncomputable instance WordDist.instMeasureableSpaceOpp: MeasurableSpace (Additive (MulOpposite G)) := borel (Additive (MulOpposite G))
+noncomputable instance WordDist.instMeasureableSpaceOpp: MeasurableSpace (Additive G) := borel (Additive G)
 
 noncomputable instance WordDist.instBorelSpace: BorelSpace G where
   measurable_eq := rfl
 
 
-noncomputable instance WordDist.instBorelSpaceAddOpp: BorelSpace (Additive (MulOpposite G)) where
+noncomputable instance WordDist.instBorelSpaceAddOpp: BorelSpace (Additive G) where
   measurable_eq := rfl
 
 -- TODO - are we really supposed to be using a metric topology if it turns out to be the discrete topology?
@@ -260,9 +259,9 @@ instance: IsTopologicalGroup G where
   continuous_inv := continuous_of_discreteTopology
 
 
-instance IsTopologicalGroupAddOpp: IsTopologicalAddGroup (Additive (MulOpposite G)) where
-  continuous_add := continuous_of_discreteTopology
-  continuous_neg := continuous_of_discreteTopology
+-- instance IsTopologicalGroupAddOpp: IsTopologicalAddGroup (Additive G) where
+--   continuous_add := continuous_of_discreteTopology
+--   continuous_neg := continuous_of_discreteTopology
 
 -- Define Haar measure so that singleton sets have measure 1 -
 -- I think this is what we want in order to be able to nicely convert integrals to sums
@@ -289,12 +288,12 @@ noncomputable instance WordDist.measureSpace: MeasureTheory.MeasureSpace G := {
   volume := myHaar
 }
 
-noncomputable def addHaarSingleton: TopologicalSpace.PositiveCompacts (Additive (MulOpposite G)) := {
+noncomputable def addHaarSingleton: TopologicalSpace.PositiveCompacts (Additive G) := {
   carrier := {0}
   isCompact' := by
     simp
   interior_nonempty' := by
-    have zero_mem: (0 : Additive (MulOpposite G)) ∈ interior {0} := by
+    have zero_mem: (0 : Additive G) ∈ interior {0} := by
       rw [mem_interior]
       use {0}
       simp
@@ -302,11 +301,11 @@ noncomputable def addHaarSingleton: TopologicalSpace.PositiveCompacts (Additive 
     exact ⟨0, zero_mem⟩
 }
 
-lemma singleton_carrier: (addHaarSingleton.carrier) = ({0} : (Set (Additive (MulOpposite G)))) := by
+lemma singleton_carrier: (addHaarSingleton.carrier) = ({0} : (Set (Additive G))) := by
   unfold addHaarSingleton
   rfl
 
-noncomputable abbrev myHaarAddOpp := MeasureTheory.Measure.addHaarMeasure (G := Additive (MulOpposite G)) addHaarSingleton
+noncomputable abbrev myHaarAddOpp := MeasureTheory.Measure.addHaarMeasure (G := Additive G) addHaarSingleton
 
 -- Definition 3.5 in Vikman - a harmonic function on G
 def Harmonic (f: G → ℂ): Prop := ∀ x: G, f x = ((1 : ℂ) / #(S)) * ∑ s ∈ S, f (x * s)
@@ -1837,16 +1836,8 @@ instance countable_G: Countable G := by
 
 
 -- TODO - use the fact that G is finitely generated
-instance countable_add_G: Countable (Additive (MulOpposite G)) := by
-  apply Function.Surjective.countable (f := fun (x: List S) => (Additive.ofMul (MulOpposite.op (x.unattach.prod))))
-  intro g
-  obtain ⟨l, hl⟩ := mem_S_prod_list (S := S) g.toMul.unop
-  use l
-  simp only
-  unfold ProdS at hl
-  rw [hl]
-  simp
-
+instance countable_add_G: Countable (Additive G) := by
+  apply inferInstanceAs (Countable G)
 
 lemma singleton_pairwise_disjoint {T: Type*} (s: Set (T)) : s.PairwiseDisjoint Set.singleton := by
   refine Set.pairwiseDisjoint_iff.mpr ?_
@@ -2010,11 +2001,17 @@ instance myNegInvariant: MeasureTheory.Measure.IsNegInvariant (myHaarAddOpp (G :
 open scoped Convolution
 open MeasureTheory
 -- TODO - should we define this using 'Lp'?
+-- NOTE - the Mathlib convolution uses the opposite order of arguments as in the Vikman paper (g(x - t) instead of g(t - x))
+-- I originally used 'MulOpposite' make our usage agree with the paper, but this made it an enormous pain to work with
+-- (since while Additive G is defeq to G, MulOpposite G is not defeq to G)
+-- Nothing in the paper should actually depend on this (since we take a convolution over a symmetric generating set S)
+-- Some of our definitions will have an inverse or order swap compared to the paper, but this is better than
+-- fighting with 'MulOpposite' every time we need to prove something about a convolution
 noncomputable def Conv (f g: G → ℝ) (x: G) : ℝ :=
-  (MeasureTheory.convolution (G := Additive (MulOpposite G)) (fun x => f x.toMul.unop) (fun x => g x.toMul.unop) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp (Additive.ofMul (MulOpposite.op x)))
+  (MeasureTheory.convolution (G := Additive G) (fun x => f x.toMul) (fun x => g x.toMul) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp (Additive.ofMul x))
 
 
-def ConvExists (f g: G → ℝ) := MeasureTheory.ConvolutionExists (G := Additive (MulOpposite G)) (fun x => f x.toMul.unop) (fun x => g x.toMul.unop) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp
+def ConvExists (f g: G → ℝ) := MeasureTheory.ConvolutionExists (G := Additive G) (fun x => f x.toMul) (fun x => g x.toMul) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp
 
 -- lemma conv_lp2 (f g: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): MemLp (Conv f g) 2 := by
 --   unfold Conv
@@ -2037,8 +2034,9 @@ def ConvExists (f g: G → ℝ) := MeasureTheory.ConvolutionExists (G := Additiv
 
 
 
-
-abbrev opAdd (g : G) := Additive.ofMul (MulOpposite.op g)
+-- TODO - this is left over from when I used MulOpposite
+-- we should remove all usages of this
+abbrev opAdd (g : G) := Additive.ofMul g
 
 
 -- A versi on of `conv_exists` where at least one of the functions has finite support
@@ -2059,12 +2057,10 @@ lemma conv_exists_fin_supp (f g: G → ℝ) (hfg: f.support.Finite ∨ g.support
       apply Set.Finite.inter_of_left
       apply Set.Finite.subset (s := opAdd '' f.support)
       . unfold opAdd
-        exact Set.Finite.image (fun g ↦ Additive.ofMul (MulOpposite.op g)) hf
+        exact Set.Finite.image (fun g ↦ Additive.ofMul g) hf
       . intro a ha
         simp at ha
         simp [opAdd]
-        use a.toMul.unop
-        simp only [MulOpposite.op_unop, ofMul_toMul, and_true]
         exact ha
     | .inr hg =>
       apply Set.Finite.inter_of_right
@@ -2098,17 +2094,17 @@ lemma lt_top_mul {a b c : ENNReal} (hab: a ≤ b * c) (hb: b < ⊤) (hc: c < ⊤
   exact b_c_not_top
 
 
-instance my_add_haar_left_invariant: (myHaarAddOpp.IsAddLeftInvariant (G := Additive (MulOpposite G))) := by
+instance my_add_haar_left_invariant: (myHaarAddOpp.IsAddLeftInvariant (G := Additive (G))) := by
   rw [my_add_haar_eq_count]
   infer_instance
 
-instance my_add_haar_right_invariant: (myHaarAddOpp.IsAddRightInvariant (G := Additive (MulOpposite G))) := by
+instance my_add_haar_right_invariant: (myHaarAddOpp.IsAddRightInvariant (G := Additive (G))) := by
   rw [my_add_haar_eq_count]
   infer_instance
 
 lemma conv_exists_lp1 (f g: G → ℝ)
-  (hf: MeasureTheory.MemLp ((fun x => f x.toMul.unop)) 1 myHaarAddOpp)
-  (hg: ∀ y: G, MeasureTheory.MemLp ((fun x => g x.toMul.unop)) 1 myHaarAddOpp)
+  (hf: MeasureTheory.MemLp ((fun x => f x.toMul)) 1 myHaarAddOpp)
+  (hg: ∀ y: G, MeasureTheory.MemLp ((fun x => g x.toMul)) 1 myHaarAddOpp)
   : ConvExists f g := by
 
   apply ENNReal.ConvolutionExists.of_memLp_memLp (p := 1) (q := 1) (μ := myHaarAddOpp) (by
@@ -2179,8 +2175,8 @@ lemma conv_exists_lp1 (f g: G → ℝ)
 
 
 lemma conv_exists (p q : ℝ) (hp: 0 < p) (hq: 0 < q) (hpq: p.HolderConjugate q) (f g: G → ℝ)
-  (hf: MeasureTheory.MemLp ((fun x => f x.toMul.unop)) (ENNReal.ofReal p) myHaarAddOpp)
-  (hg: ∀ y: G, MeasureTheory.MemLp ((fun x => g (x.toMul.unop⁻¹ * y))) (ENNReal.ofReal q) myHaarAddOpp)
+  (hf: MeasureTheory.MemLp ((fun x => f x.toMul)) (ENNReal.ofReal p) myHaarAddOpp)
+  (hg: ∀ y: G, MeasureTheory.MemLp ((fun x => g (y / x.toMul))) (ENNReal.ofReal q) myHaarAddOpp)
   : ConvExists f g := by
   unfold ConvExists MeasureTheory.ConvolutionExists MeasureTheory.ConvolutionExistsAt MeasureTheory.Integrable
   intro x
@@ -2190,8 +2186,8 @@ lemma conv_exists (p q : ℝ) (hp: 0 < p) (hq: 0 < q) (hpq: p.HolderConjugate q)
   simp
   have holder_bound := ENNReal.lintegral_mul_le_Lp_mul_Lq (MeasureTheory.Measure.count) (hpq)
     (AEMeasurable.of_discrete) (AEMeasurable.of_discrete)
-    (f := fun a => ‖f (MulOpposite.unop (Additive.toMul a))‖ₑ)
-    (g := fun a => ‖g ((MulOpposite.unop (Additive.toMul a))⁻¹ * MulOpposite.unop (Additive.toMul x))‖ₑ)
+    (f := fun a => ‖f ( (Additive.toMul a))‖ₑ)
+    (g := fun a => ‖g ((Additive.toMul x) / ((Additive.toMul a)))‖ₑ)
   simp at holder_bound
   rw [my_add_haar_eq_count]
 
@@ -2222,7 +2218,7 @@ lemma conv_exists (p q : ℝ) (hp: 0 < p) (hq: 0 < q) (hpq: p.HolderConjugate q)
         linarith
       . exact LT.lt.ne_top foo
     .
-      have foo := MeasureTheory.lintegral_rpow_enorm_lt_top_of_eLpNorm_lt_top q_ne_zero (by simp) (MeasureTheory.MemLp.eLpNorm_lt_top (hg x.toMul.unop))
+      have foo := MeasureTheory.lintegral_rpow_enorm_lt_top_of_eLpNorm_lt_top q_ne_zero (by simp) (MeasureTheory.MemLp.eLpNorm_lt_top (hg x.toMul))
       rw [my_add_haar_eq_count] at foo
       rw [ENNReal.toReal_ofReal q_ge_zero] at foo
       apply ENNReal.rpow_ne_top_of_nonneg (?_) ?_
@@ -2303,7 +2299,7 @@ noncomputable def muConv (n: ℕ): G → ℝ := (Nat.iterate (fun f => Conv (S :
 
 abbrev delta (s: G): G → ℝ := Pi.single s 1
 
-lemma conv_eq_sum {f h: G → ℝ} (hconv: ConvExists f h) (g: G): Conv f h g = ∑' (a : Additive Gᵐᵒᵖ), f (MulOpposite.unop (Additive.toMul a)) * h ((MulOpposite.unop (Additive.toMul a))⁻¹ * g) := by
+lemma conv_eq_sum {f h: G → ℝ} (hconv: ConvExists f h) (g: G): Conv f h g = ∑' (a : Additive G), f ((Additive.toMul a)) * h (g * (Additive.toMul a)⁻¹) := by
   unfold Conv
   unfold MeasureTheory.convolution
   rw [MeasureTheory.integral_countable']
@@ -2315,9 +2311,10 @@ lemma conv_eq_sum {f h: G → ℝ} (hconv: ConvExists f h) (g: G): Conv f h g = 
     simp_rw [← singleton_carrier]
     simp_rw [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
     simp [MeasureTheory.Measure.addHaarMeasure_self]
+    field_simp
   . exact (hconv (opAdd g))
 
-lemma conv_eq_sum'  {f h: G → ℝ} (hconv: ConvExists f h): Conv f h = fun g => ∑' (a : Additive Gᵐᵒᵖ), f (MulOpposite.unop (Additive.toMul a)) * h ((MulOpposite.unop (Additive.toMul a))⁻¹ * g) := by
+lemma conv_eq_sum'  {f h: G → ℝ} (hconv: ConvExists f h): Conv f h = fun g => ∑' (a : Additive G), f ((Additive.toMul a)) * h (g * (Additive.toMul a)⁻¹) := by
   funext g
   exact conv_eq_sum hconv g
 
@@ -2330,7 +2327,7 @@ lemma conv_add_right {f g h: G → ℝ} (h_fg: ConvExists f g) (h_fh : ConvExist
     lhs
     intro x
     arg 2
-    equals (fun x => g (MulOpposite.unop (Additive.toMul x))) + (fun x => h (MulOpposite.unop (Additive.toMul x))) =>
+    equals (fun x => g ((Additive.toMul x))) + (fun x => h ((Additive.toMul x))) =>
       rfl
 
   rw [MeasureTheory.ConvolutionExists.distrib_add]
@@ -2344,7 +2341,7 @@ lemma conv_add_left {f g h: G → ℝ} (h_fh: ConvExists f h) (h_gh : ConvExists
     lhs
     intro x
     arg 1
-    equals (fun x => f (MulOpposite.unop (Additive.toMul x))) + (fun x => g (MulOpposite.unop (Additive.toMul x))) =>
+    equals (fun x => f ((Additive.toMul x))) + (fun x => g ((Additive.toMul x))) =>
       rfl
 
   rw [MeasureTheory.ConvolutionExists.add_distrib]
@@ -2358,14 +2355,42 @@ lemma conv_smul {f h: G → ℝ} (k: ℝ): Conv (k • f) h = k • Conv f h := 
   conv =>
     arg 1
     arg 1
-    equals k • (fun x => f (MulOpposite.unop (Additive.toMul x))) =>
+    equals k • (fun x => f ((Additive.toMul x))) =>
       funext p
       simp
 
   rw [MeasureTheory.smul_convolution]
   simp
 
+lemma smul_conv (f h: G → ℝ) (k: ℝ): Conv f (k • h) = k • Conv f h := by
+  funext g
+  unfold Conv
+  conv =>
+    arg 1
+    arg 2
+    equals k • (fun x => h ((Additive.toMul x))) =>
+      funext p
+      simp
 
+  rw [MeasureTheory.convolution_smul]
+  simp
+
+lemma conv_assoc (f g h: G → ℝ): Conv (Conv f g) h = Conv f (Conv g h) := by
+  unfold Conv
+  conv =>
+    lhs
+    intro x
+    arg 1
+
+    rw [MeasureTheory.convolution_assoc]
+  simp_rw [MeasureTheory.ConvolutionExists.assoc]
+  . rfl
+  . apply conv_exists_fin_supp
+    left
+    exact f.support.Finite
+  . apply conv_exists_fin_supp
+    right
+    exact g.support.Finite
 
 -- TODO - figure out why we need this
 instance Real.t2Space: T2Space ℝ := TopologicalSpace.t2Space_of_metrizableSpace
@@ -2435,11 +2460,11 @@ lemma conv_sum {T: Type*} (H: Finset T) (f: T → G → ℝ) (h: G → ℝ) (h_f
     --     simp
 
 -- Proposition 3.12, item 1, in Vikman
-lemma f_conv_delta (f: G → ℝ) (g s: G): (Conv (S := S) f (delta s)) g = f (g * s⁻¹) := by
+lemma f_conv_delta (f: G → ℝ) (g s: G): (Conv (S := S) f (delta s)) g = f (s⁻¹ * g) := by
   unfold delta
   rw [conv_eq_sum]
   .
-    rw [tsum_eq_sum (s := {opAdd ((g * s⁻¹))}) ?_]
+    rw [tsum_eq_sum (s := {opAdd ((s⁻¹ * g))}) ?_]
     .
       simp
       -- TODO - why does this need 'conv'?
@@ -2448,6 +2473,10 @@ lemma f_conv_delta (f: G → ℝ) (g s: G): (Conv (S := S) f (delta s)) g = f (g
         arg 2
         arg 3
         simp only [mul_inv_rev, inv_inv, inv_mul_cancel_right]
+      rw [← mul_assoc]
+      -- TODO - why is 'simp' not doing these?
+      rw [mul_inv_cancel]
+      rw [one_mul]
       simp
     .
       intro b hb
@@ -2455,34 +2484,31 @@ lemma f_conv_delta (f: G → ℝ) (g s: G): (Conv (S := S) f (delta s)) g = f (g
       simp only [mul_eq_zero]
       right
       apply Pi.single_eq_of_ne
-      apply_fun (fun x => x * s⁻¹)
-      simp only [mul_inv_cancel, ne_eq]
-      apply_fun (fun x => (MulOpposite.unop (Additive.toMul b)) * x)
-      conv =>
-        lhs
-        simp
-        rw [← mul_assoc, ← mul_assoc]
-        simp only [mul_inv_cancel, one_mul]
-      simp only [mul_one, ne_eq]
+      apply_fun (fun x => s⁻¹ * x)
+      simp
+      apply_fun (fun x => (x * (Additive.toMul b)) )
+      simp
       rw [eq_comm]
       unfold opAdd at hb
-      apply_fun MulOpposite.op
-      simp only [MulOpposite.op_unop, MulOpposite.op_mul, MulOpposite.op_inv, ne_eq]
       apply_fun Additive.ofMul
-      simp only [ofMul_toMul]
+      simp
+      apply_fun (fun x => x + b)
+      simp only []
+      rw [add_assoc]
+      simp
       exact hb
   .
     apply conv_exists_fin_supp
     right
     simp
 
-lemma f_conv_delta_helper (f: G → ℝ) (s: G): (Conv (S := S) f (delta s)) = fun g => f (g * s⁻¹) := by
+lemma f_conv_delta_helper (f: G → ℝ) (s: G): (Conv (S := S) f (delta s)) = fun g => f (s⁻¹ * g) := by
   funext g
   exact f_conv_delta f g s
 
 lemma f_mul_mu_summable (f: G → ℝ) (g: G) (s: G):
   Summable fun a ↦
-    (f (MulOpposite.unop (Additive.toMul a))) * (if s = (((MulOpposite.unop (Additive.toMul a))⁻¹ * g)) then 1 else 0) := by
+    (f ((Additive.toMul a))) * (if s = ((((Additive.toMul a))⁻¹ * g)) then 1 else 0) := by
   apply summable_of_finite_support
   simp only [one_div, Function.support_mul, Function.support_inv]
   apply Set.Finite.inter_of_right
@@ -2528,7 +2554,7 @@ lemma f_conv_mu (f: G → ℝ): (Conv (S := S) f (mu (S := S))) = fun g => ((1 :
       arg 1
       intro a
       rhs
-      equals (∑ s ∈ S, (Pi.single s (1 : ℝ) ((MulOpposite.unop (Additive.toMul a))⁻¹ * g))) =>
+      equals (∑ s ∈ S, (Pi.single s (1 : ℝ) ((g * (Additive.toMul a)⁻¹)))) =>
         simp
 
 
@@ -2566,14 +2592,13 @@ lemma f_conv_mu (f: G → ℝ): (Conv (S := S) f (mu (S := S))) = fun g => ((1 :
         rw [Summable.tsum_mul_left (hf := by (
           simp [Pi.single_apply]
           apply summable_of_finite_support
-          apply Set.Finite.subset (s := {(opAdd (g * x⁻¹ ))})
+          apply Set.Finite.subset (s := {(opAdd ( x⁻¹ * g ))})
           . simp
           . intro z hz
             simp
             simp at hz
             rw [← hz.1]
             simp
-            rfl
           --apply f_mul_mu_summable
         ))]
         rw [delta_conv x]
@@ -2606,14 +2631,13 @@ lemma f_conv_mu (f: G → ℝ): (Conv (S := S) f (mu (S := S))) = fun g => ((1 :
           -- TODO - deduplicate this
           simp [Pi.single_apply]
           apply summable_of_finite_support
-          apply Set.Finite.subset (s := {(opAdd (g * s⁻¹ ))})
+          apply Set.Finite.subset (s := {(opAdd (s⁻¹ * g ))})
           . simp
           . intro z hz
             simp
             simp at hz
             rw [← hz.1]
             simp
-            rfl
           --apply f_mul_mu_summable
         . field_simp
   . apply conv_exists_fin_supp
@@ -2658,25 +2682,32 @@ lemma mu_conv_finsupp (m: ℕ): (muConv (S := S) m).support.Finite := by
     --let other := (fun (g:  Additive Gᵐᵒᵖ) => (g))
     conv =>
       arg 1
-      intro p
       arg 1
-      intro q
-      rw [conv_eq_sum (by
+      rw [conv_eq_sum' (by
         apply conv_exists_fin_supp
         right
         apply mu_finsupp
       )]
 
 
-      -- + (Additive.ofMul (MulOpposite.op q⁻¹))
-      rw [tsum_eq_sum' (s := Finset.image (fun (g:  Additive Gᵐᵒᵖ) => (g)) (Finset.image Additive.ofMul (Finset.image MulOpposite.op (ih).toFinset))) (by
+
+
+      intro g
+      rw [tsum_eq_sum (s := ((ih).toFinset : Finset (G))) (by
         intro a ha
         simp at ha
+        sorry
+      )]
+      rw [tsum_eq_sum' (s := Finset.image (fun (g:  Additive G) => (g)) (Finset.image Additive.ofMul (Finset.image Inv.inv ((ih).toFinset)))) (by
+        intro a ha
+        simp at ha
+        simp
         simp
         use (MulOpposite.unop (Additive.toMul a))
         simp
         exact ha.1
       )]
+
 
 
 
@@ -4053,16 +4084,17 @@ lemma f_n_fin_supp (n: ℕ): (f_n (S := S) n).support.Finite := by
 
 lemma laplace_conv_eq_laplace_right (f g: G → ℝ): Laplace_b (Conv f g) = Conv f (Laplace_b g) := by
   simp_rw [Laplace_b]
-  rw [sub_eq_add_neg]
+  nth_rw 2 [sub_eq_add_neg]
+  rw [conv_add_right]
+  -- TODO - figure out how to do this without a 'conv' block
   conv =>
-    lhs
     rhs
-    equals (-1 : ℝ) • Conv (Conv f g) (mu (S := S)) =>
-      sorry
-  rw [neg_eq_neg_one_mul]
-  rw [← smul_eq_mul]
-  have foo := conv_smul (k := -1) (f := (Conv f g)) (h := mu (S := S))
-  rw [← foo]
+    rhs
+    equals Conv f ((-1 : ℝ) • (Conv g (mu (S := S)))) =>
+      simp
+  rw [smul_conv]
+  simp
+  simp
 
   rw [← conv_add_left]
 
