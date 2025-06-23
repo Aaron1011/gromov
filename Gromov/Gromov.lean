@@ -3730,9 +3730,11 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
   rw [inner_smul_right]
   rw [inner_sum]
 
-  let conv_f_delta_lp (i: G) :=  MemLp.toLp (Conv (f) (delta i⁻¹)) (μ := volume) (p := 2) (
-
-    sorry
+  let conv_f_delta_lp (i: G) :=  MemLp.toLp (Conv (f) (delta i⁻¹)) (μ := volume) (p := 2) (by
+    simp_rw [f_conv_delta_helper]
+    apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
+    . apply MeasureTheory.Lp.memLp f
+    . exact measurePreserving_mul_right volume _
   )
 
   conv =>
@@ -3744,7 +3746,7 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
     rhs
     equals conv_f_delta_lp i =>
       unfold conv_f_delta_lp
-      rw [f_conv_delta_helper]
+      simp_rw [f_conv_delta_helper]
       simp
     -- arg 1
     -- intro i
