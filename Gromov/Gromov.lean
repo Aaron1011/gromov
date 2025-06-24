@@ -1969,9 +1969,7 @@ lemma count_ae_everywhere (p: G → Prop): (∀ᵐ g ∂(MeasureTheory.Measure.c
     simp at ha
     contradiction
 
-@[simp]
-lemma ae_eq_everywhere {f g: G → ℝ}: (f =ᶠ[MeasureTheory.ae MeasureTheory.volume (α := G)] g) ↔ (f = g) := by
-  simp [Filter.EventuallyEq]
+lemma ae_eventually_everywhere {f g: G → ℝ}: ((∀ᵐ (x : G), f x = g x)) ↔ (f = g) := by
   simp [MeasureTheory.volume]
   simp_rw [my_haar_eq_count]
   have foo := count_ae_everywhere (p := fun a => f a = g a)
@@ -1986,6 +1984,12 @@ lemma ae_eq_everywhere {f g: G → ℝ}: (f =ᶠ[MeasureTheory.ae MeasureTheory.
   simp
   simp at foo
   exact foo
+
+
+@[simp]
+lemma ae_eq_everywhere {f g: G → ℝ}: (f =ᶠ[MeasureTheory.ae MeasureTheory.volume (α := G)] g) ↔ (f = g) := by
+  simp [Filter.EventuallyEq]
+  apply ae_eventually_everywhere
 
 
 -- Use the fact that our measure is the counting measure (since we have the discrete topology),
@@ -4340,11 +4344,62 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     continuous_toFun := by exact continuous_of_discreteTopology
   }
 
-  have conv_h_n_kipschitz (n: ℕ) (hn: 0 < n): LipschitzWith 1 (conv_h_n_cont n) := by
+  have conv_h_n_kipschitz (n: ℕ) (hn: 0 < n): LipschitzWith 2 (conv_h_n_cont n) := by
     unfold conv_h_n_cont
     simp [LipschitzWith]
     intro x y
     have norm_bound := h_conv_f_bounded n
+    simp [eLpNorm, eLpNormEssSup] at norm_bound
+    have ae_le := ENNReal.ae_le_essSup (fun x ↦ ‖Conv (H_n n) (f_n n) x‖ₑ) (μ := volume)
+    simp [volume] at ae_le
+    rw [my_haar_eq_count] at ae_le
+    rw [count_ae_everywhere] at ae_le
+    simp_rw [Real.enorm_eq_ofReal_abs] at ae_le
+    simp_rw [Real.enorm_eq_ofReal_abs] at norm_bound
+    have conv_norm_le_one: ∀ g: G, ENNReal.ofReal |Conv (H_n n) (f_n n) g| ≤ 1 := by
+      intro g
+      grw [ae_le]
+      simp [volume] at norm_bound
+      rw [my_haar_eq_count] at norm_bound
+      exact norm_bound
+
+    by_cases x_eq_y: x = y
+    . simp [x_eq_y]
+    .
+      norm_cast at conv_norm_le_one
+      norm_cast
+      rw [edist_dist]
+      rw [Real.dist_eq]
+      rw [edist_dist]
+      conv =>
+        rhs
+        equals ENNReal.ofReal (2 * (dist x y)) =>
+          rw [ENNReal.ofReal_mul]
+          . simp
+          . linarith
+      rw [ENNReal.ofReal_le_ofReal_iff]
+      .
+        grw [abs_sub]
+        grw [conv_norm_le_one]
+        grw [conv_norm_le_one]
+        rw [one_add_one_eq_two]
+        simp
+        simp [dist]
+        have dist_ne_zero: dist x y ≠ 0 := by
+          exact dist_ne_zero.mpr x_eq_y
+        simp [dist] at dist_ne_zero
+        omega
+      . simp [dist]
+
+
+
+
+
+
+
+
+
+
 
   -- The set of 'Conv (H_n f_n)' for all n
   let all_h_f_conv: Set C(G, ℝ) := Set.range conv_h_n_cont
