@@ -3166,7 +3166,7 @@ theorem f_n_norm_one (n: ℕ): MeasureTheory.eLpNorm (f_n (S := S) n) 1 = 1 := b
   .
     simp
 -- Proposition 3.15.2 from Vikman
-theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) n) - (Conv (f_n (S := S) n) (mu (S := S)))) 1 ≤ ENNReal.ofReal ((2 : ℝ) / (n : ℝ)) := by
+theorem f_n_sub_conv (n: ℕ): MeasureTheory.eLpNorm ((f_n (S := S) n) - (Conv (f_n (S := S) n) (mu (S := S)))) 1 ≤ ENNReal.ofReal ((2 : ℝ) / ((n + 1) : ℝ)) := by
   unfold f_n
   conv =>
     lhs
@@ -3239,13 +3239,12 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
       rhs
       rhs
       equals (muConv (n + 1)) - muConv (0) =>
-        induction n, hn using Nat.le_induction with
-        | base =>
+        induction n with
+        | zero =>
           simp
           group
 
-        | succ y y_ge iy =>
-          simp at y_ge
+        | succ y iy =>
           rw [Finset.sum_fin_eq_sum_range]
           rw [Finset.sum_range_succ_comm]
           rw [Finset.sum_fin_eq_sum_range] at iy
@@ -3298,19 +3297,6 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
         field_simp
         simp
         linarith
-    .
-      rw [ENNReal.ofReal_le_ofReal_iff]
-      group
-      simp
-      rw [inv_le_inv₀]
-      . linarith
-      . linarith
-      . exact Nat.cast_pos'.mpr hn
-      .
-        group
-        simp
-
-
   . exact mu_finsupp
 
   --   MeasureTheory.eLpNorm_add_le
@@ -4074,6 +4060,7 @@ lemma laplace_conv_eq_laplace_right (f g: G → ℝ): Laplace_b (Conv f g) = Con
 -- IsCompact.tendsto_subseq
 
 -- Case two of Theorem 3.6
+set_option maxHeartbeats 2000000 in
 lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℤ, F ≠ ConstLipschitzH z := by
   obtain ⟨s, hs⟩ := f_n_limit
   rw [ENNReal.tendsto_nhds_zero] at hs
@@ -4344,7 +4331,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     continuous_toFun := by exact continuous_of_discreteTopology
   }
 
-  have conv_h_n_kipschitz (n: ℕ) (hn: 0 < n): LipschitzWith 2 (conv_h_n_cont n) := by
+  have conv_h_n_kipschitz (n: ℕ): LipschitzWith 2 (conv_h_n_cont n) := by
     unfold conv_h_n_cont
     simp [LipschitzWith]
     intro x y
@@ -4410,7 +4397,88 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     ) at arzela_conv
 
     obtain ⟨F, F_mem, seq, mono_seq, hF⟩ := arzela_conv
+    simp [all_h_f_conv] at F_mem
+    obtain ⟨n, f_eq_n⟩ := F_mem
+    have F_lipschitz := conv_h_n_kipschitz n
+    rw [f_eq_n] at F_lipschitz
     rw [ContinuousMap.tendsto_iff_forall_isCompact_tendstoUniformlyOn] at hF
+
+    let F_lipschitzh: LipschitzH := {
+      toFun := (fun x => F x),
+      lipschitz := by
+        use 2
+        rw [← Function.comp_def]
+        conv =>
+          arg 1
+          equals 1 * 2 => simp
+        apply LipschitzWith.comp (Kf := 1) (Kg := 2)
+        .
+          exact Isometry.lipschitz (Complex.isometry_ofReal)
+        . exact F_lipschitz
+      harmonic := by
+        simp [Harmonic]
+        --have lim_mul_sum := Filter.Tendsto.const_mul (2: ℝ) (l := Filter.atTop (α := ℕ)) (c := ∑ c ∈ S, F (x * c))
+        intro x
+        have lim_f_x :=  hF {x} (by exact isCompact_singleton)
+        rw [tendstoUniformlyOn_singleton_iff_tendsto] at lim_f_x
+        dsimp [conv_h_n_cont] at hF
+        have lim_f_sum := tendsto_finset_sum (M := ℝ) (s := S) (a := fun s => F (x * s)) (f := fun g k => Conv (H_n (seq k)) (f_n (seq k)) (x * g)) (x := Filter.atTop (α := ℕ)) (by
+          intro s hs
+          have lim_f_s :=  hF {x * s} (by exact isCompact_singleton)
+          rw [tendstoUniformlyOn_singleton_iff_tendsto] at lim_f_s
+          beta_reduce
+          exact lim_f_s
+        )
+        beta_reduce at lim_f_sum
+        -- TODO - figure out why lean hangs without this
+        have my_mul : ContinuousMul ℝ := instIsTopologicalRingReal.toContinuousMul
+        have lim_mul_sum := Filter.Tendsto.const_mul (↑(#S))⁻¹ lim_f_sum
+
+        have lim_f_sub_sum := Filter.Tendsto.sub lim_f_x lim_mul_sum
+        dsimp [conv_h_n_cont] at lim_f_sub_sum
+
+        have laplace_conv_tendsto_zero: Filter.Tendsto (fun n => eLpNorm (Laplace_b (Conv (H_n (n)) (f_n (n)))) ⊤) Filter.atTop (nhds 0) := by
+          apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := fun (n: ℕ) => ENNReal.ofReal ((2: ℝ) / ((n + 1) : ℝ)))
+          . simp
+          .
+            rw [← ENNReal.tendsto_toReal_iff]
+            conv =>
+              arg 1
+              intro n
+              rw [ENNReal.toReal_ofReal (by
+                norm_cast
+                by_cases n_eq_zero: n = 0
+                . simp [n_eq_zero]
+                .
+                  group
+                  simp
+                  linarith
+              )]
+            apply tendsto_const_div_atTop_nhds_zero_nat
+            . intro i
+              simp
+            . simp
+          . rw [Pi.le_def]
+            intro x
+            simp
+          . rw [Pi.le_def]
+            intro n
+            simp
+            have bound_by_norm_one := conv_laplce_norm n
+            have norm_le_two_div := f_n_sub_conv (S := S) n
+            nth_rw 1 [eLpNorm] at bound_by_norm_one
+            simp at bound_by_norm_one
+            grw [bound_by_norm_one]
+            have h_norm := H_n_norm n
+            simp [eLpNorm, eLpNorm'] at h_norm
+            rw [h_norm]
+            simp
+            simp_rw [Laplace_b]
+            exact norm_le_two_div
+
+        sorry
+
+    }
 
   .
     simp
@@ -4461,7 +4529,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
 --   .
 --     right
 
-
+#synth OrderTopology ENNReal
 
 -- Based on https://github.com/YaelDillies/LeanCamCombi/blob/b6312bee17293272af6bdcdb47b3ffe98fca46a4/LeanCamCombi/GrowthInGroups/Lecture1.lean#L41
 -- and the Vikman paper
