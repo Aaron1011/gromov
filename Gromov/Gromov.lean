@@ -4281,15 +4281,25 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     . apply AEStronglyMeasurable.of_discrete
     . exact measure_preserving_op_add (S := S)
 
-  have conv_laplce_norm (n: ℕ): eLpNorm ((Conv (S := S) (Laplace_b (H_n n)) (f_n n))) ⊤ = eLpNorm (Conv (S := S) (H_n n) (Laplace_b (f_n n))) ⊤ := by
-    rw [conv_eq_sum']
-    . rw [conv_eq_sum']
-      .
-        simp_rw [Laplace_b]
-        simp_rw [f_conv_mu]
-        sorry
-      . sorry
-    . sorry
+  have conv_laplce_norm (n: ℕ): eLpNorm ((Laplace_b ((Conv (G := G) (H_n n)) (f_n n)))) ⊤ (μ := volume (α := G)) ≤ eLpNorm (H_n n) ⊤ * (eLpNorm (Laplace_b (f_n n)) 1 (μ := volume (α := G))) := by
+    rw [laplace_conv_eq_laplace_right]
+    unfold Conv
+    eta_reduce
+    simp only [volume]
+    rw [haar_eq_haar_add]
+
+    have my_norm := ENNReal.eLpNorm_convolution_le_enorm_mul (f := H_n n) (G := (Additive G)) (L := (ContinuousLinearMap.mul ℝ ℝ))
+      (g := Laplace_b (G := G) (f_n n)) (r := ⊤) (p := ⊤) (q := 1) (μ := myHaarAddOpp)
+      (by simp)
+      (by simp)
+      (by simp)
+      (by simp)
+      (by apply AEMeasurable.of_discrete)
+      (by apply AEMeasurable.of_discrete)
+
+
+    grw [my_norm]
+    simp [enorm]
 
   sorry
 
