@@ -2693,24 +2693,16 @@ lemma mu_conv_finsupp (m: ℕ): (muConv (S := S) m).support.Finite := by
 
 
       intro g
-      rw [tsum_eq_sum (s := ((ih).toFinset : Finset (G))) (by
-        intro a ha
-        simp at ha
-        sorry
-      )]
-      rw [tsum_eq_sum' (s := Finset.image (fun (g:  Additive G) => (g)) (Finset.image Additive.ofMul (Finset.image Inv.inv ((ih).toFinset)))) (by
+      rw [tsum_eq_sum (s := (Finset.image Additive.ofMul (ih).toFinset)) (by
         intro a ha
         simp at ha
         simp
-        simp
-        use (MulOpposite.unop (Additive.toMul a))
-        simp
-        exact ha.1
+        unfold muConv at ha
+        left
+        have foo := ha (a.toMul)
+        simp at foo
+        exact foo
       )]
-
-
-
-
 
 
     apply Set.Finite.subset (ht := Finset.support_sum _ _)
@@ -2722,7 +2714,7 @@ lemma mu_conv_finsupp (m: ℕ): (muConv (S := S) m).support.Finite := by
       .
         intro i hi
         apply Set.Finite.inter_of_right
-        apply Set.Finite.of_injOn (f := fun x => i⁻¹ * x) (t := (mu_finsupp (S := S)).toFinset)
+        apply Set.Finite.of_injOn (f := fun x => x * i⁻¹) (t := (mu_finsupp (S := S)).toFinset)
         .
           intro x hx
           simp at hx
