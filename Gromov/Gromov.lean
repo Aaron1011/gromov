@@ -4454,8 +4454,15 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
                   simp
                   linarith
               )]
+            conv =>
+              arg 1
+              intro n
+              rhs
+              equals ((((n: ℕ) + 1) : ℕ ) : ℝ) => simp
+            rw [Filter.tendsto_add_atTop_iff_nat (f := fun n => (2 : ℝ) / (n))]
             apply tendsto_const_div_atTop_nhds_zero_nat
-            . intro i
+            .
+              intro n
               simp
             . simp
           . rw [Pi.le_def]
@@ -4475,9 +4482,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
             simp
             simp_rw [Laplace_b]
             exact norm_le_two_div
-
         sorry
-
     }
 
   .
