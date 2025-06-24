@@ -3086,7 +3086,8 @@ lemma mu_norm_one (m: ℕ): MeasureTheory.eLpNorm (muConv (S := S) m) 1 = 1 := b
       rw [ha]
 
 -- Defintion 3.14 from Vikman
-noncomputable def f_n (n: ℕ) (g: G): ℝ := ((1: ℝ) / (n: ℝ)) * ∑ m: Fin n, muConv (S := S) (m.val) g
+-- We offset by one to avoid the need to carry around a '0 < n' hypothesis everywgere
+noncomputable def f_n (n: ℕ) (g: G): ℝ := ((1: ℝ) / ((n + 1): ℝ)) * ∑ m: Fin (n + 1), muConv (S := S) (m.val) g
 
 lemma mu_conv_nonneg (n: ℕ): ∀ g, 0 ≤ muConv (S := S) n g := by
   intro g
@@ -3112,7 +3113,7 @@ lemma mu_conv_nonneg (n: ℕ): ∀ g, 0 ≤ muConv (S := S) n g := by
 --set_option pp.analyze true
 
 -- Proposition 3.15.1 from Vikman
-theorem f_n_norm_one (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm (f_n (S := S) n) 1 = 1 := by
+theorem f_n_norm_one (n: ℕ): MeasureTheory.eLpNorm (f_n (S := S) n) 1 = 1 := by
   unfold f_n
   simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm']
   rw [lintegral_g_eq_add]
@@ -3122,7 +3123,7 @@ theorem f_n_norm_one (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm (f_n (S := S) n
     arg 2
     arg 1
     intro g
-    equals ∑ m: Fin (n), ‖muConv (↑m) g‖ₑ =>
+    equals ∑ m: Fin (n + 1), ‖muConv (↑m) g‖ₑ =>
       rw [Real.enorm_of_nonneg (by
         apply Finset.sum_nonneg
         intro i hi
@@ -3148,15 +3149,18 @@ theorem f_n_norm_one (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm (f_n (S := S) n
     simp_rw [mu_norm]
     simp
     norm_cast
-    rw [Real.enorm_of_nonneg (by simp)]
+    rw [Real.enorm_of_nonneg (by
+      simp
+      linarith
+    )]
     rw [← ENNReal.ofReal_natCast]
     rw [← ENNReal.ofReal_mul]
     .
       field_simp
     . simp
+      linarith
   .
     simp
-
 -- Proposition 3.15.2 from Vikman
 theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) n) - (Conv (f_n (S := S) n) (mu (S := S)))) 1 ≤ ENNReal.ofReal ((2 : ℝ) / (n : ℝ)) := by
   unfold f_n
@@ -3170,7 +3174,7 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
     lhs
     arg 1
     arg 1
-    equals ((1: ℝ) / n) • ∑ m: Fin n, muConv (↑m) =>
+    equals ((1: ℝ) / (n + 1)) • ∑ m: Fin (n + 1), muConv (↑m) =>
       funext p
       simp
   simp_rw [← smul_eq_mul]
@@ -3191,14 +3195,14 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
     lhs
     arg 1
     rhs
-    equals ((1 : ℝ) / (n : ℝ)) • (Conv (∑ m: Fin n, muConv (m)) (mu (S := S))) =>
+    equals ((1 : ℝ) / ((n + 1) : ℝ)) • (Conv (∑ m: Fin (n + 1), muConv (m)) (mu (S := S))) =>
       funext g
       simp
       left
       conv =>
         lhs
         arg 1
-        equals ∑ m: Fin n, muConv (S := S) (m) =>
+        equals ∑ m: Fin (n + 1), muConv (S := S) (m) =>
           funext y
           simp
 
@@ -3216,11 +3220,12 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
       equals muConv (↑x + 1) =>
         unfold muConv
         rw [Function.iterate_succ_apply']
+
     conv =>
       lhs
       arg 1
       rhs
-      equals -∑ x: Fin n, ((muConv (S := S) (↑x + 1)) - (muConv (S := S) (x.val))) =>
+      equals -∑ x: Fin (n + 1), ((muConv (S := S) (↑x + 1)) - (muConv (S := S) (x.val))) =>
         simp
 
 
@@ -3229,9 +3234,12 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
       arg 1
       rhs
       rhs
-      equals (muConv (n)) - muConv (0) =>
+      equals (muConv (n + 1)) - muConv (0) =>
         induction n, hn using Nat.le_induction with
-        | base => simp
+        | base =>
+          simp
+          group
+
         | succ y y_ge iy =>
           simp at y_ge
           rw [Finset.sum_fin_eq_sum_range]
@@ -3242,7 +3250,7 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
           conv =>
             lhs
             rhs
-            rw [Finset.sum_congr (s₂ := Finset.range y) rfl (g := fun x => if x < y then muConv (x + 1) - muConv (x) else 0) (by
+            rw [Finset.sum_congr (s₂ := Finset.range (y + 1)) rfl (g := fun x => if x < y + 1 then muConv (x + 1) - muConv (x) else 0) (by
               intro x hx
               simp
               simp at hx
@@ -3260,29 +3268,47 @@ theorem f_n_sub_conv (n: ℕ) (hn: n > 0): MeasureTheory.eLpNorm ((f_n (S := S) 
     nth_rw 1 [muConv]
     simp
     calc
-      _ ≤ ‖(n: ℝ)⁻¹‖ₑ * MeasureTheory.eLpNorm ((mu - muConv n)) 1 MeasureTheory.volume := by
+      _ ≤ ‖((n + 1): ℝ)⁻¹‖ₑ * MeasureTheory.eLpNorm ((mu - muConv (n + 1))) 1 MeasureTheory.volume := by
         apply MeasureTheory.eLpNorm_const_smul_le
-      _ ≤ ‖(n: ℝ)⁻¹‖ₑ * (MeasureTheory.eLpNorm ((mu)) 1 MeasureTheory.volume + (MeasureTheory.eLpNorm ((muConv n)) 1 MeasureTheory.volume)) := by
-        have sub_le := MeasureTheory.eLpNorm_sub_le (p := 1) (f := mu (S := S)) (g := muConv (S := S) n) (μ := MeasureTheory.volume) ?_ ?_ (by simp)
+      _ ≤ ‖((n + 1): ℝ)⁻¹‖ₑ * (MeasureTheory.eLpNorm ((mu)) 1 MeasureTheory.volume + (MeasureTheory.eLpNorm ((muConv (n + 1))) 1 MeasureTheory.volume)) := by
+        have sub_le := MeasureTheory.eLpNorm_sub_le (p := 1) (f := mu (S := S)) (g := muConv (S := S) (n + 1)) (μ := MeasureTheory.volume) ?_ ?_ (by simp)
         .
           apply mul_le_mul_left' sub_le
         . apply MeasureTheory.AEStronglyMeasurable.of_discrete
         . apply MeasureTheory.AEStronglyMeasurable.of_discrete
-      _ ≤ ENNReal.ofReal ((2: ℝ) / (n: ℝ)) := by
+      _ ≤ ENNReal.ofReal ((2: ℝ) / ((n + 1): ℝ)) := by
         rw [mu_norm_one]
         have mu_single_norm := mu_norm_one (S := S) 0
         simp [muConv] at mu_single_norm
         rw [mu_single_norm]
         field_simp
         norm_cast
-        rw [Real.enorm_of_nonneg (by simp)]
+        rw [Real.enorm_of_nonneg (by
+          simp
+          linarith
+        )]
         rw [← ENNReal.ofReal_natCast]
         rw [← ENNReal.ofReal_mul]
         simp
         rw [mul_comm]
         field_simp
         simp
+        linarith
+    .
+      rw [ENNReal.ofReal_le_ofReal_iff]
+      group
+      simp
+      rw [inv_le_inv₀]
+      . linarith
+      . linarith
+      . exact Nat.cast_pos'.mpr hn
+      .
+        group
+        simp
+
+
   . exact mu_finsupp
+
   --   MeasureTheory.eLpNorm_add_le
   --   rw [MeasureTheory.eLpNorm_nsmul]
   --   rw [Finset.sum_range_sub]
@@ -4036,6 +4062,13 @@ lemma laplace_conv_eq_laplace_right (f g: G → ℝ): Laplace_b (Conv f g) = Con
   . sorry
   . sorry
 
+#synth Module ℝ (Lp ℝ 2 (μ := MeasureTheory.volume (α := G)))
+
+-- We need to prove that a bounded seqence of Lipschitz harmonic functions has a subsequence that converges to a Lipschitz harmonic function
+-- lp.memℓp_of_tendsto
+-- MeasureTheory.ae_bdd_liminf_atTop_of_eLpNorm_bdd
+-- IsCompact.tendsto_subseq
+
 -- Case two of Theorem 3.6
 lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℤ, F ≠ ConstLipschitzH z := by
   obtain ⟨s, hs⟩ := f_n_limit
@@ -4257,13 +4290,13 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
   have haar_eq_haar_add : myHaar (G := G) = myHaarAddOpp := by
     rfl
 
-  have h_conv_f_bounded (n: ℕ) (hn: 0 < n): eLpNorm (Conv (H_n n) (f_n n)) ⊤ ≤ 1 := by
+  have h_conv_f_bounded (n: ℕ): eLpNorm (Conv (H_n n) (f_n n)) ⊤ ≤ 1 := by
     unfold Conv
     rw [← Function.comp_def]
     rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := myHaarAddOpp)]
     .
       grw [ENNReal.eLpNorm_convolution_le_enorm_mul (p := ⊤) (q := 1)]
-      have norm_one := f_n_norm_one n hn (S := S)
+      have norm_one := f_n_norm_one (n ) (S := S)
       simp [volume] at norm_one
       rw [haar_eq_haar_add] at norm_one
       rw [norm_one]
@@ -4301,7 +4334,62 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     grw [my_norm]
     simp [enorm]
 
-  sorry
+
+  let conv_h_n_cont (n: ℕ): C(G, ℝ) := {
+    toFun := Conv (H_n n) (f_n n),
+    continuous_toFun := by exact continuous_of_discreteTopology
+  }
+
+  have conv_h_n_kipschitz (n: ℕ) (hn: 0 < n): LipschitzWith 1 (conv_h_n_cont n) := by
+    unfold conv_h_n_cont
+    simp [LipschitzWith]
+    intro x y
+    have norm_bound := h_conv_f_bounded n
+
+  -- The set of 'Conv (H_n f_n)' for all n
+  let all_h_f_conv: Set C(G, ℝ) := Set.range conv_h_n_cont
+  have arzela_conv := ArzelaAscoli.isCompact_of_equicontinuous all_h_f_conv ?_ ?_
+  .
+    apply IsCompact.tendsto_subseq (x := conv_h_n_cont) (hx := by
+      simp [all_h_f_conv]
+    ) at arzela_conv
+
+    obtain ⟨F, F_mem, seq, mono_seq, hF⟩ := arzela_conv
+    rw [ContinuousMap.tendsto_iff_forall_isCompact_tendstoUniformlyOn] at hF
+
+  .
+    simp
+    apply isCompact_of_totallyBounded_isClosed
+
+    . simp
+    rw [Metric.isCompact_iff_isClosed_bounded]
+  .
+    unfold Equicontinuous
+    intro x
+    rw [Metric.equicontinuousAt_iff_pair]
+    intro eps heps
+    use Metric.ball x ((1: ℝ))
+    refine ⟨?_, ?_⟩
+    . simp
+    .
+      intro y hy z hz
+      simp [dist] at hy
+      have y_dist_zero: dist y x = 0 := by
+        simp [dist]
+        exact hy
+      simp at y_dist_zero
+
+      simp [dist] at hz
+      have z_dist_zero: dist z x = 0 := by
+        simp [dist]
+        exact hz
+      simp at z_dist_zero
+      intro f
+      rw [y_dist_zero, z_dist_zero]
+      simp
+      exact heps
+
+
 
 -- structure ListPrefix {T: Type*} (n: ℕ) (head: T) (suffix target: List T): Prop where
 --   suffix_neq: suffix ≠ []
