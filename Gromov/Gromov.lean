@@ -2356,46 +2356,38 @@ lemma conv_add_left {f g h: G → ℝ} (h_fh: ConvExists f h) (h_gh : ConvExists
 lemma conv_smul {f h: G → ℝ} (k: ℝ): Conv (k • f) h = k • Conv f h := by
   funext g
   unfold Conv
-  conv =>
-    arg 1
-    arg 1
-    equals k • (fun x => f ((Additive.toMul x))) =>
-      funext p
-      simp
-
   rw [MeasureTheory.smul_convolution]
   simp
 
 lemma smul_conv (f h: G → ℝ) (k: ℝ): Conv f (k • h) = k • Conv f h := by
   funext g
   unfold Conv
-  conv =>
-    arg 1
-    arg 2
-    equals k • (fun x => h ((Additive.toMul x))) =>
-      funext p
-      simp
-
   rw [MeasureTheory.convolution_smul]
   simp
 
-lemma conv_assoc (f g h: G → ℝ): Conv (Conv f g) h = Conv f (Conv g h) := by
+lemma conv_assoc {f g h: G → ℝ} (h_fg: ConvExists f g): Conv (Conv f g) h = Conv f (Conv g h) := by
   unfold Conv
-  rw [MeasureTheory.convolution_assoc]
+  unfold ConvExists at h_fg
+  funext x
   conv =>
     lhs
-    intro x
     arg 1
-
-    rw [MeasureTheory.convolution_assoc]
-  simp_rw [MeasureTheory.ConvolutionExists.assoc]
+    simp
+    eta_reduce
+  rw [MeasureTheory.convolution_assoc (L := ContinuousLinearMap.mul ℝ ℝ) (L₂ := ContinuousLinearMap.mul ℝ ℝ) (L₃ := ContinuousLinearMap.mul ℝ ℝ) (L₄ := ContinuousLinearMap.mul ℝ ℝ)]
   . rfl
-  . apply conv_exists_fin_supp
-    left
-    exact f.support.Finite
-  . apply conv_exists_fin_supp
-    right
-    exact g.support.Finite
+  . intro x y z
+    field_simp
+    rw [mul_assoc]
+  . apply MeasureTheory.AEStronglyMeasurable.of_discrete
+  . apply MeasureTheory.AEStronglyMeasurable.of_discrete
+  . apply MeasureTheory.AEStronglyMeasurable.of_discrete
+  .
+    apply Filter.Eventually.of_forall
+    exact h_fg
+  . sorry
+  . sorry
+
 
 -- TODO - figure out why we need this
 instance Real.t2Space: T2Space ℝ := TopologicalSpace.t2Space_of_metrizableSpace
@@ -2483,6 +2475,7 @@ lemma f_conv_delta (f: G → ℝ) (g s: G): (Conv (S := S) f (delta s)) g = f (s
       rw [mul_inv_cancel]
       rw [one_mul]
       simp
+      rfl
     .
       intro b hb
       simp only [Finset.mem_singleton] at hb
@@ -4037,10 +4030,11 @@ lemma laplace_conv_eq_laplace_right (f g: G → ℝ): Laplace_b (Conv f g) = Con
     equals Conv f ((-1 : ℝ) • (Conv g (mu (S := S)))) =>
       simp
   rw [smul_conv]
-  simp
-  simp
-
-  rw [← conv_add_left]
+  rw [conv_assoc]
+  . simp
+    rfl
+  . sorry
+  . sorry
 
 -- Case two of Theorem 3.6
 lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℤ, F ≠ ConstLipschitzH z := by
@@ -4087,7 +4081,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     simp_rw [h_norm_one]
     simp
 
-  have H_n_diff_pos: ∀ n: ℕ,  ∀ (i : G), 0 ≤ H_n n i⁻¹ * f_n n i - H_n n i⁻¹ * f_n n (i * (↑s)⁻¹) := by
+  have H_n_diff_pos: ∀ n: ℕ,  ∀ (i : G), 0 ≤ H_n n i⁻¹ * f_n n i - H_n n i⁻¹ * f_n n ((↑s)⁻¹ * i) := by
     intro n g
     simp [H_n]
     simp [f_conv_delta]
@@ -4095,7 +4089,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     . linarith
     .
       rename_i diff_zero
-      by_cases val_pos: 0 ≤ f_n n g - f_n n (g * (↑s)⁻¹)
+      by_cases val_pos: 0 ≤ f_n n g - f_n n ((↑s)⁻¹ * g)
       .
         rw [abs_of_nonneg val_pos]
         rw [div_self]
@@ -4187,7 +4181,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
         . exact Set.toFinite (Membership.mem Finset.univ.val)
         .
           intro m hm
-          apply Set.Finite.of_injOn (f := fun a => (MulOpposite.unop (Additive.toMul a))⁻¹) (ht := mu_conv_finsupp (S := S) m)
+          apply Set.Finite.of_injOn (f := fun a => ((Additive.toMul a))⁻¹) (ht := mu_conv_finsupp (S := S) m)
           .
             intro a ha
             exact ha
@@ -4205,7 +4199,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
         . exact Set.toFinite (Membership.mem Finset.univ.val)
         .
           intro m hm
-          apply Set.Finite.of_injOn (f := fun a => (MulOpposite.unop (Additive.toMul a))⁻¹ * s.val⁻¹) (ht := mu_conv_finsupp (S := S) m)
+          apply Set.Finite.of_injOn (f := fun a => s.val⁻¹ * ((Additive.toMul a))⁻¹ ) (ht := mu_conv_finsupp (S := S) m)
           .
             intro a ha
             exact ha
@@ -4216,7 +4210,14 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     simp_rw [f_conv_delta]
     rw [← ENNReal.ofReal_tsum_of_nonneg]
     rw [ENNReal.ofReal_eq_ofReal_iff]
-    rw [← Function.Injective.tsum_eq (γ := G) (β := Additive (MulOpposite G)) (g := fun a => Additive.ofMul (MulOpposite.op a⁻¹))]
+    rw [← Function.Injective.tsum_eq (γ := G) (β := Additive (G)) (g := fun a => Additive.ofMul (a⁻¹))]
+    simp
+    field_simp
+    unfold Additive.ofMul
+    simp
+    simp [Neg.neg, Multiplicative.ofAdd]
+    unfold Additive.toMul
+    unfold Additive.ofMul
     simp
     rw [abs_of_nonneg]
     .
@@ -4226,9 +4227,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
       simp
       apply Function.Injective.comp
       . exact neg_injective
-      . apply Function.Injective.comp
-        . exact Additive.toMul.injective
-        . exact MulOpposite.op_injective
+      . exact fun ⦃a₁ a₂⦄ a ↦ a
     .
       simp
       intro g hg
@@ -4249,12 +4248,14 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
       refine ⟨?_, ?_⟩
       . apply f_n_fin_supp
       .
-        apply Set.Finite.of_injOn (f := fun a => a * s.val⁻¹) (ht := f_n_fin_supp n)
+        apply Set.Finite.of_injOn (f := fun a => s.val⁻¹ * a) (ht := f_n_fin_supp n)
         . intro a ha
           simpa using ha
         . simp
 
 
+  have haar_eq_haar_add : myHaar (G := G) = myHaarAddOpp := by
+    rfl
 
   have h_conv_f_bounded (n: ℕ) (hn: 0 < n): eLpNorm (Conv (H_n n) (f_n n)) ⊤ ≤ 1 := by
     unfold Conv
@@ -4262,18 +4263,15 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := myHaarAddOpp)]
     .
       grw [ENNReal.eLpNorm_convolution_le_enorm_mul (p := ⊤) (q := 1)]
-      rw [← Function.comp_def]
-      rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := volume)]
+      have norm_one := f_n_norm_one n hn (S := S)
+      simp [volume] at norm_one
+      rw [haar_eq_haar_add] at norm_one
+      rw [norm_one]
+      simp only  [volume] at H_n_norm
+      rw [haar_eq_haar_add] at H_n_norm
       rw [H_n_norm]
-      rw [← Function.comp_def]
-      rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := volume)]
-      rw [f_n_norm_one]
+      simp
       simp [enorm]
-      . exact hn
-      . apply MeasureTheory.AEStronglyMeasurable.of_discrete
-      . exact measure_preserving_unop_tomul (S := S)
-      . apply MeasureTheory.AEStronglyMeasurable.of_discrete
-      . exact measure_preserving_unop_tomul (S := S)
       . simp
       . simp
       . simp
