@@ -2007,8 +2007,11 @@ open MeasureTheory
 -- Nothing in the paper should actually depend on this (since we take a convolution over a symmetric generating set S)
 -- Some of our definitions will have an inverse or order swap compared to the paper, but this is better than
 -- fighting with 'MulOpposite' every time we need to prove something about a convolution
+
+-- Note - there's some defeq abuse going on here, as we're passing in 'f' and 'g' directly (they take in G, not 'Additive G')
+-- However, this makes it much easier to prove properties about this via the `MeasureTheory.ConvolutionExists` API
 noncomputable def Conv (f g: G → ℝ) (x: G) : ℝ :=
-  (MeasureTheory.convolution (G := Additive G) (fun x => f x.toMul) (fun x => g x.toMul) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp (Additive.ofMul x))
+  (MeasureTheory.convolution (G := Additive G) f g (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp x)
 
 
 def ConvExists (f g: G → ℝ) := MeasureTheory.ConvolutionExists (G := Additive G) (fun x => f x.toMul) (fun x => g x.toMul) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp
@@ -2299,7 +2302,7 @@ noncomputable def muConv (n: ℕ): G → ℝ := (Nat.iterate (fun f => Conv (S :
 
 abbrev delta (s: G): G → ℝ := Pi.single s 1
 
-lemma conv_eq_sum {f h: G → ℝ} (hconv: ConvExists f h) (g: G): Conv f h g = ∑' (a : Additive G), f ((Additive.toMul a)) * h (g * (Additive.toMul a)⁻¹) := by
+lemma conv_eq_sum {f h: G → ℝ} (hconv: ConvExists f h) (g: G): Conv f h g = ∑' (a : Additive G), f (a) * h (g * (Additive.toMul a)⁻¹) := by
   unfold Conv
   unfold MeasureTheory.convolution
   rw [MeasureTheory.integral_countable']
@@ -2312,6 +2315,7 @@ lemma conv_eq_sum {f h: G → ℝ} (hconv: ConvExists f h) (g: G): Conv f h g = 
     simp_rw [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
     simp [MeasureTheory.Measure.addHaarMeasure_self]
     field_simp
+    rfl
   . exact (hconv (opAdd g))
 
 lemma conv_eq_sum'  {f h: G → ℝ} (hconv: ConvExists f h): Conv f h = fun g => ∑' (a : Additive G), f ((Additive.toMul a)) * h (g * (Additive.toMul a)⁻¹) := by
@@ -2377,6 +2381,7 @@ lemma smul_conv (f h: G → ℝ) (k: ℝ): Conv f (k • h) = k • Conv f h := 
 
 lemma conv_assoc (f g h: G → ℝ): Conv (Conv f g) h = Conv f (Conv g h) := by
   unfold Conv
+  rw [MeasureTheory.convolution_assoc]
   conv =>
     lhs
     intro x
@@ -2541,6 +2546,7 @@ lemma mu_finsupp: (mu (S := S)).support.Finite := by
     simp at hS
     exact Finset.nonempty_iff_ne_empty.mp hS
 
+#print axioms mu_finsupp
 -- Proposition 3.12, item 2, in Vikman
 lemma f_conv_mu (f: G → ℝ): (Conv (S := S) f (mu (S := S))) = fun g => ((1 : ℝ) / (#(S) : ℝ)) * ∑ s ∈ S, f (s * g) := by
   funext g
@@ -2589,6 +2595,21 @@ lemma f_conv_mu (f: G → ℝ): (Conv (S := S) f (mu (S := S))) = fun g => ((1 :
         lhs
         rhs
         intro x
+        rhs
+        intro b
+        rw [mul_comm]
+        rw [mul_assoc]
+      simp [delta] at delta_conv
+      conv at delta_conv =>
+        intro x
+        lhs
+        arg 1
+        intro a
+        rw [mul_comm]
+      conv =>
+        lhs
+        rhs
+        intro x
         rw [Summable.tsum_mul_left (hf := by (
           simp [Pi.single_apply]
           apply summable_of_finite_support
@@ -2617,8 +2638,6 @@ lemma f_conv_mu (f: G → ℝ): (Conv (S := S) f (mu (S := S))) = fun g => ((1 :
       simp
     .
       intro s hs
-      simp_rw [mul_comm, mul_assoc]
-      simp only [one_div]
       by_cases card_zero: #(S) = 0
       .
         simp [card_zero]
@@ -2626,6 +2645,10 @@ lemma f_conv_mu (f: G → ℝ): (Conv (S := S) f (mu (S := S))) = fun g => ((1 :
         use 0
         exact hasSum_zero
       .
+        conv =>
+          arg 1
+          intro a
+          rw [mul_assoc, mul_comm, mul_assoc]
         rw [summable_mul_left_iff]
         .
           -- TODO - deduplicate this
@@ -3783,12 +3806,12 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
   rw [integral_const_mul]
   rw [MeasureTheory.integral_finset_sum]
 
-  -- I couldn't figuoure how to to handle 'toLp (∑ x ∈ S), so I ended up manipulating the integral to avoid dealing with it
-  have comp_smul_right (i: G) := MeasureTheory.Lp.coeFn_compMeasurePreserving (g := f) (f := fun a => i * a) (μ := volume) (by
+  -- I couldn't figure how to to handle 'toLp (∑ x ∈ S), so I ended up manipulating the integral to avoid dealing with it
+  have comp_smul_left (i: G) := MeasureTheory.Lp.coeFn_compMeasurePreserving (g := f) (f := fun a => i * a) (μ := volume) (by
     exact measurePreserving_mul_left volume i
   )
-  simp_rw [ae_eq_everywhere] at comp_smul_right
-  have congr_comp (i: G) (x: G) := congrFun (comp_smul_right i) x
+  simp_rw [ae_eq_everywhere] at comp_smul_left
+  have congr_comp (i: G) (x: G) := congrFun (comp_smul_left i) x
   simp only [Function.comp_apply] at congr_comp
   simp_rw [smul_eq_mul]
   simp_rw [← congr_comp]
@@ -3872,7 +3895,7 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
     simp_rw [f_conv_delta_helper]
     apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
     . apply MeasureTheory.Lp.memLp f
-    . exact measurePreserving_mul_right volume _
+    . exact measurePreserving_mul_left volume _
   )
 
 
@@ -3947,7 +3970,7 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
           rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := volume)]
           . simp [norm]
           . apply MeasureTheory.AEStronglyMeasurable.of_discrete
-          . exact measurePreserving_mul_right volume x
+          . exact measurePreserving_mul_left volume x
       simp
       have s_card_ne_zero: (#S : ℝ) ≠ 0 := by
         simp
@@ -3961,10 +3984,10 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
     intro s hs
     simp
 
-    have mem_lp_h_comp: MemLp (f ∘ (fun x => x * s)) 2 := by
+    have mem_lp_h_comp: MemLp (f ∘ (fun x => s * x)) 2 := by
       apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
       . apply MeasureTheory.Lp.memLp f
-      . exact measurePreserving_mul_right volume s
+      . exact measurePreserving_mul_left volume s
 
     have prod_lp1 := MeasureTheory.MemLp.smul (p := 2) (q := 2) (r := 1) (μ := volume) (MeasureTheory.Lp.memLp f) mem_lp_h_comp
     rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
