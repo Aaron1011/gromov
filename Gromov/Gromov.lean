@@ -3635,7 +3635,7 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
     rhs
     arg 2
     intro s
-    rw [← MeasureTheory.integral_mul_right_eq_self (g := s⁻¹)]
+    rw [← MeasureTheory.integral_mul_left_eq_self (g := s⁻¹)]
     simp
   rw [← MeasureTheory.integral_finset_sum]
   conv =>
@@ -3644,7 +3644,7 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
     arg 2
     intro g
     rw [← Finset.mul_sum]
-    rw [Finset.sum_bijective (s := S) (t := S) (e := fun s => s⁻¹) (g := fun i => (f (g * i) * (h g))) (by
+    rw [Finset.sum_bijective (s := S) (t := S) (e := fun s => s⁻¹) (g := fun i => (f (i * g) * (h g))) (by
       refine ⟨?_, ?_⟩
       . exact inv_injective
       . exact inv_surjective
@@ -3694,10 +3694,10 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
     apply MeasureTheory.integrable_finset_sum
     intro s hs
     apply MeasureTheory.Integrable.const_mul
-    have mem_lp_f_comp: MemLp (f ∘ (fun x => x * s)) 2 := by
+    have mem_lp_f_comp: MemLp (f ∘ (fun x => s * x)) 2 := by
       apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
       . apply MeasureTheory.Lp.memLp f
-      . exact measurePreserving_mul_right volume s
+      . exact measurePreserving_mul_left volume s
 
     have prod_lp1 := MeasureTheory.MemLp.smul (f := h) (p := 2) (q := 2) (r := 1) (μ := volume) (MeasureTheory.Lp.memLp h) mem_lp_f_comp
     rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
@@ -3705,10 +3705,10 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
   .
     intro s hs
     apply MeasureTheory.Integrable.const_mul
-    have mem_lp_f_comp: MemLp (f ∘ (fun x => x * s⁻¹)) 2 := by
+    have mem_lp_f_comp: MemLp (f ∘ (fun x => s⁻¹ * x)) 2 := by
       apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
       . apply MeasureTheory.Lp.memLp f
-      . exact measurePreserving_mul_right volume s⁻¹
+      . exact measurePreserving_mul_left volume s⁻¹
     have prod_lp1 := MeasureTheory.MemLp.smul (f := h) (p := 2) (q := 2) (r := 1) (μ := volume) (MeasureTheory.Lp.memLp h) mem_lp_f_comp
     rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
     exact prod_lp1
@@ -3716,10 +3716,10 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
     intro s hs
     apply MeasureTheory.Integrable.const_mul
 
-    have mem_lp_h_comp: MemLp (h ∘ (fun x => x * s)) 2 := by
+    have mem_lp_h_comp: MemLp (h ∘ (fun x => s * x)) 2 := by
       apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
       . apply MeasureTheory.Lp.memLp h
-      . exact measurePreserving_mul_right volume s
+      . exact measurePreserving_mul_left volume s
 
     have prod_lp1 := MeasureTheory.MemLp.smul (p := 2) (q := 2) (r := 1) (μ := volume) mem_lp_h_comp (MeasureTheory.Lp.memLp f)
     rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
@@ -3733,10 +3733,10 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
     intro s hs
     apply MeasureTheory.Integrable.const_mul
 
-    have mem_lp_h_comp: MemLp (h ∘ (fun x => x * s)) 2 := by
+    have mem_lp_h_comp: MemLp (h ∘ (fun x => s * x)) 2 := by
       apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
       . apply MeasureTheory.Lp.memLp h
-      . exact measurePreserving_mul_right volume s
+      . exact measurePreserving_mul_left volume s
 
     have prod_lp1 := MeasureTheory.MemLp.smul (p := 2) (q := 2) (r := 1) (μ := volume) mem_lp_h_comp (MeasureTheory.Lp.memLp f)
     rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
@@ -3784,8 +3784,8 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
   rw [MeasureTheory.integral_finset_sum]
 
   -- I couldn't figuoure how to to handle 'toLp (∑ x ∈ S), so I ended up manipulating the integral to avoid dealing with it
-  have comp_smul_right (i: G) := MeasureTheory.Lp.coeFn_compMeasurePreserving (g := f) (f := fun a => a * i) (μ := volume) (by
-    exact measurePreserving_mul_right volume i
+  have comp_smul_right (i: G) := MeasureTheory.Lp.coeFn_compMeasurePreserving (g := f) (f := fun a => i * a) (μ := volume) (by
+    exact measurePreserving_mul_left volume i
   )
   simp_rw [ae_eq_everywhere] at comp_smul_right
   have congr_comp (i: G) (x: G) := congrFun (comp_smul_right i) x
