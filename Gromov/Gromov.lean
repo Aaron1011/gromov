@@ -2542,7 +2542,7 @@ lemma mu_finsupp: (mu (S := S)).support.Finite := by
     exact Finset.nonempty_iff_ne_empty.mp hS
 
 -- Proposition 3.12, item 2, in Vikman
-lemma f_conv_mu (f: G → ℝ): (Conv (S := S) f (mu (S := S))) = fun g => ((1 : ℝ) / (#(S) : ℝ)) * ∑ s ∈ S, f (g * s) := by
+lemma f_conv_mu (f: G → ℝ): (Conv (S := S) f (mu (S := S))) = fun g => ((1 : ℝ) / (#(S) : ℝ)) * ∑ s ∈ S, f (s * g) := by
   funext g
   rw [conv_eq_sum]
   .
@@ -2592,7 +2592,7 @@ lemma f_conv_mu (f: G → ℝ): (Conv (S := S) f (mu (S := S))) = fun g => ((1 :
         rw [Summable.tsum_mul_left (hf := by (
           simp [Pi.single_apply]
           apply summable_of_finite_support
-          apply Set.Finite.subset (s := {(opAdd ( x⁻¹ * g ))})
+          apply Set.Finite.subset (s := {(opAdd (   x⁻¹ * g  ))})
           . simp
           . intro z hz
             simp
