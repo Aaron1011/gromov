@@ -2845,7 +2845,7 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
       left
       rw [← Finset.sum_attach]
       rw [← Finset.sum_product']
-      apply Fintype.sum_bijective (e := fun (x) => (fun (i: Fin (n + 1 + 1)) => if hi: i.val = n + 1 then x.fst else x.snd ⟨i, by omega⟩))
+      apply Fintype.sum_bijective (e := fun (x) => (fun (i: Fin (n + 1 + 1)) => if hi: i.val = 0 then x.fst else x.snd ⟨i - 1, by omega⟩))
       .
         refine ⟨?_, ?_⟩
         .
@@ -2853,7 +2853,7 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
           simp at hab
           ext p
           .
-            have fst_eq := congrFun hab (⟨(n + 1), by omega⟩)
+            have fst_eq := congrFun hab (⟨0, by omega⟩)
             simp at fst_eq
             rw [fst_eq]
 
@@ -2865,18 +2865,28 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
               simp
               omega
 
-            have snd_eq := congrFun hab (⟨p, by omega⟩)
-            norm_cast at snd_eq
-            simp [cast_succ_ne] at snd_eq
-            simp [p_val_neq] at snd_eq
-            rw [snd_eq]
+            have snd_eq := congrFun hab (⟨p + 1, by omega⟩)
+            by_cases p_eq_zero: p = 0
+            .
+              simp [p_eq_zero] at snd_eq
+              rw [p_eq_zero]
+              rw [snd_eq]
+            .
+              simp [p_eq_zero] at snd_eq
+              rw [snd_eq]
         .
           intro f
-          use ((f (⟨n + 1, by omega⟩)), fun i => f (⟨i, by omega⟩))
+          use ((f (⟨0, by omega⟩)), fun i => f (⟨i + 1, by omega⟩))
           funext i
           simp
-          intro hi
-          simp_rw [← hi]
+          by_cases i_eq_zero: i = 0
+          . simp [i_eq_zero]
+          .
+            simp [i_eq_zero]
+            have i_val_neq_zero: i.val ≠ 0 := by
+              simp [i_eq_zero]
+            have one_le_i: 1 ≤ i.val := by omega
+            simp [Nat.sub_add_cancel one_le_i]
       .
         intro x
         simp only [delta]
@@ -2890,42 +2900,30 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
           simp [hi]
         .
           rename_i g_eq g_mul_neq
-          apply_fun (fun y => y * (x.fst.val)) at g_eq
-          simp only [inv_mul_cancel_right] at g_eq
+          apply_fun (fun y =>  (x.fst.val) * y ) at g_eq
+          rw [← mul_assoc] at g_eq
+          simp at g_eq
           rw [← g_eq] at g_mul_neq
-          rw [ofFn_succ_last] at g_mul_neq
-          simp at g_mul_neq
+          rw [List.ofFn_succ] at g_mul_neq
+          --rw [ofFn_fir] at g_mul_neq
+          norm_cast at g_mul_neq
           conv at g_mul_neq =>
             arg 1
             lhs
-            rhs
-            lhs
-            arg 1
-            arg 1
-            arg 1
-            intro i
-            equals x.2 i.succ =>
-              have i_neq_n: i.val ≠ n := by omega
-              simp [i_neq_n]
+            simp
 
-          rw [mul_assoc] at g_mul_neq
+
           contradiction
         . rename_i g_mul_neq g_eq
 
-          rw [ofFn_succ_last] at g_eq
-          simp [-List.ofFn_succ] at g_eq
+          simp [List.ofFn_succ] at g_eq
           rw [← g_eq] at g_mul_neq
           simp at g_mul_neq
-
-          have i_neq_n: ∀ i: Fin n, i.val ≠ n := by
-            intro i
-            omega
-          simp [i_neq_n] at g_mul_neq
         . rfl
     . intro s hs
       simp [Pi.single_apply]
       rw [← summable_norm_iff]
-      apply Summable.of_nonneg_of_le (f := fun a => ‖(fun f ↦ Conv f mu)^[n] mu (MulOpposite.unop (Additive.toMul a))‖)
+      apply Summable.of_nonneg_of_le (f := fun a => ‖(fun f ↦ Conv f mu)^[n] mu ((Additive.toMul a))‖)
       .
         intro x
         simp
@@ -2939,7 +2937,7 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
         unfold muConv at conv_finsupp
 
         apply summable_of_finite_support
-        apply Set.Finite.of_injOn (f := fun a => (MulOpposite.unop (Additive.toMul a))) (ht := conv_finsupp)
+        apply Set.Finite.of_injOn (f := fun a => ( (Additive.toMul a))) (ht := conv_finsupp)
         .
           intro a ha
           exact ha
@@ -2949,7 +2947,7 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
     .
       simp [Pi.single_apply]
       rw [← summable_norm_iff]
-      apply Summable.of_nonneg_of_le (f := fun a => ‖(fun f ↦ Conv f mu)^[n] mu (MulOpposite.unop (Additive.toMul a))‖)
+      apply Summable.of_nonneg_of_le (f := fun a => ‖(fun f ↦ Conv f mu)^[n] mu ((Additive.toMul a))‖)
       .
         intro x
         simp
@@ -2963,7 +2961,7 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
         unfold muConv at conv_finsupp
 
         apply summable_of_finite_support
-        apply Set.Finite.of_injOn (f := fun a => (MulOpposite.unop (Additive.toMul a))) (ht := conv_finsupp)
+        apply Set.Finite.of_injOn (f := fun a => ( (Additive.toMul a))) (ht := conv_finsupp)
         .
           intro a ha
           exact ha
@@ -2985,7 +2983,6 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
       apply Set.Finite.subset (ht := supp_sum)
       simp
       exact Set.toFinite (⋃ i ∈ S, {i})
-
 
 
 
