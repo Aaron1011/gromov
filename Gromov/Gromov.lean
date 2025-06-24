@@ -4482,6 +4482,60 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
             simp
             simp_rw [Laplace_b]
             exact norm_le_two_div
+
+        rw [← ENNReal.tendsto_toReal_iff] at laplace_conv_tendsto_zero
+
+        have laplace_real_tendsto_zero: Filter.Tendsto (fun n => |(Laplace_b (Conv (H_n (seq n)) (f_n (seq n)))) (x)|) Filter.atTop (nhds 0)  := by
+          apply squeeze_zero (g := fun n => (eLpNorm (Laplace_b (Conv (H_n (seq n)) (f_n (seq n)))) ⊤ volume).toReal)
+          .
+            intro n
+            simp
+          . intro n
+            have ae_le := ENNReal.ae_le_essSup (fun x ↦ ‖Laplace_b (Conv (H_n (seq n)) (f_n (seq n))) x‖ₑ) (μ := volume)
+            simp [volume] at ae_le
+            rw [my_haar_eq_count] at ae_le
+            rw [count_ae_everywhere] at ae_le
+            specialize ae_le x
+            simp [eLpNorm, eLpNorm']
+            simp [eLpNormEssSup]
+            rw [← ENNReal.toReal_le_toReal] at ae_le
+            simp only [toReal_enorm, Real.norm_eq_abs, OrderTop.bddAbove] at ae_le
+            simp [volume]
+            rw [my_haar_eq_count]
+            exact ae_le
+            . simp
+            .
+              -- TODO - deduplicate this
+              have bound_by_norm_one := conv_laplce_norm (seq n)
+              have norm_le_two_div := f_n_sub_conv (S := S) (seq n)
+              nth_rw 1 [eLpNorm] at bound_by_norm_one
+              simp at bound_by_norm_one
+              have h_norm := H_n_norm (seq n)
+              simp [eLpNorm, eLpNorm'] at h_norm
+              rw [h_norm] at bound_by_norm_one
+              simp only [eLpNormEssSup] at bound_by_norm_one
+              simp [volume] at bound_by_norm_one
+              rw [my_haar_eq_count] at bound_by_norm_one
+              rw [← WithTop.lt_top_iff_ne_top]
+              grw [bound_by_norm_one]
+              simp_rw [Laplace_b]
+              simp [volume] at norm_le_two_div
+              rw [my_haar_eq_count] at norm_le_two_div
+              grw [norm_le_two_div]
+              apply ENNReal.ofReal_lt_top
+          sorry
+
+
+    -- simp [eLpNorm, eLpNormEssSup] at norm_bound
+    -- have ae_le := ENNReal.ae_le_essSup (fun x ↦ ‖Conv (H_n n) (f_n n) x‖ₑ) (μ := volume)
+    -- simp [volume] at ae_le
+    -- rw [my_haar_eq_count] at ae_le
+    -- rw [count_ae_everywhere] at ae_le
+    -- simp_rw [Real.enorm_eq_ofReal_abs] at ae_le
+    -- simp_rw [Real.enorm_eq_ofReal_abs] at norm_bound
+
+        --simp [eLpNorm, eLpNormEssSup] at laplace_conv_tendsto_zero
+        -- MeasureTheory.ae_eq_zero_of_eLpNorm'_eq_zero
         sorry
     }
 
