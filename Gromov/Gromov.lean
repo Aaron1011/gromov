@@ -2074,7 +2074,7 @@ lemma conv_exists_fin_supp (f g: G → ℝ) (hfg: f.support.Finite ∨ g.support
             simp
             refine ⟨?_, ?_⟩
             . intro ha
-              use (MulOpposite.unop (Additive.toMul a))⁻¹ * MulOpposite.unop (Additive.toMul x)
+              use (Additive.toMul x) / ((Additive.toMul a))
               refine ⟨ha, ?_⟩
               simp [myFun, opAdd]
             . intro ha
@@ -2977,7 +2977,6 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
       exact Set.toFinite (⋃ i ∈ S, {i})
 
 
-
 lemma lintegral_g_eq_add (f: G → ENNReal): (∫⁻ (g: G), f g) = (∑' (g : G), f g) := by
   rw [MeasureTheory.lintegral_countable']
   simp [MeasureTheory.volume]
@@ -3344,7 +3343,7 @@ noncomputable def conv_mu_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume 
   --.
   simp_rw [Finset.mul_sum]
   --  (1 : ℝ) / (#(S) : ℝ) * f (a * s)
-  have other := MeasureTheory.memLp_finset_sum (μ := MeasureTheory.volume (α := G)) (s := S) (p := 2) (f := fun s a => ((1 : ℝ) / (#(S) : ℝ)) * f (a * s)) (by
+  have other := MeasureTheory.memLp_finset_sum (μ := MeasureTheory.volume (α := G)) (s := S) (p := 2) (f := fun s a => ((1 : ℝ) / (#(S) : ℝ)) * f (s * a)) (by
     intro s hs
     simp
     apply MeasureTheory.MemLp.const_mul
@@ -3353,7 +3352,7 @@ noncomputable def conv_mu_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume 
     .
       simp [MeasureTheory.volume]
       simp_rw [my_haar_eq_count]
-      rw [MeasureTheory.Measure.IsMulRightInvariant.map_mul_right_eq_self s]
+      rw [MeasureTheory.Measure.IsMulLeftInvariant.map_mul_left_eq_self s]
       have mem_f := Lp.memLp f
       simp [volume, my_haar_eq_count] at mem_f
       exact mem_f
@@ -3462,71 +3461,11 @@ noncomputable def conv_finsupp_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.vo
 noncomputable def Laplace_b (f: G → ℝ): G → ℝ := f - (Conv f (mu (S := S)))
 noncomputable def Laplace (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := f - (conv_mu_lp2 f)
 
-lemma measure_preserving_unop_tomul: MeasurePreserving (fun (x: Additive (MulOpposite G)) ↦ MulOpposite.unop (Additive.toMul x)) myHaarAddOpp volume := by
-  exact {
-    measurable := by
-      apply Measurable.of_discrete
-    map_eq := by
-      simp [MeasureTheory.volume]
-      rw [my_haar_eq_count]
-      rw [my_add_haar_eq_count]
-      ext g hg
-      rw [MeasureTheory.Measure.map_apply_of_aemeasurable]
-      rw [← MeasureTheory.Measure.count_injective_image (f := fun g =>  MulOpposite.unop (Additive.toMul g))]
-      conv =>
-        arg 1
-        arg 2
-        equals g =>
-          ext a
-          refine ⟨?_, ?_⟩
-          . simp
-          . simp
+lemma measure_preserving_unop_tomul: MeasurePreserving (fun (x: Additive (G)) ↦ (Additive.toMul x)) myHaarAddOpp volume := by
+  apply MeasureTheory.MeasurePreserving.id
 
-      .
-        rw [← Function.comp_def]
-        apply Function.Injective.comp
-        . exact MulOpposite.unop_injective
-        . exact fun ⦃a₁ a₂⦄ a ↦ a
-      . apply AEMeasurable.of_discrete
-      . exact hg
-  }
-
-lemma measure_preserving_op_add: MeasurePreserving (fun (x: G) ↦ Additive.ofMul (MulOpposite.op x)) volume myHaarAddOpp := by
-  exact {
-    measurable := by
-      apply Measurable.of_discrete
-    map_eq := by
-      simp [MeasureTheory.volume]
-      rw [my_haar_eq_count]
-      rw [my_add_haar_eq_count]
-      ext g hg
-      rw [MeasureTheory.Measure.map_apply_of_aemeasurable]
-      rw [← MeasureTheory.Measure.count_injective_image (f := fun g => Additive.ofMul (MulOpposite.op g))]
-      conv =>
-        arg 1
-        arg 2
-        equals g =>
-          ext a
-          refine ⟨?_, ?_⟩
-          .
-            intro ha
-            simp at ha
-            obtain ⟨x, mem_g, a_eq⟩ := ha
-            rw [← a_eq]
-            exact mem_g
-          .
-            intro ha
-            simp
-            use MulOpposite.unop (Additive.toMul a)
-            simpa using ha
-      .
-        rw [← Function.comp_def]
-        apply Function.Injective.comp
-        . exact fun ⦃a₁ a₂⦄ a ↦ a
-        . exact MulOpposite.op_injective
-      . apply AEMeasurable.of_discrete
-      . exact hg
-  }
+lemma measure_preserving_op_add: MeasurePreserving (fun (x: G) ↦ Additive.ofMul (x)) volume myHaarAddOpp := by
+  apply MeasureTheory.MeasurePreserving.id
 
 -- Proposition 3.17.1: "∆ is bounded" from Vikman
 -- The paper also proves that the Laplace operator is self-adjoint as part of this step,
@@ -3550,7 +3489,7 @@ lemma laplace_bounded (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G
     rhs
     arg 1
     arg 1
-    equals ∑ x ∈ S, fun g => f (g • x) =>
+    equals ∑ x ∈ S, fun g => f (x • g) =>
       funext g
       simp
 
@@ -3566,14 +3505,11 @@ lemma laplace_bounded (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G
     rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := MeasureTheory.volume) (by
       apply MeasureTheory.AEStronglyMeasurable.of_discrete
     ) (by
-    simp
     exact {
       measurable := by
         apply Measurable.of_discrete
       map_eq := by
         simp [MeasureTheory.volume]
-        rw [my_haar_eq_count]
-        exact MeasureTheory.Measure.IsMulRightInvariant.map_mul_right_eq_self x
     }
   )]
   simp
@@ -3602,11 +3538,7 @@ lemma laplace_bounded (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G
     apply MeasureTheory.MemLp.comp_of_map
     .
       simp [MeasureTheory.volume]
-      simp_rw [my_haar_eq_count]
-      rw [MeasureTheory.Measure.IsMulRightInvariant.map_mul_right_eq_self s]
-      have mem_f := Lp.memLp f
-      simp [volume, my_haar_eq_count] at mem_f
-      exact mem_f
+      apply MeasureTheory.Lp.memLp f
     . apply AEMeasurable.of_discrete
 
 #print axioms laplace_bounded
