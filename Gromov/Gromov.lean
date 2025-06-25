@@ -4461,8 +4461,8 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
         have lim_f_g := tendsto_F g
         have lim_f_g_sub := Filter.Tendsto.sub lim_f_g lim_f_mul_sum
 
-        have laplace_conv_tendsto_zero: Filter.Tendsto (fun n => eLpNorm (Laplace_b (Conv (H_n (n)) (f_n (n)))) ⊤) Filter.atTop (nhds 0) := by
-          apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := fun (n: ℕ) => ENNReal.ofReal ((2: ℝ) / ((n + 1) : ℝ)))
+        have laplace_conv_tendsto_zero: Filter.Tendsto (fun n => eLpNorm (Laplace_b (Conv (H_n ((eps_seq (seq n)))) (f_n ((eps_seq (seq n)))))) ⊤) Filter.atTop (nhds 0) := by
+          apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := fun (n: ℕ) => ENNReal.ofReal ((2: ℝ) / (((eps_seq (seq n))) : ℝ)))
           . simp
           .
             rw [← ENNReal.tendsto_toReal_iff]
@@ -4471,23 +4471,34 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
               intro n
               rw [ENNReal.toReal_ofReal (by
                 norm_cast
-                by_cases n_eq_zero: n = 0
-                . simp [n_eq_zero]
-                .
-                  group
-                  simp
-                  linarith
+                positivity
               )]
             conv =>
               arg 1
               intro n
               rhs
-              equals ((((n: ℕ) + 1) : ℕ ) : ℝ) => simp
-            rw [Filter.tendsto_add_atTop_iff_nat (f := fun n => (2 : ℝ) / (n))]
-            apply tendsto_const_div_atTop_nhds_zero_nat
+              equals (((((eps_seq (seq n)): ℕ)) : ℕ ) : ℝ) => simp
+            --rw [Filter.tendsto_add_atTop_iff_nat (f := fun n => (2 : ℝ) / ((eps_seq (seq n))))]
+            conv =>
+              arg 1
+              equals (fun (n: ℕ) => (2 : ℝ) / (n) ) ∘ (fun n => (eps_seq (seq n))) =>
+                ext n
+                simp
+            rw [← tendsto_iff_tendsto_subseq_of_antitone _ _]
             .
-              intro n
-              simp
+              apply tendsto_const_div_atTop_nhds_zero_nat
+            .
+              intro a b hab
+              field_simp
+              by_cases b_eq_zero: b = 0
+              . simp [b_eq_zero]
+                positivity
+              .
+                rw [div_le_div_iff_of_pos_left]
+                . simp
+                  linarith
+                . linarith
+                . positivity
             . simp
           . rw [Pi.le_def]
             intro x
@@ -4495,12 +4506,12 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
           . rw [Pi.le_def]
             intro n
             simp
-            have bound_by_norm_one := conv_laplce_norm n
-            have norm_le_two_div := f_n_sub_conv (S := S) n
+            have bound_by_norm_one := conv_laplce_norm (eps_seq (seq n))
+            have norm_le_two_div := f_n_sub_conv (S := S) (eps_seq (seq n))
             nth_rw 1 [eLpNorm] at bound_by_norm_one
             simp at bound_by_norm_one
             grw [bound_by_norm_one]
-            have h_norm := H_n_norm n
+            have h_norm := H_n_norm (eps_seq (seq n))
             simp [eLpNorm, eLpNorm'] at h_norm
             rw [h_norm]
             simp
@@ -4547,7 +4558,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
               rw [my_haar_eq_count] at norm_le_two_div
               grw [norm_le_two_div]
               apply ENNReal.ofReal_lt_top
-          . sorry
+          . apply laplace_conv_tendsto_zero
 
         simp_rw [Laplace_b] at laplace_real_tendsto_zero
         simp_rw [f_conv_mu] at laplace_real_tendsto_zero
@@ -4566,7 +4577,8 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
           arg 1
           intro n
           rw [← Finset.sum_subtype (s := S) (f := fun s => Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) (s * g)) (h := by
-            sorry
+            intro s
+            simp
           )]
         have lim_eq := tendsto_nhds_unique laplace_real_tendsto_zero lim_f_g_sub
         rw [eq_comm] at lim_eq
@@ -4646,6 +4658,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
   }
   use F_lipschitzh
   intro z
+
   sorry
 
   -- BAD CODE - do not use
