@@ -3165,6 +3165,7 @@ theorem f_n_norm_one (n: ℕ): MeasureTheory.eLpNorm (f_n (S := S) n) 1 = 1 := b
       linarith
   .
     simp
+
 -- Proposition 3.15.2 from Vikman
 theorem f_n_sub_conv (n: ℕ): MeasureTheory.eLpNorm ((f_n (S := S) n) - (Conv (f_n (S := S) n) (mu (S := S)))) 1 ≤ ENNReal.ofReal ((2 : ℝ) / ((n + 1) : ℝ)) := by
   unfold f_n
@@ -4331,10 +4332,8 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     continuous_toFun := by exact continuous_of_discreteTopology
   }
 
-  have conv_h_n_kipschitz (n: ℕ): LipschitzWith 2 (conv_h_n_cont n) := by
-    unfold conv_h_n_cont
-    simp [LipschitzWith]
-    intro x y
+  have abs_conv_le_one: ∀ g: G, ∀ n: ℕ,  |Conv (H_n n) (f_n n) g| ≤ 1 := by
+    intro g n
     have norm_bound := h_conv_f_bounded n
     simp [eLpNorm, eLpNormEssSup] at norm_bound
     have ae_le := ENNReal.ae_le_essSup (fun x ↦ ‖Conv (H_n n) (f_n n) x‖ₑ) (μ := volume)
@@ -4343,17 +4342,20 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     rw [count_ae_everywhere] at ae_le
     simp_rw [Real.enorm_eq_ofReal_abs] at ae_le
     simp_rw [Real.enorm_eq_ofReal_abs] at norm_bound
-    have conv_norm_le_one: ∀ g: G, ENNReal.ofReal |Conv (H_n n) (f_n n) g| ≤ 1 := by
-      intro g
-      grw [ae_le]
-      simp [volume] at norm_bound
-      rw [my_haar_eq_count] at norm_bound
-      exact norm_bound
+    norm_cast at ae_le
+    simp [volume] at norm_bound
+    rw [my_haar_eq_count] at norm_bound
+    specialize ae_le g
+    have ennreal_bound := le_trans ae_le norm_bound
+    norm_cast at ennreal_bound
 
+  have conv_h_n_lipschitz (n: ℕ): LipschitzWith 2 (conv_h_n_cont n) := by
+    unfold conv_h_n_cont
+    simp [LipschitzWith]
+    intro x y
     by_cases x_eq_y: x = y
     . simp [x_eq_y]
     .
-      norm_cast at conv_norm_le_one
       norm_cast
       rw [edist_dist]
       rw [Real.dist_eq]
@@ -4367,8 +4369,8 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
       rw [ENNReal.ofReal_le_ofReal_iff]
       .
         grw [abs_sub]
-        grw [conv_norm_le_one]
-        grw [conv_norm_le_one]
+        grw [abs_conv_le_one x]
+        grw [abs_conv_le_one y]
         rw [one_add_one_eq_two]
         simp
         simp [dist]
@@ -4390,6 +4392,15 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
 
   -- The set of 'Conv (H_n f_n)' for all n
   let all_h_f_conv: Set C(G, ℝ) := Set.range conv_h_n_cont
+  have pointwise_limit (g : G) : True := by
+    have bounded_at: ∀ n, Conv (H_n n) (f_n n) g ∈ Metric.closedBall 0 1 := by
+      intro n
+      simp
+      have lipschitz := conv_h_n_lipschitz n
+      simp [conv_h_n_cont] at lipschitz
+
+ -- have tendsto_F := MeasureTheory.Lp.cauchy_complete_eLpNorm (p := ⊤) (μ := volume)
+  --  (by simp) (f := fun n => Conv (H_n n) (f_n n)) ?_ ?_
   have arzela_conv := ArzelaAscoli.isCompact_of_equicontinuous all_h_f_conv ?_ ?_
   .
     apply IsCompact.tendsto_subseq (x := conv_h_n_cont) (hx := by
@@ -4399,7 +4410,8 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     obtain ⟨F, F_mem, seq, mono_seq, hF⟩ := arzela_conv
     simp [all_h_f_conv] at F_mem
     obtain ⟨n, f_eq_n⟩ := F_mem
-    have F_lipschitz := conv_h_n_kipschitz n
+    have F_lipschitz := conv_h_n_lipschitz n
+    simp
     rw [f_eq_n] at F_lipschitz
     rw [ContinuousMap.tendsto_iff_forall_isCompact_tendstoUniformlyOn] at hF
 
@@ -4523,7 +4535,8 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
               rw [my_haar_eq_count] at norm_le_two_div
               grw [norm_le_two_div]
               apply ENNReal.ofReal_lt_top
-          sorry
+          . sorry
+          --exact laplace_conv_tendsto_zero
 
 
     -- simp [eLpNorm, eLpNormEssSup] at norm_bound
