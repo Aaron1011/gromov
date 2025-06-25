@@ -4401,6 +4401,14 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     grw [abs_conv_le_one]
     linarith
 
+  have h_n_pointwise_converge := IsCompact.tendsto_subseq compact_closure_f (x := fun n => (Conv (H_n n) (f_n n))) (by
+    intro n
+    simp
+    apply Set.mem_of_subset_of_mem (_root_.subset_closure)
+    simp
+  )
+  obtain ⟨F, F_mem, seq, seq_mono, tendsto_F⟩ := h_n_pointwise_converge
+
 
 
   --have compact_closure_f: IsCompact
