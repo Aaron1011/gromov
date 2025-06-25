@@ -4504,13 +4504,13 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
 
         rw [← ENNReal.tendsto_toReal_iff] at laplace_conv_tendsto_zero
 
-        have laplace_real_tendsto_zero: Filter.Tendsto (fun n => |(Laplace_b (Conv (H_n (seq n)) (f_n (seq n)))) (x)|) Filter.atTop (nhds 0)  := by
-          apply squeeze_zero (g := fun n => (eLpNorm (Laplace_b (Conv (H_n (seq n)) (f_n (seq n)))) ⊤ volume).toReal)
+        have laplace_real_tendsto_zero: Filter.Tendsto (fun n => |(Laplace_b (Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n)))) (g))|) Filter.atTop (nhds 0)  := by
+          apply squeeze_zero (g := fun n => (eLpNorm (Laplace_b (Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))))) ⊤ volume).toReal)
           .
             intro n
             simp
           . intro n
-            have ae_le := ENNReal.ae_le_essSup (fun x ↦ ‖Laplace_b (Conv (H_n (seq n)) (f_n (seq n))) x‖ₑ) (μ := volume)
+            have ae_le := ENNReal.ae_le_essSup (fun x ↦ ‖Laplace_b (Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n)))) x‖ₑ) (μ := volume)
             simp [volume] at ae_le
             rw [my_haar_eq_count] at ae_le
             rw [count_ae_everywhere] at ae_le
@@ -4545,6 +4545,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
           . sorry
 
         simp_rw [Laplace_b] at laplace_real_tendsto_zero
+        simp_rw [f_conv_mu] at laplace_real_tendsto_zero
 
 
         sorry
