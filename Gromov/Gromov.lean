@@ -4447,51 +4447,114 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
           apply conv_h_n_lipschitz
         ) tendsto_F
         exact F_lipschitz
+    harmonic := by
+      simp [Harmonic]
+      intro g
+      rw [tendsto_pi_nhds] at tendsto_F
+      have lim_f_sum := tendsto_finset_sum (ι := S) (M := ℝ) (s := Finset.univ) (a := fun s => F (g * s.val)) (f := (fun (s: S) n ↦ Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) (g * s.val))) (x := Filter.atTop (α := ℕ)) ?_
+      .
+        have lim_f_g := tendsto_F g
+        have lim_f_g_sub := Filter.Tendsto.sub lim_f_g lim_f_sum
 
-        let a := 1
-
-
-        --dsimp [LipschitzWith]
-        intro x y
-
-
-
-        obtain ⟨x_lim_mem, x_seq, x_seq_mono, tendsto_x_lim⟩ := lim_at_spec x
-        obtain ⟨y_lim_mem, y_seq, y_seq_mono, tendsto_y_lim⟩ := lim_at_spec y
-        rw [Metric.mem_closedBall] at x_lim_mem
-        rw [Metric.mem_closedBall] at y_lim_mem
-        by_cases x_eq_y: x = y
-        .
-          simp_rw [x_eq_y]
-          rw [edist_self]
-          simp
-        .
-
-
-
-          conv =>
-            rhs
-            equals ENNReal.ofReal (2 * (dist x y)) =>
-              simp [edist, PseudoMetricSpace.edist]
-              simp [dist]
-              norm_cast
+        have laplace_conv_tendsto_zero: Filter.Tendsto (fun n => eLpNorm (Laplace_b (Conv (H_n (n)) (f_n (n)))) ⊤) Filter.atTop (nhds 0) := by
+          apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := fun (n: ℕ) => ENNReal.ofReal ((2: ℝ) / ((n + 1) : ℝ)))
+          . simp
+          .
+            rw [← ENNReal.tendsto_toReal_iff]
+            conv =>
+              arg 1
+              intro n
+              rw [ENNReal.toReal_ofReal (by
+                norm_cast
+                by_cases n_eq_zero: n = 0
+                . simp [n_eq_zero]
+                .
+                  group
+                  simp
+                  linarith
+              )]
+            conv =>
+              arg 1
+              intro n
+              rhs
+              equals ((((n: ℕ) + 1) : ℕ ) : ℝ) => simp
+            rw [Filter.tendsto_add_atTop_iff_nat (f := fun n => (2 : ℝ) / (n))]
+            apply tendsto_const_div_atTop_nhds_zero_nat
+            .
+              intro n
               simp
-              rfl
+            . simp
+          . rw [Pi.le_def]
+            intro x
+            simp
+          . rw [Pi.le_def]
+            intro n
+            simp
+            have bound_by_norm_one := conv_laplce_norm n
+            have norm_le_two_div := f_n_sub_conv (S := S) n
+            nth_rw 1 [eLpNorm] at bound_by_norm_one
+            simp at bound_by_norm_one
+            grw [bound_by_norm_one]
+            have h_norm := H_n_norm n
+            simp [eLpNorm, eLpNorm'] at h_norm
+            rw [h_norm]
+            simp
+            simp_rw [Laplace_b]
+            exact norm_le_two_div
 
-          rw [Real.dist_0_eq_abs] at x_lim_mem
-          rw [Real.dist_0_eq_abs] at y_lim_mem
-          rw [edist_le_ofReal (by simp; exact dist_nonneg)]
-          rw [Real.dist_eq]
-          grw [abs_sub]
-          grw [x_lim_mem]
-          grw [y_lim_mem]
-          rw [one_add_one_eq_two]
-          simp
-          simp [dist]
-          have dist_ne_zero: dist x y ≠ 0 := by
-            exact dist_ne_zero.mpr x_eq_y
-          simp [dist] at dist_ne_zero
-          omega
+        rw [← ENNReal.tendsto_toReal_iff] at laplace_conv_tendsto_zero
+
+        have laplace_real_tendsto_zero: Filter.Tendsto (fun n => |(Laplace_b (Conv (H_n (seq n)) (f_n (seq n)))) (x)|) Filter.atTop (nhds 0)  := by
+          apply squeeze_zero (g := fun n => (eLpNorm (Laplace_b (Conv (H_n (seq n)) (f_n (seq n)))) ⊤ volume).toReal)
+          .
+            intro n
+            simp
+          . intro n
+            have ae_le := ENNReal.ae_le_essSup (fun x ↦ ‖Laplace_b (Conv (H_n (seq n)) (f_n (seq n))) x‖ₑ) (μ := volume)
+            simp [volume] at ae_le
+            rw [my_haar_eq_count] at ae_le
+            rw [count_ae_everywhere] at ae_le
+            specialize ae_le x
+            simp [eLpNorm, eLpNorm']
+            simp [eLpNormEssSup]
+            rw [← ENNReal.toReal_le_toReal] at ae_le
+            simp only [toReal_enorm, Real.norm_eq_abs, OrderTop.bddAbove] at ae_le
+            simp [volume]
+            rw [my_haar_eq_count]
+            exact ae_le
+            . simp
+            .
+              -- TODO - deduplicate this
+              have bound_by_norm_one := conv_laplce_norm (seq n)
+              have norm_le_two_div := f_n_sub_conv (S := S) (seq n)
+              nth_rw 1 [eLpNorm] at bound_by_norm_one
+              simp at bound_by_norm_one
+              have h_norm := H_n_norm (seq n)
+              simp [eLpNorm, eLpNorm'] at h_norm
+              rw [h_norm] at bound_by_norm_one
+              simp only [eLpNormEssSup] at bound_by_norm_one
+              simp [volume] at bound_by_norm_one
+              rw [my_haar_eq_count] at bound_by_norm_one
+              rw [← WithTop.lt_top_iff_ne_top]
+              grw [bound_by_norm_one]
+              simp_rw [Laplace_b]
+              simp [volume] at norm_le_two_div
+              rw [my_haar_eq_count] at norm_le_two_div
+              grw [norm_le_two_div]
+              apply ENNReal.ofReal_lt_top
+          . sorry
+
+        simp_rw [Laplace_b] at laplace_real_tendsto_zero
+
+
+        sorry
+      . intro s hs
+        apply tendsto_F
+
+    beta_reduce at lim_f_sum
+    -- TODO - figure out why lean hangs without this
+    have my_mul : ContinuousMul ℝ := instIsTopologicalRingReal.toContinuousMul
+    have lim_mul_sum := Filter.Tendsto.const_mul (↑(#S))⁻¹ lim_f_sum
   }
 
   -- BAD CODE - do not use
