@@ -4629,6 +4629,14 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
           apply ENNReal.mul_lt_top
           . simp
           . simp
+          .
+            intro s hs
+            apply AEStronglyMeasurable.of_discrete
+          . simp
+          . apply AEStronglyMeasurable.of_discrete
+          . apply AEStronglyMeasurable.of_discrete
+          . simp
+
 
 
 
