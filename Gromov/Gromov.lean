@@ -4451,10 +4451,14 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
       simp [Harmonic]
       intro g
       rw [tendsto_pi_nhds] at tendsto_F
-      have lim_f_sum := tendsto_finset_sum (ι := S) (M := ℝ) (s := Finset.univ) (a := fun s => F (g * s.val)) (f := (fun (s: S) n ↦ Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) (g * s.val))) (x := Filter.atTop (α := ℕ)) ?_
+      have lim_f_sum := tendsto_finset_sum (ι := S) (M := ℝ) (s := Finset.univ) (a := fun s => F (s.val * g)) (f := (fun (s: S) n ↦ Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) (s.val *g))) (x := Filter.atTop (α := ℕ)) ?_
+
+      -- TODO - figure out why lean hangs without this
+      have my_mul : ContinuousMul ℝ := instIsTopologicalRingReal.toContinuousMul
+      have lim_f_mul_sum := Filter.Tendsto.const_mul ((#S) : ℝ)⁻¹ lim_f_sum
       .
         have lim_f_g := tendsto_F g
-        have lim_f_g_sub := Filter.Tendsto.sub lim_f_g lim_f_sum
+        have lim_f_g_sub := Filter.Tendsto.sub lim_f_g lim_f_mul_sum
 
         have laplace_conv_tendsto_zero: Filter.Tendsto (fun n => eLpNorm (Laplace_b (Conv (H_n (n)) (f_n (n)))) ⊤) Filter.atTop (nhds 0) := by
           apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := fun (n: ℕ) => ENNReal.ofReal ((2: ℝ) / ((n + 1) : ℝ)))
@@ -4514,7 +4518,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
             simp [volume] at ae_le
             rw [my_haar_eq_count] at ae_le
             rw [count_ae_everywhere] at ae_le
-            specialize ae_le x
+            specialize ae_le g
             simp [eLpNorm, eLpNorm']
             simp [eLpNormEssSup]
             rw [← ENNReal.toReal_le_toReal] at ae_le
@@ -4525,11 +4529,11 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
             . simp
             .
               -- TODO - deduplicate this
-              have bound_by_norm_one := conv_laplce_norm (seq n)
-              have norm_le_two_div := f_n_sub_conv (S := S) (seq n)
+              have bound_by_norm_one := conv_laplce_norm (eps_seq (seq n))
+              have norm_le_two_div := f_n_sub_conv (S := S) (eps_seq (seq n))
               nth_rw 1 [eLpNorm] at bound_by_norm_one
               simp at bound_by_norm_one
-              have h_norm := H_n_norm (seq n)
+              have h_norm := H_n_norm (eps_seq (seq n))
               simp [eLpNorm, eLpNorm'] at h_norm
               rw [h_norm] at bound_by_norm_one
               simp only [eLpNormEssSup] at bound_by_norm_one
@@ -4546,6 +4550,26 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
 
         simp_rw [Laplace_b] at laplace_real_tendsto_zero
         simp_rw [f_conv_mu] at laplace_real_tendsto_zero
+        beta_reduce at laplace_real_tendsto_zero
+        conv at laplace_real_tendsto_zero =>
+          arg 1
+          rw [← Function.comp_def]
+        rw [← tendsto_zero_iff_abs_tendsto_zero] at laplace_real_tendsto_zero
+        simp_rw [Function.comp_def] at lim_f_g_sub
+        conv at laplace_real_tendsto_zero =>
+          arg 1
+          intro n
+          simp
+
+        conv at lim_f_g_sub =>
+          arg 1
+          intro n
+          rw [← Finset.sum_subtype (s := S) (f := fun s => Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) (s * g)) (h := by
+            sorry
+          )]
+          simp
+        have lim_eq := tendsto_nhds_unique laplace_real_tendsto_zero lim_f_g_sub
+
 
 
         sorry
