@@ -4010,12 +4010,35 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
 noncomputable def Laplace_linear: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) →ₗ[ℝ] (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) := {
   toFun := Laplace
   map_add' := by
-    sorry
+    intro x y
+    simp [Laplace]
+    simp [conv_mu_lp2]
+    have coe_add := MeasureTheory.Lp.coeFn_add x y
+    rw [ae_eq_everywhere] at coe_add
+    norm_cast
+    simp_rw [coe_add]
+    conv =>
+      pattern Conv _ _
+      rw [conv_add_left (by
+        apply conv_exists_fin_supp
+        right
+        apply mu_finsupp
+      ) (by
+        apply conv_exists_fin_supp
+        right
+        apply mu_finsupp
+      )]
+    rw [MeasureTheory.MemLp.toLp_add]
+    abel
   map_smul' := by
     intro c f
-    simp
-    nth_rw 1 [Laplace]
-    sorry
+    simp [Laplace, conv_mu_lp2]
+    have smul_ae := MeasureTheory.Lp.coeFn_smul c f
+    rw [ae_eq_everywhere] at smul_ae
+    simp_rw [smul_ae]
+    simp_rw [conv_smul]
+    rw [MeasureTheory.MemLp.toLp_const_smul]
+    rw [smul_sub]
 }
 -- spectrum.norm_le_norm_mul_of_mem
 lemma laplce_spectrum_real (z: ℂ) (hz: z ∈ spectrum ℂ (Laplace_linear (S := S))): z.im = 0 := by
