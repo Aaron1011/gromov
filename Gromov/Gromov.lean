@@ -4595,7 +4595,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
             rhs
             rhs
             arg 1
-            equals ∑ x ∈ S, (fun g => f_n n (x • g)) =>
+            equals ∑ x ∈ S, (fun g => f_n (eps_seq (seq n)) (x • g)) =>
               funext g
               simp
 
