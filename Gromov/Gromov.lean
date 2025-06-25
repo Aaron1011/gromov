@@ -637,14 +637,14 @@ instance isometricGMul: IsIsometricSMul G G where
 
 
 def gAct (g: G) (v: LipschitzH (S := S)): LipschitzH (S := S) := {
-  toFun := fun x => v (x * g⁻¹)
+  toFun := fun x => v (g⁻¹ * x)
   lipschitz := by
     obtain ⟨C, hC⟩ := v.lipschitz
     use C
     simp [LipschitzWith]
     intro x y
     simp [LipschitzWith] at hC
-    specialize hC (x * g⁻¹) (y * g⁻¹)
+    specialize hC (g⁻¹ * x) (g⁻¹ * y)
     simp [DFunLike.coe]
     exact hC
   harmonic := by
@@ -4503,12 +4503,12 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
           . rw [Pi.le_def]
             intro n
             simp
-            have bound_by_norm_one := conv_laplce_norm (eps_seq (seq n))
-            have norm_le_two_div := f_n_sub_conv (S := S) (eps_seq (seq n))
+            have bound_by_norm_one := conv_laplce_norm ((eps_seq (seq n)))
+            have norm_le_two_div := f_n_sub_conv (S := S) ((eps_seq (seq n)))
             nth_rw 1 [eLpNorm] at bound_by_norm_one
             simp at bound_by_norm_one
             grw [bound_by_norm_one]
-            have h_norm := H_n_norm (eps_seq (seq n))
+            have h_norm := H_n_norm ((eps_seq (seq n)) + 1)
             simp [eLpNorm, eLpNorm'] at h_norm
             rw [h_norm]
             simp
