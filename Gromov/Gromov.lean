@@ -4065,9 +4065,6 @@ lemma laplace_conv_eq_laplace_right (f g: G → ℝ): Laplace_b (Conv f g) = Con
 set_option maxHeartbeats 2000000 in
 lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℤ, F ≠ ConstLipschitzH z := by
   obtain ⟨s, hs⟩ := f_n_limit
-  rw [ENNReal.tendsto_nhds_zero] at hs
-  simp at hs
-  obtain ⟨eps, eps_gt_zero, hx⟩ := hs
   let H_n := fun n g => if  ((f_n n g⁻¹) - (Conv (f_n n) (delta s.val)) g⁻¹) ≠ 0 then ((f_n n g⁻¹) - (Conv (f_n n) (delta s.val)) g⁻¹) / |((f_n n g⁻¹) - (Conv (f_n n) (delta s.val)) g⁻¹)| else 1
 
   -- TODO - why can't we write '∞' here
@@ -4383,47 +4380,29 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
 
 
 
-
-
-
-
-
-
-
-
   -- The set of 'Conv (H_n f_n)' for all n
   let all_h_f_conv: Set C(G, ℝ) := Set.range conv_h_n_cont
-  have pointwise_limit (g : G) : True := by
-    have bounded_at: ∀ n, Conv (H_n n) (f_n n) g ∈ Metric.closedBall 0 1 := by
-      intro n
+  have pointwise_limit: True := by
+    rw [Filter.not_tendsto_iff_exists_frequently_notMem] at hs
+    obtain ⟨eps, h_eps, frequently_gt_eps⟩ := hs
+    rw [Filter.frequently_iff_seq_forall] at frequently_gt_eps
+    -- We obtain a subsequence where all of the points satisfy the 'norm > ε' condition
+    obtain ⟨eps_seq, h_eps_seq, eps_seq_gt_x⟩ := frequently_gt_eps
+
+    -- Along this sequence, the evauation of 'Conv H_n f_n' at is leq to 1,
+    -- so it's in a compact set
+    have locally_bounded_at_g: ∀ g: G, ∀ n, Conv (H_n (eps_seq n)) (f_n (eps_seq n)) g ∈ Metric.closedBall 0 1 := by
+      intro g n
       simp
-      apply abs_conv_le_one g n
+      apply abs_conv_le_one
 
-    obtain ⟨lim_g, h_lim_g, seq, seq_mono, tendsto_lim_g⟩ := IsCompact.tendsto_subseq (s := Metric.closedBall (0 : ℝ) (1: ℝ))
+    -- Take another subsequence to obtain a sequence that converges to a point, and also satisfies the 'norm > ε' condition
+    have point_convergence (g: G) := IsCompact.tendsto_subseq (s := Metric.closedBall (0 : ℝ) (1: ℝ))
       (by exact isCompact_closedBall 0 1)
-      (hx := bounded_at)
-
-
-
-
- -- have tendsto_F := MeasureTheory.Lp.cauchy_complete_eLpNorm (p := ⊤) (μ := volume)
-  --  (by simp) (f := fun n => Conv (H_n n) (f_n n)) ?_ ?_
-  have arzela_conv := ArzelaAscoli.isCompact_of_equicontinuous all_h_f_conv ?_ ?_
-  .
-    apply IsCompact.tendsto_subseq (x := conv_h_n_cont) (hx := by
-      simp [all_h_f_conv]
-    ) at arzela_conv
-
-    obtain ⟨F, F_mem, seq, mono_seq, hF⟩ := arzela_conv
-    simp [all_h_f_conv] at F_mem
-    obtain ⟨n, f_eq_n⟩ := F_mem
-    have F_lipschitz := conv_h_n_lipschitz n
-    simp
-    rw [f_eq_n] at F_lipschitz
-    rw [ContinuousMap.tendsto_iff_forall_isCompact_tendstoUniformlyOn] at hF
+      (hx := locally_bounded_at_g g)
 
     let F_lipschitzh: LipschitzH := {
-      toFun := (fun x => F x),
+      toFun := (fun (g: G) => Complex.ofReal (Classical.choose (point_convergence g))),
       lipschitz := by
         use 2
         rw [← Function.comp_def]
@@ -4433,8 +4412,45 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
         apply LipschitzWith.comp (Kf := 1) (Kg := 2)
         .
           exact Isometry.lipschitz (Complex.isometry_ofReal)
-        . exact F_lipschitz
+        .
+          dsimp [LipschitzWith]
+          intro x y
+          obtain ⟨x_lim_mem, x_seq, x_seq_mono, tendsto_x_lim⟩ := Classical.choose_spec (point_convergence x)
+          obtain ⟨y_lim_mem, y_seq, y_seq_mono, tendsto_y_lim⟩ := Classical.choose_spec (point_convergence y)
+          rw [Metric.mem_closedBall] at x_lim_mem
+          rw [Metric.mem_closedBall] at y_lim_mem
+          by_cases x_eq_y: x = y
+          .
+            simp_rw [x_eq_y]
+            rw [edist_self]
+            simp
+          .
+
+            conv =>
+              rhs
+              equals ENNReal.ofReal (2 * (dist x y)) =>
+                simp [edist, PseudoMetricSpace.edist]
+                simp [dist]
+                norm_cast
+                simp
+                rfl
+
+            rw [Real.dist_0_eq_abs] at x_lim_mem
+            rw [Real.dist_0_eq_abs] at y_lim_mem
+            rw [edist_le_ofReal (by simp; exact dist_nonneg)]
+            rw [Real.dist_eq]
+            grw [abs_sub]
+            grw [x_lim_mem]
+            grw [y_lim_mem]
+            rw [one_add_one_eq_two]
+            simp
+            simp [dist]
+            have dist_ne_zero: dist x y ≠ 0 := by
+              exact dist_ne_zero.mpr x_eq_y
+            simp [dist] at dist_ne_zero
+            omega
       harmonic := by
+        sorry
         simp [Harmonic]
         --have lim_mul_sum := Filter.Tendsto.const_mul (2: ℝ) (l := Filter.atTop (α := ℕ)) (c := ∑ c ∈ S, F (x * c))
         intro x
