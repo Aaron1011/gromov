@@ -4401,17 +4401,100 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     grw [abs_conv_le_one]
     linarith
 
-  have h_n_pointwise_converge := IsCompact.tendsto_subseq compact_closure_f (x := fun n => (Conv (H_n n) (f_n n))) (by
+
+  rw [Filter.not_tendsto_iff_exists_frequently_notMem] at hs
+  obtain ⟨eps, h_eps, frequently_gt_eps⟩ := hs
+  rw [Filter.frequently_iff_seq_forall] at frequently_gt_eps
+  -- We obtain a subsequence where all of the points satisfy the 'norm > ε' condition
+  obtain ⟨eps_seq, h_eps_seq, eps_seq_gt_x⟩ := frequently_gt_eps
+
+  -- Along this sequence, the evauation of 'Conv H_n f_n' at is leq to 1,
+  -- so it's in a compact set
+  have locally_bounded_at_g: ∀ g: G, ∀ n, Conv (H_n (eps_seq n)) (f_n (eps_seq n)) g ∈ Metric.closedBall 0 1 := by
+    intro g n
+    simp
+    apply abs_conv_le_one
+
+
+  have h_n_pointwise_converge := IsCompact.tendsto_subseq compact_closure_f (x := fun n => (Conv (H_n (eps_seq n)) (f_n (eps_seq n)))) (by
     intro n
     simp
     apply Set.mem_of_subset_of_mem (_root_.subset_closure)
     simp
   )
+  -- We now have a sequence of functions which converges pointwise, where all of the
+  -- elements of the sequence satisfy the 'norm > ε' condition
   obtain ⟨F, F_mem, seq, seq_mono, tendsto_F⟩ := h_n_pointwise_converge
 
+  let F_lipschitzh: LipschitzH := {
+    toFun := (fun (g: G) => Complex.ofReal (F g)),
+    lipschitz := by
+      use 2
+      rw [← Function.comp_def]
+      conv =>
+        arg 1
+        equals 1 * 2 => simp
+      apply LipschitzWith.comp (Kf := 1) (Kg := 2)
+      .
+        exact Isometry.lipschitz (Complex.isometry_ofReal)
+      .
+        have closed_lipschitz := isClosed_setOf_lipschitzWith (α := G) (β := ℝ) 2
+        apply IsClosed.isSeqClosed at closed_lipschitz
+        simp [IsSeqClosed] at closed_lipschitz
+        have F_lipschitz := closed_lipschitz (p := F) (x := (fun n ↦ Conv (H_n (eps_seq n)) (f_n (eps_seq n))) ∘ seq) (by
+          intro n
+          simp
+          apply conv_h_n_lipschitz
+        ) tendsto_F
+        exact F_lipschitz
+
+        let a := 1
 
 
-  --have compact_closure_f: IsCompact
+        --dsimp [LipschitzWith]
+        intro x y
+
+
+
+        obtain ⟨x_lim_mem, x_seq, x_seq_mono, tendsto_x_lim⟩ := lim_at_spec x
+        obtain ⟨y_lim_mem, y_seq, y_seq_mono, tendsto_y_lim⟩ := lim_at_spec y
+        rw [Metric.mem_closedBall] at x_lim_mem
+        rw [Metric.mem_closedBall] at y_lim_mem
+        by_cases x_eq_y: x = y
+        .
+          simp_rw [x_eq_y]
+          rw [edist_self]
+          simp
+        .
+
+
+
+          conv =>
+            rhs
+            equals ENNReal.ofReal (2 * (dist x y)) =>
+              simp [edist, PseudoMetricSpace.edist]
+              simp [dist]
+              norm_cast
+              simp
+              rfl
+
+          rw [Real.dist_0_eq_abs] at x_lim_mem
+          rw [Real.dist_0_eq_abs] at y_lim_mem
+          rw [edist_le_ofReal (by simp; exact dist_nonneg)]
+          rw [Real.dist_eq]
+          grw [abs_sub]
+          grw [x_lim_mem]
+          grw [y_lim_mem]
+          rw [one_add_one_eq_two]
+          simp
+          simp [dist]
+          have dist_ne_zero: dist x y ≠ 0 := by
+            exact dist_ne_zero.mpr x_eq_y
+          simp [dist] at dist_ne_zero
+          omega
+  }
+
+  -- BAD CODE - do not use
 
   have new_arzela := ArzelaAscoli.isCompact_of_equicontinuous all_h_f_conv (by
     simp [all_h_f_conv]
