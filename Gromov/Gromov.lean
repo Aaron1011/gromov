@@ -4577,7 +4577,61 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
         simp
         . simp
         . intro n
-          sorry
+          -- TODO - deduplicate this. I'm sure there's lots of other versions of it scattered around this file
+          rw [← WithTop.lt_top_iff_ne_top]
+          grw [conv_laplce_norm]
+          rw [H_n_norm]
+          simp
+          simp_rw [Laplace_b]
+          grw [MeasureTheory.eLpNorm_sub_le]
+          rw [f_n_norm_one]
+          simp_rw [f_conv_mu]
+          simp_rw [← smul_eq_mul]
+          rw [← Pi.smul_def]
+          rw [MeasureTheory.eLpNorm_const_smul]
+          conv =>
+            lhs
+            rhs
+            rhs
+            arg 1
+            equals ∑ x ∈ S, (fun g => f_n n (x • g)) =>
+              funext g
+              simp
+
+
+          grw [MeasureTheory.eLpNorm_sum_le]
+          simp_rw [← Function.comp_def]
+          conv =>
+            lhs
+            rhs
+            rhs
+            arg 2
+            intro x
+            rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := MeasureTheory.volume) (by
+              apply MeasureTheory.AEStronglyMeasurable.of_discrete
+            ) (by
+            exact {
+              measurable := by
+                apply Measurable.of_discrete
+              map_eq := by
+                simp [MeasureTheory.volume]
+            }
+          )]
+          simp_rw [f_n_norm_one]
+          simp
+          field_simp
+          norm_cast
+          rw [Real.enorm_eq_ofReal_abs]
+          simp
+          norm_cast
+          rw [ENNReal.add_lt_top]
+          refine ⟨by simp, ?_⟩
+          apply ENNReal.mul_lt_top
+          . simp
+          . simp
+
+
+
         . simp
       . intro s hs
         apply tendsto_F
