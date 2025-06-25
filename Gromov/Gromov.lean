@@ -4567,8 +4567,14 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
           rw [← Finset.sum_subtype (s := S) (f := fun s => Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) (s * g)) (h := by
             sorry
           )]
-          simp
         have lim_eq := tendsto_nhds_unique laplace_real_tendsto_zero lim_f_g_sub
+        rw [eq_comm] at lim_eq
+        rw [sub_eq_zero] at lim_eq
+        rw [lim_eq]
+        norm_cast
+        rfl
+        field_simp
+        rw [← Finset.sum_subtype (s := S) (f := fun i => Complex.ofReal (F (i * g)))]
 
 
 
