@@ -2393,8 +2393,9 @@ lemma conv_assoc {f g h: G → ℝ} (h_fg: ConvExists f g): Conv (Conv f g) h = 
   . sorry
 
 
--- TODO - figure out why we need this
+-- TODO - figure out why we need these
 instance Real.t2Space: T2Space ℝ := TopologicalSpace.t2Space_of_metrizableSpace
+instance Real.firstCountable: FirstCountableTopology ℝ := TopologicalSpace.PseudoMetrizableSpace.firstCountableTopology
 
 lemma conv_sum {T: Type*} (H: Finset T) (f: T → G → ℝ) (h: G → ℝ) (h_finsupp: h.support.Finite): Conv (∑ t ∈ H, f t) h = ∑ t ∈ H, (Conv (f t) h) := by
   funext g
@@ -4396,8 +4397,14 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     have bounded_at: ∀ n, Conv (H_n n) (f_n n) g ∈ Metric.closedBall 0 1 := by
       intro n
       simp
-      have lipschitz := conv_h_n_lipschitz n
-      simp [conv_h_n_cont] at lipschitz
+      apply abs_conv_le_one g n
+
+    obtain ⟨lim_g, h_lim_g, seq, seq_mono, tendsto_lim_g⟩ := IsCompact.tendsto_subseq (s := Metric.closedBall (0 : ℝ) (1: ℝ))
+      (by exact isCompact_closedBall 0 1)
+      (hx := bounded_at)
+
+
+
 
  -- have tendsto_F := MeasureTheory.Lp.cauchy_complete_eLpNorm (p := ⊤) (μ := volume)
   --  (by simp) (f := fun n => Conv (H_n n) (f_n n)) ?_ ?_
