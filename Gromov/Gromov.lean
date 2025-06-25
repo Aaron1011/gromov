@@ -4484,22 +4484,11 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
               equals (fun (n: ℕ) => (2 : ℝ) / (n) ) ∘ (fun n => (eps_seq (seq n))) =>
                 ext n
                 simp
-            rw [← tendsto_iff_tendsto_subseq_of_antitone _ _]
-            .
-              apply tendsto_const_div_atTop_nhds_zero_nat
-            .
-              intro a b hab
-              field_simp
-              by_cases b_eq_zero: b = 0
-              . simp [b_eq_zero]
-                positivity
-              .
-                rw [div_le_div_iff_of_pos_left]
-                . simp
-                  linarith
-                . linarith
-                . positivity
-            . simp
+            apply Filter.Tendsto.comp
+            . apply tendsto_const_div_atTop_nhds_zero_nat
+            . apply Filter.Tendsto.comp
+              . apply h_eps_seq
+              . exact StrictMono.tendsto_atTop seq_mono
           . rw [Pi.le_def]
             intro x
             simp
