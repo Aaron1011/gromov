@@ -4382,6 +4382,70 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
 
   -- The set of 'Conv (H_n f_n)' for all n
   let all_h_f_conv: Set C(G, ℝ) := Set.range conv_h_n_cont
+
+  have compact_closure_f: IsCompact (closure ( (Set.range (fun n => (Conv (H_n n) (f_n n)))))) := by
+    rw [Pi.isCompact_closure_iff]
+    intro g
+    apply Bornology.IsBounded.isCompact_closure
+    rw [Metric.isBounded_iff]
+    use 2
+    intro x hx y hy
+    simp at hx
+    simp at hy
+    obtain ⟨n, h_x_n⟩ := hx
+    obtain ⟨m, h_y_m⟩ := hy
+    rw [Real.dist_eq]
+    grw [abs_sub]
+    rw [← h_x_n, ← h_y_m]
+    grw [abs_conv_le_one]
+    grw [abs_conv_le_one]
+    linarith
+
+
+
+  --have compact_closure_f: IsCompact
+
+  have new_arzela := ArzelaAscoli.isCompact_of_equicontinuous all_h_f_conv (by
+    simp [all_h_f_conv]
+    rw [Pi.isCompact_iff]
+    refine ⟨?_, ?_⟩
+    . sorry
+    .
+      intro g
+      simp
+    apply IsSeqCompact.isCompact
+    simp [IsSeqCompact]
+    intro seq h_seq
+
+    simp_rw [tendsto_pi_nhds]
+
+
+    have locally_bounded_at_g: ∀ g: G, ∀ n, (conv_h_n_cont n) g ∈ Metric.closedBall 0 1 := by
+      intro g n
+      simp
+      apply abs_conv_le_one
+
+
+    have closed_lipschitz := isClosed_setOf_lipschitzWith (α := G) (β := ℝ) 2
+    apply IsClosed.isSeqClosed at closed_lipschitz
+    simp [IsSeqClosed] at closed_lipschitz
+
+
+
+    have point_convergence (g: G) := IsCompact.tendsto_subseq (s := Metric.closedBall (0 : ℝ) (1: ℝ))
+      (by exact isCompact_closedBall 0 1)
+      (hx := locally_bounded_at_g g)
+
+
+    specialize point_convergence (conv_h_n_cont a)
+
+  ) (by
+    apply UniformEquicontinuous.equicontinuous
+    apply LipschitzWith.uniformEquicontinuous (K := 2)
+    simp [all_h_f_conv]
+    apply conv_h_n_lipschitz
+  )
+
   have pointwise_limit: True := by
     rw [Filter.not_tendsto_iff_exists_frequently_notMem] at hs
     obtain ⟨eps, h_eps, frequently_gt_eps⟩ := hs
@@ -4401,8 +4465,15 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
       (by exact isCompact_closedBall 0 1)
       (hx := locally_bounded_at_g g)
 
+    -- The pointwise limit of 'Conv (H_n f_n) g'
+    let lim_at (g: G) := Classical.choose (point_convergence g)
+    have choose_eq_lim_at (g: G): lim_at g = Classical.choose (point_convergence g) := by
+      rfl
+    -- TODO - is there a nicer way of getting the property to refer to 'lim_at' and not 'Classical.choose'?
+    have lim_at_spec (g : G) := (choose_eq_lim_at g) ▸ Classical.choose_spec (point_convergence g)
+
     let F_lipschitzh: LipschitzH := {
-      toFun := (fun (g: G) => Complex.ofReal (Classical.choose (point_convergence g))),
+      toFun := (fun (g: G) => Complex.ofReal (lim_at g)),
       lipschitz := by
         use 2
         rw [← Function.comp_def]
@@ -4415,8 +4486,8 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
         .
           dsimp [LipschitzWith]
           intro x y
-          obtain ⟨x_lim_mem, x_seq, x_seq_mono, tendsto_x_lim⟩ := Classical.choose_spec (point_convergence x)
-          obtain ⟨y_lim_mem, y_seq, y_seq_mono, tendsto_y_lim⟩ := Classical.choose_spec (point_convergence y)
+          obtain ⟨x_lim_mem, x_seq, x_seq_mono, tendsto_x_lim⟩ := lim_at_spec x
+          obtain ⟨y_lim_mem, y_seq, y_seq_mono, tendsto_y_lim⟩ := lim_at_spec y
           rw [Metric.mem_closedBall] at x_lim_mem
           rw [Metric.mem_closedBall] at y_lim_mem
           by_cases x_eq_y: x = y
@@ -4450,16 +4521,15 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
             simp [dist] at dist_ne_zero
             omega
       harmonic := by
-        sorry
-        simp [Harmonic]
+        -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Topology/UniformSpace/CompactConvergence.html#ContinuousMap.tendsto_iff_forall_isCompact_tendstoUniformlyOn
+        -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Topology/UniformSpace/CompactConvergence.html#ContinuousMap.tendsto_iff_tendstoUniformly
+        simp only [Harmonic]
         --have lim_mul_sum := Filter.Tendsto.const_mul (2: ℝ) (l := Filter.atTop (α := ℕ)) (c := ∑ c ∈ S, F (x * c))
         intro x
-        have lim_f_x :=  hF {x} (by exact isCompact_singleton)
-        rw [tendstoUniformlyOn_singleton_iff_tendsto] at lim_f_x
-        dsimp [conv_h_n_cont] at hF
-        have lim_f_sum := tendsto_finset_sum (M := ℝ) (s := S) (a := fun s => F (x * s)) (f := fun g k => Conv (H_n (seq k)) (f_n (seq k)) (x * g)) (x := Filter.atTop (α := ℕ)) (by
+        obtain ⟨x_lim_mem, x_seq, x_seq_mono, tendsto_x_lim⟩ := lim_at_spec x
+        have lim_f_sum := tendsto_finset_sum (M := ℝ) (s := S) (a := fun s => lim_at (x * s)) (f := fun g k => Conv (H_n (seq k)) (f_n (seq k)) (x * g)) (x := Filter.atTop (α := ℕ)) (by
           intro s hs
-          have lim_f_s :=  hF {x * s} (by exact isCompact_singleton)
+          have lim_f_s := lim_at {x * s} (by exact isCompact_singleton)
           rw [tendstoUniformlyOn_singleton_iff_tendsto] at lim_f_s
           beta_reduce
           exact lim_f_s
