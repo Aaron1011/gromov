@@ -308,7 +308,9 @@ lemma singleton_carrier: (addHaarSingleton.carrier) = ({0} : (Set (Additive G)))
 noncomputable abbrev myHaarAddOpp := MeasureTheory.Measure.addHaarMeasure (G := Additive G) addHaarSingleton
 
 -- Definition 3.5 in Vikman - a harmonic function on G
-def Harmonic (f: G → ℂ): Prop := ∀ x: G, f x = ((1 : ℂ) / #(S)) * ∑ s ∈ S, f (x * s)
+-- Note that our multiplication order is swapped: f (s * x) instead of f (x * s)
+-- This is needed to make it match up with the result of MeasureTheory.convolution
+def Harmonic (f: G → ℂ): Prop := ∀ x: G, f x = ((1 : ℂ) / #(S)) * ∑ s ∈ S, f (s * x)
 
 -- A Lipschitz harmonic function from section 3.2 of Vikman
 structure LipschitzH [Generates (G := G) (S := S)] where
@@ -635,16 +637,15 @@ instance isometricGMul: IsIsometricSMul G G where
 
 
 def gAct (g: G) (v: LipschitzH (S := S)): LipschitzH (S := S) := {
-  toFun := fun x => v (g⁻¹ * x)
+  toFun := fun x => v (x * g⁻¹)
   lipschitz := by
     obtain ⟨C, hC⟩ := v.lipschitz
     use C
     simp [LipschitzWith]
     intro x y
     simp [LipschitzWith] at hC
-    specialize hC (g⁻¹ * x) (g⁻¹ * y)
+    specialize hC (x * g⁻¹) (y * g⁻¹)
     simp [DFunLike.coe]
-    simp at hC
     exact hC
   harmonic := by
     unfold Harmonic
@@ -4572,9 +4573,9 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
         rw [sub_eq_zero] at lim_eq
         rw [lim_eq]
         norm_cast
-        rfl
-        field_simp
-        rw [← Finset.sum_subtype (s := S) (f := fun i => Complex.ofReal (F (i * g)))]
+        rw [← Finset.sum_subtype (s := S) (f := fun i => (F (i * g)))]
+        simp
+        . simp
 
 
 
