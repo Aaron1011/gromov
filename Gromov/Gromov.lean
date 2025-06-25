@@ -4576,18 +4576,15 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
         rw [← Finset.sum_subtype (s := S) (f := fun i => (F (i * g)))]
         simp
         . simp
-
-
-
-        sorry
+        . intro n
+          sorry
+        . simp
       . intro s hs
         apply tendsto_F
-
-    beta_reduce at lim_f_sum
-    -- TODO - figure out why lean hangs without this
-    have my_mul : ContinuousMul ℝ := instIsTopologicalRingReal.toContinuousMul
-    have lim_mul_sum := Filter.Tendsto.const_mul (↑(#S))⁻¹ lim_f_sum
   }
+  use F_lipschitzh
+  intro z
+  sorry
 
   -- BAD CODE - do not use
 
