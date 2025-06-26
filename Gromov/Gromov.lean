@@ -4073,16 +4073,25 @@ lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f = 
      -- rw [← Finset.expect_eq_sum_div_card] at f_at_l
       have f_s_eq: ∀ s: S, f a = f (s * (l.unattach.prod * a)) := by
         by_contra!
-        rw [← sub_eq_zero] at f_at_l
         simp at this
         obtain ⟨s, s_mem_s, hs⟩ := this
         by_cases val_le_max: f (s * (l.unattach.prod * a)) ≤ f a
         .
           have val_lt_max: f (s * (l.unattach.prod * a)) < f a := by
             exact lt_of_le_of_ne (h_max (↑s * (l.unattach.prod * a))) (id (Ne.symm hs))
-          rw [← Finset.add_sum_erase (s := S) (a := (s))] at f_at_l
-          sorry
-          sorry
+
+          have sum_strict_lt := Finset.sum_lt_sum (f := fun x => f (x * (l.unattach.prod * a))) (g := fun x => f a) (s := S) ?_ ?_
+          .
+            simp at sum_strict_lt
+            rw [mul_comm] at sum_strict_lt
+            rw [← div_lt_iff₀] at sum_strict_lt
+            .
+              apply ne_of_gt at sum_strict_lt
+              contradiction
+            . simpa using hS
+          . intro s hs
+            apply h_max
+          . use s
         .
           have val_gt := h_max (s * (l.unattach.prod * a))
           simp at val_le_max
