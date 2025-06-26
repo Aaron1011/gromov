@@ -4051,6 +4051,58 @@ noncomputable def laplace_range := LinearMap.range (Laplace_linear (S := S))
 
 #synth TopologicalSpace ↥(Lp ℝ 2 volume (α := G))
 
+-- If a harmonic function has a maximum value, then it must be a constant function
+-- We state 'f is harmonc' as 'Laplace_b f = 0', as this is the hypothesis we have where we need to call this lemma
+-- This is true even if it's a local maximum (considered in terms of the  poitns reached by multiply by S), but
+-- we don't need that result yet
+lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f = 0) (a: G) (h_max: ∀ g: G, f g ≤ f a): f = fun _ => f a := by
+  have path_implies_max (l : List S): f (l.unattach.prod * a) = f a := by
+    induction l with
+    | nil =>
+      simp
+    | cons s l ih =>
+      simp
+      simp [Laplace_b, f_conv_mu] at hf
+      have f_at_l := congrFun hf (l.unattach.prod * a)
+      simp at f_at_l
+      rw [sub_eq_zero] at f_at_l
+      rw [ih] at f_at_l
+      field_simp at f_at_l
+
+      -- TODO - is there a 'Finset.expect' theorem we can use?
+     -- rw [← Finset.expect_eq_sum_div_card] at f_at_l
+      have f_s_eq: ∀ s: S, f a = f (s * (l.unattach.prod * a)) := by
+        by_contra!
+        rw [← sub_eq_zero] at f_at_l
+        simp at this
+        obtain ⟨s, s_mem_s, hs⟩ := this
+        by_cases val_le_max: f (s * (l.unattach.prod * a)) ≤ f a
+        .
+          have val_lt_max: f (s * (l.unattach.prod * a)) < f a := by
+            exact lt_of_le_of_ne (h_max (↑s * (l.unattach.prod * a))) (id (Ne.symm hs))
+          rw [← Finset.add_sum_erase (s := S) (a := (s))] at f_at_l
+          sorry
+          sorry
+        .
+          have val_gt := h_max (s * (l.unattach.prod * a))
+          simp at val_le_max
+          linarith
+      specialize f_s_eq s
+      rw [f_s_eq]
+      rw [mul_assoc]
+  ext g
+
+  obtain ⟨l, h_l_prod⟩ := mem_S_prod_list (g * a⁻¹)
+  simp [ProdS] at h_l_prod
+  specialize path_implies_max l
+  rw [h_l_prod] at path_implies_max
+  simpa using path_implies_max
+
+
+
+lemma laplace_zero_lp_2 (g: Lp ℝ 2 volume (α := G)) (hg: Laplace g = 0): g = 0 := by
+  sorry
+
 lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_range (S := S)) := by
   rw [Submodule.dense_iff_topologicalClosure_eq_top]
   rw [Submodule.topologicalClosure_eq_top_iff]
