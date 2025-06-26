@@ -4044,8 +4044,100 @@ noncomputable def Laplace_linear: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G
 lemma laplce_spectrum_real (z: ℂ) (hz: z ∈ spectrum ℂ (Laplace_linear (S := S))): z.im = 0 := by
   sorry
 
+noncomputable def F_n (n : ℕ) := Real.sqrt ∘ (f_n (S := S) n)
+noncomputable def F_n_lp2 (n : ℕ) := MeasureTheory.MemLp.toLp (F_n (S := S) n) (by sorry) (μ := volume (α := G)) (p := 2)
+
+noncomputable def laplace_range := LinearMap.range (Laplace_linear (S := S))
+
+#synth TopologicalSpace ↥(Lp ℝ 2 volume (α := G))
+
+lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_range (S := S)) := by
+  rw [Submodule.dense_iff_topologicalClosure_eq_top]
+  rw [Submodule.topologicalClosure_eq_top_iff]
+  simp_rw [laplace_range]
+  ext g
+  rw [Submodule.mem_bot]
+  refine ⟨?_, ?_⟩
+  .
+    intro hg
+    simp at hg
+    rw [Submodule.mem_orthogonal] at hg
+    have inner_laplace_zero: ∀ u: (Lp ℝ 2 volume), ⟪Laplace_linear u, g⟫ = 0 := by
+      intro u
+      specialize hg (Laplace_linear u)
+      simpa using hg
+
+    simp only [Laplace_linear, LinearMap.coe_mk, AddHom.coe_mk] at inner_laplace_zero
+    simp_rw [← laplace_self_adjoint] at inner_laplace_zero
+    simp at inner_laplace_zero
+
+    have eq_zero:= Dense.eq_zero_of_inner_right (K := ⊤) (E := (Lp ℝ 2 (volume (α := G)))) (𝕜 := ℝ) (by apply dense_univ) (x := (Laplace g))
+    simp at eq_zero
+    specialize eq_zero inner_laplace_zero
+
+
 lemma laplace_spectrum_contains_zero: 0 ∈ spectrum ℝ (Laplace_linear (S := S)) := by
+  rw [spectrum.zero_mem_iff]
+  by_contra this
+  obtain ⟨f, hf⟩ := this
+  -- Copied from https://github.com/leanprover-community/mathlib4/blob/60041760fb96850991084120a9a9b217890cf1f1/Mathlib/Topology/Algebra/Module/Equiv.lean#L760
+  let laplace_equiv: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) ≃ₗ[ℝ] (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) := {
+      toFun := f.val
+      map_add' := by simp
+      map_smul' := by simp
+      invFun := f.inv
+      left_inv := fun x =>
+        show (f.inv * f.val) x = x by
+          rw [f.inv_val]
+          simp
+      right_inv := fun x =>
+        show (f.val * f.inv) x = x by
+          rw [f.val_inv]
+          simp
+      }
+  have laplace_cont := continuous_of_linear_of_bound (C := 2) (𝕜 := ℝ ) (f := f.val) ?_ ?_ ?_
+  have cont_equiv :=  LinearEquiv.toContinuousLinearEquivOfContinuous laplace_equiv laplace_cont
+
+  have inv_bounded := ContinuousLinearMap.isBoundedLinearMap (𝕜 := ℝ) (cont_equiv.symm.toContinuousLinearMap)
+  have nontrival_lp : Nontrivial ↥(Lp ℝ 2 (volume (α := G))) := by
+    sorry
+
+  have norm_mul_bound := ContinuousLinearEquiv.one_le_norm_mul_norm_symm cont_equiv
+
+
+
+  have inv_norm_ge (n: ℕ) : (1 : ENNReal) / (eLpNorm (Laplace_b (F_n n)) 2 (μ := volume (α := G))) ≤ ENNReal.ofReal ‖cont_equiv.symm.toContinuousLinearMap‖ := by
+    calc
+    _ = (eLpNorm (F_n n) 2 (μ := volume (α := G))) / ((eLpNorm (Laplace_b (F_n n)) 2 (μ := volume (α := G)))) := by
+      sorry
+    _ = (eLpNorm (cont_equiv.symm.toFun (cont_equiv.toFun (F_n_lp2 n))) 2) / ((eLpNorm (Laplace_b (F_n n)) 2 (μ := volume (α := G)))) := by
+      sorry
+    _ ≤ ENNReal.ofReal ‖cont_equiv.symm.toContinuousLinearMap‖ := by
+      sorry
+
+
   sorry
+    -- ContinuousLinearMap.le_opNorm
+
+
+  --rw [mul_comm] at norm_mul_bound
+  --apply div_le_of_le  _mul₀ at norm_mul_bound
+
+  --have foo := ContinuousLinearMap.le_of_opNorm_le norm_mul_bound
+
+  -- ContinuousLinearMap.le_of_opNorm_le
+
+
+  --let cont_equiv := LinearEquiv.toContinuousLinearEquiv laplace_equiv
+
+  -- have cont_iff_bounded := (IsBoundedLinearMap.isLinearMap_and_continuous_iff_isBoundedLinearMap laplace_equiv.symm ( 𝕜 := ℝ)).mp (by
+  --   refine ⟨?_, ?_⟩
+  --   .
+  -- )
+
+  -- have inv_bounded := ContinuousLinearMap.isBoundedLinearMap cont_inv
+
+  -- LinearEquiv.continuous_symm
 
 #print axioms laplace_bounded
 #print axioms laplace_self_adjoint
