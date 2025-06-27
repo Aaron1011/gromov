@@ -22,6 +22,7 @@ class Generates {S: outParam (Finset G)}: Prop where
   -- This should be fine, since the growth rate doesn't depend on the generating set
   one_mem: (1 : G) ∈ S
   has_inv: ∀ g ∈ S, g⁻¹ ∈ S
+  g_infinite: Infinite G
 
 
 
@@ -4111,9 +4112,6 @@ lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f = 
 
 
 
-lemma laplace_zero_lp_2 (g: Lp ℝ 2 volume (α := G)) (hg: Laplace g = 0): g = 0 := by
-  sorry
-
 lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_range (S := S)) := by
   rw [Submodule.dense_iff_topologicalClosure_eq_top]
   rw [Submodule.topologicalClosure_eq_top_iff]
@@ -4150,7 +4148,27 @@ lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_
         field_simp at eq_zero
         field_simp
         exact eq_zero
-      have g_const := harmonic_maximum_implies_const g (sorry) a ha
+      have g_const := harmonic_maximum_implies_const g (laplace_b_zero) a ha
+      have g_const_zero := MeasureTheory.memLp_const_iff (p := 2) (by simp) (by simp) (c := g a) (μ := volume (α := G))
+      rw [← g_const] at g_const_zero
+      simp [MeasureTheory.Lp.memLp] at g_const_zero
+      simp [volume, my_haar_eq_count] at g_const_zero
+      simp [hGS.g_infinite] at g_const_zero
+      have g_eq_zero: g.val.cast = 0 := by
+        rw [g_const]
+        rw [g_const_zero]
+        ext a
+        simp
+
+      ext
+      rw [ae_eq_everywhere]
+      rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)]
+      exact g_eq_zero
+    . sorry
+  . intro hg
+    rw [hg]
+    simp
+
 
 
 
