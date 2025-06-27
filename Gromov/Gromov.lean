@@ -4707,9 +4707,8 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
 
   rw [Filter.not_tendsto_iff_exists_frequently_notMem] at hs
   obtain ⟨eps, h_eps, frequently_gt_eps⟩ := hs
-  rw [Filter.frequently_iff_seq_forall] at frequently_gt_eps
-  -- We obtain a subsequence where all of the points satisfy the 'norm > ε' condition
-  obtain ⟨eps_seq, h_eps_seq, eps_seq_gt_x⟩ := frequently_gt_eps
+    -- We obtain a subsequence where all of the points satisfy the 'norm > ε' condition
+  obtain ⟨eps_seq, mono_eps_seq, eps_seq_gt_x⟩ := Filter.extraction_of_frequently_atTop frequently_gt_eps
 
   -- Along this sequence, the evauation of 'Conv H_n f_n' at is leq to 1,
   -- so it's in a compact set
@@ -4763,8 +4762,8 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
         have lim_f_g := tendsto_F g
         have lim_f_g_sub := Filter.Tendsto.sub lim_f_g lim_f_mul_sum
 
-        have laplace_conv_tendsto_zero: Filter.Tendsto (fun n => eLpNorm (Laplace_b (Conv (H_n ((eps_seq (seq n)))) (f_n ((eps_seq (seq n)))) + 1)) ⊤) Filter.atTop (nhds 0) := by
-          apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := fun (n: ℕ) => ENNReal.ofReal ((2: ℝ) / (((eps_seq (seq n)) + 1) : ℝ)))
+        have laplace_conv_tendsto_zero: Filter.Tendsto (fun n => eLpNorm (Laplace_b (Conv (H_n ((eps_seq (seq n)))) (f_n ((eps_seq (seq n)))))) ⊤) Filter.atTop (nhds 0) := by
+          apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := fun (n: ℕ) => ENNReal.ofReal ((2: ℝ) / (((eps_seq (seq n))) : ℝ)))
           . simp
           .
             rw [← ENNReal.tendsto_toReal_iff]
@@ -4779,24 +4778,24 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
               arg 1
               intro n
               rhs
-              equals ((((((eps_seq (seq n)) + 1): ℕ)) : ℕ ) : ℝ) => simp
+              equals ((((((eps_seq (seq n))): ℕ)) : ℕ ) : ℝ) => simp
             conv =>
               arg 1
-              equals (fun (n: ℕ) => (2 : ℝ) / (n + 1) ) ∘ (fun n => (eps_seq (seq n))) =>
+              equals (fun (n: ℕ) => (2 : ℝ) / (n) ) ∘ (fun n => (eps_seq (seq n))) =>
                 ext n
                 simp
             apply Filter.Tendsto.comp
             .
               conv =>
                 arg 1
-                equals (fun (n: ℕ) => (2 : ℝ) / ((n + 1) : ℕ)) =>
+                equals (fun (n: ℕ) => (2 : ℝ) / ((n) : ℕ)) =>
                   ext n
                   simp
-              rw [Filter.tendsto_add_atTop_iff_nat (f := fun n => (2 : ℝ) / (n))]
+              --rw [Filter.tendsto_add_atTop_iff_nat (f := fun n => (2 : ℝ) / (n))]
               apply tendsto_const_div_atTop_nhds_zero_nat
             . apply Filter.Tendsto.comp
-              . apply h_eps_seq
-              . exact StrictMono.tendsto_atTop seq_mono
+              . apply StrictMono.tendsto_atTop mono_eps_seq
+              . apply StrictMono.tendsto_atTop seq_mono
             . simp
             . simp
           . rw [Pi.le_def]
@@ -4810,12 +4809,18 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
             nth_rw 1 [eLpNorm] at bound_by_norm_one
             simp at bound_by_norm_one
             grw [bound_by_norm_one]
-            have h_norm := H_n_norm ((eps_seq (seq n)) + 1)
+            have h_norm := H_n_norm ((eps_seq (seq n)))
             simp [eLpNorm, eLpNorm'] at h_norm
             rw [h_norm]
             simp
             simp_rw [Laplace_b]
-            exact norm_le_two_div
+            grw [norm_le_two_div]
+            rw [ENNReal.ofReal_le_ofReal_iff]
+            . apply div_le_div_of_nonneg_left
+              . simp
+              . sorry
+              . sorry
+            . positivity
 
         rw [← ENNReal.tendsto_toReal_iff] at laplace_conv_tendsto_zero
 
