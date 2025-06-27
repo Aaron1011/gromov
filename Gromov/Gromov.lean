@@ -3496,6 +3496,7 @@ noncomputable def conv_finsupp_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.vo
 noncomputable def Laplace_b (f: G → ℝ): G → ℝ := f - (Conv f (mu (S := S)))
 noncomputable def Laplace (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := f - (conv_mu_lp2 f)
 
+
 lemma measure_preserving_unop_tomul: MeasurePreserving (fun (x: Additive (G)) ↦ (Additive.toMul x)) myHaarAddOpp volume := by
   apply MeasureTheory.MeasurePreserving.id
 
@@ -4071,6 +4072,7 @@ lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f = 
 
       -- TODO - is there a 'Finset.expect' theorem we can use?
      -- rw [← Finset.expect_eq_sum_div_card] at f_at_l
+     -- TODO - upstream this to mathlib in some form
       have f_s_eq: ∀ s: S, f a = f (s * (l.unattach.prod * a)) := by
         by_contra!
         simp at this
@@ -4135,6 +4137,24 @@ lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_
     have eq_zero:= Dense.eq_zero_of_inner_right (K := ⊤) (E := (Lp ℝ 2 (volume (α := G)))) (𝕜 := ℝ) (by apply dense_univ) (x := (Laplace g))
     simp at eq_zero
     specialize eq_zero inner_laplace_zero
+    by_cases g_has_maximum: ∃ a: G, ∀ b: G, g b ≤ g a
+    .
+      obtain ⟨a, ha⟩ := g_has_maximum
+      have laplace_b_zero: Laplace_b (S := S) g = 0 := by
+        simp [Laplace, conv_mu_lp2, f_conv_mu] at eq_zero
+        simp_rw [Laplace_b, f_conv_mu]
+        apply_fun (fun f => f.val.cast) at eq_zero
+        rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)] at eq_zero
+        rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)] at eq_zero
+        rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)] at eq_zero
+        field_simp at eq_zero
+        field_simp
+        exact eq_zero
+      have g_const := harmonic_maximum_implies_const g (sorry) a ha
+
+
+
+
 
 
 lemma laplace_spectrum_contains_zero: 0 ∈ spectrum ℝ (Laplace_linear (S := S)) := by
