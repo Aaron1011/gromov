@@ -4110,31 +4110,54 @@ lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f = 
   rw [h_l_prod] at path_implies_max
   simpa using path_implies_max
 
--- Creates an increasing sequence of values from 'f', given that 'f' has no maximum value
-noncomputable def increasing_g_seq (f: G → ℝ) (h: ∀ g: G, ∃ a, f g < f a) (start_val: G) (n: ℕ): G := match n with
- | .zero => start_val
- | .succ a => by
-    let prev := ((increasing_g_seq f h start_val a))
-    exact Classical.choose (h prev)
-
-lemma increasing_g_seq_strictmono (f: G → ℝ) (h: ∀ g: G, ∃ a, f g < f a) (start_val: G): StrictMono (fun n => f ((increasing_g_seq f h start_val n))) := by
-  intro a b hab
-  unfold increasing_g_seq
-  simp
-  split
+lemma harmonic_exteme_val_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f = 0) (a: G) (h_max: ∀ g: G, |f g| ≤ |f a|): f = fun _ => f a := by
+  by_cases f_a_pos: 0 ≤ f a
   .
-    simp at hab
-    split
-    . simp at hab
+    have lt_f_a: ∀ g: G, f g ≤ f a := by
+      intro g
+      by_cases f_g_pos: 0 ≤ f g
+      . specialize h_max g
+        rw [abs_eq_self.mpr ?_] at h_max
+        rw [abs_eq_self.mpr f_a_pos] at h_max
+        . exact h_max
+        . exact f_g_pos
+      . linarith
+    exact harmonic_maximum_implies_const f hf a lt_f_a
+  .
+    have f_neg_le: ∀ g, (-f) g ≤ (-f) a := by
+      intro g
+      simp at f_a_pos
+      simp
+      specialize h_max g
+      rw [abs_of_neg f_a_pos] at h_max
+      by_cases f_g_pos: 0 ≤ f g
+      . rw [abs_of_nonneg f_g_pos] at h_max
+        linarith
+      . simp at f_g_pos
+        rw [abs_of_neg f_g_pos] at h_max
+        linarith
+    have neg_const := harmonic_maximum_implies_const (-f) ?_ a f_neg_le
     .
-      rename_i a b c
-      have spec := Classical.choose_spec (h (increasing_g_seq f h start_val 0))
-      dsimp [increasing_g_seq] at spec
-      exact spec
-      linarith
-
-
-
+      apply_fun (fun h => -h) at neg_const
+      simp at neg_const
+      rw [Pi.neg_def] at neg_const
+      simpa using neg_const
+    .
+      simp_rw [Laplace_b]
+      simp_rw [Laplace_b] at hf
+      conv =>
+        lhs
+        rhs
+        arg 1
+        equals (-1 : ℝ) • f =>
+          simp
+      rw [conv_smul]
+      simp
+      rw [add_comm]
+      rw [← sub_eq_add_neg]
+      rw [sub_eq_zero]
+      rw [sub_eq_zero] at hf
+      exact hf.symm
 
 lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_range (S := S)) := by
   rw [Submodule.dense_iff_topologicalClosure_eq_top]
@@ -4159,7 +4182,7 @@ lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_
     have eq_zero:= Dense.eq_zero_of_inner_right (K := ⊤) (E := (Lp ℝ 2 (volume (α := G)))) (𝕜 := ℝ) (by apply dense_univ) (x := (Laplace g))
     simp at eq_zero
     specialize eq_zero inner_laplace_zero
-    by_cases g_has_maximum: ∃ a: G, ∀ b: G, g b ≤ g a
+    by_cases g_has_maximum: ∃ a: G, ∀ b: G, |g b| ≤ |g a|
     .
       obtain ⟨a, ha⟩ := g_has_maximum
       have laplace_b_zero: Laplace_b (S := S) g = 0 := by
@@ -4172,7 +4195,7 @@ lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_
         field_simp at eq_zero
         field_simp
         exact eq_zero
-      have g_const := harmonic_maximum_implies_const g (laplace_b_zero) a ha
+      have g_const := harmonic_exteme_val_implies_const g (laplace_b_zero) a ha
       have g_const_zero := MeasureTheory.memLp_const_iff (p := 2) (by simp) (by simp) (c := g a) (μ := volume (α := G))
       rw [← g_const] at g_const_zero
       simp [MeasureTheory.Lp.memLp] at g_const_zero
@@ -4204,10 +4227,10 @@ lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_
         exact Function.ne_iff.mp g_ne_zero
 
       obtain ⟨a, ha⟩ := nonzero_val
-      have finite_gt := ENNReal.finite_const_le_of_tsum_ne_top integral_lt (ε := ‖g a‖ₑ ^ 2) (by
+      have finite_gt := ENNReal.finite_const_le_of_tsum_ne_top integral_lt (ε := ‖|g a|‖ₑ ^ 2) (by
         simpa using ha
       )
-      have maximal := Set.Finite.exists_maximalFor (f := g) _ finite_gt (by
+      have maximal := Set.Finite.exists_maximalFor (f := fun h => |g h|) _ finite_gt (by
         apply Set.nonempty_of_mem (x := a)
         simp
       )
@@ -4225,7 +4248,8 @@ lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_
         rw [← ENNReal.toReal_le_toReal]
         .
           simp
-          sorry
+          rw [sq_le_sq]
+          linarith
         . simp
         . simp
       linarith
@@ -4235,7 +4259,7 @@ lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_
 
 
 
-
+#print axioms laplace_range_dense
 
 
 
