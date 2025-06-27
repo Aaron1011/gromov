@@ -4763,7 +4763,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
         have lim_f_g_sub := Filter.Tendsto.sub lim_f_g lim_f_mul_sum
 
         have laplace_conv_tendsto_zero: Filter.Tendsto (fun n => eLpNorm (Laplace_b (Conv (H_n ((eps_seq (seq n)))) (f_n ((eps_seq (seq n)))))) ⊤) Filter.atTop (nhds 0) := by
-          apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := fun (n: ℕ) => ENNReal.ofReal ((2: ℝ) / (((eps_seq (seq n))) : ℝ)))
+          apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := fun (n: ℕ) => ENNReal.ofReal ((2: ℝ) / (((eps_seq (seq n)) + 1) : ℝ)))
           . simp
           .
             rw [← ENNReal.tendsto_toReal_iff]
@@ -4778,10 +4778,10 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
               arg 1
               intro n
               rhs
-              equals ((((((eps_seq (seq n))): ℕ)) : ℕ ) : ℝ) => simp
+              equals ((((((eps_seq (seq n)) + 1): ℕ)) : ℕ ) : ℝ) => simp
             conv =>
               arg 1
-              equals (fun (n: ℕ) => (2 : ℝ) / (n) ) ∘ (fun n => (eps_seq (seq n))) =>
+              equals (fun (n: ℕ) => (2 : ℝ) / (n) ) ∘ (fun n => (eps_seq (seq n)) + 1) =>
                 ext n
                 simp
             apply Filter.Tendsto.comp
@@ -4793,9 +4793,19 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
                   simp
               --rw [Filter.tendsto_add_atTop_iff_nat (f := fun n => (2 : ℝ) / (n))]
               apply tendsto_const_div_atTop_nhds_zero_nat
-            . apply Filter.Tendsto.comp
-              . apply StrictMono.tendsto_atTop mono_eps_seq
-              . apply StrictMono.tendsto_atTop seq_mono
+            .
+              --apply Filter.tendsto_atTop_add_const_right (f := fun n => eps_seq (seq n))
+              apply Filter.Tendsto.comp
+              . conv =>
+                  arg 1
+                  equals fun n => n + 1 =>
+                    simp
+                apply Filter.tendsto_add_atTop_nat
+
+              . simp
+                apply Filter.Tendsto.comp
+                . apply StrictMono.tendsto_atTop mono_eps_seq
+                . apply StrictMono.tendsto_atTop seq_mono
             . simp
             . simp
           . rw [Pi.le_def]
@@ -4818,7 +4828,9 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
             rw [ENNReal.ofReal_le_ofReal_iff]
             . apply div_le_div_of_nonneg_left
               . simp
-              . sorry
+              .
+                simp at eps_seq_gt_x
+                sorry
               . sorry
             . positivity
 
