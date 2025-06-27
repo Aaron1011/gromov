@@ -4110,6 +4110,30 @@ lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f = 
   rw [h_l_prod] at path_implies_max
   simpa using path_implies_max
 
+-- Creates an increasing sequence of values from 'f', given that 'f' has no maximum value
+noncomputable def increasing_g_seq (f: G → ℝ) (h: ∀ g: G, ∃ a, f g < f a) (start_val: G) (n: ℕ): G := match n with
+ | .zero => start_val
+ | .succ a => by
+    let prev := ((increasing_g_seq f h start_val a))
+    exact Classical.choose (h prev)
+
+lemma increasing_g_seq_strictmono (f: G → ℝ) (h: ∀ g: G, ∃ a, f g < f a) (start_val: G): StrictMono (fun n => f ((increasing_g_seq f h start_val n))) := by
+  intro a b hab
+  unfold increasing_g_seq
+  simp
+  split
+  .
+    simp at hab
+    split
+    . simp at hab
+    .
+      rename_i a b c
+      have spec := Classical.choose_spec (h (increasing_g_seq f h start_val 0))
+      dsimp [increasing_g_seq] at spec
+      exact spec
+      linarith
+
+
 
 
 lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_range (S := S)) := by
@@ -4164,7 +4188,47 @@ lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_
       rw [ae_eq_everywhere]
       rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)]
       exact g_eq_zero
-    . sorry
+    . rename _ => g_no_maximum
+      simp at g_no_maximum
+      have integrable_g := MeasureTheory.MemLp.integrable_sq (MeasureTheory.Lp.memLp g)
+      simp [Integrable, HasFiniteIntegral] at integrable_g
+      obtain ⟨_, integral_lt⟩ := integrable_g
+      rw [lintegral_g_eq_add] at integral_lt
+      rw [WithTop.lt_top_iff_ne_top] at integral_lt
+      by_contra g_ne_zero
+      simp at g_ne_zero
+      have nonzero_val: ∃ a: G, g a ≠ 0 := by
+        rw [MeasureTheory.Lp.ext_iff] at g_ne_zero
+        rw [ae_eq_everywhere] at g_ne_zero
+        rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)] at g_ne_zero
+        exact Function.ne_iff.mp g_ne_zero
+
+      obtain ⟨a, ha⟩ := nonzero_val
+      have finite_gt := ENNReal.finite_const_le_of_tsum_ne_top integral_lt (ε := ‖g a‖ₑ ^ 2) (by
+        simpa using ha
+      )
+      have maximal := Set.Finite.exists_maximalFor (f := g) _ finite_gt (by
+        apply Set.nonempty_of_mem (x := a)
+        simp
+      )
+      obtain ⟨m, m_in_g, hm⟩ := maximal
+      simp at m_in_g
+      -- Obtain an element greater than the maximum
+      obtain ⟨p, hp⟩ := g_no_maximum m
+      have p_gt := hm (j := p) ?_ ?_
+      .
+        have not_g_le := not_lt_of_ge p_gt
+        contradiction
+      .
+        simp
+        grw [m_in_g]
+        rw [← ENNReal.toReal_le_toReal]
+        .
+          simp
+          sorry
+        . simp
+        . simp
+      linarith
   . intro hg
     rw [hg]
     simp
