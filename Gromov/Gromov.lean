@@ -4825,14 +4825,6 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
             simp
             simp_rw [Laplace_b]
             grw [norm_le_two_div]
-            rw [ENNReal.ofReal_le_ofReal_iff]
-            . apply div_le_div_of_nonneg_left
-              . simp
-              .
-                simp at eps_seq_gt_x
-                sorry
-              . sorry
-            . positivity
 
         rw [← ENNReal.tendsto_toReal_iff] at laplace_conv_tendsto_zero
 
