@@ -4159,6 +4159,79 @@ lemma harmonic_exteme_val_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f
       rw [sub_eq_zero] at hf
       exact hf.symm
 
+lemma laplace_zero_iff_zero (g: (Lp ℝ 2 volume (α := G))) (eq_zero: Laplace g = 0): g = 0 := by
+  by_cases g_has_maximum: ∃ a: G, ∀ b: G, |g b| ≤ |g a|
+  .
+    obtain ⟨a, ha⟩ := g_has_maximum
+    have laplace_b_zero: Laplace_b (S := S) g = 0 := by
+      simp [Laplace, conv_mu_lp2, f_conv_mu] at eq_zero
+      simp_rw [Laplace_b, f_conv_mu]
+      apply_fun (fun f => f.val.cast) at eq_zero
+      rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)] at eq_zero
+      rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)] at eq_zero
+      rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)] at eq_zero
+      field_simp at eq_zero
+      field_simp
+      exact eq_zero
+    have g_const := harmonic_exteme_val_implies_const g (laplace_b_zero) a ha
+    have g_const_zero := MeasureTheory.memLp_const_iff (p := 2) (by simp) (by simp) (c := g a) (μ := volume (α := G))
+    rw [← g_const] at g_const_zero
+    simp [MeasureTheory.Lp.memLp] at g_const_zero
+    simp [volume, my_haar_eq_count] at g_const_zero
+    simp [hGS.g_infinite] at g_const_zero
+    have g_eq_zero: g.val.cast = 0 := by
+      rw [g_const]
+      rw [g_const_zero]
+      ext a
+      simp
+
+    ext
+    rw [ae_eq_everywhere]
+    rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)]
+    exact g_eq_zero
+  . rename _ => g_no_maximum
+    simp at g_no_maximum
+    have integrable_g := MeasureTheory.MemLp.integrable_sq (MeasureTheory.Lp.memLp g)
+    simp [Integrable, HasFiniteIntegral] at integrable_g
+    obtain ⟨_, integral_lt⟩ := integrable_g
+    rw [lintegral_g_eq_add] at integral_lt
+    rw [WithTop.lt_top_iff_ne_top] at integral_lt
+    by_contra g_ne_zero
+    simp at g_ne_zero
+    have nonzero_val: ∃ a: G, g a ≠ 0 := by
+      rw [MeasureTheory.Lp.ext_iff] at g_ne_zero
+      rw [ae_eq_everywhere] at g_ne_zero
+      rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)] at g_ne_zero
+      exact Function.ne_iff.mp g_ne_zero
+
+    obtain ⟨a, ha⟩ := nonzero_val
+    have finite_gt := ENNReal.finite_const_le_of_tsum_ne_top integral_lt (ε := ‖|g a|‖ₑ ^ 2) (by
+      simpa using ha
+    )
+    have maximal := Set.Finite.exists_maximalFor (f := fun h => |g h|) _ finite_gt (by
+      apply Set.nonempty_of_mem (x := a)
+      simp
+    )
+    obtain ⟨m, m_in_g, hm⟩ := maximal
+    simp at m_in_g
+    -- Obtain an element greater than the maximum
+    obtain ⟨p, hp⟩ := g_no_maximum m
+    have p_gt := hm (j := p) ?_ ?_
+    .
+      have not_g_le := not_lt_of_ge p_gt
+      contradiction
+    .
+      simp
+      grw [m_in_g]
+      rw [← ENNReal.toReal_le_toReal]
+      .
+        simp
+        rw [sq_le_sq]
+        linarith
+      . simp
+      . simp
+    linarith
+
 lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_range (S := S)) := by
   rw [Submodule.dense_iff_topologicalClosure_eq_top]
   rw [Submodule.topologicalClosure_eq_top_iff]
@@ -4182,81 +4255,26 @@ lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_
     have eq_zero:= Dense.eq_zero_of_inner_right (K := ⊤) (E := (Lp ℝ 2 (volume (α := G)))) (𝕜 := ℝ) (by apply dense_univ) (x := (Laplace g))
     simp at eq_zero
     specialize eq_zero inner_laplace_zero
-    by_cases g_has_maximum: ∃ a: G, ∀ b: G, |g b| ≤ |g a|
-    .
-      obtain ⟨a, ha⟩ := g_has_maximum
-      have laplace_b_zero: Laplace_b (S := S) g = 0 := by
-        simp [Laplace, conv_mu_lp2, f_conv_mu] at eq_zero
-        simp_rw [Laplace_b, f_conv_mu]
-        apply_fun (fun f => f.val.cast) at eq_zero
-        rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)] at eq_zero
-        rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)] at eq_zero
-        rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)] at eq_zero
-        field_simp at eq_zero
-        field_simp
-        exact eq_zero
-      have g_const := harmonic_exteme_val_implies_const g (laplace_b_zero) a ha
-      have g_const_zero := MeasureTheory.memLp_const_iff (p := 2) (by simp) (by simp) (c := g a) (μ := volume (α := G))
-      rw [← g_const] at g_const_zero
-      simp [MeasureTheory.Lp.memLp] at g_const_zero
-      simp [volume, my_haar_eq_count] at g_const_zero
-      simp [hGS.g_infinite] at g_const_zero
-      have g_eq_zero: g.val.cast = 0 := by
-        rw [g_const]
-        rw [g_const_zero]
-        ext a
-        simp
-
-      ext
-      rw [ae_eq_everywhere]
-      rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)]
-      exact g_eq_zero
-    . rename _ => g_no_maximum
-      simp at g_no_maximum
-      have integrable_g := MeasureTheory.MemLp.integrable_sq (MeasureTheory.Lp.memLp g)
-      simp [Integrable, HasFiniteIntegral] at integrable_g
-      obtain ⟨_, integral_lt⟩ := integrable_g
-      rw [lintegral_g_eq_add] at integral_lt
-      rw [WithTop.lt_top_iff_ne_top] at integral_lt
-      by_contra g_ne_zero
-      simp at g_ne_zero
-      have nonzero_val: ∃ a: G, g a ≠ 0 := by
-        rw [MeasureTheory.Lp.ext_iff] at g_ne_zero
-        rw [ae_eq_everywhere] at g_ne_zero
-        rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)] at g_ne_zero
-        exact Function.ne_iff.mp g_ne_zero
-
-      obtain ⟨a, ha⟩ := nonzero_val
-      have finite_gt := ENNReal.finite_const_le_of_tsum_ne_top integral_lt (ε := ‖|g a|‖ₑ ^ 2) (by
-        simpa using ha
-      )
-      have maximal := Set.Finite.exists_maximalFor (f := fun h => |g h|) _ finite_gt (by
-        apply Set.nonempty_of_mem (x := a)
-        simp
-      )
-      obtain ⟨m, m_in_g, hm⟩ := maximal
-      simp at m_in_g
-      -- Obtain an element greater than the maximum
-      obtain ⟨p, hp⟩ := g_no_maximum m
-      have p_gt := hm (j := p) ?_ ?_
-      .
-        have not_g_le := not_lt_of_ge p_gt
-        contradiction
-      .
-        simp
-        grw [m_in_g]
-        rw [← ENNReal.toReal_le_toReal]
-        .
-          simp
-          rw [sq_le_sq]
-          linarith
-        . simp
-        . simp
-      linarith
+    apply laplace_zero_iff_zero _ eq_zero
   . intro hg
     rw [hg]
     simp
 
+
+lemma laplace_g_n (n: ℕ): ∃ g: (Lp ℝ 2 volume (α := G)), ‖g‖ ≤ (1 : ℝ) / 2 := by
+  have ball_open: IsOpen (Metric.ball (0 : Lp ℝ 2 volume (α := G)) (1 / 2)) := by
+    exact Metric.isOpen_ball
+
+  have dense := laplace_range_dense (S := S)
+  rw [dense_iff_inter_open] at dense
+  have mem_ball := dense _ ball_open (by simp)
+  simp only [Set.Nonempty] at mem_ball
+  obtain ⟨g, gh⟩ := mem_ball
+  simp at gh
+  have g_norm := gh.1
+  use g
+  simp
+  linarith
 
 
 #print axioms laplace_range_dense
@@ -4967,7 +4985,6 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
   use F_lipschitzh
   intro z
 
-  sorry
 
 #synth OrderTopology ENNReal
 
