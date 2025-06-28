@@ -4277,6 +4277,9 @@ lemma laplace_g_n (n: ℕ): ∃ g: (Lp ℝ 2 volume (α := G)), ‖g‖ ≤ (1 :
   linarith
 
 
+lemma propoision_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (Laplace f) g) = (1 : ℝ) / ((2 : ℝ) * (#(S) : ℝ)) * ∑ s ∈ S, eLpNorm (f) 2 (μ := volume (α := G)) := by
+  sorry
+
 #print axioms laplace_range_dense
 
 
