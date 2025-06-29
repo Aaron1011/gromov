@@ -3369,6 +3369,7 @@ theorem f_n_sub_conv (n: ℕ): MeasureTheory.eLpNorm ((f_n (S := S) n) - (Conv (
 #print axioms f_n_norm_one
 #print axioms f_n_sub_conv
 
+
 noncomputable def conv_mu_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := MeasureTheory.MemLp.toLp (Conv f (mu (S := S))) (by
   rw [MeasureTheory.MemLp]
   refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
@@ -4302,21 +4303,18 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
     lhs
     arg 1
     intro g
-    rw [← mul_inv_cancel_left₀ (a := 2) (by simp) (f g)]
+    lhs
+    rw [← inv_mul_cancel_left₀ (a := 2) (by simp) (f g)]
+
+
 
   simp_rw [mul_assoc]
-  conv =>
-    lhs
-    arg 1
-    intro g
-    rw [← smul_eq_mul]
-
-
-  --rw [Summable.tsum_const_smul (b := 2)]
-  sorry
+  rw [Summable.tsum_mul_left]
+  simp_rw [← mul_assoc]
 
   conv =>
     lhs
+    rhs
     arg 1
     intro g
     rw [mul_sub]
@@ -4333,15 +4331,61 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
     field_simp
   conv =>
     lhs
+    rhs
     lhs
     arg 1
     intro g
+    rw [mul_assoc]
     rw [← pow_two]
     rw [sum_f (c := (f g)^2)]
 
+  rw [Summable.tsum_mul_left]
+  rw [Summable.tsum_mul_left]
+  have f_norm := MeasureTheory.eLpNorm_eq_lintegral_rpow_enorm (p := 2) (by simp) (by simp) (f := f.val.cast) (μ := volume (α := G))
+  simp_rw [lintegral_g_eq_add] at f_norm
+  simp [enorm] at f_norm
+  apply_fun ENNReal.toReal at f_norm
+  norm_cast at f_norm
+  rw [← ENNReal.toReal_rpow] at f_norm
+  rw [ENNReal.tsum_toReal_eq] at f_norm
+  simp at f_norm
+  apply_fun (fun x => x^2) at f_norm
+  nth_rw 2 [← Real.rpow_natCast] at f_norm
+  rw [← Real.rpow_mul] at f_norm
+  field_simp at f_norm
+  conv =>
+    lhs
+    rhs
+    lhs
+    rhs
+    rhs
+    rw [Summable.tsum_finsetSum (by
+      intro i hi
+      sorry
+    )]
+    rw [← f_norm]
 
+  conv =>
+    lhs
+    rhs
+    rhs
+    arg 1
+    intro b
+    rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)]
+    rw [← mul_assoc]
+    rw [mul_comm (2 * _)]
+    rw [mul_assoc]
+    rw [mul_assoc]
+    rw [Finset.mul_sum]
+    rw [← mul_assoc]
 
-  simp_rw [sum_f]
+  rw [Summable.tsum_mul_left]
+  rw [Summable.tsum_finsetSum (by
+    intro i hi
+    sorry
+  )]
+  have inner_f_conv := MeasureTheory.L2.inner_def (𝕜 := ℝ) (f := f) (g := f)
+  --simp_rw [sum_f]
 
 
 
