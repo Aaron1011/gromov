@@ -4261,24 +4261,89 @@ lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_
     simp
 
 
-lemma laplace_g_n (n: ℕ): ∃ g: (Lp ℝ 2 volume (α := G)), ‖g‖ ≤ (1 : ℝ) / 2 := by
-  have ball_open: IsOpen (Metric.ball (0 : Lp ℝ 2 volume (α := G)) (1 / 2)) := by
+lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖Laplace g‖ ≤ (1 : ℝ) / n := by
+  have ball_open: IsOpen (Metric.ball (0 : Lp ℝ 2 volume (α := G)) (1 / n)) := by
     exact Metric.isOpen_ball
 
   have dense := laplace_range_dense (S := S)
   rw [dense_iff_inter_open] at dense
-  have mem_ball := dense _ ball_open (by simp)
+  have mem_ball := dense _ ball_open (by
+    simp
+    exact hn
+  )
   simp only [Set.Nonempty] at mem_ball
   obtain ⟨g, gh⟩ := mem_ball
   simp at gh
   have g_norm := gh.1
-  use g
-  simp
+  have g_range := gh.2
+  simp only [laplace_range] at g_range
+  simp only [LinearMap.mem_range] at g_range
+  obtain ⟨a, ha⟩ := g_range
+  use a
+  simp [Laplace_linear] at ha
+  rw [ha]
+  field_simp at g_norm
   linarith
 
+#print axioms laplace_g_n
 
-lemma propoision_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (Laplace f) g) = (1 : ℝ) / ((2 : ℝ) * (#(S) : ℝ)) * ∑ s ∈ S, eLpNorm (f) 2 (μ := volume (α := G)) := by
+lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (Laplace f) g) = (((2) * (#(S) : ℝ))⁻¹ * ∑ s ∈ S, (eLpNorm (f.val.cast - (Conv f (delta s))) 2 (μ := volume (α := G))).toReal) := by
+  simp_rw [Laplace]
+  simp_rw [conv_mu_lp2]
+  simp_rw [f_conv_mu]
+  conv =>
+    enter [1, 1, g, 2, 1, 1, 2, 1, g, 2, 2, s]
+    rw[ ← inv_inv s]
+    rw [← f_conv_delta (s := s⁻¹) (f := f.val.cast)]
+
+  simp_rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)]
+  simp only [Pi.sub_apply]
+  conv =>
+    lhs
+    arg 1
+    intro g
+    rw [← mul_inv_cancel_left₀ (a := 2) (by simp) (f g)]
+
+  simp_rw [mul_assoc]
+  conv =>
+    lhs
+    arg 1
+    intro g
+    rw [← smul_eq_mul]
+
+
+  --rw [Summable.tsum_const_smul (b := 2)]
   sorry
+
+  conv =>
+    lhs
+    arg 1
+    intro g
+    rw [mul_sub]
+  rw [Summable.tsum_sub]
+  have sum_f: ∀ c: ℝ, c = (#(S) : ℝ)⁻¹ * ∑ s ∈ S, c := by
+    intro g
+    simp
+    have card_nonneg: #(S) ≠ 0 := by
+      have foo := S_nonempty (S := S)
+      simp
+      push_neg
+      rw [← Finset.nonempty_iff_ne_empty]
+      apply foo
+    field_simp
+  conv =>
+    lhs
+    lhs
+    arg 1
+    intro g
+    rw [← pow_two]
+    rw [sum_f (c := (f g)^2)]
+
+
+
+  simp_rw [sum_f]
+
+
 
 #print axioms laplace_range_dense
 
