@@ -4399,18 +4399,67 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
     exact Metric.isOpen_ball
 
 
-  -- have punctured_ball_open: IsOpen ((Metric.ball (0 : Lp ℝ 2 volume (α := G)) (1 / n)) \ {0})  := by
-  --   apply IsOpen.sdiff
-  --   . exact ball_open
-  --   .
-  --     rw [← Metric.closedBall_zero]
-  --     apply Metric.isClosed_closedBall
+  have punctured_ball_open: IsOpen ((Metric.ball (0 : Lp ℝ 2 volume (α := G)) (1 / n)) \ {0})  := by
+    apply IsOpen.sdiff
+    . exact ball_open
+    .
+      rw [← Metric.closedBall_zero]
+      apply Metric.isClosed_closedBall
 
   have dense := laplace_range_dense (S := S)
   rw [dense_iff_inter_open] at dense
-  have mem_ball := dense _ ball_open (by
+
+  let lp_point: (Lp ℝ 2 volume (α := G)) := MemLp.toLp (fun (g: G) => if g = 1 then (1 : ℝ) / ((n + 1)^2) else 0) (by
+    sorry
+  )
+
+  have mem_ball := dense _ punctured_ball_open (by
     simp
-    exact hn
+    use lp_point
+    simp
+    refine ⟨?_, ?_⟩
+    . simp [lp_point, eLpNorm, eLpNorm']
+      rw [lintegral_g_eq_add]
+      simp_rw [Real.enorm_eq_ofReal_abs]
+      conv =>
+        lhs
+        arg 1
+        lhs
+        arg 1
+        intro g
+        rw [← ENNReal.ofReal_pow (by simp)]
+      rw [tsum_eq_sum (s := {1})]
+      .
+        simp
+        rw [ENNReal.ofReal_rpow_of_nonneg]
+        rw [ENNReal.toReal_ofReal]
+        .
+          rw [← Real.rpow_neg_one]
+          rw [← Real.rpow_mul]
+          rw [← Real.rpow_cast]
+          rw [← Real.rpow_mul]
+          field_simp
+          simp
+          rw [← Real.rpow_neg_one]
+          rw [← Real.rpow_mul]
+          simp
+          field_simp
+          norm_num
+
+        . positivity
+        . positivity
+        . simp
+      . intro b hb
+        simp at hb
+        simp [hb]
+    . by_contra!
+      rw [MeasureTheory.Lp.ext_iff] at this
+      rw [ae_eq_everywhere] at this
+      have eval_one := congrFun this (1 : G)
+      rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)] at eval_one
+      rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)] at eval_one
+      simp at eval_one
+      linarith
   )
   simp only [Set.Nonempty] at mem_ball
   obtain ⟨g, gh⟩ := mem_ball
@@ -4421,20 +4470,36 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
   simp only [LinearMap.mem_range] at g_range
   obtain ⟨a, ha⟩ := g_range
 
-  use (Real.sqrt ⟪Laplace a, a⟫)⁻¹ • a
-  simp [Laplace_linear] at ha
-  field_simp at g_norm
-  refine ⟨?_, ?_⟩
+  by_cases inner_laplace_nonneg: 0 ≤ ⟪Laplace a, a⟫
   .
-    rw [laplace_smul, norm_smul]
-    simp [Laplace]
-  .
-    rw [laplace_smul]
-    rw [inner_smul_left]
-    rw [inner_smul_right]
-    field_simp
-
-    sorry
+    use (Real.sqrt ⟪Laplace a, a⟫)⁻¹ • a
+    simp [Laplace_linear] at ha
+    field_simp at g_norm
+    refine ⟨?_, ?_⟩
+    .
+      rw [laplace_smul]
+      rw [norm_smul]
+      simp
+      rw [norm_eq_sqrt_real_inner]
+      rw [inner_smul_left]
+      rw [inner_smul_right]
+      field_simp
+      simp [Laplace]
+    .
+      rw [laplace_smul]
+      rw [inner_smul_left]
+      rw [inner_smul_right]
+      field_simp
+      apply div_self
+      rw [Real.sqrt_ne_zero]
+      . by_contra!
+        apply inner_laplace_zero at this
+        rw [this] at ha
+        have g_nonzero := g_norm.2
+        rw [eq_comm] at ha
+        contradiction
+      . exact inner_laplace_nonneg
+  . sorry
 
 
 #print axioms laplace_g_n
