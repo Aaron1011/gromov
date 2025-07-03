@@ -4513,8 +4513,8 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
   rw [Finset.mul_sum]
   . apply summable_sum
     intro s hs
-
-    sorry
+    simp_rw [f_conv_delta]
+    apply summable_f_mul_translate
   .
     apply tsum_nonneg
     intro g
@@ -4532,8 +4532,35 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
     apply Summable.mul_left
     simp_rw [← pow_two]
     apply lp2_summable
-  . sorry
-  . sorry
+  . simp_rw [mul_assoc]
+    apply Summable.mul_left
+    rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)]
+    simp_rw [← mul_assoc]
+    simp_rw [Finset.mul_sum]
+    apply summable_sum
+    intro s hs
+    simp_rw [f_conv_delta]
+    simp_rw [mul_comm]
+    simp_rw [mul_assoc]
+    apply Summable.mul_left
+    apply summable_f_mul_translate
+  .
+    apply Summable.mul_left
+    rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)]
+    simp_rw [mul_sub]
+    apply Summable.sub
+    . simp_rw [← pow_two]
+      apply lp2_summable
+    .
+      simp_rw [← mul_assoc]
+      simp_rw [Finset.mul_sum]
+      apply summable_sum
+      intro s hs
+      simp_rw [f_conv_delta]
+      simp_rw [mul_comm]
+      simp_rw [mul_assoc]
+      apply Summable.mul_left
+      apply summable_f_mul_translate
 
 
 #print axioms laplace_range_dense
