@@ -4266,6 +4266,43 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
 
 #print axioms laplace_g_n
 
+lemma lp_summable (p: ℝ) (hp: 0 < p) (f: (Lp ℝ (ENNReal.ofReal p) volume (α := G))): Summable (fun g: G => |(f g)|^p) := by
+  have f_norm := (MeasureTheory.Lp.memLp f).2
+  simp [eLpNorm, eLpNorm'] at f_norm
+  have not_le: ¬(p ≤ 0) := by linarith
+  simp [not_le] at f_norm
+  rw [lintegral_g_eq_add] at f_norm
+  rw [WithTop.lt_top_iff_ne_top] at f_norm
+  rw [Ne] at f_norm
+  rw [ENNReal.rpow_eq_top_iff] at f_norm
+  simp at f_norm
+  have not_ofreal: ¬((ENNReal.ofReal p).toReal ≤ 0) := by
+    simp
+    rw [ENNReal.toReal_ofReal]
+    . linarith
+    . linarith
+  simp [not_ofreal] at f_norm
+  rw [ENNReal.toReal_ofReal] at f_norm
+  .
+    simp_rw [Real.enorm_eq_ofReal_abs] at f_norm
+    conv at f_norm =>
+      arg 1
+      lhs
+      arg 1
+      intro g
+      rw [ENNReal.ofReal_rpow_of_nonneg (by simp) (by linarith)]
+    apply ENNReal.summable_toReal at f_norm
+    conv at f_norm =>
+      arg 1
+      intro x
+      rw [ENNReal.toReal_ofReal (by
+        apply Real.rpow_nonneg
+        simp
+      )]
+    exact f_norm
+  . linarith
+
+
 -- Note - this is stated incorrectly in Vikman
 -- The RHS should have a squared norm
 lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (Laplace f) g) = ((2) * (#(S) : ℝ))⁻¹ * ∑ s ∈ S, ‖(f - (conv_finsupp_lp2 f (delta s) (by simp [delta])))‖^2 := by
