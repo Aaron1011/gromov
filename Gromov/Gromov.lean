@@ -4266,10 +4266,10 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
 
 #print axioms laplace_g_n
 
-lemma lp_summable (p: ℝ) (hp: 0 < p) (f: (Lp ℝ (ENNReal.ofReal p) volume (α := G))): Summable (fun g: G => |(f g)|^p) := by
+lemma lp_summable {p: ℕ} (hp: 0 < p) (f: (Lp ℝ p volume (α := G))): Summable (fun g: G => |(f g)|^p) := by
   have f_norm := (MeasureTheory.Lp.memLp f).2
   simp [eLpNorm, eLpNorm'] at f_norm
-  have not_le: ¬(p ≤ 0) := by linarith
+  have not_le: ¬(p = 0) := by linarith
   simp [not_le] at f_norm
   rw [lintegral_g_eq_add] at f_norm
   rw [WithTop.lt_top_iff_ne_top] at f_norm
@@ -4278,30 +4278,30 @@ lemma lp_summable (p: ℝ) (hp: 0 < p) (f: (Lp ℝ (ENNReal.ofReal p) volume (α
   simp at f_norm
   have not_ofreal: ¬((ENNReal.ofReal p).toReal ≤ 0) := by
     simp
-    rw [ENNReal.toReal_ofReal]
-    . linarith
-    . linarith
-  simp [not_ofreal] at f_norm
-  rw [ENNReal.toReal_ofReal] at f_norm
-  .
-    simp_rw [Real.enorm_eq_ofReal_abs] at f_norm
-    conv at f_norm =>
-      arg 1
-      lhs
-      arg 1
-      intro g
-      rw [ENNReal.ofReal_rpow_of_nonneg (by simp) (by linarith)]
-    apply ENNReal.summable_toReal at f_norm
-    conv at f_norm =>
-      arg 1
-      intro x
-      rw [ENNReal.toReal_ofReal (by
-        apply Real.rpow_nonneg
-        simp
-      )]
-    exact f_norm
-  . linarith
+    linarith
+  simp [not_le] at f_norm
+  simp_rw [Real.enorm_eq_ofReal_abs] at f_norm
+  conv at f_norm =>
+    arg 1
+    lhs
+    arg 1
+    intro g
+    rw [← ENNReal.ofReal_pow (by simp)]
+  apply ENNReal.summable_toReal at f_norm
+  conv at f_norm =>
+    arg 1
+    intro x
+    rw [ENNReal.toReal_ofReal (by
+      simp
+    )]
+  exact f_norm
 
+lemma lp2_summable (f: (Lp ℝ 2 volume (α := G))): Summable (fun g: G => (f g)^2) := by
+  conv =>
+    arg 1
+    intro g
+    rw [← sq_abs]
+  apply lp_summable (p := 2) (by simp) f
 
 -- Note - this is stated incorrectly in Vikman
 -- The RHS should have a squared norm
@@ -4370,6 +4370,7 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
   nth_rw 2 [← Real.rpow_natCast] at f_norm
   rw [← Real.rpow_mul] at f_norm
   field_simp at f_norm
+  have f_summable := lp_summable (p := 2) (by simp) f (S := S)
   conv =>
     lhs
     rhs
@@ -4378,7 +4379,7 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
     rhs
     rw [Summable.tsum_finsetSum (by
       intro i hi
-      sorry
+      apply lp2_summable
     )]
     rw [← f_norm]
 
@@ -4399,6 +4400,8 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
   rw [Summable.tsum_mul_left]
   rw [Summable.tsum_finsetSum (by
     intro i hi
+    simp_rw [f_conv_delta]
+
     sorry
   )]
   simp_rw [f_conv_delta]
@@ -4479,7 +4482,10 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
   simp_rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)]
   eta_reduce
   rw [Finset.mul_sum]
-  . sorry
+  . apply summable_sum
+    intro s hs
+
+    sorry
   .
     apply tsum_nonneg
     intro g
@@ -4489,11 +4495,12 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
   .
     apply Summable.mul_left
     apply summable_sum
-    intro s
-    sorry
+    intro s hs
+    apply lp2_summable
   . simp_rw [mul_assoc]
     apply Summable.mul_left
-    sorry
+    simp_rw [← pow_two]
+    apply lp2_summable
   . sorry
   . sorry
 
