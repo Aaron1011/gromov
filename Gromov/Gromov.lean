@@ -4436,16 +4436,32 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
         .
           rw [← Real.rpow_neg_one]
           rw [← Real.rpow_mul]
-          rw [← Real.rpow_cast]
+          rw [← Real.rpow_natCast]
+          rw [← Real.rpow_mul]
+          rw [← Real.rpow_natCast]
           rw [← Real.rpow_mul]
           field_simp
+          rw [Real.rpow_neg]
           simp
-          rw [← Real.rpow_neg_one]
-          rw [← Real.rpow_mul]
-          simp
-          field_simp
-          norm_num
-
+          rw [inv_lt_inv₀]
+          rw [pow_two]
+          ring
+          norm_cast
+          rw [mul_two]
+          . omega
+          .
+            norm_cast
+            positivity
+          . norm_cast
+          . norm_cast
+            linarith
+          . norm_cast
+            linarith
+          . norm_cast
+            positivity
+          .
+            norm_cast
+            positivity
         . positivity
         . positivity
         . simp
