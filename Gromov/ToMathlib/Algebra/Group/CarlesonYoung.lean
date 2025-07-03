@@ -440,7 +440,22 @@ theorem eLpNorm_Ioc_convolution_le_of_norm_le_mul (a : ℝ) {T : ℝ} [hT : Fact
     (c : ℝ) (hL : ∀ (x y : ℝ), ‖L (f x) (g y)‖ ≤ c * ‖f x‖ * ‖g y‖) :
     eLpNorm ((Ioc a (a + T)).indicator fun x ↦ ∫ y in a..a+T, L (f y) (g (x - y))) r ≤
     .ofReal c * eLpNorm ((Ioc a (a + T)).indicator f) p * eLpNorm ((Ioc a (a + T)).indicator g) q :=
-  sorry
+  calc
+    _ = eLpNorm (liftIoc T a fun x ↦ ∫ (y : ℝ) in a..a + T, (L (f y)) (g (x - y))) r := by
+      rw [← eLpNorm_liftIoc T a]
+      · apply AEStronglyMeasurable.sub
+        · apply AEStronglyMeasurable.integral_prod_right' (f := fun z ↦ L (f z.2) (g (z.1 - z.2)))
+          apply L.aestronglyMeasurable_comp₂ hf.restrict.comp_snd
+          exact hg.comp_quasiMeasurePreserving (quasiMeasurePreserving_sub _ _)
+        · have empty_interval := Set.Ioc_eq_empty_of_le ((le_add_iff_nonneg_right a).mpr hT.out.le)
+          simpa [empty_interval] using aestronglyMeasurable_const
+    _ = eLpNorm (liftIoc T a f ⋆[L] liftIoc T a g) r := by
+      rw [← liftIoc_convolution_liftIoc L a hfT hgT]
+    _ ≤ .ofReal c * eLpNorm (liftIoc T a f) p * eLpNorm (liftIoc T a g) q := by
+      exact eLpNorm_convolution_le_of_norm_le_mul' L hp hq hr hpqr (hf.liftIoc T a) (hg.liftIoc T a)
+        c (by intros; apply hL)
+    _ = _ := by
+      rw [← eLpNorm_liftIoc T a hf, ← eLpNorm_liftIoc T a hg]
 
 open Set in
 /-- **Young's convolution inequality** on (a, a + T]: the `L^r` seminorm of the convolution
