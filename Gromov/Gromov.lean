@@ -3014,21 +3014,6 @@ lemma lintegral_g_eq_add (f: G → ENNReal): (∫⁻ (g: G), f g) = (∑' (g : G
     simp [MeasureTheory.Measure.haarMeasure_self]
 
 
-lemma lintegral_g_eq_add (f: G → ENNReal): (∫⁻ (g: G), f g) = (∑' (g : G), f g) := by
-  rw [MeasureTheory.lintegral_countable']
-  simp [MeasureTheory.volume]
-  unfold myHaar
-  conv =>
-    arg 1
-    arg 1
-    intro a
-    rw [MeasureTheory.Measure.haar_singleton]
-    simp [MeasureTheory.Measure.haarMeasure_self]
-    rw [← mul_singleton_carrier]
-    simp [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
-    simp [MeasureTheory.Measure.haarMeasure_self]
-
-
 lemma mu_norm_one (m: ℕ): MeasureTheory.eLpNorm (muConv (S := S) m) 1 = 1 := by
   simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm']
   rw [lintegral_g_eq_add]
@@ -4491,7 +4476,9 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
     intro g
     apply sq_nonneg
   . simp
-  . sorry
+  . apply summable_sum
+    intro s hs
+    apply lp2_summable
   .
     apply Summable.mul_left
     apply summable_sum
