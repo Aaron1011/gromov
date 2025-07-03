@@ -4417,7 +4417,9 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
   )]
   simp_rw [f_conv_delta]
   simp only [inv_inv]
-  let f_conv := fun (s: G) => conv_finsupp_lp2 f (delta s) (by sorry)
+  let f_conv := fun (s: G) => conv_finsupp_lp2 f (delta s) (by
+    simp [delta]
+  )
   have inner_f_conv := fun (s: G) => MeasureTheory.L2.inner_def (𝕜 := ℝ) (f := f) (g := f_conv s)
   simp [f_conv, conv_finsupp_lp2] at inner_f_conv
   simp_rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)] at inner_f_conv
@@ -4563,6 +4565,7 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
       apply summable_f_mul_translate
 
 
+#print axioms proposition_3_18
 #print axioms laplace_range_dense
 
 
