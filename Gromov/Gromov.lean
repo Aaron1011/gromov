@@ -3412,8 +3412,9 @@ instance volume_finite_compact: IsFiniteMeasureOnCompacts (volume (α := G)) := 
       exact Measure.count_apply_lt_top.mpr finite
   }
 
-lemma finsupp_lp_top (f: G → ℝ) (hf: f.support.Finite): MeasureTheory.MemLp f ⊤ (volume) := by
-  apply Continuous.memLp_top_of_hasCompactSupport
+lemma finsupp_lp_top (f: G → ℝ) (hf: f.support.Finite) (p: ENNReal): MeasureTheory.MemLp f p (Measure.count) := by
+  rw [← my_haar_eq_count]
+  apply Continuous.memLp_of_hasCompactSupport
   . apply continuous_of_discreteTopology
   .
     simp [HasCompactSupport]
@@ -3427,87 +3428,31 @@ lemma finsupp_lp_top (f: G → ℝ) (hf: f.support.Finite): MeasureTheory.MemLp 
 noncomputable def conv_finsupp_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))) (g: G → ℝ) (hg: g.support.Finite): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := MeasureTheory.MemLp.toLp (Conv f g) (by
   simp [MemLp]
   refine ⟨by apply AEStronglyMeasurable.of_discrete, ?_⟩
-  have norm_bound := ENNReal.eLpNorm_convolution_le_enorm_mul (f := f) (g := g)
+  have norm_bound := ENNReal.eLpNorm_convolution_le_enorm_mul (G := Additive G)  (f := f) (g := g) (E' := ℝ) (E := ℝ) (F := ℝ) (𝕜 := ℝ) (p := 2) (q := 1) (r := 2) (μ := myHaarAddOpp (G := G)) (ContinuousLinearMap.mul ℝ ℝ)
+    (by simp) (by simp) (by simp) (by simp) (by apply AEMeasurable.of_discrete) (by apply AEMeasurable.of_discrete)
 
-  --
-  rw [conv_eq_sum']
-  conv =>
-    arg 1
-    intro g
-    --rw [tsum_eq_sum (s := Finset.image Additive.ofMul hg.toFinset) _]
-
-  have foo := Finset.exists_max_image (s := Finset.image Additive.ofMul hg.toFinset) (f := fun a => (f a ) * g a) ?_
-  obtain ⟨a, a_mem, f_a_max⟩ := foo
-  apply MeasureTheory.MemLp.mono (g := fun x => #(S) * ((f a) * (g (x * (-a).toMul))))
-  apply MeasureTheory.MemLp.const_mul
-  apply MeasureTheory.MemLp.const_mul
-  . simp [MemLp]
-    refine ⟨?_, ?_⟩
-    . apply AEStronglyMeasurable.of_discrete
-    .
-      simp [eLpNorm, eLpNorm']
-      apply ENNReal.rpow_lt_top_of_nonneg
-      . simp
-      .
-        rw [← WithTop.lt_top_iff_ne_top]
-        simp_rw [← enorm_pow]
-        apply MeasureTheory.Integrable.hasFiniteIntegral
-        apply Continuous.integrable_of_hasCompactSupport
-        . apply continuous_of_discreteTopology
-        .
-          unfold HasCompactSupport
-          rw [isCompact_iff_finite]
-          dsimp [tsupport]
-          rw [closure_discrete]
-
-          simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, Function.support_pow]
-          let myFun := fun x => x * (Additive.toMul a)
-          have finite_image := Set.finite_image_iff (f := myFun) (s := g.support) ?_
-          .
-            conv =>
-              arg 1
-              equals (myFun '' Function.support g) =>
-                ext b
-                simp
-                refine ⟨?_, ?_⟩
-                . intro ha
-                  use (Additive.toMul b) * ((Additive.toMul a)⁻¹)
-                  refine ⟨ha, ?_⟩
-                  simp [myFun, opAdd]
-                  rfl
-                . intro ha
-                  simp [myFun, opAdd] at ha
-                  obtain ⟨b, b_zero, a_eq⟩ := ha
-                  rw [← a_eq]
-                  simp [b_zero]
-            rw [finite_image]
-            exact hg
-          .
-            simp [myFun, opAdd]
-  . apply AEStronglyMeasurable.of_discrete
+  unfold Conv
+  eta_reduce
+  rw [my_add_haar_eq_count]
+  dsimp [volume]
+  simp_rw [my_haar_eq_count]
+  rw [my_add_haar_eq_count] at norm_bound
+  grw [norm_bound]
+  apply WithTop.mul_lt_top
+  . apply WithTop.mul_lt_top
+    . norm_cast
+    . rw [← my_add_haar_eq_count]
+      apply (MeasureTheory.Lp.memLp f).2
   .
-    apply Filter.Eventually.of_forall
-    intro x
-    rw [tsum_eq_sum (s := Finset.image (fun y => -y + (Additive.ofMul x)) (Finset.image Additive.ofMul (hg.toFinset))) _]
-    simp
-    rw [abs_le]
-    . refine ⟨?_, ?_⟩
-      . positivity
-      .
-        grw [Finset.sum_le_card_nsmul (n := (f a) * (g a))]
-      sorry
-    .
-      intro b hb
-      simp at hb
-      simp
-      right
-      by_contra!
-      specialize hb (x * (Additive.toMul b)⁻¹) this
-      field_simp at hb
-  . simp
-  . apply conv_exists_fin_supp
-    right
-    apply hg
+    simp [eLpNorm, eLpNorm']
+    rw [MeasureTheory.lintegral_count]
+    rw [tsum_eq_sum (s := hg.toFinset) (β := Additive G)]
+    . simp_rw [Real.enorm_eq_ofReal_abs]
+      rw [← ENNReal.ofReal_sum_of_nonneg]
+      . -- TODO - why can't simp' find this?
+        apply ENNReal.ofReal_lt_top
+      . simp
+    . simp
 )
 
 -- The Vikman paper defines the Laplace operator as a function ' ∆ : ℓ2(G) → ℓ2(G)'
