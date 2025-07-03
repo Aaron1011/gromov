@@ -4429,6 +4429,7 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
       simp [hb]
   )
 
+  -- Show that the punctured open ball is nonempty, so a dense set has a nonempty intersection with it
   have mem_ball := dense _ punctured_ball_open (by
     simp
     use lp_point
