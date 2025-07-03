@@ -4177,6 +4177,14 @@ lemma harmonic_exteme_val_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f
       rw [sub_eq_zero] at hf
       exact hf.symm
 
+lemma laplace_smul (k: ℝ) (f: (Lp ℝ 2 volume (α := G))): Laplace (k • f) = k • (Laplace f) := by
+  simp [Laplace, conv_mu_lp2]
+  simp_rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_smul _ _)]
+  simp_rw [conv_smul]
+  rw [MeasureTheory.MemLp.toLp_const_smul]
+  rw [smul_sub]
+
+
 lemma laplace_zero_iff_zero (g: (Lp ℝ 2 volume (α := G))) (eq_zero: Laplace g = 0): g = 0 := by
   by_cases g_has_maximum: ∃ a: G, ∀ b: G, |g b| ≤ |g a|
   .
@@ -4390,6 +4398,14 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
   have ball_open: IsOpen (Metric.ball (0 : Lp ℝ 2 volume (α := G)) (1 / n)) := by
     exact Metric.isOpen_ball
 
+
+  -- have punctured_ball_open: IsOpen ((Metric.ball (0 : Lp ℝ 2 volume (α := G)) (1 / n)) \ {0})  := by
+  --   apply IsOpen.sdiff
+  --   . exact ball_open
+  --   .
+  --     rw [← Metric.closedBall_zero]
+  --     apply Metric.isClosed_closedBall
+
   have dense := laplace_range_dense (S := S)
   rw [dense_iff_inter_open] at dense
   have mem_ball := dense _ ball_open (by
@@ -4405,14 +4421,19 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
   simp only [LinearMap.mem_range] at g_range
   obtain ⟨a, ha⟩ := g_range
 
-  use a
+  use (Real.sqrt ⟪Laplace a, a⟫)⁻¹ • a
   simp [Laplace_linear] at ha
   field_simp at g_norm
   refine ⟨?_, ?_⟩
   .
-    rw [ha]
-    linarith
+    rw [laplace_smul, norm_smul]
+    simp [Laplace]
   .
+    rw [laplace_smul]
+    rw [inner_smul_left]
+    rw [inner_smul_right]
+    field_simp
+
     sorry
 
 
