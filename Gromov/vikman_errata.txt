@@ -1,1 +1,3 @@
 - There are subtleties around when the convolution of two functions is LP2. I don't think it's enough for them both to be LP2 - we need to use the fact that one of them is finitely supported
+
+Proposition 3.18: The right-hand side should have a squared norm

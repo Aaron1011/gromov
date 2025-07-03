@@ -2999,6 +2999,20 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
       simp
       exact Set.toFinite (⋃ i ∈ S, {i})
 
+lemma lintegral_g_eq_add (f: G → ENNReal): (∫⁻ (g: G), f g) = (∑' (g : G), f g) := by
+  rw [MeasureTheory.lintegral_countable']
+  simp [MeasureTheory.volume]
+  unfold myHaar
+  conv =>
+    arg 1
+    arg 1
+    intro a
+    rw [MeasureTheory.Measure.haar_singleton]
+    simp [MeasureTheory.Measure.haarMeasure_self]
+    rw [← mul_singleton_carrier]
+    simp [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
+    simp [MeasureTheory.Measure.haarMeasure_self]
+
 
 lemma lintegral_g_eq_add (f: G → ENNReal): (∫⁻ (g: G), f g) = (∑' (g : G), f g) := by
   rw [MeasureTheory.lintegral_countable']
@@ -3425,7 +3439,7 @@ lemma finsupp_lp_top (f: G → ℝ) (hf: f.support.Finite) (p: ENNReal): Measure
 
 -- The convolution of an Lp2 function with a finitely-supported function is LP2
 --set_option maxHeartbeats 1000000 in
-noncomputable def conv_finsupp_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))) (g: G → ℝ) (hg: g.support.Finite): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := MeasureTheory.MemLp.toLp (Conv f g) (by
+noncomputable def conv_finsupp_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))) (g : G → ℝ) (hg : g.support.Finite): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := MeasureTheory.MemLp.toLp (Conv f g) (by
   simp [MemLp]
   refine ⟨by apply AEStronglyMeasurable.of_discrete, ?_⟩
   have norm_bound := ENNReal.eLpNorm_convolution_le_enorm_mul (G := Additive G)  (f := f) (g := g) (E' := ℝ) (E := ℝ) (F := ℝ) (𝕜 := ℝ) (p := 2) (q := 1) (r := 2) (μ := myHaarAddOpp (G := G)) (ContinuousLinearMap.mul ℝ ℝ)
@@ -4252,7 +4266,9 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
 
 #print axioms laplace_g_n
 
-lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (Laplace f) g) = (((2) * (#(S) : ℝ))⁻¹ * ∑ s ∈ S, (eLpNorm (f.val.cast - (Conv f (delta s))) 2 (μ := volume (α := G))).toReal) := by
+-- Note - this is stated incorrectly in Vikman
+-- The RHS should have a squared norm
+lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (Laplace f) g) = ((2) * (#(S) : ℝ))⁻¹ * ∑ s ∈ S, ‖(f - (conv_finsupp_lp2 f (delta s) (by simp [delta])))‖^2 := by
   simp_rw [Laplace]
   simp_rw [conv_mu_lp2]
   simp_rw [f_conv_mu]
@@ -4348,8 +4364,85 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
     intro i hi
     sorry
   )]
-  have inner_f_conv := MeasureTheory.L2.inner_def (𝕜 := ℝ) (f := f) (g := f)
-  --simp_rw [sum_f]
+  simp_rw [f_conv_delta]
+  simp only [inv_inv]
+  let f_conv := fun (s: G) => conv_finsupp_lp2 f (delta s) (by sorry)
+  have inner_f_conv := fun (s: G) => MeasureTheory.L2.inner_def (𝕜 := ℝ) (f := f) (g := f_conv s)
+  simp [f_conv, conv_finsupp_lp2] at inner_f_conv
+  simp_rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)] at inner_f_conv
+  conv at inner_f_conv =>
+    intro a
+    rhs
+    rw [MeasureTheory.integral_countable' (by
+      simp [f_conv_delta]
+      sorry
+    )]
+  simp [volume, my_haar_eq_count, f_conv_delta] at inner_f_conv
+  conv =>
+    lhs
+    rhs
+    rhs
+    rhs
+    arg 1
+    rw [S_eq_Sinv (S := S)]
+
+  simp only [Finset.sum_inv_index]
+  simp [mul_comm] at inner_f_conv
+
+  simp_rw [← inner_f_conv]
+  -- Split '2 * ‖f‖^2 into two copies of ‖f‖^2, and convert one into ‖Conv f delta‖^2
+  rw [two_mul]
+  conv =>
+    lhs
+    rhs
+    lhs
+    lhs
+    rhs
+    arg 2
+    intro s
+    rw [← MeasureTheory.eLpNorm_comp_measurePreserving (f := fun x => s⁻¹ * x) (ν := volume) (by apply AEStronglyMeasurable.of_discrete) (by apply measurePreserving_mul_left)]
+    -- TODO - why does doing this result in a weird metavariable outside of conv?
+    --pattern _ ∘ _
+    --equals fun g => f (s⁻¹ * g) =>
+    --  funext a
+    --  simp
+
+
+
+  simp_rw [Function.comp_def]
+  simp_rw [← f_conv_delta]
+  have card_s_ne: #(S) ≠ 0 := by
+    simp
+    simp at hS
+    exact Finset.nonempty_iff_ne_empty.mp hS
+  field_simp
+
+  simp_rw [add_comm]
+
+  conv =>
+    rhs
+    arg 2
+    intro s
+    rw [norm_sub_sq_real]
+
+
+  rw [Finset.sum_add_distrib]
+  rw [Finset.sum_sub_distrib]
+  simp [MeasureTheory.Lp.norm_def]
+  simp_rw [MeasureTheory.L2.inner_def, conv_finsupp_lp2]
+  field_simp
+  rw [sub_add]
+  rw [← add_sub]
+  rw [sub_sub_eq_add_sub]
+  rw [add_sub_assoc]
+  rw [mul_comm]
+  rw [add_left_cancel_iff]
+
+
+  simp_rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)]
+  eta_reduce
+  rw [Finset.mul_sum]
+  .
 
 
 
