@@ -3060,6 +3060,13 @@ lemma lintegral_g_eq_add (f: G → ENNReal): (∫⁻ (g: G), f g) = (∑' (g : G
     simp [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
     simp [MeasureTheory.Measure.haarMeasure_self]
 
+lemma integral_eq_eq_sum (f: G → ℝ) (hf: Integrable f): (∫ (g: G), f g) = (∑' (g : G), f g) := by
+  rw [MeasureTheory.integral_countable']
+  .
+    simp [MeasureTheory.volume]
+    simp_rw [my_haar_eq_count]
+    simp
+  . apply hf
 
 lemma mu_norm_one (m: ℕ): MeasureTheory.eLpNorm (muConv (S := S) m) 1 = 1 := by
   simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm']
@@ -4243,6 +4250,113 @@ lemma laplace_zero_iff_zero (g: (Lp ℝ 2 volume (α := G))) (eq_zero: Laplace g
       . simp
     linarith
 
+lemma norm_conv_mu_le  (f: (Lp ℝ 2 volume (α := G))): ‖conv_mu_lp2 f‖ ≤ ‖f‖ := by
+  simp [conv_mu_lp2]
+  simp [f_conv_mu]
+  simp_rw [← smul_eq_mul]
+  rw [← Pi.smul_def]
+  rw [MeasureTheory.eLpNorm_const_smul]
+  -- TODO - deduplicate this with 'laplace_bounded'
+  conv =>
+    lhs
+    rhs
+    rhs
+    arg 1
+    equals ∑ x ∈ S, fun g => f (x • g) =>
+      funext g
+      simp
+
+  have card_s_ne: (#S : ℝ) ≠ 0 := by
+    simp
+    simp at hS
+    exact Finset.nonempty_iff_ne_empty.mp hS
+
+  grw [MeasureTheory.eLpNorm_sum_le]
+  simp_rw [← Function.comp_def]
+  conv =>
+    lhs
+    rhs
+    rhs
+    arg 2
+    intro x
+    rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := MeasureTheory.volume) (by
+      apply MeasureTheory.AEStronglyMeasurable.of_discrete
+    ) (by
+    exact {
+      measurable := by
+        apply Measurable.of_discrete
+      map_eq := by
+        simp [MeasureTheory.volume]
+    }
+  )]
+  . field_simp
+    rfl
+  .
+    apply WithTop.mul_ne_top
+    .
+      rw [Real.enorm_of_nonneg (by simp)]
+      apply ENNReal.ofReal_ne_top
+    .
+      rw [WithTop.sum_ne_top]
+      intro s hs
+      rw [← Function.comp_def]
+      conv =>
+        rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := MeasureTheory.volume) (by
+          apply MeasureTheory.AEStronglyMeasurable.of_discrete
+        ) (by
+        exact {
+          measurable := by
+            apply Measurable.of_discrete
+          map_eq := by
+            simp [MeasureTheory.volume]
+        }
+      )]
+      rw [← WithTop.lt_top_iff_ne_top]
+      apply (MeasureTheory.Lp.memLp f).2
+  . intro s hs
+    apply AEStronglyMeasurable.of_discrete
+  . simp
+
+lemma inner_laplace_zero (f: (Lp ℝ 2 volume (α := G))) (hf: ⟪Laplace f, f⟫ = 0): Laplace f = 0 := by
+  have inner_le := real_inner_le_norm (conv_mu_lp2 f) f
+
+  by_cases norm_f_zero: ‖f‖ = 0
+  .
+    simp at norm_f_zero
+    simp [Laplace, conv_mu_lp2]
+    simp [f_conv_mu]
+    simp_rw [norm_f_zero]
+    simp_rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)]
+    simp
+    simp_rw [← Pi.zero_def]
+    rw [MeasureTheory.MemLp.toLp_zero]
+
+  simp [Laplace] at hf
+  rw [inner_sub_left] at hf
+  rw [real_inner_self_eq_norm_sq] at hf
+  rw [sub_eq_zero] at hf
+  rw [eq_comm] at hf
+  rw [pow_two] at hf
+  --rw [inner_eq_norm_mul_iff_real] at hf
+  rw [hf] at inner_le
+  nth_rw 2 [mul_comm] at inner_le
+  rw [mul_le_mul_iff_of_pos_left] at inner_le
+  have conv_le_f := norm_conv_mu_le f
+  have f_norm_eq: ‖f‖ = ‖conv_mu_lp2 f‖ := by
+    linarith
+
+  have f_sub_norm := norm_sub_sq_real f (conv_mu_lp2 f)
+  rw [real_inner_comm] at f_sub_norm
+  rw [hf] at f_sub_norm
+  rw [← f_norm_eq] at f_sub_norm
+  rw [← pow_two] at f_sub_norm
+  group at f_sub_norm
+  rw [zpow_two] at f_sub_norm
+  rw [mul_self_eq_zero] at f_sub_norm
+  simp at f_sub_norm
+  simpa [Laplace] using f_sub_norm
+  simpa using norm_f_zero
+
 lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_range (S := S)) := by
   rw [Submodule.dense_iff_topologicalClosure_eq_top]
   rw [Submodule.topologicalClosure_eq_top_iff]
@@ -4272,7 +4386,7 @@ lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_
     simp
 
 
-lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖Laplace g‖ ≤ (1 : ℝ) / n := by
+lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖Laplace g‖ ≤ (1 : ℝ) / n ∧ ⟪Laplace g, g⟫ = 1 := by
   have ball_open: IsOpen (Metric.ball (0 : Lp ℝ 2 volume (α := G)) (1 / n)) := by
     exact Metric.isOpen_ball
 
@@ -4290,11 +4404,17 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
   simp only [laplace_range] at g_range
   simp only [LinearMap.mem_range] at g_range
   obtain ⟨a, ha⟩ := g_range
+
   use a
   simp [Laplace_linear] at ha
-  rw [ha]
   field_simp at g_norm
-  linarith
+  refine ⟨?_, ?_⟩
+  .
+    rw [ha]
+    linarith
+  .
+    sorry
+
 
 #print axioms laplace_g_n
 
@@ -4611,6 +4731,21 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
       simp_rw [mul_assoc]
       apply Summable.mul_left
       apply summable_f_mul_translate
+
+noncomputable def G_n (n: ℕ) (hn: 0 < n) := Classical.choose (laplace_g_n n hn (S := S))
+
+lemma g_sub_norm_gt (n: ℕ) (hn: 0 < n): ∃ s: S, ‖(G_n n hn) - (conv_finsupp_lp2 (G_n n hn) (delta s.val) (by simp [delta]))‖ > 1 := by
+  have sum_norm := (proposition_3_18 (G_n n hn) (S := S))
+  have g_inner_laplace := MeasureTheory.L2.inner_def (Laplace (G_n n hn)) (G_n n hn) (𝕜 := ℝ) (α := G)
+  rw [integral_eq_eq_sum] at g_inner_laplace
+  .
+    simp at g_inner_laplace
+    simp_rw [← g_inner_laplace] at sum_norm
+
+
+
+
+  field_simp at sum_norm
 
 #track_sorry proposition_3_18
 #print axioms proposition_3_18
