@@ -4410,7 +4410,23 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
   rw [dense_iff_inter_open] at dense
 
   let lp_point: (Lp ℝ 2 volume (α := G)) := MemLp.toLp (fun (g: G) => if g = 1 then (1 : ℝ) / ((n + 1)^2) else 0) (by
-    sorry
+    simp [MemLp]
+    refine ⟨by apply AEStronglyMeasurable.of_discrete, ?_⟩
+    simp [eLpNorm, eLpNorm']
+    rw [lintegral_g_eq_add]
+    rw [tsum_eq_sum (s := {1})]
+    . simp
+      rw [Real.enorm_eq_ofReal_abs]
+      norm_cast
+      simp
+      apply ENNReal.rpow_lt_top_of_nonneg
+      . simp
+      .
+        apply ENNReal.pow_ne_top
+        apply ENNReal.ofReal_ne_top
+    . intro b hb
+      simp at hb
+      simp [hb]
   )
 
   have mem_ball := dense _ punctured_ball_open (by
