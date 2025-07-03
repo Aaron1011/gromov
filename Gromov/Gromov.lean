@@ -4385,9 +4385,35 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
   rw [Summable.tsum_mul_left]
   rw [Summable.tsum_finsetSum (by
     intro i hi
-    simp_rw [f_conv_delta]
-
-    sorry
+    simp [f_conv_delta]
+    have lp_mul := (MeasureTheory.MemLp.mul (φ := f) (f := fun x => f (i * x)) (p := 2) (q := 2) (r := 1) (μ := volume) ?_ ?_).2
+    .
+      simp [MemLp, eLpNorm, eLpNorm'] at lp_mul
+      rw [lintegral_g_eq_add] at lp_mul
+      apply Summable.of_abs
+      conv =>
+        arg 1
+        intro x
+        rw [abs_mul]
+      simp [Real.enorm_eq_ofReal_abs] at lp_mul
+      simp [← ENNReal.ofReal_mul] at lp_mul
+      rw [WithTop.lt_top_iff_ne_top] at lp_mul
+      apply ENNReal.summable_toReal at lp_mul
+      conv at lp_mul =>
+        arg 1
+        intro x
+        rw [ENNReal.toReal_ofReal (by
+          apply mul_nonneg
+          . simp
+          . simp
+        )]
+      exact lp_mul
+    .
+      rw [← Function.comp_def]
+      apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
+      . apply MeasureTheory.Lp.memLp f
+      . exact measurePreserving_mul_left volume i
+    . apply Lp.memLp f
   )]
   simp_rw [f_conv_delta]
   simp only [inv_inv]
