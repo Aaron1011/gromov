@@ -4442,8 +4442,23 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
   simp_rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)]
   eta_reduce
   rw [Finset.mul_sum]
+  . sorry
   .
-
+    apply tsum_nonneg
+    intro g
+    apply sq_nonneg
+  . simp
+  . sorry
+  .
+    apply Summable.mul_left
+    apply summable_sum
+    intro s
+    sorry
+  . simp_rw [mul_assoc]
+    apply Summable.mul_left
+    sorry
+  . sorry
+  . sorry
 
 
 #print axioms laplace_range_dense
