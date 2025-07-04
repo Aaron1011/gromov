@@ -4514,6 +4514,10 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
       rw [norm_smul]
       simp
       rw [norm_eq_sqrt_real_inner]
+      rw [ha]
+      rw [← norm_eq_sqrt_real_inner]
+
+      simp
       rw [inner_smul_left]
       rw [inner_smul_right]
       field_simp
