@@ -3596,7 +3596,17 @@ lemma laplace_bounded (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G
       apply MeasureTheory.Lp.memLp f
     . apply AEMeasurable.of_discrete
 
-#print axioms laplace_bounded
+lemma laplace_bounded' (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): ‖(Laplace (S := S) f)‖ ≤ 2 * ‖f‖ := by
+  have bounded := laplace_bounded f
+  rw [← ofReal_norm_eq_enorm] at bounded
+  rw [← ofReal_norm_eq_enorm] at bounded
+  simp_rw [← ENNReal.ofReal_ofNat] at bounded
+  rw [← ENNReal.ofReal_mul] at bounded
+  .
+    rw [ENNReal.ofReal_le_ofReal_iff] at bounded
+    . exact bounded
+    . simp
+  . simp
 
 -- The only measure-zero sets are empty sets, so we can evaluate a MemLp function by evaluating any function
 -- from the equivalence class
@@ -4428,6 +4438,76 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
       simp at hb
       simp [hb]
   )
+
+  have lp_point_norm: ‖lp_point‖ < (n: ℝ)⁻¹ := by
+    simp [lp_point, eLpNorm, eLpNorm']
+    rw [lintegral_g_eq_add]
+    simp_rw [Real.enorm_eq_ofReal_abs]
+    conv =>
+      lhs
+      arg 1
+      lhs
+      arg 1
+      intro g
+      rw [← ENNReal.ofReal_pow (by simp)]
+    rw [tsum_eq_sum (s := {1})]
+    .
+      simp
+      rw [ENNReal.ofReal_rpow_of_nonneg]
+      rw [ENNReal.toReal_ofReal]
+      .
+        rw [← Real.rpow_neg_one]
+        rw [← Real.rpow_mul]
+        rw [← Real.rpow_natCast]
+        rw [← Real.rpow_mul]
+        rw [← Real.rpow_natCast]
+        rw [← Real.rpow_mul]
+        field_simp
+        rw [Real.rpow_neg]
+        simp
+        rw [inv_lt_inv₀]
+        rw [pow_two]
+        ring
+        norm_cast
+        rw [mul_two]
+        . omega
+        .
+          norm_cast
+          positivity
+        . norm_cast
+        . norm_cast
+          linarith
+        . norm_cast
+          linarith
+        . norm_cast
+          positivity
+        .
+          norm_cast
+          positivity
+      . positivity
+      . positivity
+      . simp
+    . intro b hb
+      simp at hb
+      simp [hb]
+
+  use (Real.sqrt ⟪Laplace lp_point, lp_point⟫)⁻¹ • lp_point
+  refine ⟨?_, ?_⟩
+  .
+    rw [laplace_smul]
+    rw [norm_smul]
+    simp only [norm_inv, Real.norm_eq_abs, one_div]
+    grw [laplace_bounded']
+    grw [lp_point_norm]
+    rw [inv_mul_le_iff₀]
+    .
+      rw [← Real.norm_eq_abs]
+      rw [Real.norm_of_nonneg (by apply Real.sqrt_nonneg)]
+      simp_rw [Laplace]
+      simp_rw [inner_sub_left, conv_mu_lp2]
+      simp_rw [f_conv_mu]
+      grw [real_inner_le_norm]
+
 
   -- Show that the punctured open ball is nonempty, so a dense set has a nonempty intersection with it
   have mem_ball := dense _ punctured_ball_open (by
