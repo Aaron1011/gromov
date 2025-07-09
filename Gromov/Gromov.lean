@@ -5059,7 +5059,7 @@ lemma f_n_nonneg: ∀ n: ℕ, ∀ g: G,  0 ≤ f_n n g := by
     intro i hi
     apply mu_conv_nonneg
 
-lemma F_n_norm_one: ∀ n, MeasureTheory.eLpNorm (F_n n) 2 MeasureTheory.volume (α := G) = 1 := by
+lemma F_n_norm_eq_one: ∀ n, MeasureTheory.eLpNorm (F_n n) 2 MeasureTheory.volume (α := G) = 1 := by
   simp [eLpNorm, eLpNorm', lintegral_g_eq_add]
   simp [F_n, Real.enorm_eq_ofReal_abs, ← ENNReal.ofReal_pow]
 
@@ -5136,8 +5136,8 @@ lemma nontrivial_harmonic_case_one(f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: 
           apply ENNReal.ofReal_le_ofReal
           . apply F_n_le
           . simp
-        . sorry
-        . sorry
+        . simp
+        . simp
       . simp
 
   have laplace_tendsto: (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (Laplace_b (F_n n)) 2 MeasureTheory.volume (α := G)) Filter.atTop (nhds 0)) := by
