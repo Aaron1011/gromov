@@ -5050,8 +5050,32 @@ lemma laplace_conv_eq_laplace_right (f g: G → ℝ): Laplace_b (Conv f g) = Con
   . sorry
   . sorry
 
+lemma F_n_norm_one: ∀ n, MeasureTheory.eLpNorm (F_n n) 2 MeasureTheory.volume (α := G) = 1 := by
+  simp [eLpNorm, eLpNorm', lintegral_g_eq_add]
+  simp [F_n, Real.enorm_eq_ofReal_abs, ← ENNReal.ofReal_pow]
+  have f_n_nonneg: ∀ n: ℕ, ∀ g: G,  0 ≤ f_n n g := by
+    intro n g
+    simp [f_n]
+    apply mul_nonneg
+    . positivity
+    . apply Finset.sum_nonneg
+      intro i hi
+      apply mu_conv_nonneg
+  intro n
+  simp [f_n_nonneg]
+  have norm_one := f_n_norm_one (n) (S := S)
+  simp [eLpNorm, eLpNorm', lintegral_g_eq_add] at norm_one
+  simp_rw [Real.enorm_eq_ofReal_abs] at norm_one
+  simp [f_n_nonneg, abs_of_nonneg] at norm_one
+  simp [norm_one]
+
 #synth Module ℝ (Lp ℝ 2 (μ := MeasureTheory.volume (α := G)))
 
+lemma nontrivial_harmonic_case_one(f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℤ, F ≠ ConstLipschitzH z := by
+
+
+  have laplace_tendsto: (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (Laplace_b (F_n n)) 2 MeasureTheory.volume (α := G)) Filter.atTop (nhds 0)) := by
+    simp [eLpNorm, eLpNorm', lintegral_g_eq_add]
 -- We need to prove that a bounded seqence of Lipschitz harmonic functions has a subsequence that converges to a Lipschitz harmonic function
 -- lp.memℓp_of_tendsto
 -- MeasureTheory.ae_bdd_liminf_atTop_of_eLpNorm_bdd
