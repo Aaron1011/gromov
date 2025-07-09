@@ -5050,17 +5050,19 @@ lemma laplace_conv_eq_laplace_right (f g: G → ℝ): Laplace_b (Conv f g) = Con
   . sorry
   . sorry
 
+lemma f_n_nonneg: ∀ n: ℕ, ∀ g: G,  0 ≤ f_n n g := by
+  intro n g
+  simp [f_n]
+  apply mul_nonneg
+  . positivity
+  . apply Finset.sum_nonneg
+    intro i hi
+    apply mu_conv_nonneg
+
 lemma F_n_norm_one: ∀ n, MeasureTheory.eLpNorm (F_n n) 2 MeasureTheory.volume (α := G) = 1 := by
   simp [eLpNorm, eLpNorm', lintegral_g_eq_add]
   simp [F_n, Real.enorm_eq_ofReal_abs, ← ENNReal.ofReal_pow]
-  have f_n_nonneg: ∀ n: ℕ, ∀ g: G,  0 ≤ f_n n g := by
-    intro n g
-    simp [f_n]
-    apply mul_nonneg
-    . positivity
-    . apply Finset.sum_nonneg
-      intro i hi
-      apply mu_conv_nonneg
+
   intro n
   simp [f_n_nonneg]
   have norm_one := f_n_norm_one (n) (S := S)
@@ -5071,11 +5073,76 @@ lemma F_n_norm_one: ∀ n, MeasureTheory.eLpNorm (F_n n) 2 MeasureTheory.volume 
 
 #synth Module ℝ (Lp ℝ 2 (μ := MeasureTheory.volume (α := G)))
 
+lemma abs_sub_sq_eq (a b : ℝ): (a - b)^2 = |a - b|^2 := by
+  nth_rw 2 [pow_two]
+  rw [abs_sub_sq]
+  rw [sub_sq]
+  group
+
+lemma sub_sq_le_abs (a b : ℝ) (ha: 0 ≤ a) (hb: 0 ≤ b): (a - b)^2 ≤ |a^2 - b^2| := by
+  rw [sq_sub_sq]
+  rw [abs_mul]
+  have sub_le_add: |a - b| ≤ |a + b| := by
+    have sum_pos: 0 ≤ a + b := by linarith
+    rw [abs_of_nonneg sum_pos]
+    rw [abs_le]
+    refine ⟨?_, ?_⟩
+    . linarith
+    . linarith
+  rw [abs_sub_sq_eq]
+  grw [← sub_le_add]
+  rw [pow_two]
+
 lemma nontrivial_harmonic_case_one(f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℤ, F ≠ ConstLipschitzH z := by
 
+  have F_n_le (s: S) (n: ℕ): (F_n n - (Conv (F_n n) (delta s.val)))^2 ≤ |(f_n n - (Conv (f_n n) (delta s.val)))| := by
+    simp [f_conv_delta_helper, F_n]
+    rw [Pi.le_def]
+    intro g
+    simp [Function.comp_def]
+    grw [sub_sq_le_abs]
+    simp [Real.sq_sqrt, f_n_nonneg]
+    . apply Real.sqrt_nonneg
+    . apply Real.sqrt_nonneg
+
+  have conv_delta_tendsto (s: S): Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm ((F_n n) - (Conv (F_n n) (delta s.val))) 2 MeasureTheory.volume (α := G)) Filter.atTop (nhds 0) := by
+    apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := (fun x => x^((1 : ℝ) / 2)) ∘ (fun n: ℕ => (MeasureTheory.eLpNorm ((f_n n) - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume (α := G))))
+    . simp
+    .
+      apply Filter.Tendsto.comp (y := (nhds 0))
+      .
+        conv =>
+          arg 3
+          equals nhds (0 ^ ((1 : ℝ) / 2)) =>
+            simp
+        apply Filter.Tendsto.ennrpow_const (m := id)
+        exact fun ⦃U⦄ a ↦ a
+      . apply f_n_limit
+    . rw [Pi.le_def]
+      intro n
+      simp
+    .
+      rw [Pi.le_def]
+      intro n
+      simp [eLpNorm, eLpNorm', lintegral_g_eq_add]
+      apply ENNReal.rpow_le_rpow
+      .
+        apply Summable.tsum_le_tsum
+        . intro g
+          rw [Real.enorm_eq_ofReal_abs]
+          rw [← ENNReal.ofReal_pow]
+          rw [sq_abs]
+          rw [Real.enorm_eq_ofReal_abs]
+          apply ENNReal.ofReal_le_ofReal
+          . apply F_n_le
+          . simp
+        . sorry
+        . sorry
+      . simp
 
   have laplace_tendsto: (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (Laplace_b (F_n n)) 2 MeasureTheory.volume (α := G)) Filter.atTop (nhds 0)) := by
-    simp [eLpNorm, eLpNorm', lintegral_g_eq_add]
+    simp [eLpNorm, eLpNorm', lintegral_g_eq_add, Laplace_b]
+
 -- We need to prove that a bounded seqence of Lipschitz harmonic functions has a subsequence that converges to a Lipschitz harmonic function
 -- lp.memℓp_of_tendsto
 -- MeasureTheory.ae_bdd_liminf_atTop_of_eLpNorm_bdd
