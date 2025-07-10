@@ -5183,9 +5183,11 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         field_simp
         rw [Real.enorm_of_nonneg]
         .
-          norm_cast
-          simp
-          sorry
+          rw [ENNReal.ofReal_le_iff_le_toReal]
+          . simp
+          . simp
+            have s_nonempty := Finset.nonempty_iff_ne_empty.mp (S_nonempty (S := S))
+            exact s_nonempty
         . simp
       .
         grw [MeasureTheory.eLpNorm_sum_le]
