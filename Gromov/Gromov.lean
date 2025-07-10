@@ -5231,7 +5231,107 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
       . simp
       . simp
 
+  let F_n_cont (n: ℕ): C(G, ℝ) := {
+    toFun := F_n n,
+    continuous_toFun := by exact continuous_of_discreteTopology
+  }
 
+  have abs_F_n_le_one: ∀ g: G, ∀ n: ℕ, |F_n n g| ≤ 1 := by
+    intro g n
+    have F_n_norm := F_n_norm_eq_one n (S := S)
+    have bound := bounded_from_elpnorm_bound (F_n n) (S := S) 2 (by simp) 1 (by simp)
+    simp only [Nat.cast_ofNat, ENNReal.ofReal_one] at bound
+    rw [F_n_norm] at bound
+    apply bound (by simp)
+
+  have F_n_lipschitz (n: ℕ): LipschitzWith 2 (F_n_cont n) := by
+    unfold F_n_cont
+    simp [LipschitzWith]
+    intro x y
+    by_cases x_eq_y: x = y
+    . simp [x_eq_y]
+    .
+      norm_cast
+      rw [edist_dist]
+      rw [Real.dist_eq]
+      rw [edist_dist]
+      conv =>
+        rhs
+        equals ENNReal.ofReal (2 * (dist x y)) =>
+          rw [ENNReal.ofReal_mul]
+          . simp
+          . linarith
+      rw [ENNReal.ofReal_le_ofReal_iff]
+      .
+        grw [abs_sub]
+        grw [abs_F_n_le_one x]
+        grw [abs_F_n_le_one y]
+        rw [one_add_one_eq_two]
+        simp
+        simp [dist]
+        have dist_ne_zero: dist x y ≠ 0 := by
+          exact dist_ne_zero.mpr x_eq_y
+        simp [dist] at dist_ne_zero
+        omega
+      . simp [dist]
+
+
+
+  -- The set of 'F_n' for all n
+  let all_F_n_conv: Set C(G, ℝ) := Set.range F_n_cont
+
+  have compact_closure_f: IsCompact (closure ( (Set.range (fun n => (F_n (S := S) n))))) := by
+    rw [Pi.isCompact_closure_iff]
+    intro g
+    apply Bornology.IsBounded.isCompact_closure
+    rw [Metric.isBounded_iff]
+    use 2
+    intro x hx y hy
+    simp at hx
+    simp at hy
+    obtain ⟨n, h_x_n⟩ := hx
+    obtain ⟨m, h_y_m⟩ := hy
+    rw [Real.dist_eq]
+    grw [abs_sub]
+    rw [← h_x_n, ← h_y_m]
+    grw [abs_F_n_le_one]
+    grw [abs_F_n_le_one]
+    linarith
+
+  have F_n_pointwise_converge := IsCompact.tendsto_subseq compact_closure_f (x := fun n => F_n n) (by
+    intro n
+    simp
+    apply Set.mem_of_subset_of_mem (_root_.subset_closure)
+    simp
+  )
+  -- We now have a sequence of functions which converges pointwise, where all of the
+  -- elements of the sequence satisfy the 'norm > ε' condition
+  obtain ⟨F, F_mem, seq, seq_mono, tendsto_F⟩ := F_n_pointwise_converge
+
+  let F_lipschitzh: LipschitzH := {
+    toFun := (fun (g: G) => Complex.ofReal (F g)),
+    lipschitz := by
+      use 2
+      rw [← Function.comp_def]
+      conv =>
+        arg 1
+        equals 1 * 2 => simp
+      apply LipschitzWith.comp (Kf := 1) (Kg := 2)
+      .
+        exact Isometry.lipschitz (Complex.isometry_ofReal)
+      .
+        have closed_lipschitz := isClosed_setOf_lipschitzWith (α := G) (β := ℝ) 2
+        apply IsClosed.isSeqClosed at closed_lipschitz
+        simp [IsSeqClosed] at closed_lipschitz
+        have F_lipschitz := closed_lipschitz (p := F) (x := (fun n ↦ F_n n) ∘ seq) (by
+          intro n
+          simp
+          apply F_n_lipschitz
+        ) tendsto_F
+        exact F_lipschitz
+    harmonic := by
+      simp [Harmonic]
+  }
   sorry
 -- We need to prove that a bounded seqence of Lipschitz harmonic functions has a subsequence that converges to a Lipschitz harmonic function
 -- lp.memℓp_of_tendsto
