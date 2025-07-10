@@ -5098,6 +5098,28 @@ lemma card_s_ne: #(S) ≠ 0 := by
   simp at hS
   exact Finset.nonempty_iff_ne_empty.mp hS
 
+lemma bounded_from_elpnorm_bound (f: G → ℝ) (p: ℕ) (hp: p ≠ 0) (C: ℝ) (hC: 0 ≤ C) (hf: eLpNorm f p (volume) ≤ (ENNReal.ofReal C)): ∀ g: G, |f g| ≤ C := by
+  simp [eLpNorm, eLpNorm', hp] at hf
+  simp_rw [lintegral_g_eq_add] at hf
+  by_contra!
+  obtain ⟨g, hg⟩ := this
+  have norm_le := ENNReal.le_tsum (f := fun a => ‖f a‖ₑ ^ p) g
+  rw [ENNReal.rpow_inv_le_iff] at hf
+  .
+    rw [Real.enorm_eq_ofReal_abs] at norm_le
+    grw [hf] at norm_le
+    norm_cast at norm_le
+    rw [← ENNReal.ofReal_pow (by simp)] at norm_le
+    rw [← ENNReal.ofReal_pow hC] at norm_le
+    rw [ENNReal.ofReal_le_ofReal_iff (by simp [hC])] at norm_le
+    rw [pow_le_pow_iff_left₀ (by simp) hC (by omega)] at norm_le
+    linarith
+  . simp only [Nat.cast_pos]
+    omega
+
+
+
+
 lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℤ, F ≠ ConstLipschitzH z := by
 
   have F_n_le (s: S) (n: ℕ): (F_n n - (Conv (F_n n) (delta s.val)))^2 ≤ |(f_n n - (Conv (f_n n) (delta s.val)))| := by
@@ -5208,6 +5230,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         . simp
       . simp
       . simp
+
 
   sorry
 -- We need to prove that a bounded seqence of Lipschitz harmonic functions has a subsequence that converges to a Lipschitz harmonic function
