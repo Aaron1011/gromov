@@ -5175,7 +5175,18 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         lhs
         arg 1
         equals ((#S) : ℝ)⁻¹ • (∑ s_1 : S, ((F_n n) - Conv (F_n n) (delta s_1.val))) =>
-          sorry
+          funext g
+          simp
+          field_simp [card_s_ne]
+          rw [mul_comm]
+          simp_rw [f_conv_delta]
+          conv =>
+            lhs
+            rhs
+            arg 1
+            rw [S_eq_Sinv (S := S)]
+          simp
+          rw [← Finset.sum_attach]
 
       rw [MeasureTheory.eLpNorm_const_smul]
       apply mul_le_mul
@@ -5197,7 +5208,8 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         . simp
       . simp
       . simp
-  . sorry
+
+  sorry
 -- We need to prove that a bounded seqence of Lipschitz harmonic functions has a subsequence that converges to a Lipschitz harmonic function
 -- lp.memℓp_of_tendsto
 -- MeasureTheory.ae_bdd_liminf_atTop_of_eLpNorm_bdd
