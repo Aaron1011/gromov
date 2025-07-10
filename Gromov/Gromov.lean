@@ -5093,7 +5093,12 @@ lemma sub_sq_le_abs (a b : ℝ) (ha: 0 ≤ a) (hb: 0 ≤ b): (a - b)^2 ≤ |a^2 
   grw [← sub_le_add]
   rw [pow_two]
 
-lemma nontrivial_harmonic_case_one(f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℤ, F ≠ ConstLipschitzH z := by
+lemma card_s_ne: #(S) ≠ 0 := by
+  simp
+  simp at hS
+  exact Finset.nonempty_iff_ne_empty.mp hS
+
+lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℤ, F ≠ ConstLipschitzH z := by
 
   have F_n_le (s: S) (n: ℕ): (F_n n - (Conv (F_n n) (delta s.val)))^2 ≤ |(f_n n - (Conv (f_n n) (delta s.val)))| := by
     simp [f_conv_delta_helper, F_n]
@@ -5141,8 +5146,56 @@ lemma nontrivial_harmonic_case_one(f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: 
       . simp
 
   have laplace_tendsto: (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (Laplace_b (F_n n)) 2 MeasureTheory.volume (α := G)) Filter.atTop (nhds 0)) := by
-    simp [eLpNorm, eLpNorm', lintegral_g_eq_add, Laplace_b]
+    apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := (fun n: ℕ => (#(S) : ENNReal)⁻¹ * (( ∑ s : S, MeasureTheory.eLpNorm (F_n n - (Conv (F_n n) (delta s.val))) 2 MeasureTheory.volume (α := G)))))
+    . simp
+    .
+      conv =>
+        pattern (nhds 0)
+        equals nhds ( (#(S) : ENNReal)⁻¹ * 0) =>
+          simp
+      apply ENNReal.Tendsto.const_mul
+      . conv =>
+          pattern (nhds 0)
+          equals nhds (∑ s : S, 0) =>
+            simp
+        apply tendsto_finset_sum
+        intro s hs
+        apply conv_delta_tendsto s
+      .
+        simp only [ne_eq, not_true_eq_false, ENNReal.inv_eq_top, Nat.cast_eq_zero,
+          Finset.card_eq_zero, false_or]
+        exact Finset.nonempty_iff_ne_empty.mp S_nonempty
+    . rw [Pi.le_def]
+      simp
+    . rw [Pi.le_def]
+      intro n
+      simp [Laplace_b, f_conv_mu]
 
+      conv =>
+        lhs
+        arg 1
+        equals ((#S) : ℝ)⁻¹ • (∑ s_1 : S, ((F_n n) - Conv (F_n n) (delta s_1.val))) =>
+          sorry
+
+      rw [MeasureTheory.eLpNorm_const_smul]
+      apply mul_le_mul
+      .
+        field_simp
+        rw [Real.enorm_of_nonneg]
+        .
+          norm_cast
+          simp
+          sorry
+        . simp
+      .
+        grw [MeasureTheory.eLpNorm_sum_le]
+        . rfl
+        . intro s hs
+          apply AEStronglyMeasurable.of_discrete
+        . simp
+      . simp
+      . simp
+  . sorry
 -- We need to prove that a bounded seqence of Lipschitz harmonic functions has a subsequence that converges to a Lipschitz harmonic function
 -- lp.memℓp_of_tendsto
 -- MeasureTheory.ae_bdd_liminf_atTop_of_eLpNorm_bdd
