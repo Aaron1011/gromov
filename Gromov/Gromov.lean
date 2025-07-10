@@ -5120,7 +5120,8 @@ lemma bounded_from_elpnorm_bound (f: G → ℝ) (p: ℕ) (hp: p ≠ 0) (C: ℝ) 
 
 
 
-lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℤ, F ≠ ConstLipschitzH z := by
+
+lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℂ, F ≠ ConstLipschitzH z := by
 
   have F_n_le (s: S) (n: ℕ): (F_n n - (Conv (F_n n) (delta s.val)))^2 ≤ |(f_n n - (Conv (f_n n) (delta s.val)))| := by
     simp [f_conv_delta_helper, F_n]
@@ -5331,8 +5332,25 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         exact F_lipschitz
     harmonic := by
       simp [Harmonic]
+      intro g
+      rw [tendsto_pi_nhds] at tendsto_F
+      have lim_f_sum := tendsto_finset_sum (ι := S) (M := ℝ) (s := Finset.univ) (a := fun s => F (s.val * g)) (f := (fun (s: S) n ↦ (F_n n) (s.val *g))) (x := Filter.atTop (α := ℕ)) ?_
+
+      -- TODO - figure out why lean hangs without this
+      have my_mul : ContinuousMul ℝ := instIsTopologicalRingReal.toContinuousMul
+      have lim_f_mul_sum := Filter.Tendsto.const_mul ((#S) : ℝ)⁻¹ lim_f_sum
+      simp_rw [Laplace_b] at laplace_tendsto
+      sorry
+      sorry
   }
-  sorry
+  use F_lipschitzh
+  intro z
+
+  have norm_zero := MeasureTheory.Lp.eLpNorm'_lim_eq_lintegral_liminf (f := (fun n => F_n n) ∘ seq) (f_lim := F) (p := 2) (μ := volume) ?_
+  . simp at norm_zero
+  . apply Filter.Eventually.of_forall
+    rw [tendsto_pi_nhds] at tendsto_F
+    apply tendsto_F
 -- We need to prove that a bounded seqence of Lipschitz harmonic functions has a subsequence that converges to a Lipschitz harmonic function
 -- lp.memℓp_of_tendsto
 -- MeasureTheory.ae_bdd_liminf_atTop_of_eLpNorm_bdd
