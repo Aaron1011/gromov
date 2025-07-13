@@ -5232,6 +5232,10 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
       . simp
       . simp
 
+  -- WRONG - we cannot just use 'F_n' directly
+  -- Consider the sequence of functions 'A_n' where A_n(g_n) = 1, and A_n(g) = 0 for all other g
+  -- Each of these functions has Lp2 norm equal to 1, but their pointwise limit is the constant zero function
+
   let F_n_cont (n: ℕ): C(G, ℝ) := {
     toFun := F_n n,
     continuous_toFun := by exact continuous_of_discreteTopology
@@ -5346,11 +5350,35 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
   use F_lipschitzh
   intro z
 
-  have norm_zero := MeasureTheory.Lp.eLpNorm'_lim_eq_lintegral_liminf (f := (fun n => F_n n) ∘ seq) (f_lim := F) (p := 2) (μ := volume) ?_
-  . simp at norm_zero
+
+  have norm_eq := MeasureTheory.Lp.eLpNorm'_lim_eq_lintegral_liminf (f := (fun n => F_n n) ∘ seq) (f_lim := F) (p := 2) (μ := volume) ?_
+  . simp at norm_eq
+    simp_rw [lintegral_g_eq_add] at norm_eq
+
+    have norm_ne_zero: eLpNorm' F 2 volume ≠ 0 := by
+      rw [norm_eq]
+      simp only [ne_eq, ENNReal.rpow_eq_zero_iff, ENNReal.tsum_eq_zero, inv_pos, Nat.ofNat_pos,
+        and_true, inv_neg'', not_or, not_forall, not_and, not_lt, Nat.ofNat_nonneg, implies_true]
+      by_contra!
+      have F_n_norm := F_n_norm_eq_one (S := S)
+      sorry
+
+
+    sorry
   . apply Filter.Eventually.of_forall
     rw [tendsto_pi_nhds] at tendsto_F
     apply tendsto_F
+
+
+  --simp at norm_zero
+  have foo (n: ℕ) := F_n_norm_eq_one (seq n) (S := S)
+  simp [F_n_norm_eq_one] at norm_zero
+
+    -- apply Filter.Eventually.of_forall
+    -- rw [tendsto_pi_nhds] at tendsto_F
+    -- apply tendsto_F
+
+  sorry
 -- We need to prove that a bounded seqence of Lipschitz harmonic functions has a subsequence that converges to a Lipschitz harmonic function
 -- lp.memℓp_of_tendsto
 -- MeasureTheory.ae_bdd_liminf_atTop_of_eLpNorm_bdd
