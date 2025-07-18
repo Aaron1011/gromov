@@ -5992,7 +5992,8 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     refine ⟨h_eps, ?_⟩
     simp_rw [← fn_sub_norm]
     apply Filter.Frequently.of_forall
-    exact eps_seq_gt_x
+    intro n
+    exact eps_seq_gt_x (seq n)
 
   have F_non_const: F 1 ≠ F s⁻¹ := by
     by_contra!
