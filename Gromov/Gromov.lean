@@ -6021,7 +6021,6 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
   simp [DFunLike.coe] at app_s_inv_eq
   rw [← app_one_eq] at app_s_inv_eq
   norm_cast at app_s_inv_eq
-  norm_cast at app_s_inv_eq
   rw [eq_comm] at app_s_inv_eq
   contradiction
 
