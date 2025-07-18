@@ -414,7 +414,11 @@ def ConstLipschitzH (z: ℂ) : LipschitzH (G := G) := {
     simp
     field_simp
     have card_ne_zero: (#(S) : ℂ) ≠ 0 := by
-      sorry
+      norm_cast
+      simp
+      have foo := hS
+      simp only [nonempty_subtype] at foo
+      exact Finset.nonempty_iff_ne_empty.mp foo
     field_simp
 }
 
@@ -6024,7 +6028,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
   rw [eq_comm] at app_s_inv_eq
   contradiction
 
-
+#track_sorry nontrivial_harmonic_case_two
 
 #synth OrderTopology ENNReal
 
