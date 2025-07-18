@@ -698,7 +698,8 @@ def gAct (g: G) (v: LipschitzH (S := S)): LipschitzH (S := S) := {
     simp [LipschitzWith] at hC
     specialize hC (g⁻¹ * x) (g⁻¹ * y)
     simp [DFunLike.coe]
-    exact hC
+    sorry
+    --exact hC
   harmonic := by
     unfold Harmonic
     intro x
@@ -707,7 +708,8 @@ def gAct (g: G) (v: LipschitzH (S := S)): LipschitzH (S := S) := {
     specialize v_harmonic (g⁻¹ * x)
     simp [DFunLike.coe]
     simp_rw [← mul_assoc]
-    exact v_harmonic
+    sorry
+    --exact v_harmonic
 }
 
 
@@ -1393,12 +1395,13 @@ lemma measurable_GRepW: Measurable (fun g => GRepW (G := G) (GRepW_base (G := G)
   . simp [GRepW]
     sorry
   . sorry
-  . infer_instance
+  . sorry
+    --infer_instance
 
 lemma continuous_GRepW : Continuous (fun g => GRepW (G := G) (GRepW_base (G := G) g)) := by
   fun_prop
 
---set_option synthInstance.maxHeartbeats 50000
+set_option synthInstance.maxHeartbeats 500000
 
 lemma continous_of_map (v: W (G := G)): Continuous (fun (r: (W (G := G) →L[ℂ] W (G := G))ˣ) => r.val v) := by
   apply Continuous.comp (g := (fun r => r v)) (f := (fun (r : (W (G := G) →L[ℂ] W (G := G))ˣ) => r.val))
@@ -1498,6 +1501,7 @@ instance GL_W_Proper: ProperSpace (GL_W (G := G)) := {
     rw [← inv_ball]
     rw [Topology.IsInducing.isCompact_iff units_val_inducing]
     rw [Set.image_preimage_eq_range_inter]
+    sorry
 }
 
 --#synth Bornology (GL_W (G := G))
@@ -1511,8 +1515,8 @@ instance GL_W_Proper: ProperSpace (GL_W (G := G)) := {
 
 #synth NormedSpace ℂ (W (G := G) →L[ℂ] W (G := G))
 
-lemma rho_g_subset_unitary: (toEuclidean '' (Units.val '' ((rho_g (G := G)).carrier))) ⊆ (unitary _).carrier := by
-  sorry
+--lemma rho_g_subset_unitary: (toEuclidean '' (Units.val '' ((rho_g (G := G)).carrier))) ⊆ (unitary _).carrier := by
+--  sorry
 
 -- All norms are equivalent on finite-dimensional spaces:
 -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Analysis/Normed/Module/FiniteDimension.html
@@ -1523,12 +1527,14 @@ lemma closed_image_rho_g: closure (Units.val '' (rho_g_closure (G := G))) = Unit
   . sorry
   .
     intro hw
-    rw [Topology.IsEmbedding.closure_eq_preimage_closure_image (isembedding_units_val (G := G)) _]
-    simp
+    sorry
+    --rw [Topology.IsEmbedding.closure_eq_preimage_closure_image (isembedding_units_val (G := G)) _]
+    --simp
 
 
 -- In the Vikman paper, rho_g is precompact, and the closure of rho_g is a compact subgroup
 -- LinearMap.finiteDimensional
+set_option maxHeartbeats 2000000 in
 theorem compact_rho_g: IsCompact (rho_g_closure (G := G)) := by
   --unfold rho_g_closure rho_g
   unfold rho_g_closure
@@ -1588,6 +1594,7 @@ theorem compact_rho_g: IsCompact (rho_g_closure (G := G)) := by
     .
       simp at invertible
       simp at hx
+      sorry
 
 
 
@@ -1595,16 +1602,17 @@ theorem compact_rho_g: IsCompact (rho_g_closure (G := G)) := by
 
 
   rw [Topology.IsEmbedding.closure_eq_preimage_closure_image (isembedding_units_val (G := G))]
-  rw [Topology.IsInducing.isCompact_preimage_iff]
-  . sorry
-  . apply (isembedding_units_val (G := G)).isInducing
-  .
-    rw [IsClosed.closure_eq]
-    . simp
-    .
+  --rw [Topology.IsInducing.isCompact_preimage_iff]
+  --. sorry
+  --. apply (isembedding_units_val (G := G)).isInducing
+  --.
+  --  rw [IsClosed.closure_eq]
+  --  . simp
+  --  .
 
-    simp
-  rw [Topology.IsEmbedding.isCompact_iff (isembedding_units_val (G := G))]
+  --    sorry
+    --simp
+  --rw [Topology.IsEmbedding.isCompact_iff (isembedding_units_val (G := G))]
 
   -- rw [Topology.IsEmbedding.closure_eq_preimage_closure_image (isembedding_units_val (G := G))]
 
@@ -1649,8 +1657,11 @@ theorem compact_rho_g: IsCompact (rho_g_closure (G := G)) := by
     exact norm_triangle
 
   have foo := image_closure_subset_closure_image (Units.continuous_val) (s := _root_.closure (rho_g (G := G)).carrier)
-  rw [image_closure_of_isCompact]
-  . exact compact_closure_of
+  sorry
+  --rw [image_closure_of_isCompact]
+  --. exact compact_closure_of
+  --. sorry
+
 
   --have foo := Topology.IsEmbedding.isCompact_iff (isembedding_units_val (G := G))
 
@@ -1710,15 +1721,18 @@ instance Borel_rho_g: BorelSpace ↥(rho_g (G := G)) := by
 
 instance LocallyCompact_GL_W: LocallyCompactSpace (GL_W (G := G)) := by
   apply Topology.IsInducing.locallyCompactSpace (isembedding_units_val (G := G).isInducing)
+  sorry
   --apply Topology.IsEmbedding.locallyCompactSpace (isembedding_units_val (G := G))
 
 instance LocallyCompact_rho_g: LocallyCompactSpace (rho_g (G := G)) := by
   apply IsOpen.locallyCompactSpace
+  sorry
 
 lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutative M ∧ M.FiniteIndex := by
   let my_map := Subgroup.subtype (rho_g (G := G))
   unfold GL_W at my_map
   have my_weyl_trick := weyl_unitarian_trick (H := rho_g (G := G)) (G := GL_W (G := G)) (V := (W (G := G))) (rep := my_map)
+  sorry
 
 -- We need this to work with Finset
 noncomputable instance GL_W_DecidableEq: DecidableEq (GL_W (G := G)) := by
@@ -1850,6 +1864,7 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
         dsimp [H_as_GL_W]
         rw [Subgroup.index_map_subtype]
         simp [H_index_ne_zero]
+        sorry
 
     }
 
@@ -1859,7 +1874,8 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
     rw [Subgroup.mem_comap] at g_mem_G'
     unfold H_as_GL_W at g_mem_G'
     simp at g_mem_G'
-    use ⟨Classical.choose g_mem_G', by sorry⟩
+    sorry
+    --use ⟨Classical.choose g_mem_G', by sorry⟩
   ))
 
   --let other := ((fun (g : G') => (⟨(rho_hom) g, by sorry⟩ : ↥H)))
@@ -1871,8 +1887,8 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
   exact {
     G' := G',
     finite_index := G'_finite_index,
-    φ := h_to_z,
-    hφ := h_to_z_surjective
+    φ := sorry -- h_to_z,
+    hφ := sorry -- h_to_z_surjective
   }
 
 
@@ -2162,76 +2178,76 @@ instance my_add_haar_right_invariant: (myHaarAddOpp.IsAddRightInvariant (G := Ad
   rw [my_add_haar_eq_count]
   infer_instance
 
-lemma conv_exists_lp1 (f g: G → ℝ)
-  (hf: MeasureTheory.MemLp ((fun x => f x.toMul)) 1 myHaarAddOpp)
-  (hg: ∀ y: G, MeasureTheory.MemLp ((fun x => g x.toMul)) 1 myHaarAddOpp)
-  : ConvExists f g := by
+-- lemma conv_exists_lp1 (f g: G → ℝ)
+--   (hf: MeasureTheory.MemLp ((fun x => f x.toMul)) 1 myHaarAddOpp)
+--   (hg: ∀ y: G, MeasureTheory.MemLp ((fun x => g x.toMul)) 1 myHaarAddOpp)
+--   : ConvExists f g := by
 
-  apply ENNReal.ConvolutionExists.of_memLp_memLp (p := 1) (q := 1) (μ := myHaarAddOpp) (by
-    simp [ENNReal.HolderConjugate]
-    exact {
-      inv_add_inv_eq_inv := by field_simp
-    }
-  )
-    -- (f := fun a => f (MulOpposite.unop (Additive.toMul a)))
-    -- (g := fun a => g ((MulOpposite.unop (Additive.toMul a))))
-    -- (hf := AEMeasurable.of_discrete)
-    -- (hg := AEMeasurable.of_discrete)
-    -- (by simp [ENNReal.HolderConjugate])
-    -- (by simp [ENNReal.HolderConjugate])
+--   apply ENNReal.ConvolutionExists.of_memLp_memLp (p := 1) (q := 1) (μ := myHaarAddOpp) (by
+--     simp [ENNReal.HolderConjugate]
+--     exact {
+--       inv_add_inv_eq_inv := by field_simp
+--     }
+--   )
+--     -- (f := fun a => f (MulOpposite.unop (Additive.toMul a)))
+--     -- (g := fun a => g ((MulOpposite.unop (Additive.toMul a))))
+--     -- (hf := AEMeasurable.of_discrete)
+--     -- (hg := AEMeasurable.of_discrete)
+--     -- (by simp [ENNReal.HolderConjugate])
+--     -- (by simp [ENNReal.HolderConjugate])
 
-  have young_bound := ENNReal.eLpNorm_convolution_le_enorm_mul
-    (f := fun a => f (MulOpposite.unop (Additive.toMul a)))
-    (g := fun a => g ((MulOpposite.unop (Additive.toMul a))))
-    (L := (ContinuousLinearMap.mul ℝ ℝ))
-    (r := 1)
-    (p := 1)
-    (q := 1)
-    (μ := myHaarAddOpp)
-    (by simp)
-    (by simp)
-    (by simp)
-    (by simp)
-    (by apply AEMeasurable.of_discrete)
-    (by apply AEMeasurable.of_discrete)
+--   have young_bound := ENNReal.eLpNorm_convolution_le_enorm_mul
+--     (f := fun a => f (MulOpposite.unop (Additive.toMul a)))
+--     (g := fun a => g ((MulOpposite.unop (Additive.toMul a))))
+--     (L := (ContinuousLinearMap.mul ℝ ℝ))
+--     (r := 1)
+--     (p := 1)
+--     (q := 1)
+--     (μ := myHaarAddOpp)
+--     (by simp)
+--     (by simp)
+--     (by simp)
+--     (by simp)
+--     (by apply AEMeasurable.of_discrete)
+--     (by apply AEMeasurable.of_discrete)
 
-  have young_lt_top := lt_top_mul young_bound ?_ ?_
-  .
-    simp [eLpNorm, eLpNorm'] at young_lt_top
-    --
+--   have young_lt_top := lt_top_mul young_bound ?_ ?_
+--   .
+--     simp [eLpNorm, eLpNorm'] at young_lt_top
+--     --
 
-    unfold ConvExists MeasureTheory.ConvolutionExists MeasureTheory.ConvolutionExistsAt MeasureTheory.Integrable
-    intro z
-    refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
-    unfold MeasureTheory.HasFiniteIntegral
-    simp [MeasureTheory.convolution] at young_lt_top
-    simp
+--     unfold ConvExists MeasureTheory.ConvolutionExists MeasureTheory.ConvolutionExistsAt MeasureTheory.Integrable
+--     intro z
+--     refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
+--     unfold MeasureTheory.HasFiniteIntegral
+--     simp [MeasureTheory.convolution] at young_lt_top
+--     simp
 
-    rw [WithTop.lt_top_iff_ne_top] at young_lt_top
-    apply MeasureTheory.measure_eq_top_of_lintegral_ne_top _ at young_lt_top
-    rw [my_add_haar_eq_count] at young_lt_top
-    rw [MeasureTheory.Measure.count_eq_zero_iff] at young_lt_top
-    simp only [enorm_ne_top] at young_lt_top
-
-
-
-
-  unfold ConvExists MeasureTheory.ConvolutionExists MeasureTheory.ConvolutionExistsAt MeasureTheory.Integrable
-  intro g
-  refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
-  unfold MeasureTheory.HasFiniteIntegral
-  simp [eLpNorm, eLpNorm'] at young_bound
-  --simp [MeasureTheory.convolution] at young_bound
-  grw [young_bound]
+--     rw [WithTop.lt_top_iff_ne_top] at young_lt_top
+--     apply MeasureTheory.measure_eq_top_of_lintegral_ne_top _ at young_lt_top
+--     rw [my_add_haar_eq_count] at young_lt_top
+--     rw [MeasureTheory.Measure.count_eq_zero_iff] at young_lt_top
+--     simp only [enorm_ne_top] at young_lt_top
 
 
 
-  unfold ConvExists MeasureTheory.ConvolutionExists MeasureTheory.ConvolutionExistsAt MeasureTheory.Integrable
-  intro x
-  simp only [toMul_sub, MulOpposite.unop_div, ContinuousLinearMap.mul_apply']
-  refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
-  unfold MeasureTheory.HasFiniteIntegral
-  grw [ENNReal.eLpNorm_convolution_le_enorm_mul]
+
+--   unfold ConvExists MeasureTheory.ConvolutionExists MeasureTheory.ConvolutionExistsAt MeasureTheory.Integrable
+--   intro g
+--   refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
+--   unfold MeasureTheory.HasFiniteIntegral
+--   simp [eLpNorm, eLpNorm'] at young_bound
+--   --simp [MeasureTheory.convolution] at young_bound
+--   grw [young_bound]
+
+
+
+--   unfold ConvExists MeasureTheory.ConvolutionExists MeasureTheory.ConvolutionExistsAt MeasureTheory.Integrable
+--   intro x
+--   simp only [toMul_sub, MulOpposite.unop_div, ContinuousLinearMap.mul_apply']
+--   refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
+--   unfold MeasureTheory.HasFiniteIntegral
+--   grw [ENNReal.eLpNorm_convolution_le_enorm_mul]
 
 
 lemma conv_exists (p q : ℝ) (hp: 0 < p) (hq: 0 < q) (hpq: p.HolderConjugate q) (f g: G → ℝ)
@@ -4075,8 +4091,8 @@ noncomputable def Laplace_linear: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G
     rw [smul_sub]
 }
 -- spectrum.norm_le_norm_mul_of_mem
-lemma laplce_spectrum_real (z: ℂ) (hz: z ∈ spectrum ℂ (Laplace_linear (S := S))): z.im = 0 := by
-  sorry
+--lemma laplce_spectrum_real (z: ℂ) (hz: z ∈ spectrum ℂ (Laplace_linear (S := S))): z.im = 0 := by
+--  sorry
 
 noncomputable def F_n (n : ℕ) := Real.sqrt ∘ (f_n (S := S) n)
 noncomputable def F_n_lp2 (n : ℕ) := MeasureTheory.MemLp.toLp (F_n (S := S) n) (by sorry) (μ := volume (α := G)) (p := 2)
@@ -4408,6 +4424,9 @@ lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_
     simp
 
 
+
+set_option maxHeartbeats 2000000 in
+-- This whole lemma is probably completely wrong - it needs to use the spectral theorem
 lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖Laplace g‖ ≤ (1 : ℝ) / n ∧ ⟪Laplace g, g⟫ = 1 := by
   have ball_open: IsOpen (Metric.ball (0 : Lp ℝ 2 volume (α := G)) (1 / n)) := by
     exact Metric.isOpen_ball
@@ -4510,7 +4529,9 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
       simp_rw [Laplace]
       simp_rw [inner_sub_left, conv_mu_lp2]
       simp_rw [f_conv_mu]
-      grw [real_inner_le_norm]
+      sorry
+      --grw [real_inner_le_norm]
+    . sorry
 
 
   -- Show that the punctured open ball is nonempty, so a dense set has a nonempty intersection with it
@@ -4586,41 +4607,42 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
   simp only [laplace_range] at g_range
   simp only [LinearMap.mem_range] at g_range
   obtain ⟨a, ha⟩ := g_range
+  sorry
 
-  by_cases inner_laplace_nonneg: 0 ≤ ⟪Laplace a, a⟫
-  .
-    use (Real.sqrt ⟪Laplace a, a⟫)⁻¹ • a
-    simp [Laplace_linear] at ha
-    field_simp at g_norm
-    refine ⟨?_, ?_⟩
-    .
-      rw [laplace_smul]
-      rw [norm_smul]
-      simp
-      rw [norm_eq_sqrt_real_inner]
-      rw [ha]
-      rw [← norm_eq_sqrt_real_inner]
+  -- by_cases inner_laplace_nonneg: 0 ≤ ⟪Laplace a, a⟫
+  -- .
+  --   --use (Real.sqrt ⟪Laplace a, a⟫)⁻¹ • a
+  --   --simp [Laplace_linear] at ha
+  --   field_simp at g_norm
+  --   refine ⟨?_, ?_⟩
+  --   .
+  --     rw [laplace_smul]
+  --     rw [norm_smul]
+  --     simp
+  --     rw [norm_eq_sqrt_real_inner]
+  --     rw [ha]
+  --     rw [← norm_eq_sqrt_real_inner]
 
-      simp
-      rw [inner_smul_left]
-      rw [inner_smul_right]
-      field_simp
-      simp [Laplace]
-    .
-      rw [laplace_smul]
-      rw [inner_smul_left]
-      rw [inner_smul_right]
-      field_simp
-      apply div_self
-      rw [Real.sqrt_ne_zero]
-      . by_contra!
-        apply inner_laplace_zero at this
-        rw [this] at ha
-        have g_nonzero := g_norm.2
-        rw [eq_comm] at ha
-        contradiction
-      . exact inner_laplace_nonneg
-  . sorry
+  --     simp
+  --     rw [inner_smul_left]
+  --     rw [inner_smul_right]
+  --     field_simp
+  --     simp [Laplace]
+  --   .
+  --     rw [laplace_smul]
+  --     rw [inner_smul_left]
+  --     rw [inner_smul_right]
+  --     field_simp
+  --     apply div_self
+  --     rw [Real.sqrt_ne_zero]
+  --     . by_contra!
+  --       apply inner_laplace_zero at this
+  --       rw [this] at ha
+  --       have g_nonzero := g_norm.2
+  --       rw [eq_comm] at ha
+  --       contradiction
+  --     . exact inner_laplace_nonneg
+  -- . sorry
 
 
 #print axioms laplace_g_n
@@ -4948,11 +4970,13 @@ lemma g_sub_norm_gt (n: ℕ) (hn: 0 < n): ∃ s: S, ‖(G_n n hn) - (conv_finsup
   .
     simp at g_inner_laplace
     simp_rw [← g_inner_laplace] at sum_norm
+    sorry
 
 
 
 
   field_simp at sum_norm
+  sorry
 
 #track_sorry proposition_3_18
 #print axioms proposition_3_18
@@ -5000,6 +5024,9 @@ lemma laplace_spectrum_contains_zero: 0 ∈ spectrum ℝ (Laplace_linear (S := S
       sorry
 
 
+  sorry
+  sorry
+  sorry
   sorry
     -- ContinuousLinearMap.le_opNorm
 
@@ -5051,6 +5078,7 @@ lemma laplace_conv_eq_laplace_right (f g: G → ℝ): Laplace_b (Conv f g) = Con
   rw [conv_assoc]
   . simp
     rfl
+  . sorry
   . sorry
   . sorry
 
@@ -5374,15 +5402,16 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     apply tendsto_F
 
 
+
   --simp at norm_zero
-  have foo (n: ℕ) := F_n_norm_eq_one (seq n) (S := S)
-  simp [F_n_norm_eq_one] at norm_zero
+  --have foo (n: ℕ) := F_n_norm_eq_one (seq n) (S := S)
+  --simp [F_n_norm_eq_one] at norm_zero
 
     -- apply Filter.Eventually.of_forall
     -- rw [tendsto_pi_nhds] at tendsto_F
     -- apply tendsto_F
 
-  sorry
+  --sorry
 -- We need to prove that a bounded seqence of Lipschitz harmonic functions has a subsequence that converges to a Lipschitz harmonic function
 -- lp.memℓp_of_tendsto
 -- MeasureTheory.ae_bdd_liminf_atTop_of_eLpNorm_bdd
@@ -6316,6 +6345,7 @@ noncomputable def three_two_B_n_single_s (φ: (Additive G) →+ ℤ) (γ: G) (n:
 --set_option maxHeartbeats 600000
 
 -- If G has polynomial growth, than we can find an N such that S_n ⊆ B_n * B_n⁻¹
+set_option maxHeartbeats 2000000 in
 lemma new_three_two_poly_growth (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD d (S := S)) (γ: G) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ) (hγ: φ γ = 1) (s: G) (s_mem: s ∈ S): ∃ n, three_two_S_n (S := {s}) φ γ (n + 1) ⊆ ((three_two_B_n (S := {s}) φ γ n) * (three_two_B_n (S := {s}) φ γ n)⁻¹)  := by
   by_contra!
   simp [HasPolynomialGrowthD] at hG
@@ -7348,6 +7378,7 @@ lemma three_poly_poly_growth_all_s_n (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGro
 
 
 -- The kernel of `φ` is generated by {γ_m_i}
+set_option maxHeartbeats 1000000
 lemma three_two_gamma_m_generates(φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ) (γ: G) (hγ: φ γ = 1) : Subgroup.closure (Set.range (Function.uncurry (gamma_m_helper (G := G) (S := S) φ γ))) = AddSubgroup.toSubgroup φ.ker := by
   have phi_ofmul: φ (ofMul γ) = 1 := by
     exact hγ

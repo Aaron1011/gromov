@@ -112,6 +112,17 @@ variable {𝕜 : Type u𝕜} {G : Type uG} [MeasurableSpace G] {μ : Measure G}
 variable [NormedAddCommGroup E] [NormedAddCommGroup E'] [NormedAddCommGroup F]
   {f : G → E} {g : G → E'}
 
+/-- If `MemLp f p μ` and `MemLp g q μ`, where `p` and `q` are Hölder conjugates, then the
+convolution of `f` and `g` exists everywhere. -/
+theorem ConvolutionExists.of_memLp_memLp [NontriviallyNormedField 𝕜] [NormedSpace 𝕜 E] [NormedSpace 𝕜 E'] [NormedSpace 𝕜 F] {L : E →L[𝕜] E' →L[𝕜] F} [AddGroup G] [MeasurableAdd₂ G]
+    [MeasurableNeg G] (μ : Measure G) [SFinite μ] [μ.IsNegInvariant] [μ.IsAddLeftInvariant]
+    [μ.IsAddRightInvariant] {p q : ENNReal} (hpq : p.HolderConjugate q)
+    (hL : ∀ (x y : G), ‖L (f x) (g y)‖ ≤ ‖f x‖ * ‖g y‖) (hf : AEStronglyMeasurable f μ)
+    (hg : AEStronglyMeasurable g μ) (hfp : MemLp f p μ) (hgq : MemLp g q μ) :
+    ConvolutionExists f g L μ := by
+  sorry
+
+
 -- Used in the proof of `enorm_convolution_le_eLpNorm_mul_eLpNorm_mul_eLpNorm`
 open ENNReal in
 private lemma eLpNorm_eq_eLpNorm_rpow (h : G → E) {r e : ℝ} (r0 : 0 < r) (e0 : 0 < e)
@@ -457,5 +468,6 @@ theorem eLpNorm_Ioc_convolution_le_enorm_mul (a : ℝ) {T : ℝ} [hT : Fact (0 <
     ((L (f x)).le_opNorm (g y)).trans <| mul_le_mul_of_nonneg_right (L.le_opNorm _) (norm_nonneg _)
 
 end ENNReal
+
 
 end Convolution
