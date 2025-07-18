@@ -5386,7 +5386,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
 -- Case two of Theorem 3.6
 set_option maxHeartbeats 2000000 in
-lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℤ, F ≠ ConstLipschitzH z := by
+lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH (S := S), ∀ z: ℂ, F ≠ ConstLipschitzH z := by
   obtain ⟨s, hs⟩ := f_n_limit
   let H_n := fun n g => if  ((f_n n g⁻¹) - (Conv (f_n n) (delta s.val)) g⁻¹) ≠ 0 then ((f_n n g⁻¹) - (Conv (f_n n) (delta s.val)) g⁻¹) / |((f_n n g⁻¹) - (Conv (f_n n) (delta s.val)) g⁻¹)| else 1
 
@@ -5986,6 +5986,44 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
   }
   use F_lipschitzh
   intro z
+  have not_conv_tendsto_zero: ¬Filter.Tendsto (fun n => ENNReal.ofReal |Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) 1 - Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) (↑s)⁻¹|) Filter.atTop (nhds 0) := by
+    rw [Filter.not_tendsto_iff_exists_frequently_notMem]
+    use eps
+    refine ⟨h_eps, ?_⟩
+    simp_rw [← fn_sub_norm]
+    apply Filter.Frequently.of_forall
+    exact eps_seq_gt_x
+
+  have F_non_const: F 1 ≠ F s⁻¹ := by
+    by_contra!
+    rw [← sub_eq_zero] at this
+    rw [tendsto_pi_nhds] at tendsto_F
+    have lim_f_sub := Filter.Tendsto.sub (tendsto_F 1) (tendsto_F s⁻¹)
+    rw [this] at lim_f_sub
+    simp_rw [Function.comp_def] at lim_f_sub
+    rw [tendsto_zero_iff_abs_tendsto_zero] at lim_f_sub
+    rw [Function.comp_def] at lim_f_sub
+    have f_sub_ennreal := ENNReal.tendsto_ofReal lim_f_sub
+    simp only [ENNReal.ofReal_zero] at f_sub_ennreal
+    contradiction
+
+  by_contra!
+  -- TODO - there must be a cleaner way
+  have app_one_eq: F_lipschitzh 1 = ConstLipschitzH z (1: G) := by
+    rw [this]
+  unfold F_lipschitzh ConstLipschitzH at app_one_eq
+  simp [DFunLike.coe] at app_one_eq
+
+  have app_s_inv_eq: F_lipschitzh s⁻¹ = ConstLipschitzH z (s⁻¹: G) := by
+    rw [this]
+  unfold F_lipschitzh ConstLipschitzH at app_s_inv_eq
+  simp [DFunLike.coe] at app_s_inv_eq
+  rw [← app_one_eq] at app_s_inv_eq
+  norm_cast at app_s_inv_eq
+  norm_cast at app_s_inv_eq
+  rw [eq_comm] at app_s_inv_eq
+  contradiction
+
 
 
 #synth OrderTopology ENNReal
