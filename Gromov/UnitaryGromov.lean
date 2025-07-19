@@ -84,8 +84,8 @@ instance compact_unitary (n: ℕ) [Nonempty (Fin n)]: CompactSpace ↥(Matrix.un
   linarith
 
 -- Lemma 3.31 (Volume Packing)
-lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℕ, ∀ (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)), (G' n ε G).FiniteIndex ∧ (G' n ε G).index ≤ C := by
-  use sorry
+lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, ∀ (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)), (G' n ε G).FiniteIndex ∧ (G' n ε G).index ≤ C := by
+
 
   have nonempty_fin : Nonempty (Fin n) := by
     exact Fin.pos_iff_nonempty.mp hn
@@ -101,6 +101,8 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℕ, 
   let measure_haar: MeasureTheory.MeasureSpace (Matrix.unitaryGroup (Fin n) ℂ) := {
     volume := MeasureTheory.Measure.haarMeasure compacts_univ
   }
+
+  use 1 / (MeasureTheory.volume (Metric.ball (1 : (Matrix.unitaryGroup (Fin n) ℂ) ) (ε / 2 / 2))).toReal
 
   intro G
   -- We can find a maximal subset I where ||a - b|| ≥ ε for distinct a, b in I
@@ -262,7 +264,44 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℕ, 
         . unfold MeasureTheory.volume
           simp [measure_haar]
 
+    -- Subgroup.index_le_of_leftCoset_cover_const
+
+
+    have inter_subset (g) (hg: g ∈ G.carrier): Metric.ball (g : (Matrix.unitaryGroup (Fin n) ℂ)) ε ∩ G.carrier ⊆ (fun x => g * x.val) '' (G' n ε G).carrier := by
+      rw [translate_ball]
+      intro a ha
+      simp only [Set.mem_image]
+
+      have a_mem := Set.mem_of_mem_inter_left ha
+      simp only [Set.mem_image] at a_mem
+      obtain ⟨x, hx⟩ := a_mem
+      have a_mem_g := Set.mem_of_mem_inter_right ha
+      simp at a_mem_g
+      have g_mul_x := hx.2
+      rw [eq_comm] at g_mul_x
+      rw [← inv_mul_eq_iff_eq_mul] at g_mul_x
+      have x_mem_g: x ∈ G := by
+        rw [← g_mul_x]
+        apply Subgroup.mul_mem
+        . simpa using hg
+        . exact a_mem_g
+
+      use ⟨x, x_mem_g⟩
+      refine ⟨?_, ?_⟩
+      .
+        apply Subgroup.subset_closure
+        exact hx.1
+      .
+        simp_rw [← g_mul_x]
+        simp
+      . exact hε
+
     sorry
+    -- refine ⟨?_, ?_⟩
+    -- . sorry
+    -- .
+    --   apply Subgroup.index_le_of_leftCoset_cover_const
+    -- sorry
   . intro S S_subset S_chain
     use Set.sUnion S
     refine ⟨?_, ?_⟩
