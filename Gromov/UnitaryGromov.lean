@@ -1,6 +1,8 @@
 import Mathlib
 
 open scoped Matrix.L2OpNorm ComplexInnerProductSpace
+--open scoped ComplexInnerProductSpace
+
 
 -- Lemma 3.29 (Shrinking Conjugators)
 lemma shrinking_conjugators (n: ℕ) (g h: Matrix.unitaryGroup (Fin n) ℂ):
@@ -82,6 +84,220 @@ instance compact_unitary (n: ℕ) [Nonempty (Fin n)]: CompactSpace ↥(Matrix.un
   grw [dist_le_norm_add_norm]
   rw [CStarRing.norm_coe_unitary, CStarRing.norm_coe_unitary]
   linarith
+
+
+def diag_unitary (c: ℂ)  (n: ℕ) : Matrix (Fin n) (Fin n) ℂ := Matrix.diagonal (fun _ => c)
+
+lemma diag_mem_unitary (c: ℂ) (hc: ‖c‖ = 1) (n: ℕ): diag_unitary c n ∈ Matrix.unitaryGroup (Fin n) ℂ := by
+  dsimp [diag_unitary]
+  rw [Matrix.mem_unitaryGroup_iff]
+  dsimp [star]
+  simp
+  rw [Complex.mul_conj']
+  simp [hc]
+
+-- Errata - `1 = det h'` is false, we only know that '1 = norm (det h')'
+lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix.unitaryGroup (Fin n) ℂ) (h_det: h.val.det = 1) (ε : ℝ) (hε: 0 < ε)
+  (h_dist: ‖h.val - 1‖ < ε) (c: ℂ) (hc: ‖c‖ = 1) (h_mul: h = diag_unitary c n): ∃ C: ℝ, ε < C → c = 1 := by
+  rw [h_mul] at h_dist
+  simp [diag_unitary] at h_dist
+  conv at h_dist =>
+    arg 1
+    arg 1
+    lhs
+    equals c • (Matrix.diagonal (fun _ => 1)) =>
+      rw [← Matrix.smul_one_eq_diagonal]
+      simp
+
+  have c_nonzero: c ≠ 0 := by
+    by_contra!
+    rw [this] at hc
+    simp at hc
+
+  have ne_zero_n: NeZero n := by
+    rw [neZero_iff]
+    linarith
+
+  let c_unit: Units ℂ := {
+      val := c,
+      inv := c⁻¹,
+      val_inv := by field_simp
+      inv_val := by field_simp
+    }
+
+  rw [Matrix.diagonal_one] at h_dist
+  conv at h_dist =>
+    arg 1
+    arg 1
+    rhs
+    equals (1 : ℂ) • 1 =>
+      simp
+  rw [← sub_smul] at h_dist
+  rw [norm_smul] at h_dist
+  conv at h_dist =>
+    lhs
+    rhs
+    equals (1 : ℝ) =>
+      sorry
+
+  simp at h_dist
+  have det_eq_c_n: h.val.det = c^n := by
+    rw [h_mul]
+    simp [diag_unitary]
+
+
+  rw [h_det] at det_eq_c_n
+  let dists := (fun (x: ℂ) => (‖x - 1‖ : ℝ)) '' ((Units.val '' (rootsOfUnity n ℂ).carrier \ {1}))
+  --let dists := (fun x => ‖x - (1: ℂ)‖) '' (Units.val '' (rootsOfUnity n ℂ).carrier \ {1})
+
+  -- TODO - why can't we combine these into a single line?
+  have foo := Set.Finite.exists_minimal (s := dists) ?_ ?_
+  obtain ⟨min_dist, h_min_dist⟩ := foo
+  . simp [Minimal] at h_min_dist
+    use min_dist
+    intro eps_lt
+
+
+
+    by_contra!
+
+    have c_mem : c ∈ Units.val '' rootsOfUnity n ℂ := by
+      use c_unit
+      simp [c_unit]
+      ext
+      simp
+      rw [← det_eq_c_n]
+
+    have c_dist_e: ε ≤ ‖ c - 1‖ := by
+      grw [eps_lt]
+      have c_dist  := h_min_dist.2 (y := ‖c - 1‖)
+      simp [dists] at c_dist
+      have dist_ge := c_dist c_unit ?_ ?_ ?_
+      .
+        by_contra!
+        specialize dist_ge (by linarith)
+        linarith
+      . simp [c_unit]
+        ext
+        simp
+        rw [det_eq_c_n]
+      . simp [c_unit]
+        rw [Units.ext_iff]
+        simp
+        simp [this]
+      . simp [c_unit]
+    linarith
+  .
+    simp [dists]
+    apply Set.Finite.image
+    apply Set.Finite.diff
+    apply Set.Finite.image
+
+
+    have fintype_roots := rootsOfUnity.fintype (k := n) (R  := ℂ)
+    have finite_roots: Finite ↥(rootsOfUnity n ℂ) := by infer_instance
+    -- TODO - how is this working???
+    exact finite_roots
+  .
+    simp [dists]
+    rw [Set.diff_nonempty]
+    have roots_mem := Complex.mem_rootsOfUnity (n := n)
+    simp
+
+    have n_gt_one: 1 < n := by
+      sorry
+
+    let my_root: Units ℂ := {
+      val := Complex.exp (2 * ↑Real.pi * Complex.I * (1 / ↑n)),
+      inv := (Complex.exp (2 * ↑Real.pi * Complex.I * (1 / ↑n)))⁻¹
+      val_inv := by simp
+      inv_val := by simp
+    }
+    use my_root
+    simp [my_root]
+    refine ⟨?_, ?_⟩
+    . ext
+      simp
+      rw [← Complex.exp_nat_mul]
+      rw [mul_comm]
+      field_simp
+    .
+      rw [Units.ext_iff]
+      simp
+      rw [Complex.exp_eq_one_iff]
+      simp
+      intro a
+      conv =>
+        arg 1
+        rhs
+        rw [mul_comm]
+      field_simp
+      by_contra!
+      apply mul_left_cancel₀ at this
+      .
+        field_simp at this
+        sorry
+      . norm_num
+        have pos := Real.pi_pos
+        linarith
+
+
+        --rw [div_eq_iff_eq_mul] at this
+
+
+
+
+    -- use c_unit
+    -- simp [c_unit]
+    -- refine ⟨?_, ?_⟩
+    -- . ext
+    --   simp
+    --   rw [det_eq_c_n]
+    -- .
+    --   rw [Units.ext_iff]
+    --   simp
+    --   simp []
+
+
+    -- apply Set.Nonempty.diff
+    -- apply Set.Nonempty.image
+
+
+
+
+
+
+  -- simp at det_eq_c_n
+  -- have h_det_norm := unitary_implies_det n h.val (by simp)
+  -- rw [det_eq_c_n] at h_det_norm
+  -- have h_det := Matrix.det_of_mem_unitary (A := h.val) (by simp)
+
+  -- simp [unitary] at h_det
+  -- rw [Complex.conj_mul'] at h_det
+  -- have norm_det := h_det.1
+  -- simp at norm_det
+
+  -- rw [Matrix.l2_opNorm_def] at h_dist
+  -- simp at h_dist
+  -- rw [ContinuousLinearMap.norm_id] at h_dist
+  -- have foo := Matrix.norm_eq_sup_sup_nnnorm (A := (1 : Matrix (Fin n) (Fin n) ℂ))
+  -- unfold norm at foo
+  -- rw [foo] at h_dist
+  -- simp [Matrix.cstar_norm_def] at h_dist
+
+  -- conv at h_dist =>
+  --   lhs
+  --   rhs
+  --   dsimp [Matrix.norm_def]
+
+
+  -- rw []
+  -- simp [norm] at h_dist
+  -- rw [Matrix.l2_opNorm_def] at h_dist
+  -- rw [Matrix.norm_def] at h_dist
+  -- simp at h_dist
+  -- simp at h_dist
+  -- sorry
 
 -- Lemma 3.31 (Volume Packing)
 lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, ∀ (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)), (G' n ε G).FiniteIndex ∧ (G' n ε G).index ≤ C := by
