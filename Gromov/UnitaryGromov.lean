@@ -297,6 +297,10 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
       . exact hε
 
     sorry
+    --  (g := fun g => Metric.ball g ((ε / 2) / 2))
+
+    --have coset_bound := Subgroup.index_le_of_leftCoset_cover_const (H := G' n ε G) (s := I)
+    --sorry
     -- refine ⟨?_, ?_⟩
     -- . sorry
     -- .
