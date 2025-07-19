@@ -233,13 +233,29 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℕ, 
         rw [ENNReal.toReal_mul] at volume_sum
         simp at volume_sum
         . exact volume_sum
-        . sorry
+        .
+          apply ENNReal.mul_ne_top
+          . simp
+          . simp
         . simp
       . sorry
       . exact disjoint_balls
       . intro b hb
         exact measurableSet_ball
-      . sorry
+      .
+        conv =>
+          lhs
+          equals (0 : ENNReal).toReal => simp
+        rw [ENNReal.toReal_lt_toReal]
+        . unfold MeasureTheory.volume
+          simp [measure_haar]
+          apply IsOpen.measure_pos
+          exact Metric.isOpen_ball
+          simp [hε]
+        . simp
+        . unfold MeasureTheory.volume
+          simp [measure_haar]
+
     sorry
   . intro S S_subset S_chain
     use Set.sUnion S
