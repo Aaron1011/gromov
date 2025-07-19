@@ -238,7 +238,13 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℕ, 
           . simp
           . simp
         . simp
-      . sorry
+      .
+        apply Set.PairwiseDisjoint.countable_of_isOpen (s := fun g => Metric.ball g ((ε / 2)/2))
+        . exact disjoint_balls
+        . intro i hi
+          exact Metric.isOpen_ball
+        . intro i hi
+          simp [hε]
       . exact disjoint_balls
       . intro b hb
         exact measurableSet_ball
