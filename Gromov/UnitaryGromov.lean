@@ -96,7 +96,7 @@ lemma diag_mem_unitary (c: ℂ) (hc: ‖c‖ = 1) (n: ℕ): diag_unitary c n ∈
   rw [Complex.mul_conj']
   simp [hc]
 
--- Errata - `1 = det h'` is false, we only know that '1 = norm (det h')'
+-- Note - `1 = det h'` comes from the fact that 'h' is equal to a commutator [a, b]
 lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix.unitaryGroup (Fin n) ℂ) (h_det: h.val.det = 1) (ε : ℝ) (hε: 0 < ε)
   (h_dist: ‖h.val - 1‖ < ε) (c: ℂ) (hc: ‖c‖ = 1) (h_mul: h = diag_unitary c n): ∃ C: ℝ, ε < C → c = 1 := by
   rw [h_mul] at h_dist
