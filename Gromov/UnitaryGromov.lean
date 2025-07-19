@@ -242,7 +242,16 @@ lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix.unitaryGroup (Fin n) ℂ
       .
         field_simp at this
         have abs_lt_one: ‖((1: ℂ) / ↑n)‖ < 1 := by
-          sorry
+          simp
+          have div_le := Nat.cast_inv_le_one (α := ℝ) n
+          by_cases inv_eq_one: (n : ℝ)⁻¹ = 1
+          .
+            simp at inv_eq_one
+            linarith
+          .
+            rw [← ne_iff_lt_iff_le] at div_le
+            simp [n_eq_one] at div_le
+            exact div_le
         by_cases a_eq_zero: a = 0
         . rw [a_eq_zero] at this
           simp at this
