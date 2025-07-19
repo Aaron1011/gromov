@@ -44,9 +44,55 @@ def G' (n: ℕ) (ε: ℝ) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)): Subgr
 lemma volume_packing (n: ℕ) (ε: ℝ) (hε : 0 < ε): ∃ C: ℕ, ∀ (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)), (G' n ε G).FiniteIndex ∧ (G' n ε G).index ≤ C := by
   use sorry
   intro G
+  -- We can find a maximal subset I where ||a - b|| ≥ ε for distinct a, b in I
   let I_sets := { S | S ⊆ G.carrier ∧ ∀ x ∈ S, ∀ y ∈ S, x ≠ y → ‖x.val - y.val‖ ≥ ε }
   have maximal_I := zorn_subset I_sets ?_
-  . sorry
+  . obtain ⟨I, hI⟩ := maximal_I
+    have balls_cover: G.carrier ⊆ ⋃ (g ∈ I), Metric.ball g ε := by
+      intro a ha
+      by_cases a_dist_I: ∀ g ∈ I, ‖a.val - g.val‖ ≥ ε
+      . have a_mem_I: a ∈ I := by
+          have enlarge_I: {a} ∪ I ∈ I_sets := by
+            simp [-Subtype.forall, I_sets]
+            simp [Maximal] at hI
+            have I_prop := hI.1
+            simp [-Subtype.forall, I_sets] at I_prop
+            refine ⟨?_, ?_⟩
+            . apply Set.insert_subset ha I_prop.1
+            . refine ⟨?_, ?_⟩
+              . intro b hb a_neq_b
+                apply a_dist_I b hb
+              . intro c hc
+                refine ⟨?_, ?_⟩
+                . intro c_neq_a
+                  rw [norm_sub_rev]
+                  apply a_dist_I c hc
+                . intro d hd c_neq_d
+                  apply I_prop.2
+                  . apply hc
+                  . apply hd
+                  . apply c_neq_d
+
+          exact Maximal.mem_of_prop_insert hI enlarge_I
+
+        .
+          apply Set.mem_sUnion_of_mem (t := Metric.ball a ε)
+          . simp [hε]
+          . rw [Set.mem_range]
+            use a
+            -- TODO - this is a really weird way of doing this
+            have nonempty_prop: Nonempty (a ∈ I) := by
+              exact Nonempty.intro a_mem_I
+            rw [Set.iUnion_const]
+      . simp [-Subtype.forall, -Subtype.exists] at a_dist_I
+        obtain ⟨b, b_mem, b_dist_le⟩ := a_dist_I
+        rw [Set.mem_iUnion]
+        use b
+        simp [b_mem]
+        simp [dist]
+        rw [dist_eq_norm_sub]
+        exact b_dist_le
+    sorry
   . intro S S_subset S_chain
     use Set.sUnion S
     refine ⟨?_, ?_⟩
