@@ -204,7 +204,7 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℕ, 
 
 
 
-    have card_i_le: I.ncard ≤ (1: ℝ) / (MeasureTheory.volume ((Metric.ball (1: (Matrix.unitaryGroup (Fin n) ℂ)) ((ε / 2)/2)))).toReal := by
+    have card_i_le: Nat.card I ≤ (1: ℝ) / (MeasureTheory.volume ((Metric.ball (1: (Matrix.unitaryGroup (Fin n) ℂ)) ((ε / 2)/2)))).toReal := by
       rw [le_div_iff₀]
       simp [MeasureTheory.volume] at volume_sum
       rw [MeasureTheory.measure_biUnion] at volume_sum
@@ -219,14 +219,27 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℕ, 
       simp [measure_haar]
       norm_cast
       norm_cast at volume_sum
-      rw [ENat.card_eq_coe_natCard] at volume_sum
-      grw [MeasureTheory.measure_mono]
-
-      have left_inv := MeasureTheory.Measure.isMulLeftInvariant_haarMeasure (G := Matrix.unitaryGroup (Fin n) ℂ) compacts_univ
-      rw [← MeasureTheory.forall_measure_preimage_mul_iff] at left_inv
-      unfold MeasureTheory.volume
-      simp [measure_haar]
-      .
+      by_cases I_infinite: Infinite I
+      . simp
+      . have I_finite: I.Finite := by
+          simpa using I_infinite
+        norm_cast at volume_sum
+        have finite_I: Finite I := by
+          exact I_finite
+        rw [ENat.card_eq_coe_natCard] at volume_sum
+        norm_cast at volume_sum
+        norm_cast
+        rw [← ENNReal.toReal_le_toReal] at volume_sum
+        rw [ENNReal.toReal_mul] at volume_sum
+        simp at volume_sum
+        . exact volume_sum
+        . sorry
+        . simp
+      . sorry
+      . exact disjoint_balls
+      . intro b hb
+        exact measurableSet_ball
+      . sorry
     sorry
   . intro S S_subset S_chain
     use Set.sUnion S
