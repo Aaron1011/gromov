@@ -101,6 +101,7 @@ lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix.unitaryGroup (Fin n) ℂ
   (h_dist: ‖h.val - 1‖ < ε) (c: ℂ) (hc: ‖c‖ = 1) (h_mul: h = diag_unitary c n): ∃ C: ℝ, ε < C → c = 1 := by
   rw [h_mul] at h_dist
   simp [diag_unitary] at h_dist
+
   conv at h_dist =>
     arg 1
     arg 1
@@ -147,6 +148,13 @@ lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix.unitaryGroup (Fin n) ℂ
 
 
   rw [h_det] at det_eq_c_n
+  by_cases n_eq_one: n = 1
+  . rw [n_eq_one] at det_eq_c_n
+    simp at det_eq_c_n
+    rw [eq_comm] at det_eq_c_n
+    simp [det_eq_c_n]
+
+  have n_gt_one: 1 < n := by omega
   let dists := (fun (x: ℂ) => (‖x - 1‖ : ℝ)) '' ((Units.val '' (rootsOfUnity n ℂ).carrier \ {1}))
   --let dists := (fun x => ‖x - (1: ℂ)‖) '' (Units.val '' (rootsOfUnity n ℂ).carrier \ {1})
 
@@ -204,9 +212,6 @@ lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix.unitaryGroup (Fin n) ℂ
     have roots_mem := Complex.mem_rootsOfUnity (n := n)
     simp
 
-    have n_gt_one: 1 < n := by
-      sorry
-
     let my_root: Units ℂ := {
       val := Complex.exp (2 * ↑Real.pi * Complex.I * (1 / ↑n)),
       inv := (Complex.exp (2 * ↑Real.pi * Complex.I * (1 / ↑n)))⁻¹
@@ -236,7 +241,18 @@ lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix.unitaryGroup (Fin n) ℂ
       apply mul_left_cancel₀ at this
       .
         field_simp at this
-        sorry
+        have abs_lt_one: ‖((1: ℂ) / ↑n)‖ < 1 := by
+          sorry
+        by_cases a_eq_zero: a = 0
+        . rw [a_eq_zero] at this
+          simp at this
+          omega
+        .
+          have abs_a := Int.one_le_abs a_eq_zero
+          rw [this] at abs_lt_one
+          simp at abs_lt_one
+          norm_cast at abs_lt_one
+          linarith
       . norm_num
         have pos := Real.pi_pos
         linarith
