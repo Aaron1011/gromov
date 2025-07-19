@@ -73,10 +73,7 @@ instance unitary_proper (n: ℕ): ProperSpace ↥(Matrix.unitaryGroup (Fin n) �
 #synth Nontrivial (Matrix (Fin 1) (Fin 1) ℂ)
 
 
-instance compact_unitary (n: ℕ) (hn: 0 < n): CompactSpace ↥(Matrix.unitaryGroup (Fin n) ℂ) := by
-  have nonempty_fin: Nonempty (Fin n) := by
-    exact Fin.pos_iff_nonempty.mp hn
-
+instance compact_unitary (n: ℕ) [Nonempty (Fin n)]: CompactSpace ↥(Matrix.unitaryGroup (Fin n) ℂ) := by
   rw [Metric.compactSpace_iff_isBounded_univ]
   rw [Metric.isBounded_iff]
   use 2
@@ -87,13 +84,22 @@ instance compact_unitary (n: ℕ) (hn: 0 < n): CompactSpace ↥(Matrix.unitaryGr
   linarith
 
 -- Lemma 3.31 (Volume Packing)
-lemma volume_packing (n: ℕ) (ε: ℝ) (hε : 0 < ε): ∃ C: ℕ, ∀ (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)), (G' n ε G).FiniteIndex ∧ (G' n ε G).index ≤ C := by
+lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℕ, ∀ (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)), (G' n ε G).FiniteIndex ∧ (G' n ε G).index ≤ C := by
   use sorry
 
+  have nonempty_fin : Nonempty (Fin n) := by
+    exact Fin.pos_iff_nonempty.mp hn
+
+  let compacts_univ: TopologicalSpace.PositiveCompacts (Matrix.unitaryGroup (Fin n) ℂ) := {
+    carrier := Set.univ,
+    isCompact' := by apply CompactSpace.isCompact_univ
+    interior_nonempty' := by
+      simp
+  }
 
   borelize ↥(Matrix.unitaryGroup (Fin n) ℂ)
-  have measure_haar: MeasureTheory.MeasureSpace (Matrix.unitaryGroup (Fin n) ℂ) := {
-    volume := MeasureTheory.Measure.haar
+  let measure_haar: MeasureTheory.MeasureSpace (Matrix.unitaryGroup (Fin n) ℂ) := {
+    volume := MeasureTheory.Measure.haarMeasure compacts_univ
   }
 
   intro G
@@ -184,8 +190,43 @@ lemma volume_packing (n: ℕ) (ε: ℝ) (hε : 0 < ε): ∃ C: ℕ, ∀ (G: Subg
       rw [CStarRing.norm_mem_unitary_mul]
       simp
 
-    have card_i_le: I.ncard ≤ (1: ℝ) / (MeasureTheory.volume ((Metric.ball (1: (Matrix.unitaryGroup (Fin n) ℂ)) ε))) := by
-      sorry
+    have volume_sum: MeasureTheory.volume (⋃ (g ∈ I), (Metric.ball g ((ε/2)/2))) ≤ 1 := by
+      grw [MeasureTheory.measure_mono (t := Set.univ)]
+      unfold MeasureTheory.volume
+      simp [measure_haar]
+      conv =>
+        pattern Set.univ
+        equals ↑compacts_univ =>
+          simp [compacts_univ]
+
+      . rw [MeasureTheory.Measure.haarMeasure_self]
+      . simp
+
+
+
+    have card_i_le: I.ncard ≤ (1: ℝ) / (MeasureTheory.volume ((Metric.ball (1: (Matrix.unitaryGroup (Fin n) ℂ)) ((ε / 2)/2)))).toReal := by
+      rw [le_div_iff₀]
+      simp [MeasureTheory.volume] at volume_sum
+      rw [MeasureTheory.measure_biUnion] at volume_sum
+      conv at volume_sum =>
+        lhs
+        arg 1
+        intro i
+        rw [translate_ball _ (by linarith)]
+      unfold MeasureTheory.volume at volume_sum
+      simp [measure_haar] at volume_sum
+      unfold MeasureTheory.volume
+      simp [measure_haar]
+      norm_cast
+      norm_cast at volume_sum
+      rw [ENat.card_eq_coe_natCard] at volume_sum
+      grw [MeasureTheory.measure_mono]
+
+      have left_inv := MeasureTheory.Measure.isMulLeftInvariant_haarMeasure (G := Matrix.unitaryGroup (Fin n) ℂ) compacts_univ
+      rw [← MeasureTheory.forall_measure_preimage_mul_iff] at left_inv
+      unfold MeasureTheory.volume
+      simp [measure_haar]
+      .
     sorry
   . intro S S_subset S_chain
     use Set.sUnion S
