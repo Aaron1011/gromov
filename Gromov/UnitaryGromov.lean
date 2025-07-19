@@ -40,9 +40,62 @@ lemma shrinking_conjugators (n: ℕ) (g h: Matrix.unitaryGroup (Fin n) ℂ):
 
 def G' (n: ℕ) (ε: ℝ) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)): Subgroup G := Subgroup.closure (Metric.ball (1 : G) ε)
 
+--instance unitary_matrix_measure_space : MeasurableSpace (Matrix.unitaryGroup (Fin 2) ℂ) := borel _
+
+
+lemma unitary_implies_det (n: ℕ) (m: Matrix (Fin n) (Fin n) ℂ): m ∈ Matrix.unitaryGroup (Fin n) ℂ → ‖m.det‖ = 1 := by
+  intro hm
+  have det_unit := Matrix.det_of_mem_unitary hm
+  simp [unitary] at det_unit
+  rw [Complex.mul_conj, Complex.conj_mul'] at det_unit
+  norm_cast at det_unit
+  have norm_ne_neg: ‖m.det‖ ≠ -1 := by
+    have nonneg := norm_nonneg (m.det)
+    linarith
+  simp [norm_ne_neg] at det_unit
+  exact det_unit.1
+
+lemma unitary_preimage (n: ℕ): (fun (m: Matrix (Fin n) (Fin n) ℂ) => m * (star m)) ⁻¹' {1} = (Matrix.unitaryGroup (Fin n) ℂ).carrier := by
+  ext a
+  simp [Matrix.mem_unitaryGroup_iff]
+
+lemma unitary_closed (n: ℕ): IsClosed (Matrix.unitaryGroup (Fin n) ℂ).carrier := by
+  rw [← unitary_preimage]
+  apply IsClosed.preimage
+  . fun_prop
+  . simp
+
+
+instance unitary_proper (n: ℕ): ProperSpace ↥(Matrix.unitaryGroup (Fin n) ℂ) := by
+  apply ProperSpace.of_isClosed
+  apply unitary_closed
+
+#synth Nontrivial (Matrix (Fin 1) (Fin 1) ℂ)
+
+
+instance compact_unitary (n: ℕ) (hn: 0 < n): CompactSpace ↥(Matrix.unitaryGroup (Fin n) ℂ) := by
+  have nonempty_fin: Nonempty (Fin n) := by
+    exact Fin.pos_iff_nonempty.mp hn
+
+  rw [Metric.compactSpace_iff_isBounded_univ]
+  rw [Metric.isBounded_iff]
+  use 2
+  intro x _ y _
+  dsimp [dist]
+  grw [dist_le_norm_add_norm]
+  rw [CStarRing.norm_coe_unitary, CStarRing.norm_coe_unitary]
+  linarith
+
 -- Lemma 3.31 (Volume Packing)
 lemma volume_packing (n: ℕ) (ε: ℝ) (hε : 0 < ε): ∃ C: ℕ, ∀ (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)), (G' n ε G).FiniteIndex ∧ (G' n ε G).index ≤ C := by
   use sorry
+
+
+  borelize ↥(Matrix.unitaryGroup (Fin n) ℂ)
+  have measure_haar: MeasureTheory.MeasureSpace (Matrix.unitaryGroup (Fin n) ℂ) := {
+    volume := MeasureTheory.Measure.haar
+  }
+
   intro G
   -- We can find a maximal subset I where ||a - b|| ≥ ε for distinct a, b in I
   let I_sets := { S | S ⊆ G.carrier ∧ ∀ x ∈ S, ∀ y ∈ S, x ≠ y → ‖x.val - y.val‖ ≥ ε }
@@ -116,27 +169,23 @@ lemma volume_packing (n: ℕ) (ε: ℝ) (hε : 0 < ε): ∃ C: ℕ, ∀ (G: Subg
       simp at triangle
       linarith
 
-    have tranlate_ball (g: (Matrix.unitaryGroup (Fin n) ℂ)): Metric.ball g ε = (fun x => g * x) '' (Metric.ball (1: (Matrix.unitaryGroup (Fin n) ℂ)) ε) := by
+    have translate_ball (d: ℝ) (hd: 0 < d) (g: (Matrix.unitaryGroup (Fin n) ℂ)): Metric.ball g d = (fun x => g * x) '' (Metric.ball (1: (Matrix.unitaryGroup (Fin n) ℂ)) d) := by
       ext a
-      refine ⟨?_, ?_⟩
-      . intro a_mem
-        simp at a_mem
-        simp
-        simp [dist, dist_eq_norm_sub] at a_mem
-        simp [dist, dist_eq_norm_sub]
-        conv =>
-          lhs
-          arg 1
-          equals (star g) * (a.val - g.val) =>
-            rw [mul_sub]
-            simp
-        simp
-        norm_cast
-        rw [CStarRing.norm_mem_unitary_mul]
-        . exact a_mem
-        . simp
-      . intro a
+      simp
+      simp [dist, dist_eq_norm_sub]
+      conv =>
+        rhs
+        arg 1
+        arg 1
+        equals (star g) * (a.val - g.val) =>
+          rw [mul_sub]
+          simp
+      simp
+      rw [CStarRing.norm_mem_unitary_mul]
+      simp
 
+    have card_i_le: I.ncard ≤ (1: ℝ) / (MeasureTheory.volume ((Metric.ball (1: (Matrix.unitaryGroup (Fin n) ℂ)) ε))) := by
+      sorry
     sorry
   . intro S S_subset S_chain
     use Set.sUnion S
