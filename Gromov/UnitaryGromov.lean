@@ -38,6 +38,57 @@ lemma shrinking_conjugators (n: ℕ) (g h: Matrix.unitaryGroup (Fin n) ℂ):
       rw [mul_comm] at norm_sub_h
       linarith
 
+def G' (n: ℕ) (ε: ℝ) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)): Subgroup G := Subgroup.closure (Metric.ball (1 : G) ε)
+
+-- Lemma 3.31 (Volume Packing)
+lemma volume_packing (n: ℕ) (ε: ℝ) (hε : 0 < ε): ∃ C: ℕ, ∀ (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)), (G' n ε G).FiniteIndex ∧ (G' n ε G).index ≤ C := by
+  use sorry
+  intro G
+  let I_sets := { S | S ⊆ G.carrier ∧ ∀ x ∈ S, ∀ y ∈ S, x ≠ y → ‖x.val - y.val‖ ≥ ε }
+  have maximal_I := zorn_subset I_sets ?_
+  . sorry
+  . intro S S_subset S_chain
+    use Set.sUnion S
+    refine ⟨?_, ?_⟩
+    .
+      simp only [ne_eq, ge_iff_le, Subtype.mk.injEq, Set.mem_setOf_eq,
+      Set.sUnion_subset_iff, Set.mem_sUnion, forall_exists_index, and_imp, I_sets]
+
+      refine ⟨?_, ?_⟩
+      . intro s hs
+        simp [I_sets] at S_subset
+        specialize S_subset hs
+        simp at S_subset
+        exact S_subset.1
+      . simp [I_sets] at S_subset
+        intro a M M_mem_S a_mem_M b N N_mem_S b_mem_N a_neq_b
+        simp [IsChain] at S_chain
+        specialize S_chain M_mem_S N_mem_S
+        by_cases M_eq_N: M = N
+        . rw [M_eq_N] at a_mem_M
+          specialize S_subset N_mem_S
+          simp at S_subset
+          have a_b_dist := S_subset.2 a (by simp) (by simp [a_mem_M]) b (by simp) (by simp [b_mem_N]) (by simp [a_neq_b])
+          exact a_b_dist
+        .
+          specialize S_chain M_eq_N
+          match S_chain with
+          | .inl h =>
+            have a_mem_N := h a_mem_M
+            specialize S_subset N_mem_S
+            simp at S_subset
+            have a_b_dist := S_subset.2 a (by simp) (by simp [a_mem_N]) b (by simp) (by simp [b_mem_N]) (by simp [a_neq_b])
+            exact a_b_dist
+          | .inr h =>
+            have b_mem_M := h b_mem_N
+            specialize S_subset M_mem_S
+            simp at S_subset
+            have a_b_dist := S_subset.2 a (by simp) (by simp [a_mem_M]) b (by simp) (by simp [b_mem_M]) (by simp [a_neq_b])
+            exact a_b_dist
+
+
+    . intro s hs
+      exact Set.subset_sUnion_of_subset S s (fun ⦃a⦄ a ↦ a) hs
 
 def FreshInnerProduct (V: Type*) := V
 
