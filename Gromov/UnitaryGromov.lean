@@ -139,7 +139,7 @@ lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix.unitaryGroup (Fin n) ℂ
     lhs
     rhs
     equals (1 : ℝ) =>
-      sorry
+      bound
 
   simp at h_dist
   have det_eq_c_n: h.val.det = c^n := by
@@ -266,63 +266,7 @@ lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix.unitaryGroup (Fin n) ℂ
         have pos := Real.pi_pos
         linarith
 
-
-        --rw [div_eq_iff_eq_mul] at this
-
-
-
-
-    -- use c_unit
-    -- simp [c_unit]
-    -- refine ⟨?_, ?_⟩
-    -- . ext
-    --   simp
-    --   rw [det_eq_c_n]
-    -- .
-    --   rw [Units.ext_iff]
-    --   simp
-    --   simp []
-
-
-    -- apply Set.Nonempty.diff
-    -- apply Set.Nonempty.image
-
-
-
-
-
-
-  -- simp at det_eq_c_n
-  -- have h_det_norm := unitary_implies_det n h.val (by simp)
-  -- rw [det_eq_c_n] at h_det_norm
-  -- have h_det := Matrix.det_of_mem_unitary (A := h.val) (by simp)
-
-  -- simp [unitary] at h_det
-  -- rw [Complex.conj_mul'] at h_det
-  -- have norm_det := h_det.1
-  -- simp at norm_det
-
-  -- rw [Matrix.l2_opNorm_def] at h_dist
-  -- simp at h_dist
-  -- rw [ContinuousLinearMap.norm_id] at h_dist
-  -- have foo := Matrix.norm_eq_sup_sup_nnnorm (A := (1 : Matrix (Fin n) (Fin n) ℂ))
-  -- unfold norm at foo
-  -- rw [foo] at h_dist
-  -- simp [Matrix.cstar_norm_def] at h_dist
-
-  -- conv at h_dist =>
-  --   lhs
-  --   rhs
-  --   dsimp [Matrix.norm_def]
-
-
-  -- rw []
-  -- simp [norm] at h_dist
-  -- rw [Matrix.l2_opNorm_def] at h_dist
-  -- rw [Matrix.norm_def] at h_dist
-  -- simp at h_dist
-  -- simp at h_dist
-  -- sorry
+#print axioms small_dist_matrix
 
 -- Lemma 3.31 (Volume Packing)
 lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, ∀ (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)), (G' n ε G).FiniteIndex ∧ (G' n ε G).index ≤ C := by
