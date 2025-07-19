@@ -391,8 +391,11 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
 
 
 
-    have card_i_le: Nat.card I ≤ (1: ℝ) / (MeasureTheory.volume ((Metric.ball (1: (Matrix.unitaryGroup (Fin n) ℂ)) ((ε / 2)/2)))).toReal := by
-      rw [le_div_iff₀]
+    have card_i_le: ENat.card I ≤ (1: ENNReal) / (MeasureTheory.volume ((Metric.ball (1: (Matrix.unitaryGroup (Fin n) ℂ)) ((ε / 2)/2)))) := by
+      rw [div_eq_mul_inv]
+      rw [mul_comm]
+      rw [← ENNReal.mul_le_iff_le_inv]
+      rw [mul_comm]
       simp [MeasureTheory.volume] at volume_sum
       rw [MeasureTheory.measure_biUnion] at volume_sum
       conv at volume_sum =>
@@ -404,6 +407,24 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
       simp [measure_haar] at volume_sum
       unfold MeasureTheory.volume
       simp [measure_haar]
+      exact volume_sum
+      .
+        apply Set.PairwiseDisjoint.countable_of_isOpen (s := fun g => Metric.ball g ((ε / 2)/2))
+        . exact disjoint_balls
+        . intro i hi
+          exact Metric.isOpen_ball
+        . intro i hi
+          simp [hε]
+      . exact disjoint_balls
+      . intro i hi
+        exact measurableSet_ball
+      . unfold MeasureTheory.volume
+        simp [measure_haar]
+
+      .
+        unfold MeasureTheory.volume
+        simp [measure_haar]
+
       norm_cast
       norm_cast at volume_sum
       by_cases I_infinite: Infinite I
@@ -480,6 +501,11 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
         simp_rw [← g_mul_x]
         simp
       . exact hε
+
+    refine ⟨?_, ?_⟩
+    . sorry
+    .
+      grw [Subgroup.index_le_of_leftCoset_cover_const (s := I)]
 
     sorry
     --  (g := fun g => Metric.ball g ((ε / 2) / 2))
