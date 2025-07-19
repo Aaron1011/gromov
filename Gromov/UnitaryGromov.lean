@@ -92,6 +92,51 @@ lemma volume_packing (n: ℕ) (ε: ℝ) (hε : 0 < ε): ∃ C: ℕ, ∀ (G: Subg
         simp [dist]
         rw [dist_eq_norm_sub]
         exact b_dist_le
+    -- Note - Vikman uses ε/2, but using ε/4 made things easier (it might actually be false for ε/2)
+    have disjoint_balls: I.PairwiseDisjoint (fun g => Metric.ball g ((ε/2)/2)) := by
+      intro a a_mem b b_mem a_neq_b
+      simp [Maximal] at hI
+      have I_prop := hI.1
+      simp [-Subtype.forall, I_sets] at I_prop
+      have dist_ge := I_prop.2 a a_mem b b_mem a_neq_b
+      simp [Disjoint]
+      intro X X_subset_A X_subset_B
+      by_contra!
+      obtain ⟨x, hx⟩ := this
+      specialize X_subset_A hx
+      specialize X_subset_B hx
+      simp at X_subset_A
+      simp at X_subset_B
+      simp [dist, dist_eq_norm_sub] at X_subset_A
+      simp [dist, dist_eq_norm_sub] at X_subset_B
+      have triangle := dist_triangle a x b
+      simp [dist, dist_eq_norm_sub] at triangle
+      rw [norm_sub_rev] at X_subset_A
+      grw [X_subset_A, X_subset_B] at triangle
+      simp at triangle
+      linarith
+
+    have tranlate_ball (g: (Matrix.unitaryGroup (Fin n) ℂ)): Metric.ball g ε = (fun x => g * x) '' (Metric.ball (1: (Matrix.unitaryGroup (Fin n) ℂ)) ε) := by
+      ext a
+      refine ⟨?_, ?_⟩
+      . intro a_mem
+        simp at a_mem
+        simp
+        simp [dist, dist_eq_norm_sub] at a_mem
+        simp [dist, dist_eq_norm_sub]
+        conv =>
+          lhs
+          arg 1
+          equals (star g) * (a.val - g.val) =>
+            rw [mul_sub]
+            simp
+        simp
+        norm_cast
+        rw [CStarRing.norm_mem_unitary_mul]
+        . exact a_mem
+        . simp
+      . intro a
+
     sorry
   . intro S S_subset S_chain
     use Set.sUnion S
