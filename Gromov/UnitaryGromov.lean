@@ -553,7 +553,21 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
 
       simp at card_i_le
       rw [le_div_iff₀]
-      . sorry
+      .
+        rw [Finset.card_attach]
+        rw [← Set.ncard_eq_toFinset_card']
+
+        rw [← Set.Finite.cast_ncard_eq] at card_i_le
+        simp at card_i_le
+        rw [← ENNReal.toReal_le_toReal] at card_i_le
+        simp at card_i_le
+        exact card_i_le
+        . apply ENNReal.mul_ne_top
+          . simp
+          . unfold MeasureTheory.volume
+            simp [measure_haar]
+        . simp
+        . exact card_lt_top
       .
         unfold MeasureTheory.volume
         simp [measure_haar]
@@ -619,6 +633,8 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
 
     . intro s hs
       exact Set.subset_sUnion_of_subset S s (fun ⦃a⦄ a ↦ a) hs
+
+#print axioms volume_packing
 
 def FreshInnerProduct (V: Type*) := V
 
