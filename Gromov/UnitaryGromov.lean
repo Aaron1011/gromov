@@ -823,12 +823,19 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] [IsTopologi
 -- A product of k unitary groups U(n_1) × U(n_2) × ... × U(n_k), where n_i < n for each n_i
 abbrev UnitaryProd (k: ℕ) (n: ℕ) (n_i: Fin k → Fin n) := (i: Fin k) → Matrix.unitaryGroup (Fin (n_i i)) ℂ
 
-#synth Group (Subgroup (Units ℤ))
+structure InductiveLemmaData (n: ℕ) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) where
+  k: ℕ
+  k_pos: 0 < k
+  n_i: Fin k → ℕ
+  n_i_lt: ∀ i: Fin k, n_i i < n
+  positive_n_i: ∀ i: Fin k, n_i i ≠ 0
+  groups: (i: Fin k) → Subgroup (Matrix.unitaryGroup (Fin (n_i i)) ℂ)
+  iso: Subgroup.centralizer {g.val} ≃* ((i: Fin k) → (groups i))
+
 -- Lemma 3.30
 lemma inductive_lemma (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) (g_not_multiple_I: ∀ z: ℂ, g.val.val ≠ z • 1):
-  ∃ k: ℕ, ∃ n_i: Fin k → ℕ, ∃ groups: (i: Fin k) → Subgroup (Matrix.unitaryGroup (Fin (n_i i)) ℂ), Nonempty (Subgroup.centralizer {g.val} ≃* ((i: Fin k) → (groups i))) := by
+  Nonempty (InductiveLemmaData n G g) := by
 
-  sorry
   -- TODO - this must already exist somewhere
   have nontrivial_fin_n_c: Nontrivial ((Fin n) → ℂ) := by
     use (fun n => 1)
@@ -885,9 +892,9 @@ lemma inductive_lemma (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (
   sorry
 
 
--- Theorem 3.8, first case
--- We show that if the group contains a non-trivial central element, then it's virtually abelian
-lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) (g_not_multiple_I: ∀ z: ℂ, g.val.val ≠ z • 1) (g_central: g ∈ Set.center G): ∃ N: Subgroup G, IsMulCommutative N := by
+-- Theorem 3.8
+set_option synthInstance.maxHeartbeats 100000 in
+lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)): ∃ N: Subgroup G, IsMulCommutative N := by
   by_cases n_eq_one: n = 1
   .
     have fin_sin_subsingleton: Subsingleton (Fin n) := by
@@ -924,28 +931,71 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
         }
     }
   .
-    have G_subset_centralizer: G.carrier ⊆ Subgroup.centralizer {g.val} := by
-      intro a ha
-      simp
-      rw [Subgroup.mem_centralizer_iff]
-      intro b hb
-      simp at hb
-      rw [hb]
-      rw [Set.mem_center_iff] at g_central
-      have g_comm := g_central.comm ⟨a, ha⟩
-      rw [Subtype.ext_iff] at g_comm
-      simp at g_comm
-      apply g_comm
 
-    have exists_centralizer_iso := inductive_lemma n hn G g g_not_multiple_I
-    obtain ⟨k, subgroup_dim, ⟨centralizer_iso⟩⟩ := exists_centralizer_iso
-    have k_gt_zero: 0 < k := by
-      by_contra!
-      simp at this
-      simp [UnitaryProd] at centralizer_iso
+    by_cases nontrivial_central: ∃ g: G, (∀ z: ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G
+    .
+      obtain ⟨g, g_not_multiple_I, g_central⟩ := nontrivial_central
+      have G_subset_centralizer: G.carrier ⊆ Subgroup.centralizer {g.val} := by
+        intro a ha
+        simp
+        rw [Subgroup.mem_centralizer_iff]
+        intro b hb
+        simp at hb
+        rw [hb]
+        rw [Set.mem_center_iff] at g_central
+        have g_comm := g_central.comm ⟨a, ha⟩
+        rw [Subtype.ext_iff] at g_comm
+        simp at g_comm
+        apply g_comm
+
+      have all_mem_central: ∀ a : G, a.val ∈ Subgroup.centralizer {g.val} := by
+        intro a
+        apply G_subset_centralizer a.property
+
+      obtain ⟨data⟩ := inductive_lemma n hn G g g_not_multiple_I
+      have subgroup_virtual := fun i: Fin (data.k) => central_implies_virtually_abelian (data.n_i i) (data.positive_n_i i) (data.groups i)
+      -- Page 48: Let Gᵢ := πᵢ⁻¹(πᵢ(G)′) = {g ∈ G : πᵢ(g) ∈ πᵢ(G)′}
+      let inv_image : Fin (data.k) → Subgroup G := fun i: Fin (data.k) => {
+        carrier := { a : G | (data.iso (⟨a.val, all_mem_central a⟩)) i ∈ (Classical.choose (subgroup_virtual i)) },
+        mul_mem' := by
+          intro a b ha hb
+          simp at ha
+          simp at hb
+          have mul_mem := Subgroup.mul_mem _ ha hb
+          rw [← Pi.mul_apply] at mul_mem
+          rw [← MulEquiv.map_mul] at mul_mem
+          simp
+          simp at mul_mem
+          exact mul_mem
+        one_mem' := by
+          simp
+          conv =>
+            arg 2
+            arg 2
+            equals 1 => simp
+
+          rw [MulEquiv.map_one]
+          simp
+          apply Subgroup.one_mem
+        inv_mem' := by
+          intro a ha
+          simp only [Set.mem_setOf_eq] at ha
+          simp only [Set.mem_setOf_eq]
+
+          conv =>
+            arg 2
+            arg 2
+            equals ⟨a.val, all_mem_central a⟩⁻¹ =>
+              ext
+              simp
+          rw [MulEquiv.map_inv]
+          rw [Pi.inv_apply]
+          rw [Subgroup.inv_mem_iff]
+          exact ha
+      }
+
+
+      --unfold UnitaryProd at centralizer_iso
       sorry
 
-
-
-    unfold UnitaryProd at centralizer_iso
-    sorry
+    . sorry
