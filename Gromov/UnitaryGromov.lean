@@ -270,6 +270,8 @@ lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix.unitaryGroup (Fin n) ℂ
 
 -- Lemma 3.31 (Volume Packing)
 set_option synthInstance.maxHeartbeats 50000 in
+set_option maxHeartbeats 500000 in
+open Pointwise in
 lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, ∀ (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)), (G' n ε G).FiniteIndex ∧ (G' n ε G).index ≤ C := by
 
 
@@ -461,26 +463,79 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
         simp
       . exact hε
 
+    have card_lt_top: (ENat.card I).toENNReal < ⊤ := by
+      grw [card_i_le]
+      simp
+      unfold MeasureTheory.volume
+      simp [measure_haar]
+      apply IsOpen.measure_pos
+      exact Metric.isOpen_ball
+      simp [hε]
+    norm_cast at card_lt_top
+    rw [WithTop.lt_top_iff_ne_top] at card_lt_top
+    simp at card_lt_top
+    rw [ENat.card_eq_top] at card_lt_top
+    simp at card_lt_top
+
+    have fintype_I: Fintype I := by
+      exact Set.Finite.fintype card_lt_top
+
+    have i_mem_G: ∀ i ∈ I, i ∈ G := by
+      intro i i_mem
+      simp [Maximal] at hI
+      have I_prop := hI.1
+      simp [-Subtype.forall, I_sets] at I_prop
+      apply (I_prop.1 i_mem)
+
+    --have g_hsmul: HSMul G (Set G) (Set G) := by
+    --  infer_instance
+
+
+    have cosets_cover: (⋃ i ∈ I.toFinset.attach, (((⟨i.val, i_mem_G i.val (Set.mem_toFinset.mp i.property)⟩ : G) • (((G' n ε G)) : Set G)) : (Set G))) = (Set.univ : Set G) := by
+      have balls_inter_cover: G.carrier ⊆ ⋃ g ∈ I, ((Metric.ball g ε) ∩ G.carrier) := by
+        intro g hg
+        specialize balls_cover hg
+        simp only [Set.mem_iUnion] at balls_cover
+        obtain ⟨i, i_mem, g_mem_i⟩ := balls_cover
+        simp only [Set.mem_iUnion]
+        use i
+        use i_mem
+        exact Set.mem_inter g_mem_i hg
+
+
+      simp
+      ext a
+      simp only [Set.mem_univ, iff_true]
+      have a_mem_g: a.val ∈ G.carrier := by simp
+      specialize balls_inter_cover a_mem_g
+      simp only [Set.mem_iUnion] at balls_inter_cover
+      obtain ⟨i, i_mem, a_mem_i⟩ := balls_inter_cover
+      have i_mem_G: i ∈ G.carrier := by
+        simp [Maximal] at hI
+        have I_prop := hI.1
+        simp [-Subtype.forall, I_sets] at I_prop
+        apply (I_prop.1 i_mem)
+      specialize inter_subset i i_mem_G
+      have a_mem := inter_subset a_mem_i
+      simp only [Set.mem_image] at a_mem
+      obtain ⟨x, hx, a_eq_mul⟩ := a_mem
+      simp only [Set.mem_iUnion]
+      have i_mem_finset: i ∈ I.toFinset := by
+        exact Set.mem_toFinset.mpr i_mem
+      use ⟨i, i_mem_finset⟩
+      simp
+      rw [Set.mem_smul_set]
+      use x
+      refine ⟨?_, ?_⟩
+      . exact hx
+      .
+        rw [Subtype.ext_iff]
+        simp [a_eq_mul]
+
     refine ⟨?_, ?_⟩
-    . sorry
     .
-      have card_lt_top: (ENat.card I).toENNReal < ⊤ := by
-        grw [card_i_le]
-        simp
-        unfold MeasureTheory.volume
-        simp [measure_haar]
-        apply IsOpen.measure_pos
-        exact Metric.isOpen_ball
-        simp [hε]
-      norm_cast at card_lt_top
-      rw [WithTop.lt_top_iff_ne_top] at card_lt_top
-      simp at card_lt_top
-      rw [ENat.card_eq_top] at card_lt_top
-      simp at card_lt_top
-
-      have fintype_I: Fintype I := by
-        exact Set.Finite.fintype card_lt_top
-
+      apply Subgroup.finiteIndex_of_leftCoset_cover_const cosets_cover
+    .
       have I_subset_G: I ⊆ G := by
         simp [Maximal] at hI
         have i_mem := hI.1
@@ -511,46 +566,8 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
         simp [hε]
         . simp
         . simp
-      .
-        have balls_inter_cover: G.carrier ⊆ ⋃ g ∈ I, ((Metric.ball g ε) ∩ G.carrier) := by
-          intro g hg
-          specialize balls_cover hg
-          simp only [Set.mem_iUnion] at balls_cover
-          obtain ⟨i, i_mem, g_mem_i⟩ := balls_cover
-          simp only [Set.mem_iUnion]
-          use i
-          use i_mem
-          exact Set.mem_inter g_mem_i hg
+      . apply cosets_cover
 
-
-        simp
-        ext a
-        simp only [Set.mem_univ, iff_true]
-        have a_mem_g: a.val ∈ G.carrier := by simp
-        specialize balls_inter_cover a_mem_g
-        simp only [Set.mem_iUnion] at balls_inter_cover
-        obtain ⟨i, i_mem, a_mem_i⟩ := balls_inter_cover
-        have i_mem_G: i ∈ G.carrier := by
-          simp [Maximal] at hI
-          have I_prop := hI.1
-          simp [-Subtype.forall, I_sets] at I_prop
-          apply (I_prop.1 i_mem)
-        specialize inter_subset i i_mem_G
-        have a_mem := inter_subset a_mem_i
-        simp only [Set.mem_image] at a_mem
-        obtain ⟨x, hx, a_eq_mul⟩ := a_mem
-        simp only [Set.mem_iUnion]
-        have i_mem_finset: i ∈ I.toFinset := by
-          exact Set.mem_toFinset.mpr i_mem
-        use ⟨i, i_mem_finset⟩
-        simp
-        rw [Set.mem_smul_set]
-        use x
-        refine ⟨?_, ?_⟩
-        . exact hx
-        .
-          rw [Subtype.ext_iff]
-          simp [a_eq_mul]
     --  (g := fun g => Metric.ball g ((ε / 2) / 2))
 
     --have coset_bound := Subgroup.index_le_of_leftCoset_cover_const (H := G' n ε G) (s := I)
