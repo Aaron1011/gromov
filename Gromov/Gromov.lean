@@ -8291,6 +8291,7 @@ lemma three_two_kernel_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialG
 
   sorry
 
+
 -- Decompose list of {e_k, γ}:
 
 -- The starting list must have the powers of γ sum to zero (since it's in the kernel of φ)

@@ -880,3 +880,42 @@ lemma inductive_lemma (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (
   -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/DirectSum/LinearMap.html#LinearMap.toMatrix_directSum_collectedBasis_eq_blockDiagonal'
   let a := g.val.val.eigenvalues_conjTranspose_mul_self_nonneg
   sorry
+
+
+lemma central_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) (g_not_multiple_I: ∀ z: ℂ, g.val.val ≠ z • 1): ∃ N: Subgroup G, IsMulCommutative N := by
+  by_cases n_eq_one: n = 1
+  .
+    have fin_sin_subsingleton: Subsingleton (Fin n) := by
+      rw [n_eq_one]
+      exact Fin.subsingleton_one
+    have all_diag: ∀ h: G, h.val.val.IsDiag := by
+      intro h
+      apply Matrix.isDiag_of_subsingleton
+
+    have all_comm: ∀ (a b: G), a.val.val * b.val.val = b.val.val * a.val.val := by
+      intro a b
+      have diag_a := all_diag a
+      have diag_b := all_diag b
+      rw [Matrix.isDiag_iff_diagonal_diag] at diag_a
+      rw [Matrix.isDiag_iff_diagonal_diag] at diag_b
+      rw [← diag_a, ← diag_b]
+      simp
+      intro i
+      rw [mul_comm]
+
+    use ⊤
+    exact {
+      is_comm := by
+        exact {
+          comm := by
+            intro a b
+            rw [Subtype.ext_iff]
+            simp
+            rw [Subtype.ext_iff]
+            simp
+            rw [Subtype.ext_iff]
+            simp
+            apply all_comm
+        }
+    }
+  . sorry
