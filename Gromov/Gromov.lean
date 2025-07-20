@@ -1749,16 +1749,16 @@ instance rho_g_FG: Group.FG (rho_g (G := G)) := by
 
 
 -- The input data and proofs for Theorem 3.1 in Vikman
-structure Theorem3_1_Data where
+structure Theorem3_1_Input where
   -- A finite index subgroup G' of G
   G': Subgroup G
   finite_index: G'.FiniteIndex
   -- G' can be mapped homomorphically onto ℤ
-  φ: (Additive G) →+ ℤ
-  (hφ: Function.Surjective φ)
+  φ: (Additive G') →+ ℤ
+  hφ: Function.Surjective φ
 
 -- Case 1 in Section 3.3 of Vikman, where the representation ρ(G) is infinite
-lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theorem3_1_Data (G := G)) := by
+lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theorem3_1_Input (G := G)) := by
   obtain ⟨H, H_abelian, H_finite_index⟩ := rho_g_contains_abelian (G := G)
   -- TODO - generalize this to a lemma: finite-index subgroup of an infinite group is infinite
   -- and upstream to mathlib
@@ -1845,6 +1845,8 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
     use g
   )
 
+
+
   conv at G'_index =>
     rhs
     equals H_as_GL_W.index =>
@@ -1868,18 +1870,27 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
 
     }
 
-  let g'_to_h: G' → H := (fun g => (by
-    have g_mem_G' : g.val ∈ G' := by simp
-    unfold G' at g_mem_G'
-    rw [Subgroup.mem_comap] at g_mem_G'
-    unfold H_as_GL_W at g_mem_G'
-    simp at g_mem_G'
-    sorry
-    --use ⟨Classical.choose g_mem_G', by sorry⟩
-  ))
+  -- TODO - there must be an easier way to do this
+  let g'_to_h: G' →* H := {
+    toFun := fun g => (⟨⟨rho_hom g, by (
+      simp [rho_g, rho_hom]
+    )⟩, by (
+      have g_prop := g.property
+      simp only [G'] at g_prop
+      rw [Subgroup.mem_comap] at g_prop
+      simp [H_as_GL_W] at g_prop
+      obtain ⟨mem_first, mem_second⟩ := g_prop
+      exact mem_second
+    )⟩ : H),
+    map_one' := by simp
+    map_mul' := by simp
+  }
 
-  --let other := ((fun (g : G') => (⟨(rho_hom) g, by sorry⟩ : ↥H)))
-  --let G'_to_Z :=  h_to_z
+  let additive_g'_to_h := g'_to_h.toAdditive
+  let additive_h_to_z := h_to_z.toAdditive
+
+  let g_to_additive_z := additive_h_to_z.comp additive_g'_to_h
+  let g_to_z := (AddEquiv.additiveMultiplicative ℤ).toAddMonoidHom.comp g_to_additive_z
 
 
 
@@ -1887,12 +1898,23 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
   exact {
     G' := G',
     finite_index := G'_finite_index,
-    φ := sorry -- h_to_z,
-    hφ := sorry -- h_to_z_surjective
+    φ := g_to_z,
+    hφ := by
+      simp [g_to_z, g_to_additive_z]
+      apply Function.Surjective.comp
+      . simp [additive_h_to_z]
+        exact h_to_z_surjective
+      .
+        simp [additive_g'_to_h, g'_to_h]
+        intro h
+        have h_prop := h.val.property
+        simp [rho_g] at h_prop
+        simp [rho_hom]
+        obtain ⟨a, ha⟩ := h_prop
+        use a
+        use sorry
+        simp_rw [ha]
   }
-
-
-
 
 instance countable_G: Countable G := by
   apply Function.Surjective.countable (f := fun (x: List S) => x.unattach.prod)
