@@ -1757,6 +1757,16 @@ structure Theorem3_1_Input where
   φ: (Additive G') →+ ℤ
   hφ: Function.Surjective φ
 
+
+-- Based on https://github.com/YaelDillies/LeanCamCombi/blob/b6312bee17293272af6bdcdb47b3ffe98fca46a4/LeanCamCombi/GrowthInGroups/Lecture1.lean#L41
+-- and the Vikman paper
+def HasPolynomialGrowthD (d: ℕ): Prop := ∃ a: ℕ+, ∀ n ≥ 2, #(S ^ n) ≤ a * n ^ d
+def HasPolynomialGrowth: Prop := ∃ d, HasPolynomialGrowthD (S := S) d
+
+lemma theorem_3_1 (data: Theorem3_1_Input (G := G)) (n: ℕ) (h_growth: HasPolynomialGrowthD (S := S) n): Group.IsVirtuallyNilpotent G := by
+
+  sorry
+
 -- Case 1 in Section 3.3 of Vikman, where the representation ρ(G) is infinite
 lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theorem3_1_Input (G := G)) := by
   obtain ⟨H, H_abelian, H_finite_index⟩ := rho_g_contains_abelian (G := G)
@@ -1862,10 +1872,20 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
     unfold G'
     exact {
       index_ne_zero := by
-        rw [G'_index]
-        dsimp [H_as_GL_W]
-        rw [Subgroup.index_map_subtype]
-        simp [H_index_ne_zero]
+        rw [Subgroup.index_comap]
+        dsimp [Subgroup.relindex]
+        simp [H_as_GL_W]
+
+
+        -- rw [Subgroup.relIndex]
+        -- dsimp [H_as_GL_W]
+        -- rw [Subgroup.index_map_eq]
+        -- simp [H_as_GL_W, rho_g, rho_hom]
+
+        -- rw [G'_index]
+        -- dsimp [H_as_GL_W]
+        -- rw [Subgroup.index_map_subtype]
+        -- simp [H_index_ne_zero]
         sorry
 
     }
@@ -6090,10 +6110,6 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
 
 #synth OrderTopology ENNReal
 
--- Based on https://github.com/YaelDillies/LeanCamCombi/blob/b6312bee17293272af6bdcdb47b3ffe98fca46a4/LeanCamCombi/GrowthInGroups/Lecture1.lean#L41
--- and the Vikman paper
-def HasPolynomialGrowthD (d: ℕ): Prop := ∃ a: ℕ+, ∀ n ≥ 2, #(S ^ n) ≤ a * n ^ d
-def HasPolynomialGrowth: Prop := ∃ d, HasPolynomialGrowthD (S := S) d
 
 -- TODO - upstream to mathlib
 lemma s_pow_inv (n: ℕ): (S^n)⁻¹ = (S⁻¹)^n := by
@@ -8151,6 +8167,11 @@ lemma three_two_gamma_m_generates(φ: (Additive G) →+ ℤ) (hφ: Function.Surj
         exact h_z_list.2
   exact gamma_m_ker_phi
 
+noncomputable def phi_generating (n: ℕ) (φ: (Additive G) →+ ℤ) (γ: G) := Finset.preimage (three_two_S_n (S := S) φ γ (n)) Multiplicative.ofAdd (by
+    apply Set.injOn_of_injective
+    exact fun ⦃a₁ a₂⦄ a ↦ a
+  )
+
 lemma three_two_ker_fg (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD d (S := S)) (g: G) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ): φ.ker.FG := by
   simp only [AddSubgroup.FG]
   obtain ⟨γ, phi_gamma⟩ := hφ 1
@@ -8236,6 +8257,39 @@ lemma three_two_ker_fg (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD d (S := S
       rw [← helper_eq_a]
       rw [← Subgroup.toAddSubgroup'_closure]
       exact hn
+
+-- Extract aq generatating set for the kernel of φ
+noncomputable def phi_S (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD d (S := S)) (g: G) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ): Finset ((G)) := by
+  have fg := three_two_ker_fg d hd hG g φ hφ
+  rw [AddSubgroup.fg_iff] at fg
+  let S := Classical.choose fg
+  have s_finite := (Classical.choose_spec fg).2
+  have fintype : Fintype S := by
+    exact s_finite.fintype
+
+  let s_fin := S.toFinset
+  exact s_fin
+
+
+lemma three_two_kernel_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD d (S := S)) (g: G) (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1) (phi_gromov: Group.IsVirtuallyNilpotent (Multiplicative φ.ker))
+ : HasPolynomialGrowthD (d - 1) (G := G) (S := phi_generating n φ γ (S := S)) := by
+  unfold HasPolynomialGrowthD
+  unfold Group.IsVirtuallyNilpotent at phi_gromov
+  obtain ⟨pre_N, nilpotent_pre_N, old_finite_index_pre_N⟩ := phi_gromov
+  let N := pre_N.normalCore
+  have nilpotent_N: Group.IsNilpotent N := by
+    rw [nilpotent_iff_lowerCentralSeries]
+    rw [nilpotent_iff_lowerCentralSeries] at nilpotent_pre_N
+    obtain ⟨n, hn⟩ := nilpotent_pre_N
+    have := lowerCentralSeries_map_subtype_le N n
+    simp at this
+    sorry
+  have N_normal: N.Normal := by
+    simp [N]
+    apply Subgroup.normalCore_normal
+
+
+  sorry
 
 -- Decompose list of {e_k, γ}:
 
