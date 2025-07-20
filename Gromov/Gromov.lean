@@ -1907,12 +1907,19 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
       .
         simp [additive_g'_to_h, g'_to_h]
         intro h
+        have h_mem := h.property
+        rw [← Subgroup.mem_carrier] at h_mem
+
         have h_prop := h.val.property
         simp [rho_g] at h_prop
         simp [rho_hom]
         obtain ⟨a, ha⟩ := h_prop
         use a
-        use sorry
+        have a_mem_G': a ∈ G' := by
+          simp [G', H_as_GL_W, rho_g, rho_hom]
+          simp_rw [ha]
+          simp
+        use a_mem_G'
         simp_rw [ha]
   }
 
