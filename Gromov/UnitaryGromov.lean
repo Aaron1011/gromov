@@ -823,9 +823,12 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] [IsTopologi
 -- A product of k unitary groups U(n_1) × U(n_2) × ... × U(n_k), where n_i < n for each n_i
 abbrev UnitaryProd (k: ℕ) (n: ℕ) (n_i: Fin k → Fin n) := (i: Fin k) → Matrix.unitaryGroup (Fin (n_i i)) ℂ
 
+#synth Group (Subgroup (Units ℤ))
+-- Lemma 3.30
 lemma inductive_lemma (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) (g_not_multiple_I: ∀ z: ℂ, g.val.val ≠ z • 1):
-  ∃ k n, ∃ n_i, Nonempty (Subgroup.centralizer {g} ≃* UnitaryProd k n n_i) := by
+  ∃ k: ℕ, ∃ n_i: Fin k → ℕ, ∃ groups: (i: Fin k) → Subgroup (Matrix.unitaryGroup (Fin (n_i i)) ℂ), Nonempty (Subgroup.centralizer {g.val} ≃* ((i: Fin k) → (groups i))) := by
 
+  sorry
   -- TODO - this must already exist somewhere
   have nontrivial_fin_n_c: Nontrivial ((Fin n) → ℂ) := by
     use (fun n => 1)
@@ -882,7 +885,9 @@ lemma inductive_lemma (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (
   sorry
 
 
-lemma central_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) (g_not_multiple_I: ∀ z: ℂ, g.val.val ≠ z • 1): ∃ N: Subgroup G, IsMulCommutative N := by
+-- Theorem 3.8, first case
+-- We show that if the group contains a non-trivial central element, then it's virtually abelian
+lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) (g_not_multiple_I: ∀ z: ℂ, g.val.val ≠ z • 1) (g_central: g ∈ Set.center G): ∃ N: Subgroup G, IsMulCommutative N := by
   by_cases n_eq_one: n = 1
   .
     have fin_sin_subsingleton: Subsingleton (Fin n) := by
@@ -918,4 +923,29 @@ lemma central_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unit
             apply all_comm
         }
     }
-  . sorry
+  .
+    have G_subset_centralizer: G.carrier ⊆ Subgroup.centralizer {g.val} := by
+      intro a ha
+      simp
+      rw [Subgroup.mem_centralizer_iff]
+      intro b hb
+      simp at hb
+      rw [hb]
+      rw [Set.mem_center_iff] at g_central
+      have g_comm := g_central.comm ⟨a, ha⟩
+      rw [Subtype.ext_iff] at g_comm
+      simp at g_comm
+      apply g_comm
+
+    have exists_centralizer_iso := inductive_lemma n hn G g g_not_multiple_I
+    obtain ⟨k, subgroup_dim, ⟨centralizer_iso⟩⟩ := exists_centralizer_iso
+    have k_gt_zero: 0 < k := by
+      by_contra!
+      simp at this
+      simp [UnitaryProd] at centralizer_iso
+      sorry
+
+
+
+    unfold UnitaryProd at centralizer_iso
+    sorry
