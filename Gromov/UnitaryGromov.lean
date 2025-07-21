@@ -891,10 +891,12 @@ lemma inductive_lemma (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (
   let a := g.val.val.eigenvalues_conjTranspose_mul_self_nonneg
   sorry
 
+#check Pi.commSemigroup
 
 -- Theorem 3.8
 set_option synthInstance.maxHeartbeats 100000 in
-lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)): ∃ N: Subgroup G, IsMulCommutative N := by
+set_option maxHeartbeats 1000000 in
+lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)): ∃ N: Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
   by_cases n_eq_one: n = 1
   .
     have fin_sin_subsingleton: Subsingleton (Fin n) := by
@@ -916,20 +918,23 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
       rw [mul_comm]
 
     use ⊤
-    exact {
-      is_comm := by
-        exact {
-          comm := by
-            intro a b
-            rw [Subtype.ext_iff]
-            simp
-            rw [Subtype.ext_iff]
-            simp
-            rw [Subtype.ext_iff]
-            simp
-            apply all_comm
-        }
-    }
+    refine ⟨?_, ?_⟩
+    .
+      exact {
+        is_comm := by
+          exact {
+            comm := by
+              intro a b
+              rw [Subtype.ext_iff]
+              simp
+              rw [Subtype.ext_iff]
+              simp
+              rw [Subtype.ext_iff]
+              simp
+              apply all_comm
+          }
+      }
+    . exact Subgroup.instFiniteIndexTop
   .
 
     by_cases nontrivial_central: ∃ g: G, (∀ z: ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G
@@ -953,10 +958,11 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
         apply G_subset_centralizer a.property
 
       obtain ⟨data⟩ := inductive_lemma n hn G g g_not_multiple_I
-      have subgroup_virtual := fun i: Fin (data.k) => central_implies_virtually_abelian (data.n_i i) (data.positive_n_i i) (data.groups i)
+      -- The abelian subgroup of G_i.
+      let Gi' := fun i: Fin (data.k) => central_implies_virtually_abelian (data.n_i i) (data.positive_n_i i) (data.groups i)
       -- Page 48: Let Gᵢ := πᵢ⁻¹(πᵢ(G)′) = {g ∈ G : πᵢ(g) ∈ πᵢ(G)′}
       let inv_image : Fin (data.k) → Subgroup G := fun i: Fin (data.k) => {
-        carrier := { a : G | (data.iso (⟨a.val, all_mem_central a⟩)) i ∈ (Classical.choose (subgroup_virtual i)) },
+        carrier := { a : G | (data.iso (⟨a.val, all_mem_central a⟩)) i ∈ (Classical.choose (Gi' i)) },
         mul_mem' := by
           intro a b ha hb
           simp at ha
@@ -994,6 +1000,206 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
           exact ha
       }
 
+      have inv_image_comm (a b) (ha: ∀ i, a ∈ inv_image i) (hb: ∀ i, b ∈ inv_image i): a * b = b * a := by
+        simp [inv_image] at ha hb
+        have symm_mul := MulEquiv.symm_apply_apply (e := data.iso) ⟨(a * b), (by
+          apply Subgroup.mul_mem
+          . apply all_mem_central
+          . apply all_mem_central
+        )⟩
+        have symm_mul_swap := MulEquiv.symm_apply_apply (e := data.iso) ⟨(b * a), (by
+          apply Subgroup.mul_mem
+          . apply all_mem_central
+          . apply all_mem_central
+        )⟩
+        rw [Subtype.ext_iff] at symm_mul
+        simp only [] at symm_mul
+        rw [Subtype.ext_iff] at symm_mul_swap
+        simp only [] at symm_mul_swap
+        rw [Subtype.ext_iff]
+        simp
+        rw [← symm_mul]
+        rw [← symm_mul_swap]
+        rw [← Subtype.ext_iff]
+        apply congrArg
+        funext i
+        specialize ha i
+        specialize hb i
+
+        have comm_subgroup := (Classical.choose_spec (Gi' i)).1.is_comm.comm
+        have a_b_comm := comm_subgroup ⟨_, ha⟩ ⟨_, hb⟩
+        rw [Subtype.ext_iff] at a_b_comm
+        simp at a_b_comm
+
+        conv =>
+          lhs
+          arg 2
+          equals ⟨a.val, all_mem_central a⟩ * ⟨b.val, all_mem_central b⟩ =>
+            simp only [MulMemClass.mk_mul_mk, inv_image]
+
+        conv =>
+          rhs
+          arg 2
+          equals ⟨b.val, all_mem_central b⟩ * ⟨a.val, all_mem_central a⟩ =>
+            simp only [MulMemClass.mk_mul_mk, inv_image]
+
+
+
+        rw [MulEquiv.map_mul]
+        rw [MulEquiv.map_mul]
+        simp
+        rw [a_b_comm]
+
+        conv at symm_mul =>
+          rhs
+          equals ⟨a.val, all_mem_central _⟩ * ⟨b.val, all_mem_central _⟩ =>
+            simp
+
+        simp at symm_mul
+      let G' := ⨅ (i : Fin (data.k)), inv_image i
+
+      have G'_comm: ∀ a b: G', a * b = b * a := by
+        intro a b
+        have a_mem := a.property
+        have b_mem := b.property
+        rw [Subgroup.mem_iInf] at a_mem
+        apply Subtype.ext_val
+        simp
+
+        have a_val := a.property
+        have b_val := b.property
+        dsimp [G'] at a_val
+        dsimp [G'] at b_val
+        rw [Subgroup.mem_iInf] at a_val
+        rw [Subgroup.mem_iInf] at b_val
+        specialize a_val ⟨0, data.k_pos⟩
+        specialize b_val ⟨0, data.k_pos⟩
+        have a_b_comm := inv_image_comm ⟨0, data.k_pos⟩ _ _ a_val b_val
+        exact a_b_comm
+
+
+        apply Subtype.ext_val
+        simp
+        simp [inv_image] at a_mem
+
+        have symm_mul := MulEquiv.symm_apply_apply (e := data.iso) ⟨(a.val.val * b.val.val), (by
+          apply Subgroup.mul_mem
+          . apply all_mem_central
+          . apply all_mem_central
+        )⟩
+        have symm_mul_swap := MulEquiv.symm_apply_apply (e := data.iso) ⟨(b.val.val * a.val.val), (by
+          apply Subgroup.mul_mem
+          . apply all_mem_central
+          . apply all_mem_central
+        )⟩
+
+        --have symm_b := MulEquiv.symm_apply_apply (e := data.iso) ⟨b.val.val, all_mem_central _⟩
+
+        rw [Subtype.ext_iff] at symm_mul
+        simp only [] at symm_mul
+        rw [Subtype.ext_iff] at symm_mul_swap
+        simp only [] at symm_mul_swap
+        rw [← symm_mul, ← symm_mul_swap]
+        rw [← Subtype.ext_iff]
+        apply congrArg
+        conv =>
+          lhs
+          arg 2
+          equals ⟨a.val.val, all_mem_central a⟩ * ⟨b.val.val, all_mem_central b⟩ =>
+            simp only [MulMemClass.mk_mul_mk, inv_image]
+
+        conv =>
+          rhs
+          arg 2
+          equals ⟨b.val.val, all_mem_central b⟩ * ⟨a.val.val, all_mem_central a⟩ =>
+            simp only [MulMemClass.mk_mul_mk, inv_image]
+
+
+        rw [MulEquiv.map_mul]
+        rw [MulEquiv.map_mul]
+        have a_val := a.property
+        have b_val := b.property
+        dsimp [G'] at a_val
+        dsimp [G'] at b_val
+        rw [Subgroup.mem_iInf] at a_val
+        rw [Subgroup.mem_iInf] at b_val
+        --simp [inv_image] at a_val
+        funext i
+        simp only [Pi.mul_apply, inv_image, G']
+        specialize a_val i
+        specialize b_val i
+
+        have a_b_comm := inv_image_comm i _ _ a_val b_val
+        simp
+
+        let a_mem_comm: Subtype _ := ⟨_, a_val⟩
+
+        rw [← symm_a, ← symm_b]
+
+
+        apply iInf_congr
+
+
+      have inv_image_comm (i: Fin (data.k)) (a b: Subgroup.centralizer {g.val}): a * b = b * a := by
+        --simp [inv_image] at ha hb
+        have image_comm := (Classical.choose_spec (Gi' i)).1.is_comm.comm
+        let foo := data.iso a i
+
+        have symm_a := MulEquiv.symm_apply_apply (e := data.iso) a
+        have symm_b := MulEquiv.symm_apply_apply (e := data.iso) b
+        rw [← symm_a, ← symm_b]
+        rw [← MulEquiv.map_mul]
+        rw [← MulEquiv.map_mul]
+        rw [← MulEquiv.map_mul]
+        congr
+        rw [MulEquiv.map_mul]
+        funext i
+        --specialize image_comm a
+
+        --simp_rw [Subtype.ext_iff] at image_comm
+        --rw [← MulEquiv.symm_apply_apply (e := data.iso)]
+        --simp
+        --simp at image_comm
+        --specialize image_comm a.val.val
+
+        sorry
+
+
+      have inv_image_finite_index: ∀ i: Fin (data.k), (inv_image i).FiniteIndex := by
+        intro i
+        simp [inv_image]
+        apply Subgroup.finiteIndex_of_leftCoset_cover_const
+        sorry
+        sorry
+        sorry
+        sorry
+
+      let G' := ⨅ (i : (Fin (data.k))), inv_image i
+      have G'_abeliean: IsMulCommutative G' := by
+        exact {
+          is_comm := by
+            exact {
+              comm := by
+                unfold G'
+                intro a b
+                have a_mem := a.property
+                have b_mem := b.property
+                have a_other := a.val.property
+                rw [Subgroup.mem_iInf] at a_mem
+                rw [Subgroup.mem_iInf] at b_mem
+                specialize a_mem ⟨0, data.k_pos⟩
+                specialize b_mem ⟨0, data.k_pos⟩
+                dsimp [inv_image] at a
+                dsimp [inv_image] at b
+                have image_comm := (Classical.choose_spec (subgroup_virtual ⟨0, data.k_pos⟩)).1.is_comm.comm
+                simp at image_comm
+                specialize image_comm a.val.val.val
+
+                specialize image_comm ⟨a.val.val, by sorry⟩
+
+                apply image_comm
+            }
+        }
 
       --unfold UnitaryProd at centralizer_iso
       sorry
