@@ -1071,9 +1071,43 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
 
       have inv_image_finite_index: ∀ i: Fin (data.k), (inv_image i).FiniteIndex := by
         intro i
+        have finite_index_subgroup := (Classical.choose_spec (Gi' i)).2
+        have finite_quotient := @Subgroup.finite_quotient_of_finiteIndex _ _ _ finite_index_subgroup
+
+        have subgroup_union_coset := QuotientGroup.univ_eq_iUnion_smul ((Classical.choose (Gi' i)))
+        --apply Subgroup.finiteIndex_of_leftCoset_cover_const (g := id)
+
+        apply @Subgroup.finiteIndex_of_finite_quotient _ _ _ ?_
+        apply Finite.of_injective (β := (data.groups i) ⧸ (Classical.choose (Gi' i))) (f := fun a => (
+          data.iso ⟨a.out, all_mem_central _⟩ i
+        ))
+        intro x y hxy
+        simp at hxy
+        rw [← QuotientGroup.out_eq' (a := x)]
+        rw [← QuotientGroup.out_eq' (a := y)]
+        rw [QuotientGroup.eq]
         simp [inv_image]
+
+        rw [QuotientGroup.eq] at hxy
+        conv at hxy =>
+          arg 2
+          lhs
+          equals (data.iso ⟨x.out, all_mem_central _⟩)⁻¹ i =>
+            simp
+        rw [← MulEquiv.map_inv] at hxy
+        rw [← Pi.mul_apply] at hxy
+        rw [← MulEquiv.map_mul] at hxy
+        exact hxy
+
+
+
+
+        --simp [inv_image]
+        -- Subgroup.finiteIndex_iff_finite_quotient
         --apply Subgroup.finiteIndex_of_leftCoset_cover_const
-        sorry
+        --sorry
+
+
 
       let G' := ⨅ (i : (Fin (data.k))), inv_image i
       have G'_abeliean: IsMulCommutative G' := by
@@ -1085,11 +1119,12 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
             }
         }
 
+      have G'_finite_index: G'.FiniteIndex := by
+        apply Subgroup.finiteIndex_iInf
+        apply inv_image_finite_index
+
       --unfold UnitaryProd at centralizer_iso
       use G'
-      refine ⟨G'_abeliean, ?_⟩
-      sorry
-
     . sorry
 termination_by n
 decreasing_by {
