@@ -1125,7 +1125,10 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
 
       --unfold UnitaryProd at centralizer_iso
       use G'
-    . sorry
+    . simp only [ne_eq, exists_and_left, not_exists, not_and] at nontrivial_central
+
+
+      sorry
 termination_by n
 decreasing_by {
   exact data.n_i_lt i
