@@ -1086,6 +1086,8 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
         }
 
       --unfold UnitaryProd at centralizer_iso
+      use G'
+      refine ⟨G'_abeliean, ?_⟩
       sorry
 
     . sorry
