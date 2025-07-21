@@ -1072,10 +1072,7 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
       have inv_image_finite_index: ∀ i: Fin (data.k), (inv_image i).FiniteIndex := by
         intro i
         simp [inv_image]
-        apply Subgroup.finiteIndex_of_leftCoset_cover_const
-        sorry
-        sorry
-        sorry
+        --apply Subgroup.finiteIndex_of_leftCoset_cover_const
         sorry
 
       let G' := ⨅ (i : (Fin (data.k))), inv_image i
@@ -1092,3 +1089,7 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
       sorry
 
     . sorry
+termination_by n
+decreasing_by {
+  exact data.n_i_lt i
+}
