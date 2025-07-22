@@ -836,6 +836,60 @@ structure InductiveLemmaData (n: ℕ) (G: Subgroup (Matrix.unitaryGroup (Fin n) 
 lemma inductive_lemma (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) (g_not_multiple_I: ∀ z: ℂ, g.val.val ≠ z • 1):
   Nonempty (InductiveLemmaData n G g) := by
 
+  let g_end: Module.End ℂ (Fin n → ℂ) := Matrix.toLin' g
+  -- TODO - is there a better way to write the space as a finite union of generalized eigenspaces?
+  have eigenspace_span := Module.End.iSup_maxGenEigenspace_eq_top g_end
+  rw [← iSup_ne_bot_subtype] at eigenspace_span
+  have subtype_eq: { z: ℂ // g_end.maxGenEigenspace z ≠ ⊥ } = { z: ℂ // ∃ n, g_end.HasGenEigenvalue z n} := by
+    simp only [Module.End.maxGenEigenspace]
+    simp_rw [Module.End.genEigenspace_top]
+    conv =>
+      lhs
+      arg 1
+      intro z
+      simp
+      arg 1
+      intro x
+      rw [← ne_eq]
+      rw [← Module.End.hasGenEigenvalue_iff]
+
+  have finite_eigenvalues := Module.End.finite_hasEigenvalue g_end
+  have subtype_finite: Finite { z: ℂ // ∃ n, g_end.HasGenEigenvalue z n} := by
+    have finite_setof: Finite (setOf g_end.HasEigenvalue) := by
+      simp
+      exact finite_eigenvalues
+    apply Finite.of_injective (β := setOf g_end.HasEigenvalue) (f := fun z => (by
+      have z_mem := Classical.choose_spec z.prop
+      let other := Module.End.hasEigenvalue_of_hasGenEigenvalue z_mem
+      exact ⟨z, other⟩
+    ))
+    simp
+    exact Isometry.injective fun x1 ↦ congrFun rfl
+
+  
+  --rw [iSup_congr_Prop] at eigenspace_span
+  --rw [subtype_eq] at eigenspace_span
+  -- Module.End.hasGenEigenvalue_iff
+  conv at eigenspace_span =>
+    lhs
+    arg 1
+
+  have f_map (h: G) (h_comm: Commute g h): True := by
+    have preserves := Module.End.mapsTo_genEigenspace_of_comm ?_ (f := g_end) (g := Matrix.toLin' h.val.val)
+
+    -- Module.End.maxGenEigenspace_eq_genEigenspace_finrank
+    -- LinearMap.toMatrix'
+
+    let h_end:  Module.End ℂ (Fin n → ℂ) := Matrix.toLin' h
+    have test_preserves := preserves 1 ⊤
+    let h_restrict := h_end.restrict test_preserves
+    have ⟨k, basis⟩ := Submodule.basisOfPid (by sorry) ((g_end.genEigenspace 1) ⊤) (ι := Fin 2)
+    let h_restrict_matrix := (LinearMap.toMatrix basis basis) h_restrict
+    have rank_eq := Submodule.finrank_eq_rank _ _ ((g_end.genEigenspace 1) ⊤)
+
+
+    sorry
+
   -- TODO - this must already exist somewhere
   have nontrivial_fin_n_c: Nontrivial ((Fin n) → ℂ) := by
     use (fun n => 1)
