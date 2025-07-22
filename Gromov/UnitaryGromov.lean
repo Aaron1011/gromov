@@ -972,6 +972,63 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
       have subgroup_fg: ∀ i: Fin (data.k), (data.groups i).FG := by
         intro i
         have iso := data.iso
+        have centralizer_fg: (Subgroup.centralizer {g}).FG := by
+          sorry
+        -- TODO - why doesn't `Pi.evalMonoidHom' work here?
+        let i_hom : ((j : Fin data.k) → ↥(data.groups j)) →* (data.groups i) := {
+          toFun := fun f => f i,
+          map_one' := Pi.one_apply i,
+          map_mul' := by
+            intro x y
+            simp
+
+        }
+        rw [Subgroup.fg_iff_submonoid_fg] at centralizer_fg
+        have map_prod_fg := Submonoid.FG.map (P := ⊤) ?_ data.iso.toMonoidHom
+        .
+          simp at map_prod_fg
+          rw [← Monoid.fg_def] at map_prod_fg
+          have range_fg := Monoid.fg_range i_hom
+          rw [MonoidHom.mrange_eq_top.mpr] at range_fg
+          rw [Monoid.fg_def] at range_fg
+          --simp [i_hom] at range_fg
+          have map_factor := Submonoid.FG.map (P := ⊤) ?_ i_hom
+          rw [Subgroup.fg_iff_submonoid_fg]
+          conv at map_factor =>
+            arg 1
+            equals ⊤ =>
+              sorry
+          rw [← Monoid.fg_def] at map_factor
+          . exact (Monoid.fg_iff_submonoid_fg (data.groups i).toSubmonoid).mp map_factor
+          . exact Monoid.fg_def.mp map_prod_fg
+          .
+            intro a
+            use (fun j => if hij: i = j then (
+              have n_i_eq: Fin (data.n_i i ) = Fin (data.n_i j) := by
+                rw [hij]
+
+              have n_i_equiv : Fin (data.n_i i) ≃ Fin (data.n_i j) := by
+                rw [hij]
+
+              let a_map := Matrix.reindex n_i_equiv n_i_equiv (α := ℂ)
+              ⟨⟨a_map a, by sorry⟩, by sorry⟩
+            ) else 1)
+            simp [i_hom]
+
+
+        obtain ⟨S, hS⟩ := centralizer_fg
+        let pre_S' := Finset.image (fun s => (⟨s, all_mem_central s⟩: (Subgroup.centralizer {g}))) S
+        let S' := Finset.image iso pre_S'
+        let pre_target := Finset.image (fun f => f i) S'
+        let target := Finset.image (Subgroup.subtype _) pre_target
+        unfold Subgroup.FG
+        use target
+        simp [target, pre_target, S', pre_S']
+        ext a
+
+
+
+
 
         sorry
       -- The abelian subgroup of G_i.
