@@ -973,7 +973,13 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
         intro i
         have iso := data.iso
         have centralizer_fg: (Subgroup.centralizer {g}).FG := by
-          sorry
+          conv =>
+            arg 1
+            equals ⊤ =>
+              simp
+              exact g_central
+          rw [← Group.fg_def]
+          exact (Group.fg_iff_subgroup_fg G).mpr G_FG
         -- TODO - why doesn't `Pi.evalMonoidHom' work here?
         let i_hom : ((j : Fin data.k) → ↥(data.groups j)) →* (data.groups i) := {
           toFun := fun f => f i,
