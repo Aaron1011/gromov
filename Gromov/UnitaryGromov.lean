@@ -1016,21 +1016,23 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
             simp [i_hom]
 
 
-        obtain ⟨S, hS⟩ := centralizer_fg
-        let pre_S' := Finset.image (fun s => (⟨s, all_mem_central s⟩: (Subgroup.centralizer {g}))) S
-        let S' := Finset.image iso pre_S'
-        let pre_target := Finset.image (fun f => f i) S'
-        let target := Finset.image (Subgroup.subtype _) pre_target
-        unfold Subgroup.FG
-        use target
-        simp [target, pre_target, S', pre_S']
-        ext a
-
-
-
-
-
         sorry
+        -- rw [← Monoid.FG.fg_top]
+        -- obtain ⟨S, hS⟩ := centralizer_fg
+        -- let pre_S' := Finset.image (fun s => (⟨s, all_mem_central s⟩: (Subgroup.centralizer {g}))) S
+        -- let S' := Finset.image iso pre_S'
+        -- let pre_target := Finset.image (fun f => f i) S'
+        -- let target := Finset.image (Subgroup.subtype _) pre_target
+        -- unfold Subgroup.FG
+        -- use target
+        -- simp [target, pre_target, S', pre_S']
+        -- ext a
+
+
+
+
+
+        -- sorry
       -- The abelian subgroup of G_i.
       let Gi' := fun i: Fin (data.k) => central_implies_virtually_abelian (data.n_i i) (data.positive_n_i i) (data.groups i) (subgroup_fg i)
       -- Page 48: Let Gᵢ := πᵢ⁻¹(πᵢ(G)′) = {g ∈ G : πᵢ(g) ∈ πᵢ(G)′}
