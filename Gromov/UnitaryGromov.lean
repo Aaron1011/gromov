@@ -833,7 +833,7 @@ structure InductiveLemmaData (n: ℕ) (G: Subgroup (Matrix.unitaryGroup (Fin n) 
   iso: Subgroup.centralizer {g} ≃* ((i: Fin k) → (groups i))
 
 -- Lemma 3.30
-lemma inductive_lemma (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) (g_not_multiple_I: ∀ z: ℂ, g.val.val ≠ z • 1):
+lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) (g_not_multiple_I: ∀ z: ℂ, g.val.val ≠ z • 1):
   Nonempty (InductiveLemmaData n G g) := by
 
   let g_end: Module.End ℂ (Fin n → ℂ) := Matrix.toLin' g
@@ -866,7 +866,203 @@ lemma inductive_lemma (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (
     simp
     exact Isometry.injective fun x1 ↦ congrFun rfl
 
-  
+  have nontrival_coord: Nontrivial (Fin n → ℂ) := by
+    have nontrivial_fin: Nontrivial (Fin n) := by
+      exact Fin.nontrivial_iff_two_le.mpr hn
+    infer_instance
+
+  have n_gt: 0 < n := by omega
+
+  let list_eigenvalues := finite_eigenvalues.toFinset.toList
+
+  have two_eigenvalues: 2 ≤ list_eigenvalues.length := by
+    by_contra!
+    by_cases len_eq_zero: list_eigenvalues.length = 0
+    .
+      simp [list_eigenvalues] at len_eq_zero
+      obtain ⟨z, hz⟩ := Module.End.exists_eigenvalue g_end
+      have eigenvalues_nonempty: setOf g_end.HasEigenvalue ≠ ∅ := by
+        rw [← Set.nonempty_iff_ne_empty]
+        apply Set.nonempty_of_mem hz
+      contradiction
+    .
+      have len_eq_one: list_eigenvalues.length = 1 := by
+        omega
+
+      obtain ⟨z, hz⟩ := Module.End.exists_eigenvalue g_end
+      have z_gen_eigen: g_end.HasGenEigenvalue z 1 := by
+        rw [Module.End.hasGenEigenvalue_iff]
+        exact hz
+      rw [Module.End.hasGenEigenvalue_iff] at z_gen_eigen
+      -- Since we only have a single eigenvalue, we only have one non-bot maxGenEigenspace
+      have unique_subtype: Unique { i // g_end.maxGenEigenspace i ≠ ⊥ } := by
+        exact {
+          default := ⟨z, by (
+            simp only [Module.End.maxGenEigenspace]
+            simp_rw [Module.End.genEigenspace_top]
+            rw [ne_eq]
+            rw [iSup_eq_bot]
+            simp
+            use 1
+          )⟩
+          uniq := by
+            intro x
+            have x_prop := x.property
+            simp only [Module.End.maxGenEigenspace] at x_prop
+            simp_rw [Module.End.genEigenspace_top] at x_prop
+            rw [ne_eq] at x_prop
+            rw [iSup_eq_bot] at x_prop
+            simp at x_prop
+            obtain ⟨y, hy⟩ := x_prop
+            rw [← ne_eq] at hy
+            rw [← Module.End.hasGenEigenvalue_iff] at hy
+            have y_eigen := Module.End.hasEigenvalue_of_hasGenEigenvalue hy
+            simp [list_eigenvalues] at len_eq_one
+            rw [Finset.card_eq_one] at len_eq_one
+            obtain ⟨p, hp⟩ := len_eq_one
+            -- TODO - clean this up
+            have eigenvalues_eq_singleton: setOf g_end.HasEigenvalue = {p} := by
+              ext a
+              refine ⟨?_, ?_⟩
+              . intro ha
+                have foo := Set.Finite.mem_toFinset finite_eigenvalues (a := a)
+                simp only [] at foo
+                simp only [Set.mem_setOf_eq] at ha
+                have mem_finite := foo.mpr ha
+                rw [hp] at mem_finite
+                simpa using mem_finite
+              . intro ha
+                simp at ha
+                have a_mem_finset: a ∈ finite_eigenvalues.toFinset := by
+                  rw [hp]
+                  simp
+                  exact ha
+                simp at a_mem_finset
+                exact a_mem_finset
+
+            simp at eigenvalues_eq_singleton
+            have x_mem: x.val ∈ setOf g_end.HasEigenvalue := by
+              simp
+              exact y_eigen
+
+            have z_mem: z ∈ setOf g_end.HasEigenvalue := by
+              simp
+              exact hz
+            rw [eigenvalues_eq_singleton] at z_mem
+            simp at z_mem
+            rw [eigenvalues_eq_singleton] at x_mem
+            simp at x_mem
+            ext
+            simp
+            rw [x_mem]
+            rw [← z_mem]
+        }
+
+
+      rw [iSup_unique] at eigenspace_span
+      rw [Module.End.maxGenEigenspace] at eigenspace_span
+      -- We need to somehow use the fact that the matrix is unitary, and conclude
+      -- than 'genEigenspace ⊤ = genEeingespace 1', so a single eigenspace spans the whole space.
+      -- THis implies that g is diagonal, contradicting 'g_not_multiple_I'
+      sorry
+      -- conv at eigenspace_span =>
+      --   arg 1
+      --   arg 1
+      --   arg 2
+      --   arg 1
+      --   equals ⟨z, by (
+      --     simp [Module.End.genEigenspace_top]
+      --     use 1
+
+      --   )⟩ =>
+      --     apply Unique.default_eq
+
+      -- rw [Module.End.genEigenspace_one] at eigenspace_span
+      -- rw [Module.End.genEigenspace_top] at eigenspace_span
+
+  have nontrivial_len:  Nontrivial (Fin list_eigenvalues.length) := by
+    exact Fin.nontrivial_iff_two_le.mpr two_eigenvalues
+
+  have foo := Module.End.pos_finrank_genEigenspace_of_hasEigenvalue (f := g_end) (μ := 1) (k := 2)
+  exact Nonempty.intro {
+    k := list_eigenvalues.length,
+    k_pos := by
+      simp [list_eigenvalues]
+      obtain ⟨z, hz⟩ := Module.End.exists_eigenvalue g_end
+      exact Set.nonempty_of_mem hz
+    n_i := fun i => (Module.finrank ℂ (Module.End.genEigenspace g_end (list_eigenvalues.get ⟨i, by (
+      simp
+    )⟩) ⊤)),
+    n_i_lt := fun i => by
+      calc
+        _ < Module.finrank ℂ (Fin n → ℂ) := by
+          apply Submodule.finrank_lt
+          by_contra!
+          have distinct: ∃ j: Fin list_eigenvalues.length, i ≠ j := by
+            have foo := exists_ne i
+            obtain ⟨j, hj⟩ := foo
+            use j
+            exact hj.symm
+
+          obtain ⟨j, hj⟩ := distinct
+          have vals_neq: list_eigenvalues.get i ≠ list_eigenvalues.get j := by
+            simp [list_eigenvalues]
+            have no_dup := Finset.nodup_toList finite_eigenvalues.toFinset
+            rw [List.Nodup.getElem_inj_iff]
+            . omega
+            . exact no_dup
+
+
+            --rw [List.Nodup.get_inj_iff no_dup]
+          let j_subspace := Module.End.genEigenspace g_end (list_eigenvalues.get j) ⊤
+          have i_j_disjoint := Module.End.disjoint_genEigenspace g_end vals_neq ⊤ ⊤
+
+          have j_mem_tolist: list_eigenvalues.get j ∈ list_eigenvalues := by
+            simp [list_eigenvalues]
+
+          unfold list_eigenvalues at j_mem_tolist
+          simp only [Finset.mem_toList] at j_mem_tolist
+          simp at j_mem_tolist
+          have j_generalized_eigenvalue: g_end.HasGenEigenvalue (list_eigenvalues.get j) 1 := by
+            rw [Module.End.hasGenEigenvalue_iff_hasEigenvalue]
+            . exact j_mem_tolist
+            . simp
+
+          -- Our 'j' eigenspace is not the trivial (bot) space
+          have j_not_bot := Module.End.hasGenEigenvalue_iff.mp j_generalized_eigenvalue
+          have j_top_not_bot: (g_end.genEigenspace (list_eigenvalues.get j)) ⊤ ≠ ⊥ := by
+            rw [← bot_lt_iff_ne_bot] at j_not_bot
+            grw [Module.End.genEigenspace_le_maximal] at j_not_bot
+            rw [bot_lt_iff_ne_bot] at j_not_bot
+            exact j_not_bot
+
+          -- The i and j spaces are disjoint and j is not ⊥, so i is not ⊤
+          have i_ne_top: (g_end.genEigenspace (list_eigenvalues.get i)) ⊤ ≠ ⊤ := by
+            by_contra!
+            rw [this] at i_j_disjoint
+            simp at i_j_disjoint
+            contradiction
+
+          contradiction
+
+
+
+        _ ≤ n := by
+          simp
+
+
+
+
+    positive_n_i := fun _ => hn,
+    groups := fun _ => G,
+    iso := Subgroup.centralizer {g} ≃* (fun i => G)
+  }
+
+  -- Module.End.maxGenEigenspace_eq_genEigenspace_finrank
+
+  simp [Module.End.maxGenEigenspace] at eigenspace_span
+  simp_rw [Module.End.genEigenspace_top_eq_maxUnifEigenspaceIndex] at eigenspace_span
+
   --rw [iSup_congr_Prop] at eigenspace_span
   --rw [subtype_eq] at eigenspace_span
   -- Module.End.hasGenEigenvalue_iff
