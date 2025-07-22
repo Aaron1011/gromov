@@ -893,6 +893,13 @@ lemma inductive_lemma (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (
 
 #check Pi.commSemigroup
 
+-- Theorem 3.8, case with only trivial elements in the center
+lemma central_trivial_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (ε: ℝ) (hε: 0 < ε)
+  (G_central_trivial: ∀ g: G, g ∈ Set.center G → ∃ z: ℂ, g.val.val = z • 1)
+  (G'_central_trivial: ∀ g: (G' n ε G), g ∈ Set.center (G' n ε G) → ∃ z: ℂ, g.val.val.val = z • 1)
+  : ∃ N: Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
+  sorry
+
 -- Theorem 3.8
 set_option synthInstance.maxHeartbeats 100000 in
 set_option maxHeartbeats 1000000 in
@@ -1218,7 +1225,22 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
         --let foo := Subgroup.map (Subgroup.subtype _) N
 
         --let foo := Subgroup.comap ((Subgroup.map (G.subtype (G' n ε G))).subtype) N
-      sorry
+      .
+        have target := central_trivial_virtually_abelian n hn G ε hε ?_ ?_
+        . exact target
+        .
+          intro g hg
+          specialize nontrivial_central g
+          rw [← not_imp_not] at nontrivial_central
+          simp at nontrivial_central
+          exact nontrivial_central hg
+        . intro g hg
+          simp only [ne_eq, exists_and_left, not_exists,
+            not_and] at G'_nontrivial_central
+          specialize G'_nontrivial_central g
+          rw [← not_imp_not] at G'_nontrivial_central
+          simp at G'_nontrivial_central
+          exact G'_nontrivial_central hg
 termination_by (n, G.index)
 decreasing_by
   . apply Prod.Lex.left
