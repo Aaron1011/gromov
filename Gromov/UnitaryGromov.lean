@@ -1244,7 +1244,9 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
         have g_comm := g_central.comm a
         exact g_comm
 
-      obtain ⟨data⟩ := inductive_lemma n hn G g g_not_multiple_I
+      have n_ge_two: 2 ≤ n := by
+        omega
+      obtain ⟨data⟩ := inductive_lemma n n_ge_two G g g_not_multiple_I
       -- TODO - PR this to mathlib
       have subgroup_fg: ∀ i: Fin (data.k), (data.groups i).FG := by
         intro i
