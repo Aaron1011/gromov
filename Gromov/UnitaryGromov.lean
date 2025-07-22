@@ -999,19 +999,20 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
             equals ⊤ =>
               ext a
               simp
-              sorry
+              -- TODO - deduplicate this
+              use (fun j => if hij: i = j then (
+                have group_equiv : data.groups i ≃* data.groups j := by
+                  rw [hij]
+
+                group_equiv a
+              ) else 1)
+              simp [i_hom]
           rw [← Monoid.fg_def] at map_factor
           . exact (Monoid.fg_iff_submonoid_fg (data.groups i).toSubmonoid).mp map_factor
           . exact Monoid.fg_def.mp map_prod_fg
           .
             intro a
             use (fun j => if hij: i = j then (
-              have n_i_eq: Fin (data.n_i i ) = Fin (data.n_i j) := by
-                rw [hij]
-
-              have n_i_equiv : Fin (data.n_i i) ≃ Fin (data.n_i j) := by
-                rw [hij]
-
               have group_equiv : data.groups i ≃* data.groups j := by
                 rw [hij]
 
