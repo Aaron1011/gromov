@@ -830,7 +830,7 @@ structure InductiveLemmaData (n: ℕ) (G: Subgroup (Matrix.unitaryGroup (Fin n) 
   n_i_lt: ∀ i: Fin k, n_i i < n
   positive_n_i: ∀ i: Fin k, n_i i ≠ 0
   groups: (i: Fin k) → Subgroup (Matrix.unitaryGroup (Fin (n_i i)) ℂ)
-  iso: Subgroup.centralizer {g.val} ≃* ((i: Fin k) → (groups i))
+  iso: Subgroup.centralizer {g} ≃* ((i: Fin k) → (groups i))
 
 -- Lemma 3.30
 lemma inductive_lemma (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) (g_not_multiple_I: ∀ z: ℂ, g.val.val ≠ z • 1):
@@ -894,16 +894,17 @@ lemma inductive_lemma (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (
 #check Pi.commSemigroup
 
 -- Theorem 3.8, case with only trivial elements in the center
-lemma central_trivial_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (ε: ℝ) (hε: 0 < ε)
+lemma central_trivial_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG) (ε: ℝ) (hε: 0 < ε)
   (G_central_trivial: ∀ g: G, g ∈ Set.center G → ∃ z: ℂ, g.val.val = z • 1)
   (G'_central_trivial: ∀ g: (G' n ε G), g ∈ Set.center (G' n ε G) → ∃ z: ℂ, g.val.val.val = z • 1)
   : ∃ N: Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
+
   sorry
 
 -- Theorem 3.8
 set_option synthInstance.maxHeartbeats 100000 in
 set_option maxHeartbeats 1000000 in
-lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)): ∃ N: Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
+lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG): ∃ N: Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
   by_cases n_eq_one: n = 1
   .
     have fin_sin_subsingleton: Subsingleton (Fin n) := by
@@ -943,31 +944,41 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
       }
     . exact Subgroup.instFiniteIndexTop
   .
-    have nontrivial_centrer_implies_virtual (G: Subgroup ↥(Matrix.unitaryGroup (Fin n) ℂ)) (nontrivial_central: ∃ g: G, (∀ z: ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G): ∃ N: Subgroup G, IsMulCommutative ↥N ∧ N.FiniteIndex := by
+    have nontrivial_centrer_implies_virtual (G: Subgroup ↥(Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG) (nontrivial_central: ∃ g: G, (∀ z: ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G): ∃ N: Subgroup G, IsMulCommutative ↥N ∧ N.FiniteIndex := by
       obtain ⟨g, g_not_multiple_I, g_central⟩ := nontrivial_central
-      have G_subset_centralizer: G.carrier ⊆ Subgroup.centralizer {g.val} := by
-        intro a ha
-        simp
-        rw [Subgroup.mem_centralizer_iff]
-        intro b hb
-        simp at hb
-        rw [hb]
-        rw [Set.mem_center_iff] at g_central
-        have g_comm := g_central.comm ⟨a, ha⟩
-        rw [Subtype.ext_iff] at g_comm
-        simp at g_comm
-        apply g_comm
+      -- have G_subset_centralizer:  ⊆ (Subgroup.centralizer {g}).carrier := by
+      --   intro a ha
+      --   simp
+      --   rw [Subgroup.mem_centralizer_iff]
+      --   intro b hb
+      --   simp at hb
+      --   rw [hb]
+      --   rw [Set.mem_center_iff] at g_central
+      --   have g_comm := g_central.comm ⟨a, ha⟩
+      --   rw [Subtype.ext_iff] at g_comm
+      --   simp at g_comm
+      --   apply g_comm
 
-      have all_mem_central: ∀ a : G, a.val ∈ Subgroup.centralizer {g.val} := by
-        intro a
-        apply G_subset_centralizer a.property
+      have all_mem_central: ∀ a : G, a ∈ Subgroup.centralizer {g} := by
+        intro a b b_mem
+        simp at b_mem
+        rw [b_mem]
+        rw [Set.mem_center_iff] at g_central
+        have g_comm := g_central.comm a
+        exact g_comm
 
       obtain ⟨data⟩ := inductive_lemma n hn G g g_not_multiple_I
+      -- TODO - PR this to mathlib
+      have subgroup_fg: ∀ i: Fin (data.k), (data.groups i).FG := by
+        intro i
+        have iso := data.iso
+
+        sorry
       -- The abelian subgroup of G_i.
-      let Gi' := fun i: Fin (data.k) => central_implies_virtually_abelian (data.n_i i) (data.positive_n_i i) (data.groups i)
+      let Gi' := fun i: Fin (data.k) => central_implies_virtually_abelian (data.n_i i) (data.positive_n_i i) (data.groups i) (subgroup_fg i)
       -- Page 48: Let Gᵢ := πᵢ⁻¹(πᵢ(G)′) = {g ∈ G : πᵢ(g) ∈ πᵢ(G)′}
       let inv_image : Fin (data.k) → Subgroup G := fun i: Fin (data.k) => {
-        carrier := { a : G | (data.iso (⟨a.val, all_mem_central a⟩)) i ∈ (Classical.choose (Gi' i)) },
+        carrier := { a : G | (data.iso ⟨a, all_mem_central a⟩) i ∈ (Classical.choose (Gi' i)) },
         mul_mem' := by
           intro a b ha hb
           simp at ha
@@ -996,7 +1007,7 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
           conv =>
             arg 2
             arg 2
-            equals ⟨a.val, all_mem_central a⟩⁻¹ =>
+            equals ⟨a, all_mem_central a⟩⁻¹ =>
               ext
               simp
           rw [MulEquiv.map_inv]
@@ -1022,8 +1033,6 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
         simp only [] at symm_mul
         rw [Subtype.ext_iff] at symm_mul_swap
         simp only [] at symm_mul_swap
-        rw [Subtype.ext_iff]
-        simp
         rw [← symm_mul]
         rw [← symm_mul_swap]
         rw [← Subtype.ext_iff]
@@ -1040,13 +1049,13 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
         conv =>
           lhs
           arg 2
-          equals ⟨a.val, all_mem_central a⟩ * ⟨b.val, all_mem_central b⟩ =>
+          equals ⟨a, all_mem_central a⟩ * ⟨b, all_mem_central b⟩ =>
             simp only [MulMemClass.mk_mul_mk, inv_image]
 
         conv =>
           rhs
           arg 2
-          equals ⟨b.val, all_mem_central b⟩ * ⟨a.val, all_mem_central a⟩ =>
+          equals ⟨b, all_mem_central b⟩ * ⟨a, all_mem_central a⟩ =>
             simp only [MulMemClass.mk_mul_mk, inv_image]
 
 
@@ -1131,7 +1140,7 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
       --unfold UnitaryProd at centralizer_iso
       use G'
     by_cases nontrivial_central: ∃ g: G, (∀ z: ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G
-    . exact nontrivial_centrer_implies_virtual G nontrivial_central
+    . exact nontrivial_centrer_implies_virtual G G_FG nontrivial_central
     .
       -- Case two - we have no non-trivial central elements
       simp only [ne_eq, exists_and_left, not_exists, not_and] at nontrivial_central
@@ -1142,9 +1151,20 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
       obtain ⟨C, G_eps⟩:= volume_packing n (by omega) ε hε
       specialize G_eps G
 
+
       by_cases G'_nontrivial_central: ∃ g: (G' n ε G), (∀ z: ℂ, g.val.val.val ≠ z • 1) ∧ g ∈ Set.center (G' n ε G)
       .
         have G'_virtual := nontrivial_centrer_implies_virtual (Subgroup.map G.subtype (G' n ε G)) (by
+          have G'_finite := G_eps.1
+          have G_FG_other: Group.FG G := by
+            exact (Group.fg_iff_subgroup_fg G).mpr G_FG
+          have G'_FG := Subgroup.fg_of_index_ne_zero (G' n ε G)
+          -- TODO - PR this to mathlib
+          rw [Subgroup.fg_iff_submonoid_fg]
+          apply Submonoid.FG.map
+          rw [← Subgroup.fg_iff_submonoid_fg]
+          exact (Group.fg_iff_subgroup_fg (G' n ε G)).mp G'_FG
+        ) (by
           obtain ⟨g, hg⟩ := G'_nontrivial_central
           use ⟨g, by simp⟩
           refine ⟨?_, ?_⟩
@@ -1226,7 +1246,7 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
 
         --let foo := Subgroup.comap ((Subgroup.map (G.subtype (G' n ε G))).subtype) N
       .
-        have target := central_trivial_virtually_abelian n hn G ε hε ?_ ?_
+        have target := central_trivial_virtually_abelian n hn G G_FG ε hε ?_ ?_
         . exact target
         .
           intro g hg
