@@ -938,6 +938,7 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
   .
 
     by_cases nontrivial_central: ∃ g: G, (∀ z: ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G
+    -- Case one - we have a nontrivial central element
     .
       obtain ⟨g, g_not_multiple_I, g_central⟩ := nontrivial_central
       have G_subset_centralizer: G.carrier ⊆ Subgroup.centralizer {g.val} := by
@@ -1125,9 +1126,56 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
 
       --unfold UnitaryProd at centralizer_iso
       use G'
-    . simp only [ne_eq, exists_and_left, not_exists, not_and] at nontrivial_central
+    .
+      -- Case two - we have no non-trivial central elements
+      simp only [ne_eq, exists_and_left, not_exists, not_and] at nontrivial_central
+      let ε: ℝ := 2
+      have hε : 0 < ε := by
+        simp [ε]
+
+      obtain ⟨C, G_eps⟩:= volume_packing n (by omega) ε hε
+      specialize G_eps G
+
+      by_cases G'_nontrivial_central: ∃ g: (G' n ε G), (∀ z: ℂ, g.val.val.val ≠ z • 1) ∧ g ∈ Set.center (G' n ε G)
+      .
+        -- We view G' as a subgroup of the unitary group
+        have G'_virtual := central_implies_virtually_abelian n hn (Subgroup.map G.subtype (G' n ε G))
+        obtain ⟨N, N_comm, N_finite_index⟩ := G'_virtual
+
+        have G'_iso := Subgroup.equivMapOfInjective (G' n ε G) G.subtype (by simp)
+        let G'_hom := G'_iso.symm.toMonoidHom
+        let other := Subgroup.map G'_hom N
+        let latest := Subgroup.map (Subgroup.subtype _) other
+        use latest
+        refine ⟨?_, ?_⟩
+        . sorry
+        . simp [latest, other, G'_hom]
+          rw [Subgroup.finiteIndex_iff]
+          rw [ Subgroup.index_map]
+          simp
+          rw [Subgroup.finiteIndex_iff] at N_finite_index
+          rw [Subgroup.finiteIndex_iff] at G_eps
+          refine ⟨N_finite_index, G_eps.1⟩
 
 
+        -- use Subgroup.comap G.subtype (Subgroup.map (Subgroup.subtype _) N)
+        -- refine ⟨?_, ?_⟩
+        -- .
+        --   sorry
+        -- . rw [Subgroup.finiteIndex_iff]
+        --   rw [Subgroup.index_comap]
+        --   rw [Subgroup.index_map]
+        --   sorry
+
+        --let inner := (Subgroup.map G.subtype (G' n ε G)).subtype
+        --let bar := Subgroup.map inner N
+
+
+        --let bar := N.subtype
+        --let other := bar.subtype.range
+        --let foo := Subgroup.map (Subgroup.subtype _) N
+
+        --let foo := Subgroup.comap ((Subgroup.map (G.subtype (G' n ε G))).subtype) N
       sorry
 termination_by n
 decreasing_by {
