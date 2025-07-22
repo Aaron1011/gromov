@@ -1082,91 +1082,92 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
      sorry
       --have preserves := Module.End.mapsTo_genEigenspace_of_comm ?_ (f := g_end) (g := Matrix.toLin' g)
     )
-    iso := Subgroup.centralizer {g} ≃* (fun i => G)
+    iso := by sorry
+    --iso := Subgroup.centralizer {g} ≃* (fun i => G)
   }
 
   -- Module.End.maxGenEigenspace_eq_genEigenspace_finrank
 
-  simp [Module.End.maxGenEigenspace] at eigenspace_span
-  simp_rw [Module.End.genEigenspace_top_eq_maxUnifEigenspaceIndex] at eigenspace_span
+  -- simp [Module.End.maxGenEigenspace] at eigenspace_span
+  -- simp_rw [Module.End.genEigenspace_top_eq_maxUnifEigenspaceIndex] at eigenspace_span
 
-  --rw [iSup_congr_Prop] at eigenspace_span
-  --rw [subtype_eq] at eigenspace_span
-  -- Module.End.hasGenEigenvalue_iff
-  conv at eigenspace_span =>
-    lhs
-    arg 1
+  -- --rw [iSup_congr_Prop] at eigenspace_span
+  -- --rw [subtype_eq] at eigenspace_span
+  -- -- Module.End.hasGenEigenvalue_iff
+  -- conv at eigenspace_span =>
+  --   lhs
+  --   arg 1
 
-  have f_map (h: G) (h_comm: Commute g h): True := by
-    have preserves := Module.End.mapsTo_genEigenspace_of_comm ?_ (f := g_end) (g := Matrix.toLin' h.val.val)
+  -- have f_map (h: G) (h_comm: Commute g h): True := by
+  --   have preserves := Module.End.mapsTo_genEigenspace_of_comm ?_ (f := g_end) (g := Matrix.toLin' h.val.val)
 
-    -- Module.End.maxGenEigenspace_eq_genEigenspace_finrank
-    -- LinearMap.toMatrix'
+  --   -- Module.End.maxGenEigenspace_eq_genEigenspace_finrank
+  --   -- LinearMap.toMatrix'
 
-    let h_end:  Module.End ℂ (Fin n → ℂ) := Matrix.toLin' h
-    have test_preserves := preserves 1 ⊤
-    let h_restrict := h_end.restrict test_preserves
-    have ⟨k, basis⟩ := Submodule.basisOfPid (by sorry) ((g_end.genEigenspace 1) ⊤) (ι := Fin 2)
-    let h_restrict_matrix := (LinearMap.toMatrix basis basis) h_restrict
-    have rank_eq := Submodule.finrank_eq_rank _ _ ((g_end.genEigenspace 1) ⊤)
-
-
-    sorry
-
-  -- TODO - this must already exist somewhere
-  have nontrivial_fin_n_c: Nontrivial ((Fin n) → ℂ) := by
-    use (fun n => 1)
-    use (fun n => 2)
-    by_contra!
-    have foo := congrFun this ⟨0, by omega⟩
-    simp at foo
-
-  -- View g as a linear endomorphism
-  let g': Module.End _ _ := g.val.val.toLin'
-  have exists_eigenvalue := Module.End.exists_eigenvalue g'
-
-  have nonempty_eigenvalues: Nonempty g'.Eigenvalues := by
-    obtain ⟨c, hc⟩ := exists_eigenvalue
-    use c
-
-  have two_eigenvalues: 2 ≤ Nat.card g'.Eigenvalues := by
-    by_contra!
-    have card_ne_zero: 0 < Nat.card g'.Eigenvalues := by
-      rw [Nat.card_pos_iff]
-      refine ⟨nonempty_eigenvalues, ?_⟩
-      exact Finite.of_fintype g'.Eigenvalues
-
-    have card_eq_one: Nat.card g'.Eigenvalues = 1 := by
-      omega
-
-    -- TODO - there must be a simpler way of proving this
-    have unique_eigenvalues: Unique g'.Eigenvalues := {
-      uniq := by
-        intro x
-        rw [Nat.card_eq_one_iff_exists] at card_eq_one
-        obtain ⟨z, hz⟩ := card_eq_one
-        have first := hz default
-        have second := hz x
-        rw [second, first]
-    }
-    sorry
+  --   let h_end:  Module.End ℂ (Fin n → ℂ) := Matrix.toLin' h
+  --   have test_preserves := preserves 1 ⊤
+  --   let h_restrict := h_end.restrict test_preserves
+  --   have ⟨k, basis⟩ := Submodule.basisOfPid (by sorry) ((g_end.genEigenspace 1) ⊤) (ι := Fin 2)
+  --   let h_restrict_matrix := (LinearMap.toMatrix basis basis) h_restrict
+  --   have rank_eq := Submodule.finrank_eq_rank _ _ ((g_end.genEigenspace 1) ⊤)
 
 
-    -- obtain ⟨c, hc⟩ := exists_eigenvalue
-    -- obtain ⟨v, hv⟩ := Module.End.HasEigenvalue.exists_hasEigenvector hc
-    -- have has_eigenvalue_iff_c: ∀ z: ℂ, g'.HasEigenvalue z ↔ z = c := by
-    --   sorry
+  --   sorry
+
+  -- -- TODO - this must already exist somewhere
+  -- have nontrivial_fin_n_c: Nontrivial ((Fin n) → ℂ) := by
+  --   use (fun n => 1)
+  --   use (fun n => 2)
+  --   by_contra!
+  --   have foo := congrFun this ⟨0, by omega⟩
+  --   simp at foo
+
+  -- -- View g as a linear endomorphism
+  -- let g': Module.End _ _ := g.val.val.toLin'
+  -- have exists_eigenvalue := Module.End.exists_eigenvalue g'
+
+  -- have nonempty_eigenvalues: Nonempty g'.Eigenvalues := by
+  --   obtain ⟨c, hc⟩ := exists_eigenvalue
+  --   use c
+
+  -- have two_eigenvalues: 2 ≤ Nat.card g'.Eigenvalues := by
+  --   by_contra!
+  --   have card_ne_zero: 0 < Nat.card g'.Eigenvalues := by
+  --     rw [Nat.card_pos_iff]
+  --     refine ⟨nonempty_eigenvalues, ?_⟩
+  --     exact Finite.of_fintype g'.Eigenvalues
+
+  --   have card_eq_one: Nat.card g'.Eigenvalues = 1 := by
+  --     omega
+
+  --   -- TODO - there must be a simpler way of proving this
+  --   have unique_eigenvalues: Unique g'.Eigenvalues := {
+  --     uniq := by
+  --       intro x
+  --       rw [Nat.card_eq_one_iff_exists] at card_eq_one
+  --       obtain ⟨z, hz⟩ := card_eq_one
+  --       have first := hz default
+  --       have second := hz x
+  --       rw [second, first]
+  --   }
+  --   sorry
+
+
+  --   -- obtain ⟨c, hc⟩ := exists_eigenvalue
+  --   -- obtain ⟨v, hv⟩ := Module.End.HasEigenvalue.exists_hasEigenvector hc
+  --   -- have has_eigenvalue_iff_c: ∀ z: ℂ, g'.HasEigenvalue z ↔ z = c := by
+  --   --   sorry
 
 
 
-    -- have eigenspace_iff := fun μ => Module.End.hasEigenvalue_iff (f := g') (μ := μ)
-    -- simp_rw [has_eigenvalue_iff_c] at eigenspace_iff
-    -- simp at ei
+  --   -- have eigenspace_iff := fun μ => Module.End.hasEigenvalue_iff (f := g') (μ := μ)
+  --   -- simp_rw [has_eigenvalue_iff_c] at eigenspace_iff
+  --   -- simp at ei
 
 
-  -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/DirectSum/LinearMap.html#LinearMap.toMatrix_directSum_collectedBasis_eq_blockDiagonal'
-  let a := g.val.val.eigenvalues_conjTranspose_mul_self_nonneg
-  sorry
+  -- -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/DirectSum/LinearMap.html#LinearMap.toMatrix_directSum_collectedBasis_eq_blockDiagonal'
+  -- let a := g.val.val.eigenvalues_conjTranspose_mul_self_nonneg
+  -- sorry
 
 #check Pi.commSemigroup
 
