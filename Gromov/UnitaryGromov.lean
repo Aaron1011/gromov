@@ -936,10 +936,7 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
       }
     . exact Subgroup.instFiniteIndexTop
   .
-
-    by_cases nontrivial_central: ∃ g: G, (∀ z: ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G
-    -- Case one - we have a nontrivial central element
-    .
+    have nontrivial_centrer_implies_virtual (G: Subgroup ↥(Matrix.unitaryGroup (Fin n) ℂ)) (nontrivial_central: ∃ g: G, (∀ z: ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G): ∃ N: Subgroup G, IsMulCommutative ↥N ∧ N.FiniteIndex := by
       obtain ⟨g, g_not_multiple_I, g_central⟩ := nontrivial_central
       have G_subset_centralizer: G.carrier ⊆ Subgroup.centralizer {g.val} := by
         intro a ha
@@ -1126,6 +1123,8 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
 
       --unfold UnitaryProd at centralizer_iso
       use G'
+    by_cases nontrivial_central: ∃ g: G, (∀ z: ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G
+    . exact nontrivial_centrer_implies_virtual G nontrivial_central
     .
       -- Case two - we have no non-trivial central elements
       simp only [ne_eq, exists_and_left, not_exists, not_and] at nontrivial_central
@@ -1138,8 +1137,50 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
 
       by_cases G'_nontrivial_central: ∃ g: (G' n ε G), (∀ z: ℂ, g.val.val.val ≠ z • 1) ∧ g ∈ Set.center (G' n ε G)
       .
+        have G'_virtual := nontrivial_centrer_implies_virtual (Subgroup.map G.subtype (G' n ε G)) (by
+          obtain ⟨g, hg⟩ := G'_nontrivial_central
+          use ⟨g, by simp⟩
+          refine ⟨?_, ?_⟩
+          . intro z
+            simp
+            have g_prop := hg.1 z
+            simpa using g_prop
+          .
+            have g_mem := hg.2
+            rw [Set.mem_center_iff]
+            rw [Set.mem_center_iff] at g_mem
+            exact {
+              comm := by
+                -- TODO - make this less horrible
+                intro a
+                have a_prop := a.property
+                rw [Subgroup.mem_map] at a_prop
+                obtain ⟨b, b_mem, b_map⟩ := a_prop
+                have foo := g_mem.comm ⟨b, b_mem⟩
+                rw [Subtype.ext_iff] at foo
+                rw [Subtype.ext_iff] at foo
+                simp at foo
+                rw [Subtype.ext_iff]
+                rw [Subtype.ext_iff] at foo
+                simp at foo
+                simp
+                rw [← b_map]
+                rw [Subtype.ext_iff]
+                simp
+                exact foo
+              left_assoc := by
+                intro b c
+                group
+              mid_assoc := by
+                intro a b
+                group
+              right_assoc := by
+                intro a b
+                group
+            }
+        )
         -- We view G' as a subgroup of the unitary group
-        have G'_virtual := central_implies_virtually_abelian n hn (Subgroup.map G.subtype (G' n ε G))
+        --have G'_virtual := central_implies_virtually_abelian n hn (Subgroup.map G.subtype (G' n ε G))
         obtain ⟨N, N_comm, N_finite_index⟩ := G'_virtual
 
         have G'_iso := Subgroup.equivMapOfInjective (G' n ε G) G.subtype (by simp)
@@ -1178,7 +1219,7 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
 
         --let foo := Subgroup.comap ((Subgroup.map (G.subtype (G' n ε G))).subtype) N
       sorry
-termination_by n
-decreasing_by {
-  exact data.n_i_lt i
-}
+termination_by (n, G.index)
+decreasing_by
+  . apply Prod.Lex.left
+    exact data.n_i_lt i
