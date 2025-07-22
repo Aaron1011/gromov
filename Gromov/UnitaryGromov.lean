@@ -997,6 +997,8 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
           conv at map_factor =>
             arg 1
             equals ⊤ =>
+              ext a
+              simp
               sorry
           rw [← Monoid.fg_def] at map_factor
           . exact (Monoid.fg_iff_submonoid_fg (data.groups i).toSubmonoid).mp map_factor
@@ -1010,13 +1012,10 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
               have n_i_equiv : Fin (data.n_i i) ≃ Fin (data.n_i j) := by
                 rw [hij]
 
-              let a_map := Matrix.reindex n_i_equiv n_i_equiv (α := ℂ)
-              ⟨⟨a_map a, by (
-                sorry
-              )⟩, by (
-                have a_prop := a.property
-                sorry
-              )⟩
+              have group_equiv : data.groups i ≃* data.groups j := by
+                rw [hij]
+
+              group_equiv a
             ) else 1)
             simp [i_hom]
 
