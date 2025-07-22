@@ -1148,7 +1148,8 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
         let latest := Subgroup.map (Subgroup.subtype _) other
         use latest
         refine ⟨?_, ?_⟩
-        . sorry
+        . simp [latest, other, G'_hom]
+          apply Subgroup.map_isMulCommutative
         . simp [latest, other, G'_hom]
           rw [Subgroup.finiteIndex_iff]
           rw [ Subgroup.index_map]
