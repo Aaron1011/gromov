@@ -1011,12 +1011,23 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
                 rw [hij]
 
               let a_map := Matrix.reindex n_i_equiv n_i_equiv (α := ℂ)
-              ⟨⟨a_map a, by sorry⟩, by sorry⟩
+              ⟨⟨a_map a, by (
+                sorry
+              )⟩, by (
+                have a_prop := a.property
+                sorry
+              )⟩
             ) else 1)
             simp [i_hom]
 
 
-        sorry
+        --rw [← Monoid.fg_iff_submonoid_fg] at centralizer_fg
+
+        rw [← Subgroup.fg_iff_submonoid_fg] at centralizer_fg
+        rw [← Subgroup.top_toSubmonoid]
+        rw [← Subgroup.fg_iff_submonoid_fg]
+        rw [← Group.fg_def]
+        exact (Group.fg_iff_subgroup_fg (Subgroup.centralizer {g})).mpr centralizer_fg
         -- rw [← Monoid.FG.fg_top]
         -- obtain ⟨S, hS⟩ := centralizer_fg
         -- let pre_S' := Finset.image (fun s => (⟨s, all_mem_central s⟩: (Subgroup.centralizer {g}))) S
