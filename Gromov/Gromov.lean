@@ -1418,7 +1418,9 @@ lemma continous_of_map (v: W (G := G)): Continuous (fun (r: (W (G := G) →L[ℂ
 
 
 -- The image of G under our representation: ρ(G) in the Vikman paper
-noncomputable def rho_g := ((GRepW (G := G)).restrict ((GRepW_base (G := G)).range)).range
+--noncomputable def rho_g := ((GRepW (G := G)).restrict ((GRepW_base (G := G)).range)).range
+
+noncomputable def rho_g := (GRepW_base (G := G)).range
 
 --noncomputable instance GL_W_TopologicalSpace: TopologicalSpace (GL_W (G := G)) := TopologicalSpace.induced Units.val (by infer_instance)
 --noncomputable instance GL_W_PseudoMetricSpace: PseudoMetricSpace (GL_W (G := G)) := Topology.IsInducing.comapPseudoMetricSpace (f := Units.val) (by apply Topology.IsInducing.induced)
@@ -1768,6 +1770,7 @@ lemma theorem_3_1 (data: Theorem3_1_Input (G := G)) (n: ℕ) (h_growth: HasPolyn
   sorry
 
 -- Case 1 in Section 3.3 of Vikman, where the representation ρ(G) is infinite
+set_option maxHeartbeats 500000 in
 lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theorem3_1_Input (G := G)) := by
   obtain ⟨H, H_abelian, H_finite_index⟩ := rho_g_contains_abelian (G := G)
   -- TODO - generalize this to a lemma: finite-index subgroup of an infinite group is infinite
@@ -1835,34 +1838,42 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
       . exact Prod.fst_surjective
       . exact iso.surjective
 
+  dsimp [rho_g] at H
+
+  let other_rho := ((GRepW (G := G)).restrict ((GRepW_base (G := G)).range))
+
   let rho_hom := ((GRepW (G := G)).comp ((GRepW_base (G := G))))
 
   -- Interpret H as a subgroup of GL_W
   let H_as_GL_W := Subgroup.map (Subgroup.subtype (rho_g (S := S))) H
   -- Take the preimage ρ⁻¹(H) := G'
-  let G' := Subgroup.comap rho_hom H_as_GL_W
+  --let G' := Subgroup.comap rho_hom H
 
-
-  have G'_index := Subgroup.index_comap H_as_GL_W rho_hom
-  simp [relindex] at G'_index
-
-  have subgroupof_equiv := Subgroup.subgroupOfEquivOfLe (H := H_as_GL_W) (K := rho_hom.range) (by
-    simp [H_as_GL_W, rho_hom, rho_g]
-    intro x hx
-    simp
-    simp at hx
-    obtain ⟨⟨g, x_eq_rep_g⟩, x_mem_H⟩ := hx
-    use g
-  )
+  let equiv_range := MonoidHom.ofInjective (G := G) (f := GRepW_base) (sorry)
+  let G' := Subgroup.comap equiv_range.toMonoidHom H
 
 
 
-  conv at G'_index =>
-    rhs
-    equals H_as_GL_W.index =>
-      unfold Subgroup.subgroupOf
+  --have G'_index := Subgroup.index_comap H_as_GL_W rho_hom
+  --simp [relindex] at G'_index
 
-      sorry
+  -- have subgroupof_equiv := Subgroup.subgroupOfEquivOfLe (H := H_as_GL_W) (K := rho_hom.range) (by
+  --   simp [H_as_GL_W, rho_hom, rho_g]
+  --   intro x hx
+  --   simp
+  --   simp at hx
+  --   obtain ⟨⟨g, x_eq_rep_g⟩, x_mem_H⟩ := hx
+  --   use g
+  -- )
+
+
+
+  -- conv at G'_index =>
+  --   rhs
+  --   equals H_as_GL_W.index =>
+  --     unfold Subgroup.subgroupOf
+
+  --     sorry
 
 
 
@@ -1872,36 +1883,23 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
     unfold G'
     exact {
       index_ne_zero := by
-        rw [Subgroup.index_comap]
-        dsimp [Subgroup.relindex]
-        simp [H_as_GL_W]
-
-
-        -- rw [Subgroup.relIndex]
-        -- dsimp [H_as_GL_W]
-        -- rw [Subgroup.index_map_eq]
-        -- simp [H_as_GL_W, rho_g, rho_hom]
-
-        -- rw [G'_index]
-        -- dsimp [H_as_GL_W]
-        -- rw [Subgroup.index_map_subtype]
-        -- simp [H_index_ne_zero]
-        sorry
-
+        simp
+        rw [Subgroup.comap_equiv_eq_map_symm]
+        simp
+        exact H_finite_index.index_ne_zero
     }
+
+
 
   -- TODO - there must be an easier way to do this
   let g'_to_h: G' →* H := {
-    toFun := fun g => (⟨⟨rho_hom g, by (
-      simp [rho_g, rho_hom]
-    )⟩, by (
+    toFun := fun g => ⟨⟨GRepW_base (S := S) g, by simp⟩, by (
       have g_prop := g.property
-      simp only [G'] at g_prop
-      rw [Subgroup.mem_comap] at g_prop
-      simp [H_as_GL_W] at g_prop
-      obtain ⟨mem_first, mem_second⟩ := g_prop
-      exact mem_second
-    )⟩ : H),
+      simp only [G', Subgroup.mem_comap] at g_prop
+      simp only [equiv_range] at g_prop
+      simp at g_prop
+      exact g_prop
+    )⟩
     map_one' := by simp
     map_mul' := by simp
   }
@@ -1931,16 +1929,41 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
         rw [← Subgroup.mem_carrier] at h_mem
 
         have h_prop := h.val.property
-        simp [rho_g] at h_prop
         simp [rho_hom]
         obtain ⟨a, ha⟩ := h_prop
         use a
         have a_mem_G': a ∈ G' := by
           simp [G', H_as_GL_W, rho_g, rho_hom]
+          simp [equiv_range]
+          conv =>
+            arg 2
+            equals ⟨GRepW_base a, (equiv_range a).property⟩ =>
+              rw [Subtype.ext_iff]
+              rw [MonoidHom.ofInjective_apply]
+
+
           simp_rw [ha]
           simp
+        -- TODO - make this less awful
         use a_mem_G'
+        unfold DFunLike.coe
+        unfold AddMonoidHom.instFunLike
+        unfold Equiv.instFunLike
+        eta_reduce
+        unfold MonoidHom.toAdditive
+        eta_reduce
+        dsimp
+        apply Additive.ext
+        simp
+        unfold MonoidHom.instFunLike
+        simp
         simp_rw [ha]
+        rfl
+
+
+        --simp_rw [MonoidHom.toAdditive_apply_apply]
+        --simp
+        --simp_rw [ha]
   }
 
 instance countable_G: Countable G := by
