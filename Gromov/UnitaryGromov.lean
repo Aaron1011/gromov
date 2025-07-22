@@ -1053,7 +1053,22 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
 
 
 
-    positive_n_i := fun _ => hn,
+    positive_n_i := by
+      intro i
+      have i_mem_tolist: list_eigenvalues.get i ∈ list_eigenvalues := by
+        simp [list_eigenvalues]
+
+      unfold list_eigenvalues at i_mem_tolist
+      simp only [Finset.mem_toList] at i_mem_tolist
+      simp at i_mem_tolist
+      have increasing := Module.End.genEigenspace_le_maximal g_end (list_eigenvalues.get i) 1
+      apply Submodule.finrank_mono at increasing
+      have pos_rank := Module.End.pos_finrank_genEigenspace_of_hasEigenvalue (k := 1) i_mem_tolist (by simp)
+      simp at pos_rank
+      simp at increasing
+      grw [increasing] at pos_rank
+      simp only [Fin.eta, List.get_eq_getElem, ne_eq, list_eigenvalues]
+      linarith
     groups := fun _ => G,
     iso := Subgroup.centralizer {g} ≃* (fun i => G)
   }
