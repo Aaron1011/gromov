@@ -1069,7 +1069,19 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
       grw [increasing] at pos_rank
       simp only [Fin.eta, List.get_eq_getElem, ne_eq, list_eigenvalues]
       linarith
-    groups := fun _ => G,
+    groups := fun i => (by
+     --let mapped := Submodule.map g.val.val.toLin' (g_end.genEigenspace (list_eigenvalues.get i) ⊤)
+     let g_restrict := g_end.restrict (p := g_end.genEigenspace (list_eigenvalues.get i) ⊤) (q := g_end.genEigenspace (list_eigenvalues.get i) ⊤) (by sorry)
+
+     let dim := (Module.finrank ℂ (Module.End.genEigenspace g_end (list_eigenvalues.get ⟨i, by (
+      simp
+    )⟩) ⊤))
+     have ⟨k, basis⟩ := Submodule.basisOfPid (Pi.basisFun _ _) ((g_end.genEigenspace (list_eigenvalues.get i)) ⊤) (ι := Fin (n))
+     let g_restrict_matrix := (LinearMap.toMatrix basis basis) g_restrict
+     have rank_eq := Submodule.finrank_eq_rank _ _ ((g_end.genEigenspace 1) ⊤)
+     sorry
+      --have preserves := Module.End.mapsTo_genEigenspace_of_comm ?_ (f := g_end) (g := Matrix.toLin' g)
+    )
     iso := Subgroup.centralizer {g} ≃* (fun i => G)
   }
 
