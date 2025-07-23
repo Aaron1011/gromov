@@ -155,6 +155,7 @@ lemma word_norm_le (g: G) (l: List S) (hgl: ProdS g l): WordNorm (S := S) g ≤ 
   apply Nat.sInf_le
   use l
 
+-- TODO - this probably needs to be swapped to make 'gAct' work
 noncomputable def WordDist (x y: G) := WordNorm (S := S) (x⁻¹ * y)
 
 lemma WordDist_self (x: G): WordDist (S := S) x x = 0 := by
@@ -687,30 +688,69 @@ instance isometricGMul: IsIsometricSMul G G where
     group
 
 
-
 def gAct (g: G) (v: LipschitzH (S := S)): LipschitzH (S := S) := {
   toFun := fun x => v (g⁻¹ * x)
   lipschitz := by
     obtain ⟨C, hC⟩ := v.lipschitz
     use C
-    simp [LipschitzWith]
+    rw [lipschitzWith_iff_dist_le_mul]
     intro x y
-    simp [LipschitzWith] at hC
-    specialize hC (g⁻¹ * x) (g⁻¹ * y)
+    rw [lipschitzWith_iff_dist_le_mul] at hC
+    specialize hC (x * g⁻¹) (y * g⁻¹)
     simp [DFunLike.coe]
-    sorry
-    --exact hC
+    grw [hC]
+    simp [dist, WordDist]
   harmonic := by
     unfold Harmonic
     intro x
+    simp
     have v_harmonic := v.harmonic
     simp [Harmonic] at v_harmonic
     specialize v_harmonic (g⁻¹ * x)
     simp [DFunLike.coe]
+    rw [v_harmonic]
     simp_rw [← mul_assoc]
-    sorry
-    --exact v_harmonic
 }
+
+-- TODO - is this actually true? What if all of the functions happen to be periodic,
+-- and we translate by multiples of the period?
+-- It's almost certainly wrong, since the image of rho can be finite
+lemma gAct_injective: Function.Injective (gAct (S := S)) := by
+  intro x y hxy
+
+  have nontrivial_f: ∃ f: LipschitzH, ∀ z: ℂ, f ≠ ConstLipschitzH (S := S) z := by
+    sorry
+
+  obtain ⟨f, hf⟩ := nontrivial_f
+
+  -- A non-constant function has at least two distinct values
+  have distinct_values: ∃ a b, f a ≠ f b := by
+    by_contra!
+    have f_eq_const: f = ConstLipschitzH (S := S) (f 1) := by
+      ext z
+      simp [DFunLike.coe] at this
+      rw [this z 1]
+      unfold ConstLipschitzH
+      simp
+      rfl
+    specialize hf (f 1)
+    contradiction
+
+  obtain ⟨a, b, hab⟩ := distinct_values
+  have app_f: (gAct x) f = (gAct y) f := by
+    rw [hxy]
+
+  simp [gAct] at app_f
+
+  have congr_a := congrFun app_f (x * a)
+  simp at congr_a
+
+
+
+
+
+
+
 
 
 def gAct_const (g: G) (z: ℂ): gAct g (ConstLipschitzH z) = ConstLipschitzH z := by
@@ -1849,8 +1889,14 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
   -- Take the preimage ρ⁻¹(H) := G'
   --let G' := Subgroup.comap rho_hom H
 
-  let equiv_range := MonoidHom.ofInjective (G := G) (f := GRepW_base) (sorry)
-  let G' := Subgroup.comap equiv_range.toMonoidHom H
+  -- WRONG - oour representation is not necessarily injective
+  -- let equiv_range := MonoidHom.ofInjective (G := G) (f := GRepW_base) (by
+  --   intro a b hab
+  --   simp [GRepW_base, GRepW, GRepW_non_invertible, GRep] at hab
+  --   sorry
+  -- )
+  let G' := Subgroup.comap GRepW_base.rangeRestrict H
+  --let G' := Subgroup.comap equiv_range.toMonoidHom H
 
 
 
@@ -1879,14 +1925,30 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
 
   have H_index_ne_zero := H_finite_index.index_ne_zero
 
+  -- TODO - generalize this and PR to pathlib
+  have rangerestrict_range: (GRepW_base (S := S)).rangeRestrict.range = ⊤ := by
+    ext a
+    simp
+    have a_prop := a.property
+    rw [MonoidHom.mem_range] at a_prop
+    obtain ⟨x, hx⟩ := a_prop
+    use x
+    rw [Subtype.ext_iff]
+    simp
+    exact hx
+
+
+
   have G'_finite_index: G'.FiniteIndex := by
     unfold G'
     exact {
       index_ne_zero := by
         simp
-        rw [Subgroup.comap_equiv_eq_map_symm]
-        simp
-        exact H_finite_index.index_ne_zero
+        rw [Subgroup.index_comap]
+        simp [Subgroup.relindex]
+        rw [rangerestrict_range]
+        -- apply somehow found this - how does it work???
+        exact Subgroup.FiniteIndex.index_ne_zero
     }
 
 
@@ -1896,8 +1958,6 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
     toFun := fun g => ⟨⟨GRepW_base (S := S) g, by simp⟩, by (
       have g_prop := g.property
       simp only [G', Subgroup.mem_comap] at g_prop
-      simp only [equiv_range] at g_prop
-      simp at g_prop
       exact g_prop
     )⟩
     map_one' := by simp
@@ -1934,14 +1994,7 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
         use a
         have a_mem_G': a ∈ G' := by
           simp [G', H_as_GL_W, rho_g, rho_hom]
-          simp [equiv_range]
-          conv =>
-            arg 2
-            equals ⟨GRepW_base a, (equiv_range a).property⟩ =>
-              rw [Subtype.ext_iff]
-              rw [MonoidHom.ofInjective_apply]
-
-
+          simp [MonoidHom.rangeRestrict]
           simp_rw [ha]
           simp
         -- TODO - make this less awful
@@ -1965,6 +2018,8 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
         --simp
         --simp_rw [ha]
   }
+
+#print axioms rho_g_case_infinite
 
 instance countable_G: Countable G := by
   apply Function.Surjective.countable (f := fun (x: List S) => x.unattach.prod)
