@@ -2088,10 +2088,32 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
       sorry
   }
 
-  conv at act_ker =>
-    intro g
-    rhs
-    simp [GRepW_base, GRepW_non_invertible]
+  by_cases lambda_g_infinite: Infinite (lambda_g_hom.range)
+  . sorry
+  .
+    simp only [not_infinite_iff_finite] at lambda_g_infinite
+    let G'' := lambda_g_hom.ker
+    have G''_finite_index := Subgroup.finiteIndex_ker lambda_g_hom
+
+    have G''_act_v (g: lambda_g_hom.ker) (f: LipschitzH (S := S)): f g = f 1 := by
+      have g_prop := g.property
+      rw [← Subgroup.inv_mem_iff] at g_prop
+      rw [MonoidHom.mem_ker] at g_prop
+      simp [lambda_g_hom, lambda_g_dual, lambda_g, GRep] at g_prop
+      apply_fun (fun p => p f) at g_prop
+      simp at g_prop
+      simp [LipschitzH_apply] at g_prop
+      simp [lipschitz_sub_tofun] at g_prop
+      rw [sub_eq_zero] at g_prop
+      simp [gAct] at g_prop
+      rw [g_prop]
+      rfl
+
+
+    
+
+
+
 
 
 
