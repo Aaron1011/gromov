@@ -400,6 +400,8 @@ instance LipschitzH.add [Generates (S := S)] : Add (LipschitzH (G := G)) := {
   }
 }
 
+-- TODO - mark this as a simp lemma
+lemma LipschitzH_apply [Generates (S := S)] (f: LipschitzH (G := G)) (x: G): f x = f.toFun x := rfl
 
 
 lemma S_nonempty: S.Nonempty := by exact Finset.nonempty_coe_sort.mp hS
@@ -776,6 +778,8 @@ lemma lipschitz_add_tofun (f g: LipschitzH (G := G)): (f + g).toFun = f.toFun + 
 lemma lipschitz_sub_tofun (f g: LipschitzH (G := G)): (f - g).toFun = f.toFun - g.toFun := by
   rfl
 
+lemma lipschitz_smul_tofun (c: ℂ) (f: LipschitzH (G := G)): (c • f).toFun = c • f.toFun := by
+  rfl
 
 def gActW (g: G): W (G := G) → W (G := G) := Quotient.lift (fun f => Submodule.Quotient.mk (gAct g f)) (by
   intro f h hfh
@@ -1925,7 +1929,7 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
 
   have H_index_ne_zero := H_finite_index.index_ne_zero
 
-  -- TODO - generalize this and PR to pathlib
+  -- TODO - generalize this and PR to mathlib
   have rangerestrict_range: (GRepW_base (S := S)).rangeRestrict.range = ⊤ := by
     ext a
     simp
@@ -2020,6 +2024,76 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
   }
 
 #print axioms rho_g_case_infinite
+
+lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1_Input (G := G)) := by
+  have quotient_iso := QuotientGroup.quotientKerEquivRange (GRepW_base (G := G))
+  unfold rho_g at hr
+
+  have ker_finite_index := Subgroup.finiteIndex_ker (GRepW_base (G := G))
+  let G' := (GRepW_base (G := G)).ker
+
+  let G'_action := (GRepW_base (G := G)).restrict G'
+
+  have act_ker (g: G) := MonoidHom.mem_ker (f := (GRepW_base (G := G))) (x := g)
+
+  have act_v (g: G) (hg: g ∈ (GRepW_base (G := G)).ker) (f: LipschitzH (S := S)): Submodule.Quotient.mk (GRep (S := S) g f) = (Submodule.Quotient.mk (f) : W) := by
+    simp [GRep]
+    have apply_g := (act_ker g).mp hg
+    simp [GRepW_base, GRepW_non_invertible, GRep] at apply_g
+    apply_fun Units.val at apply_g
+    rw [Representation.asGroupHom_apply] at apply_g
+    rw [Representation.quotient_apply] at apply_g
+    apply_fun (fun y => y (Submodule.Quotient.mk f)) at apply_g
+    simp at apply_g
+    exact apply_g
+
+  let extract_const (f: LipschitzH) (hf: f ∈ ConstF (S := S)) := f 1
+
+  simp_rw [Submodule.Quotient.eq] at act_v
+
+  -- As proved in 'act_v', we have  '(GRep g f) - f' is a constant function. We can therefore evaluate
+  -- it any poitn in G (here, 1) to get the constant
+  let lambda_g := fun (g: G') (f: LipschitzH (S := S)) => ((GRep g.val) f - f) 1
+  let lambda_g_dual (g: G'): Module.Dual ℂ (LipschitzH) := {
+    toFun := fun w => lambda_g g w
+    map_add' := by
+      intro x y
+      simp [lambda_g]
+      simp [LipschitzH_apply]
+      simp [lipschitz_sub_tofun]
+      simp [LipschitzH_apply]
+      abel
+    map_smul' := by
+      intro c x
+      simp [lambda_g]
+      simp [LipschitzH_apply]
+      simp [lipschitz_sub_tofun]
+      rw [mul_sub]
+      simp [lipschitz_smul_tofun]
+  }
+
+  let lambda_g_hom: G' →* Multiplicative (Module.Dual ℂ (LipschitzH)) := {
+    toFun := fun g => Multiplicative.ofAdd (lambda_g_dual g)
+    map_one' := by
+      simp [lambda_g_dual]
+      simp [lambda_g]
+      ext f
+      simp
+      rfl
+    map_mul' := by
+      intro g h
+      simp [lambda_g_dual, lambda_g]
+      ext f
+      simp [LipschitzH_apply]
+      sorry
+  }
+
+  conv at act_ker =>
+    intro g
+    rhs
+    simp [GRepW_base, GRepW_non_invertible]
+
+
 
 instance countable_G: Countable G := by
   apply Function.Surjective.countable (f := fun (x: List S) => x.unattach.prod)
