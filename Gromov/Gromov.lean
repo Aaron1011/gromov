@@ -156,11 +156,11 @@ lemma word_norm_le (g: G) (l: List S) (hgl: ProdS g l): WordNorm (S := S) g ≤ 
   use l
 
 -- TODO - this probably needs to be swapped to make 'gAct' work
-noncomputable def WordDist (x y: G) := WordNorm (S := S) (x⁻¹ * y)
+noncomputable def WordDist (x y: G) := WordNorm (S := S) (y * x⁻¹)
 
 lemma WordDist_self (x: G): WordDist (S := S) x x = 0 := by
   unfold WordDist
-  rw [inv_mul_cancel]
+  rw [mul_inv_cancel]
   unfold WordNorm
   simp only [Nat.sInf_eq_zero, Set.mem_setOf_eq, List.length_eq_zero_iff, exists_eq_left]
   left
@@ -168,7 +168,7 @@ lemma WordDist_self (x: G): WordDist (S := S) x x = 0 := by
 
 lemma WordDist_swap_le (x y: G): WordDist (S := S) y x ≤ WordDist (S := S) x y := by
   unfold WordDist
-  obtain ⟨l, l_prod, l_len⟩ := word_norm_prod (x⁻¹ * y) (WordNorm (x⁻¹ * y)) (rfl)
+  obtain ⟨l, l_prod, l_len⟩ := word_norm_prod (y * x⁻¹) (WordNorm (y * x⁻¹)) (rfl)
   unfold ProdS at l_prod
   apply_fun (fun x => x⁻¹) at l_prod
   rw [mul_inv_rev, inv_inv] at l_prod
@@ -181,7 +181,7 @@ lemma WordDist_swap_le (x y: G): WordDist (S := S) y x ≤ WordDist (S := S) x y
 
 
   rw [commute_unattach, ← List.unattach_reverse] at l_prod
-  have prod_le := word_norm_le (S := S) (y⁻¹ * x) _ l_prod
+  have prod_le := word_norm_le (S := S) (x * y⁻¹) _ l_prod
   conv at prod_le =>
     rhs
     equals l.length =>
@@ -195,25 +195,26 @@ lemma WordDist_comm (x y: G): WordDist (S := S) x y = WordDist (S := S) y x := b
   exact Nat.le_antisymm le_right le_left
 
 lemma WordDist_triangle (x y z: G): WordDist (S := S) x z ≤ WordDist (S := S) x y + WordDist (S := S) y z := by
-  have eq_through_y: x⁻¹ * z = x⁻¹ * y * y⁻¹ * z := by
+  have eq_through_y: z * x⁻¹ = z  * y * y⁻¹ * x⁻¹ := by
     simp
 
   unfold WordDist
-  obtain ⟨l_x_y, x_y_prod, x_y_len⟩ := word_norm_prod_self (S := S) (x⁻¹ * y)
-  obtain ⟨l_y_z, y_z_prod, y_z_len⟩ := word_norm_prod_self (S := S) (y⁻¹ * z)
+  obtain ⟨l_x_y, x_y_prod, x_y_len⟩ := word_norm_prod_self (S := S) (y * x⁻¹)
+  obtain ⟨l_y_z, y_z_prod, y_z_len⟩ := word_norm_prod_self (S := S) (z * y⁻¹)
   unfold ProdS at x_y_prod
   unfold ProdS at y_z_prod
 
-  have prod_append: ProdS (S := S) (x⁻¹ * z) (l_x_y ++ l_y_z) := by
+  have prod_append: ProdS (S := S) (z * x⁻¹) (l_y_z ++ l_x_y) := by
     unfold ProdS
     simp
     rw [x_y_prod, y_z_prod]
     rw [← mul_assoc]
     simp
 
-  have le_append := word_norm_le (S := S) (x⁻¹ * z) _ prod_append
+  have le_append := word_norm_le (S := S) (z * x⁻¹) _ prod_append
   rw [List.length_append] at le_append
   rw [x_y_len, y_z_len] at le_append
+  rw [add_comm] at le_append
   exact le_append
 
 -- TODO - I'm not certain that these are actually the correct instances for the proof
@@ -239,11 +240,10 @@ noncomputable instance WordDist.instMetricSpace: MetricSpace G where
     | .inl empty_prod =>
       unfold ProdS at empty_prod
       simp only [List.unattach_nil, List.prod_nil] at empty_prod
-      apply_fun (fun y => x * y) at empty_prod
-      simp only [mul_one, mul_inv_cancel_left] at empty_prod
-      exact empty_prod
+      apply_fun (fun y => y * x) at empty_prod
+      simpa using empty_prod
     | .inr empty_set =>
-      obtain ⟨l, hl⟩ := mem_S_prod_list (S := S) (x⁻¹ * y)
+      obtain ⟨l, hl⟩ := mem_S_prod_list (S := S) (y * x⁻¹)
       unfold ProdS at hl
       have len_in_set: l.unattach.length ∈ (∅ : Set ℕ) := by
         rw [← empty_set]
@@ -475,6 +475,51 @@ instance lipschitzSMul: SMul ℂ (LipschitzH (G := G)) := {
   }
 }
 
+
+instance negLipschitzH: Neg (LipschitzH (G := G)) := {
+  neg := fun f => {
+    toFun := fun x => -f.toFun x
+    lipschitz := by
+      obtain ⟨C, hC⟩ := f.lipschitz
+      use C
+      exact LipschitzWith.neg hC
+    harmonic := by
+      have f_harmonic := f.harmonic
+      simp [Harmonic] at f_harmonic
+      unfold Harmonic
+      intro g
+      simp
+      specialize f_harmonic g
+      exact f_harmonic
+  }
+}
+
+-- TODO - is there an existing instance we should be using here?
+instance subLipschithZ: Sub (LipschitzH (G := G)) := {
+  sub := fun f g => f + -g
+}
+
+instance lipschitzSmulZ: SMul ℤ (LipschitzH (G := G)) := {
+  smul := fun n f => (n : ℂ) • f
+}
+
+
+
+@[simp]
+lemma lipschitz_neg_tofun (f: LipschitzH (G := G)): (-f).toFun = -(f.toFun) := by
+  rfl
+
+
+lemma lipschitz_add_tofun (f g: LipschitzH (G := G)): (f + g).toFun = f.toFun + g.toFun := by
+  rfl
+
+
+lemma lipschitz_sub_tofun (f g: LipschitzH (G := G)): (f - g).toFun = f.toFun - g.toFun := by
+  rfl
+
+lemma lipschitz_smul_tofun (c: ℂ) (f: LipschitzH (G := G)): (c • f).toFun = c • f.toFun := by
+  rfl
+
 instance LipschitzH.addMonoid [Generates (S := S)] : AddMonoid (LipschitzH (G := G)) := {
   LipschitzH.zero,
   LipschitzH.add with
@@ -489,7 +534,13 @@ instance LipschitzH.addMonoid [Generates (S := S)] : AddMonoid (LipschitzH (G :=
     dsimp [Zero.zero]
     simp
   nsmul_succ := by
-    sorry
+    intro n f
+    ext g
+    simp [lipschitz_smul_tofun]
+    rw [add_mul]
+    simp
+    simp [LipschitzH_apply]
+    rfl
 }
 
 
@@ -529,42 +580,20 @@ instance LipschitzH.addMonoid [Generates (S := S)] : AddMonoid (LipschitzH (G :=
 
 
 
-instance negLipschitzH: Neg (LipschitzH (G := G)) := {
-  neg := fun f => {
-    toFun := fun x => -f.toFun x
-    lipschitz := by
-      obtain ⟨C, hC⟩ := f.lipschitz
-      use C
-      exact LipschitzWith.neg hC
-    harmonic := by
-      have f_harmonic := f.harmonic
-      simp [Harmonic] at f_harmonic
-      unfold Harmonic
-      intro g
-      simp
-      specialize f_harmonic g
-      exact f_harmonic
-  }
-}
-
--- TODO - is there an existing instance we should be using here?
-instance subLipschithZ: Sub (LipschitzH (G := G)) := {
-  sub := fun f g => f + -g
-}
-
-instance lipschitzSmulZ: SMul ℤ (LipschitzH (G := G)) := {
-  smul := fun n f => (n : ℂ) • f
-}
-
 instance LipschitzH.instAddCommMonoid: AddCommMonoid (LipschitzH (G := G)) := {
   LipschitzH.addMonoid with add_comm := fun _ _ => ext fun _ => add_comm _ _
 }
+
+
 
 instance LipschitzH.instAddCommGroup: AddCommGroup (LipschitzH (G := G)) := {
   LipschitzH.instAddCommMonoid with
   sub_eq_add_neg := by
     intro f h
-    sorry
+    ext g
+    simp [lipschitz_sub_tofun, lipschitz_add_tofun, lipschitz_neg_tofun]
+    rw [LipschitzH_apply, LipschitzH_apply]
+    rfl
   zsmul := fun n f => (n : ℂ) • f
   zsmul_zero' := by
     intro f
@@ -583,11 +612,20 @@ instance LipschitzH.instAddCommGroup: AddCommGroup (LipschitzH (G := G)) := {
     unfold Zero.toOfNat0
     unfold OfNat.ofNat
     simp [Zero.zero]
-  zsmul_succ' := by sorry
+  zsmul_succ' := by
+    intro n f
+    simp
+    ext g
+    simp [lipschitz_smul_tofun]
+    rw [add_mul]
+    simp [LipschitzH_apply]
+    rfl
   zsmul_neg' := by
     intro n hn
     simp
-    sorry
+    ext g
+    simp [lipschitz_smul_tofun]
+    group
 }
 
 
@@ -679,19 +717,19 @@ def ConstF: Submodule ℂ (LipschitzH (G := G)) := {
     simp [ConstLipschitzH]
 }
 
-instance isometricGMul: IsIsometricSMul G G where
-  isometry_smul := by
-    intro g
-    simp [Isometry]
-    intro a b
-    simp [edist]
-    simp [PseudoMetricSpace.edist]
-    simp [WordDist]
-    group
+-- instance isometricGMul: IsIsometricSMul G G where
+--   isometry_smul := by
+--     intro g
+--     simp [Isometry]
+--     intro a b
+--     simp [edist]
+--     simp [PseudoMetricSpace.edist]
+--     simp [WordDist]
+--     group
 
 
 def gAct (g: G) (v: LipschitzH (S := S)): LipschitzH (S := S) := {
-  toFun := fun x => v (g⁻¹ * x)
+  toFun := fun x => v (x * g⁻¹)
   lipschitz := by
     obtain ⟨C, hC⟩ := v.lipschitz
     use C
@@ -702,13 +740,15 @@ def gAct (g: G) (v: LipschitzH (S := S)): LipschitzH (S := S) := {
     simp [DFunLike.coe]
     grw [hC]
     simp [dist, WordDist]
+    group
+    rfl
   harmonic := by
     unfold Harmonic
     intro x
     simp
     have v_harmonic := v.harmonic
     simp [Harmonic] at v_harmonic
-    specialize v_harmonic (g⁻¹ * x)
+    specialize v_harmonic (x * g⁻¹)
     simp [DFunLike.coe]
     rw [v_harmonic]
     simp_rw [← mul_assoc]
@@ -766,20 +806,6 @@ def gAct_const (g: G) (z: ℂ): gAct g (ConstLipschitzH z) = ConstLipschitzH z :
 
 abbrev W := (LipschitzH (G := G)) ⧸ ConstF
 
-@[simp]
-lemma lipschitz_neg_tofun (f: LipschitzH (G := G)): (-f).toFun = -(f.toFun) := by
-  rfl
-
-
-lemma lipschitz_add_tofun (f g: LipschitzH (G := G)): (f + g).toFun = f.toFun + g.toFun := by
-  rfl
-
-
-lemma lipschitz_sub_tofun (f g: LipschitzH (G := G)): (f - g).toFun = f.toFun - g.toFun := by
-  rfl
-
-lemma lipschitz_smul_tofun (c: ℂ) (f: LipschitzH (G := G)): (c • f).toFun = c • f.toFun := by
-  rfl
 
 def gActW (g: G): W (G := G) → W (G := G) := Quotient.lift (fun f => Submodule.Quotient.mk (gAct g f)) (by
   intro f h hfh
@@ -798,7 +824,7 @@ def gActW (g: G): W (G := G) → W (G := G) := Quotient.lift (fun f => Submodule
   use -z
   ext a
   apply_fun LipschitzH.toFun at hz
-  have app_eq := congrFun hz (g⁻¹ * a)
+  have app_eq := congrFun hz (a * g⁻¹)
   simp at app_eq
   rw [lipschitz_sub_tofun] at app_eq
   simp at app_eq
