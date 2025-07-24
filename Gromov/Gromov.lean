@@ -2124,6 +2124,9 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
       simp [lambda_g_dual, lambda_g]
       ext f
       simp [LipschitzH_apply]
+      simp [GRep, gAct]
+      simp [lipschitz_sub_tofun]
+      simp [LipschitzH_apply]
       sorry
   }
 
@@ -2189,7 +2192,8 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
 
 
     have finite_quotient := Subgroup.finite_quotient_of_finiteIndex (H := G''_subgroup_G)
-    have coset_union := QuotientGroup.univ_eq_iUnion_smul (α := G) (H := G''_subgroup_G)
+
+    have coset_union := QuotientGroup.univ_eq_iUnion_smul G''_subgroup_G
 
     -- have G''_normal: G''_subgroup_G.Normal := by
     --   unfold G''_subgroup_G
@@ -2215,7 +2219,7 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
 
 
     --   }
-      simp
+
     -- normal_iff_eq_cosets
 
 
@@ -2248,17 +2252,14 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
         simp only [Set.mem_range]
         use i
         rw [← f_translate]
-
-
-
-
-
+        exact hy
       . intro ha
         simp only [Set.mem_range] at ha
         obtain ⟨y, hy⟩ := ha
         simp
         use y.out
 
+    
     rw [← Set.iUnion_inv_smul] at coset_union
     sorry
 
