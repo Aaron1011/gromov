@@ -717,6 +717,17 @@ def ConstF: Submodule ℂ (LipschitzH (G := G)) := {
     simp [ConstLipschitzH]
 }
 
+instance isometricGMul: IsIsometricSMul (MulOpposite G) (G) where
+  isometry_smul := by
+    intro g
+    simp [Isometry]
+    intro a b
+    simp [edist]
+    simp [PseudoMetricSpace.edist]
+    simp [WordDist]
+    group
+
+
 -- instance isometricGMul: IsIsometricSMul G G where
 --   isometry_smul := by
 --     intro g
@@ -729,14 +740,14 @@ def ConstF: Submodule ℂ (LipschitzH (G := G)) := {
 
 
 def gAct (g: G) (v: LipschitzH (S := S)): LipschitzH (S := S) := {
-  toFun := fun x => v (x * g⁻¹)
+  toFun := fun x => v (x * g)
   lipschitz := by
     obtain ⟨C, hC⟩ := v.lipschitz
     use C
     rw [lipschitzWith_iff_dist_le_mul]
     intro x y
     rw [lipschitzWith_iff_dist_le_mul] at hC
-    specialize hC (x * g⁻¹) (y * g⁻¹)
+    specialize hC (x * g) (y * g)
     simp [DFunLike.coe]
     grw [hC]
     simp [dist, WordDist]
@@ -748,7 +759,7 @@ def gAct (g: G) (v: LipschitzH (S := S)): LipschitzH (S := S) := {
     simp
     have v_harmonic := v.harmonic
     simp [Harmonic] at v_harmonic
-    specialize v_harmonic (x * g⁻¹)
+    specialize v_harmonic (x * g)
     simp [DFunLike.coe]
     rw [v_harmonic]
     simp_rw [← mul_assoc]
@@ -786,6 +797,7 @@ lemma gAct_injective: Function.Injective (gAct (S := S)) := by
 
   have congr_a := congrFun app_f (x * a)
   simp at congr_a
+  sorry
 
 
 
@@ -824,7 +836,7 @@ def gActW (g: G): W (G := G) → W (G := G) := Quotient.lift (fun f => Submodule
   use -z
   ext a
   apply_fun LipschitzH.toFun at hz
-  have app_eq := congrFun hz (a * g⁻¹)
+  have app_eq := congrFun hz (a * g)
   simp at app_eq
   rw [lipschitz_sub_tofun] at app_eq
   simp at app_eq
@@ -1241,16 +1253,17 @@ lemma GRep_preserves_norm (g: G) (f: LipschitzH): ‖(GRep g) f‖ = ‖f‖ := 
     arg 1
     arg 1
     intro k
-    equals (LipschitzWith k (f.toFun ∘ (fun y => (g⁻¹ * y)))) =>
+    equals (LipschitzWith k (f.toFun ∘ (fun y => (y * g)))) =>
       rfl
 
-  have comp := LipschitzWith.comp (f := f.toFun) (g := fun y => (g⁻¹ • y)) (Kf := (LipschitzSemiNorm ⇑f)) (Kg := 1) ?_ ?_
+  have comp := LipschitzWith.comp (f := f.toFun) (g := fun y => (y * g)) (Kf := (LipschitzSemiNorm ⇑f)) (Kg := 1) ?_ ?_
   rotate_left 1
   . apply lipschitz_attains_norm
     exact f.lipschitz
-  . simp [LipschitzWith]
+  .
+    simp [LipschitzWith]
 
-  have norm_mem: (LipschitzSemiNorm (G := G) f) ∈ { k: NNReal | LipschitzWith k (f.toFun ∘ (fun y => (g⁻¹ * y))) } := by
+  have norm_mem: (LipschitzSemiNorm (G := G) f) ∈ { k: NNReal | LipschitzWith k (f.toFun ∘ (fun y => (y * g))) } := by
     simp
     simp at comp
     exact comp
@@ -1281,9 +1294,9 @@ lemma GRep_preserves_norm (g: G) (f: LipschitzH): ‖(GRep g) f‖ = ‖f‖ := 
         simp [LipschitzWith] at hb
         simp [LipschitzWith]
         intro x y
-        specialize hb (g * x) (g * y)
+        specialize hb (x * g⁻¹) (y * g⁻¹)
         simp at hb
-        exact hb
+        grw [hb]
 
 
 
