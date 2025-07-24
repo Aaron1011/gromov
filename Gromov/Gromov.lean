@@ -2135,7 +2135,7 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
     have G''_finite_index := Subgroup.finiteIndex_ker lambda_g_hom
 
   -- TODO - this could be a lot cleaner
-    have G''_act_v (g: lambda_g_hom.ker) (x: G) (f: LipschitzH (S := S)): f (g⁻¹ * x) = f x := by
+    have G''_act_v (g: lambda_g_hom.ker) (x: G) (f: LipschitzH (S := S)): f (x * g) = f x := by
       specialize act_v g
       simp at act_v
       have g_prop := g.property
@@ -2189,32 +2189,32 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
 
 
     have finite_quotient := Subgroup.finite_quotient_of_finiteIndex (H := G''_subgroup_G)
-    have coset_union := QuotientGroup.univ_eq_iUnion_smul G''_subgroup_G
+    have coset_union := QuotientGroup.univ_eq_iUnion_smul (α := G) (H := G''_subgroup_G)
 
-    have G''_normal: G''_subgroup_G.Normal := by
-      unfold G''_subgroup_G
-      have G'_normal := MonoidHom.normal_ker (GRepW_base (G := G))
-      have ker_normal: lambda_g_hom.ker.Normal := by
-        exact MonoidHom.normal_ker lambda_g_hom
+    -- have G''_normal: G''_subgroup_G.Normal := by
+    --   unfold G''_subgroup_G
+    --   have G'_normal := MonoidHom.normal_ker (GRepW_base (G := G))
+    --   have ker_normal: lambda_g_hom.ker.Normal := by
+    --     exact MonoidHom.normal_ker lambda_g_hom
 
-      exact {
-        conj_mem := by
-          intro n hn
-          simp only [mem_map] at hn
-          obtain ⟨x, x_mem, x_eq_n⟩ := hn
-          have k_normal_conj := G'_normal.conj_mem
-          specialize k_normal_conj x (by simp)
-          intro g
-          simp at x_eq_n
-          specialize k_normal_conj g
-          rw [x_eq_n] at k_normal_conj
-          simp [lambda_g_hom, lambda_g_dual, lambda_g]
-          simp only [mem_map]
-          simp only [mem_map] at k_normal_conj
+    --   exact {
+    --     conj_mem := by
+    --       intro n hn
+    --       simp only [mem_map] at hn
+    --       obtain ⟨x, x_mem, x_eq_n⟩ := hn
+    --       have k_normal_conj := G'_normal.conj_mem
+    --       specialize k_normal_conj x (by simp)
+    --       intro g
+    --       simp at x_eq_n
+    --       specialize k_normal_conj g
+    --       rw [x_eq_n] at k_normal_conj
+    --       simp [lambda_g_hom, lambda_g_dual, lambda_g]
+    --       simp only [mem_map]
+    --       simp only [mem_map] at k_normal_conj
 
 
 
-      }
+    --   }
       simp
     -- normal_iff_eq_cosets
 
