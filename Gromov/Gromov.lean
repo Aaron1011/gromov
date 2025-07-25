@@ -1929,43 +1929,7 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
 
   -- Interpret H as a subgroup of GL_W
   let H_as_GL_W := Subgroup.map (Subgroup.subtype (rho_g (S := S))) H
-  -- Take the preimage ρ⁻¹(H) := G'
-  --let G' := Subgroup.comap rho_hom H
-
-  -- WRONG - oour representation is not necessarily injective
-  -- let equiv_range := MonoidHom.ofInjective (G := G) (f := GRepW_base) (by
-  --   intro a b hab
-  --   simp [GRepW_base, GRepW, GRepW_non_invertible, GRep] at hab
-  --   sorry
-  -- )
   let G' := Subgroup.comap GRepW_base.rangeRestrict H
-  --let G' := Subgroup.comap equiv_range.toMonoidHom H
-
-
-
-  --have G'_index := Subgroup.index_comap H_as_GL_W rho_hom
-  --simp [relindex] at G'_index
-
-  -- have subgroupof_equiv := Subgroup.subgroupOfEquivOfLe (H := H_as_GL_W) (K := rho_hom.range) (by
-  --   simp [H_as_GL_W, rho_hom, rho_g]
-  --   intro x hx
-  --   simp
-  --   simp at hx
-  --   obtain ⟨⟨g, x_eq_rep_g⟩, x_mem_H⟩ := hx
-  --   use g
-  -- )
-
-
-
-  -- conv at G'_index =>
-  --   rhs
-  --   equals H_as_GL_W.index =>
-  --     unfold Subgroup.subgroupOf
-
-  --     sorry
-
-
-
   have H_index_ne_zero := H_finite_index.index_ne_zero
 
   -- TODO - generalize this and PR to mathlib
@@ -2055,11 +2019,6 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
         simp
         simp_rw [ha]
         rfl
-
-
-        --simp_rw [MonoidHom.toAdditive_apply_apply]
-        --simp
-        --simp_rw [ha]
   }
 
 #print axioms rho_g_case_infinite
