@@ -6344,6 +6344,14 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
       simp [GRep, gAct]
       simp [lipschitz_sub_tofun]
       simp [LipschitzH_apply]
+      have act_h := act_v h (by simp) f
+      simp [GRep, gAct, ConstF] at act_h
+      obtain ⟨y, hy⟩ := act_h
+      apply_fun (fun l => l.toFun) at hy
+      simp [lipschitz_sub_tofun] at hy
+      have apply_h := congrFun hy g
+      simp at apply_h
+
       sorry
   }
 
@@ -6481,6 +6489,28 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
       have f_max := Set.Finite.exists_maximalFor (fun y => ‖y‖) (Set.range f) ?_ ?_
 
       obtain ⟨z, z_mem, hz⟩ := f_max
+      -- TODO - there must be an easier way to do this
+      have z_max: ∀ p ∈ Set.range f, ‖p‖ ≤ ‖z‖ := by
+        intro p hp
+        simp at hp
+        obtain ⟨y, hy⟩ := hp
+        by_cases p_le_z: ‖p‖ ≤ ‖z‖
+        . exact p_le_z
+        . simp at p_le_z
+
+          have f_le := hz (j := f.toFun y) ?_ ?_
+          .
+            simp at f_le
+            rw [← hy]
+            exact f_le
+          . simp
+            use y
+            rfl
+          . simp
+            rw [← hy] at p_le_z
+            simp [LipschitzH_apply] at p_le_z
+            linarith
+
       simp at z_mem
       obtain ⟨g, f_g_eq⟩ := z_mem
       have f_const := harmonic_exteme_val_implies_const (S := S) f.toFun ?_ g ?_
@@ -6495,16 +6525,13 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
         simpa using f_harmonic
       .
         intro a
-        have f_le := hz (j := f.toFun a) ?_ ?_
-        .
-          simp at f_le
-          rw [← f_g_eq] at f_le
-          exact f_le
-        . simp
+        specialize z_max (f.toFun a) (by (
+          simp
           use a
           rfl
-        . simp
-          sorry
+        ))
+        rw [← f_g_eq] at z_max
+        exact z_max
       . rw [f_range_eq]
         apply Set.finite_range
       . apply Set.range_nonempty
