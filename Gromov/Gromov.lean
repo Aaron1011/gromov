@@ -4280,19 +4280,16 @@ noncomputable def laplace_range := LinearMap.range (Laplace_linear (S := S))
 -- We state 'f is harmonc' as 'Laplace_b f = 0', as this is the hypothesis we have where we need to call this lemma
 -- This is true even if it's a local maximum (considered in terms of the  poitns reached by multiply by S), but
 -- we don't need that result yet
-lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f = 0) (a: G) (h_max: ∀ g: G, f g ≤ f a): f = fun _ => f a := by
+lemma harmonic_exteme_val_implies_const  (f: G → ℂ) (hf: ∀ g: G, f g = ((#S) : ℝ)⁻¹ * ∑ s ∈ S, f (s * g)) (a: G) (h_max: ∀ g: G, ‖f g‖ ≤ ‖f a‖): f = fun _ => f a := by
   have path_implies_max (l : List S): f (l.unattach.prod * a) = f a := by
     induction l with
     | nil =>
       simp
     | cons s l ih =>
       simp
-      simp [Laplace_b, f_conv_mu] at hf
-      have f_at_l := congrFun hf (l.unattach.prod * a)
+      have f_at_l := hf (l.unattach.prod * a)
       simp at f_at_l
-      rw [sub_eq_zero] at f_at_l
       rw [ih] at f_at_l
-      field_simp at f_at_l
 
       -- TODO - is there a 'Finset.expect' theorem we can use?
      -- rw [← Finset.expect_eq_sum_div_card] at f_at_l
@@ -4301,23 +4298,37 @@ lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f = 
         by_contra!
         simp at this
         obtain ⟨s, s_mem_s, hs⟩ := this
-        by_cases val_le_max: f (s * (l.unattach.prod * a)) ≤ f a
+        by_cases val_le_max: ‖f (s * (l.unattach.prod * a))‖ ≤ ‖f a‖
         .
-          have val_lt_max: f (s * (l.unattach.prod * a)) < f a := by
-            exact lt_of_le_of_ne (h_max (↑s * (l.unattach.prod * a))) (id (Ne.symm hs))
+          -- have val_lt_max: ‖f (s * (l.unattach.prod * a))‖ < ‖f a‖ := by
+          --   apply lt_of_le_of_ne
+          --   . exact val_le_max
+          --   .
+          --    exact fun a_1 ↦ hs (id (Eq.symm a_1))
 
-          have sum_strict_lt := Finset.sum_lt_sum (f := fun x => f (x * (l.unattach.prod * a))) (g := fun x => f a) (s := S) ?_ ?_
+          have norm_sum_lt: ‖f a‖ < ‖((#S) : ℂ) * ∑ s ∈ S, f (s * (l.unattach.prod * a))‖ := by
+            sorry
+
+          have sum_strict_lt := Finset.sum_lt_sum (f := fun x => ‖f (x * (l.unattach.prod * a))‖) (g := fun x => ‖f a‖) (s := S) ?_ ?_
           .
             simp at sum_strict_lt
             rw [mul_comm] at sum_strict_lt
             rw [← div_lt_iff₀] at sum_strict_lt
             .
               apply ne_of_gt at sum_strict_lt
-              contradiction
+              apply_fun (fun x => ‖x‖) at f_at_l
+              -- TODO - fix S⁻¹ term
+              sorry
+              --linarith
             . simpa using hS
           . intro s hs
             apply h_max
-          . use s
+          .
+            use s
+            refine ⟨s_mem_s, ?_⟩
+            simp
+            sorry
+
         .
           have val_gt := h_max (s * (l.unattach.prod * a))
           simp at val_le_max
@@ -4333,257 +4344,58 @@ lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f = 
   rw [h_l_prod] at path_implies_max
   simpa using path_implies_max
 
-lemma harmonic_exteme_val_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f = 0) (a: G) (h_max: ∀ g: G, |f g| ≤ |f a|): f = fun _ => f a := by
-  by_cases f_a_pos: 0 ≤ f a
-  .
-    have lt_f_a: ∀ g: G, f g ≤ f a := by
-      intro g
-      by_cases f_g_pos: 0 ≤ f g
-      . specialize h_max g
-        rw [abs_eq_self.mpr ?_] at h_max
-        rw [abs_eq_self.mpr f_a_pos] at h_max
-        . exact h_max
-        . exact f_g_pos
-      . linarith
-    exact harmonic_maximum_implies_const f hf a lt_f_a
-  .
-    have f_neg_le: ∀ g, (-f) g ≤ (-f) a := by
-      intro g
-      simp at f_a_pos
-      simp
-      specialize h_max g
-      rw [abs_of_neg f_a_pos] at h_max
-      by_cases f_g_pos: 0 ≤ f g
-      . rw [abs_of_nonneg f_g_pos] at h_max
-        linarith
-      . simp at f_g_pos
-        rw [abs_of_neg f_g_pos] at h_max
-        linarith
-    have neg_const := harmonic_maximum_implies_const (-f) ?_ a f_neg_le
-    .
-      apply_fun (fun h => -h) at neg_const
-      simp at neg_const
-      rw [Pi.neg_def] at neg_const
-      simpa using neg_const
-    .
-      simp_rw [Laplace_b]
-      simp_rw [Laplace_b] at hf
-      conv =>
-        lhs
-        rhs
-        arg 1
-        equals (-1 : ℝ) • f =>
-          simp
-      rw [conv_smul]
-      simp
-      rw [add_comm]
-      rw [← sub_eq_add_neg]
-      rw [sub_eq_zero]
-      rw [sub_eq_zero] at hf
-      exact hf.symm
-
-
-lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1_Input (G := G)) := by
-  have quotient_iso := QuotientGroup.quotientKerEquivRange (GRepW_base (G := G))
-  unfold rho_g at hr
-
-  have ker_finite_index := Subgroup.finiteIndex_ker (GRepW_base (G := G))
-  let G' := (GRepW_base (G := G)).ker
-
-  let G'_action := (GRepW_base (G := G)).restrict G'
-
-  have act_ker (g: G) := MonoidHom.mem_ker (f := (GRepW_base (G := G))) (x := g)
-
-  have act_v (g: G) (hg: g ∈ (GRepW_base (G := G)).ker) (f: LipschitzH (S := S)): Submodule.Quotient.mk (GRep (S := S) g f) = (Submodule.Quotient.mk (f) : W) := by
-    simp [GRep]
-    have apply_g := (act_ker g).mp hg
-    simp [GRepW_base, GRepW_non_invertible, GRep] at apply_g
-    apply_fun Units.val at apply_g
-    rw [Representation.asGroupHom_apply] at apply_g
-    rw [Representation.quotient_apply] at apply_g
-    apply_fun (fun y => y (Submodule.Quotient.mk f)) at apply_g
-    simp at apply_g
-    exact apply_g
-
-  let extract_const (f: LipschitzH) (hf: f ∈ ConstF (S := S)) := f 1
-
-  simp_rw [Submodule.Quotient.eq] at act_v
-
-  -- As proved in 'act_v', we have  '(GRep g f) - f' is a constant function. We can therefore evaluate
-  -- it any poitn in G (here, 1) to get the constant
-  let lambda_g := fun (g: G') (f: LipschitzH (S := S)) => ((GRep g.val) f - f) 1
-  let lambda_g_dual (g: G'): Module.Dual ℂ (LipschitzH) := {
-    toFun := fun w => lambda_g g w
-    map_add' := by
-      intro x y
-      simp [lambda_g]
-      simp [LipschitzH_apply]
-      simp [lipschitz_sub_tofun]
-      simp [LipschitzH_apply]
-      abel
-    map_smul' := by
-      intro c x
-      simp [lambda_g]
-      simp [LipschitzH_apply]
-      simp [lipschitz_sub_tofun]
-      rw [mul_sub]
-      simp [lipschitz_smul_tofun]
-  }
-
-  let lambda_g_hom: G' →* Multiplicative (Module.Dual ℂ (LipschitzH)) := {
-    toFun := fun g => Multiplicative.ofAdd (lambda_g_dual g)
-    map_one' := by
-      simp [lambda_g_dual]
-      simp [lambda_g]
-      ext f
-      simp
-      rfl
-    map_mul' := by
-      intro g h
-      simp [lambda_g_dual, lambda_g]
-      ext f
-      simp [LipschitzH_apply]
-      simp [GRep, gAct]
-      simp [lipschitz_sub_tofun]
-      simp [LipschitzH_apply]
-      sorry
-  }
-
-  by_cases lambda_g_infinite: Infinite (lambda_g_hom.range)
-  . sorry
-  .
-    simp only [not_infinite_iff_finite] at lambda_g_infinite
-    let G'' := lambda_g_hom.ker
-    have G''_finite_index := Subgroup.finiteIndex_ker lambda_g_hom
-
-  -- TODO - this could be a lot cleaner
-    have G''_act_v (g: lambda_g_hom.ker) (x: G) (f: LipschitzH (S := S)): f (x * g) = f x := by
-      specialize act_v g
-      simp at act_v
-      have g_prop := g.property
-      rw [MonoidHom.mem_ker] at g_prop
-      simp [lambda_g_hom, lambda_g_dual, lambda_g, GRep] at g_prop
-      apply_fun (fun p => p f) at g_prop
-      simp at g_prop
-      simp [LipschitzH_apply] at g_prop
-      simp [lipschitz_sub_tofun] at g_prop
-      rw [sub_eq_zero] at g_prop
-      simp [gAct] at g_prop
-      specialize act_v f
-      simp [GRep, gAct, ConstF] at act_v
-      obtain ⟨y, hy⟩ := act_v
-      simp [ConstLipschitzH] at hy
-      apply_fun (fun l => l.toFun) at hy
-      simp at hy
-      rw [lipschitz_sub_tofun] at hy
-      simp at hy
-      simp [LipschitzH_apply]
-      rw [Pi.sub_def] at hy
-      have eval_one := hy
-      apply_fun (fun f => f 1) at eval_one
-      apply_fun (fun f => f x) at hy
-      simp at hy
-      simp at eval_one
-      rw [← g_prop] at eval_one
-      simp at eval_one
-      rw [eq_comm] at hy
-      apply eq_add_of_sub_eq' at hy
-      simp [LipschitzH_apply] at hy
-      rw [hy]
-      simp
-      exact eval_one
-
-
-    -- View G'' as a subgroup of G
-    let G''_subgroup_G := (Subgroup.map G'.subtype lambda_g_hom.ker)
-
-    -- TODO - clean up this proof
-    have G''_subgroup_finite_index: G''_subgroup_G.FiniteIndex := by
-      unfold G''_subgroup_G
-      rw [Subgroup.finiteIndex_iff]
-      rw [Subgroup.index_map]
-      simp
-      unfold G'
-      rw [Subgroup.finiteIndex_iff] at ker_finite_index
-      refine ⟨?_, ker_finite_index⟩
-      rw [Subgroup.finiteIndex_iff] at G''_finite_index
-      exact G''_finite_index
-
-
-    have finite_quotient := Subgroup.finite_quotient_of_finiteIndex (H := G''_subgroup_G)
-
-    have coset_union := QuotientGroup.univ_eq_iUnion_smul G''_subgroup_G
-
-    -- have G''_normal: G''_subgroup_G.Normal := by
-    --   unfold G''_subgroup_G
-    --   have G'_normal := MonoidHom.normal_ker (GRepW_base (G := G))
-    --   have ker_normal: lambda_g_hom.ker.Normal := by
-    --     exact MonoidHom.normal_ker lambda_g_hom
-
-    --   exact {
-    --     conj_mem := by
-    --       intro n hn
-    --       simp only [mem_map] at hn
-    --       obtain ⟨x, x_mem, x_eq_n⟩ := hn
-    --       have k_normal_conj := G'_normal.conj_mem
-    --       specialize k_normal_conj x (by simp)
-    --       intro g
-    --       simp at x_eq_n
-    --       specialize k_normal_conj g
-    --       rw [x_eq_n] at k_normal_conj
-    --       simp [lambda_g_hom, lambda_g_dual, lambda_g]
-    --       simp only [mem_map]
-    --       simp only [mem_map] at k_normal_conj
+-- lemma harmonic_exteme_val_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f = 0) (a: G) (h_max: ∀ g: G, |f g| ≤ |f a|): f = fun _ => f a := by
+--   by_cases f_a_pos: 0 ≤ f a
+--   .
+--     have lt_f_a: ∀ g: G, f g ≤ f a := by
+--       intro g
+--       by_cases f_g_pos: 0 ≤ f g
+--       . specialize h_max g
+--         rw [abs_eq_self.mpr ?_] at h_max
+--         rw [abs_eq_self.mpr f_a_pos] at h_max
+--         . exact h_max
+--         . exact f_g_pos
+--       . linarith
+--     exact harmonic_maximum_implies_const f hf a lt_f_a
+--   .
+--     have f_neg_le: ∀ g, (-f) g ≤ (-f) a := by
+--       intro g
+--       simp at f_a_pos
+--       simp
+--       specialize h_max g
+--       rw [abs_of_neg f_a_pos] at h_max
+--       by_cases f_g_pos: 0 ≤ f g
+--       . rw [abs_of_nonneg f_g_pos] at h_max
+--         linarith
+--       . simp at f_g_pos
+--         rw [abs_of_neg f_g_pos] at h_max
+--         linarith
+--     have neg_const := harmonic_maximum_implies_const (-f) ?_ a f_neg_le
+--     .
+--       apply_fun (fun h => -h) at neg_const
+--       simp at neg_const
+--       rw [Pi.neg_def] at neg_const
+--       simpa using neg_const
+--     .
+--       simp_rw [Laplace_b]
+--       simp_rw [Laplace_b] at hf
+--       conv =>
+--         lhs
+--         rhs
+--         arg 1
+--         equals (-1 : ℝ) • f =>
+--           simp
+--       rw [conv_smul]
+--       simp
+--       rw [add_comm]
+--       rw [← sub_eq_add_neg]
+--       rw [sub_eq_zero]
+--       rw [sub_eq_zero] at hf
+--       exact hf.symm
 
 
 
-    --   }
 
-    -- normal_iff_eq_cosets
-
-
-
-    have f_range_eq (f: LipschitzH (S := S)): Set.range f = Set.range ((fun (x: G ⧸ G''_subgroup_G) => f (x.out))) := by
-      ext a
-      refine ⟨?_, ?_⟩
-      . intro ha
-        simp at ha
-        obtain ⟨y, hy⟩ := ha
-        have y_mem: y ∈ Set.univ := by simp
-        rw [coset_union] at y_mem
-        simp at y_mem
-        obtain ⟨i, hi⟩ := y_mem
-        rw [Set.mem_smul_set] at hi
-        obtain ⟨x, x_mem, y_eq⟩ := hi
-        rw [← y_eq] at hy
-
-        unfold G''_subgroup_G at x_mem
-        simp at x_mem
-        obtain ⟨x_mem_g', hx'⟩ := x_mem
-
-        have x_mem_ker: ⟨x, x_mem_g'⟩ ∈ lambda_g_hom.ker := by
-          simp
-          exact hx'
-
-        let x_ker: lambda_g_hom.ker := ⟨⟨x, x_mem_g'⟩, x_mem_ker⟩
-        have f_translate := G''_act_v x_ker i.out f
-
-        simp only [Set.mem_range]
-        use i
-        rw [← f_translate]
-        exact hy
-      . intro ha
-        simp only [Set.mem_range] at ha
-        obtain ⟨y, hy⟩ := ha
-        simp
-        use y.out
-
-
-    have all_f_const (f: LipschitzH (S := S)): ∃ z: ℂ, f = ConstLipschitzH z := by
-      have f_const := harmonic_maximum_implies_const (S := S) f.toFun
-
-    rw [← Set.iUnion_inv_smul] at coset_union
-    sorry
 
 
 
@@ -4594,9 +4406,9 @@ lemma laplace_smul (k: ℝ) (f: (Lp ℝ 2 volume (α := G))): Laplace (k • f) 
   rw [MeasureTheory.MemLp.toLp_const_smul]
   rw [smul_sub]
 
-
+set_option maxHeartbeats 500000 in
 lemma laplace_zero_iff_zero (g: (Lp ℝ 2 volume (α := G))) (eq_zero: Laplace g = 0): g = 0 := by
-  by_cases g_has_maximum: ∃ a: G, ∀ b: G, |g b| ≤ |g a|
+  by_cases g_has_maximum: ∃ a: G, ∀ b: G, ‖Complex.ofReal (g b)‖ ≤ ‖g a‖
   .
     obtain ⟨a, ha⟩ := g_has_maximum
     have laplace_b_zero: Laplace_b (S := S) g = 0 := by
@@ -4609,8 +4421,22 @@ lemma laplace_zero_iff_zero (g: (Lp ℝ 2 volume (α := G))) (eq_zero: Laplace g
       field_simp at eq_zero
       field_simp
       exact eq_zero
-    have g_const := harmonic_exteme_val_implies_const g (laplace_b_zero) a ha
+
+    simp [Laplace_b] at laplace_b_zero
+    simp [f_conv_mu] at laplace_b_zero
+    rw [sub_eq_zero] at laplace_b_zero
+    have g_const := harmonic_exteme_val_implies_const (fun x => Complex.ofReal (g x)) (by (
+      intro a
+      simp
+      nth_rw 1 [laplace_b_zero]
+      beta_reduce
+      simp
+
+    )) a (by simpa using ha)
     have g_const_zero := MeasureTheory.memLp_const_iff (p := 2) (by simp) (by simp) (c := g a) (μ := volume (α := G))
+    apply_fun (fun x => Complex.re ∘ x) at g_const
+    simp [Function.comp_def] at g_const
+    eta_reduce at g_const
     rw [← g_const] at g_const_zero
     simp [MeasureTheory.Lp.memLp] at g_const_zero
     simp [volume, my_haar_eq_count] at g_const_zero
@@ -6440,6 +6266,250 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
 #track_sorry nontrivial_harmonic_case_two
 
 #synth OrderTopology ENNReal
+
+-- Theorem 3.6 - a non-constant harmonic function exists on G
+theorem exists_nontrivial_harmonic: ∃ F: LipschitzH (S := S), ∀ z: ℂ, F ≠ ConstLipschitzH z := by
+  by_cases f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))
+  . exact nontrivial_harmonic_case_two f_n_limit
+  .
+    simp at f_n_limit
+    exact nontrivial_harmonic_case_one (by
+      intro s
+      exact f_n_limit s.val s.property
+    )
+
+
+
+
+lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1_Input (G := G)) := by
+  have quotient_iso := QuotientGroup.quotientKerEquivRange (GRepW_base (G := G))
+  unfold rho_g at hr
+
+  have ker_finite_index := Subgroup.finiteIndex_ker (GRepW_base (G := G))
+  let G' := (GRepW_base (G := G)).ker
+
+  let G'_action := (GRepW_base (G := G)).restrict G'
+
+  have act_ker (g: G) := MonoidHom.mem_ker (f := (GRepW_base (G := G))) (x := g)
+
+  have act_v (g: G) (hg: g ∈ (GRepW_base (G := G)).ker) (f: LipschitzH (S := S)): Submodule.Quotient.mk (GRep (S := S) g f) = (Submodule.Quotient.mk (f) : W) := by
+    simp [GRep]
+    have apply_g := (act_ker g).mp hg
+    simp [GRepW_base, GRepW_non_invertible, GRep] at apply_g
+    apply_fun Units.val at apply_g
+    rw [Representation.asGroupHom_apply] at apply_g
+    rw [Representation.quotient_apply] at apply_g
+    apply_fun (fun y => y (Submodule.Quotient.mk f)) at apply_g
+    simp at apply_g
+    exact apply_g
+
+  let extract_const (f: LipschitzH) (hf: f ∈ ConstF (S := S)) := f 1
+
+  simp_rw [Submodule.Quotient.eq] at act_v
+
+  -- As proved in 'act_v', we have  '(GRep g f) - f' is a constant function. We can therefore evaluate
+  -- it any poitn in G (here, 1) to get the constant
+  let lambda_g := fun (g: G') (f: LipschitzH (S := S)) => ((GRep g.val) f - f) 1
+  let lambda_g_dual (g: G'): Module.Dual ℂ (LipschitzH) := {
+    toFun := fun w => lambda_g g w
+    map_add' := by
+      intro x y
+      simp [lambda_g]
+      simp [LipschitzH_apply]
+      simp [lipschitz_sub_tofun]
+      simp [LipschitzH_apply]
+      abel
+    map_smul' := by
+      intro c x
+      simp [lambda_g]
+      simp [LipschitzH_apply]
+      simp [lipschitz_sub_tofun]
+      rw [mul_sub]
+      simp [lipschitz_smul_tofun]
+  }
+
+  let lambda_g_hom: G' →* Multiplicative (Module.Dual ℂ (LipschitzH)) := {
+    toFun := fun g => Multiplicative.ofAdd (lambda_g_dual g)
+    map_one' := by
+      simp [lambda_g_dual]
+      simp [lambda_g]
+      ext f
+      simp
+      rfl
+    map_mul' := by
+      intro g h
+      simp [lambda_g_dual, lambda_g]
+      ext f
+      simp [LipschitzH_apply]
+      simp [GRep, gAct]
+      simp [lipschitz_sub_tofun]
+      simp [LipschitzH_apply]
+      sorry
+  }
+
+  by_cases lambda_g_infinite: Infinite (lambda_g_hom.range)
+  . sorry
+  .
+    simp only [not_infinite_iff_finite] at lambda_g_infinite
+    let G'' := lambda_g_hom.ker
+    have G''_finite_index := Subgroup.finiteIndex_ker lambda_g_hom
+
+  -- TODO - this could be a lot cleaner
+    have G''_act_v (g: lambda_g_hom.ker) (x: G) (f: LipschitzH (S := S)): f (x * g) = f x := by
+      specialize act_v g
+      simp at act_v
+      have g_prop := g.property
+      rw [MonoidHom.mem_ker] at g_prop
+      simp [lambda_g_hom, lambda_g_dual, lambda_g, GRep] at g_prop
+      apply_fun (fun p => p f) at g_prop
+      simp at g_prop
+      simp [LipschitzH_apply] at g_prop
+      simp [lipschitz_sub_tofun] at g_prop
+      rw [sub_eq_zero] at g_prop
+      simp [gAct] at g_prop
+      specialize act_v f
+      simp [GRep, gAct, ConstF] at act_v
+      obtain ⟨y, hy⟩ := act_v
+      simp [ConstLipschitzH] at hy
+      apply_fun (fun l => l.toFun) at hy
+      simp at hy
+      rw [lipschitz_sub_tofun] at hy
+      simp at hy
+      simp [LipschitzH_apply]
+      rw [Pi.sub_def] at hy
+      have eval_one := hy
+      apply_fun (fun f => f 1) at eval_one
+      apply_fun (fun f => f x) at hy
+      simp at hy
+      simp at eval_one
+      rw [← g_prop] at eval_one
+      simp at eval_one
+      rw [eq_comm] at hy
+      apply eq_add_of_sub_eq' at hy
+      simp [LipschitzH_apply] at hy
+      rw [hy]
+      simp
+      exact eval_one
+
+
+    -- View G'' as a subgroup of G
+    let G''_subgroup_G := (Subgroup.map G'.subtype lambda_g_hom.ker)
+
+    -- TODO - clean up this proof
+    have G''_subgroup_finite_index: G''_subgroup_G.FiniteIndex := by
+      unfold G''_subgroup_G
+      rw [Subgroup.finiteIndex_iff]
+      rw [Subgroup.index_map]
+      simp
+      unfold G'
+      rw [Subgroup.finiteIndex_iff] at ker_finite_index
+      refine ⟨?_, ker_finite_index⟩
+      rw [Subgroup.finiteIndex_iff] at G''_finite_index
+      exact G''_finite_index
+
+
+    have finite_quotient := Subgroup.finite_quotient_of_finiteIndex (H := G''_subgroup_G)
+
+    have coset_union := QuotientGroup.univ_eq_iUnion_smul G''_subgroup_G
+
+    -- have G''_normal: G''_subgroup_G.Normal := by
+    --   unfold G''_subgroup_G
+    --   have G'_normal := MonoidHom.normal_ker (GRepW_base (G := G))
+    --   have ker_normal: lambda_g_hom.ker.Normal := by
+    --     exact MonoidHom.normal_ker lambda_g_hom
+
+    --   exact {
+    --     conj_mem := by
+    --       intro n hn
+    --       simp only [mem_map] at hn
+    --       obtain ⟨x, x_mem, x_eq_n⟩ := hn
+    --       have k_normal_conj := G'_normal.conj_mem
+    --       specialize k_normal_conj x (by simp)
+    --       intro g
+    --       simp at x_eq_n
+    --       specialize k_normal_conj g
+    --       rw [x_eq_n] at k_normal_conj
+    --       simp [lambda_g_hom, lambda_g_dual, lambda_g]
+    --       simp only [mem_map]
+    --       simp only [mem_map] at k_normal_conj
+
+
+
+    --   }
+
+    -- normal_iff_eq_cosets
+
+
+
+    have f_range_eq (f: LipschitzH (S := S)): Set.range f = Set.range ((fun (x: G ⧸ G''_subgroup_G) => f (x.out))) := by
+      ext a
+      refine ⟨?_, ?_⟩
+      . intro ha
+        simp at ha
+        obtain ⟨y, hy⟩ := ha
+        have y_mem: y ∈ Set.univ := by simp
+        rw [coset_union] at y_mem
+        simp at y_mem
+        obtain ⟨i, hi⟩ := y_mem
+        rw [Set.mem_smul_set] at hi
+        obtain ⟨x, x_mem, y_eq⟩ := hi
+        rw [← y_eq] at hy
+
+        unfold G''_subgroup_G at x_mem
+        simp at x_mem
+        obtain ⟨x_mem_g', hx'⟩ := x_mem
+
+        have x_mem_ker: ⟨x, x_mem_g'⟩ ∈ lambda_g_hom.ker := by
+          simp
+          exact hx'
+
+        let x_ker: lambda_g_hom.ker := ⟨⟨x, x_mem_g'⟩, x_mem_ker⟩
+        have f_translate := G''_act_v x_ker i.out f
+
+        simp only [Set.mem_range]
+        use i
+        rw [← f_translate]
+        exact hy
+      . intro ha
+        simp only [Set.mem_range] at ha
+        obtain ⟨y, hy⟩ := ha
+        simp
+        use y.out
+
+
+    have all_f_const (f: LipschitzH (S := S)): ∃ z: ℂ, f = ConstLipschitzH z := by
+      have f_max := Set.Finite.exists_maximalFor (fun y => ‖y‖) (Set.range f) ?_ ?_
+
+      obtain ⟨z, z_mem, hz⟩ := f_max
+      simp at z_mem
+      obtain ⟨g, f_g_eq⟩ := z_mem
+      have f_const := harmonic_exteme_val_implies_const (S := S) f.toFun ?_ g ?_
+      use z
+      ext a
+      rw [f_const]
+      simp [ConstLipschitzH]
+      exact f_g_eq
+      .
+        have f_harmonic := f.harmonic
+        simp [Harmonic] at f_harmonic
+        simpa using f_harmonic
+      .
+        intro a
+        have f_le := hz (j := f.toFun a) ?_ ?_
+        .
+          simp at f_le
+          rw [← f_g_eq] at f_le
+          exact f_le
+        . simp
+          use a
+          rfl
+        . simp
+          sorry
+
+    obtain ⟨f, nontrivial_f⟩ := exists_nontrivial_harmonic
+    obtain ⟨z, f_eq_const⟩ := all_f_const f
+    specialize nontrivial_f z
+    contradiction
 
 
 -- TODO - upstream to mathlib
