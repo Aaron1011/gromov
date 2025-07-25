@@ -1857,7 +1857,7 @@ lemma theorem_3_1 (data: Theorem3_1_Input (G := G)) (n: ℕ) (h_growth: HasPolyn
 
 
 
-lemma g_hom_abelian {T: Type*} [Group T] (hom: G →* T) (h_hom: Infinite hom.range) (H: Subgroup hom.range) (H_abeliean: IsMulCommutative H) (H_finite_index: H.FiniteIndex) (H_FG: Group.FG H): Nonempty (Theorem3_1_Input (G := G)) := by
+lemma g_hom_abelian {T: Type*} [Group T] (hom: G →* T) (H: Subgroup hom.range) (H_infinite: Infinite H) (H_abeliean: IsMulCommutative H) (H_finite_index: H.FiniteIndex) (H_FG: Group.FG H): Nonempty (Theorem3_1_Input (G := G)) := by
   -- TODO - generalize this to a lemma: finite-index subgroup of an infinite group is infinite
   -- and upstream to mathlib
 
@@ -1873,13 +1873,7 @@ lemma g_hom_abelian {T: Type*} [Group T] (hom: G →* T) (h_hom: Infinite hom.ra
   --  dsimp [CommGroup.toGroup]
   --  exact h_fg
 
-  have card_mul := Subgroup.card_mul_index H
-  rw [Nat.card_eq_zero_of_infinite (α := hom.range)] at card_mul
-  rw [Nat.mul_eq_zero] at card_mul
-  simp [H_finite_index.index_ne_zero] at card_mul
-  rw [Nat.card_eq_zero] at card_mul
-  simp at card_mul
-  obtain h_infinite := card_mul
+
 
 
   -- TODO - figure out how to make instance inference work here
@@ -1906,7 +1900,7 @@ lemma g_hom_abelian {T: Type*} [Group T] (hom: G →* T) (h_hom: Infinite hom.ra
           }
         apply Finite.of_fintype
       apply Finite.instProd
-    have no_finite := card_mul.not_finite
+    have no_finite := H_infinite.not_finite
     contradiction
 
   -- TODO - can we get the comp '∘' syntax to give us a monoid hom, instead of a plain function?
@@ -2023,10 +2017,16 @@ lemma g_hom_abelian {T: Type*} [Group T] (hom: G →* T) (h_hom: Infinite hom.ra
 lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theorem3_1_Input (G := G)) := by
   obtain ⟨H, H_abelian, H_finite_index⟩ := rho_g_contains_abelian (G := G)
 
+  have card_mul := Subgroup.card_mul_index H
+  rw [Nat.card_eq_zero_of_infinite (α := rho_g)] at card_mul
+  rw [Nat.mul_eq_zero] at card_mul
+  simp [H_finite_index.index_ne_zero] at card_mul
+  rw [Nat.card_eq_zero] at card_mul
+  simp at card_mul
   have h_fg: Group.FG H := by
     apply Subgroup.fg_of_index_ne_zero
 
-  apply g_hom_abelian ((GRepW_base (G := G))) hr H H_abelian H_finite_index (h_fg)
+  apply g_hom_abelian ((GRepW_base (G := G))) H card_mul H_abelian H_finite_index (h_fg)
 
 #print axioms rho_g_case_infinite
 
@@ -6344,7 +6344,11 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
   }
 
   by_cases lambda_g_infinite: Infinite (lambda_g_hom.range)
-  . sorry
+  .
+
+    have foo := g_hom_abelian (G := G) (GRepW_base (G := G)) lambda_g_hom.range
+    exact foo
+    sorry
   .
     simp only [not_infinite_iff_finite] at lambda_g_infinite
     let G'' := lambda_g_hom.ker
