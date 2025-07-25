@@ -6505,8 +6505,11 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
           rfl
         . simp
           sorry
+      . rw [f_range_eq]
+        apply Set.finite_range
+      . apply Set.range_nonempty
 
-    obtain ⟨f, nontrivial_f⟩ := exists_nontrivial_harmonic
+    obtain ⟨f, nontrivial_f⟩ := exists_nontrivial_harmonic (S := S)
     obtain ⟨z, f_eq_const⟩ := all_f_const f
     specialize nontrivial_f z
     contradiction
