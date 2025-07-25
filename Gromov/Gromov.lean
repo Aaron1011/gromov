@@ -1852,10 +1852,12 @@ lemma theorem_3_1 (data: Theorem3_1_Input (G := G)) (n: ℕ) (h_growth: HasPolyn
 
   sorry
 
--- Case 1 in Section 3.3 of Vikman, where the representation ρ(G) is infinite
-set_option maxHeartbeats 500000 in
-lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theorem3_1_Input (G := G)) := by
-  obtain ⟨H, H_abelian, H_finite_index⟩ := rho_g_contains_abelian (G := G)
+#synth Group.FG (rho_g (G := G))
+
+
+
+
+lemma g_hom_abelian {T: Type*} [Group T] (hom: G →* T) (h_hom: Infinite hom.range) (H: Subgroup hom.range) (H_abeliean: IsMulCommutative H) (H_finite_index: H.FiniteIndex) (H_FG: Group.FG H): Nonempty (Theorem3_1_Input (G := G)) := by
   -- TODO - generalize this to a lemma: finite-index subgroup of an infinite group is infinite
   -- and upstream to mathlib
 
@@ -1863,13 +1865,16 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
   --have h_commgroup: CommGroup H := by
   --  apply CommGroup.ofIsMulCommutative
 
-  have h_fg: Group.FG ↥H := by infer_instance
+  --have h_fg: Group.FG H := by
+  --  apply
+
+    --infer_instance
   --have h_fg_comm: @Group.FG ↥H CommGroup.toGroup := by
   --  dsimp [CommGroup.toGroup]
   --  exact h_fg
 
   have card_mul := Subgroup.card_mul_index H
-  rw [Nat.card_eq_zero_of_infinite (α := rho_g (G := G))] at card_mul
+  rw [Nat.card_eq_zero_of_infinite (α := hom.range)] at card_mul
   rw [Nat.mul_eq_zero] at card_mul
   simp [H_finite_index.index_ne_zero] at card_mul
   rw [Nat.card_eq_zero] at card_mul
@@ -1878,7 +1883,7 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
 
 
   -- TODO - figure out how to make instance inference work here
-  obtain ⟨i, j, i_fin, j_fin, p, p_prime, e, exists_iso⟩ := @CommGroup.equiv_free_prod_directSum_zmod H (by apply CommGroup.ofIsMulCommutative) (h_fg)
+  obtain ⟨i, j, i_fin, j_fin, p, p_prime, e, exists_iso⟩ := @CommGroup.equiv_free_prod_directSum_zmod H (by apply CommGroup.ofIsMulCommutative) (H_FG)
   have iso := Classical.choice exists_iso
 
   have j_nonempty: Nonempty j := by
@@ -1921,16 +1926,15 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
       . exact Prod.fst_surjective
       . exact iso.surjective
 
-  dsimp [rho_g] at H
 
 
   -- Interpret H as a subgroup of GL_W
-  let H_as_GL_W := Subgroup.map (Subgroup.subtype (rho_g (S := S))) H
-  let G' := Subgroup.comap GRepW_base.rangeRestrict H
+  let H_as_GL_W := Subgroup.map (Subgroup.subtype (hom.range)) H
+  let G' := Subgroup.comap hom.rangeRestrict H
   have H_index_ne_zero := H_finite_index.index_ne_zero
 
   -- TODO - generalize this and PR to mathlib
-  have rangerestrict_range: (GRepW_base (S := S)).rangeRestrict.range = ⊤ := by
+  have rangerestrict_range: hom.rangeRestrict.range = ⊤ := by
     ext a
     simp
     have a_prop := a.property
@@ -1959,7 +1963,7 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
 
   -- TODO - there must be an easier way to do this
   let g'_to_h: G' →* H := {
-    toFun := fun g => ⟨⟨GRepW_base (S := S) g, by simp⟩, by (
+    toFun := fun g => ⟨⟨hom g, by simp⟩, by (
       have g_prop := g.property
       simp only [G', Subgroup.mem_comap] at g_prop
       exact g_prop
@@ -2004,19 +2008,25 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
         -- TODO - make this less awful
         use a_mem_G'
         unfold DFunLike.coe
-        unfold AddMonoidHom.instFunLike
-        unfold Equiv.instFunLike
+        unfold MonoidHom.instFunLike
         eta_reduce
-        unfold MonoidHom.toAdditive
-        eta_reduce
-        dsimp
+        simp
         apply Additive.ext
         simp
         unfold MonoidHom.instFunLike
         simp
         simp_rw [ha]
-        rfl
   }
+
+
+-- Case 1 in Section 3.3 of Vikman, where the representation ρ(G) is infinite
+lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theorem3_1_Input (G := G)) := by
+  obtain ⟨H, H_abelian, H_finite_index⟩ := rho_g_contains_abelian (G := G)
+
+  have h_fg: Group.FG H := by
+    apply Subgroup.fg_of_index_ne_zero
+
+  apply g_hom_abelian ((GRepW_base (G := G))) hr H H_abelian H_finite_index (h_fg)
 
 #print axioms rho_g_case_infinite
 
