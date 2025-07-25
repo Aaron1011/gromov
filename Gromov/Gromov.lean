@@ -1923,9 +1923,6 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
 
   dsimp [rho_g] at H
 
-  let other_rho := ((GRepW (G := G)).restrict ((GRepW_base (G := G)).range))
-
-  let rho_hom := ((GRepW (G := G)).comp ((GRepW_base (G := G))))
 
   -- Interpret H as a subgroup of GL_W
   let H_as_GL_W := Subgroup.map (Subgroup.subtype (rho_g (S := S))) H
@@ -1996,11 +1993,11 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
         rw [← Subgroup.mem_carrier] at h_mem
 
         have h_prop := h.val.property
-        simp [rho_hom]
+        simp
         obtain ⟨a, ha⟩ := h_prop
         use a
         have a_mem_G': a ∈ G' := by
-          simp [G', H_as_GL_W, rho_g, rho_hom]
+          simp [G', H_as_GL_W, rho_g]
           simp [MonoidHom.rangeRestrict]
           simp_rw [ha]
           simp
