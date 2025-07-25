@@ -1857,7 +1857,7 @@ lemma theorem_3_1 (data: Theorem3_1_Input (G := G)) (n: ℕ) (h_growth: HasPolyn
 
 
 
-lemma g_hom_abelian {T: Type*} [Group T] (hom: G →* T) (H: Subgroup hom.range) (H_infinite: Infinite H) (H_abeliean: IsMulCommutative H) (H_finite_index: H.FiniteIndex) (H_FG: Group.FG H): Nonempty (Theorem3_1_Input (G := G)) := by
+lemma g_hom_abelian {T: Type*} [Group T] (A: Subgroup G) (A_finite_index: A.FiniteIndex) (hom: A →* T) (H: Subgroup hom.range) (H_infinite: Infinite H) (H_abeliean: IsMulCommutative H) (H_finite_index: H.FiniteIndex) (H_FG: Group.FG H): Nonempty (Theorem3_1_Input (G := G)) := by
   -- TODO - generalize this to a lemma: finite-index subgroup of an infinite group is infinite
   -- and upstream to mathlib
 
@@ -1935,6 +1935,7 @@ lemma g_hom_abelian {T: Type*} [Group T] (hom: G →* T) (H: Subgroup hom.range)
     rw [MonoidHom.mem_range] at a_prop
     obtain ⟨x, hx⟩ := a_prop
     use x
+    use x.property
     rw [Subtype.ext_iff]
     simp
     exact hx
@@ -1956,14 +1957,41 @@ lemma g_hom_abelian {T: Type*} [Group T] (hom: G →* T) (H: Subgroup hom.range)
 
 
   -- TODO - there must be an easier way to do this
-  let g'_to_h: G' →* H := {
-    toFun := fun g => ⟨⟨hom g, by simp⟩, by (
+  let g'_to_h: (map A.subtype G') →* H := {
+    toFun := fun g => ⟨⟨hom ⟨g.val, by (
+      -- TODO - clean this up
+      have foo := g.property
+      rw [Subgroup.mem_map] at foo
+      obtain ⟨x, hx, a_subtype⟩ := foo
+      rw [← a_subtype]
+      simp
+    )⟩, by simp⟩, by (
       have g_prop := g.property
       simp only [G', Subgroup.mem_comap] at g_prop
-      exact g_prop
+      rw [Subgroup.mem_map] at g_prop
+      obtain ⟨x, hx, a_subtype⟩ := g_prop
+      simp_rw [← a_subtype]
+      simp
+      simp at hx
+      exact hx
     )⟩
-    map_one' := by simp
-    map_mul' := by simp
+    map_one' := by
+      simp
+      conv =>
+        lhs
+        arg 2
+        equals 1 => simp
+      simp
+
+    map_mul' := by
+      simp
+      intro a ha a_mem b hb b_mem
+
+      conv =>
+        lhs
+        arg 2
+        equals ⟨a, ha⟩ * ⟨b, hb⟩ => simp
+      rw [MonoidHom.map_mul]
   }
 
   let additive_g'_to_h := g'_to_h.toAdditive
@@ -1973,11 +2001,18 @@ lemma g_hom_abelian {T: Type*} [Group T] (hom: G →* T) (H: Subgroup hom.range)
   let g_to_z := (AddEquiv.additiveMultiplicative ℤ).toAddMonoidHom.comp g_to_additive_z
 
 
-
   apply Nonempty.intro
   exact {
-    G' := G',
-    finite_index := G'_finite_index,
+    G' := Subgroup.map A.subtype G',
+    finite_index := by
+      rw [Subgroup.finiteIndex_iff]
+      simp [Subgroup.index_map_subtype]
+      refine ⟨?_, ?_⟩
+      . rw [← ne_eq]
+        rw [← Subgroup.finiteIndex_iff]
+        exact G'_finite_index
+      . exact A_finite_index.index_ne_zero
+      -- G'_finite_index
     φ := g_to_z,
     hφ := by
       simp [g_to_z, g_to_additive_z]
@@ -2000,6 +2035,7 @@ lemma g_hom_abelian {T: Type*} [Group T] (hom: G →* T) (H: Subgroup hom.range)
           simp_rw [ha]
           simp
         -- TODO - make this less awful
+        simp
         use a_mem_G'
         unfold DFunLike.coe
         unfold MonoidHom.instFunLike
@@ -2026,7 +2062,7 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
   have h_fg: Group.FG H := by
     apply Subgroup.fg_of_index_ne_zero
 
-  apply g_hom_abelian ((GRepW_base (G := G))) H card_mul H_abelian H_finite_index (h_fg)
+  apply g_hom_abelian ⊤ (by infer_instance) ((GRepW_base (G := G))) H card_mul H_abelian H_finite_index (h_fg)
 
 #print axioms rho_g_case_infinite
 
