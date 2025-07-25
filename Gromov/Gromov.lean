@@ -2445,11 +2445,6 @@ lemma conv_exists (p q : ℝ) (hp: 0 < p) (hq: 0 < q) (hpq: p.HolderConjugate q)
   have p_ne_zero: ENNReal.ofReal p ≠ 0 := by
     simp [hp]
 
-  have p_ne_top: ENNReal.ofReal p ≠ ⊤ := by
-    simp
-
-  have q_ne_zero: ENNReal.ofReal q ≠ 0 := by
-    simp [hq]
 
   have p_ge_zero: 0 ≤ p := by
     linarith
@@ -5270,8 +5265,10 @@ lemma f_n_fin_supp (n: ℕ): (f_n (S := S) n).support.Finite := by
   . intro m hm
     apply mu_conv_finsupp
 
-lemma laplace_conv_eq_laplace_right (f g: G → ℝ): Laplace_b (Conv f g) = Conv f (Laplace_b g) := by
+lemma laplace_conv_eq_laplace_right (f g: G → ℝ) (hfg: ConvExists f g): Laplace_b (Conv f g) = Conv f (Laplace_b g) := by
   simp_rw [Laplace_b]
+  rw [conv_assoc]
+
   nth_rw 2 [sub_eq_add_neg]
   rw [conv_add_right]
   -- TODO - figure out how to do this without a 'conv' block
@@ -5281,12 +5278,27 @@ lemma laplace_conv_eq_laplace_right (f g: G → ℝ): Laplace_b (Conv f g) = Con
     equals Conv f ((-1 : ℝ) • (Conv g (mu (S := S)))) =>
       simp
   rw [smul_conv]
-  rw [conv_assoc]
-  . simp
-    rfl
-  . sorry
-  . sorry
-  . sorry
+  simp
+  . rw [← sub_eq_add_neg]
+  . exact hfg
+  .
+    simp [ConvExists, MeasureTheory.ConvolutionExists, MeasureTheory.ConvolutionExistsAt]
+    intro a
+    simp_rw [← neg_mul]
+    simp_rw [f_conv_mu]
+    simp_rw [← mul_assoc, mul_comm, mul_assoc]
+    apply MeasureTheory.Integrable.const_mul
+    simp_rw [Finset.mul_sum]
+    apply MeasureTheory.integrable_finset_sum
+    intro s hs
+    simp [ConvExists, MeasureTheory.ConvolutionExists, MeasureTheory.ConvolutionExistsAt] at hfg
+    specialize hfg (s * a)
+    simp only [neg_mul]
+    apply MeasureTheory.Integrable.neg
+    field_simp
+    exact hfg
+  . exact hfg
+
 
 lemma f_n_nonneg: ∀ n: ℕ, ∀ g: G,  0 ≤ f_n n g := by
   intro n g
@@ -5868,23 +5880,33 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
 
   have conv_laplce_norm (n: ℕ): eLpNorm ((Laplace_b ((Conv (G := G) (H_n n)) (f_n n)))) ⊤ (μ := volume (α := G)) ≤ eLpNorm (H_n n) ⊤ * (eLpNorm (Laplace_b (f_n n)) 1 (μ := volume (α := G))) := by
     rw [laplace_conv_eq_laplace_right]
-    unfold Conv
-    eta_reduce
-    simp only [volume]
-    rw [haar_eq_haar_add]
+    .
+      unfold Conv
+      eta_reduce
+      simp only [volume]
+      rw [haar_eq_haar_add]
 
-    have my_norm := ENNReal.eLpNorm_convolution_le_enorm_mul (f := H_n n) (G := (Additive G)) (L := (ContinuousLinearMap.mul ℝ ℝ))
-      (g := Laplace_b (G := G) (f_n n)) (r := ⊤) (p := ⊤) (q := 1) (μ := myHaarAddOpp)
-      (by simp)
-      (by simp)
-      (by simp)
-      (by simp)
-      (by apply AEMeasurable.of_discrete)
-      (by apply AEMeasurable.of_discrete)
+      have my_norm := ENNReal.eLpNorm_convolution_le_enorm_mul (f := H_n n) (G := (Additive G)) (L := (ContinuousLinearMap.mul ℝ ℝ))
+        (g := Laplace_b (G := G) (f_n n)) (r := ⊤) (p := ⊤) (q := 1) (μ := myHaarAddOpp)
+        (by simp)
+        (by simp)
+        (by simp)
+        (by simp)
+        (by apply AEMeasurable.of_discrete)
+        (by apply AEMeasurable.of_discrete)
 
 
-    grw [my_norm]
-    simp [enorm]
+      grw [my_norm]
+      simp [enorm]
+    .
+      -- TODO - it's not obvious from the paper why this convolution exists
+      --simp [ConvExists, MeasureTheory.ConvolutionExists, MeasureTheory.ConvolutionExistsAt]
+      apply conv_exists (p := 2) (q := 2) (by simp) (by simp) (by
+        rw [Real.holderConjugate_iff]
+        field_simp
+      )
+      . sorry
+      . sorry
 
 
   let conv_h_n_cont (n: ℕ): C(G, ℝ) := {
