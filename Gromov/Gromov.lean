@@ -1515,7 +1515,7 @@ noncomputable def rho_g := (GRepW_base (G := G)).range
 --noncomputable instance GL_W_PseudoMetricSpace: PseudoMetricSpace (GL_W (G := G)) := Topology.IsInducing.comapPseudoMetricSpace (f := Units.val) (by apply Topology.IsInducing.induced)
 
 
-def rho_g_closure := _root_.closure (rho_g (G := G)).carrier
+--def rho_g_closure := _root_.closure (rho_g (G := G)).carrier
 
 -- instance GL_W_proper: ProperSpace (GL_W (G := G)) := by
 --   unfold GL_W
@@ -1612,143 +1612,143 @@ instance GL_W_Proper: ProperSpace (GL_W (G := G)) := {
 -- All norms are equivalent on finite-dimensional spaces:
 -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Analysis/Normed/Module/FiniteDimension.html
 
-lemma closed_image_rho_g: closure (Units.val '' (rho_g_closure (G := G))) = Units.val '' (closure (rho_g_closure (G := G))) := by
-  ext w
-  refine ⟨?_, ?_⟩
-  . sorry
-  .
-    intro hw
-    sorry
-    --rw [Topology.IsEmbedding.closure_eq_preimage_closure_image (isembedding_units_val (G := G)) _]
-    --simp
+-- lemma closed_image_rho_g: closure (Units.val '' (rho_g_closure (G := G))) = Units.val '' (closure (rho_g_closure (G := G))) := by
+--   ext w
+--   refine ⟨?_, ?_⟩
+--   . sorry
+--   .
+--     intro hw
+--     sorry
+--     --rw [Topology.IsEmbedding.closure_eq_preimage_closure_image (isembedding_units_val (G := G)) _]
+--     --simp
 
 
 -- In the Vikman paper, rho_g is precompact, and the closure of rho_g is a compact subgroup
 -- LinearMap.finiteDimensional
-set_option maxHeartbeats 2000000 in
-theorem compact_rho_g: IsCompact (rho_g_closure (G := G)) := by
-  --unfold rho_g_closure rho_g
-  unfold rho_g_closure
-  rw [Topology.IsEmbedding.isCompact_iff (isembedding_units_val (G := G))]
-  rw [Metric.isCompact_iff_isClosed_bounded]
-  have closed_original: IsClosed (_root_.closure (rho_g (G := G)).carrier) := by
-    apply isClosed_closure
-  refine ⟨?_, ?_⟩
-  .
-    rw [← isOpen_compl_iff]
-    rw [isOpen_iff_forall_mem_open]
-    intro x hx
-    by_cases invertible: ∃ x_unit: GL_W (G := G), x_unit.val = x
-    .
-      obtain ⟨x_unit, hx_unit⟩ := invertible
-      rw [← isOpen_compl_iff] at closed_original
-      rw [Metric.isOpen_iff] at closed_original
-      obtain ⟨r, r_gt_zero, ball_r⟩ := closed_original x_unit (by
-        rw [← hx_unit] at hx
-        simp at hx
-        simp
-        exact fun a ↦ hx x_unit a rfl
-      )
-      have ball_r_subset := Isometry.mapsTo_ball (unit_val_isometry (G := G)) x_unit r
-      apply Set.MapsTo.image_subset at ball_r_subset
-      --rw [Set.MapsTo] at ball_r_subset
-      -- specialize ball_r_subset (x := x_unit) (by
-      --   apply Metric.mem_closedBall_self
-      --   linarith
-      -- )
-      use Units.val '' Metric.ball (x_unit) (r)
-      refine ⟨?_, ?_, ?_⟩
-      .
-        intro a ha
-        specialize ball_r_subset ha
-        simp
-        simp at ball_r_subset
-        simp at ha
-        obtain ⟨p, p_mem, p_eq⟩ := ha
-        specialize ball_r p_mem
-        simp at ball_r
-        intro x hx
-        by_contra!
-        rw [← p_eq] at this
-        norm_cast at this
-        rw [this] at hx
-        contradiction
-      .
-        apply units_openMap
-        simp
-      .
-        rw [← hx_unit]
-        simp
-        use x_unit
-        simp
-        exact r_gt_zero
-    .
-      simp at invertible
-      simp at hx
-      sorry
+-- set_option maxHeartbeats 2000000 in
+-- theorem compact_rho_g: IsCompact (rho_g_closure (G := G)) := by
+--   --unfold rho_g_closure rho_g
+--   unfold rho_g_closure
+--   rw [Topology.IsEmbedding.isCompact_iff (isembedding_units_val (G := G))]
+--   rw [Metric.isCompact_iff_isClosed_bounded]
+--   have closed_original: IsClosed (_root_.closure (rho_g (G := G)).carrier) := by
+--     apply isClosed_closure
+--   refine ⟨?_, ?_⟩
+--   .
+--     rw [← isOpen_compl_iff]
+--     rw [isOpen_iff_forall_mem_open]
+--     intro x hx
+--     by_cases invertible: ∃ x_unit: GL_W (G := G), x_unit.val = x
+--     .
+--       obtain ⟨x_unit, hx_unit⟩ := invertible
+--       rw [← isOpen_compl_iff] at closed_original
+--       rw [Metric.isOpen_iff] at closed_original
+--       obtain ⟨r, r_gt_zero, ball_r⟩ := closed_original x_unit (by
+--         rw [← hx_unit] at hx
+--         simp at hx
+--         simp
+--         exact fun a ↦ hx x_unit a rfl
+--       )
+--       have ball_r_subset := Isometry.mapsTo_ball (unit_val_isometry (G := G)) x_unit r
+--       apply Set.MapsTo.image_subset at ball_r_subset
+--       --rw [Set.MapsTo] at ball_r_subset
+--       -- specialize ball_r_subset (x := x_unit) (by
+--       --   apply Metric.mem_closedBall_self
+--       --   linarith
+--       -- )
+--       use Units.val '' Metric.ball (x_unit) (r)
+--       refine ⟨?_, ?_, ?_⟩
+--       .
+--         intro a ha
+--         specialize ball_r_subset ha
+--         simp
+--         simp at ball_r_subset
+--         simp at ha
+--         obtain ⟨p, p_mem, p_eq⟩ := ha
+--         specialize ball_r p_mem
+--         simp at ball_r
+--         intro x hx
+--         by_contra!
+--         rw [← p_eq] at this
+--         norm_cast at this
+--         rw [this] at hx
+--         contradiction
+--       .
+--         apply units_openMap
+--         simp
+--       .
+--         rw [← hx_unit]
+--         simp
+--         use x_unit
+--         simp
+--         exact r_gt_zero
+--     .
+--       simp at invertible
+--       simp at hx
+--       sorry
 
 
 
 
 
 
-  rw [Topology.IsEmbedding.closure_eq_preimage_closure_image (isembedding_units_val (G := G))]
-  --rw [Topology.IsInducing.isCompact_preimage_iff]
-  --. sorry
-  --. apply (isembedding_units_val (G := G)).isInducing
-  --.
-  --  rw [IsClosed.closure_eq]
-  --  . simp
-  --  .
+--   rw [Topology.IsEmbedding.closure_eq_preimage_closure_image (isembedding_units_val (G := G))]
+--   --rw [Topology.IsInducing.isCompact_preimage_iff]
+--   --. sorry
+--   --. apply (isembedding_units_val (G := G)).isInducing
+--   --.
+--   --  rw [IsClosed.closure_eq]
+--   --  . simp
+--   --  .
 
-  --    sorry
-    --simp
-  --rw [Topology.IsEmbedding.isCompact_iff (isembedding_units_val (G := G))]
+--   --    sorry
+--     --simp
+--   --rw [Topology.IsEmbedding.isCompact_iff (isembedding_units_val (G := G))]
 
-  -- rw [Topology.IsEmbedding.closure_eq_preimage_closure_image (isembedding_units_val (G := G))]
+--   -- rw [Topology.IsEmbedding.closure_eq_preimage_closure_image (isembedding_units_val (G := G))]
 
-  -- apply Topology.IsClosedEmbedding.isCompact_preimage
-  -- . apply Continuous.isClosedEmbedding
-  -- apply IsCompact.preimage_continuous
+--   -- apply Topology.IsClosedEmbedding.isCompact_preimage
+--   -- . apply Continuous.isClosedEmbedding
+--   -- apply IsCompact.preimage_continuous
 
 
-  have compact_closure_of: IsCompact (_root_.closure (Units.val '' _root_.closure (rho_g (G := G)).carrier)) := by
-    rw [closure_image_closure (by exact Units.continuous_val)]
-    apply Bornology.IsBounded.isCompact_closure
-    rw [Metric.isBounded_iff]
-    use 2
-    intro p hp q hq
-    rw [Set.mem_image] at hp
-    rw [Set.mem_image] at hq
-    simp [rho_g] at hp
-    simp [rho_g] at hq
-    obtain ⟨a, p_eq_a_rep⟩ := hp
-    obtain ⟨b, q_eq_b_rep⟩ := hq
-    simp [dist]
-    rw [ContinuousLinearMap.seminorm]
-    apply csInf_le (by
-      simp [BddBelow]
-      apply Set.nonempty_of_mem (x := 0)
-      rw [mem_lowerBounds]
-      simp
-      intro x hx _
-      exact hx
-    )
-    simp
-    intro x
-    rw [sub_eq_add_neg]
-    have norm_triangle := norm_add_le (p x) (- q x)
-    simp only [norm_neg] at norm_triangle
-    rw [← p_eq_a_rep, ← q_eq_b_rep] at norm_triangle
-    rw [GLW_preseves_norm] at norm_triangle
-    rw [GLW_preseves_norm] at norm_triangle
-    rw [two_mul]
-    rw [p_eq_a_rep] at norm_triangle
-    rw [q_eq_b_rep] at norm_triangle
-    exact norm_triangle
+--   have compact_closure_of: IsCompact (_root_.closure (Units.val '' _root_.closure (rho_g (G := G)).carrier)) := by
+--     rw [closure_image_closure (by exact Units.continuous_val)]
+--     apply Bornology.IsBounded.isCompact_closure
+--     rw [Metric.isBounded_iff]
+--     use 2
+--     intro p hp q hq
+--     rw [Set.mem_image] at hp
+--     rw [Set.mem_image] at hq
+--     simp [rho_g] at hp
+--     simp [rho_g] at hq
+--     obtain ⟨a, p_eq_a_rep⟩ := hp
+--     obtain ⟨b, q_eq_b_rep⟩ := hq
+--     simp [dist]
+--     rw [ContinuousLinearMap.seminorm]
+--     apply csInf_le (by
+--       simp [BddBelow]
+--       apply Set.nonempty_of_mem (x := 0)
+--       rw [mem_lowerBounds]
+--       simp
+--       intro x hx _
+--       exact hx
+--     )
+--     simp
+--     intro x
+--     rw [sub_eq_add_neg]
+--     have norm_triangle := norm_add_le (p x) (- q x)
+--     simp only [norm_neg] at norm_triangle
+--     rw [← p_eq_a_rep, ← q_eq_b_rep] at norm_triangle
+--     rw [GLW_preseves_norm] at norm_triangle
+--     rw [GLW_preseves_norm] at norm_triangle
+--     rw [two_mul]
+--     rw [p_eq_a_rep] at norm_triangle
+--     rw [q_eq_b_rep] at norm_triangle
+--     exact norm_triangle
 
-  have foo := image_closure_subset_closure_image (Units.continuous_val) (s := _root_.closure (rho_g (G := G)).carrier)
-  sorry
+--   have foo := image_closure_subset_closure_image (Units.continuous_val) (s := _root_.closure (rho_g (G := G)).carrier)
+--   sorry
   --rw [image_closure_of_isCompact]
   --. exact compact_closure_of
   --. sorry
@@ -1773,7 +1773,7 @@ theorem compact_rho_g: IsCompact (rho_g_closure (G := G)) := by
 #synth MeasurableSpace (W (G := G) →L[ℂ] W (G := G))ˣ
 #synth TopologicalSpace (W (G := G) →L[ℂ] W (G := G))ˣ
 #synth BorelSpace (W (G := G) →L[ℂ] W (G := G))
-#synth BorelSpace (Units.val '' (rho_g (G := G)).carrier)
+--#synth BorelSpace (Units.val '' (rho_g (G := G)).carrier)
 
 #synth ContinuousMul (W (G := G) →L[ℂ] W (G := G))
 
@@ -1807,22 +1807,22 @@ theorem compact_rho_g: IsCompact (rho_g_closure (G := G)) := by
 instance Borel_GL_W: BorelSpace (GL_W (G := G)) := by
   sorry
 
-instance Borel_rho_g: BorelSpace ↥(rho_g (G := G)) := by
-  apply Subtype.borelSpace
+-- instance Borel_rho_g: BorelSpace ↥(rho_g (G := G)) := by
+--   apply Subtype.borelSpace
 
 instance LocallyCompact_GL_W: LocallyCompactSpace (GL_W (G := G)) := by
   apply Topology.IsInducing.locallyCompactSpace (isembedding_units_val (G := G).isInducing)
   sorry
   --apply Topology.IsEmbedding.locallyCompactSpace (isembedding_units_val (G := G))
 
-instance LocallyCompact_rho_g: LocallyCompactSpace (rho_g (G := G)) := by
-  apply IsOpen.locallyCompactSpace
-  sorry
+-- instance LocallyCompact_rho_g: LocallyCompactSpace (rho_g (G := G)) := by
+--   apply IsOpen.locallyCompactSpace
+--   sorry
 
 lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutative M ∧ M.FiniteIndex := by
   let my_map := Subgroup.subtype (rho_g (G := G))
   unfold GL_W at my_map
-  have my_weyl_trick := weyl_unitarian_trick (H := rho_g (G := G)) (G := GL_W (G := G)) (V := (W (G := G))) (rep := my_map)
+  --have my_weyl_trick := weyl_unitarian_trick (H := rho_g (G := G)) (G := GL_W (G := G)) (V := (W (G := G))) (rep := my_map)
   sorry
 
 -- We need this to work with Finset
@@ -2461,6 +2461,10 @@ lemma conv_exists (p q : ℝ) (hp: 0 < p) (hq: 0 < q) (hpq: p.HolderConjugate q)
   have q_ge_zero: 0 ≤ q := by
     linarith
 
+  have q_ne_zero: ENNReal.ofReal q ≠ 0 := by
+    simp
+    linarith
+
   have integral_lt_top := ne_top_of_le_ne_top (?_) holder_bound
   . exact Ne.lt_top' (id (Ne.symm integral_lt_top))
   . apply WithTop.mul_ne_top
@@ -2473,6 +2477,7 @@ lemma conv_exists (p q : ℝ) (hp: 0 < p) (hq: 0 < q) (hpq: p.HolderConjugate q)
         linarith
       . exact LT.lt.ne_top foo
     .
+
       have foo := MeasureTheory.lintegral_rpow_enorm_lt_top_of_eLpNorm_lt_top q_ne_zero (by simp) (MeasureTheory.MemLp.eLpNorm_lt_top (hg x.toMul))
       rw [my_add_haar_eq_count] at foo
       rw [ENNReal.toReal_ofReal q_ge_zero] at foo
@@ -8766,7 +8771,7 @@ lemma three_two_ker_fg (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD d (S := S
       rw [← Subgroup.toAddSubgroup'_closure]
       exact hn
 
--- Extract aq generatating set for the kernel of φ
+-- Extract a generatating set for the kernel of φ
 noncomputable def phi_S (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD d (S := S)) (g: G) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ): Finset ((G)) := by
   have fg := three_two_ker_fg d hd hG g φ hφ
   rw [AddSubgroup.fg_iff] at fg
