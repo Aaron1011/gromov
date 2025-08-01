@@ -6400,7 +6400,15 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
     . exact MonoidHom.rangeRestrict_surjective lambda_g_hom
     . rw [rangeRestrict_range]
       simp
-      sorry
+      -- TODO: PR this to mathlib
+      apply (Equiv.infinite_iff (α := lambda_g_hom.range) _).mp
+      . exact lambda_g_infinite
+      . exact {
+          toFun := fun g => ⟨g, trivial⟩
+          invFun := fun g => g.val
+          left_inv := by simp [Function.LeftInverse]
+          right_inv := by simp [Function.RightInverse, Function.LeftInverse]
+        }
     . exact {
         is_comm := {
           comm := by
