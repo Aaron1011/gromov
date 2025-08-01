@@ -1123,7 +1123,7 @@ instance const_isClosed: IsClosed (ConstF (G := G) : Set (LipschitzH (G := G))) 
 -- The space 'GL(W)' of invertible continuous linear functions from W to W
 abbrev GL_W := (W (G := G) →L[ℂ] W (G := G))ˣ
 
-#synth LieGroup (modelWithCornersSelf ℂ ((W (G := G) →L[ℂ] W (G := G)))) 1 (GL_W (G := G))
+--#synth LieGroup (modelWithCornersSelf ℂ ((W (G := G) →L[ℂ] W (G := G)))) 1 (GL_W (G := G))
 #synth TopologicalSpace ((W (G := G) →L[ℂ] W (G := G)))
 #synth TopologicalSpace ((W (G := G) →L[ℂ] W (G := G)))ˣ
 
@@ -1415,7 +1415,7 @@ lemma GLW_preseves_norm (g: G) (w: W (G := G)): ‖(GRepW (G := G) (GRepW_base g
   rw [← hv]
   rw [quotient_norm_eq_norm]
 
-#synth CompleteSpace (W (G := G))
+--#synth CompleteSpace (W (G := G))
 
 lemma measurable_GRepW: Measurable (fun g => GRepW (G := G) (GRepW_base (G := G) g)) := by
   simp [GRepW_base, GRepW]
@@ -2039,7 +2039,20 @@ lemma singleton_pairwise_disjoint {T: Type*} (s: Set (T)) : s.PairwiseDisjoint S
   exact hab.symm
 
 
+instance G_Add_MeasureableSingleton: MeasurableSingletonClass (Additive G) := {
+  measurableSet_singleton := by
+    intro x
+    sorry
+}
+
+instance G_MeasureableSingleton: MeasurableSingletonClass (G) := {
+  measurableSet_singleton := by
+    intro x
+    sorry
+}
+
 -- Use the fact that we have the discrete topology
+set_option maxHeartbeats 500000 in
 lemma my_add_haar_eq_count: (myHaarAddOpp (G := G)) = MeasureTheory.Measure.count := by
   ext s hs
   by_cases s_finite: Set.Finite s
@@ -3092,7 +3105,7 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
         lhs
         lhs
         simp
-        equals (↑(#S) ^ (n + 1 + 1))⁻¹ =>
+        equals (((#S) : ℝ) ^ (n + 1 + 1))⁻¹ =>
           field_simp
           nth_rw 2 [pow_succ]
           simp
@@ -4692,10 +4705,9 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
         rw [← Real.rpow_natCast]
         rw [← Real.rpow_mul]
         field_simp
-        rw [Real.rpow_neg]
         simp
         rw [inv_lt_inv₀]
-        rw [pow_two]
+        rw [zpow_two]
         ring
         norm_cast
         rw [mul_two]
@@ -4707,11 +4719,8 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
         . norm_cast
           linarith
         . norm_cast
-          linarith
-        . norm_cast
           positivity
-        .
-          norm_cast
+        . norm_cast
           positivity
       . positivity
       . positivity
@@ -4769,10 +4778,9 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
           rw [← Real.rpow_natCast]
           rw [← Real.rpow_mul]
           field_simp
-          rw [Real.rpow_neg]
           simp
           rw [inv_lt_inv₀]
-          rw [pow_two]
+          rw [zpow_two]
           ring
           norm_cast
           rw [mul_two]
@@ -4784,11 +4792,8 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
           . norm_cast
             linarith
           . norm_cast
-            linarith
-          . norm_cast
             positivity
-          .
-            norm_cast
+          . norm_cast
             positivity
         . positivity
         . positivity
@@ -7485,7 +7490,6 @@ lemma closure_iterate_mulact {T: Type*} [Group T] [DecidableEq T] (a b: T) (n: �
             exact conj_inv_in
       | one =>
         simp
-        apply Subgroup.one_mem
       | mul y z hy hz y_mem z_mem =>
         have mul_mem := Subgroup.mul_mem _ y_mem z_mem
         simp at mul_mem
@@ -7580,7 +7584,6 @@ lemma closure_iterate_mulact {T: Type*} [Group T] [DecidableEq T] (a b: T) (n: �
             exact conj_in
       | one =>
         simp
-        apply Subgroup.one_mem
       | mul y z hy hz y_mem z_mem =>
         have mul_mem := Subgroup.mul_mem _ y_mem z_mem
         repeat rw [← mul_assoc] at mul_mem
