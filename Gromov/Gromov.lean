@@ -6398,11 +6398,8 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
     . simp [G']
       exact ker_finite_index
     . exact MonoidHom.rangeRestrict_surjective lambda_g_hom
-    . simp
-      simp at lambda_g_infinite
-
-      rw [Set.infinite_coe_iff]
-      apply Set.infinite_range_of_injective
+    . rw [rangeRestrict_range]
+      simp
       sorry
     . exact {
         is_comm := {
@@ -6416,7 +6413,9 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
     . rw [Subgroup.finiteIndex_iff]
       rw [rangeRestrict_range]
       simp
-    . sorry
+    . rw [rangeRestrict_range]
+      simp
+      exact Group.FG.out
   .
     simp only [not_infinite_iff_finite] at lambda_g_infinite
     let G'' := lambda_g_hom.ker
