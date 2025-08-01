@@ -2601,8 +2601,9 @@ lemma smul_conv (f h: G → ℝ) (k: ℝ): Conv f (k • h) = k • Conv f h := 
   simp
 
 -- Proving associativity in full generality is very annoying
--- Fortunately, we only need it in the case where g and h are non-negative, which is much easier
-lemma conv_assoc {f g h: G → ℝ} (h_fg: ConvExists f g) (h_gh: ConvExists g h) (g_nonneg: ∀ a : G, 0 ≤ g a) (h_nonneg: ∀ a : G, 0 ≤ h a): Conv (Conv f g) h = Conv f (Conv g h) := by
+-- Fortunately, we only need to use it once, so we can use restrictive hypothesis that match
+-- the functions we invoke this with
+lemma conv_assoc {f g h: G → ℝ} (h_fg: ConvExists f g) (h_gh: ConvExists g h) (g_finsupp: g.support.Finite) (g_nonneg: ∀ a : G, 0 ≤ g a) (h_nonneg: ∀ a : G, 0 ≤ h a): Conv (Conv f g) h = Conv f (Conv g h) := by
   unfold Conv
   unfold ConvExists at h_fg
   funext x
@@ -2634,7 +2635,45 @@ lemma conv_assoc {f g h: G → ℝ} (h_fg: ConvExists f g) (h_gh: ConvExists g h
       intro b
       rw [Real.norm_of_nonneg (h_nonneg b)]
     apply h_gh a
-  . sorry
+  .
+
+    have g_supp_compact: HasCompactSupport fun x ↦ ‖g x‖ := by
+      apply HasCompactSupport.intro (K := g.support)
+      . apply Set.Finite.isCompact
+        sorry
+      . simp
+
+    have h_supp_compact: HasCompactSupport fun x ↦ ‖h x‖ := by
+      apply HasCompactSupport.intro (K := h.support)
+      . apply Set.Finite.isCompact
+        sorry
+      . simp
+
+    apply HasCompactSupport.convolutionExists_right
+    .
+      apply HasCompactSupport.convolution
+      .
+        apply g_supp_compact
+      . apply h_supp_compact
+    . apply Continuous.locallyIntegrable
+      exact continuous_of_discreteTopology
+    .
+      apply HasCompactSupport.continuous_convolution_right
+      . apply h_supp_compact
+      .
+        apply Continuous.locallyIntegrable
+        exact continuous_of_discreteTopology
+      . exact continuous_of_discreteTopology
+    -- let other := ((fun (x: (Additive G)) ↦ ‖g x‖) ⋆[ContinuousLinearMap.mul ℝ ℝ, myHaarAddOpp] fun (x: (Additive G)) ↦ ‖h x‖)
+    -- have finsupp_conv := conv_exists_fin_supp (fun (b: G) => ‖f b‖) (fun b => other (Additive.ofMul b)) ?_
+    -- . apply finsupp_conv x
+    -- . left
+    --   simp
+    --   rw [← Function.comp_def]
+    --   rw [Function.support_comp_eq]
+    --   . apply f_finsupp
+    --   . simp
+
 
 
 -- TODO - figure out why we need these
@@ -5307,6 +5346,7 @@ lemma laplace_conv_eq_laplace_right (f g: G → ℝ) (hfg: ConvExists f g) (g_no
     apply conv_exists_fin_supp
     right
     exact mu_finsupp
+  . apply f_finsupp
   . exact g_nonneg
   . intro a
     simp [mu]
@@ -5921,6 +5961,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
       . sorry
       . sorry
     . apply f_n_nonneg
+    . exact f_n_fin_supp n
 
 
   let conv_h_n_cont (n: ℕ): C(G, ℝ) := {
