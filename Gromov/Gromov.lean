@@ -123,7 +123,7 @@ lemma mem_S_prod_list (x: G): ∃ l: List S, ProdS x l := by
   rw [← Subgroup.closure_toSubmonoid _] at foo
   simp only [mem_toSubmonoid, Finset.mem_coe] at foo
   specialize foo (mem_closure x)
-  rw [s_union_sinv (S := S)] at foo
+  rw [s_union_sinv] at foo
   obtain ⟨l, ⟨mem_s, prod_eq⟩⟩ := foo
   use (l.attach).map (fun x => ⟨x.val, mem_s (x.val) x.property⟩)
   unfold ProdS
@@ -401,6 +401,7 @@ instance LipschitzH.add [Generates (S := S)] : Add (LipschitzH (G := G)) := {
 }
 
 -- TODO - mark this as a simp lemma
+@[simp]
 lemma LipschitzH_apply [Generates (S := S)] (f: LipschitzH (G := G)) (x: G): f x = f.toFun x := rfl
 
 
@@ -539,8 +540,6 @@ instance LipschitzH.addMonoid [Generates (S := S)] : AddMonoid (LipschitzH (G :=
     simp [lipschitz_smul_tofun]
     rw [add_mul]
     simp
-    simp [LipschitzH_apply]
-    rfl
 }
 
 
@@ -592,7 +591,6 @@ instance LipschitzH.instAddCommGroup: AddCommGroup (LipschitzH (G := G)) := {
     intro f h
     ext g
     simp [lipschitz_sub_tofun, lipschitz_add_tofun, lipschitz_neg_tofun]
-    rw [LipschitzH_apply, LipschitzH_apply]
     rfl
   zsmul := fun n f => (n : ℂ) • f
   zsmul_zero' := by
@@ -606,9 +604,7 @@ instance LipschitzH.instAddCommGroup: AddCommGroup (LipschitzH (G := G)) := {
   neg_add_cancel := by
     intro f
     ext g
-    simp
     simp [negLipschitzH]
-    simp [DFunLike.coe]
     unfold Zero.toOfNat0
     unfold OfNat.ofNat
     simp [Zero.zero]
@@ -618,8 +614,7 @@ instance LipschitzH.instAddCommGroup: AddCommGroup (LipschitzH (G := G)) := {
     ext g
     simp [lipschitz_smul_tofun]
     rw [add_mul]
-    simp [LipschitzH_apply]
-    rfl
+    simp
   zsmul_neg' := by
     intro n hn
     simp
@@ -695,7 +690,6 @@ def ConstF: Submodule ℂ (LipschitzH (G := G)) := {
     simp [ConstLipschitzH]
     rw [← hx, ← hy]
     dsimp [ConstLipschitzH]
-    simp [DFunLike.coe]
   zero_mem' := by
     use (0 : ℂ)
     simp [ConstLipschitzH]
@@ -760,7 +754,6 @@ def gAct (g: G) (v: LipschitzH (S := S)): LipschitzH (S := S) := {
     have v_harmonic := v.harmonic
     simp [Harmonic] at v_harmonic
     specialize v_harmonic (x * g)
-    simp [DFunLike.coe]
     rw [v_harmonic]
     simp_rw [← mul_assoc]
 }
@@ -791,7 +784,6 @@ lemma gAct_injective: Function.Injective (gAct (S := S)) := by
       rw [this z 1]
       unfold ConstLipschitzH
       simp
-      rfl
     specialize hf (f 1)
     contradiction
 
@@ -850,7 +842,6 @@ def gActW (g: G): W (G := G) → W (G := G) := Quotient.lift (fun f => Submodule
   simp
   rw [sub_eq_add_neg]
   rw [add_comm]
-  rfl
 )
 
 
@@ -871,8 +862,7 @@ noncomputable def LipschitzSemiNorm_w (w: W (G := G)) := Quotient.lift ((fun f =
   simp [LipschitzSemiNorm]
   simp [LipschitzWith]
   simp_rw [edist_eq_enorm_sub]
-  simp_rw [ConstLipschitzH_apply]
-  simp [DFunLike.coe]
+  simp [ConstLipschitzH]
 ) w
 
 
@@ -1208,23 +1198,19 @@ def GRep: Representation ℂ G (LipschitzH (G := G))  := {
       intro f h
       ext a
       simp [gAct]
-      simp [DFunLike.coe]
     map_smul' := by
       intro c f
       ext a
       simp [gAct]
-      simp [DFunLike.coe]
       simp [HSMul.hSMul, SMul.smul]
   }
   map_one' := by
     ext f a
     simp [gAct]
-    rfl
   map_mul' := by
     intro g h
     ext f a
     simp [gAct]
-    simp [DFunLike.coe]
     simp [mul_assoc]
 }
 
