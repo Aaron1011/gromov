@@ -6305,7 +6305,16 @@ theorem exists_nontrivial_harmonic: ∃ F: LipschitzH (S := S), ∀ z: ℂ, F �
       exact f_n_limit s.val s.property
     )
 
-
+lemma rangeRestrict_range {A B: Type*} [Group A] [Group B] (f: A →* B): f.rangeRestrict.range = ⊤ := by
+  ext a
+  have a_prop := a.property
+  simp only [mem_top, iff_true]
+  rw [MonoidHom.mem_range] at a_prop
+  rw [MonoidHom.mem_range]
+  obtain ⟨x, hx⟩ := a_prop
+  use x
+  ext
+  simp [hx]
 
 
 lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1_Input (G := G)) := by
@@ -6389,7 +6398,12 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
     . simp [G']
       exact ker_finite_index
     . exact MonoidHom.rangeRestrict_surjective lambda_g_hom
-    . sorry
+    . simp
+      simp at lambda_g_infinite
+
+      rw [Set.infinite_coe_iff]
+      apply Set.infinite_range_of_injective
+      sorry
     . exact {
         is_comm := {
           comm := by
@@ -6399,7 +6413,9 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
             rw [add_comm]
         }
       }
-    . sorry
+    . rw [Subgroup.finiteIndex_iff]
+      rw [rangeRestrict_range]
+      simp
     . sorry
   .
     simp only [not_infinite_iff_finite] at lambda_g_infinite
