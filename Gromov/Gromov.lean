@@ -5920,6 +5920,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
       )
       . sorry
       . sorry
+    . apply f_n_nonneg
 
 
   let conv_h_n_cont (n: ℕ): C(G, ℝ) := {
