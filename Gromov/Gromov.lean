@@ -511,13 +511,15 @@ lemma lipschitz_neg_tofun (f: LipschitzH (G := G)): (-f).toFun = -(f.toFun) := b
   rfl
 
 
+@[simp]
 lemma lipschitz_add_tofun (f g: LipschitzH (G := G)): (f + g).toFun = f.toFun + g.toFun := by
   rfl
 
-
+@[simp]
 lemma lipschitz_sub_tofun (f g: LipschitzH (G := G)): (f - g).toFun = f.toFun - g.toFun := by
   rfl
 
+@[simp]
 lemma lipschitz_smul_tofun (c: ℂ) (f: LipschitzH (G := G)): (c • f).toFun = c • f.toFun := by
   rfl
 
@@ -629,7 +631,7 @@ abbrev V := Module ℂ (LipschitzH (G := G))
 
 
 
-
+@[simp]
 lemma zero_apply (x: G): (0: LipschitzH (G := G) (S := S)).toFun x = 0 := by
   unfold LipschitzH.zero
   rfl
@@ -648,9 +650,6 @@ instance lipschitzHVectorSpace : V (G := G) := {
     intro c
     dsimp [HSMul.hSMul, SMul.smul]
     ext g
-    simp
-    have foo := zero_apply g
-    rw [foo]
     simp
   smul_add := by
     intro a f g
@@ -694,9 +693,7 @@ def ConstF: Submodule ℂ (LipschitzH (G := G)) := {
     use (0 : ℂ)
     simp [ConstLipschitzH]
     ext g
-    simp [DFunLike.coe]
-    dsimp [OfNat.ofNat]
-    simp [Zero.zero]
+    simp
   smul_mem' := by
     intro c f hf
     simp at hf
@@ -705,7 +702,6 @@ def ConstF: Submodule ℂ (LipschitzH (G := G)) := {
     use (c * x)
     ext g
     simp [ConstLipschitzH]
-    simp [HSMul.hSMul, SMul.smul]
     left
     rw [← hx]
     simp [ConstLipschitzH]
@@ -835,8 +831,6 @@ def gActW (g: G): W (G := G) → W (G := G) := Quotient.lift (fun f => Submodule
   ext a
   apply_fun LipschitzH.toFun at hz
   have app_eq := congrFun hz (a * g)
-  simp at app_eq
-  rw [lipschitz_sub_tofun] at app_eq
   simp at app_eq
   rw [app_eq]
   simp
@@ -1009,13 +1003,14 @@ noncomputable instance LipschitzH_seminorm: SeminormedAddCommGroup (LipschitzH (
   dist_comm := by
     intro x y
     simp [LipschitzSemiNorm]
-    simp [DFunLike.coe]
     conv =>
       lhs
-      pattern x - y
-      equals -(y - x) =>
-        field_simp
-    simp_rw [lipschitz_neg_tofun]
+      pattern ⇑(x - y)
+      equals -⇑((y - x)) =>
+        ext a
+        simp
+
+
     simp_rw [lipschitzWith_neg_iff]
   dist_triangle := by
     intro x y z
@@ -1202,7 +1197,6 @@ def GRep: Representation ℂ G (LipschitzH (G := G))  := {
       intro c f
       ext a
       simp [gAct]
-      simp [HSMul.hSMul, SMul.smul]
   }
   map_one' := by
     ext f a
@@ -1366,9 +1360,7 @@ lemma quotient_norm_eq_norm (f: LipschitzH (G := G)): ‖(Submodule.Quotient.mk 
       simp [LipschitzSemiNorm]
       simp [LipschitzWith]
       simp_rw [← ha]
-      simp [ConstLipschitzH, DFunLike.coe]
-      simp_rw [lipschitz_sub_tofun]
-      simp
+      simp [ConstLipschitzH]
       rfl
 
   conv =>
@@ -6346,17 +6338,11 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
     map_add' := by
       intro x y
       simp [lambda_g]
-      simp [LipschitzH_apply]
-      simp [lipschitz_sub_tofun]
-      simp [LipschitzH_apply]
       abel
     map_smul' := by
       intro c x
       simp [lambda_g]
-      simp [LipschitzH_apply]
-      simp [lipschitz_sub_tofun]
       rw [mul_sub]
-      simp [lipschitz_smul_tofun]
   }
 
   -- TODO - this could be much cleaner
@@ -6377,15 +6363,14 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
     rw [add_comm]
     simp [LipschitzH_apply]
     simp [LipschitzH_apply] at hy
-    simp_rw [← hy]
+    have other_app := congrFun hy 1
+    simp at other_app
+    rw [← other_app]
     simp [ConstLipschitzH]
 
   have lambda_const (g: (GRepW_base (G := G)).ker) (f: LipschitzH (S := S)) (k: ℂ): (lambda_g g (f + (ConstLipschitzH k))) = (lambda_g g f) := by
     simp [lambda_g, GRep, gAct]
-    simp [LipschitzH_apply]
-    simp [lipschitz_sub_tofun]
     simp [ConstLipschitzH]
-    simp [LipschitzH_apply]
 
 
   let lambda_g_hom: G' →* Multiplicative (Module.Dual ℂ (LipschitzH)) := {
@@ -6395,7 +6380,6 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
       simp [lambda_g]
       ext f
       simp
-      rfl
     map_mul' := by
       intro g h
       ext f
@@ -6405,11 +6389,8 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
         dsimp [lambda_g]
       simp [GRep]
       rw [gAct_mul]
-      simp [LipschitzH_apply]
-      simp [lipschitz_sub_tofun]
       rw [act_eq_lambda h.val h.property]
       rw [act_eq_lambda g.val g.property]
-      simp [LipschitzH_apply]
       rw [lambda_const]
       simp [ConstLipschitzH]
       group
@@ -6462,8 +6443,6 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
       simp [lambda_g_hom, lambda_g_dual, lambda_g, GRep] at g_prop
       apply_fun (fun p => p f) at g_prop
       simp at g_prop
-      simp [LipschitzH_apply] at g_prop
-      simp [lipschitz_sub_tofun] at g_prop
       rw [sub_eq_zero] at g_prop
       simp [gAct] at g_prop
       specialize act_v f
@@ -6472,9 +6451,6 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
       simp [ConstLipschitzH] at hy
       apply_fun (fun l => l.toFun) at hy
       simp at hy
-      rw [lipschitz_sub_tofun] at hy
-      simp at hy
-      simp [LipschitzH_apply]
       rw [Pi.sub_def] at hy
       have eval_one := hy
       apply_fun (fun f => f 1) at eval_one
@@ -6485,7 +6461,7 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
       simp at eval_one
       rw [eq_comm] at hy
       apply eq_add_of_sub_eq' at hy
-      simp [LipschitzH_apply] at hy
+      simp
       rw [hy]
       simp
       exact eval_one
@@ -6543,6 +6519,7 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
         simp only [Set.mem_range] at ha
         obtain ⟨y, hy⟩ := ha
         simp
+        simp at hy
         use y.out
 
 
@@ -6565,11 +6542,8 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
             rw [← hy]
             exact f_le
           . simp
-            use y
-            rfl
           . simp
             rw [← hy] at p_le_z
-            simp [LipschitzH_apply] at p_le_z
             linarith
 
       simp at z_mem
@@ -6588,8 +6562,6 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
         intro a
         specialize z_max (f.toFun a) (by (
           simp
-          use a
-          rfl
         ))
         rw [← f_g_eq] at z_max
         exact z_max
