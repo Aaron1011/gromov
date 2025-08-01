@@ -5353,6 +5353,7 @@ lemma laplace_conv_eq_laplace_right (f g: G → ℝ) (hfg: ConvExists f g) (g_no
     simp [mu]
     positivity
 
+#print axioms laplace_conv_eq_laplace_right
 
 lemma f_n_nonneg: ∀ n: ℕ, ∀ g: G,  0 ≤ f_n n g := by
   intro n g
