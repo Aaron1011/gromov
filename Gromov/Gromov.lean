@@ -2078,8 +2078,6 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
 
 
 
-
-
 instance countable_G: Countable G := by
   apply Function.Surjective.countable (f := fun (x: List S) => x.unattach.prod)
   intro g
@@ -6653,6 +6651,13 @@ lemma mem_closure_iff_mem_pow (g: G): g ∈ Subgroup.closure S ↔ ∃ n, g ∈ 
   .
     intro _
     apply mem_closure g
+
+-- TODO - get rid of the duplicate 'hGS'
+lemma exists_theorem_3_1_input [hGS: Generates (G := G) (S := S)]: Nonempty (Theorem3_1_Input (G := G)) := by
+  by_cases rho_g_infinite: Infinite (↥(rho_g (G := G)))
+  . exact rho_g_case_infinite rho_g_infinite
+  . exact rho_g_case_finite (by simpa using rho_g_infinite)
+
 
 lemma poly_growth_implies (d: ℕ) (hd: HasPolynomialGrowthD (S := S) d): HasPolynomialGrowthD (S := S') d := by
 
