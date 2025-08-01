@@ -1857,7 +1857,7 @@ lemma theorem_3_1 (data: Theorem3_1_Input (G := G)) (n: ℕ) (h_growth: HasPolyn
 
 
 
-lemma g_hom_abelian {T: Type*} [Group T] (A: Subgroup G) (A_finite_index: A.FiniteIndex) (hom: A →* T) (H: Subgroup hom.range) (H_infinite: Infinite H) (H_abeliean: IsMulCommutative H) (H_finite_index: H.FiniteIndex) (H_FG: Group.FG H): Nonempty (Theorem3_1_Input (G := G)) := by
+lemma g_hom_abelian {T: Type*} [Group T] (A: Subgroup G) (A_finite_index: A.FiniteIndex) (hom: A →* T) (hom_surjective: Function.Surjective hom) (H: Subgroup T) (H_infinite: Infinite H) (H_abeliean: IsMulCommutative H) (H_finite_index: H.FiniteIndex) (H_FG: Group.FG H): Nonempty (Theorem3_1_Input (G := G)) := by
   -- TODO - generalize this to a lemma: finite-index subgroup of an infinite group is infinite
   -- and upstream to mathlib
 
@@ -1923,8 +1923,8 @@ lemma g_hom_abelian {T: Type*} [Group T] (A: Subgroup G) (A_finite_index: A.Fini
 
 
   -- Interpret H as a subgroup of GL_W
-  let H_as_GL_W := Subgroup.map (Subgroup.subtype (hom.range)) H
-  let G' := Subgroup.comap hom.rangeRestrict H
+  --let H_as_GL_W := Subgroup.map (Subgroup.subtype (hom.range)) H
+  let G' := Subgroup.comap hom H
   have H_index_ne_zero := H_finite_index.index_ne_zero
 
   -- TODO - generalize this and PR to mathlib
@@ -1949,7 +1949,6 @@ lemma g_hom_abelian {T: Type*} [Group T] (A: Subgroup G) (A_finite_index: A.Fini
         simp
         rw [Subgroup.index_comap]
         simp [Subgroup.relindex]
-        rw [rangerestrict_range]
         -- apply somehow found this - how does it work???
         exact Subgroup.FiniteIndex.index_ne_zero
     }
@@ -1958,14 +1957,14 @@ lemma g_hom_abelian {T: Type*} [Group T] (A: Subgroup G) (A_finite_index: A.Fini
 
   -- TODO - there must be an easier way to do this
   let g'_to_h: (map A.subtype G') →* H := {
-    toFun := fun g => ⟨⟨hom ⟨g.val, by (
+    toFun := fun g => ⟨hom ⟨g.val, by (
       -- TODO - clean this up
       have foo := g.property
       rw [Subgroup.mem_map] at foo
       obtain ⟨x, hx, a_subtype⟩ := foo
       rw [← a_subtype]
       simp
-    )⟩, by simp⟩, by (
+    )⟩, by (
       have g_prop := g.property
       simp only [G', Subgroup.mem_comap] at g_prop
       rw [Subgroup.mem_map] at g_prop
@@ -2022,47 +2021,63 @@ lemma g_hom_abelian {T: Type*} [Group T] (A: Subgroup G) (A_finite_index: A.Fini
       .
         simp [additive_g'_to_h, g'_to_h]
         intro h
-        have h_mem := h.property
-        rw [← Subgroup.mem_carrier] at h_mem
-
-        have h_prop := h.val.property
+        obtain ⟨a, hom_a⟩ := hom_surjective h
         simp
-        obtain ⟨a, ha⟩ := h_prop
         use a
-        have a_mem_G': a ∈ G' := by
-          simp [G', H_as_GL_W, rho_g]
-          simp [MonoidHom.rangeRestrict]
-          simp_rw [ha]
-          simp
-        -- TODO - make this less awful
         simp
-        use a_mem_G'
-        unfold DFunLike.coe
-        unfold MonoidHom.instFunLike
-        eta_reduce
-        simp
-        apply Additive.ext
-        simp
-        unfold MonoidHom.instFunLike
-        simp
-        simp_rw [ha]
+        simp [G', hom_a]
   }
 
+#print axioms g_hom_abelian
 
 -- Case 1 in Section 3.3 of Vikman, where the representation ρ(G) is infinite
 lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theorem3_1_Input (G := G)) := by
   obtain ⟨H, H_abelian, H_finite_index⟩ := rho_g_contains_abelian (G := G)
 
-  have card_mul := Subgroup.card_mul_index H
-  rw [Nat.card_eq_zero_of_infinite (α := rho_g)] at card_mul
-  rw [Nat.mul_eq_zero] at card_mul
-  simp [H_finite_index.index_ne_zero] at card_mul
-  rw [Nat.card_eq_zero] at card_mul
-  simp at card_mul
+
   have h_fg: Group.FG H := by
     apply Subgroup.fg_of_index_ne_zero
 
-  apply g_hom_abelian ⊤ (by infer_instance) ((GRepW_base (G := G))) H card_mul H_abelian H_finite_index (h_fg)
+  let top_equiv := Subgroup.topEquiv (G := G)
+  let top_comp := (GRepW_base (G := G)).comp top_equiv.toMonoidHom
+
+
+
+
+  --let H' := top_equiv.toMonoidHom
+  --let other_H' := H'.range
+
+  have target := g_hom_abelian (G := G) ⊤ (by infer_instance) (top_comp) H ?_ ?_ ?_ ?_
+  . exact target
+  .
+    unfold top_comp top_equiv topEquiv
+    dsimp [MonoidHom.range]
+    have card_mul := Subgroup.card_mul_index top_comp.rangeRestrict.range
+    unfold top_comp at card_mul
+
+    rw [Nat.card_eq_zero_of_infinite] at card_mul
+    rw [Nat.mul_eq_zero] at card_mul
+    simp [H_finite_index.index_ne_zero] at card_mul
+    rw [Nat.card_eq_zero] at card_mul
+    simp at card_mul
+  . simp [top_comp]
+    exact {
+      is_comm := by {
+        exact {
+          comm := by
+            intro a b
+            have a_prop := a.property
+            have b_prop := b.property
+            simp only [MonoidHom.mem_range] at a_prop b_prop
+            obtain ⟨c, hc⟩ := a_prop
+            obtain ⟨d, hd⟩ := b_prop
+            have h_comm := H_abelian.is_comm.comm
+            unfold H at h_comm
+        }
+      }
+    }
+  . sorry
+  . sorry
 
 #print axioms rho_g_case_infinite
 
