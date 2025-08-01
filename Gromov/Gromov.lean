@@ -2040,44 +2040,32 @@ lemma rho_g_case_infinite (hr: Infinite (↥(rho_g (G := G)))): Nonempty (Theore
 
   let top_equiv := Subgroup.topEquiv (G := G)
   let top_comp := (GRepW_base (G := G)).comp top_equiv.toMonoidHom
-
+  let g_rho := (GRepW_base (G := G)).rangeRestrict.comp top_equiv.toMonoidHom
 
 
 
   --let H' := top_equiv.toMonoidHom
   --let other_H' := H'.range
 
-  have target := g_hom_abelian (G := G) ⊤ (by infer_instance) (top_comp) H ?_ ?_ ?_ ?_
+  have target := g_hom_abelian (G := G) ⊤ (by infer_instance) (g_rho) ?_ (H) ?_ ?_ ?_ ?_
   . exact target
   .
-    unfold top_comp top_equiv topEquiv
+    simp [g_rho]
+    exact MonoidHom.rangeRestrict_surjective GRepW_base
+  .
     dsimp [MonoidHom.range]
-    have card_mul := Subgroup.card_mul_index top_comp.rangeRestrict.range
-    unfold top_comp at card_mul
-
-    rw [Nat.card_eq_zero_of_infinite] at card_mul
+    unfold rho_g at hr
+    have card_mul := Subgroup.card_mul_index H
+    unfold rho_g at card_mul
+    nth_rw 2 [Nat.card_eq_zero_of_infinite] at card_mul
     rw [Nat.mul_eq_zero] at card_mul
     simp [H_finite_index.index_ne_zero] at card_mul
     rw [Nat.card_eq_zero] at card_mul
     simp at card_mul
-  . simp [top_comp]
-    exact {
-      is_comm := by {
-        exact {
-          comm := by
-            intro a b
-            have a_prop := a.property
-            have b_prop := b.property
-            simp only [MonoidHom.mem_range] at a_prop b_prop
-            obtain ⟨c, hc⟩ := a_prop
-            obtain ⟨d, hd⟩ := b_prop
-            have h_comm := H_abelian.is_comm.comm
-            unfold H at h_comm
-        }
-      }
-    }
-  . sorry
-  . sorry
+    exact card_mul
+  . exact H_abelian
+  . exact H_finite_index
+  . exact h_fg
 
 #print axioms rho_g_case_infinite
 
