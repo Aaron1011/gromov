@@ -5953,14 +5953,9 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
       grw [my_norm]
       simp [enorm]
     .
-      -- TODO - it's not obvious from the paper why this convolution exists
-      --simp [ConvExists, MeasureTheory.ConvolutionExists, MeasureTheory.ConvolutionExistsAt]
-      apply conv_exists (p := 2) (q := 2) (by simp) (by simp) (by
-        rw [Real.holderConjugate_iff]
-        field_simp
-      )
-      . sorry
-      . sorry
+      apply conv_exists_fin_supp
+      right
+      exact f_n_fin_supp n
     . apply f_n_nonneg
     . exact f_n_fin_supp n
 
