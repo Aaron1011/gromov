@@ -6424,58 +6424,6 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
       rw [lambda_const]
       simp [ConstLipschitzH]
       group
-      --have g_prop := g.property
-      --have h_prop := h.property
-      --simp only [G', MonoidHom.mem_ker] at g_prop h_prop
-      simp [lambda_g_dual, lambda_g]
-      ext f
-      simp
-      -- simp [LipschitzH_apply]
-      -- conv =>
-      --   lhs
-      --   arg 1
-      --   arg 1
-      --   arg 2
-      --   simp [GRep, gAct]
-      --   simp [lipschitz_sub_tofun]
-      --   simp [LipschitzH_apply]
-
-
-      --simp [lipschitz_sub_tofun]
-      --simp [DFunLike.coe]
-      --simp [LipschitzH_apply]
-      have act_h := act_v h (by simp) f
-      simp [GRep, gAct, ConstF] at act_h
-      obtain ⟨y, hy⟩ := act_h
-      apply_fun (fun l => l.toFun) at hy
-      simp [lipschitz_sub_tofun] at hy
-      have apply_h := congrFun hy g
-      simp at apply_h
-      simp [ConstLipschitzH] at apply_h
-      rw [eq_comm] at apply_h
-      apply eq_add_of_sub_eq at apply_h
-      rw [eq_comm] at hy
-      apply eq_add_of_sub_eq at hy
-      conv =>
-        pattern (GRep ↑h) f
-        simp [GRep, gAct]
-        simp [hy]
-
-      --simp [lipschitz_sub_tofun]
-      simp [LipschitzH_apply]
-      simp [lipschitz_sub_tofun]
-      simp [GRep, gAct]
-      simp [LipschitzH_apply]
-      simp [ConstLipschitzH]
-      rw [apply_h]
-      rw [add_sub]
-      field_simp
-
-      rw [hy]
-      simp
-
-
-      sorry
   }
 
   by_cases lambda_g_infinite: Infinite (lambda_g_hom.range)
@@ -6573,36 +6521,6 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
     have finite_quotient := Subgroup.finite_quotient_of_finiteIndex (H := G''_subgroup_G)
 
     have coset_union := QuotientGroup.univ_eq_iUnion_smul G''_subgroup_G
-
-    -- have G''_normal: G''_subgroup_G.Normal := by
-    --   unfold G''_subgroup_G
-    --   have G'_normal := MonoidHom.normal_ker (GRepW_base (G := G))
-    --   have ker_normal: lambda_g_hom.ker.Normal := by
-    --     exact MonoidHom.normal_ker lambda_g_hom
-
-    --   exact {
-    --     conj_mem := by
-    --       intro n hn
-    --       simp only [mem_map] at hn
-    --       obtain ⟨x, x_mem, x_eq_n⟩ := hn
-    --       have k_normal_conj := G'_normal.conj_mem
-    --       specialize k_normal_conj x (by simp)
-    --       intro g
-    --       simp at x_eq_n
-    --       specialize k_normal_conj g
-    --       rw [x_eq_n] at k_normal_conj
-    --       simp [lambda_g_hom, lambda_g_dual, lambda_g]
-    --       simp only [mem_map]
-    --       simp only [mem_map] at k_normal_conj
-
-
-
-    --   }
-
-    -- normal_iff_eq_cosets
-
-
-
     have f_range_eq (f: LipschitzH (S := S)): Set.range f = Set.range ((fun (x: G ⧸ G''_subgroup_G) => f (x.out))) := by
       ext a
       refine ⟨?_, ?_⟩
