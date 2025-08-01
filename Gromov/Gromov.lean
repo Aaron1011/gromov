@@ -765,6 +765,12 @@ def gAct (g: G) (v: LipschitzH (S := S)): LipschitzH (S := S) := {
     simp_rw [← mul_assoc]
 }
 
+lemma gAct_mul (g h : G) (f: LipschitzH (S := S)): gAct (g * h) f = gAct g (gAct h f) := by
+  unfold gAct
+  ext x
+  simp [DFunLike.coe]
+  rw [← mul_assoc]
+
 -- TODO - is this actually true? What if all of the functions happen to be periodic,
 -- and we translate by multiples of the period?
 -- It's almost certainly wrong, since the image of rho can be finite
@@ -6364,6 +6370,35 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
       simp [lipschitz_smul_tofun]
   }
 
+  -- TODO - this could be much cleaner
+  have act_eq_lambda (g: G) (hg: g ∈ (GRepW_base (G := G)).ker) (f: LipschitzH (S := S)): (gAct g f) = f + ConstLipschitzH (lambda_g ⟨g, hg⟩ f) := by
+    have act := act_v g hg f
+    simp [GRep, gAct, ConstF] at act
+    simp [gAct]
+    obtain ⟨y, hy⟩ := act
+    simp [lambda_g, GRep, gAct]
+    ext a
+    simp
+    apply_fun (fun l => l.toFun) at hy
+    have app_a := congrFun hy a
+    simp [lipschitz_sub_tofun] at app_a
+    rw [eq_comm] at app_a
+    apply eq_add_of_sub_eq at app_a
+    rw [app_a]
+    rw [add_comm]
+    simp [LipschitzH_apply]
+    simp [LipschitzH_apply] at hy
+    simp_rw [← hy]
+    simp [ConstLipschitzH]
+
+  have lambda_const (g: (GRepW_base (G := G)).ker) (f: LipschitzH (S := S)) (k: ℂ): (lambda_g g (f + (ConstLipschitzH k))) = (lambda_g g f) := by
+    simp [lambda_g, GRep, gAct]
+    simp [LipschitzH_apply]
+    simp [lipschitz_sub_tofun]
+    simp [ConstLipschitzH]
+    simp [LipschitzH_apply]
+
+
   let lambda_g_hom: G' →* Multiplicative (Module.Dual ℂ (LipschitzH)) := {
     toFun := fun g => Multiplicative.ofAdd (lambda_g_dual g)
     map_one' := by
@@ -6374,12 +6409,41 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
       rfl
     map_mul' := by
       intro g h
+      ext f
+      simp [lambda_g_dual]
+      conv =>
+        lhs
+        dsimp [lambda_g]
+      simp [GRep]
+      rw [gAct_mul]
+      simp [LipschitzH_apply]
+      simp [lipschitz_sub_tofun]
+      rw [act_eq_lambda h.val h.property]
+      rw [act_eq_lambda g.val g.property]
+      simp [LipschitzH_apply]
+      rw [lambda_const]
+      simp [ConstLipschitzH]
+      group
+      --have g_prop := g.property
+      --have h_prop := h.property
+      --simp only [G', MonoidHom.mem_ker] at g_prop h_prop
       simp [lambda_g_dual, lambda_g]
       ext f
-      simp [LipschitzH_apply]
-      simp [GRep, gAct]
-      simp [lipschitz_sub_tofun]
-      simp [LipschitzH_apply]
+      simp
+      -- simp [LipschitzH_apply]
+      -- conv =>
+      --   lhs
+      --   arg 1
+      --   arg 1
+      --   arg 2
+      --   simp [GRep, gAct]
+      --   simp [lipschitz_sub_tofun]
+      --   simp [LipschitzH_apply]
+
+
+      --simp [lipschitz_sub_tofun]
+      --simp [DFunLike.coe]
+      --simp [LipschitzH_apply]
       have act_h := act_v h (by simp) f
       simp [GRep, gAct, ConstF] at act_h
       obtain ⟨y, hy⟩ := act_h
@@ -6387,6 +6451,29 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
       simp [lipschitz_sub_tofun] at hy
       have apply_h := congrFun hy g
       simp at apply_h
+      simp [ConstLipschitzH] at apply_h
+      rw [eq_comm] at apply_h
+      apply eq_add_of_sub_eq at apply_h
+      rw [eq_comm] at hy
+      apply eq_add_of_sub_eq at hy
+      conv =>
+        pattern (GRep ↑h) f
+        simp [GRep, gAct]
+        simp [hy]
+
+      --simp [lipschitz_sub_tofun]
+      simp [LipschitzH_apply]
+      simp [lipschitz_sub_tofun]
+      simp [GRep, gAct]
+      simp [LipschitzH_apply]
+      simp [ConstLipschitzH]
+      rw [apply_h]
+      rw [add_sub]
+      field_simp
+
+      rw [hy]
+      simp
+
 
       sorry
   }
