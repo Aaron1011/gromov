@@ -760,45 +760,6 @@ lemma gAct_mul (g h : G) (f: LipschitzH (S := S)): gAct (g * h) f = gAct g (gAct
   simp [DFunLike.coe]
   rw [← mul_assoc]
 
--- TODO - is this actually true? What if all of the functions happen to be periodic,
--- and we translate by multiples of the period?
--- It's almost certainly wrong, since the image of rho can be finite
-lemma gAct_injective: Function.Injective (gAct (S := S)) := by
-  intro x y hxy
-
-  have nontrivial_f: ∃ f: LipschitzH, ∀ z: ℂ, f ≠ ConstLipschitzH (S := S) z := by
-    sorry
-
-  obtain ⟨f, hf⟩ := nontrivial_f
-
-  -- A non-constant function has at least two distinct values
-  have distinct_values: ∃ a b, f a ≠ f b := by
-    by_contra!
-    have f_eq_const: f = ConstLipschitzH (S := S) (f 1) := by
-      ext z
-      simp [DFunLike.coe] at this
-      rw [this z 1]
-      unfold ConstLipschitzH
-      simp
-    specialize hf (f 1)
-    contradiction
-
-  obtain ⟨a, b, hab⟩ := distinct_values
-  have app_f: (gAct x) f = (gAct y) f := by
-    rw [hxy]
-
-  simp [gAct] at app_f
-
-  have congr_a := congrFun app_f (x * a)
-  simp at congr_a
-  sorry
-
-
-
-
-
-
-
 
 
 def gAct_const (g: G) (z: ℂ): gAct g (ConstLipschitzH z) = ConstLipschitzH z := by
