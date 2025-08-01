@@ -2600,7 +2600,9 @@ lemma smul_conv (f h: G → ℝ) (k: ℝ): Conv f (k • h) = k • Conv f h := 
   rw [MeasureTheory.convolution_smul]
   simp
 
-lemma conv_assoc {f g h: G → ℝ} (h_fg: ConvExists f g): Conv (Conv f g) h = Conv f (Conv g h) := by
+-- Proving associativity in full generality is very annoying
+-- Fortunately, we only need it in the case where g and h are non-negative, which is much easier
+lemma conv_assoc {f g h: G → ℝ} (h_fg: ConvExists f g) (h_gh: ConvExists g h) (g_nonneg: ∀ a : G, 0 ≤ g a) (h_nonneg: ∀ a : G, 0 ≤ h a): Conv (Conv f g) h = Conv f (Conv g h) := by
   unfold Conv
   unfold ConvExists at h_fg
   funext x
@@ -2620,7 +2622,18 @@ lemma conv_assoc {f g h: G → ℝ} (h_fg: ConvExists f g): Conv (Conv f g) h = 
   .
     apply Filter.Eventually.of_forall
     exact h_fg
-  . sorry
+  . apply Filter.Eventually.of_forall
+    intro a
+    conv =>
+      arg 1
+      intro b
+      rw [Real.norm_of_nonneg (g_nonneg b)]
+
+    conv =>
+      arg 2
+      intro b
+      rw [Real.norm_of_nonneg (h_nonneg b)]
+    apply h_gh a
   . sorry
 
 
@@ -5257,7 +5270,7 @@ lemma f_n_fin_supp (n: ℕ): (f_n (S := S) n).support.Finite := by
   . intro m hm
     apply mu_conv_finsupp
 
-lemma laplace_conv_eq_laplace_right (f g: G → ℝ) (hfg: ConvExists f g): Laplace_b (Conv f g) = Conv f (Laplace_b g) := by
+lemma laplace_conv_eq_laplace_right (f g: G → ℝ) (hfg: ConvExists f g) (g_nonneg: ∀ a: G, 0 ≤ g a): Laplace_b (Conv f g) = Conv f (Laplace_b g) := by
   simp_rw [Laplace_b]
   rw [conv_assoc]
 
@@ -5290,6 +5303,14 @@ lemma laplace_conv_eq_laplace_right (f g: G → ℝ) (hfg: ConvExists f g): Lapl
     field_simp
     exact hfg
   . exact hfg
+  .
+    apply conv_exists_fin_supp
+    right
+    exact mu_finsupp
+  . exact g_nonneg
+  . intro a
+    simp [mu]
+    positivity
 
 
 lemma f_n_nonneg: ∀ n: ℕ, ∀ g: G,  0 ≤ f_n n g := by
