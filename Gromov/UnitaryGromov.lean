@@ -5,6 +5,7 @@ open scoped Matrix.L2OpNorm ComplexInnerProductSpace
 
 
 -- Lemma 3.29 (Shrinking Conjugators)
+set_option maxHeartbeats 500000 in
 lemma shrinking_conjugators (n: ℕ) (g h: Matrix.unitaryGroup (Fin n) ℂ):
   ‖⁅g, h⁆.val - 1‖ ≤ 2 * ‖g.val - 1‖ * ‖h.val - 1‖ := by
   dsimp only [Bracket.bracket]
@@ -1354,7 +1355,6 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
 
           rw [MulEquiv.map_one]
           simp
-          apply Subgroup.one_mem
         inv_mem' := by
           intro a ha
           simp only [Set.mem_setOf_eq] at ha
@@ -1540,6 +1540,8 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
                 rw [Subgroup.mem_map] at a_prop
                 obtain ⟨b, b_mem, b_map⟩ := a_prop
                 have foo := g_mem.comm ⟨b, b_mem⟩
+                rw [commute_iff_eq] at foo
+                rw [commute_iff_eq]
                 rw [Subtype.ext_iff] at foo
                 rw [Subtype.ext_iff] at foo
                 simp at foo
@@ -1553,9 +1555,6 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
                 exact foo
               left_assoc := by
                 intro b c
-                group
-              mid_assoc := by
-                intro a b
                 group
               right_assoc := by
                 intro a b
