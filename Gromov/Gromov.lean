@@ -6385,9 +6385,22 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
   by_cases lambda_g_infinite: Infinite (lambda_g_hom.range)
   .
 
-    have foo := g_hom_abelian (G := G) (GRepW_base (G := G)) lambda_g_hom.range
-    exact foo
-    sorry
+    apply g_hom_abelian (G := G) G' ?_ lambda_g_hom.rangeRestrict ?_ lambda_g_hom.rangeRestrict.range ?_ ?_ ?_ ?_
+    . simp [G']
+      exact ker_finite_index
+    . exact MonoidHom.rangeRestrict_surjective lambda_g_hom
+    . sorry
+    . exact {
+        is_comm := {
+          comm := by
+            intro a b
+            ext
+            simp
+            rw [add_comm]
+        }
+      }
+    . sorry
+    . sorry
   .
     simp only [not_infinite_iff_finite] at lambda_g_infinite
     let G'' := lambda_g_hom.ker
