@@ -2603,7 +2603,7 @@ lemma smul_conv (f h: G → ℝ) (k: ℝ): Conv f (k • h) = k • Conv f h := 
 -- Proving associativity in full generality is very annoying
 -- Fortunately, we only need to use it once, so we can use restrictive hypothesis that match
 -- the functions we invoke this with
-lemma conv_assoc {f g h: G → ℝ} (h_fg: ConvExists f g) (h_gh: ConvExists g h) (g_finsupp: g.support.Finite) (g_nonneg: ∀ a : G, 0 ≤ g a) (h_nonneg: ∀ a : G, 0 ≤ h a): Conv (Conv f g) h = Conv f (Conv g h) := by
+lemma conv_assoc {f g h: G → ℝ} (h_fg: ConvExists f g) (h_gh: ConvExists g h) (g_finsupp: g.support.Finite) (g_nonneg: ∀ a : G, 0 ≤ g a) (h_finsupp: h.support.Finite) (h_nonneg: ∀ a : G, 0 ≤ h a): Conv (Conv f g) h = Conv f (Conv g h) := by
   unfold Conv
   unfold ConvExists at h_fg
   funext x
@@ -2640,13 +2640,13 @@ lemma conv_assoc {f g h: G → ℝ} (h_fg: ConvExists f g) (h_gh: ConvExists g h
     have g_supp_compact: HasCompactSupport fun x ↦ ‖g x‖ := by
       apply HasCompactSupport.intro (K := g.support)
       . apply Set.Finite.isCompact
-        sorry
+        apply g_finsupp
       . simp
 
     have h_supp_compact: HasCompactSupport fun x ↦ ‖h x‖ := by
       apply HasCompactSupport.intro (K := h.support)
       . apply Set.Finite.isCompact
-        sorry
+        apply h_finsupp
       . simp
 
     apply HasCompactSupport.convolutionExists_right
@@ -5309,7 +5309,7 @@ lemma f_n_fin_supp (n: ℕ): (f_n (S := S) n).support.Finite := by
   . intro m hm
     apply mu_conv_finsupp
 
-lemma laplace_conv_eq_laplace_right (f g: G → ℝ) (hfg: ConvExists f g) (g_nonneg: ∀ a: G, 0 ≤ g a): Laplace_b (Conv f g) = Conv f (Laplace_b g) := by
+lemma laplace_conv_eq_laplace_right (f g: G → ℝ) (hfg: ConvExists f g) (g_nonneg: ∀ a: G, 0 ≤ g a) (g_finsupp: g.support.Finite): Laplace_b (Conv f g) = Conv f (Laplace_b g) := by
   simp_rw [Laplace_b]
   rw [conv_assoc]
 
@@ -5346,8 +5346,9 @@ lemma laplace_conv_eq_laplace_right (f g: G → ℝ) (hfg: ConvExists f g) (g_no
     apply conv_exists_fin_supp
     right
     exact mu_finsupp
-  . apply f_finsupp
+  . apply g_finsupp
   . exact g_nonneg
+  . exact mu_finsupp
   . intro a
     simp [mu]
     positivity
