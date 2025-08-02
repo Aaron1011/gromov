@@ -1761,7 +1761,7 @@ instance LocallyCompact_GL_W: LocallyCompactSpace (GL_W (G := G)) := by
 lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutative M ∧ M.FiniteIndex := by
   let my_map := Subgroup.subtype (rho_g (G := G))
   unfold GL_W at my_map
-  --have my_weyl_trick := weyl_unitarian_trick (H := rho_g (G := G)) (G := GL_W (G := G)) (V := (W (G := G))) (rep := my_map)
+  have my_weyl_trick := weyl_unitarian_trick (H := rho_g (G := G)) (G := GL_W (G := G)) (V := (W (G := G))) (rep := my_map)
   sorry
 
 -- We need this to work with Finset
@@ -2042,13 +2042,15 @@ lemma singleton_pairwise_disjoint {T: Type*} (s: Set (T)) : s.PairwiseDisjoint S
 instance G_Add_MeasureableSingleton: MeasurableSingletonClass (Additive G) := {
   measurableSet_singleton := by
     intro x
-    sorry
+    apply IsOpen.measurableSet
+    simp
 }
 
 instance G_MeasureableSingleton: MeasurableSingletonClass (G) := {
   measurableSet_singleton := by
     intro x
-    sorry
+    apply IsOpen.measurableSet
+    simp
 }
 
 -- Use the fact that we have the discrete topology
