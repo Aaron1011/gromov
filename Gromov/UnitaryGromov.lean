@@ -651,7 +651,7 @@ attribute [-simp] PiLp.inner_apply
 
 
 
-lemma new_weyl_unitarian_trick {V: Type*} [SeminormedAddCommGroup V]  [IsTopologicalAddGroup V] [T2Space V] [Module ℂ V] [FiniteDimensional ℂ V] [ContinuousSMul ℂ V] [InnerProductSpace ℂ V]  (H: Subgroup (V →L[ℂ] V)ˣ) [IsTopologicalGroup H] [MeasurableSpace H] [BorelSpace H] [LocallyCompactSpace H] [CompactSpace H]: True := by
+lemma new_weyl_unitarian_trick {V: Type*} [SeminormedAddCommGroup V]  [IsTopologicalAddGroup V] [T2Space V] [InnerProductSpace ℂ V]  (H: Subgroup (V →L[ℂ] V)ˣ) [IsTopologicalGroup H] [MeasurableSpace H] [BorelSpace H] [LocallyCompactSpace H] [CompactSpace H] [T2Space H]: True := by
   let integrand := fun (v w: V) (h: H) => ⟪(h.val.val v), (h.val.val w)⟫
   have continuous_integrand: ∀ v w: V, Continuous fun h: H => integrand v w h := by
     intro v w
@@ -700,15 +700,8 @@ lemma new_weyl_unitarian_trick {V: Type*} [SeminormedAddCommGroup V]  [IsTopolog
     smul_left := by
       intro x y z
       simp [integrand]
-      have my_mul (h: H) := inner_smul_left (r := z) (x := h.val.val x) (y := h.val.val y)
-      conv =>
-        lhs
-        arg 2
-        intro h
-        equals (starRingEnd ℂ) z * ⟪h.val.val x, h.val.val y⟫ =>
-          apply my_mul h
-      rw [integral_mul_const_of_integrable (integrable_on x y)]
-      rw [mul_comm]
+      simp_rw [inner_smul_left]
+      rw [integral_const_mul_of_integrable (integrable_on x y)]
     definite := by
       intro x hx
       simp only [integrand] at hx
