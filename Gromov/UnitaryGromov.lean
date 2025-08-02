@@ -649,7 +649,7 @@ noncomputable def toComplexEuclidean {E: Type*} [AddCommGroup E] [TopologicalSpa
 
 attribute [-simp] PiLp.inner_apply
 
-
+attribute [-simp] MeasureTheory.Measure.inv_eq_self
 
 lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopologicalAddGroup V] [T2Space V] [InnerProductSpace ℂ V]  (H: Subgroup (V →L[ℂ] V)ˣ) [IsTopologicalGroup H] [MeasurableSpace H] [BorelSpace H] [LocallyCompactSpace H] [CompactSpace H] [T2Space H]: True := by
   let integrand := fun (v w: V) (h: H) => ⟪(h.val.val v), (h.val.val w)⟫
@@ -658,7 +658,7 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
     simp only [integrand]
     fun_prop
 
-  have integrable_on: ∀ v w: V, MeasureTheory.Integrable (integrand v w) (MeasureTheory.Measure.haar (G := H)) := by
+  have integrable_on: ∀ v w: V, MeasureTheory.Integrable (integrand v w) (MeasureTheory.Measure.haar.inv (G := H)) := by
     intro v w
     rw [← MeasureTheory.integrableOn_univ]
     apply ContinuousOn.integrableOn_compact
@@ -667,12 +667,12 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
 
 
   let inner_product_core: InnerProductSpace.Core ℂ (FreshInnerProduct V) := {
-    inner := fun v w => MeasureTheory.integral (MeasureTheory.Measure.haar) (integrand v w)
+    inner := fun v w => MeasureTheory.integral (MeasureTheory.Measure.haar.inv) (integrand v w)
     conj_inner_symm := by
       intro x y
       simp only [integrand]
       rw [← integral_conj]
-      simp
+      simp_rw [inner_conj_symm]
     re_inner_nonneg := by
       intro x
       simp [integrand]
@@ -757,7 +757,6 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
         simp at foo
         exact foo
   }
-  . exact Ne.symm (NeZero.ne' (MeasureTheory.Measure.haar Set.univ))
 
   let new_inner := InnerProductSpace.ofCore inner_product_core
 
@@ -775,18 +774,17 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
       lhs
       arg 2
       intro f
-      --rw [← ContinuousLinearMap.adjoint_inner_right]
-    --simp_rw [← ContinuousLinearMap.mul_apply]
-    simp_rw [← ContinuousLinearMap.smul_def]
-    conv =>
+
+    have mul_right_inv := MeasureTheory.Measure.inv.instIsMulRightInvariant (μ := MeasureTheory.Measure.haar (G := H))
+    have mul_left := MeasureTheory.integral_mul_right_eq_self (f := integrand v w) (μ := (MeasureTheory.Measure.haar.inv (G := H)))
+    simp only [integrand] at mul_left
+    conv at mul_left =>
+      intro g
       lhs
-      arg 2
-      intro f
-      lhs
-      simp [toComplexEuclidean]
-      rw [ContinuousLinearEquiv.map_smul]
-    --simp_rw [inner_smul_left]
-    sorry
+      simp
+
+    apply mul_left
+  . sorry
 
 --  [NormedAddCommGroup V]  [CompleteSpace V] [InnerProductSpace ℂ V]
 -- [MeasurableSpace H] [T2Space H] [BorelSpace H] [IsTopologicalGroup H] [LocallyCompactSpace H]
