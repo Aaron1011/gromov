@@ -1758,10 +1758,34 @@ instance LocallyCompact_GL_W: LocallyCompactSpace (GL_W (G := G)) := by
 --   apply IsOpen.locallyCompactSpace
 --   sorry
 
+#synth NormedAddCommGroup (W (G := G))
+
+#synth FiniteDimensional ℂ (W (G := G))
+
+open scoped ComplexInnerProductSpace in
+set_option maxHeartbeats 500000 in
 lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutative M ∧ M.FiniteIndex := by
   let my_map := Subgroup.subtype (rho_g (G := G))
+  have W_equiv: (W (G := G)) ≃L[ℂ] EuclideanSpace ℂ (Fin <| Module.finrank ℂ W) := ContinuousLinearEquiv.ofFinrankEq finrank_euclideanSpace_fin.symm
   unfold GL_W at my_map
-  have my_weyl_trick := weyl_unitarian_trick (H := rho_g (G := G)) (G := GL_W (G := G)) (V := (W (G := G))) (rep := my_map)
+  let my_range := (GRepW (G := G)).range
+  unfold GL_W at my_range
+  -- TODO - is there a simpler way to get an arbitrary inner product space?
+  let inner_prod_core: InnerProductSpace.Core ℂ (W (G := G)) := {
+    inner := fun v w => ⟪W_equiv v, W_equiv w⟫,
+    conj_inner_symm := by simp,
+    re_inner_nonneg := by
+      exact fun x ↦ inner_self_nonneg
+    add_left := by simp
+    smul_left := by
+      intro x y r
+      simp
+      rw [mul_comm]
+    definite := by simp
+  }
+
+  have temp_inner := InnerProductSpace.ofCore inner_prod_core
+  have my_weyl_trick := new_weyl_unitarian_trick (H := my_range) (V := W (G := G))
   sorry
 
 -- We need this to work with Finset
