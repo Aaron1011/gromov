@@ -651,7 +651,7 @@ attribute [-simp] PiLp.inner_apply
 
 
 
-lemma new_weyl_unitarian_trick {V: Type*} [SeminormedAddCommGroup V]  [IsTopologicalAddGroup V] [T2Space V] [InnerProductSpace ℂ V]  (H: Subgroup (V →L[ℂ] V)ˣ) [IsTopologicalGroup H] [MeasurableSpace H] [BorelSpace H] [LocallyCompactSpace H] [CompactSpace H] [T2Space H]: True := by
+lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopologicalAddGroup V] [T2Space V] [InnerProductSpace ℂ V]  (H: Subgroup (V →L[ℂ] V)ˣ) [IsTopologicalGroup H] [MeasurableSpace H] [BorelSpace H] [LocallyCompactSpace H] [CompactSpace H] [T2Space H]: True := by
   let integrand := fun (v w: V) (h: H) => ⟪(h.val.val v), (h.val.val w)⟫
   have continuous_integrand: ∀ v w: V, Continuous fun h: H => integrand v w h := by
     intro v w
@@ -693,15 +693,14 @@ lemma new_weyl_unitarian_trick {V: Type*} [SeminormedAddCommGroup V]  [IsTopolog
     add_left := by
       intro a b c
       simp [integrand]
-      simp_rw [inner_add_left]
       rw [MeasureTheory.integral_add]
       . exact integrable_on a c
       . exact integrable_on b c
     smul_left := by
       intro x y z
       simp [integrand]
-      simp_rw [inner_smul_left]
-      rw [integral_const_mul_of_integrable (integrable_on x y)]
+      rw [integral_mul_const_of_integrable (integrable_on x y)]
+      rw [mul_comm]
     definite := by
       intro x hx
       simp only [integrand] at hx
@@ -729,6 +728,7 @@ lemma new_weyl_unitarian_trick {V: Type*} [SeminormedAddCommGroup V]  [IsTopolog
             field_simp
 
 
+        simp at inner_q_zero
         have map_iff_zero := LinearMap.map_eq_zero_iff (f := q.val.val.toLinearMap) (x := x) ?_
         .
           simp at map_iff_zero
@@ -753,7 +753,7 @@ lemma new_weyl_unitarian_trick {V: Type*} [SeminormedAddCommGroup V]  [IsTopolog
         rw [Pi.le_def]
         intro y
         simp
-        have foo := inner_self_nonneg (𝕜 := ℂ) (x := toComplexEuclidean (y.val.val x))
+        have foo := inner_self_nonneg (𝕜 := ℂ) (x := (y.val.val x))
         simp at foo
         exact foo
   }
