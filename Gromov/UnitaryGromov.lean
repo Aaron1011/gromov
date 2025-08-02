@@ -717,8 +717,8 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
       .
         dsimp only [Filter.EventuallyEq] at hx
         conv at hx =>
-          pattern MeasureTheory.Measure.haar
-          rw [← MeasureTheory.Measure.restrict_univ (μ := MeasureTheory.Measure.haar)]
+          pattern MeasureTheory.Measure.haar.inv
+          rw [← MeasureTheory.Measure.restrict_univ (μ := MeasureTheory.Measure.haar.inv)]
 
 
         obtain ⟨q, _, inner_q_zero⟩ := MeasureTheory.Measure.exists_mem_of_measure_ne_zero_of_ae ?_ hx
@@ -757,6 +757,7 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
         simp at foo
         exact foo
   }
+  . exact Ne.symm (NeZero.ne' (MeasureTheory.Measure.haar.inv Set.univ))
 
   let new_inner := InnerProductSpace.ofCore inner_product_core
 
@@ -784,7 +785,7 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
       simp
 
     apply mul_left
-  . sorry
+  . trivial
 
 --  [NormedAddCommGroup V]  [CompleteSpace V] [InnerProductSpace ℂ V]
 -- [MeasurableSpace H] [T2Space H] [BorelSpace H] [IsTopologicalGroup H] [LocallyCompactSpace H]
