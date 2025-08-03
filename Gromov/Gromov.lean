@@ -1874,8 +1874,10 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   --borelize (FreshTopology (W (G := G)))
 
 
-  have compact_subgroup: CompactSpace my_range := by
+  have compact_subgroup: CompactSpace my_range.topologicalClosure := by
     sorry
+    --refine { isCompact_univ := ?_ }
+    --apply isCompact_of_totallyBounded_isClosed
 
   -- TODO: this is probably wrong, and we need to somehow take the closure
   -- maybe also locallyCompact_of_proper
@@ -1884,7 +1886,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   --  sorry
 
   -- TODO - avoid constructing continuous linear map with wrong topolgoy
-  have my_weyl_trick := new_weyl_unitarian_trick (V := (FreshTopology (W (G := G)))) (H := my_range)
+  have my_weyl_trick := new_weyl_unitarian_trick (V := (FreshTopology (W (G := G)))) (H := my_range.topologicalClosure)
 
 
 
