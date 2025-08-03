@@ -1866,8 +1866,22 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   }
   let my_range := new_rep.range
   have fresh_complete: CompleteSpace (FreshTopology (W (G := G))) := by apply complete_of_proper (α := FreshTopology (W (G := G)))
+  have proper_map: ProperSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))) := by infer_instance
+  have locally_compact_map: LocallyCompactSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))) := locallyCompact_of_proper
+  have units_locally:  LocallyCompactSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by
+    infer_instance
   --have borel_map: BorelSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))) := ContinuousLinearMap.instBorelSpace
   --borelize (FreshTopology (W (G := G)))
+
+
+  have compact_subgroup: CompactSpace my_range := by
+    sorry
+
+  -- TODO: this is probably wrong, and we need to somehow take the closure
+  -- maybe also locallyCompact_of_proper
+  --have locally_compact_subgroup: LocallyCompactSpace my_range := by
+  --  apply Topology.IsInducing.subtypeVal.locallyCompactSpace
+  --  sorry
 
   -- TODO - avoid constructing continuous linear map with wrong topolgoy
   have my_weyl_trick := new_weyl_unitarian_trick (V := (FreshTopology (W (G := G)))) (H := my_range)
