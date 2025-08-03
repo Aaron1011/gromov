@@ -1802,10 +1802,12 @@ instance (V: Type*) [AddCommGroup V] [Module ℂ V]  [base_finite: FiniteDimensi
 
 #synth CStarAlgebra ((ℂ →L[ℂ] ℂ))
 
+#synth AddCommMonoid (W (G := G))
+
 --#synth NormedAddCommGroup (W (G := G))
 open scoped ComplexInnerProductSpace in
-set_option maxHeartbeats 300000 in
-set_option synthInstance.maxHeartbeats 300000 in
+set_option maxHeartbeats 500000 in
+set_option synthInstance.maxHeartbeats 600000 in
 set_option trace.Meta.synthInstance true in
 lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutative M ∧ M.FiniteIndex := by
   let my_map := Subgroup.subtype (rho_g (G := G))
@@ -1830,14 +1832,15 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
 
   let temp_inner := InnerProductSpace.ofCore inner_prod_core
   let add_comm := InnerProductSpace.Core.toNormedAddCommGroup (𝕜 := ℂ) (F := (FreshTopology (W (G := G))))
-  let normed_space := InnerProductSpace.Core.toNormedSpace (𝕜 := ℂ) (F := (FreshTopology (W (G := G))))
+
+  --let normed_space := InnerProductSpace.Core.toNormedSpace (𝕜 := ℂ) (F := (FreshTopology (W (G := G))))
 
   have proper_space: ProperSpace (FreshTopology (W (G := G))) := FiniteDimensional.proper_rclike ℂ _
 
   have fresh_t2: T2Space (FreshTopology (W (G := G))) := TopologicalSpace.t2Space_of_metrizableSpace
 
   -- TODO - this is completely wrong, and needs to be the range of it applied to 'g'
-  let new_rep: ((FreshTopology (W (G := G))) →ₗ[ℂ] (FreshTopology (W (G := G))))ˣ →* ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := {
+  let linear_to_clm: ((FreshTopology (W (G := G))) →ₗ[ℂ] (FreshTopology (W (G := G))))ˣ →* ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := {
     toFun := fun f => {
       val := LinearMap.toContinuousLinearMap f.val
       inv := LinearMap.toContinuousLinearMap f.inv
@@ -1865,7 +1868,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
       simp only []
       rfl
   }
-  let my_range := new_rep.range
+  let my_range := (linear_to_clm.comp GRepW_base).range
   have fresh_complete: CompleteSpace (FreshTopology (W (G := G))) := by apply complete_of_proper (α := FreshTopology (W (G := G)))
   have proper_map: ProperSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))) := by infer_instance
   have locally_compact_map: LocallyCompactSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))) := locallyCompact_of_proper
@@ -1918,6 +1921,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
     simp
 
 
+
   have compact_subgroup: CompactSpace my_range.topologicalClosure := by
     refine { isCompact_univ := ?_ }
     rw [Metric.isCompact_iff_isClosed_bounded]
@@ -1948,8 +1952,71 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
         rhs
         intro z
         rw [← ha]
+        simp [linear_to_clm, GRepW_base]
+        arg 1
+        arg 1
+        arg 1
+        -- TODO - why can't we just rw with 'Representation.asGroupHom_apply'
+        equals (GRepW_non_invertible a) =>
+          apply Representation.asGroupHom_apply
 
-      simp [new_rep] at norm_le_iff
+
+      let to_fresh (w: (W (G := G))): FreshTopology (W (G := G)) := w
+
+      have preserves_norm (z: FreshTopology (W (G := G))): ‖to_fresh (((GRepW_non_invertible a) z))‖ = ‖z‖ := by
+        simp [to_fresh]
+
+        have exists_v: ∃ v, Submodule.Quotient.mk v = z := by
+          apply Quotient.exists_rep
+
+        unfold GRepW_non_invertible
+        obtain ⟨v, hv⟩ := exists_v
+        nth_rw 1 [← hv]
+        simp
+        sorry
+
+
+        --rw [GRep_preserves_norm]
+        --rw [GRepW_non_invertible]
+        --rw [Representation.asGroupHom_apply]
+
+
+      dsimp [to_fresh] at preserves_norm
+      simp [add_comm] at preserves_norm
+      conv at norm_le_iff =>
+        rhs
+        intro z
+        simp
+        lhs
+        equals ‖z‖ =>
+          apply preserves_norm z
+
+
+      simp at norm_le_iff
+      grw [norm_le_iff]
+      grw [norm_le_iff]
+      simp
+      rw [← ha]
+      simp [linear_to_clm, GRepW_base]
+
+
+      dsimp [GRepW_non_invertible] at norm_le_iff
+
+
+
+
+
+      obtain ⟨v, hv⟩ := exists_v
+      simp [GRepW, GRepW_base, GRepW_non_invertible]
+      nth_rw 1 [← hv]
+      rw [Representation.asGroupHom_apply]
+      simp
+      --rw [Submodule.mapQ_apply]
+      rw [quotient_norm_eq_norm]
+
+      simp_rw [Representation.asGroupHom_apply] at norm_le_iff
+      -- GRep_preserves_norm
+
   -- TODO: this is probably wrong, and we need to somehow take the closure
   -- maybe also locallyCompact_of_proper
   --have locally_compact_subgroup: LocallyCompactSpace my_range := by
