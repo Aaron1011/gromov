@@ -675,6 +675,8 @@ instance V_FiniteDimentional: FiniteDimensional ℂ (LipschitzH (G := G)) := by
   -- This is a very long part of the proof in Vikman
   sorry
 
+
+
 def ConstF: Submodule ℂ (LipschitzH (G := G)) := {
   carrier := Set.range ConstLipschitzH
   add_mem' := by
@@ -773,6 +775,7 @@ def gAct_const (g: G) (z: ℂ): gAct g (ConstLipschitzH z) = ConstLipschitzH z :
 
 abbrev W := (LipschitzH (G := G)) ⧸ ConstF
 
+#synth Module ℂ (W (G := G))
 
 def gActW (g: G): W (G := G) → W (G := G) := Quotient.lift (fun f => Submodule.Quotient.mk (gAct g f)) (by
   intro f h hfh
@@ -955,7 +958,8 @@ lemma lipschitzH_norm_triangle (x y z: LipschitzH (G := G)): LipschitzSemiNorm (
 
 --def lift_triangle (x y z: LipschitzH) := Quotient.lift lipschitzH_norm_triangle sorry
 
-noncomputable instance LipschitzH_seminorm: SeminormedAddCommGroup (LipschitzH (G := G)) where
+section lipschitz_norm
+noncomputable local instance LipschitzH_seminorm: SeminormedAddCommGroup (LipschitzH (G := G)) where
   norm := fun v => LipschitzSemiNorm (G := G) v
   dist_self := by
     intro v
@@ -981,7 +985,7 @@ noncomputable instance LipschitzH_seminorm: SeminormedAddCommGroup (LipschitzH (
 -- Note that we only implement SeminormedAddCommGroup for LipschitzH, so this is only
 -- really a seminormed space. The quotient space W := LipschitzH ⧸ ConstF
 -- is an actual normed space.
-noncomputable instance LipschitzH_normed: NormedSpace ℂ (LipschitzH (G := G)) where
+noncomputable local instance LipschitzH_normed: NormedSpace ℂ (LipschitzH (G := G)) where
   norm_smul_le := by
     intro c f
     simp [HSMul.hSMul, SMul.smul]
@@ -1061,6 +1065,8 @@ instance const_isClosed: IsClosed (ConstF (G := G) : Set (LipschitzH (G := G))) 
 #synth NormedAddCommGroup (W (S := S))
 
 #synth TopologicalSpace (W (G := G))
+
+
 -- noncomputable instance W_seminorm: SeminormedAddCommGroup (W (G := G)) where
 --   norm := fun f => (LipschitzSemiNorm_w f).val
 --   dist_self := by
@@ -1147,6 +1153,8 @@ instance proper_linear_w: ProperSpace (((W (G := G) →L[ℂ] W (G := G)))) := F
 #synth FiniteDimensional ℂ (LipschitzH (G := G))
 #synth TopologicalSpace (LipschitzH (G := G))
 
+
+
 def GRep: Representation ℂ G (LipschitzH (G := G))  := {
   toFun := fun g => {
     toFun := gAct g
@@ -1168,6 +1176,9 @@ def GRep: Representation ℂ G (LipschitzH (G := G))  := {
     simp [gAct]
     simp [mul_assoc]
 }
+
+
+attribute [-instance] QuotientModule.Quotient.topologicalSpace
 
 -- We start with a map from G into the space of (not necessarily invertible) linear maps from W to W
 def GRepW_non_invertible: Representation ℂ G (W (G := G)) := Representation.quotient (GRep (G := G)) ConstF (by
@@ -1545,6 +1556,8 @@ instance GL_W_Proper: ProperSpace (GL_W (G := G)) := {
 
 #synth NormedSpace ℂ (W (G := G) →L[ℂ] W (G := G))
 
+
+
 --lemma rho_g_subset_unitary: (toEuclidean '' (Units.val '' ((rho_g (G := G)).carrier))) ⊆ (unitary _).carrier := by
 --  sorry
 
@@ -1716,6 +1729,8 @@ instance GL_W_Proper: ProperSpace (GL_W (G := G)) := {
 
 #synth ContinuousMul (W (G := G) →L[ℂ] W (G := G))
 
+
+
 -- instance units_borel: BorelSpace (GL_W (G := G)) := {
 --   measurable_eq := by
 --     rw [borel_comap]
@@ -1762,16 +1777,32 @@ instance LocallyCompact_GL_W: LocallyCompactSpace (GL_W (G := G)) := by
 
 #synth FiniteDimensional ℂ (W (G := G))
 
+
+end lipschitz_norm
+
+attribute [-instance] QuotientModule.Quotient.topologicalSpace
+def FreshTopology (V: Type*) := V
+instance (V: Type*) [base_group: Group V]: Group (FreshTopology V) := base_group
+instance (V: Type*) [base_comm: AddCommGroup V]: AddCommGroup (FreshTopology V) := base_comm
+instance (V: Type*) [AddCommGroup V] [base_module: Module ℂ V]: Module ℂ (FreshTopology V) := base_module
+instance (V: Type*) [AddCommGroup V] [Module ℂ V]  [base_finite: FiniteDimensional ℂ V]: FiniteDimensional ℂ (FreshTopology V) := base_finite
+-- instance (V: Type*) [base_topology: TopologicalSpace V]: TopologicalSpace (FreshTopology V) := base_topology
+-- instance (V: Type*) [TopologicalSpace V] [AddCommGroup V] [base_add: IsTopologicalAddGroup V]: IsTopologicalAddGroup (FreshTopology V) := base_add
+-- #synth Group (FreshTopology (W (G := G) →L[ℂ] W (G := G))ˣ)
+
+
+--#synth NormedAddCommGroup (W (G := G))
 open scoped ComplexInnerProductSpace in
-set_option maxHeartbeats 500000 in
+set_option maxHeartbeats 900000 in
 lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutative M ∧ M.FiniteIndex := by
   let my_map := Subgroup.subtype (rho_g (G := G))
-  have W_equiv: (W (G := G)) ≃L[ℂ] EuclideanSpace ℂ (Fin <| Module.finrank ℂ W) := ContinuousLinearEquiv.ofFinrankEq finrank_euclideanSpace_fin.symm
+  have W_equiv: (W (G := G)) ≃ₗ[ℂ] EuclideanSpace ℂ (Fin <| Module.finrank ℂ W) := LinearEquiv.ofFinrankEq _ _ finrank_euclideanSpace_fin.symm
+
+
+
   unfold GL_W at my_map
-  let my_range := (GRepW (G := G)).range
-  unfold GL_W at my_range
   -- TODO - is there a simpler way to get an arbitrary inner product space?
-  let inner_prod_core: InnerProductSpace.Core ℂ (W (G := G)) := {
+  let inner_prod_core: InnerProductSpace.Core ℂ (FreshTopology (W (G := G))) := {
     inner := fun v w => ⟪W_equiv v, W_equiv w⟫,
     conj_inner_symm := by simp,
     re_inner_nonneg := by
@@ -1784,8 +1815,52 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
     definite := by simp
   }
 
-  have temp_inner := InnerProductSpace.ofCore inner_prod_core
-  have my_weyl_trick := new_weyl_unitarian_trick (H := my_range) (V := W (G := G))
+  let temp_inner := InnerProductSpace.ofCore inner_prod_core
+  let add_comm := InnerProductSpace.Core.toNormedAddCommGroup (𝕜 := ℂ) (F := (FreshTopology (W (G := G))))
+  let normed_space := InnerProductSpace.Core.toNormedSpace (𝕜 := ℂ) (F := (FreshTopology (W (G := G))))
+
+
+  have fresh_t2: T2Space (FreshTopology (W (G := G))) := TopologicalSpace.t2Space_of_metrizableSpace
+
+  let new_rep: ((FreshTopology (W (G := G))) →ₗ[ℂ] (FreshTopology (W (G := G))))ˣ →* ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := {
+    toFun := fun f => {
+      val := LinearMap.toContinuousLinearMap f.val
+      inv := LinearMap.toContinuousLinearMap f.inv
+      val_inv := by
+        have old_inv := f.val_inv
+        ext a
+        apply_fun (fun f => f a) at old_inv
+        simp only [Units.inv_eq_val_inv, Module.End.one_apply] at old_inv
+        apply old_inv
+      inv_val := by
+        have old_inv := f.inv_val
+        ext a
+        apply_fun (fun f => f a) at old_inv
+        simp only [Units.inv_eq_val_inv, Module.End.one_apply] at old_inv
+        apply old_inv
+    }
+    -- TODO - why is a normal `simp` so slow here?
+    map_one' := by
+      ext a
+      simp only []
+      rfl
+    map_mul' := by
+      intro f g
+      ext a
+      simp only []
+      rfl
+  }
+
+  -- TODO - avoid constructing continuous linear map with wrong topolgoy
+  have my_weyl_trick := new_weyl_unitarian_trick (H := new_rep.range)
+
+
+
+
+  --conv at my_range =>
+  --  equals Subgroup (((FreshTopology W) →L[ℂ] (FreshTopology W))ˣ) =>
+  --    rfl
+
   sorry
 
 -- We need this to work with Finset
