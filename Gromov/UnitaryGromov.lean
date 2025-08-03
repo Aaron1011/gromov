@@ -651,7 +651,8 @@ attribute [-simp] PiLp.inner_apply
 
 attribute [-simp] MeasureTheory.Measure.inv_eq_self
 
-lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopologicalAddGroup V] [T2Space V] [InnerProductSpace ℂ V]  (H: Subgroup (V →L[ℂ] V)ˣ) [IsTopologicalGroup H] [LocallyCompactSpace H] [CompactSpace H] [T2Space H]: True := by
+set_option maxHeartbeats 500000 in
+lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopologicalAddGroup V] [T2Space V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V]  (H: Subgroup (V →L[ℂ] V)ˣ)  [IsTopologicalGroup H] [LocallyCompactSpace H] [CompactSpace H] [T2Space H]: True := by
   let integrand := fun (v w: V) (h: H) => ⟪(h.val.val v), (h.val.val w)⟫
   have continuous_integrand: ∀ v w: V, Continuous fun h: H => integrand v w h := by
     intro v w
@@ -659,6 +660,9 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
     fun_prop
 
   borelize (V →L[ℂ] V)ˣ
+
+  --
+
 
   have integrable_on: ∀ v w: V, MeasureTheory.Integrable (integrand v w) (MeasureTheory.Measure.haar.inv (G := H)) := by
     intro v w
@@ -762,6 +766,16 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
   . exact Ne.symm (NeZero.ne' (MeasureTheory.Measure.haar.inv Set.univ))
 
   let new_inner := InnerProductSpace.ofCore inner_product_core
+  let normed_add := InnerProductSpace.Core.toNormedAddCommGroup (𝕜 := ℂ) (F := (FreshInnerProduct V))
+
+  have finite_dimensional_fresh: FiniteDimensional ℂ (FreshInnerProduct V) := by
+    sorry
+
+  have proper_fresh: ProperSpace (FreshInnerProduct V) := by
+    apply FiniteDimensional.proper_rclike ℂ _
+
+  have complete_fresh: CompleteSpace (FreshInnerProduct V) := by
+    apply complete_of_proper
 
   let apply_rep (h: H) (v: FreshInnerProduct V): FreshInnerProduct V := h.val.val v
 
@@ -776,7 +790,6 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
     conv =>
       lhs
       arg 2
-      intro f
 
     have mul_right_inv := MeasureTheory.Measure.inv.instIsMulRightInvariant (μ := MeasureTheory.Measure.haar (G := H))
     have mul_left := MeasureTheory.integral_mul_right_eq_self (f := integrand v w) (μ := (MeasureTheory.Measure.haar.inv (G := H)))
@@ -787,7 +800,73 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
       simp
 
     apply mul_left
-  . trivial
+  .
+
+    -- finDimVectorspaceEquiv
+    have rank_eq := Module.finrank_eq_rank' ℂ (FreshInnerProduct V)
+    have V_equiv := (finDimVectorspaceEquiv (Module.finrank ℂ (FreshInnerProduct V)) rank_eq.symm).toContinuousLinearEquiv
+    let V_equiv_fresh: V ≃L[ℂ] (FreshInnerProduct V) := ContinuousLinearEquiv.ofFinrankEq ?_
+    have V_map_equiv := ContinuousLinearEquiv.arrowCongr V_equiv V_equiv
+    let V_fresh_arrow := ContinuousLinearEquiv.arrowCongr V_equiv_fresh V_equiv_fresh
+
+    let H_matrix := LinearMap.toMatrix' '' (ContinuousLinearMap.toLinearMap '' (V_map_equiv '' (V_fresh_arrow '' (Units.val '' H.carrier))))
+
+
+    --let H_matrix := LinearMap.toMatrix' '' (ContinuousLinearMap.toLinearMap '' (V_fresh_arrow '' (V_map_equiv '' (Units.val '' H.carrier))))
+    have H_mem_unitary: ∀ h ∈ H_matrix, h ∈ Matrix.unitaryGroup (Fin (Module.finrank ℂ (FreshInnerProduct V))) ℂ := by
+      intro h h_mem
+      simp [H_matrix] at h_mem
+      obtain ⟨a, a_mem, ha⟩ := h_mem
+      rw [Matrix.mem_unitaryGroup_iff]
+
+      have preserves_inner_iff := (ContinuousLinearMap.inner_map_map_iff_adjoint_comp_self (H := (FreshInnerProduct V)) (K := (FreshInnerProduct V)) (𝕜 := ℂ) (V_fresh_arrow a.val)).mp ?_
+      . sorry
+      .
+        intro v w
+        unfold inner
+        simp [InnerProductSpace.toInner, new_inner]
+        dsimp [inner_product_core]
+        simp [InnerProductSpace.ofCore]
+        simp [integrand]
+        conv =>
+          lhs
+          arg 2
+
+        have mul_right_inv := MeasureTheory.Measure.inv.instIsMulRightInvariant (μ := MeasureTheory.Measure.haar (G := H))
+        have mul_left := MeasureTheory.integral_mul_right_eq_self (f := integrand v w) (μ := (MeasureTheory.Measure.haar.inv (G := H)))
+        simp only [integrand] at mul_left
+        conv at mul_left =>
+          intro g
+          lhs
+          simp
+
+        have my_mul := mul_left ⟨a, a_mem⟩
+        simp at my_mul
+        simp [V_fresh_arrow]
+
+
+
+
+    let H_carrier := H.carrier
+    let H_matrix: Subgroup (Matrix.unitaryGroup (Fin (Module.finrank ℂ V)) ℂ) := {
+      carrier := {
+
+      }
+    }
+
+    let units_map: (V →L[ℂ] V)ˣ →* (Fin (Module.finrank ℂ V) → ℂ) →L[ℂ] Fin (Module.finrank ℂ V) → ℂ := {
+      toFun := fun x => V_map_equiv x,
+      map_one' := by
+        simp
+    }
+
+    have H_function_map := Units.map V_map_equiv.toMonoid
+    let H_mat_equiv := LinearMap.toMatrix'
+    let H_equiv := Subgroup.map ((ContinuousLinearEquiv.unitsEquiv ℂ V)).toMonoidHom H
+    let coe_lm := (ContinuousLinearMap.coeLM (R := ℂ) (M := V) (N₃ := V) ℂ)
+    let H_linear := Subgroup.map (ContinuousLinearMap.coeLM _) H_equiv
+
+   trivial
 
 --  [NormedAddCommGroup V]  [CompleteSpace V] [InnerProductSpace ℂ V]
 -- [MeasurableSpace H] [T2Space H] [BorelSpace H] [IsTopologicalGroup H] [LocallyCompactSpace H]
@@ -937,7 +1016,7 @@ lemma weyl_unitarian_trick (G: Type*) [Group G] [TopologicalSpace G] [IsTopologi
 
     let new_inner := InnerProductSpace.ofCore inner_product_core
 
-    let apply_rep (h: H) (v: FreshInnerProduct V): FreshInnerProduct V := (rep h).val v
+    let apply_rep (h: H) := (rep h).val
 
     have v_preserves_inner: ∀ h: H, ∀ v w: FreshInnerProduct V, ⟪(apply_rep h v), (apply_rep h w)⟫ = ⟪v, w⟫ := by
       intro h v w

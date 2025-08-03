@@ -1911,7 +1911,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
       . sorry
 
   have proper_units: ProperSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by
-    --apply ProperSpace.of_isClosed
+    apply ProperSpace.of_isClosed
     --apply ProperSpace.of_isCompact
     sorry
 
@@ -1977,6 +1977,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
 
       let to_fresh (w: (W (G := G))): FreshTopology (W (G := G)) := w
 
+      -- TODO - this is probably wrong. We need to use the fact that all norms are equivalent on finite-dimensional spaces
       have preserves_norm_a (z: FreshTopology (W (G := G))): ‖to_fresh (((GRepW_non_invertible a) z))‖ = ‖z‖ := by
         simp [to_fresh]
 
