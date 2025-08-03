@@ -653,8 +653,8 @@ attribute [-simp] MeasureTheory.Measure.inv_eq_self
 
 set_option maxHeartbeats 500000 in
 lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopologicalAddGroup V] [T2Space V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V]  (H: Subgroup (V →L[ℂ] V)ˣ)  [IsTopologicalGroup H] [LocallyCompactSpace H] [CompactSpace H] [T2Space H]: True := by
-  let integrand := fun (v w: V) (h: H) => ⟪(h.val.val v), (h.val.val w)⟫
-  have continuous_integrand: ∀ v w: V, Continuous fun h: H => integrand v w h := by
+  let integrand := fun (v w: FreshInnerProduct V) (h: H) => ⟪(h.val.val v), (h.val.val w)⟫
+  have continuous_integrand: ∀ v w: FreshInnerProduct V, Continuous fun h: H => integrand v w h := by
     intro v w
     simp only [integrand]
     fun_prop
@@ -663,6 +663,8 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
 
   --
 
+  have finite_dimensional_fresh: FiniteDimensional ℂ (FreshInnerProduct V) := by
+    sorry
 
   have integrable_on: ∀ v w: V, MeasureTheory.Integrable (integrand v w) (MeasureTheory.Measure.haar.inv (G := H)) := by
     intro v w
@@ -768,8 +770,6 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
   let new_inner := InnerProductSpace.ofCore inner_product_core
   let normed_add := InnerProductSpace.Core.toNormedAddCommGroup (𝕜 := ℂ) (F := (FreshInnerProduct V))
 
-  have finite_dimensional_fresh: FiniteDimensional ℂ (FreshInnerProduct V) := by
-    sorry
 
   have proper_fresh: ProperSpace (FreshInnerProduct V) := by
     apply FiniteDimensional.proper_rclike ℂ _
@@ -819,8 +819,17 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
       obtain ⟨a, a_mem, ha⟩ := h_mem
       rw [Matrix.mem_unitaryGroup_iff]
 
-      have preserves_inner_iff := (ContinuousLinearMap.inner_map_map_iff_adjoint_comp_self (H := (FreshInnerProduct V)) (K := (FreshInnerProduct V)) (𝕜 := ℂ) (V_fresh_arrow a.val)).mp ?_
-      . sorry
+      let a_map := a.val.toLinearMap
+      let a_fresh: (FreshInnerProduct V) →ₗ[ℂ] (FreshInnerProduct V) := a_map
+
+      -- LinearMap.norm_map_iff_inner_map_map
+      have preserves_inner_iff := (LinearMap.norm_map_iff_inner_map_map a_fresh).mpr ?_
+      . rw [← ContinuousLinearMap.star_eq_adjoint] at preserves_inner_iff
+        rw [← ha]
+        rw [← ContinuousLinearMap.mul_def] at preserves_inner_iff
+        apply_fun V_map_equiv at preserves_inner_iff
+        apply_fun LinearMap.toMatrix' at preserves_inner_iff
+        sorry
       .
         intro v w
         unfold inner
@@ -842,7 +851,8 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
 
         have my_mul := mul_left ⟨a, a_mem⟩
         simp at my_mul
-        simp [V_fresh_arrow]
+        simp [a_fresh, a_map]
+        exact my_mul
 
 
 
