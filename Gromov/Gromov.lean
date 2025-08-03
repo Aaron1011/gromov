@@ -1727,9 +1727,7 @@ instance GL_W_Proper: ProperSpace (GL_W (G := G)) := {
 #synth TopologicalSpace (W (G := G) →L[ℂ] W (G := G))ˣ
 #synth BorelSpace (W (G := G) →L[ℂ] W (G := G))
 
-lemma foo (a: G) [hGS: Generates (S := S) (G := G)]: True := by
-  borelize (W (G := G) →L[ℂ] W (G := G))ˣ
-  
+
 
 
 --borelize (W (G := G) →L[ℂ] W (G := G))ˣ
@@ -1868,7 +1866,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   }
   let my_range := new_rep.range
   have fresh_complete: CompleteSpace (FreshTopology (W (G := G))) := by apply complete_of_proper (α := FreshTopology (W (G := G)))
-  have borel_map: BorelSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))) := ContinuousLinearMap.instBorelSpace
+  --have borel_map: BorelSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))) := ContinuousLinearMap.instBorelSpace
   --borelize (FreshTopology (W (G := G)))
 
   -- TODO - avoid constructing continuous linear map with wrong topolgoy
