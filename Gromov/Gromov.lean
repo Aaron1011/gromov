@@ -1777,6 +1777,7 @@ instance LocallyCompact_GL_W: LocallyCompactSpace (GL_W (G := G)) := by
 
 #synth FiniteDimensional ℂ (W (G := G))
 
+#synth CompleteSpace (W (G := G))
 
 end lipschitz_norm
 
@@ -1790,10 +1791,14 @@ instance (V: Type*) [AddCommGroup V] [Module ℂ V]  [base_finite: FiniteDimensi
 -- instance (V: Type*) [TopologicalSpace V] [AddCommGroup V] [base_add: IsTopologicalAddGroup V]: IsTopologicalAddGroup (FreshTopology V) := base_add
 -- #synth Group (FreshTopology (W (G := G) →L[ℂ] W (G := G))ˣ)
 
+--instance proper_fresh_topology [TopologicalSpace (FreshTopology (W))]: ProperSpace ((((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))))) := FiniteDimensional.proper_rclike ℂ (((W (G := G) →L[ℂ] W (G := G))))
+
+#synth CStarAlgebra ((ℂ →L[ℂ] ℂ))
 
 --#synth NormedAddCommGroup (W (G := G))
 open scoped ComplexInnerProductSpace in
-set_option maxHeartbeats 900000 in
+set_option maxHeartbeats 300000 in
+set_option trace.Meta.synthInstance true in
 lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutative M ∧ M.FiniteIndex := by
   let my_map := Subgroup.subtype (rho_g (G := G))
   have W_equiv: (W (G := G)) ≃ₗ[ℂ] EuclideanSpace ℂ (Fin <| Module.finrank ℂ W) := LinearEquiv.ofFinrankEq _ _ finrank_euclideanSpace_fin.symm
@@ -1819,6 +1824,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   let add_comm := InnerProductSpace.Core.toNormedAddCommGroup (𝕜 := ℂ) (F := (FreshTopology (W (G := G))))
   let normed_space := InnerProductSpace.Core.toNormedSpace (𝕜 := ℂ) (F := (FreshTopology (W (G := G))))
 
+  have proper_space: ProperSpace (FreshTopology (W (G := G))) := FiniteDimensional.proper_rclike ℂ _
 
   have fresh_t2: T2Space (FreshTopology (W (G := G))) := TopologicalSpace.t2Space_of_metrizableSpace
 
@@ -1850,9 +1856,11 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
       simp only []
       rfl
   }
+  let my_range := new_rep.range
+  have fresh_complete: CompleteSpace (FreshTopology (W (G := G))) := by apply complete_of_proper (α := FreshTopology (W (G := G)))
 
   -- TODO - avoid constructing continuous linear map with wrong topolgoy
-  have my_weyl_trick := new_weyl_unitarian_trick (H := new_rep.range)
+  have my_weyl_trick := new_weyl_unitarian_trick (V := (FreshTopology (W (G := G)))) (H := my_range)
 
 
 
