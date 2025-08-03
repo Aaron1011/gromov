@@ -651,12 +651,14 @@ attribute [-simp] PiLp.inner_apply
 
 attribute [-simp] MeasureTheory.Measure.inv_eq_self
 
-lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopologicalAddGroup V] [T2Space V] [InnerProductSpace ℂ V]  (H: Subgroup (V →L[ℂ] V)ˣ) [IsTopologicalGroup H] [MeasurableSpace H] [BorelSpace H] [LocallyCompactSpace H] [CompactSpace H] [T2Space H]: True := by
+lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopologicalAddGroup V] [T2Space V] [InnerProductSpace ℂ V]  (H: Subgroup (V →L[ℂ] V)ˣ) [IsTopologicalGroup H] [LocallyCompactSpace H] [CompactSpace H] [T2Space H]: True := by
   let integrand := fun (v w: V) (h: H) => ⟪(h.val.val v), (h.val.val w)⟫
   have continuous_integrand: ∀ v w: V, Continuous fun h: H => integrand v w h := by
     intro v w
     simp only [integrand]
     fun_prop
+
+  borelize (V →L[ℂ] V)ˣ
 
   have integrable_on: ∀ v w: V, MeasureTheory.Integrable (integrand v w) (MeasureTheory.Measure.haar.inv (G := H)) := by
     intro v w

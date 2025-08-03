@@ -1152,6 +1152,7 @@ instance proper_linear_w: ProperSpace (((W (G := G) →L[ℂ] W (G := G)))) := F
 
 #synth FiniteDimensional ℂ (LipschitzH (G := G))
 #synth TopologicalSpace (LipschitzH (G := G))
+#synth BorelSpace (((W (G := G) →L[ℂ] W (G := G))))
 
 
 
@@ -1725,6 +1726,14 @@ instance GL_W_Proper: ProperSpace (GL_W (G := G)) := {
 #synth MeasurableSpace (W (G := G) →L[ℂ] W (G := G))ˣ
 #synth TopologicalSpace (W (G := G) →L[ℂ] W (G := G))ˣ
 #synth BorelSpace (W (G := G) →L[ℂ] W (G := G))
+
+lemma foo (a: G) [hGS: Generates (S := S) (G := G)]: True := by
+  borelize (W (G := G) →L[ℂ] W (G := G))ˣ
+  
+
+
+--borelize (W (G := G) →L[ℂ] W (G := G))ˣ
+
 --#synth BorelSpace (Units.val '' (rho_g (G := G)).carrier)
 
 #synth ContinuousMul (W (G := G) →L[ℂ] W (G := G))
@@ -1798,6 +1807,7 @@ instance (V: Type*) [AddCommGroup V] [Module ℂ V]  [base_finite: FiniteDimensi
 --#synth NormedAddCommGroup (W (G := G))
 open scoped ComplexInnerProductSpace in
 set_option maxHeartbeats 300000 in
+set_option synthInstance.maxHeartbeats 300000 in
 set_option trace.Meta.synthInstance true in
 lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutative M ∧ M.FiniteIndex := by
   let my_map := Subgroup.subtype (rho_g (G := G))
@@ -1858,6 +1868,8 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   }
   let my_range := new_rep.range
   have fresh_complete: CompleteSpace (FreshTopology (W (G := G))) := by apply complete_of_proper (α := FreshTopology (W (G := G)))
+  have borel_map: BorelSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))) := ContinuousLinearMap.instBorelSpace
+  --borelize (FreshTopology (W (G := G)))
 
   -- TODO - avoid constructing continuous linear map with wrong topolgoy
   have my_weyl_trick := new_weyl_unitarian_trick (V := (FreshTopology (W (G := G)))) (H := my_range)
