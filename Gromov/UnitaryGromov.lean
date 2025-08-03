@@ -819,12 +819,17 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
       obtain ⟨a, a_mem, ha⟩ := h_mem
       rw [Matrix.mem_unitaryGroup_iff]
 
+      -- defeq abuse - we don't actually want to apply our equivalence from V to FreshInnerProduct V here,
+      -- since it might not be the identity, which would break 'mulLeft'
+      -- Instead, first convert to plain LinearMap (which we can use defeq abuse with, due to not having
+      -- the bundled topology with ContinuousLinearMap)
       let a_map := a.val.toLinearMap
       let a_fresh: (FreshInnerProduct V) →ₗ[ℂ] (FreshInnerProduct V) := a_map
 
       -- LinearMap.norm_map_iff_inner_map_map
       have preserves_inner_iff := (LinearMap.norm_map_iff_inner_map_map a_fresh).mpr ?_
-      . rw [← ContinuousLinearMap.star_eq_adjoint] at preserves_inner_iff
+      . simp [a_fresh, a_map] at preserves_inner_iff
+        rw [← LinearMap.star_eq_adjoint] at preserves_inner_iff
         rw [← ha]
         rw [← ContinuousLinearMap.mul_def] at preserves_inner_iff
         apply_fun V_map_equiv at preserves_inner_iff
