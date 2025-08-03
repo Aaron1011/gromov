@@ -1947,8 +1947,8 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
       obtain ⟨a, ha⟩ := hx
       obtain ⟨b, hb⟩ := hy
 
-      have norm_le_iff := ContinuousLinearMap.opNorm_le_iff (f := x.val) (M := 1) (by simp)
-      conv at norm_le_iff =>
+      have norm_le_iff_x := ContinuousLinearMap.opNorm_le_iff (f := x.val) (M := 1) (by simp)
+      conv at norm_le_iff_x =>
         rhs
         intro z
         rw [← ha]
@@ -1961,9 +1961,23 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
           apply Representation.asGroupHom_apply
 
 
+      -- TODO - deduplicate
+      have norm_le_iff_y := ContinuousLinearMap.opNorm_le_iff (f := y.val) (M := 1) (by simp)
+      conv at norm_le_iff_y =>
+        rhs
+        intro z
+        rw [← hb]
+        simp [linear_to_clm, GRepW_base]
+        arg 1
+        arg 1
+        arg 1
+        -- TODO - why can't we just rw with 'Representation.asGroupHom_apply'
+        equals (GRepW_non_invertible b) =>
+          apply Representation.asGroupHom_apply
+
       let to_fresh (w: (W (G := G))): FreshTopology (W (G := G)) := w
 
-      have preserves_norm (z: FreshTopology (W (G := G))): ‖to_fresh (((GRepW_non_invertible a) z))‖ = ‖z‖ := by
+      have preserves_norm_a (z: FreshTopology (W (G := G))): ‖to_fresh (((GRepW_non_invertible a) z))‖ = ‖z‖ := by
         simp [to_fresh]
 
         have exists_v: ∃ v, Submodule.Quotient.mk v = z := by
@@ -1975,47 +1989,44 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
         simp
         sorry
 
+      -- TODO - deduplicate
+      have preserves_norm_b (z: FreshTopology (W (G := G))): ‖to_fresh (((GRepW_non_invertible b) z))‖ = ‖z‖ := by
+        simp [to_fresh]
 
+        have exists_v: ∃ v, Submodule.Quotient.mk v = z := by
+          apply Quotient.exists_rep
+
+        unfold GRepW_non_invertible
+        obtain ⟨v, hv⟩ := exists_v
+        nth_rw 1 [← hv]
+        simp
+        sorry
         --rw [GRep_preserves_norm]
         --rw [GRepW_non_invertible]
         --rw [Representation.asGroupHom_apply]
 
 
-      dsimp [to_fresh] at preserves_norm
-      simp [add_comm] at preserves_norm
-      conv at norm_le_iff =>
+      conv at norm_le_iff_x =>
         rhs
         intro z
         simp
         lhs
         equals ‖z‖ =>
-          apply preserves_norm z
+          apply preserves_norm_a z
 
+      conv at norm_le_iff_y =>
+        rhs
+        intro z
+        simp
+        lhs
+        equals ‖z‖ =>
+          apply preserves_norm_b z
 
-      simp at norm_le_iff
-      grw [norm_le_iff]
-      grw [norm_le_iff]
-      simp
-      rw [← ha]
-      simp [linear_to_clm, GRepW_base]
-
-
-      dsimp [GRepW_non_invertible] at norm_le_iff
-
-
-
-
-
-      obtain ⟨v, hv⟩ := exists_v
-      simp [GRepW, GRepW_base, GRepW_non_invertible]
-      nth_rw 1 [← hv]
-      rw [Representation.asGroupHom_apply]
-      simp
-      --rw [Submodule.mapQ_apply]
-      rw [quotient_norm_eq_norm]
-
-      simp_rw [Representation.asGroupHom_apply] at norm_le_iff
-      -- GRep_preserves_norm
+      simp at norm_le_iff_x
+      simp at norm_le_iff_y
+      grw [norm_le_iff_x]
+      grw [norm_le_iff_y]
+      linarith
 
   -- TODO: this is probably wrong, and we need to somehow take the closure
   -- maybe also locallyCompact_of_proper
