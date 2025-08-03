@@ -827,15 +827,15 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
       let a_fresh: (FreshInnerProduct V) →ₗ[ℂ] (FreshInnerProduct V) := a_map
 
       -- LinearMap.norm_map_iff_inner_map_map
-      have preserves_inner_iff := (LinearMap.norm_map_iff_inner_map_map a_fresh).mpr ?_
-      . simp [a_fresh, a_map] at preserves_inner_iff
-        rw [← LinearMap.star_eq_adjoint] at preserves_inner_iff
-        rw [← ha]
-        rw [← ContinuousLinearMap.mul_def] at preserves_inner_iff
-        apply_fun V_map_equiv at preserves_inner_iff
-        apply_fun LinearMap.toMatrix' at preserves_inner_iff
-        sorry
-      .
+      -- have preserves_inner_iff := (LinearMap.norm_map_iff_inner_map_map a_fresh).mpr ?_
+      -- . simp [a_fresh, a_map] at preserves_inner_iff
+      --   rw [← LinearMap.star_eq_adjoint] at preserves_inner_iff
+      --   rw [← ha]
+      --   rw [← ContinuousLinearMap.mul_def] at preserves_inner_iff
+      --   apply_fun V_map_equiv at preserves_inner_iff
+      --   apply_fun LinearMap.toMatrix' at preserves_inner_iff
+      --   sorry
+      have preserves_inner: ∀ (x y : FreshInnerProduct V), ⟪a_fresh x, a_fresh y⟫ = ⟪x, y⟫ := by
         intro v w
         unfold inner
         simp [InnerProductSpace.toInner, new_inner]
@@ -859,6 +859,24 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
         simp [a_fresh, a_map]
         exact my_mul
 
+      simp [a_fresh, a_map] at preserves_inner
+      simp_rw [← LinearMap.adjoint_inner_left] at preserves_inner
+      conv at preserves_inner =>
+        intro x y
+        right
+        arg 2
+        equals (LinearMap.id (M := FreshInnerProduct V) (R := ℂ)) x =>
+          rfl
+
+      conv at preserves_inner =>
+        intro x y
+        lhs
+        arg 2
+        rw [← Module.End.mul_apply]
+
+      have inner_specialized (x: FreshInnerProduct V) := preserves_inner x x
+      rw [ext_inner_map] at inner_specialized
+      rw [← ha]
 
 
 
