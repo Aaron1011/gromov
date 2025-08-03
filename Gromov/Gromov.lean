@@ -1836,6 +1836,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
 
   have fresh_t2: T2Space (FreshTopology (W (G := G))) := TopologicalSpace.t2Space_of_metrizableSpace
 
+  -- TODO - this is completely wrong, and needs to be the range of it applied to 'g'
   let new_rep: ((FreshTopology (W (G := G))) →ₗ[ℂ] (FreshTopology (W (G := G))))ˣ →* ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := {
     toFun := fun f => {
       val := LinearMap.toContinuousLinearMap f.val
@@ -1874,11 +1875,81 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   --borelize (FreshTopology (W (G := G)))
 
 
-  have compact_subgroup: CompactSpace my_range.topologicalClosure := by
-    sorry
-    --refine { isCompact_univ := ?_ }
-    --apply isCompact_of_totallyBounded_isClosed
+  -- TODO - is the dist topology actually the same as the units topology?
+  let fresh_psuedo_metric: PseudoMetricSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by
+    apply PseudoMetricSpace.ofDistTopology (fun f g => ‖f.val - g.val‖)
+    . simp
+    .
+      intro x y
+      conv =>
+        rhs
+        arg 1
+        equals -(x.val - y.val) =>
+          simp
+      rw [ContinuousLinearMap.opNorm_neg]
+    .
+      intro x y z
+      conv =>
+        lhs
+        arg 1
+        equals (x.val - y.val + y.val - z.val) =>
+          simp
 
+      have triangle := ContinuousLinearMap.opNorm_add_le (f := x.val - y.val) (g := y.val - z.val)
+      field_simp at triangle
+      field_simp
+      exact triangle
+    . intro s
+      refine ⟨?_, ?_⟩
+      . intro hs
+        rw [isOpen_induced_iff] at hs
+        obtain ⟨t, ht⟩ := hs
+        sorry
+      . sorry
+
+  have proper_units: ProperSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by
+    --apply ProperSpace.of_isClosed
+    --apply ProperSpace.of_isCompact
+    sorry
+
+
+  have proper_units: ProperSpace my_range.topologicalClosure := by
+    apply ProperSpace.of_isClosed
+    simp
+
+
+  have compact_subgroup: CompactSpace my_range.topologicalClosure := by
+    refine { isCompact_univ := ?_ }
+    rw [Metric.isCompact_iff_isClosed_bounded]
+    refine ⟨?_, ?_⟩
+    . exact isClosed_univ
+    .
+      rw [Bornology.isBounded_univ]
+      rw [boundedSpace_subtype_iff]
+      simp
+      -- boundedSpace_subtype_iff
+      -- Bornology.IsBounded.closure
+      rw [Metric.isBounded_iff]
+      use 2
+      intro x hx y hy
+      simp [dist, fresh_psuedo_metric]
+      unfold dist
+      simp [PseudoMetricSpace.ofDistTopology]
+      grw [norm_sub_le]
+
+      simp [my_range] at hx
+      simp [my_range] at hy
+
+      obtain ⟨a, ha⟩ := hx
+      obtain ⟨b, hb⟩ := hy
+
+      have norm_le_iff := ContinuousLinearMap.opNorm_le_iff (f := x.val) (M := 1) (by simp)
+      conv at norm_le_iff =>
+        rhs
+        intro z
+        rw [← ha]
+
+      simp [new_rep] at norm_le_iff
   -- TODO: this is probably wrong, and we need to somehow take the closure
   -- maybe also locallyCompact_of_proper
   --have locally_compact_subgroup: LocallyCompactSpace my_range := by
