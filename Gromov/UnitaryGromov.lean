@@ -807,24 +807,38 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
     have V_equiv := (finDimVectorspaceEquiv (Module.finrank ℂ (FreshInnerProduct V)) rank_eq.symm).toContinuousLinearEquiv
     let V_equiv_fresh: V ≃L[ℂ] (FreshInnerProduct V) := ContinuousLinearEquiv.ofFinrankEq ?_
     have V_map_equiv := ContinuousLinearEquiv.arrowCongr V_equiv V_equiv
+    have first := V_equiv.toLinearEquiv
+    --have V_linear_arrow_congr := LinearEquiv.arrowCongr V_equiv.toLinearEquiv V_equiv.toLinearEquiv
     let V_fresh_arrow := ContinuousLinearEquiv.arrowCongr V_equiv_fresh V_equiv_fresh
 
-    let H_matrix := LinearMap.toMatrix' '' (ContinuousLinearMap.toLinearMap '' (V_map_equiv '' (V_fresh_arrow '' (Units.val '' H.carrier))))
+    let new_H_matrix := ContinuousLinearMap.toLinearMap '' (Units.val '' H.carrier)
+    -- Deliberate defeq abuse, so that things line up with our integral (which is over plain V)
+    let new_H_coe: Set ((FreshInnerProduct V) →ₗ[ℂ] (FreshInnerProduct V)) := new_H_matrix
+
+    have H_hom := Units.coeHom (V →ₗ[ℂ] V)
+
+    have euclidean_linear := LinearEquiv.ofFinrankEq (R := ℂ) V _ finrank_euclideanSpace_fin.symm
+
+    have V_basis := stdOrthonormalBasis ℂ V
+
+    let H_matrix := (LinearMap.toMatrix V_basis.toBasis V_basis.toBasis) '' new_H_coe
+
+
+    --let H_matrix := LinearMap.toMatrix' '' (ContinuousLinearMap.toLinearMap '' (V_map_equiv '' (V_fresh_arrow '' (Units.val '' H.carrier))))
 
 
     --let H_matrix := LinearMap.toMatrix' '' (ContinuousLinearMap.toLinearMap '' (V_fresh_arrow '' (V_map_equiv '' (Units.val '' H.carrier))))
     have H_mem_unitary: ∀ h ∈ H_matrix, h ∈ Matrix.unitaryGroup (Fin (Module.finrank ℂ (FreshInnerProduct V))) ℂ := by
       intro h h_mem
-      simp [H_matrix] at h_mem
+      simp [H_matrix, new_H_coe, new_H_matrix] at h_mem
       obtain ⟨a, a_mem, ha⟩ := h_mem
-      rw [Matrix.mem_unitaryGroup_iff]
+      rw [Matrix.mem_unitaryGroup_iff']
 
       -- defeq abuse - we don't actually want to apply our equivalence from V to FreshInnerProduct V here,
       -- since it might not be the identity, which would break 'mulLeft'
       -- Instead, first convert to plain LinearMap (which we can use defeq abuse with, due to not having
       -- the bundled topology with ContinuousLinearMap)
-      let a_map := a.val.toLinearMap
-      let a_fresh: (FreshInnerProduct V) →ₗ[ℂ] (FreshInnerProduct V) := a_map
+      let a_fresh: (FreshInnerProduct V) →ₗ[ℂ] (FreshInnerProduct V) := a.val.toLinearMap
 
       -- LinearMap.norm_map_iff_inner_map_map
       -- have preserves_inner_iff := (LinearMap.norm_map_iff_inner_map_map a_fresh).mpr ?_
@@ -856,11 +870,15 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
 
         have my_mul := mul_left ⟨a, a_mem⟩
         simp at my_mul
-        simp [a_fresh, a_map]
+        simp [a_fresh]
         exact my_mul
 
-      simp [a_fresh, a_map] at preserves_inner
-      simp_rw [← LinearMap.adjoint_inner_left] at preserves_inner
+      conv at preserves_inner =>
+        intro x y
+        lhs
+        equals ⟪a_fresh.adjoint (a_fresh x), y⟫ =>
+          apply (LinearMap.adjoint_inner_left  _ _ _).symm
+
       conv at preserves_inner =>
         intro x y
         right
@@ -877,6 +895,22 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
       have inner_specialized (x: FreshInnerProduct V) := preserves_inner x x
       rw [ext_inner_map] at inner_specialized
       rw [← ha]
+      simp [a_fresh] at inner_specialized
+      apply_fun (LinearMap.toMatrix V_basis.toBasis V_basis.toBasis) at inner_specialized
+      rw [LinearMap.toMatrix_id] at inner_specialized
+      rw [Matrix.star_eq_conjTranspose]
+      rw [← LinearMap.toMatrix_adjoint]
+      rw [LinearMap.toMatrix_mul] at inner_specialized
+      exact inner_specialized
+      rw [inner_specialized]
+      rw [← LinearMap.toMatrix_mul]
+
+      apply_fun LinearMap.toMatrix (EuclideanSpace.basisFun _ _).toBasis (EuclideanSpace.basisFun _ _).toBasis at inner_specialized
+      rw [← LinearMap.star_eq_adjoint] at inner_specialized
+      rw [Matrix.star_eq_conjTranspose]
+      apply_fun (LinearEquiv.arrowCongr V_equiv.toLinearEquiv V_equiv.toLinearEquiv) at inner_specialized
+      -- EuclideanSpace.basisFun
+      -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Analysis/InnerProductSpace/Adjoint.html#LinearMap.toMatrix_adjoint
 
 
 
