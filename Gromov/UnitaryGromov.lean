@@ -964,8 +964,12 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
             apply_fun Inv.inv at x_eq_b
             rw [← x_eq_b]
             sorry
-        . rfl
-
+        .
+          rw [Matrix.mem_unitaryGroup_iff] at ha
+          apply Matrix.inv_eq_right_inv at ha
+          simp_rw [ha]
+          rw [Subtype.ext_iff]
+          simp
     }
 
     let remove_fresh (h: FreshInnerProduct V →ₗ[ℂ] FreshInnerProduct V): (V →ₗ[ℂ] V) := h
