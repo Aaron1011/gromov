@@ -653,7 +653,7 @@ attribute [-simp] MeasureTheory.Measure.inv_eq_self
 
 set_option maxHeartbeats 800000 in
 set_option synthInstance.maxHeartbeats 500000 in
-lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopologicalAddGroup V] [T2Space V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V]  (H: Subgroup (V →L[ℂ] V)ˣ)  [IsTopologicalGroup H] [LocallyCompactSpace H] [CompactSpace H] [T2Space H]: ∃ S: Subgroup ↥(Matrix.unitaryGroup (Fin (Module.finrank ℂ V)) ℂ), Nonempty (S ≃* H) := by
+lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopologicalAddGroup V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V]  (H: Subgroup (V →L[ℂ] V)ˣ)  [IsTopologicalGroup H] [LocallyCompactSpace H] [CompactSpace H] [T2Space H]: ∃ S: Subgroup ↥(Matrix.unitaryGroup (Fin (Module.finrank ℂ V)) ℂ), Nonempty (S ≃* H) := by
   let integrand := fun (v w: FreshInnerProduct V) (h: H) => ⟪(h.val.val v), (h.val.val w)⟫
   have continuous_integrand: ∀ v w: FreshInnerProduct V, Continuous fun h: H => integrand v w h := by
     intro v w
