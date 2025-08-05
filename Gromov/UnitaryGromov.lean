@@ -664,8 +664,7 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
 
   --
 
-  have finite_dimensional_fresh: FiniteDimensional ℂ (FreshInnerProduct V) := by
-    sorry
+  have finite_dimensional_fresh: FiniteDimensional ℂ (FreshInnerProduct V) := inferInstanceAs (FiniteDimensional ℂ V)
 
   have integrable_on: ∀ v w: V, MeasureTheory.Integrable (integrand v w) (MeasureTheory.Measure.haar.inv (G := H)) := by
     intro v w
