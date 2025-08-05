@@ -652,7 +652,8 @@ attribute [-simp] PiLp.inner_apply
 attribute [-simp] MeasureTheory.Measure.inv_eq_self
 
 set_option maxHeartbeats 500000 in
-lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopologicalAddGroup V] [T2Space V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V]  (H: Subgroup (V →L[ℂ] V)ˣ)  [IsTopologicalGroup H] [LocallyCompactSpace H] [CompactSpace H] [T2Space H]: True := by
+set_option synthInstance.maxHeartbeats 500000 in
+lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopologicalAddGroup V] [T2Space V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V]  (H: Subgroup (V →L[ℂ] V)ˣ)  [IsTopologicalGroup H] [LocallyCompactSpace H] [CompactSpace H] [T2Space H]: ∃ S: Subgroup ↥(Matrix.unitaryGroup (Fin (Module.finrank ℂ V)) ℂ), Nonempty (S ≃* H) := by
   let integrand := fun (v w: FreshInnerProduct V) (h: H) => ⟪(h.val.val v), (h.val.val w)⟫
   have continuous_integrand: ∀ v w: FreshInnerProduct V, Continuous fun h: H => integrand v w h := by
     intro v w
@@ -905,26 +906,113 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
       exact inner_specialized
 
 
+
     let H_carrier := H.carrier
-    let H_matrix: Subgroup (Matrix.unitaryGroup (Fin (Module.finrank ℂ V)) ℂ) := {
-      carrier := {
-
-      }
-    }
-
-    let units_map: (V →L[ℂ] V)ˣ →* (Fin (Module.finrank ℂ V) → ℂ) →L[ℂ] Fin (Module.finrank ℂ V) → ℂ := {
-      toFun := fun x => V_map_equiv x,
-      map_one' := by
+    let H_matrix_subgroup: Subgroup (Matrix.unitaryGroup (Fin (Module.finrank ℂ V)) ℂ) := {
+      carrier := Set.range (fun (h: H_matrix) => ⟨h.val, H_mem_unitary h (by simp)⟩),
+      mul_mem' := by
+        intro x y hx hy
         simp
+        use (x * y).val
+        simp
+        simp at hx
+        simp at hy
+        simp [H_matrix]
+        simp [H_matrix] at hx
+        simp [H_matrix] at hy
+        obtain ⟨a, ⟨p, p_mem, p_eq_a⟩, a_eq_x⟩ := hx
+        obtain ⟨b, ⟨q, q_mem, q_eq_b⟩, b_eq_y⟩ := hy
+        simp [new_H_coe, new_H_matrix] at q_mem
+        simp [new_H_coe, new_H_matrix] at p_mem
+        obtain ⟨y, y_mem, y_eq_q⟩ := q_mem
+        obtain ⟨x, x_mem, x_eq_p⟩ := p_mem
+        simp [new_H_coe, new_H_matrix]
+        refine ⟨?_, ?_⟩
+        .
+          use (x * y)
+          refine ⟨?_, ?_⟩
+          . apply Subgroup.mul_mem
+            . exact x_mem
+            . exact y_mem
+          . simp
+            conv =>
+              lhs
+              arg 2
+              equals x.val.toLinearMap * y.val.toLinearMap =>
+                rfl
+            rw [LinearMap.toMatrix_mul]
+            rw [y_eq_q, x_eq_p, p_eq_a, q_eq_b, ← a_eq_x, ← b_eq_y]
+        . rfl
+      one_mem' := by
+        simp [H_matrix, new_H_coe, new_H_matrix]
+        use 1
+        refine ⟨by simp, ?_⟩
+        apply LinearMap.toMatrix_one _
+      inv_mem' := by
+        simp
+        intro a ha b hb a_eq_b
+        use a⁻¹
+        refine ⟨?_, ?_⟩
+        . simp [H_matrix, new_H_coe, new_H_matrix]
+          simp [H_matrix, new_H_coe, new_H_matrix] at hb
+          obtain ⟨x, x_mem, x_eq_b⟩ := hb
+          use x⁻¹
+          refine ⟨?_, ?_⟩
+          . apply Subgroup.inv_mem
+            exact x_mem
+          . rw [← a_eq_b]
+            apply_fun Inv.inv at x_eq_b
+            rw [← x_eq_b]
+            sorry
+        . rfl
+
     }
 
-    have H_function_map := Units.map V_map_equiv.toMonoid
-    let H_mat_equiv := LinearMap.toMatrix'
-    let H_equiv := Subgroup.map ((ContinuousLinearEquiv.unitsEquiv ℂ V)).toMonoidHom H
-    let coe_lm := (ContinuousLinearMap.coeLM (R := ℂ) (M := V) (N₃ := V) ℂ)
-    let H_linear := Subgroup.map (ContinuousLinearMap.coeLM _) H_equiv
+    let remove_fresh (h: FreshInnerProduct V →ₗ[ℂ] FreshInnerProduct V): (V →ₗ[ℂ] V) := h
 
-   trivial
+    . use H_matrix_subgroup
+      apply Nonempty.intro
+      exact {
+        toFun := fun h => ⟨{
+          val := ((remove_fresh (h.val.val.toLin V_basis.toBasis V_basis.toBasis)).toContinuousLinearMap),
+          inv := ((remove_fresh (h.val.val⁻¹.toLin V_basis.toBasis V_basis.toBasis)).toContinuousLinearMap),
+          val_inv := by
+            simp [remove_fresh]
+            sorry
+          inv_val := by
+            simp [remove_fresh]
+            sorry
+        }, by (
+          sorry
+        )⟩
+        invFun := fun h => ⟨⟨(LinearMap.toMatrix V_basis.toBasis V_basis.toBasis) h.val.val.toLinearMap, by (
+          apply H_mem_unitary
+          simp [H_matrix, new_H_coe, new_H_matrix]
+          use h
+          simp
+        )⟩, by (
+          simp [H_matrix_subgroup, H_matrix, new_H_coe, new_H_matrix]
+          use h
+          simp
+        )⟩,
+        left_inv := by
+          intro h
+          simp
+          rw [Subtype.ext_iff]
+          simp [remove_fresh]
+        right_inv := by
+          intro h
+          simp
+          simp [remove_fresh]
+          rfl,
+        map_mul' := by
+          intro x y
+          simp [remove_fresh]
+          ext a
+          simp
+          apply Matrix.toLin_mul_apply
+      }
+    . rfl
 
 --  [NormedAddCommGroup V]  [CompleteSpace V] [InnerProductSpace ℂ V]
 -- [MeasurableSpace H] [T2Space H] [BorelSpace H] [IsTopologicalGroup H] [LocallyCompactSpace H]
