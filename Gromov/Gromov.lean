@@ -676,7 +676,6 @@ instance V_FiniteDimentional: FiniteDimensional ℂ (LipschitzH (G := G)) := by
   sorry
 
 
-
 def ConstF: Submodule ℂ (LipschitzH (G := G)) := {
   carrier := Set.range ConstLipschitzH
   add_mem' := by
@@ -774,6 +773,12 @@ def gAct_const (g: G) (z: ℂ): gAct g (ConstLipschitzH z) = ConstLipschitzH z :
 #synth AddCommGroup (LipschitzH (G := G))
 
 abbrev W := (LipschitzH (G := G)) ⧸ ConstF
+
+
+instance W_FiniteDimensional: FiniteDimensional ℂ (W (G := G)) := by
+  -- This is a very long part of the proof in Vikman
+  sorry
+
 
 #synth Module ℂ (W (G := G))
 
@@ -1019,6 +1024,8 @@ noncomputable local instance LipschitzH_normed: NormedSpace ℂ (LipschitzH (G :
     left
     simp [K]
 
+
+#synth TopologicalSpace (LipschitzH (G := G))
 --def myInst := Submodule.Quotient.normedAddCommGroup (S := ConstF)
 
 lemma lipschitz_norm_const (z: ℂ): LipschitzSemiNorm (G := G) (ConstLipschitzH z) = 0 := by
@@ -1146,6 +1153,10 @@ lemma opnorm_continuous: Continuous fun (f: (W (G := G) →L[ℂ] W (G := G))) =
 -- Homeomorph.isCompact_preimage
 
 instance proper_linear_w: ProperSpace (((W (G := G) →L[ℂ] W (G := G)))) := FiniteDimensional.proper_rclike ℂ (((W (G := G) →L[ℂ] W (G := G))))
+
+#synth UniformSpace (((W (G := G) →ₗ[ℂ] W (G := G))))ˣ
+#synth UniformSpace C(W (G := G), W (G := G))
+
 --#synth NormedSpace ℂ (GL_W (G := G))
 --#synth MetricSpace (GL_W (G := G))
 
@@ -1153,6 +1164,8 @@ instance proper_linear_w: ProperSpace (((W (G := G) →L[ℂ] W (G := G)))) := F
 #synth FiniteDimensional ℂ (LipschitzH (G := G))
 #synth TopologicalSpace (LipschitzH (G := G))
 #synth BorelSpace (((W (G := G) →L[ℂ] W (G := G))))
+
+#synth ProperSpace (((W (G := G) →L[ℂ] W (G := G))))
 
 
 
@@ -1451,11 +1464,6 @@ lemma continous_of_map (v: W (G := G)): Continuous (fun (r: (W (G := G) →L[ℂ
 
 
 
--- WRONG: We want the topology to come from our metric space 'GL_W_psuedoMetric', not from the units
-
--- We actualy want the topology to be the induced topology from the space of (not necessarily invertible) linear maps from W to W
---attribute [-instance] Units.instTopologicalSpaceUnits
-
 
 -- The image of G under our representation: ρ(G) in the Vikman paper
 --noncomputable def rho_g := ((GRepW (G := G)).restrict ((GRepW_base (G := G)).range)).range
@@ -1502,11 +1510,11 @@ def isembedding_units_val := Units.isEmbedding_val_mk' (M := (W (G := G) →L[�
   . exact u.inv_val
 )
 
-def unit_val_isometry := Topology.IsEmbedding.to_isometry (isembedding_units_val (G := G))
-def units_val_inducing := (isembedding_units_val (G := G).isInducing)
-def units_openMap := Units.isOpenMap_val (R := (W (G := G) →L[ℂ] W (G := G)))
+--def unit_val_isometry := Topology.IsEmbedding.to_isometry (isembedding_units_val (G := G))
+--def units_val_inducing := (isembedding_units_val (G := G).isInducing)
+--def units_openMap := Units.isOpenMap_val (R := (W (G := G) →L[ℂ] W (G := G)))
 
-noncomputable instance GL_W_psuedo: PseudoMetricSpace (GL_W (G := G)) := Topology.IsInducing.comapPseudoMetricSpace (isembedding_units_val (G := G).isInducing)
+--noncomputable instance GL_W_psuedo: PseudoMetricSpace (GL_W (G := G)) := Topology.IsInducing.comapPseudoMetricSpace (isembedding_units_val (G := G).isInducing)
 --   apply FiniteDimensional.proper_rclike (K := ℂ)
 --#synth FiniteDimensional ℂ  (GL_W (G := G))
 
@@ -1532,19 +1540,19 @@ noncomputable instance GL_W_psuedo: PseudoMetricSpace (GL_W (G := G)) := Topolog
 -- }
 
 
-instance GL_W_Proper: ProperSpace (GL_W (G := G)) := {
-  isCompact_closedBall := by
-    intro w r
-    --have foo := _root_.Submonoid.units_isCompact (α := (W (G := G) →L[ℂ] W (G := G)))
-    have ball_closed: IsClosed (Metric.closedBall (w) r) := by
-      apply Metric.isClosed_closedBall
-    rw [Topology.IsInducing.isClosed_iff units_val_inducing] at ball_closed
-    obtain ⟨w_ball, w_ball_closed, inv_ball⟩ := ball_closed
-    rw [← inv_ball]
-    rw [Topology.IsInducing.isCompact_iff units_val_inducing]
-    rw [Set.image_preimage_eq_range_inter]
-    sorry
-}
+-- instance GL_W_Proper: ProperSpace (GL_W (G := G)) := {
+--   isCompact_closedBall := by
+--     intro w r
+--     --have foo := _root_.Submonoid.units_isCompact (α := (W (G := G) →L[ℂ] W (G := G)))
+--     have ball_closed: IsClosed (Metric.closedBall (w) r) := by
+--       apply Metric.isClosed_closedBall
+--     rw [Topology.IsInducing.isClosed_iff units_val_inducing] at ball_closed
+--     obtain ⟨w_ball, w_ball_closed, inv_ball⟩ := ball_closed
+--     rw [← inv_ball]
+--     rw [Topology.IsInducing.isCompact_iff units_val_inducing]
+--     rw [Set.image_preimage_eq_range_inter]
+--     sorry
+-- }
 
 --#synth Bornology (GL_W (G := G))
 
@@ -1771,9 +1779,9 @@ instance Borel_GL_W: BorelSpace (GL_W (G := G)) := by
 -- instance Borel_rho_g: BorelSpace ↥(rho_g (G := G)) := by
 --   apply Subtype.borelSpace
 
-instance LocallyCompact_GL_W: LocallyCompactSpace (GL_W (G := G)) := by
-  apply Topology.IsInducing.locallyCompactSpace (isembedding_units_val (G := G).isInducing)
-  sorry
+--instance LocallyCompact_GL_W: LocallyCompactSpace (GL_W (G := G)) := by
+  --apply Topology.IsInducing.locallyCompactSpace (isembedding_units_val (G := G).isInducing)
+  --sorry
   --apply Topology.IsEmbedding.locallyCompactSpace (isembedding_units_val (G := G))
 
 -- instance LocallyCompact_rho_g: LocallyCompactSpace (rho_g (G := G)) := by
@@ -1786,7 +1794,46 @@ instance LocallyCompact_GL_W: LocallyCompactSpace (GL_W (G := G)) := by
 
 #synth CompleteSpace (W (G := G))
 
+#synth IsBoundedSMul ℂ (LipschitzH (G := G))
+
+
+
 end lipschitz_norm
+
+
+
+noncomputable instance W_norm: NormedAddCommGroup (W (G := G)) where
+  norm := fun f => LipschitzSemiNorm (G := G) f.out
+  eq_of_dist_eq_zero := by
+    sorry
+  dist_self := by
+    intro x
+    simp [LipschitzSemiNorm]
+    sorry
+  dist_comm := by
+    intro x y
+    simp [LipschitzSemiNorm]
+    sorry
+  dist_triangle := by
+    intro x y z
+    simp [LipschitzSemiNorm]
+    sorry
+
+noncomputable instance W_normed: NormedSpace ℂ (W (G := G)) where
+  norm_smul_le := by sorry
+
+
+
+-- WRONG?: We want the topology to come from our metric space 'GL_W_psuedoMetric', not from the units
+
+-- We actualy want the topology to be the induced topology from the space of (not necessarily invertible) linear maps from W to W
+--attribute [-instance] Units.instTopologicalSpaceUnits
+
+--instance Units_subtype_Topology {T: Type*} [Monoid T] [TopologicalSpace T]: TopologicalSpace (T)ˣ := TopologicalSpace.induced Units.val (by infer_instance)
+
+
+#synth TopologicalSpace (W (G := G))
+
 
 attribute [-instance] QuotientModule.Quotient.topologicalSpace
 def FreshTopology (V: Type*) := V
@@ -1804,11 +1851,19 @@ instance (V: Type*) [AddCommGroup V] [Module ℂ V]  [base_finite: FiniteDimensi
 
 #synth AddCommMonoid (W (G := G))
 
+instance T2_W: T2Space (W (G := G)) := TopologicalSpace.t2Space_of_metrizableSpace
+
+#synth T2Space (W (G := G))
+
+
+
+#synth TopologicalSpace (W (G := G) →L[ℂ] W (G := G))ˣ
+
 --#synth NormedAddCommGroup (W (G := G))
 open scoped ComplexInnerProductSpace in
 set_option maxHeartbeats 500000 in
 set_option synthInstance.maxHeartbeats 600000 in
-set_option trace.Meta.synthInstance true in
+--set_option trace.Meta.synthInstance true in
 lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutative M ∧ M.FiniteIndex := by
   let my_map := Subgroup.subtype (rho_g (G := G))
   have W_equiv: (W (G := G)) ≃ₗ[ℂ] EuclideanSpace ℂ (Fin <| Module.finrank ℂ W) := LinearEquiv.ofFinrankEq _ _ finrank_euclideanSpace_fin.symm
@@ -1833,13 +1888,13 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   let temp_inner := InnerProductSpace.ofCore inner_prod_core
   let add_comm := InnerProductSpace.Core.toNormedAddCommGroup (𝕜 := ℂ) (F := (FreshTopology (W (G := G))))
 
-  --let normed_space := InnerProductSpace.Core.toNormedSpace (𝕜 := ℂ) (F := (FreshTopology (W (G := G))))
+  let normed_space := InnerProductSpace.Core.toNormedSpace (𝕜 := ℂ) (F := (FreshTopology (W (G := G))))
 
   have proper_space: ProperSpace (FreshTopology (W (G := G))) := FiniteDimensional.proper_rclike ℂ _
 
   have fresh_t2: T2Space (FreshTopology (W (G := G))) := TopologicalSpace.t2Space_of_metrizableSpace
 
-  -- TODO - this is completely wrong, and needs to be the range of it applied to 'g'
+
   let linear_to_clm: ((FreshTopology (W (G := G))) →ₗ[ℂ] (FreshTopology (W (G := G))))ˣ →* ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := {
     toFun := fun f => {
       val := LinearMap.toContinuousLinearMap f.val
@@ -1868,9 +1923,41 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
       simp only []
       rfl
   }
+
+  let new_linear_to_clm: (((W (G := G))) →ₗ[ℂ] ((W (G := G))))ˣ →* (((W (G := G))) →L[ℂ] ((W (G := G))))ˣ := {
+    toFun := fun f => {
+      val := LinearMap.toContinuousLinearMap f.val
+      inv := LinearMap.toContinuousLinearMap f.inv
+      val_inv := by
+        have old_inv := f.val_inv
+        ext a
+        apply_fun (fun f => f a) at old_inv
+        simp only [Units.inv_eq_val_inv, Module.End.one_apply] at old_inv
+        apply old_inv
+      inv_val := by
+        have old_inv := f.inv_val
+        ext a
+        apply_fun (fun f => f a) at old_inv
+        simp only [Units.inv_eq_val_inv, Module.End.one_apply] at old_inv
+        apply old_inv
+    }
+    -- TODO - why is a normal `simp` so slow here?
+    map_one' := by
+      ext a
+      simp only []
+      rfl
+    map_mul' := by
+      intro f g
+      ext a
+      simp only []
+      rfl
+  }
+
   let my_range := (linear_to_clm.comp GRepW_base).range
+  let my_new_range := (new_linear_to_clm.comp GRepW_base).range
+
   have fresh_complete: CompleteSpace (FreshTopology (W (G := G))) := by apply complete_of_proper (α := FreshTopology (W (G := G)))
-  have proper_map: ProperSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))) := by infer_instance
+
   have locally_compact_map: LocallyCompactSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))) := locallyCompact_of_proper
   have units_locally:  LocallyCompactSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by
     infer_instance
@@ -1879,41 +1966,63 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
 
 
   -- TODO - is the dist topology actually the same as the units topology?
-  let fresh_psuedo_metric: PseudoMetricSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by
-    apply PseudoMetricSpace.ofDistTopology (fun f g => ‖f.val - g.val‖)
-    . simp
+  -- let fresh_psuedo_metric: PseudoMetricSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by
+  --   apply PseudoMetricSpace.ofDistTopology (fun f g => ‖f.val - g.val‖)
+  --   . simp
+  --   .
+  --     intro x y
+  --     conv =>
+  --       rhs
+  --       arg 1
+  --       equals -(x.val - y.val) =>
+  --         simp
+  --     rw [ContinuousLinearMap.opNorm_neg]
+  --   .
+  --     intro x y z
+  --     conv =>
+  --       lhs
+  --       arg 1
+  --       equals (x.val - y.val + y.val - z.val) =>
+  --         simp
+
+  --     have triangle := ContinuousLinearMap.opNorm_add_le (f := x.val - y.val) (g := y.val - z.val)
+  --     field_simp at triangle
+  --     field_simp
+  --     exact triangle
+  --   . intro s
+  --     refine ⟨?_, ?_⟩
+  --     . intro hs
+  --       rw [isOpen_induced_iff] at hs
+  --       obtain ⟨t, ht⟩ := hs
+  --       sorry
+  --     . sorry
+
+  let units_metric_space: PseudoMetricSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := Topology.IsInducing.comapPseudoMetricSpace (f := Units.val) (by
+    apply Topology.IsInducing.induced (Units.val)
+  )
+
+  let proper_map: ProperSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))) := by infer_instance
+  -- TODO - the units topology seems pretty weird. Maybe we need to avoid it, and use a subtype instead
+  have proper_units: ProperSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by
+    apply LipschitzWith.properSpace (K := 1) (f := (Units.embedProduct _))
+    .
+
+      apply Topology.IsClosedEmbedding.isProperMap
+      -- This is wrong - the general linear group is open, and not closed
+      -- We need to specialize this to rho_G somehow
+      apply Units.isClosedEmbedding_embedProduct
     .
       intro x y
-      conv =>
-        rhs
-        arg 1
-        equals -(x.val - y.val) =>
-          simp
-      rw [ContinuousLinearMap.opNorm_neg]
-    .
-      intro x y z
-      conv =>
-        lhs
-        arg 1
-        equals (x.val - y.val + y.val - z.val) =>
-          simp
-
-      have triangle := ContinuousLinearMap.opNorm_add_le (f := x.val - y.val) (g := y.val - z.val)
-      field_simp at triangle
-      field_simp
-      exact triangle
-    . intro s
+      rw [Prod.edist_eq]
+      simp
       refine ⟨?_, ?_⟩
-      . intro hs
-        rw [isOpen_induced_iff] at hs
-        obtain ⟨t, ht⟩ := hs
-        sorry
-      . sorry
-
-  have proper_units: ProperSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by
-    apply ProperSpace.of_isClosed
-    --apply ProperSpace.of_isCompact
-    sorry
+      . rfl
+      .
+        rw [MulOpposite.edist_op]
+        simp [edist]
+        unfold PseudoMetricSpace.edist
+        beta_reduce
+        simp []
 
 
   have proper_units: ProperSpace my_range.topologicalClosure := by
@@ -1924,6 +2033,41 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
 
   have compact_subgroup: CompactSpace my_range.topologicalClosure := by
     refine { isCompact_univ := ?_ }
+    rw [Subtype.isCompact_iff]
+    rw [Topology.IsInducing.isCompact_iff (f := Units.embedProduct _) ?_]
+    . simp
+      conv =>
+        arg 1
+        -- WRONG - The original image always pairs values with their inverse, while the product of the ranges pairs elements with unrelated inverses
+        -- equals (Units.val '' (_root_.closure (my_range.carrier))) ×ˢ ((fun a => MulOpposite.op a.inv) '' (_root_.closure (my_range.carrier))) =>
+        --   ext g
+        --   simp
+        --   refine ⟨?_, ?_⟩
+        --   . intro hg
+        --     obtain ⟨x, x_mem, hx⟩ := hg
+        --     refine ⟨?_, ?_⟩
+        --     .
+        --       use x
+        --       refine ⟨?_, ?_⟩
+        --       . simpa using x_mem
+        --       . rw [← hx]
+        --     . use x
+        --       refine ⟨?_, ?_⟩
+        --       . simpa using x_mem
+        --       . rw [← hx]
+        --   . intro hg
+        --     obtain ⟨⟨x, x_mem, hx⟩, ⟨y, y_mem, hy⟩⟩ := hg
+        --     use x
+        --     refine ⟨?_, ?_⟩
+        --     . simpa using x_mem
+        --     .
+        --       rw [hx]
+        --       rw [hy]
+
+
+
+     apply IsCompact.prod
+
     rw [Metric.isCompact_iff_isClosed_bounded]
     refine ⟨?_, ?_⟩
     . exact isClosed_univ
@@ -2036,8 +2180,8 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   --  sorry
 
   -- TODO - avoid constructing continuous linear map with wrong topolgoy
-  have my_weyl_trick := new_weyl_unitarian_trick (V := (FreshTopology (W (G := G)))) (H := my_range.topologicalClosure)
-
+  have my_weyl_trick := new_weyl_unitarian_trick  (H := (my_range).topologicalClosure)
+  obtain ⟨A, ⟨hA⟩⟩ := my_weyl_trick
 
 
 

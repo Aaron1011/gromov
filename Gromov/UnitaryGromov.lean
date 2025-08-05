@@ -637,6 +637,7 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
 
 #print axioms volume_packing
 
+
 def FreshInnerProduct (V: Type*) := V
 
 instance (V: Type*) [base_comm: AddCommGroup V]: AddCommGroup (FreshInnerProduct V) := base_comm
