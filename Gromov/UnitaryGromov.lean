@@ -962,7 +962,16 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
           . rw [← a_eq_b]
             apply_fun Inv.inv at x_eq_b
             rw [← x_eq_b]
-            sorry
+            rw [eq_comm]
+            apply Matrix.inv_eq_right_inv
+            rw [← LinearMap.toMatrix_mul]
+            conv =>
+              arg 1
+              arg 2
+              equals (x.val * x⁻¹.val).toLinearMap =>
+                rfl
+            simp
+            apply LinearMap.toMatrix_one
         .
           rw [Matrix.mem_unitaryGroup_iff] at ha
           apply Matrix.inv_eq_right_inv at ha
