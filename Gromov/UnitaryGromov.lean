@@ -1018,9 +1018,9 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
           rw [Set.mem_image] at b_mem
           simp_rw [Set.mem_image] at b_mem
           obtain ⟨c, ⟨d, d_mem, d_eq_c⟩, c_eq_b⟩ := b_mem
-          rw [← ha, ← b_eq_a]
+          simp_rw [← ha, ← b_eq_a]
           simp
-          rw [← c_eq_b, ← d_eq_c]
+          simp_rw [← c_eq_b, ← d_eq_c]
           conv =>
             arg 2
             arg 1
