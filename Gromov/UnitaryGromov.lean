@@ -993,7 +993,16 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
             . apply Matrix.UnitaryGroup.det_isUnit
           inv_val := by
             simp [remove_fresh]
-            sorry
+            ext a
+            simp
+            conv =>
+              lhs
+              equals Matrix.toLin V_basis.toBasis V_basis.toBasis (h.val.val⁻¹ * h.val.val) a =>
+                rw [eq_comm]
+                apply Matrix.toLin_mul_apply
+            rw [Matrix.nonsing_inv_mul]
+            . simp
+            . apply Matrix.UnitaryGroup.det_isUnit
         }, by (
           simp [remove_fresh]
           have h_prop := h.property
