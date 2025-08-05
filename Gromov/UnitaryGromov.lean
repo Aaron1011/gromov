@@ -1008,7 +1008,8 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
           intro h
           simp
           simp [remove_fresh]
-          rfl,
+          ext a
+          simp
         map_mul' := by
           intro x y
           simp [remove_fresh]
