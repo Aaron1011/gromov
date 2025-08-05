@@ -651,7 +651,7 @@ attribute [-simp] PiLp.inner_apply
 
 attribute [-simp] MeasureTheory.Measure.inv_eq_self
 
-set_option maxHeartbeats 500000 in
+set_option maxHeartbeats 800000 in
 set_option synthInstance.maxHeartbeats 500000 in
 lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopologicalAddGroup V] [T2Space V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V]  (H: Subgroup (V →L[ℂ] V)ˣ)  [IsTopologicalGroup H] [LocallyCompactSpace H] [CompactSpace H] [T2Space H]: ∃ S: Subgroup ↥(Matrix.unitaryGroup (Fin (Module.finrank ℂ V)) ℂ), Nonempty (S ≃* H) := by
   let integrand := fun (v w: FreshInnerProduct V) (h: H) => ⟪(h.val.val v), (h.val.val w)⟫
@@ -986,7 +986,32 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V]  [IsTopological
             simp [remove_fresh]
             sorry
         }, by (
-          sorry
+          simp [remove_fresh]
+          have h_prop := h.property
+          simp only [H_matrix_subgroup] at h_prop
+          rw [← Subgroup.mem_carrier] at h_prop
+          simp only [] at h_prop
+          rw [Set.mem_range] at h_prop
+          obtain ⟨a, ha⟩ := h_prop
+          have a_prop := a.property
+          simp only [H_matrix, new_H_coe, new_H_matrix] at a_prop
+          rw [Set.mem_image] at a_prop
+          obtain ⟨b, b_mem, b_eq_a⟩ := a_prop
+          rw [Set.mem_image] at b_mem
+          simp_rw [Set.mem_image] at b_mem
+          obtain ⟨c, ⟨d, d_mem, d_eq_c⟩, c_eq_b⟩ := b_mem
+          rw [← ha, ← b_eq_a]
+          simp
+          rw [← c_eq_b, ← d_eq_c]
+          conv =>
+            arg 2
+            arg 1
+            equals d.val =>
+              rfl
+
+          simp
+          rw [Subgroup.mem_carrier] at d_mem
+          exact d_mem
         )⟩
         invFun := fun h => ⟨⟨(LinearMap.toMatrix V_basis.toBasis V_basis.toBasis) h.val.val.toLinearMap, by (
           apply H_mem_unitary
