@@ -1884,7 +1884,7 @@ instance T2_W: T2Space (W (G := G)) := TopologicalSpace.t2Space_of_metrizableSpa
 
 --#synth NormedAddCommGroup (W (G := G))
 open scoped ComplexInnerProductSpace in
-set_option maxHeartbeats 500000 in
+set_option maxHeartbeats 800000 in
 set_option synthInstance.maxHeartbeats 600000 in
 --set_option trace.Meta.synthInstance true in
 lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutative M ∧ M.FiniteIndex := by
@@ -2029,7 +2029,38 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
     rw [Topology.IsEmbedding.isCompact_iff (f := Units.val) ?_]
     . rw [Metric.isCompact_iff_isClosed_bounded]
       refine ⟨?_, ?_⟩
-      . sorry
+      . apply IsSeqClosed.isClosed
+        by_contra!
+        simp [IsSeqClosed] at this
+        obtain ⟨seq, seq_in, ⟨lim_seq, seq_tendsto_lim_seq, lim_seq_not_mem⟩⟩ := this
+
+        by_cases lim_seq_invertible: IsUnit lim_seq.toLinearMap
+        . obtain ⟨u, hu⟩ := lim_seq_invertible
+          sorry
+
+        rw [LinearMap.isUnit_iff_ker_eq_bot] at lim_seq_invertible
+        apply Submodule.exists_mem_ne_zero_of_ne_bot at lim_seq_invertible
+        obtain ⟨v, v_in_ker, v_ne_zero⟩ := lim_seq_invertible
+        simp at v_in_ker
+
+
+        have eval_at := Filter.Tendsto.eval_const seq_tendsto_lim_seq v
+        have norm_tendsto := Continuous.tendsto (f := fun (x: FreshTopology W) => ‖x‖) (by fun_prop) (lim_seq v)
+        have norm_seq_lim := Filter.Tendsto.comp  norm_tendsto eval_at
+        rw [v_in_ker] at norm_seq_lim
+        rw [norm_zero] at norm_seq_lim
+        conv at norm_seq_lim =>
+          arg 1
+          equals fun x => ‖v‖ =>
+            sorry
+
+        -- TODO - why do we need this?
+        have r_t2: T2Space ℝ := TopologicalSpace.t2Space_of_metrizableSpace
+
+        have tendsto_norm_v := tendsto_const_nhds (α := ℕ) (f := Filter.atTop) (x := ‖v‖)
+        have norm_v_zero := tendsto_nhds_unique tendsto_norm_v norm_seq_lim
+        simp at norm_v_zero
+        contradiction
       .
         simp
         apply LipschitzWith.isBounded_image (f := Units.val) (K := 1)
