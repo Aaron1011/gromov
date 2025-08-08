@@ -963,7 +963,7 @@ lemma lipschitzH_norm_triangle (x y z: LipschitzH (G := G)): LipschitzSemiNorm (
 
 --def lift_triangle (x y z: LipschitzH) := Quotient.lift lipschitzH_norm_triangle sorry
 
-section lipschitz_norm
+--section lipschitz_norm
 noncomputable local instance LipschitzH_seminorm: SeminormedAddCommGroup (LipschitzH (G := G)) where
   norm := fun v => LipschitzSemiNorm (G := G) v
   dist_self := by
@@ -1190,7 +1190,7 @@ def GRep: Representation ℂ G (LipschitzH (G := G))  := {
 }
 
 
-attribute [-instance] QuotientModule.Quotient.topologicalSpace
+--attribute [-instance] QuotientModule.Quotient.topologicalSpace
 
 -- We start with a map from G into the space of (not necessarily invertible) linear maps from W to W
 def GRepW_non_invertible: Representation ℂ G (W (G := G)) := Representation.quotient (GRep (G := G)) ConstF (by
@@ -1272,7 +1272,7 @@ lemma GRep_preserves_norm (g: G) (f: LipschitzH): ‖(GRep g) f‖ = ‖f‖ := 
 
 
 -- Takes in an invertible linear map from W to W, and produces a *continuous* linear map from W to W
-noncomputable def GRepW: (W (G := G) →ₗ[ℂ] W (G := G))ˣ →* GL_W (G := G) := {
+noncomputable def GRepW: (W (G := G) →ₗ[ℂ] W (G := G))ˣ →* (W (G := G) →L[ℂ] W (G := G))ˣ := {
   toFun := fun f => {
     val := LinearMap.toContinuousLinearMap f.val
     inv := LinearMap.toContinuousLinearMap f.inv
@@ -1360,8 +1360,8 @@ lemma quotient_norm_eq_norm (f: LipschitzH (G := G)): ‖(Submodule.Quotient.mk 
   . exact Submodule.nonempty ConstF
 
 -- Define the norm on invertible maps (Units) using the norm on the underlying linear maps
-noncomputable instance GL_W_opNorm : Norm (GL_W (G := G)) where
-  norm := fun f => ‖f.val‖
+--noncomputable instance GL_W_opNorm : Norm (GL_W (G := G)) where
+--  norm := fun f => ‖f.val‖
 
 -- noncomputable instance GL_W_psuedoMetric: PseudoMetricSpace (GL_W (G := G)) := PseudoMetricSpace.ofDistTopology
 --   (dist := fun f g => ‖f.val - g.val‖)
@@ -1423,8 +1423,8 @@ noncomputable instance GL_W_opNorm : Norm (GL_W (G := G)) where
 #synth NormedRing (W (G := G) →L[ℂ] W (G := G))
 #synth TopologicalSpace (W (G := G) →L[ℂ] W (G := G))ˣ
 
+
 lemma GLW_preseves_norm (g: G) (w: W (G := G)): ‖(GRepW (G := G) (GRepW_base g)).val w‖ = ‖w‖ := by
-  unfold GL_W
   have exists_v: ∃ v, Submodule.Quotient.mk v = w := by
     apply Quotient.exists_rep
   obtain ⟨v, hv⟩ := exists_v
@@ -1437,6 +1437,30 @@ lemma GLW_preseves_norm (g: G) (w: W (G := G)): ‖(GRepW (G := G) (GRepW_base g
   rw [GRep_preserves_norm]
   rw [← hv]
   rw [quotient_norm_eq_norm]
+
+
+lemma GRepW_norm_le (g: G): ‖(GRepW (G := G) (GRepW_base g)).val‖ ≤ 1 := by
+  rw [ContinuousLinearMap.opNorm_le_iff]
+  . simp [GLW_preseves_norm]
+  . simp
+  -- apply ContinuousLinearMap.opNorm_eq_of_bounds (by simp)
+  -- . simp [GLW_preseves_norm]
+  -- . intro n hn
+  --   simp [GLW_preseves_norm]
+  --   intro x
+
+  --   by_contra!
+  --   unfold W at x
+  --   specialize x (Submodule.Quotient.mk (ConstLipschitzH 1))
+  --   simp at hn
+  --   by_cases n_eq_zero: n = 0
+  --   .
+  --     simp [n_eq_zero] at x
+
+  --   have mul_lt := mul_lt_of_lt_one_left (a := ‖((Submodule.Quotient.mk (ConstLipschitzH (G := G) 1)) : W)‖) (b := n) (by linarith)
+  -- rw [ContinuousLinearMap.norm_def]
+  -- simp [GLW_preseves_norm]
+
 
 --#synth CompleteSpace (W (G := G))
 
@@ -1562,6 +1586,7 @@ def isembedding_units_val := Units.isEmbedding_val_mk' (M := (W (G := G) →L[�
 -- }
 
 #synth NormedSpace ℂ (W (G := G) →L[ℂ] W (G := G))
+#synth MetricSpace (W (G := G) →L[ℂ] W (G := G))
 
 
 
@@ -1796,29 +1821,29 @@ instance Borel_GL_W: BorelSpace (GL_W (G := G)) := by
 
 
 
-end lipschitz_norm
+--end lipschitz_norm
 
 
 
-noncomputable instance W_norm: NormedAddCommGroup (W (G := G)) where
-  norm := fun f => LipschitzSemiNorm (G := G) f.out
-  eq_of_dist_eq_zero := by
-    sorry
-  dist_self := by
-    intro x
-    simp [LipschitzSemiNorm]
-    sorry
-  dist_comm := by
-    intro x y
-    simp [LipschitzSemiNorm]
-    sorry
-  dist_triangle := by
-    intro x y z
-    simp [LipschitzSemiNorm]
-    sorry
+-- noncomputable instance W_norm: NormedAddCommGroup (W (G := G)) where
+--   norm := fun f => LipschitzSemiNorm (G := G) f.out
+--   eq_of_dist_eq_zero := by
+--     sorry
+--   dist_self := by
+--     intro x
+--     simp [LipschitzSemiNorm]
+--     sorry
+--   dist_comm := by
+--     intro x y
+--     simp [LipschitzSemiNorm]
+--     sorry
+--   dist_triangle := by
+--     intro x y z
+--     simp [LipschitzSemiNorm]
+--     sorry
 
-noncomputable instance W_normed: NormedSpace ℂ (W (G := G)) where
-  norm_smul_le := by sorry
+--noncomputable instance W_normed: NormedSpace ℂ (W (G := G)) where
+--  norm_smul_le := by sorry
 
 
 
@@ -1833,7 +1858,7 @@ noncomputable instance W_normed: NormedSpace ℂ (W (G := G)) where
 #synth TopologicalSpace (W (G := G))
 
 
-attribute [-instance] QuotientModule.Quotient.topologicalSpace
+--attribute [-instance] QuotientModule.Quotient.topologicalSpace
 def FreshTopology (V: Type*) := V
 instance (V: Type*) [base_group: Group V]: Group (FreshTopology V) := base_group
 instance (V: Type*) [base_comm: AddCommGroup V]: AddCommGroup (FreshTopology V) := base_comm
@@ -1922,39 +1947,9 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
       rfl
   }
 
-  let new_linear_to_clm: (((W (G := G))) →ₗ[ℂ] ((W (G := G))))ˣ →* (((W (G := G))) →L[ℂ] ((W (G := G))))ˣ := {
-    toFun := fun f => {
-      val := LinearMap.toContinuousLinearMap f.val
-      inv := LinearMap.toContinuousLinearMap f.inv
-      val_inv := by
-        have old_inv := f.val_inv
-        ext a
-        apply_fun (fun f => f a) at old_inv
-        simp only [Units.inv_eq_val_inv, Module.End.one_apply] at old_inv
-        apply old_inv
-      inv_val := by
-        have old_inv := f.inv_val
-        ext a
-        apply_fun (fun f => f a) at old_inv
-        simp only [Units.inv_eq_val_inv, Module.End.one_apply] at old_inv
-        apply old_inv
-    }
-    -- TODO - why is a normal `simp` so slow here?
-    map_one' := by
-      ext a
-      simp only []
-      rfl
-    map_mul' := by
-      intro f g
-      ext a
-      simp only []
-      rfl
-  }
-
 
 
   let my_range := (linear_to_clm.comp GRepW_base).range
-  let my_new_range := (new_linear_to_clm.comp GRepW_base).range
 
   have fresh_complete: CompleteSpace (FreshTopology (W (G := G))) := by apply complete_of_proper (α := FreshTopology (W (G := G)))
 
@@ -1962,41 +1957,97 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   have units_locally:  LocallyCompactSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by
     infer_instance
 
+
+
+  -- TODO - generalize to LinearMap/ContinuousLinearMap
+  have units_val_embedding: Topology.IsEmbedding (Units.val (α := ((W (G := G)) →L[ℂ] (W (G := G))))) := by
+    apply Units.isEmbedding_val_mk' (f := fun g => g.inverse)
+    . intro a ha
+      apply (ContinuousLinearMap.IsInvertible.contDiffAt_map_inverse (n := 1) ?_).continuousAt.continuousWithinAt
+      simp at ha
+      obtain ⟨b, hb⟩ := ha
+      use ContinuousLinearEquiv.ofUnit b
+      rw [← hb]
+      rfl
+    . intro u
+      have u_unit: IsUnit u.val := by
+        use u
+      apply ContinuousLinearMap.inverse_eq
+      .
+        have u_val_inv := u.val_inv
+        rw [ContinuousLinearMap.mul_def] at u_val_inv
+        -- TODO - avoid the unfold somehow
+        unfold Inv.inv
+        unfold Units.instInv
+        simp only []
+        rw [u_val_inv]
+        rfl
+      .
+        unfold Inv.inv
+        unfold Units.instInv
+        simp only []
+        have u_inv_val := u.inv_val
+        rw [ContinuousLinearMap.mul_def] at u_inv_val
+        rw [u_inv_val]
+        rfl
+
+
+  let my_new_range := ((GRepW (G := G)).comp GRepW_base).range
+
+  have continuous_mul: ContinuousMul ((W (G := G)) →L[ℂ] (W (G := G))) := by
+    infer_instance
+
+  have is_topological: IsTopologicalGroup ((W (G := G)) →L[ℂ] (W (G := G)))ˣ := by
+    infer_instance
+
+
+
+  let units_metric: MetricSpace ((W (G := G)) →L[ℂ] (W (G := G)))ˣ := by
+    apply Topology.IsEmbedding.comapMetricSpace (f := Units.val)
+    apply units_val_embedding
+
+
   have new_compact_subgroup: CompactSpace my_new_range.topologicalClosure := by
     refine { isCompact_univ := ?_ }
     rw [Subtype.isCompact_iff]
     rw [Topology.IsEmbedding.isCompact_iff (f := Units.val) ?_]
-    . sorry
-    .
-      apply Units.isEmbedding_val_mk' (f := fun g => g.inverse)
-      . intro a ha
-        apply (ContinuousLinearMap.IsInvertible.contDiffAt_map_inverse (n := 1) ?_).continuousAt.continuousWithinAt
-        simp at ha
-        obtain ⟨b, hb⟩ := ha
-        use ContinuousLinearEquiv.ofUnit b
-        rw [← hb]
-        rfl
-      . intro u
-        have u_unit: IsUnit u.val := by
-          use u
-        apply ContinuousLinearMap.inverse_eq
-        .
-          have u_val_inv := u.val_inv
-          rw [ContinuousLinearMap.mul_def] at u_val_inv
-          -- TODO - avoid the unfold somehow
-          unfold Inv.inv
-          unfold Units.instInv
-          simp only []
-          rw [u_val_inv]
+    . rw [Metric.isCompact_iff_isClosed_bounded]
+      refine ⟨?_, ?_⟩
+      . sorry
+      .
+        simp
+        apply LipschitzWith.isBounded_image (f := Units.val) (K := 1)
+        . rw [lipschitzWith_iff_dist_le_mul]
+          intro a b
+          simp
           rfl
         .
-          unfold Inv.inv
-          unfold Units.instInv
-          simp only []
-          have u_inv_val := u.inv_val
-          rw [ContinuousLinearMap.mul_def] at u_inv_val
-          rw [u_inv_val]
-          rfl
+          apply Bornology.IsBounded.closure
+          rw [Metric.isBounded_iff_subset_ball 1]
+          use 2
+          intro a ha
+          simp [my_new_range] at ha
+          obtain ⟨g, rep_g_eq_a⟩ := ha
+          simp
+          conv =>
+            lhs
+            equals dist (a.val) (ContinuousLinearMap.id _ _) =>
+              rfl
+          grw [dist_le_norm_add_norm]
+          grw [ContinuousLinearMap.norm_id_le]
+          rw [← rep_g_eq_a]
+          simp
+
+          rw [Bornology.isBounded_image_subtype_val]
+          rw [Bornology.isBounded_univ]
+          apply Bornology.IsBounded.closure
+          rw [boundedSpace_subtype_iff]
+          rw [isBounded_iff_forall_norm_le']
+
+
+        -- Bornology.isBounded_image_subtype_val
+    . apply units_val_embedding
+
 
     rw [Topology.IsInducing.isCompact_iff (f := Units.embedProduct _) ?_]
 
