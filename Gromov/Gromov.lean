@@ -1154,8 +1154,6 @@ lemma opnorm_continuous: Continuous fun (f: (W (G := G) →L[ℂ] W (G := G))) =
 
 instance proper_linear_w: ProperSpace (((W (G := G) →L[ℂ] W (G := G)))) := FiniteDimensional.proper_rclike ℂ (((W (G := G) →L[ℂ] W (G := G))))
 
-#synth UniformSpace (((W (G := G) →ₗ[ℂ] W (G := G))))ˣ
-#synth UniformSpace C(W (G := G), W (G := G))
 
 --#synth NormedSpace ℂ (GL_W (G := G))
 --#synth MetricSpace (GL_W (G := G))
@@ -1953,6 +1951,8 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
       rfl
   }
 
+
+
   let my_range := (linear_to_clm.comp GRepW_base).range
   let my_new_range := (new_linear_to_clm.comp GRepW_base).range
 
@@ -1961,6 +1961,46 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   have locally_compact_map: LocallyCompactSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))) := locallyCompact_of_proper
   have units_locally:  LocallyCompactSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by
     infer_instance
+
+  have new_compact_subgroup: CompactSpace my_new_range.topologicalClosure := by
+    refine { isCompact_univ := ?_ }
+    rw [Subtype.isCompact_iff]
+    rw [Topology.IsEmbedding.isCompact_iff (f := Units.val) ?_]
+    . sorry
+    .
+      apply Units.isEmbedding_val_mk' (f := fun g => g.inverse)
+      . intro a ha
+        apply (ContinuousLinearMap.IsInvertible.contDiffAt_map_inverse (n := 1) ?_).continuousAt.continuousWithinAt
+        simp at ha
+        obtain ⟨b, hb⟩ := ha
+        use ContinuousLinearEquiv.ofUnit b
+        rw [← hb]
+        rfl
+      . intro u
+        have u_unit: IsUnit u.val := by
+          use u
+        apply ContinuousLinearMap.inverse_eq
+        .
+          have u_val_inv := u.val_inv
+          rw [ContinuousLinearMap.mul_def] at u_val_inv
+          -- TODO - avoid the unfold somehow
+          unfold Inv.inv
+          unfold Units.instInv
+          simp only []
+          rw [u_val_inv]
+          rfl
+        .
+          unfold Inv.inv
+          unfold Units.instInv
+          simp only []
+          have u_inv_val := u.inv_val
+          rw [ContinuousLinearMap.mul_def] at u_inv_val
+          rw [u_inv_val]
+          rfl
+
+    rw [Topology.IsInducing.isCompact_iff (f := Units.embedProduct _) ?_]
+
+  --have uniform_space: UniformSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by infer_instance
   --have borel_map: BorelSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))) := ContinuousLinearMap.instBorelSpace
   --borelize (FreshTopology (W (G := G)))
 
