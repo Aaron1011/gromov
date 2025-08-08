@@ -1431,7 +1431,7 @@ lemma GLW_preseves_norm (g: G) (w: W (G := G)): ‖(GRepW (G := G) (GRepW_base g
   simp [GRepW, GRepW_base, GRepW_non_invertible]
   nth_rw 1 [← hv]
   rw [Representation.asGroupHom_apply]
-  simp
+  simp only [Representation.quotient_apply, Submodule.mapQ_apply]
   --rw [Submodule.mapQ_apply]
   rw [quotient_norm_eq_norm]
   rw [GRep_preserves_norm]
@@ -1947,7 +1947,23 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
       rfl
   }
 
+  -- TODO - this might be wrong
+  have linear_to_clm_preserves_norm (g: G) (w: W (G := G)): ‖(linear_to_clm (GRepW_base g)).val w‖ = ‖w‖ := by
+    have exists_v: ∃ v, Submodule.Quotient.mk v = w := by
+      apply Quotient.exists_rep
+    obtain ⟨v, hv⟩ := exists_v
+    dsimp [linear_to_clm]
+    simp [GRepW_base, GRepW_non_invertible]
+    nth_rw 1 [← hv]
+    rw [Representation.asGroupHom_apply]
+    simp
+    sorry
 
+    --rw [Submodule.mapQ_apply]
+    --rw [quotient_norm_eq_norm]
+    --rw [GRep_preserves_norm]
+    --rw [← hv]
+    --rw [quotient_norm_eq_norm]
 
   let my_range := (linear_to_clm.comp GRepW_base).range
 
@@ -1960,7 +1976,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
 
 
   -- TODO - generalize to LinearMap/ContinuousLinearMap
-  have units_val_embedding: Topology.IsEmbedding (Units.val (α := ((W (G := G)) →L[ℂ] (W (G := G))))) := by
+  have units_val_embedding: Topology.IsEmbedding (Units.val (α := ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))))) := by
     apply Units.isEmbedding_val_mk' (f := fun g => g.inverse)
     . intro a ha
       apply (ContinuousLinearMap.IsInvertible.contDiffAt_map_inverse (n := 1) ?_).continuousAt.continuousWithinAt
@@ -2002,12 +2018,12 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
 
 
 
-  let units_metric: MetricSpace ((W (G := G)) →L[ℂ] (W (G := G)))ˣ := by
+  let units_metric: MetricSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by
     apply Topology.IsEmbedding.comapMetricSpace (f := Units.val)
     apply units_val_embedding
 
 
-  have new_compact_subgroup: CompactSpace my_new_range.topologicalClosure := by
+  have new_compact_subgroup: CompactSpace my_range.topologicalClosure := by
     refine { isCompact_univ := ?_ }
     rw [Subtype.isCompact_iff]
     rw [Topology.IsEmbedding.isCompact_iff (f := Units.val) ?_]
@@ -2024,7 +2040,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
         .
           apply Bornology.IsBounded.closure
           rw [Metric.isBounded_iff_subset_ball 1]
-          use 2
+          use 3
           intro a ha
           simp [my_new_range] at ha
           obtain ⟨g, rep_g_eq_a⟩ := ha
@@ -2036,20 +2052,15 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
           grw [dist_le_norm_add_norm]
           grw [ContinuousLinearMap.norm_id_le]
           rw [← rep_g_eq_a]
-          simp
-
-          rw [Bornology.isBounded_image_subtype_val]
-          rw [Bornology.isBounded_univ]
-          apply Bornology.IsBounded.closure
-          rw [boundedSpace_subtype_iff]
-          rw [isBounded_iff_forall_norm_le']
+          have my_preserve := linear_to_clm_preserves_norm g
+          rw [linear_to_clm_preserves_norm (g := g)]
+          grw [linear_to_clm_preserves_norm]
+          norm_num
 
 
         -- Bornology.isBounded_image_subtype_val
     . apply units_val_embedding
 
-
-    rw [Topology.IsInducing.isCompact_iff (f := Units.embedProduct _) ?_]
 
   --have uniform_space: UniformSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by infer_instance
   --have borel_map: BorelSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))) := ContinuousLinearMap.instBorelSpace
@@ -2088,187 +2099,192 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   --       sorry
   --     . sorry
 
-  let units_metric_space: PseudoMetricSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := Topology.IsInducing.comapPseudoMetricSpace (f := Units.val) (by
-    apply Topology.IsInducing.induced (Units.val)
-  )
+  --let units_metric_space: PseudoMetricSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := Topology.IsInducing.comapPseudoMetricSpace (f := Units.val) (by
+  --  apply Topology.IsInducing.induced (Units.val)
+ -- )
 
-  let proper_map: ProperSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))) := by infer_instance
-  -- TODO - the units topology seems pretty weird. Maybe we need to avoid it, and use a subtype instead
-  have proper_units: ProperSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by
-    apply LipschitzWith.properSpace (K := 1) (f := (Units.embedProduct _))
-    .
+  -- let proper_map: ProperSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G)))) := by infer_instance
+  -- -- TODO - the units topology seems pretty weird. Maybe we need to avoid it, and use a subtype instead
+  -- have proper_units: ProperSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by
+  --   apply LipschitzWith.properSpace (K := 1) (f := (Units.embedProduct _))
+  --   .
 
-      apply Topology.IsClosedEmbedding.isProperMap
-      -- This is wrong - the general linear group is open, and not closed
-      -- We need to specialize this to rho_G somehow
-      apply Units.isClosedEmbedding_embedProduct
-    .
-      intro x y
-      rw [Prod.edist_eq]
-      simp
-      refine ⟨?_, ?_⟩
-      . rfl
-      .
-        rw [MulOpposite.edist_op]
-        simp [edist]
-        unfold PseudoMetricSpace.edist
-        beta_reduce
-        simp []
-
-
-  have proper_units: ProperSpace my_range.topologicalClosure := by
-    apply ProperSpace.of_isClosed
-    simp
+  --     apply Topology.IsClosedEmbedding.isProperMap
+  --     -- This is wrong - the general linear group is open, and not closed
+  --     -- We need to specialize this to rho_G somehow
+  --     apply Units.isClosedEmbedding_embedProduct
+  --   .
+  --     intro x y
+  --     rw [Prod.edist_eq]
+  --     simp
+  --     refine ⟨?_, ?_⟩
+  --     . rfl
+  --     .
+  --       rw [MulOpposite.edist_op]
+  --       simp [edist]
+  --       unfold PseudoMetricSpace.edist
+  --       beta_reduce
+  --       simp []
 
 
-
-  have compact_subgroup: CompactSpace my_range.topologicalClosure := by
-    refine { isCompact_univ := ?_ }
-    rw [Subtype.isCompact_iff]
-    rw [Topology.IsInducing.isCompact_iff (f := Units.embedProduct _) ?_]
-    . simp
-      conv =>
-        arg 1
-        -- WRONG - The original image always pairs values with their inverse, while the product of the ranges pairs elements with unrelated inverses
-        -- equals (Units.val '' (_root_.closure (my_range.carrier))) ×ˢ ((fun a => MulOpposite.op a.inv) '' (_root_.closure (my_range.carrier))) =>
-        --   ext g
-        --   simp
-        --   refine ⟨?_, ?_⟩
-        --   . intro hg
-        --     obtain ⟨x, x_mem, hx⟩ := hg
-        --     refine ⟨?_, ?_⟩
-        --     .
-        --       use x
-        --       refine ⟨?_, ?_⟩
-        --       . simpa using x_mem
-        --       . rw [← hx]
-        --     . use x
-        --       refine ⟨?_, ?_⟩
-        --       . simpa using x_mem
-        --       . rw [← hx]
-        --   . intro hg
-        --     obtain ⟨⟨x, x_mem, hx⟩, ⟨y, y_mem, hy⟩⟩ := hg
-        --     use x
-        --     refine ⟨?_, ?_⟩
-        --     . simpa using x_mem
-        --     .
-        --       rw [hx]
-        --       rw [hy]
+  -- have proper_units: ProperSpace my_range.topologicalClosure := by
+  --   apply ProperSpace.of_isClosed
+  --   simp
 
 
 
-     apply IsCompact.prod
-
-    rw [Metric.isCompact_iff_isClosed_bounded]
-    refine ⟨?_, ?_⟩
-    . exact isClosed_univ
-    .
-      rw [Bornology.isBounded_univ]
-      rw [boundedSpace_subtype_iff]
-      simp
-      -- boundedSpace_subtype_iff
-      -- Bornology.IsBounded.closure
-      rw [Metric.isBounded_iff]
-      use 2
-      intro x hx y hy
-      simp [dist, fresh_psuedo_metric]
-      unfold dist
-      simp [PseudoMetricSpace.ofDistTopology]
-      grw [norm_sub_le]
-
-      simp [my_range] at hx
-      simp [my_range] at hy
-
-      obtain ⟨a, ha⟩ := hx
-      obtain ⟨b, hb⟩ := hy
-
-      have norm_le_iff_x := ContinuousLinearMap.opNorm_le_iff (f := x.val) (M := 1) (by simp)
-      conv at norm_le_iff_x =>
-        rhs
-        intro z
-        rw [← ha]
-        simp [linear_to_clm, GRepW_base]
-        arg 1
-        arg 1
-        arg 1
-        -- TODO - why can't we just rw with 'Representation.asGroupHom_apply'
-        equals (GRepW_non_invertible a) =>
-          apply Representation.asGroupHom_apply
+  -- have compact_subgroup: CompactSpace my_range.topologicalClosure := by
+  --   refine { isCompact_univ := ?_ }
+  --   rw [Subtype.isCompact_iff]
+  --   rw [Topology.IsInducing.isCompact_iff (f := Units.embedProduct _) ?_]
+  --   . simp
+  --     conv =>
+  --       arg 1
+  --       -- WRONG - The original image always pairs values with their inverse, while the product of the ranges pairs elements with unrelated inverses
+  --       -- equals (Units.val '' (_root_.closure (my_range.carrier))) ×ˢ ((fun a => MulOpposite.op a.inv) '' (_root_.closure (my_range.carrier))) =>
+  --       --   ext g
+  --       --   simp
+  --       --   refine ⟨?_, ?_⟩
+  --       --   . intro hg
+  --       --     obtain ⟨x, x_mem, hx⟩ := hg
+  --       --     refine ⟨?_, ?_⟩
+  --       --     .
+  --       --       use x
+  --       --       refine ⟨?_, ?_⟩
+  --       --       . simpa using x_mem
+  --       --       . rw [← hx]
+  --       --     . use x
+  --       --       refine ⟨?_, ?_⟩
+  --       --       . simpa using x_mem
+  --       --       . rw [← hx]
+  --       --   . intro hg
+  --       --     obtain ⟨⟨x, x_mem, hx⟩, ⟨y, y_mem, hy⟩⟩ := hg
+  --       --     use x
+  --       --     refine ⟨?_, ?_⟩
+  --       --     . simpa using x_mem
+  --       --     .
+  --       --       rw [hx]
+  --       --       rw [hy]
 
 
-      -- TODO - deduplicate
-      have norm_le_iff_y := ContinuousLinearMap.opNorm_le_iff (f := y.val) (M := 1) (by simp)
-      conv at norm_le_iff_y =>
-        rhs
-        intro z
-        rw [← hb]
-        simp [linear_to_clm, GRepW_base]
-        arg 1
-        arg 1
-        arg 1
-        -- TODO - why can't we just rw with 'Representation.asGroupHom_apply'
-        equals (GRepW_non_invertible b) =>
-          apply Representation.asGroupHom_apply
 
-      let to_fresh (w: (W (G := G))): FreshTopology (W (G := G)) := w
+  --    apply IsCompact.prod
 
-      -- TODO - this is probably wrong. We need to use the fact that all norms are equivalent on finite-dimensional spaces
-      have preserves_norm_a (z: FreshTopology (W (G := G))): ‖to_fresh (((GRepW_non_invertible a) z))‖ = ‖z‖ := by
-        simp [to_fresh]
+  --   rw [Metric.isCompact_iff_isClosed_bounded]
+  --   refine ⟨?_, ?_⟩
+  --   . exact isClosed_univ
+  --   .
+  --     rw [Bornology.isBounded_univ]
+  --     rw [boundedSpace_subtype_iff]
+  --     simp
+  --     -- boundedSpace_subtype_iff
+  --     -- Bornology.IsBounded.closure
+  --     rw [Metric.isBounded_iff]
+  --     use 2
+  --     intro x hx y hy
+  --     simp [dist, fresh_psuedo_metric]
+  --     unfold dist
+  --     simp [PseudoMetricSpace.ofDistTopology]
+  --     grw [norm_sub_le]
 
-        have exists_v: ∃ v, Submodule.Quotient.mk v = z := by
-          apply Quotient.exists_rep
+  --     simp [my_range] at hx
+  --     simp [my_range] at hy
 
-        unfold GRepW_non_invertible
-        obtain ⟨v, hv⟩ := exists_v
-        nth_rw 1 [← hv]
-        simp
-        sorry
+  --     obtain ⟨a, ha⟩ := hx
+  --     obtain ⟨b, hb⟩ := hy
 
-      -- TODO - deduplicate
-      have preserves_norm_b (z: FreshTopology (W (G := G))): ‖to_fresh (((GRepW_non_invertible b) z))‖ = ‖z‖ := by
-        simp [to_fresh]
-
-        have exists_v: ∃ v, Submodule.Quotient.mk v = z := by
-          apply Quotient.exists_rep
-
-        unfold GRepW_non_invertible
-        obtain ⟨v, hv⟩ := exists_v
-        nth_rw 1 [← hv]
-        simp
-        sorry
-        --rw [GRep_preserves_norm]
-        --rw [GRepW_non_invertible]
-        --rw [Representation.asGroupHom_apply]
+  --     have norm_le_iff_x := ContinuousLinearMap.opNorm_le_iff (f := x.val) (M := 1) (by simp)
+  --     conv at norm_le_iff_x =>
+  --       rhs
+  --       intro z
+  --       rw [← ha]
+  --       simp [linear_to_clm, GRepW_base]
+  --       arg 1
+  --       arg 1
+  --       arg 1
+  --       -- TODO - why can't we just rw with 'Representation.asGroupHom_apply'
+  --       equals (GRepW_non_invertible a) =>
+  --         apply Representation.asGroupHom_apply
 
 
-      conv at norm_le_iff_x =>
-        rhs
-        intro z
-        simp
-        lhs
-        equals ‖z‖ =>
-          apply preserves_norm_a z
+  --     -- TODO - deduplicate
+  --     have norm_le_iff_y := ContinuousLinearMap.opNorm_le_iff (f := y.val) (M := 1) (by simp)
+  --     conv at norm_le_iff_y =>
+  --       rhs
+  --       intro z
+  --       rw [← hb]
+  --       simp [linear_to_clm, GRepW_base]
+  --       arg 1
+  --       arg 1
+  --       arg 1
+  --       -- TODO - why can't we just rw with 'Representation.asGroupHom_apply'
+  --       equals (GRepW_non_invertible b) =>
+  --         apply Representation.asGroupHom_apply
 
-      conv at norm_le_iff_y =>
-        rhs
-        intro z
-        simp
-        lhs
-        equals ‖z‖ =>
-          apply preserves_norm_b z
+  --     let to_fresh (w: (W (G := G))): FreshTopology (W (G := G)) := w
 
-      simp at norm_le_iff_x
-      simp at norm_le_iff_y
-      grw [norm_le_iff_x]
-      grw [norm_le_iff_y]
-      linarith
+  --     -- TODO - this is probably wrong. We need to use the fact that all norms are equivalent on finite-dimensional spaces
+  --     have preserves_norm_a (z: FreshTopology (W (G := G))): ‖to_fresh (((GRepW_non_invertible a) z))‖ = ‖z‖ := by
+  --       simp [to_fresh]
+
+  --       have exists_v: ∃ v, Submodule.Quotient.mk v = z := by
+  --         apply Quotient.exists_rep
+
+  --       unfold GRepW_non_invertible
+  --       obtain ⟨v, hv⟩ := exists_v
+  --       nth_rw 1 [← hv]
+  --       simp
+  --       sorry
+
+  --     -- TODO - deduplicate
+  --     have preserves_norm_b (z: FreshTopology (W (G := G))): ‖to_fresh (((GRepW_non_invertible b) z))‖ = ‖z‖ := by
+  --       simp [to_fresh]
+
+  --       have exists_v: ∃ v, Submodule.Quotient.mk v = z := by
+  --         apply Quotient.exists_rep
+
+  --       unfold GRepW_non_invertible
+  --       obtain ⟨v, hv⟩ := exists_v
+  --       nth_rw 1 [← hv]
+  --       simp
+  --       sorry
+  --       --rw [GRep_preserves_norm]
+  --       --rw [GRepW_non_invertible]
+  --       --rw [Representation.asGroupHom_apply]
+
+
+  --     conv at norm_le_iff_x =>
+  --       rhs
+  --       intro z
+  --       simp
+  --       lhs
+  --       equals ‖z‖ =>
+  --         apply preserves_norm_a z
+
+  --     conv at norm_le_iff_y =>
+  --       rhs
+  --       intro z
+  --       simp
+  --       lhs
+  --       equals ‖z‖ =>
+  --         apply preserves_norm_b z
+
+  --     simp at norm_le_iff_x
+  --     simp at norm_le_iff_y
+  --     grw [norm_le_iff_x]
+  --     grw [norm_le_iff_y]
+  --     linarith
 
   -- TODO: this is probably wrong, and we need to somehow take the closure
   -- maybe also locallyCompact_of_proper
-  --have locally_compact_subgroup: LocallyCompactSpace my_range := by
-  --  apply Topology.IsInducing.subtypeVal.locallyCompactSpace
-  --  sorry
+  have locally_compact_subgroup: LocallyCompactSpace my_range.topologicalClosure := by
+    apply IsClosed.locallyCompactSpace
+    exact isClosed_topologicalClosure my_range
+
+
+
+  let units_equiv := ContinuousLinearEquiv.unitsEquiv ℂ ((W (G := G)) →L[ℂ] (W (G := G)))
+
 
   -- TODO - avoid constructing continuous linear map with wrong topolgoy
   have my_weyl_trick := new_weyl_unitarian_trick  (H := (my_range).topologicalClosure)
