@@ -1948,7 +1948,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   }
 
   -- TODO - this might be wrong
-  have linear_to_clm_preserves_norm (g: G) (w: W (G := G)): ‖(linear_to_clm (GRepW_base g)).val w‖ = ‖w‖ := by
+  have linear_to_clm_preserves_norm (g: G) (w: (FreshTopology (W (G := G)))): ‖(linear_to_clm (GRepW_base g)).val w‖ = ‖w‖ := by
     have exists_v: ∃ v, Submodule.Quotient.mk v = w := by
       apply Quotient.exists_rep
     obtain ⟨v, hv⟩ := exists_v
@@ -2021,6 +2021,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   let units_metric: MetricSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by
     apply Topology.IsEmbedding.comapMetricSpace (f := Units.val)
     apply units_val_embedding
+
 
 
   have new_compact_subgroup: CompactSpace my_range.topologicalClosure := by
@@ -2140,6 +2141,18 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
           grw [dist_le_norm_add_norm]
           grw [ContinuousLinearMap.norm_id_le]
           rw [← rep_g_eq_a]
+          simp
+
+          have linear_to_clm_norm_le (g: G): ‖(linear_to_clm (GRepW_base g)).val‖ ≤ 1 := by
+            rw [ContinuousLinearMap.opNorm_le_iff]
+            . simp [linear_to_clm_preserves_norm]
+            . simp
+
+
+
+          have my_norm_le := linear_to_clm_norm_le g
+
+          grw [my_norm_le]
           have my_preserve := linear_to_clm_preserves_norm g
           rw [linear_to_clm_preserves_norm (g := g)]
           grw [linear_to_clm_preserves_norm]
