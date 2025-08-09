@@ -2026,15 +2026,28 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   --have foo : TopologicalSpace ((FreshTopology (W (G := G))) ≃L[ℂ] (FreshTopology (W (G := G)))) := by infer_instance
 
 
-  have fresh_equiv: W (G := G) ≃L[ℂ] FreshTopology (W (G := G)) := by
-    sorry
+  have fresh_equiv: W (G := G) ≃L[ℂ] FreshTopology (W (G := G)) := ContinuousLinearEquiv.ofFinrankEq (rfl)
 
   let to_fresh (f: (W (G := G)) ≃ₗ[ℂ] (W (G := G))): (FreshTopology (W (G := G))) ≃ₗ[ℂ] (FreshTopology (W (G := G))) := f
   let new_map_entry (f: (W →L[ℂ] W)ˣ): ((FreshTopology W) →L[ℂ] (FreshTopology W))ˣ := {
     val := ContinuousLinearEquiv.arrowCongr fresh_equiv fresh_equiv f.val,
-    inv := sorry
-    val_inv := sorry
-    inv_val := sorry
+    inv := ContinuousLinearEquiv.arrowCongr fresh_equiv fresh_equiv f.inv
+    val_inv := by
+      ext a
+      simp
+      conv =>
+        arg 1
+        equals (fresh_equiv ((f.val * f.inv) (fresh_equiv.symm a))) =>
+          rfl
+      simp
+    inv_val := by
+      ext a
+      simp
+      conv =>
+        arg 1
+        equals (fresh_equiv ((f.inv * f.val) (fresh_equiv.symm a))) =>
+          rfl
+      simp
   }
 
   let new_map_hom: (W →L[ℂ] W)ˣ →* ((FreshTopology W) →L[ℂ] (FreshTopology W))ˣ := {
