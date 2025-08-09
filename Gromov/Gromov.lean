@@ -2354,9 +2354,31 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
               pattern new_map_hom.range
               equals ⊤ =>
                 rw [Subgroup.eq_top_iff']
-                intro x
+                intro f
                 simp [new_map_hom, new_map_entry]
-                sorry
+                -- TODO - deduplicate this with 'new_map_entry' somehow
+                use {
+                  val := (ContinuousLinearEquiv.arrowCongr fresh_equiv fresh_equiv).symm f.val,
+                  inv := (ContinuousLinearEquiv.arrowCongr fresh_equiv fresh_equiv).symm f.inv
+                  val_inv := by
+                    ext a
+                    simp
+                    conv =>
+                      arg 1
+                      equals (fresh_equiv.symm ((f.val * f.inv) (fresh_equiv a))) =>
+                        rfl
+                    simp
+                  inv_val := by
+                    ext a
+                    simp
+                    conv =>
+                      arg 1
+                      equals (fresh_equiv.symm ((f.inv * f.val) (fresh_equiv a))) =>
+                        rfl
+                    simp
+                }
+                ext a
+                simp
             simp
       .
         -- LinearMap.range_toContinuousLinearMap
