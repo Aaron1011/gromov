@@ -2107,31 +2107,23 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
         rw [norm_zero] at norm_seq_lim
         conv at norm_seq_lim =>
           arg 1
-          -- TODO - use the fact that the action preserves the euclidian norm (maybe just up to a constant),
+          -- Use the fact that the action preserves the euclidian norm (maybe just up to a constant),
           -- so the sequence is actually constant
           equals fun x => ‖v‖ =>
             funext n
             simp
             have seq_mem := seq_in n
             obtain ⟨x, x_mem, seq_eq_x⟩ := seq_mem
-            by_cases x_mem_range: x ∈ my_range
-            . simp [my_range] at x_mem_range
-              obtain ⟨g, rep_g_eq_x⟩ := x_mem_range
-              rw [← seq_eq_x]
-              rw [← rep_g_eq_x]
-              have my_norm_eq := linear_to_clm_preserves_norm g v
-              exact my_norm_eq
-            .
-              rw [← seq_eq_x]
-              apply ContinousWithinAt.eq_const_of_mem_closure (f := fun (x: (FreshTopology (W (G := G)) →L[ℂ] FreshTopology (W (G := G)))ˣ) => ‖x.val v‖) (c := ‖v‖) (x := x) (s := my_range)
-              . apply Continuous.continuousWithinAt
-                fun_prop
-              . exact x_mem
-              . intro y hy
-                simp [my_range] at hy
-                obtain ⟨g, rep_g_eq_y⟩ := hy
-                rw [← rep_g_eq_y]
-                apply linear_to_clm_preserves_norm
+            rw [← seq_eq_x]
+            apply ContinousWithinAt.eq_const_of_mem_closure (f := fun (x: (FreshTopology (W (G := G)) →L[ℂ] FreshTopology (W (G := G)))ˣ) => ‖x.val v‖) (c := ‖v‖) (x := x) (s := my_range)
+            . apply Continuous.continuousWithinAt
+              fun_prop
+            . exact x_mem
+            . intro y hy
+              simp [my_range] at hy
+              obtain ⟨g, rep_g_eq_y⟩ := hy
+              rw [← rep_g_eq_y]
+              apply linear_to_clm_preserves_norm
 
         -- TODO - why do we need this?
         have r_t2: T2Space ℝ := TopologicalSpace.t2Space_of_metrizableSpace
