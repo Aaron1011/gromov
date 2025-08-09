@@ -2039,7 +2039,14 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
           have closure_closed := Subgroup.isClosed_topologicalClosure my_range
           rw [← isSeqClosed_iff_isClosed] at closure_closed
           dsimp [IsSeqClosed] at closure_closed
-          have lim_units := closure_closed (x := fun n => Classical.choose (seq_in n)) (p := linear_to_clm u) ?_ ?_
+
+          have seq_units: ∀ n: ℕ, IsUnit (seq n) := by
+            intro n
+            obtain ⟨x, x_mem, seq_eq_x⟩ := (seq_in n)
+            rw [← seq_eq_x]
+            apply Units.isUnit
+
+          have lim_units := closure_closed (x := fun n => (seq_units n).unit) (p := linear_to_clm u) ?_ ?_
           .
             specialize lim_seq_not_mem (linear_to_clm u) lim_units
             conv at lim_seq_not_mem =>
@@ -2055,10 +2062,30 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
                 rfl
             simp at lim_seq_not_mem
           . intro n
-            have hn := Classical.choose_spec (seq_in n)
-            exact hn.1
+            simp
+            have seq_n := seq_in n
+            obtain ⟨x, x_mem, seq_eq_x⟩ := seq_n
+            simp_rw [← seq_eq_x]
+            simpa using x_mem
           .
-            sorry
+            rw [Topology.IsEmbedding.tendsto_nhds_iff (g := Units.val)]
+            .
+              conv =>
+                arg 1
+                equals seq =>
+                  rfl
+
+              have to_clm_u: linear_to_clm u = u.val.toContinuousLinearMap := by
+                rfl
+
+              have u_val_eq_lim: u.val.toContinuousLinearMap = lim_seq := by
+                rw [hu]
+                rfl
+
+              rw [to_clm_u, u_val_eq_lim]
+              exact seq_tendsto_lim_seq
+            .
+              exact units_val_embedding
 
 
         rw [LinearMap.isUnit_iff_ker_eq_bot] at lim_seq_invertible
