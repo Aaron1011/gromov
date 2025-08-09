@@ -2143,20 +2143,29 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
           rw [← rep_g_eq_a]
           simp
 
-          have linear_to_clm_norm_le (g: G): ‖(linear_to_clm (GRepW_base g)).val‖ ≤ 1 := by
+          have linear_to_clm_norm_le (g: G): (linear_to_clm (GRepW_base g)).val.opNorm ≤ 1 := by
+            conv =>
+              lhs
+              equals ‖(linear_to_clm (GRepW_base g)).val‖ =>
+                rfl
             rw [ContinuousLinearMap.opNorm_le_iff]
             . simp [linear_to_clm_preserves_norm]
             . simp
 
+          have temp_lt (g: G): (linear_to_clm (GRepW_base g)).val.opNorm + 1 < 3 := by
+            grw [linear_to_clm_norm_le g]
+            linarith
+
+          have lt_one_one (g: G): (linear_to_clm (GRepW_base g)).val.opNorm < 1.1 := by
+            have my_le := linear_to_clm_norm_le g
+            linarith
+
 
 
           have my_norm_le := linear_to_clm_norm_le g
+          -- TODO - why can't we just use 'grw' without the temporary 'have'?
+          exact temp_lt g
 
-          grw [my_norm_le]
-          have my_preserve := linear_to_clm_preserves_norm g
-          rw [linear_to_clm_preserves_norm (g := g)]
-          grw [linear_to_clm_preserves_norm]
-          norm_num
 
 
         -- Bornology.isBounded_image_subtype_val
