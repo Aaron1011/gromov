@@ -2052,6 +2052,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
 
 
   let my_new_range := ((GRepW (G := G)).comp GRepW_base).range
+  unfold rho_g
 
   have continuous_mul: ContinuousMul ((W (G := G)) →L[ℂ] (W (G := G))) := by
     infer_instance
@@ -2275,6 +2276,123 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
 
 
   have new_weyl_trick := new_weyl_unitarian_trick  (H := mapped_group)
+  obtain ⟨A, ⟨hA⟩⟩ := new_weyl_trick
+
+  -- TODO - fill in with the finite index abelian subgroup from Theorem 3.8
+  have B: Subgroup A := sorry
+  have B_abelian: IsMulCommutative B := sorry
+  have B_finite_index: B.FiniteIndex := sorry
+
+  let B' := Subgroup.map hA.toMonoidHom B
+  let other := Subgroup.map mapped_group.subtype B'
+  let units_map := Units.map (ContinuousLinearMap.toLinearMapRingHom (M₁ := (FreshTopology (W (G := G)))) (R₁ := ℂ)).toMonoidHom
+  let B'' := Subgroup.map units_map other
+  let B''_G := Subgroup.subgroupOf B'' (GRepW_base (G := G)).range
+  use B''_G
+
+
+  have units_map_ker_trivial: units_map.ker = ⊥ := by
+    simp [units_map]
+    rw [MonoidHom.ker_eq_bot_iff]
+    apply Units.map_injective
+    intro a b hab
+    simpa using hab
+
+
+  refine ⟨?_, ?_⟩
+  . simp [B''_G, B'']
+    exact Subgroup.subgroupOf_isMulCommutative GRepW_base.range (map units_map other)
+  .
+    simp [B''_G, B'']
+
+
+    let to_continuous_hom: (FreshTopology (W (G := G)) →ₗ[ℂ] FreshTopology (W (G := G))) →* (FreshTopology (W (G := G)) →L[ℂ] FreshTopology (W (G := G))) := {
+      toFun := fun f => f.toContinuousLinearMap,
+      map_one' := by
+        ext a
+        simp
+        --apply ContinuousLinearMap.ext
+        --intro a
+        --simp
+      map_mul' := by
+        intro a b
+        rfl
+    }
+
+    have finite_index_map: (map units_map other).FiniteIndex := by
+      rw [Subgroup.finiteIndex_iff]
+      rw [Subgroup.index_map]
+      rw [units_map_ker_trivial]
+      simp
+      refine ⟨?_, ?_⟩
+      . simp [other]
+        rw [Subgroup.index_map]
+        simp
+        refine ⟨?_, ?_⟩
+        . simp [B']
+          exact finiteIndex_iff.mp B_finite_index
+        . simp [mapped_group]
+          rw [Subgroup.index_map]
+          simp
+          refine ⟨?_, ?_⟩
+          . sorry
+          . sorry
+      .
+        -- LinearMap.range_toContinuousLinearMap
+        simp [units_map]
+
+        conv =>
+          arg 1
+          arg 1
+          arg 1
+          equals ⊤ =>
+            rw [Subgroup.eq_top_iff']
+            intro x
+            use Units.map to_continuous_hom x
+            rfl
+        simp
+
+
+
+    apply Subgroup.instFiniteIndex_subgroupOf
+
+
+  let B'': Subgroup (GRepW_base.range) := {
+    carrier := (fun a => ⟨(Units.map (ContinuousLinearMap.toLinearMapRingHom (M₁ := (FreshTopology (W (G := G)))) (R₁ := ℂ)).toMonoidHom) a.val, by sorry⟩) '' B'.carrier
+    one_mem' := by
+      simp [B']
+      sorry
+    mul_mem' := by
+      sorry
+    inv_mem' := by
+      sorry
+  }
+
+  use B''
+  refine ⟨?_, ?_⟩
+  .
+   refine { is_comm := ?_ }
+   refine { comm := ?_ }
+   intro a b
+   have a_prop := a.property
+   rw [← Subgroup.mem_carrier] at a_prop
+   simp only [B''] at a_prop
+   rw [Set.mem_image] at a_prop
+   obtain ⟨a', a'_mem, a'_eq_a⟩ := a_prop
+   rw [Subgroup.mem_carrier] at a'_mem
+
+   have B_mul := B_abelian.is_comm.comm ⟨a'.val, sorry⟩
+
+  . sorry
+
+
+
+
+  have to_linear := (ContinuousLinearMap.toLinearMapRingHom (M₁ := W (G := G)) (R₁ := ℂ)).toMonoidHom
+
+
+  let B'' := Subgroup.map to_linear B'
+
 
   -- let map_entry (f: my_new_range) := (to_fresh (ContinuousLinearEquiv.unitsEquiv ℂ (W (G := G)) f).toLinearEquiv).toContinuousLinearEquiv.toUnit
   -- have continuous_map_entry: Continuous map_entry := by
