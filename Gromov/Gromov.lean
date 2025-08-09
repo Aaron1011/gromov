@@ -1879,8 +1879,8 @@ instance T2_W: T2Space (W (G := G)) := TopologicalSpace.t2Space_of_metrizableSpa
 #synth T2Space (W (G := G))
 
 
-
-#synth TopologicalSpace (W (G := G) →L[ℂ] W (G := G))ˣ
+#synth TopologicalSpace (W (G := G) →L[ℂ] W (G := G))
+#synth FiniteDimensional ℂ (W (G := G) →L[ℂ] W (G := G))
 
 --#synth NormedAddCommGroup (W (G := G))
 open scoped ComplexInnerProductSpace in
@@ -2021,6 +2021,81 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   let units_metric: MetricSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by
     apply Topology.IsEmbedding.comapMetricSpace (f := Units.val)
     apply units_val_embedding
+
+
+  --have foo : TopologicalSpace ((FreshTopology (W (G := G))) ≃L[ℂ] (FreshTopology (W (G := G)))) := by infer_instance
+
+
+  have fresh_equiv: W (G := G) ≃L[ℂ] FreshTopology (W (G := G)) := by
+    sorry
+
+  let to_fresh (f: (W (G := G)) ≃ₗ[ℂ] (W (G := G))): (FreshTopology (W (G := G))) ≃ₗ[ℂ] (FreshTopology (W (G := G))) := f
+  let new_map_entry (f: (W →L[ℂ] W)ˣ): ((FreshTopology W) →L[ℂ] (FreshTopology W))ˣ := {
+    val := ContinuousLinearEquiv.arrowCongr fresh_equiv fresh_equiv f.val,
+    inv := sorry
+    val_inv := sorry
+    inv_val := sorry
+  }
+
+  let new_map_hom: (W →L[ℂ] W)ˣ →* ((FreshTopology W) →L[ℂ] (FreshTopology W))ˣ := {
+    toFun := new_map_entry,
+    map_one' := by
+      simp [new_map_entry]
+      ext a
+      simp
+    map_mul' := by
+      intro f g
+      simp [new_map_entry]
+      ext a
+      simp
+  }
+
+  let mapped_group := Subgroup.map new_map_hom my_new_range.topologicalClosure
+
+  have my_range_compact: CompactSpace my_new_range.topologicalClosure := by
+    sorry
+
+
+
+
+  have continuous_new_map_entry: Continuous new_map_entry := by
+    simp [new_map_entry]
+    rw [Units.continuous_iff]
+    refine ⟨?_, ?_⟩
+    . fun_prop
+    . fun_prop
+
+  --have compact_map := IsCompact.image my_range_compact.isCompact_univ (f := new_map_hom)
+
+  have compact_mapped_group: CompactSpace mapped_group := by
+    simp [mapped_group]
+    refine { isCompact_univ := ?_ }
+    rw [Subtype.isCompact_iff]
+    simp
+    conv =>
+      arg 1
+      equals new_map_hom '' my_new_range.topologicalClosure =>
+        simp
+        rfl
+    apply IsCompact.image
+    . exact isCompact_iff_compactSpace.mpr my_range_compact
+    . simp [new_map_hom]
+      apply continuous_new_map_entry
+
+
+
+
+  -- let map_entry (f: my_new_range) := (to_fresh (ContinuousLinearEquiv.unitsEquiv ℂ (W (G := G)) f).toLinearEquiv).toContinuousLinearEquiv.toUnit
+  -- have continuous_map_entry: Continuous map_entry := by
+  --   simp [map_entry]
+  --   rw [← Function.comp_def]
+  --   rw [← Function.comp_def]
+  --   apply Continuous.comp
+  --   fun_prop
+
+  let map_units := ContinuousLinearEquiv.unitsEquiv ℂ (W (G := G))
+  let new_map := Subgroup.map map_units.toMonoidHom my_new_range
+
 
 
 
