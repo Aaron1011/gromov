@@ -2335,8 +2335,29 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
           rw [Subgroup.index_map]
           simp
           refine ⟨?_, ?_⟩
-          . sorry
-          . sorry
+          .
+            conv =>
+              pattern new_map_hom.ker
+              equals ⊥ =>
+                rw [MonoidHom.ker_eq_bot_iff]
+                simp [new_map_hom, new_map_entry]
+                intro a b hab
+                simp at hab
+                rw [Units.ext_iff]
+                exact hab.1
+
+            simp [my_new_range]
+            sorry
+
+          .
+            conv =>
+              pattern new_map_hom.range
+              equals ⊤ =>
+                rw [Subgroup.eq_top_iff']
+                intro x
+                simp [new_map_hom, new_map_entry]
+                sorry
+            simp
       .
         -- LinearMap.range_toContinuousLinearMap
         simp [units_map]
