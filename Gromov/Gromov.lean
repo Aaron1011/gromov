@@ -2036,7 +2036,30 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
 
         by_cases lim_seq_invertible: IsUnit lim_seq.toLinearMap
         . obtain ⟨u, hu⟩ := lim_seq_invertible
-          sorry
+          have closure_closed := Subgroup.isClosed_topologicalClosure my_range
+          rw [← isSeqClosed_iff_isClosed] at closure_closed
+          dsimp [IsSeqClosed] at closure_closed
+          have lim_units := closure_closed (x := fun n => Classical.choose (seq_in n)) (p := linear_to_clm u) ?_ ?_
+          .
+            specialize lim_seq_not_mem (linear_to_clm u) lim_units
+            conv at lim_seq_not_mem =>
+              arg 1
+              lhs
+              equals u.val.toContinuousLinearMap =>
+                rfl
+            rw [hu] at lim_seq_not_mem
+            conv at lim_seq_not_mem =>
+              arg 1
+              lhs
+              equals lim_seq =>
+                rfl
+            simp at lim_seq_not_mem
+          . intro n
+            have hn := Classical.choose_spec (seq_in n)
+            exact hn.1
+          .
+            sorry
+
 
         rw [LinearMap.isUnit_iff_ker_eq_bot] at lim_seq_invertible
         apply Submodule.exists_mem_ne_zero_of_ne_bot at lim_seq_invertible
@@ -2051,6 +2074,8 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
         rw [norm_zero] at norm_seq_lim
         conv at norm_seq_lim =>
           arg 1
+          -- TODO - use the fact that the action preserves the euclidian norm (maybe just up to a constant),
+          -- so the sequence is actually constant
           equals fun x => ‖v‖ =>
             sorry
 
