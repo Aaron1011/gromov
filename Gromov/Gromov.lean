@@ -2097,6 +2097,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
 
 
 
+  have new_weyl_trick := new_weyl_unitarian_trick  (H := mapped_group)
 
   -- let map_entry (f: my_new_range) := (to_fresh (ContinuousLinearEquiv.unitsEquiv ℂ (W (G := G)) f).toLinearEquiv).toContinuousLinearEquiv.toUnit
   -- have continuous_map_entry: Continuous map_entry := by
@@ -2108,7 +2109,6 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
 
   let map_units := ContinuousLinearEquiv.unitsEquiv ℂ (W (G := G))
   let new_map := Subgroup.map map_units.toMonoidHom my_new_range
-
 
 
 
