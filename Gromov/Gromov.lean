@@ -2035,7 +2035,11 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
         obtain ⟨seq, seq_in, ⟨lim_seq, seq_tendsto_lim_seq, lim_seq_not_mem⟩⟩ := this
 
         by_cases lim_seq_invertible: IsUnit lim_seq.toLinearMap
-        . obtain ⟨u, hu⟩ := lim_seq_invertible
+        .
+          -- If the limit (in the space of linear maps) is invertible, then the limit will also exist in the space
+          -- of units, which will then imply that the limit exists in the space of linear maps.
+          -- TODO - this probably can be a direct proof, rather than by contradiction
+          obtain ⟨u, hu⟩ := lim_seq_invertible
           have closure_closed := Subgroup.isClosed_topologicalClosure my_range
           rw [← isSeqClosed_iff_isClosed] at closure_closed
           dsimp [IsSeqClosed] at closure_closed
@@ -2088,6 +2092,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
               exact units_val_embedding
 
 
+        -- If the limit (in the space of linear maps) is not invertible, then it has a non-trivial kernel.
         rw [LinearMap.isUnit_iff_ker_eq_bot] at lim_seq_invertible
         apply Submodule.exists_mem_ne_zero_of_ne_bot at lim_seq_invertible
         obtain ⟨v, v_in_ker, v_ne_zero⟩ := lim_seq_invertible
