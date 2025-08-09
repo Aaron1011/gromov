@@ -1918,6 +1918,35 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   have fresh_t2: T2Space (FreshTopology (W (G := G))) := TopologicalSpace.t2Space_of_metrizableSpace
 
 
+  let plain_linear_to_clm: (((W (G := G))) →ₗ[ℂ] ((W (G := G))))ˣ →* (((W (G := G))) →L[ℂ] ((W (G := G))))ˣ := {
+    toFun := fun f => {
+      val := LinearMap.toContinuousLinearMap f.val
+      inv := LinearMap.toContinuousLinearMap f.inv
+      val_inv := by
+        have old_inv := f.val_inv
+        ext a
+        apply_fun (fun f => f a) at old_inv
+        simp only [Units.inv_eq_val_inv, Module.End.one_apply] at old_inv
+        apply old_inv
+      inv_val := by
+        have old_inv := f.inv_val
+        ext a
+        apply_fun (fun f => f a) at old_inv
+        simp only [Units.inv_eq_val_inv, Module.End.one_apply] at old_inv
+        apply old_inv
+    }
+    -- TODO - why is a normal `simp` so slow here?
+    map_one' := by
+      ext a
+      simp only []
+      rfl
+    map_mul' := by
+      intro f g
+      ext a
+      simp only []
+      rfl
+  }
+
   let linear_to_clm: ((FreshTopology (W (G := G))) →ₗ[ℂ] (FreshTopology (W (G := G))))ˣ →* ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := {
     toFun := fun f => {
       val := LinearMap.toContinuousLinearMap f.val
@@ -1959,6 +1988,20 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
     simp
     sorry
 
+  have plain_linear_to_clm_preserves_norm (g: G) (w: (W (G := G))): ‖(plain_linear_to_clm (GRepW_base g)).val w‖ = ‖w‖ := by
+    simp [plain_linear_to_clm]
+    have exists_v: ∃ v, Submodule.Quotient.mk v = w := by
+      apply Quotient.exists_rep
+    obtain ⟨v, hv⟩ := exists_v
+    simp [GRepW, GRepW_base, GRepW_non_invertible]
+    nth_rw 1 [← hv]
+    rw [Representation.asGroupHom_apply]
+    simp only [Representation.quotient_apply, Submodule.mapQ_apply]
+    --rw [Submodule.mapQ_apply]
+    rw [quotient_norm_eq_norm]
+    rw [GRep_preserves_norm]
+    rw [← hv]
+    rw [quotient_norm_eq_norm]
     --rw [Submodule.mapQ_apply]
     --rw [quotient_norm_eq_norm]
     --rw [GRep_preserves_norm]
@@ -2016,7 +2059,9 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   have is_topological: IsTopologicalGroup ((W (G := G)) →L[ℂ] (W (G := G)))ˣ := by
     infer_instance
 
-
+  let plain_units_metric: MetricSpace (((W (G := G))) →L[ℂ] ((W (G := G))))ˣ := by
+    apply Topology.IsEmbedding.comapMetricSpace (f := Units.val)
+    exact isembedding_units_val
 
   let units_metric: MetricSpace ((FreshTopology (W (G := G))) →L[ℂ] (FreshTopology (W (G := G))))ˣ := by
     apply Topology.IsEmbedding.comapMetricSpace (f := Units.val)
@@ -2065,8 +2110,140 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
 
   let mapped_group := Subgroup.map new_map_hom my_new_range.topologicalClosure
 
-  have my_range_compact: CompactSpace my_new_range.topologicalClosure := by
-    sorry
+  have my_new_range_compact: CompactSpace my_new_range.topologicalClosure := by
+    refine { isCompact_univ := ?_ }
+    rw [Subtype.isCompact_iff]
+    rw [Topology.IsEmbedding.isCompact_iff (f := Units.val) ?_]
+    . rw [Metric.isCompact_iff_isClosed_bounded]
+      refine ⟨?_, ?_⟩
+      . apply IsSeqClosed.isClosed
+        by_contra!
+        simp [IsSeqClosed] at this
+        obtain ⟨seq, seq_in, ⟨lim_seq, seq_tendsto_lim_seq, lim_seq_not_mem⟩⟩ := this
+
+        by_cases lim_seq_invertible: IsUnit lim_seq.toLinearMap
+        .
+          -- If the limit (in the space of linear maps) is invertible, then the limit will also exist in the space
+          -- of units, which will then imply that the limit exists in the space of linear maps.
+          -- TODO - this probably can be a direct proof, rather than by contradiction
+          obtain ⟨u, hu⟩ := lim_seq_invertible
+          have closure_closed := Subgroup.isClosed_topologicalClosure my_new_range
+          apply IsClosed.isSeqClosed at closure_closed
+          dsimp [IsSeqClosed] at closure_closed
+
+          have seq_units: ∀ n: ℕ, IsUnit (seq n) := by
+            intro n
+            obtain ⟨x, x_mem, seq_eq_x⟩ := (seq_in n)
+            rw [← seq_eq_x]
+            apply Units.isUnit
+
+          have lim_units := closure_closed (x := fun n => (seq_units n).unit) (p := plain_linear_to_clm u) ?_ ?_
+          .
+            specialize lim_seq_not_mem (plain_linear_to_clm u) lim_units
+            conv at lim_seq_not_mem =>
+              arg 1
+              lhs
+              equals u.val.toContinuousLinearMap =>
+                rfl
+            rw [hu] at lim_seq_not_mem
+            conv at lim_seq_not_mem =>
+              arg 1
+              lhs
+              equals lim_seq =>
+                rfl
+            simp at lim_seq_not_mem
+          . intro n
+            simp
+            have seq_n := seq_in n
+            obtain ⟨x, x_mem, seq_eq_x⟩ := seq_n
+            simp_rw [← seq_eq_x]
+            simpa using x_mem
+          .
+            rw [Topology.IsEmbedding.tendsto_nhds_iff (g := Units.val)]
+            .
+              conv =>
+                arg 1
+                equals seq =>
+                  rfl
+
+              have to_clm_u: plain_linear_to_clm u = u.val.toContinuousLinearMap := by
+                rfl
+
+              have u_val_eq_lim: u.val.toContinuousLinearMap = lim_seq := by
+                rw [hu]
+                rfl
+
+              rw [to_clm_u, u_val_eq_lim]
+              exact seq_tendsto_lim_seq
+            .
+              exact isembedding_units_val
+
+
+        -- If the limit (in the space of linear maps) is not invertible, then it has a non-trivial kernel.
+        rw [LinearMap.isUnit_iff_ker_eq_bot] at lim_seq_invertible
+        apply Submodule.exists_mem_ne_zero_of_ne_bot at lim_seq_invertible
+        obtain ⟨v, v_in_ker, v_ne_zero⟩ := lim_seq_invertible
+        simp at v_in_ker
+
+
+        have eval_at := Filter.Tendsto.eval_const seq_tendsto_lim_seq v
+        have norm_tendsto := Continuous.tendsto (f := fun (x: W) => ‖x‖) (by fun_prop) (lim_seq v)
+        have norm_seq_lim := Filter.Tendsto.comp norm_tendsto eval_at
+        rw [v_in_ker] at norm_seq_lim
+        rw [norm_zero] at norm_seq_lim
+        conv at norm_seq_lim =>
+          arg 1
+          -- Use the fact that the action preserves the euclidian norm (maybe just up to a constant),
+          -- so the sequence is actually constant
+          equals fun x => ‖v‖ =>
+            funext n
+            simp
+            have seq_mem := seq_in n
+            obtain ⟨x, x_mem, seq_eq_x⟩ := seq_mem
+            rw [← seq_eq_x]
+            apply ContinousWithinAt.eq_const_of_mem_closure (f := fun (x: ((W (G := G)) →L[ℂ] (W (G := G)))ˣ) => ‖x.val v‖) (c := ‖v‖) (x := x) (s := my_new_range)
+            . apply Continuous.continuousWithinAt
+              fun_prop
+            . exact x_mem
+            . intro y hy
+              simp [my_range] at hy
+              obtain ⟨g, rep_g_eq_y⟩ := hy
+              rw [← rep_g_eq_y]
+              apply plain_linear_to_clm_preserves_norm
+
+        -- TODO - why do we need this?
+        have r_t2: T2Space ℝ := TopologicalSpace.t2Space_of_metrizableSpace
+
+        have tendsto_norm_v := tendsto_const_nhds (α := ℕ) (f := Filter.atTop) (x := ‖v‖)
+        have norm_v_zero := tendsto_nhds_unique tendsto_norm_v norm_seq_lim
+        simp at norm_v_zero
+        contradiction
+      .
+        simp
+        apply LipschitzWith.isBounded_image (f := Units.val) (K := 1)
+        . rw [lipschitzWith_iff_dist_le_mul]
+          intro a b
+          simp
+          rfl
+        .
+          apply Bornology.IsBounded.closure
+          rw [Metric.isBounded_iff_subset_ball 1]
+          use 3
+          intro a ha
+          simp [my_new_range] at ha
+          obtain ⟨g, rep_g_eq_a⟩ := ha
+          simp
+          conv =>
+            lhs
+            equals dist (a.val) (ContinuousLinearMap.id _ _) =>
+              rfl
+          grw [dist_le_norm_add_norm]
+          grw [ContinuousLinearMap.norm_id_le]
+          rw [← rep_g_eq_a]
+          grw [GRepW_norm_le]
+          norm_num
+        -- Bornology.isBounded_image_subtype_val
+    . exact isembedding_units_val
 
 
 
