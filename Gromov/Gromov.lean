@@ -2347,6 +2347,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
                 exact hab.1
 
             simp [my_new_range]
+            -- This is false: https://math.stackexchange.com/questions/4465308/the-general-linear-group-gln-mathbbc-has-no-proper-subgroup-of-finite-in
             sorry
 
           .
