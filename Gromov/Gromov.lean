@@ -2268,7 +2268,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
         simp
         rfl
     apply IsCompact.image
-    . exact isCompact_iff_compactSpace.mpr my_range_compact
+    . exact isCompact_iff_compactSpace.mpr my_new_range_compact
     . simp [new_map_hom]
       apply continuous_new_map_entry
 
