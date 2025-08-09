@@ -2124,7 +2124,8 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
             .
               rw [← seq_eq_x]
               apply ContinousWithinAt.eq_const_of_mem_closure (f := fun (x: (FreshTopology (W (G := G)) →L[ℂ] FreshTopology (W (G := G)))ˣ) => ‖x.val v‖) (c := ‖v‖) (x := x) (s := my_range)
-              . sorry
+              . apply Continuous.continuousWithinAt
+                fun_prop
               . exact x_mem
               . intro y hy
                 simp [my_range] at hy
