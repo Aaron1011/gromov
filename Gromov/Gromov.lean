@@ -2360,7 +2360,8 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   have B_finite_index: B.FiniteIndex := sorry
 
   have mapped_group_iso: mapped_group ≃* my_new_range.topologicalClosure := by
-    sorry
+    simp [mapped_group]
+    exact (new_map_hom.subgroupMap my_new_range.topologicalClosure).symm
 
   let B_1 := Subgroup.map hA.toMonoidHom B
   let B_2 := Subgroup.map mapped_group_iso.toMonoidHom B_1
