@@ -2096,12 +2096,40 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
       simp
   }
 
-  let new_map_hom: (W →L[ℂ] W)ˣ →* ((FreshTopology W) →L[ℂ] (FreshTopology W))ˣ := {
-    toFun := new_map_entry,
-    map_one' := by
-      simp [new_map_entry]
+  let new_map_entry_inv (f: ((FreshTopology W) →L[ℂ] (FreshTopology W))ˣ ): (W →L[ℂ] W)ˣ  := {
+    val := (ContinuousLinearEquiv.arrowCongr fresh_equiv fresh_equiv).symm f.val,
+    inv := (ContinuousLinearEquiv.arrowCongr fresh_equiv fresh_equiv).symm f.inv
+    val_inv := by
       ext a
       simp
+      conv =>
+        arg 1
+        equals (fresh_equiv.symm ((f.val * f.inv) (fresh_equiv a))) =>
+          rfl
+      simp
+    inv_val := by
+      ext a
+      simp
+      conv =>
+        arg 1
+        equals (fresh_equiv.symm ((f.inv * f.val) (fresh_equiv a))) =>
+          rfl
+      simp
+  }
+
+  let new_map_hom: (W →L[ℂ] W)ˣ ≃* ((FreshTopology W) →L[ℂ] (FreshTopology W))ˣ := {
+    toFun := new_map_entry,
+    invFun := new_map_entry_inv,
+    left_inv := by
+      simp [Function.LeftInverse]
+      intro x
+      ext a
+      simp [new_map_entry, new_map_entry_inv]
+    right_inv := by
+      simp [Function.RightInverse]
+      intro x
+      ext a
+      simp [new_map_entry, new_map_entry_inv]
     map_mul' := by
       intro f g
       simp [new_map_entry]
@@ -2109,7 +2137,8 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
       simp
   }
 
-  let mapped_group := Subgroup.map new_map_hom my_new_range.topologicalClosure
+
+  let mapped_group := Subgroup.map new_map_hom.toMonoidHom my_new_range.topologicalClosure
 
   have my_new_range_compact: CompactSpace my_new_range.topologicalClosure := by
     refine { isCompact_univ := ?_ }
@@ -2283,12 +2312,25 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   have B_abelian: IsMulCommutative B := sorry
   have B_finite_index: B.FiniteIndex := sorry
 
+  have mapped_group_iso: mapped_group ≃* my_new_range.topologicalClosure := by
+    sorry
+
+  let other_B'' := Subgroup.map mapped_group.subtype (Subgroup.comap hA.symm.toMonoidHom B)
+  let temp_inv := new_map_hom.toMonoidHom.restrict mapped_group
+
   let B' := Subgroup.map hA.toMonoidHom B
+  let new_inv := new_map_hom.symm.toMonoidHom.rangeRestrict.restrict mapped_group
+  let inv_map := new_map_hom.symm.toMonoidHom.restrict mapped_group
+  let reverse_B' := Subgroup.map inv_map B'
   let other := Subgroup.map mapped_group.subtype B'
   let units_map := Units.map (ContinuousLinearMap.toLinearMapRingHom (M₁ := (FreshTopology (W (G := G)))) (R₁ := ℂ)).toMonoidHom
   let B'' := Subgroup.map units_map other
   let B''_G := Subgroup.subgroupOf B'' (GRepW_base (G := G)).range
   use B''_G
+
+  rw [Subgroup.finiteIndex_iff] at B_finite_index
+  rw [← Subgroup.relindex_top_right] at B_finite_index
+  have new_relindex := Subgroup.relindex_comap_ne_zero hA.symm.toMonoidHom B_finite_index
 
 
   have units_map_ker_trivial: units_map.ker = ⊥ := by
@@ -2304,6 +2346,20 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
     exact Subgroup.subgroupOf_isMulCommutative GRepW_base.range (map units_map other)
   .
     simp [B''_G, B'']
+    rw [Subgroup.finiteIndex_iff]
+    simp
+    rw [← Subgroup.comap_subtype]
+    rw [Subgroup.index_comap]
+    rw [MonoidHom.range_eq_map]
+    rw [← Subgroup.relindex_comap]
+    simp only [other, B']
+
+    rw [Subgroup.relindex_top_right]
+
+
+    --have map_equiv := Subgroup.subgroupOfEquivOfLe (H := map units_map other) (K := GRepW_base.range) ?_
+
+
 
 
     let to_continuous_hom: (FreshTopology (W (G := G)) →ₗ[ℂ] FreshTopology (W (G := G))) →* (FreshTopology (W (G := G)) →L[ℂ] FreshTopology (W (G := G))) := {
@@ -2319,7 +2375,25 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
         rfl
     }
 
-    have finite_index_map: (map units_map other).FiniteIndex := by
+    rw [Subgroup.finiteIndex_iff]
+    simp [units_map, other, mapped_group, B']
+    rw [← Subgroup.comap_subtype]
+    rw [Subgroup.index_comap]
+    rw [Subgroup.map_map]
+    rw [Subgroup.map_map]
+
+    have finite_index_map: (map units_map other).IsFiniteRelIndex GRepW_base.range := by
+      refine { relindex_ne_zero := ?_ }
+      simp [other, B']
+      unfold mapped_group
+      rw [Subgroup.map_map]
+      rw [Subgroup.map_map]
+      rw [Subgroup.map_map]
+
+      simp [units_map, other]
+      rw [Subgroup.map_map]
+      rw [Subgroup.map_map]
+
       rw [Subgroup.finiteIndex_iff]
       rw [Subgroup.index_map]
       rw [units_map_ker_trivial]
@@ -2398,7 +2472,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
 
 
 
-    apply Subgroup.instFiniteIndex_subgroupOf
+    apply Subgroup.IsFiniteRelIndex.to_finiteIndex_subgroupOf
 
 
   let B'': Subgroup (GRepW_base.range) := {
