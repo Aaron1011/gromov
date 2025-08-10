@@ -1882,6 +1882,30 @@ instance T2_W: T2Space (W (G := G)) := TopologicalSpace.t2Space_of_metrizableSpa
 #synth TopologicalSpace (W (G := G) →L[ℂ] W (G := G))
 #synth FiniteDimensional ℂ (W (G := G) →L[ℂ] W (G := G))
 
+lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V] (H: Subgroup (V →L[ℂ] V)ˣ) (h_compact: CompactSpace H) (G: Subgroup H) (G_fg: G.FG): ∃ A: Subgroup G, IsMulCommutative A ∧ A.FiniteIndex := by
+  obtain ⟨H', ⟨H_equiv_H'⟩⟩ := new_weyl_unitarian_trick (V := V) (H := H)
+  let G' := Subgroup.map H_equiv_H'.symm.toMonoidHom G
+  by_cases dim_eq_one: Module.rank ℂ (V →L[ℂ] V) = 1
+  .
+    use ⊤
+    refine ⟨?_, ?_⟩
+    .
+      rw [rank_eq_one_iff] at dim_eq_one
+      obtain ⟨v, v_ne_zero, v_span⟩ := dim_eq_one
+      refine { is_comm := ?_ }
+      refine { comm := ?_ }
+      intro x y
+      ext a
+      simp
+      obtain ⟨p, hx⟩ := v_span x.val.val.val
+      obtain ⟨q, hy⟩ := v_span y.val.val.val
+
+      rw [← hx, ← hy]
+      field_simp
+      rw [smul_comm]
+    . infer_instance
+  . sorry
+
 --#synth NormedAddCommGroup (W (G := G))
 open scoped ComplexInnerProductSpace in
 set_option maxHeartbeats 800000 in
