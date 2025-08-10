@@ -2119,35 +2119,35 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
       simp
   }
 
+  have range_to_closure_hom: (GRepW_base (G := G)).range →* my_new_range.topologicalClosure := sorry
 
-  have my_new_range_iso: my_new_range.topologicalClosure ≃* GRepW_base.range := {
+  have my_new_range_hom: my_new_range.topologicalClosure →* GRepW_base.range := {
     toFun := fun f => (by
       have f_prop := f.property
-      let a := Units.map (ContinuousLinearMap.toLinearMapRingHom.toMonoidHom) f.val
-      use a
-      simp only [my_new_range] at f_prop
-      sorry
-      -- rw [MonoidHom.mem_range] at f_prop
-      -- obtain ⟨x, hg⟩ := f_prop
-      -- rw [MonoidHom.mem_range]
-      -- use x
-      -- simp [a]
-      -- rw [← hg]
-      -- rfl
+      by_cases f_mem_base: f.val ∈ my_new_range
+      .
+        let a := Units.map (ContinuousLinearMap.toLinearMapRingHom.toMonoidHom) f.val
+        use a
+        simp only [my_new_range] at f_mem_base
+        rw [MonoidHom.mem_range] at f_mem_base
+        obtain ⟨x, hg⟩ := f_mem_base
+        rw [MonoidHom.mem_range]
+        use x
+        simp [a]
+        rw [← hg]
+        rfl
+      .
+        use 1
+        simp
     ),
-    invFun := fun f => (by
-      sorry
-    )
-    left_inv := by
+    map_one' := by
+      ext a
       simp
-      sorry
-    right_inv := by
-      simp
-      sorry
     map_mul' := by
       intro a b
       ext f
       simp
+      sorry
   }
 
 
@@ -2351,10 +2351,13 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
 
 
 
+
   have new_weyl_trick := new_weyl_unitarian_trick  (H := mapped_group)
   obtain ⟨A, ⟨hA⟩⟩ := new_weyl_trick
 
   -- TODO - fill in with the finite index abelian subgroup from Theorem 3.8
+  -- TODO - this is wrong. We should have a subgroup of the input group G for theorem 3.8,
+  -- not H (the compact group)
   have B: Subgroup A := sorry
   have B_abelian: IsMulCommutative B := sorry
   have B_finite_index: B.FiniteIndex := sorry
@@ -2363,9 +2366,13 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
     simp [mapped_group]
     exact (new_map_hom.subgroupMap my_new_range.topologicalClosure).symm
 
+  -- Subgroup.topologicalClosure_minimal
+
+
   let B_1 := Subgroup.map hA.toMonoidHom B
   let B_2 := Subgroup.map mapped_group_iso.toMonoidHom B_1
-  let B_3 := Subgroup.map my_new_range_iso.toMonoidHom B_2
+  let B_3 := Subgroup.comap range_to_closure_hom B_2
+  --let B_3 := Subgroup.map my_new_range_hom B_2
   use B_3
 
 
@@ -2395,361 +2402,371 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   refine ⟨?_, ?_⟩
   . simp [B_3, B_2, B_1]
     rw [Subgroup.map_map]
-    rw [Subgroup.map_map]
-    apply Subgroup.map_isMulCommutative
+    apply Subgroup.comap_injective_isMulCommutative
+    sorry
+    --rw [Subgroup.map_map]
+    --apply Subgroup.map_isMulCommutative
   .
     simp [B_3, B_2, B_1]
     rw [Subgroup.finiteIndex_iff]
-    simp
-    exact B_finite_index.index_ne_zero
-
-
-    simp
-    rw [← Subgroup.comap_subtype]
     rw [Subgroup.index_comap]
-    rw [MonoidHom.range_eq_map]
-    rw [← Subgroup.relindex_comap]
-    simp only [other, B']
-
-    rw [Subgroup.relindex_top_right]
-
-
-    --have map_equiv := Subgroup.subgroupOfEquivOfLe (H := map units_map other) (K := GRepW_base.range) ?_
-
-
-
-
-    rw [Subgroup.finiteIndex_iff]
-    simp [units_map, other, mapped_group, B']
-    rw [← Subgroup.comap_subtype]
-    rw [Subgroup.index_comap]
-    rw [Subgroup.map_map]
-    rw [Subgroup.map_map]
-
-    have finite_index_map: (map units_map other).IsFiniteRelIndex GRepW_base.range := by
-      refine { relindex_ne_zero := ?_ }
-      simp [other, B']
-      unfold mapped_group
-      rw [Subgroup.map_map]
-      rw [Subgroup.map_map]
-      rw [Subgroup.map_map]
-
-      simp [units_map, other]
-      rw [Subgroup.map_map]
-      rw [Subgroup.map_map]
-
-      rw [Subgroup.finiteIndex_iff]
-      rw [Subgroup.index_map]
-      rw [units_map_ker_trivial]
-      simp
-      refine ⟨?_, ?_⟩
-      . simp [other]
-        rw [Subgroup.index_map]
-        simp
-        refine ⟨?_, ?_⟩
-        . simp [B']
-          exact finiteIndex_iff.mp B_finite_index
-        . simp [mapped_group]
-          rw [Subgroup.index_map]
-          simp
-          refine ⟨?_, ?_⟩
-          .
-            conv =>
-              pattern new_map_hom.ker
-              equals ⊥ =>
-                rw [MonoidHom.ker_eq_bot_iff]
-                simp [new_map_hom, new_map_entry]
-                intro a b hab
-                simp at hab
-                rw [Units.ext_iff]
-                exact hab.1
-
-            simp [my_new_range]
-            -- This is false: https://math.stackexchange.com/questions/4465308/the-general-linear-group-gln-mathbbc-has-no-proper-subgroup-of-finite-in
-            sorry
-
-          .
-            conv =>
-              pattern new_map_hom.range
-              equals ⊤ =>
-                rw [Subgroup.eq_top_iff']
-                intro f
-                simp [new_map_hom, new_map_entry]
-                -- TODO - deduplicate this with 'new_map_entry' somehow
-                use {
-                  val := (ContinuousLinearEquiv.arrowCongr fresh_equiv fresh_equiv).symm f.val,
-                  inv := (ContinuousLinearEquiv.arrowCongr fresh_equiv fresh_equiv).symm f.inv
-                  val_inv := by
-                    ext a
-                    simp
-                    conv =>
-                      arg 1
-                      equals (fresh_equiv.symm ((f.val * f.inv) (fresh_equiv a))) =>
-                        rfl
-                    simp
-                  inv_val := by
-                    ext a
-                    simp
-                    conv =>
-                      arg 1
-                      equals (fresh_equiv.symm ((f.inv * f.val) (fresh_equiv a))) =>
-                        rfl
-                    simp
-                }
-                ext a
-                simp
-            simp
-      .
-        -- LinearMap.range_toContinuousLinearMap
-        simp [units_map]
-
-        conv =>
-          arg 1
-          arg 1
-          arg 1
-          equals ⊤ =>
-            rw [Subgroup.eq_top_iff']
-            intro x
-            use Units.map to_continuous_hom x
-            rfl
-        simp
-
-
-
-    apply Subgroup.IsFiniteRelIndex.to_finiteIndex_subgroupOf
-
-
-  let B'': Subgroup (GRepW_base.range) := {
-    carrier := (fun a => ⟨(Units.map (ContinuousLinearMap.toLinearMapRingHom (M₁ := (FreshTopology (W (G := G)))) (R₁ := ℂ)).toMonoidHom) a.val, by sorry⟩) '' B'.carrier
-    one_mem' := by
-      simp [B']
-      sorry
-    mul_mem' := by
-      sorry
-    inv_mem' := by
-      sorry
-  }
-
-  use B''
-  refine ⟨?_, ?_⟩
-  .
-   refine { is_comm := ?_ }
-   refine { comm := ?_ }
-   intro a b
-   have a_prop := a.property
-   rw [← Subgroup.mem_carrier] at a_prop
-   simp only [B''] at a_prop
-   rw [Set.mem_image] at a_prop
-   obtain ⟨a', a'_mem, a'_eq_a⟩ := a_prop
-   rw [Subgroup.mem_carrier] at a'_mem
-
-   have B_mul := B_abelian.is_comm.comm ⟨a'.val, sorry⟩
-
-  . sorry
-
-
-
-
-  have to_linear := (ContinuousLinearMap.toLinearMapRingHom (M₁ := W (G := G)) (R₁ := ℂ)).toMonoidHom
-
-
-  let B'' := Subgroup.map to_linear B'
-
-
-  -- let map_entry (f: my_new_range) := (to_fresh (ContinuousLinearEquiv.unitsEquiv ℂ (W (G := G)) f).toLinearEquiv).toContinuousLinearEquiv.toUnit
-  -- have continuous_map_entry: Continuous map_entry := by
-  --   simp [map_entry]
-  --   rw [← Function.comp_def]
-  --   rw [← Function.comp_def]
-  --   apply Continuous.comp
-  --   fun_prop
-
-  let map_units := ContinuousLinearEquiv.unitsEquiv ℂ (W (G := G))
-  let new_map := Subgroup.map map_units.toMonoidHom my_new_range
-
-
-
-  have new_compact_subgroup: CompactSpace my_range.topologicalClosure := by
-    refine { isCompact_univ := ?_ }
-    rw [Subtype.isCompact_iff]
-    rw [Topology.IsEmbedding.isCompact_iff (f := Units.val) ?_]
-    . rw [Metric.isCompact_iff_isClosed_bounded]
-      refine ⟨?_, ?_⟩
-      . apply IsSeqClosed.isClosed
-        by_contra!
-        simp [IsSeqClosed] at this
-        obtain ⟨seq, seq_in, ⟨lim_seq, seq_tendsto_lim_seq, lim_seq_not_mem⟩⟩ := this
-
-        by_cases lim_seq_invertible: IsUnit lim_seq.toLinearMap
-        .
-          -- If the limit (in the space of linear maps) is invertible, then the limit will also exist in the space
-          -- of units, which will then imply that the limit exists in the space of linear maps.
-          -- TODO - this probably can be a direct proof, rather than by contradiction
-          obtain ⟨u, hu⟩ := lim_seq_invertible
-          have closure_closed := Subgroup.isClosed_topologicalClosure my_range
-          rw [← isSeqClosed_iff_isClosed] at closure_closed
-          dsimp [IsSeqClosed] at closure_closed
-
-          have seq_units: ∀ n: ℕ, IsUnit (seq n) := by
-            intro n
-            obtain ⟨x, x_mem, seq_eq_x⟩ := (seq_in n)
-            rw [← seq_eq_x]
-            apply Units.isUnit
-
-          have lim_units := closure_closed (x := fun n => (seq_units n).unit) (p := linear_to_clm u) ?_ ?_
-          .
-            specialize lim_seq_not_mem (linear_to_clm u) lim_units
-            conv at lim_seq_not_mem =>
-              arg 1
-              lhs
-              equals u.val.toContinuousLinearMap =>
-                rfl
-            rw [hu] at lim_seq_not_mem
-            conv at lim_seq_not_mem =>
-              arg 1
-              lhs
-              equals lim_seq =>
-                rfl
-            simp at lim_seq_not_mem
-          . intro n
-            simp
-            have seq_n := seq_in n
-            obtain ⟨x, x_mem, seq_eq_x⟩ := seq_n
-            simp_rw [← seq_eq_x]
-            simpa using x_mem
-          .
-            rw [Topology.IsEmbedding.tendsto_nhds_iff (g := Units.val)]
-            .
-              conv =>
-                arg 1
-                equals seq =>
-                  rfl
-
-              have to_clm_u: linear_to_clm u = u.val.toContinuousLinearMap := by
-                rfl
-
-              have u_val_eq_lim: u.val.toContinuousLinearMap = lim_seq := by
-                rw [hu]
-                rfl
-
-              rw [to_clm_u, u_val_eq_lim]
-              exact seq_tendsto_lim_seq
-            .
-              exact units_val_embedding
-
-
-        -- If the limit (in the space of linear maps) is not invertible, then it has a non-trivial kernel.
-        rw [LinearMap.isUnit_iff_ker_eq_bot] at lim_seq_invertible
-        apply Submodule.exists_mem_ne_zero_of_ne_bot at lim_seq_invertible
-        obtain ⟨v, v_in_ker, v_ne_zero⟩ := lim_seq_invertible
-        simp at v_in_ker
-
-
-        have eval_at := Filter.Tendsto.eval_const seq_tendsto_lim_seq v
-        have norm_tendsto := Continuous.tendsto (f := fun (x: FreshTopology W) => ‖x‖) (by fun_prop) (lim_seq v)
-        have norm_seq_lim := Filter.Tendsto.comp  norm_tendsto eval_at
-        rw [v_in_ker] at norm_seq_lim
-        rw [norm_zero] at norm_seq_lim
-        conv at norm_seq_lim =>
-          arg 1
-          -- Use the fact that the action preserves the euclidian norm (maybe just up to a constant),
-          -- so the sequence is actually constant
-          equals fun x => ‖v‖ =>
-            funext n
-            simp
-            have seq_mem := seq_in n
-            obtain ⟨x, x_mem, seq_eq_x⟩ := seq_mem
-            rw [← seq_eq_x]
-            apply ContinousWithinAt.eq_const_of_mem_closure (f := fun (x: (FreshTopology (W (G := G)) →L[ℂ] FreshTopology (W (G := G)))ˣ) => ‖x.val v‖) (c := ‖v‖) (x := x) (s := my_range)
-            . apply Continuous.continuousWithinAt
-              fun_prop
-            . exact x_mem
-            . intro y hy
-              simp [my_range] at hy
-              obtain ⟨g, rep_g_eq_y⟩ := hy
-              rw [← rep_g_eq_y]
-              apply linear_to_clm_preserves_norm
-
-        -- TODO - why do we need this?
-        have r_t2: T2Space ℝ := TopologicalSpace.t2Space_of_metrizableSpace
-
-        have tendsto_norm_v := tendsto_const_nhds (α := ℕ) (f := Filter.atTop) (x := ‖v‖)
-        have norm_v_zero := tendsto_nhds_unique tendsto_norm_v norm_seq_lim
-        simp at norm_v_zero
-        contradiction
-      .
-        simp
-        apply LipschitzWith.isBounded_image (f := Units.val) (K := 1)
-        . rw [lipschitzWith_iff_dist_le_mul]
-          intro a b
-          simp
-          rfl
-        .
-          apply Bornology.IsBounded.closure
-          rw [Metric.isBounded_iff_subset_ball 1]
-          use 3
-          intro a ha
-          simp [my_new_range] at ha
-          obtain ⟨g, rep_g_eq_a⟩ := ha
-          simp
-          conv =>
-            lhs
-            equals dist (a.val) (ContinuousLinearMap.id _ _) =>
-              rfl
-          grw [dist_le_norm_add_norm]
-          grw [ContinuousLinearMap.norm_id_le]
-          rw [← rep_g_eq_a]
-          simp
-
-          have linear_to_clm_norm_le (g: G): (linear_to_clm (GRepW_base g)).val.opNorm ≤ 1 := by
-            conv =>
-              lhs
-              equals ‖(linear_to_clm (GRepW_base g)).val‖ =>
-                rfl
-            rw [ContinuousLinearMap.opNorm_le_iff]
-            . simp [linear_to_clm_preserves_norm]
-            . simp
-
-          have temp_lt (g: G): (linear_to_clm (GRepW_base g)).val.opNorm + 1 < 3 := by
-            grw [linear_to_clm_norm_le g]
-            linarith
-
-          have lt_one_one (g: G): (linear_to_clm (GRepW_base g)).val.opNorm < 1.1 := by
-            have my_le := linear_to_clm_norm_le g
-            linarith
-
-
-
-          have my_norm_le := linear_to_clm_norm_le g
-          -- TODO - why can't we just use 'grw' without the temporary 'have'?
-          exact temp_lt g
-
-
-
-        -- Bornology.isBounded_image_subtype_val
-    . apply units_val_embedding
-
-
-  have locally_compact_subgroup: LocallyCompactSpace my_range.topologicalClosure := by
-    apply IsClosed.locallyCompactSpace
-    exact isClosed_topologicalClosure my_range
-
-
-
-  let units_equiv := ContinuousLinearEquiv.unitsEquiv ℂ ((W (G := G)) →L[ℂ] (W (G := G)))
-
-
-  -- TODO - avoid constructing continuous linear map with wrong topolgoy
-  have my_weyl_trick := new_weyl_unitarian_trick  (H := (my_range).topologicalClosure)
-  obtain ⟨A, ⟨hA⟩⟩ := my_weyl_trick
-
-
-
-  --conv at my_range =>
-  --  equals Subgroup (((FreshTopology W) →L[ℂ] (FreshTopology W))ˣ) =>
-  --    rfl
-
-  sorry
+    sorry
+
+  --   rw [Subgroup.index_map]
+  --   simp
+  --   refine ⟨?_, ?_⟩
+  --   . sorry
+  --   .
+  --     simp [my_new_range_hom]
+  --   exact B_finite_index.index_ne_zero
+
+
+  --   simp
+  --   rw [← Subgroup.comap_subtype]
+  --   rw [Subgroup.index_comap]
+  --   rw [MonoidHom.range_eq_map]
+  --   rw [← Subgroup.relindex_comap]
+  --   simp only [other, B']
+
+  --   rw [Subgroup.relindex_top_right]
+
+
+  --   --have map_equiv := Subgroup.subgroupOfEquivOfLe (H := map units_map other) (K := GRepW_base.range) ?_
+
+
+
+
+  --   rw [Subgroup.finiteIndex_iff]
+  --   simp [units_map, other, mapped_group, B']
+  --   rw [← Subgroup.comap_subtype]
+  --   rw [Subgroup.index_comap]
+  --   rw [Subgroup.map_map]
+  --   rw [Subgroup.map_map]
+
+  --   have finite_index_map: (map units_map other).IsFiniteRelIndex GRepW_base.range := by
+  --     refine { relindex_ne_zero := ?_ }
+  --     simp [other, B']
+  --     unfold mapped_group
+  --     rw [Subgroup.map_map]
+  --     rw [Subgroup.map_map]
+  --     rw [Subgroup.map_map]
+
+  --     simp [units_map, other]
+  --     rw [Subgroup.map_map]
+  --     rw [Subgroup.map_map]
+
+  --     rw [Subgroup.finiteIndex_iff]
+  --     rw [Subgroup.index_map]
+  --     rw [units_map_ker_trivial]
+  --     simp
+  --     refine ⟨?_, ?_⟩
+  --     . simp [other]
+  --       rw [Subgroup.index_map]
+  --       simp
+  --       refine ⟨?_, ?_⟩
+  --       . simp [B']
+  --         exact finiteIndex_iff.mp B_finite_index
+  --       . simp [mapped_group]
+  --         rw [Subgroup.index_map]
+  --         simp
+  --         refine ⟨?_, ?_⟩
+  --         .
+  --           conv =>
+  --             pattern new_map_hom.ker
+  --             equals ⊥ =>
+  --               rw [MonoidHom.ker_eq_bot_iff]
+  --               simp [new_map_hom, new_map_entry]
+  --               intro a b hab
+  --               simp at hab
+  --               rw [Units.ext_iff]
+  --               exact hab.1
+
+  --           simp [my_new_range]
+  --           -- This is false: https://math.stackexchange.com/questions/4465308/the-general-linear-group-gln-mathbbc-has-no-proper-subgroup-of-finite-in
+  --           sorry
+
+  --         .
+  --           conv =>
+  --             pattern new_map_hom.range
+  --             equals ⊤ =>
+  --               rw [Subgroup.eq_top_iff']
+  --               intro f
+  --               simp [new_map_hom, new_map_entry]
+  --               -- TODO - deduplicate this with 'new_map_entry' somehow
+  --               use {
+  --                 val := (ContinuousLinearEquiv.arrowCongr fresh_equiv fresh_equiv).symm f.val,
+  --                 inv := (ContinuousLinearEquiv.arrowCongr fresh_equiv fresh_equiv).symm f.inv
+  --                 val_inv := by
+  --                   ext a
+  --                   simp
+  --                   conv =>
+  --                     arg 1
+  --                     equals (fresh_equiv.symm ((f.val * f.inv) (fresh_equiv a))) =>
+  --                       rfl
+  --                   simp
+  --                 inv_val := by
+  --                   ext a
+  --                   simp
+  --                   conv =>
+  --                     arg 1
+  --                     equals (fresh_equiv.symm ((f.inv * f.val) (fresh_equiv a))) =>
+  --                       rfl
+  --                   simp
+  --               }
+  --               ext a
+  --               simp
+  --           simp
+  --     .
+  --       -- LinearMap.range_toContinuousLinearMap
+  --       simp [units_map]
+
+  --       conv =>
+  --         arg 1
+  --         arg 1
+  --         arg 1
+  --         equals ⊤ =>
+  --           rw [Subgroup.eq_top_iff']
+  --           intro x
+  --           use Units.map to_continuous_hom x
+  --           rfl
+  --       simp
+
+
+
+  --   apply Subgroup.IsFiniteRelIndex.to_finiteIndex_subgroupOf
+
+
+  -- let B'': Subgroup (GRepW_base.range) := {
+  --   carrier := (fun a => ⟨(Units.map (ContinuousLinearMap.toLinearMapRingHom (M₁ := (FreshTopology (W (G := G)))) (R₁ := ℂ)).toMonoidHom) a.val, by sorry⟩) '' B'.carrier
+  --   one_mem' := by
+  --     simp [B']
+  --     sorry
+  --   mul_mem' := by
+  --     sorry
+  --   inv_mem' := by
+  --     sorry
+  -- }
+
+  -- use B''
+  -- refine ⟨?_, ?_⟩
+  -- .
+  --  refine { is_comm := ?_ }
+  --  refine { comm := ?_ }
+  --  intro a b
+  --  have a_prop := a.property
+  --  rw [← Subgroup.mem_carrier] at a_prop
+  --  simp only [B''] at a_prop
+  --  rw [Set.mem_image] at a_prop
+  --  obtain ⟨a', a'_mem, a'_eq_a⟩ := a_prop
+  --  rw [Subgroup.mem_carrier] at a'_mem
+
+  --  have B_mul := B_abelian.is_comm.comm ⟨a'.val, sorry⟩
+
+  -- . sorry
+
+
+
+
+  -- have to_linear := (ContinuousLinearMap.toLinearMapRingHom (M₁ := W (G := G)) (R₁ := ℂ)).toMonoidHom
+
+
+  -- let B'' := Subgroup.map to_linear B'
+
+
+  -- -- let map_entry (f: my_new_range) := (to_fresh (ContinuousLinearEquiv.unitsEquiv ℂ (W (G := G)) f).toLinearEquiv).toContinuousLinearEquiv.toUnit
+  -- -- have continuous_map_entry: Continuous map_entry := by
+  -- --   simp [map_entry]
+  -- --   rw [← Function.comp_def]
+  -- --   rw [← Function.comp_def]
+  -- --   apply Continuous.comp
+  -- --   fun_prop
+
+  -- let map_units := ContinuousLinearEquiv.unitsEquiv ℂ (W (G := G))
+  -- let new_map := Subgroup.map map_units.toMonoidHom my_new_range
+
+
+
+  -- have new_compact_subgroup: CompactSpace my_range.topologicalClosure := by
+  --   refine { isCompact_univ := ?_ }
+  --   rw [Subtype.isCompact_iff]
+  --   rw [Topology.IsEmbedding.isCompact_iff (f := Units.val) ?_]
+  --   . rw [Metric.isCompact_iff_isClosed_bounded]
+  --     refine ⟨?_, ?_⟩
+  --     . apply IsSeqClosed.isClosed
+  --       by_contra!
+  --       simp [IsSeqClosed] at this
+  --       obtain ⟨seq, seq_in, ⟨lim_seq, seq_tendsto_lim_seq, lim_seq_not_mem⟩⟩ := this
+
+  --       by_cases lim_seq_invertible: IsUnit lim_seq.toLinearMap
+  --       .
+  --         -- If the limit (in the space of linear maps) is invertible, then the limit will also exist in the space
+  --         -- of units, which will then imply that the limit exists in the space of linear maps.
+  --         -- TODO - this probably can be a direct proof, rather than by contradiction
+  --         obtain ⟨u, hu⟩ := lim_seq_invertible
+  --         have closure_closed := Subgroup.isClosed_topologicalClosure my_range
+  --         rw [← isSeqClosed_iff_isClosed] at closure_closed
+  --         dsimp [IsSeqClosed] at closure_closed
+
+  --         have seq_units: ∀ n: ℕ, IsUnit (seq n) := by
+  --           intro n
+  --           obtain ⟨x, x_mem, seq_eq_x⟩ := (seq_in n)
+  --           rw [← seq_eq_x]
+  --           apply Units.isUnit
+
+  --         have lim_units := closure_closed (x := fun n => (seq_units n).unit) (p := linear_to_clm u) ?_ ?_
+  --         .
+  --           specialize lim_seq_not_mem (linear_to_clm u) lim_units
+  --           conv at lim_seq_not_mem =>
+  --             arg 1
+  --             lhs
+  --             equals u.val.toContinuousLinearMap =>
+  --               rfl
+  --           rw [hu] at lim_seq_not_mem
+  --           conv at lim_seq_not_mem =>
+  --             arg 1
+  --             lhs
+  --             equals lim_seq =>
+  --               rfl
+  --           simp at lim_seq_not_mem
+  --         . intro n
+  --           simp
+  --           have seq_n := seq_in n
+  --           obtain ⟨x, x_mem, seq_eq_x⟩ := seq_n
+  --           simp_rw [← seq_eq_x]
+  --           simpa using x_mem
+  --         .
+  --           rw [Topology.IsEmbedding.tendsto_nhds_iff (g := Units.val)]
+  --           .
+  --             conv =>
+  --               arg 1
+  --               equals seq =>
+  --                 rfl
+
+  --             have to_clm_u: linear_to_clm u = u.val.toContinuousLinearMap := by
+  --               rfl
+
+  --             have u_val_eq_lim: u.val.toContinuousLinearMap = lim_seq := by
+  --               rw [hu]
+  --               rfl
+
+  --             rw [to_clm_u, u_val_eq_lim]
+  --             exact seq_tendsto_lim_seq
+  --           .
+  --             exact units_val_embedding
+
+
+  --       -- If the limit (in the space of linear maps) is not invertible, then it has a non-trivial kernel.
+  --       rw [LinearMap.isUnit_iff_ker_eq_bot] at lim_seq_invertible
+  --       apply Submodule.exists_mem_ne_zero_of_ne_bot at lim_seq_invertible
+  --       obtain ⟨v, v_in_ker, v_ne_zero⟩ := lim_seq_invertible
+  --       simp at v_in_ker
+
+
+  --       have eval_at := Filter.Tendsto.eval_const seq_tendsto_lim_seq v
+  --       have norm_tendsto := Continuous.tendsto (f := fun (x: FreshTopology W) => ‖x‖) (by fun_prop) (lim_seq v)
+  --       have norm_seq_lim := Filter.Tendsto.comp  norm_tendsto eval_at
+  --       rw [v_in_ker] at norm_seq_lim
+  --       rw [norm_zero] at norm_seq_lim
+  --       conv at norm_seq_lim =>
+  --         arg 1
+  --         -- Use the fact that the action preserves the euclidian norm (maybe just up to a constant),
+  --         -- so the sequence is actually constant
+  --         equals fun x => ‖v‖ =>
+  --           funext n
+  --           simp
+  --           have seq_mem := seq_in n
+  --           obtain ⟨x, x_mem, seq_eq_x⟩ := seq_mem
+  --           rw [← seq_eq_x]
+  --           apply ContinousWithinAt.eq_const_of_mem_closure (f := fun (x: (FreshTopology (W (G := G)) →L[ℂ] FreshTopology (W (G := G)))ˣ) => ‖x.val v‖) (c := ‖v‖) (x := x) (s := my_range)
+  --           . apply Continuous.continuousWithinAt
+  --             fun_prop
+  --           . exact x_mem
+  --           . intro y hy
+  --             simp [my_range] at hy
+  --             obtain ⟨g, rep_g_eq_y⟩ := hy
+  --             rw [← rep_g_eq_y]
+  --             apply linear_to_clm_preserves_norm
+
+  --       -- TODO - why do we need this?
+  --       have r_t2: T2Space ℝ := TopologicalSpace.t2Space_of_metrizableSpace
+
+  --       have tendsto_norm_v := tendsto_const_nhds (α := ℕ) (f := Filter.atTop) (x := ‖v‖)
+  --       have norm_v_zero := tendsto_nhds_unique tendsto_norm_v norm_seq_lim
+  --       simp at norm_v_zero
+  --       contradiction
+  --     .
+  --       simp
+  --       apply LipschitzWith.isBounded_image (f := Units.val) (K := 1)
+  --       . rw [lipschitzWith_iff_dist_le_mul]
+  --         intro a b
+  --         simp
+  --         rfl
+  --       .
+  --         apply Bornology.IsBounded.closure
+  --         rw [Metric.isBounded_iff_subset_ball 1]
+  --         use 3
+  --         intro a ha
+  --         simp [my_new_range] at ha
+  --         obtain ⟨g, rep_g_eq_a⟩ := ha
+  --         simp
+  --         conv =>
+  --           lhs
+  --           equals dist (a.val) (ContinuousLinearMap.id _ _) =>
+  --             rfl
+  --         grw [dist_le_norm_add_norm]
+  --         grw [ContinuousLinearMap.norm_id_le]
+  --         rw [← rep_g_eq_a]
+  --         simp
+
+  --         have linear_to_clm_norm_le (g: G): (linear_to_clm (GRepW_base g)).val.opNorm ≤ 1 := by
+  --           conv =>
+  --             lhs
+  --             equals ‖(linear_to_clm (GRepW_base g)).val‖ =>
+  --               rfl
+  --           rw [ContinuousLinearMap.opNorm_le_iff]
+  --           . simp [linear_to_clm_preserves_norm]
+  --           . simp
+
+  --         have temp_lt (g: G): (linear_to_clm (GRepW_base g)).val.opNorm + 1 < 3 := by
+  --           grw [linear_to_clm_norm_le g]
+  --           linarith
+
+  --         have lt_one_one (g: G): (linear_to_clm (GRepW_base g)).val.opNorm < 1.1 := by
+  --           have my_le := linear_to_clm_norm_le g
+  --           linarith
+
+
+
+  --         have my_norm_le := linear_to_clm_norm_le g
+  --         -- TODO - why can't we just use 'grw' without the temporary 'have'?
+  --         exact temp_lt g
+
+
+
+  --       -- Bornology.isBounded_image_subtype_val
+  --   . apply units_val_embedding
+
+
+  -- have locally_compact_subgroup: LocallyCompactSpace my_range.topologicalClosure := by
+  --   apply IsClosed.locallyCompactSpace
+  --   exact isClosed_topologicalClosure my_range
+
+
+
+  -- let units_equiv := ContinuousLinearEquiv.unitsEquiv ℂ ((W (G := G)) →L[ℂ] (W (G := G)))
+
+
+  -- -- TODO - avoid constructing continuous linear map with wrong topolgoy
+  -- have my_weyl_trick := new_weyl_unitarian_trick  (H := (my_range).topologicalClosure)
+  -- obtain ⟨A, ⟨hA⟩⟩ := my_weyl_trick
+
+
+
+  -- --conv at my_range =>
+  -- --  equals Subgroup (((FreshTopology W) →L[ℂ] (FreshTopology W))ˣ) =>
+  -- --    rfl
+
+  -- sorry
 
 -- We need this to work with Finset
 noncomputable instance GL_W_DecidableEq: DecidableEq (GL_W (G := G)) := by
