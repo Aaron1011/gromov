@@ -1882,16 +1882,28 @@ instance T2_W: T2Space (W (G := G)) := TopologicalSpace.t2Space_of_metrizableSpa
 #synth TopologicalSpace (W (G := G) →L[ℂ] W (G := G))
 #synth FiniteDimensional ℂ (W (G := G) →L[ℂ] W (G := G))
 
+-- Theorem 3.8 in Vikman
 lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V] (H: Subgroup (V →L[ℂ] V)ˣ) (h_compact: CompactSpace H) (G: Subgroup H) (G_fg: G.FG): ∃ A: Subgroup G, IsMulCommutative A ∧ A.FiniteIndex := by
   obtain ⟨H', ⟨H_equiv_H'⟩⟩ := new_weyl_unitarian_trick (V := V) (H := H)
-  let G' := Subgroup.map H_equiv_H'.symm.toMonoidHom G
-  by_cases dim_eq_one: Module.rank ℂ (V →L[ℂ] V) = 1
+  let G' := Subgroup.map H'.subtype (Subgroup.map H_equiv_H'.symm.toMonoidHom G)
+  by_cases dim_le_one: Module.finrank ℂ (V) ≤ 1
   .
     use ⊤
     refine ⟨?_, ?_⟩
     .
-      rw [rank_eq_one_iff] at dim_eq_one
-      obtain ⟨v, v_ne_zero, v_span⟩ := dim_eq_one
+
+      have map_dim := Module.finrank_linearMap ℂ ℂ V V
+      -- TODO - is there an easier way to prove this?
+      have map_dim_le_one: Module.finrank ℂ (V →ₗ[ℂ] V) ≤ 1 := by
+        rw [map_dim]
+        by_cases dim_eq_zero: Module.finrank ℂ (V) = 0
+        . simp [dim_eq_zero]
+        . simp at dim_eq_zero
+          have dim_eq_one: Module.finrank ℂ (V) = 1 := by omega
+          simp [dim_eq_one]
+
+      rw [finrank_le_one_iff] at map_dim_le_one
+      obtain ⟨v, v_span⟩ := map_dim_le_one
       refine { is_comm := ?_ }
       refine { comm := ?_ }
       intro x y
@@ -1900,11 +1912,25 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
       obtain ⟨p, hx⟩ := v_span x.val.val.val
       obtain ⟨q, hy⟩ := v_span y.val.val.val
 
+      have clm_apply (f: V →L[ℂ] V) (v: V): f v = f.toLinearMap v := rfl
+      rw [clm_apply]
+      rw [clm_apply]
+      rw [clm_apply]
+      rw [clm_apply]
+
       rw [← hx, ← hy]
       field_simp
       rw [smul_comm]
     . infer_instance
-  . sorry
+  .
+    have dim_ge_two: 2 ≤ Module.finrank ℂ (V →L[ℂ] V) := by omega
+    by_cases nontrivial_central: ∃ g: G', ∀ z: ℂ, g.val.val ≠ z • 1
+    .
+      obtain ⟨g, hg⟩ := nontrivial_central
+      have inductive_data := inductive_lemma _ ?_ G' g hg
+      . sorry
+      .
+    . sorry
 
 --#synth NormedAddCommGroup (W (G := G))
 open scoped ComplexInnerProductSpace in
