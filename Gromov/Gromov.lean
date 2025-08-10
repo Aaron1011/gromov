@@ -2397,8 +2397,12 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
     rw [Subgroup.map_map]
     apply Subgroup.map_isMulCommutative
   .
-    simp [B''_G, B'']
+    simp [B_3, B_2, B_1]
     rw [Subgroup.finiteIndex_iff]
+    simp
+    exact B_finite_index.index_ne_zero
+
+
     simp
     rw [← Subgroup.comap_subtype]
     rw [Subgroup.index_comap]
