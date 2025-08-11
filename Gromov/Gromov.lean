@@ -2159,16 +2159,16 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
   }
 
   -- TODO - this might be wrong
-  have linear_to_clm_preserves_norm (g: G) (w: (FreshTopology (W (G := G)))): ‖(linear_to_clm (GRepW_base g)).val w‖ = ‖w‖ := by
-    have exists_v: ∃ v, Submodule.Quotient.mk v = w := by
-      apply Quotient.exists_rep
-    obtain ⟨v, hv⟩ := exists_v
-    dsimp [linear_to_clm]
-    simp [GRepW_base, GRepW_non_invertible]
-    nth_rw 1 [← hv]
-    rw [Representation.asGroupHom_apply]
-    simp
-    sorry
+  -- have linear_to_clm_preserves_norm (g: G) (w: (FreshTopology (W (G := G)))): ‖(linear_to_clm (GRepW_base g)).val w‖ = ‖w‖ := by
+  --   have exists_v: ∃ v, Submodule.Quotient.mk v = w := by
+  --     apply Quotient.exists_rep
+  --   obtain ⟨v, hv⟩ := exists_v
+  --   dsimp [linear_to_clm]
+  --   simp [GRepW_base, GRepW_non_invertible]
+  --   nth_rw 1 [← hv]
+  --   rw [Representation.asGroupHom_apply]
+  --   simp
+  --   sorry
 
   have plain_linear_to_clm_preserves_norm (g: G) (w: (W (G := G))): ‖(plain_linear_to_clm (GRepW_base g)).val w‖ = ‖w‖ := by
     simp [plain_linear_to_clm]
@@ -2301,36 +2301,36 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
       simp
   }
 
-  have range_to_closure_hom: (GRepW_base (G := G)).range →* my_new_range.topologicalClosure := sorry
+  --have range_to_closure_hom: (GRepW_base (G := G)).range →* my_new_range.topologicalClosure := sorry
 
-  have my_new_range_hom: my_new_range.topologicalClosure →* GRepW_base.range := {
-    toFun := fun f => (by
-      have f_prop := f.property
-      by_cases f_mem_base: f.val ∈ my_new_range
-      .
-        let a := Units.map (ContinuousLinearMap.toLinearMapRingHom.toMonoidHom) f.val
-        use a
-        simp only [my_new_range] at f_mem_base
-        rw [MonoidHom.mem_range] at f_mem_base
-        obtain ⟨x, hg⟩ := f_mem_base
-        rw [MonoidHom.mem_range]
-        use x
-        simp [a]
-        rw [← hg]
-        rfl
-      .
-        use 1
-        simp
-    ),
-    map_one' := by
-      ext a
-      simp
-    map_mul' := by
-      intro a b
-      ext f
-      simp
-      sorry
-  }
+  -- have my_new_range_hom: my_new_range.topologicalClosure →* GRepW_base.range := {
+  --   toFun := fun f => (by
+  --     have f_prop := f.property
+  --     by_cases f_mem_base: f.val ∈ my_new_range
+  --     .
+  --       let a := Units.map (ContinuousLinearMap.toLinearMapRingHom.toMonoidHom) f.val
+  --       use a
+  --       simp only [my_new_range] at f_mem_base
+  --       rw [MonoidHom.mem_range] at f_mem_base
+  --       obtain ⟨x, hg⟩ := f_mem_base
+  --       rw [MonoidHom.mem_range]
+  --       use x
+  --       simp [a]
+  --       rw [← hg]
+  --       rfl
+  --     .
+  --       use 1
+  --       simp
+  --   ),
+  --   map_one' := by
+  --     ext a
+  --     simp
+  --   map_mul' := by
+  --     intro a b
+  --     ext f
+  --     simp
+  --     sorry
+  -- }
 
 
   let to_continuous_hom: (FreshTopology (W (G := G)) →ₗ[ℂ] FreshTopology (W (G := G))) →* (FreshTopology (W (G := G)) →L[ℂ] FreshTopology (W (G := G))) := {
@@ -2616,7 +2616,7 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
               use g
               rw [← hg]
               rfl
-            sorry
+            apply Subgroup.le_topologicalClosure (GRepW.comp (GRepW_base (G := G))).range mem_range
           . rfl
 
     -- .
@@ -2654,6 +2654,17 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
     simp
     exact B_finite_index.index_ne_zero
   .
+    rw [Subgroup.subgroupOf_eq_top.mpr ?_]
+    .
+      rw [← Group.fg_def]
+      simp [mapped_group]
+      apply group_fg_map
+      simp [my_new_range]
+    .
+      intro a ha
+      simp [mapped_group] at ha
+      simp
+
     sorry
     --rw [← Group.fg_iff_subgroup_fg]
     --have finite_index: ((map new_map_hom.toMonoidHom my_new_range).subgroupOf mapped_group).FiniteIndex := by
