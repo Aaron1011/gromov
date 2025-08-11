@@ -1898,38 +1898,42 @@ lemma group_fg_map {G G': Type*} [Group G] [Group G'] (H: Subgroup G) (h_fg: H.F
 
 
 -- Theorem 3.8 in Vikman
-set_option maxHeartbeats 800000 in
+set_option maxHeartbeats 500000 in
 lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V] (H: Subgroup (V →L[ℂ] V)ˣ) (h_compact: CompactSpace H) (G: Subgroup H) (G_fg: G.FG): ∃ A: Subgroup G, IsMulCommutative A ∧ A.FiniteIndex := by
   obtain ⟨H', ⟨H_equiv_H'⟩⟩ := new_weyl_unitarian_trick (V := V) (H := H)
   --let first := Subgroup.map H'.subtype.restrict_range (Subgroup.map H_equiv_H'.symm.toMonoidHom G)
   let G' := Subgroup.map H'.subtype (Subgroup.map H_equiv_H'.symm.toMonoidHom G)
-  let other := MonoidHom.subgroupComap H'.subtype G'
+  let my_hom := MonoidHom.ofInjective (f := H'.subtype) (by exact subtype_injective H')
+  let other := Subgroup.map my_hom.toMonoidHom (Subgroup.map H_equiv_H'.symm.toMonoidHom G)
+  --let other' := other.toMonoidHom.restrict
 
   let reverse := Subgroup.comap H'.subtype
 
 
-  have G'_to_G: G' →* G := {
+  let G'_to_G: G' →* G := {
     toFun := fun g => (by
-      have g_prop := g.property
-      simp only [G'] at g_prop
-      rw [Subgroup.mem_map] at g_prop
-      let x := g_prop.choose
-      obtain ⟨x_mem, g_eq⟩ := g_prop.choose_spec
-      simp only [mem_map] at x_mem
-      use x_mem.choose
-      apply x_mem.choose_spec.1
-    )
-    map_one' := by
-      simp
-      ext a
-      simp
+      use ⟨H_equiv_H' (my_hom.symm ⟨g, by sorry⟩), by sorry⟩
       sorry
+
+      -- have g_prop := g.property
+      -- simp only [G'] at g_prop
+      -- rw [Subgroup.mem_map] at g_prop
+      -- let x := g_prop.choose
+      -- obtain ⟨x_mem, g_eq⟩ := g_prop.choose_spec
+      -- simp only [mem_map] at x_mem
+      -- use x_mem.choose
+      -- apply x_mem.choose_spec.1
+    )
+    map_one' := by simp
     map_mul' := by
       intro a b
-      simp
-      ext x
-      simp
-      sorry
+      conv =>
+        enter [1, 1, 1, 1, 2, 2]
+        equals ⟨a.val, by sorry⟩ * ⟨b.val, by sorry⟩ =>
+          rfl
+
+      simp_rw [MulEquiv.map_mul]
+      rfl
   }
 
   have G'_fg: G'.FG := by
@@ -1987,9 +1991,9 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
 
 
       let new_N' := Subgroup.map G'.subtype N
-      have new_N'_le: new_N' ≤ H' := by
-        simp [new_N', G']
-        sorry
+      --have new_N'_le: new_N' ≤ H' := by
+      --  simp [new_N', G']
+      --  sorry
 
 
 
@@ -2013,9 +2017,32 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
         . simp
           refine ⟨?_, ?_⟩
           . exact N_finite_index.index_ne_zero
-          . sorry
-        . sorry
+          . conv =>
+              arg 1
+              arg 1
+              arg 1
+              equals ⊤ =>
+                rw [MonoidHom.range_eq_top]
+                simp [G'_to_G]
+                intro a
+                simp
+                use H'.subtype (H_equiv_H'.symm a)
+                simp [my_hom]
+                use ?_
+                .
 
+                  sorry
+                . simp [G']
+                  use a.val
+                  use ?_
+                  . simp
+                  . simp
+
+            simp
+        .
+          simp [G'_to_G]
+          intro a b hab
+          simpa using hab
 
       --use N'''
       -- refine ⟨?_, ?_⟩
