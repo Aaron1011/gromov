@@ -2608,7 +2608,16 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
           have x_prop := x.property
           rw [MonoidHom.mem_range] at x_prop
           obtain ⟨g, hg⟩ := x_prop
-          sorry
+          use (plain_linear_to_clm x.val)
+          refine ⟨?_, ?_⟩
+          .
+            have mem_range: plain_linear_to_clm ↑x ∈ (GRepW.comp GRepW_base).range := by
+              simp
+              use g
+              rw [← hg]
+              rfl
+            sorry
+          . rfl
 
     -- .
     --   simp [new_map_entry, plain_linear_to_clm, mapped_group, my_new_range]
