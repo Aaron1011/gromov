@@ -2024,18 +2024,6 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
 
 
       let new_N' := Subgroup.map G'.subtype N
-      --have new_N'_le: new_N' ≤ H' := by
-      --  simp [new_N', G']
-      --  sorry
-
-
-
-
-
-      let N' := Subgroup.comap H'.subtype (Subgroup.map G'.subtype N)
-      let N'' := Subgroup.map H_equiv_H'.toMonoidHom N'
-      let N''' := N''.subgroupOf G
-
 
       let new_N' := Subgroup.map G'_to_G N
       use new_N'
@@ -2074,26 +2062,6 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
           simp [G'_to_G]
           intro a b hab
           simpa using hab
-
-      --use N'''
-      -- refine ⟨?_, ?_⟩
-      -- .
-      --   simp [N''', N'', N']
-      --   apply Subgroup.comap_injective_isMulCommutative
-      --   exact subtype_injective G
-      -- .
-      --   simp [N''']
-      --   have N''_finite: N''.FiniteIndex := by
-      --     simp [N'', N']
-      --     rw [Subgroup.finiteIndex_iff]
-      --     simp
-      --     rw [Subgroup.subgroupOf]
-      --     rw [Subgroup.index_comap]
-      --     simp
-      --   apply Subgroup.instFiniteIndex_subgroupOf
-
-
-
     . sorry
 
 --#synth NormedAddCommGroup (W (G := G))
