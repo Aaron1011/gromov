@@ -2568,11 +2568,13 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
     rw [MonoidHom.ker_eq_bot_iff]
     intro a b hab
     simp at hab
-    ext f
-    apply_fun (fun g => g.val f) at hab
-    simp at hab
-    sorry
-    --rw [MulEquiv.apply_eq_iff_eq] at hab
+    apply Units.map_injective at hab
+    .
+      simp at hab
+      exact hab
+    .
+      intro a b hab
+      simpa using hab
 
   have reverse_hom_range_top: reverse_hom.range = ⊤ := by
     simp [reverse_hom]
