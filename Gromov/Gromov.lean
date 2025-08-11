@@ -2532,17 +2532,135 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
       apply continuous_new_map_entry
 
 
+  let data := theorem_3_8 (H := mapped_group) compact_mapped_group ((Subgroup.map new_map_hom.toMonoidHom my_new_range).subgroupOf mapped_group) ?_
+  obtain ⟨B, B_abelian, B_finite_index⟩ := data
+
+  let reverse_hom: ((map new_map_hom.toMonoidHom my_new_range).subgroupOf mapped_group) →* (GRepW_base (G := G)).range := {
+    toFun := fun g => (
+      ((⟨Units.map (ContinuousLinearMap.toLinearMapRingHom.toMonoidHom) (new_map_hom.symm g.val), by (
+        simp
+        have g_prop := g.property
+        rw [Subgroup.mem_subgroupOf] at g_prop
+        rw [Subgroup.mem_map] at g_prop
+        obtain ⟨x, x_mem, g_eq⟩ := g_prop
+        simp [my_new_range] at x_mem
+        obtain ⟨a, ha⟩ := x_mem
+        use a
+        ext f
+        simp
+        apply_fun (fun h => Units.map (ContinuousLinearMap.toLinearMapRingHom.toMonoidHom) h) at ha
+        simp [GRepW] at ha
+        rw [ha]
+        simp [new_map_hom, new_map_entry_inv]
+        rw [← g_eq]
+        simp [new_map_hom, new_map_entry]
+      )⟩) : GRepW_base.range)
+    ),
+    map_one' := by
+      simp
+    map_mul' := by
+      intro a b
+      simp
+  }
+
+  have reverse_hom_ker_bot: reverse_hom.ker = ⊥ := by
+    simp [reverse_hom]
+    rw [MonoidHom.ker_eq_bot_iff]
+    intro a b hab
+    simp at hab
+    ext f
+    apply_fun (fun g => g.val f) at hab
+    simp at hab
+    sorry
+    --rw [MulEquiv.apply_eq_iff_eq] at hab
+
+  have reverse_hom_range_top: reverse_hom.range = ⊤ := by
+    simp [reverse_hom]
+    rw [Subgroup.eq_top_iff']
+    intro x
+    simp
+    use new_map_entry (plain_linear_to_clm x.val)
+    use ?_
+    .
+      use ?_
+      . ext f
+        simp [new_map_hom, new_map_entry, new_map_entry_inv]
+        rfl
+      .
+        rw [Subgroup.mem_subgroupOf]
+        . simp [my_new_range]
+          have x_prop := x.property
+          rw [MonoidHom.mem_range] at x_prop
+          obtain ⟨g, hg⟩ := x_prop
+          use g
+          simp [new_map_hom, new_map_entry]
+          refine ⟨?_, ?_⟩
+          . ext f
+            rw [← hg]
+            rfl
+          . ext f
+            rw [← hg]
+            rfl
+        .
+          simp [mapped_group, my_new_range]
+          have x_prop := x.property
+          rw [MonoidHom.mem_range] at x_prop
+          obtain ⟨g, hg⟩ := x_prop
+          sorry
+
+    -- .
+    --   simp [new_map_entry, plain_linear_to_clm, mapped_group, my_new_range]
+    --   use (plain_linear_to_clm x.val)
+    --   refine ⟨?_, ?_⟩
+    --   .
+    --     have mem_range: plain_linear_to_clm x.val ∈ (GRepW.comp GRepW_base).range := by
+    --       simp [plain_linear_to_clm, my_range]
+    --       have x_prop := x.property
+    --       rw [MonoidHom.mem_range] at x_prop
+    --       obtain ⟨g, hg⟩ := x_prop
+    --       use g
+    --       ext f
+    --       simp
+    --       rw [← hg]
+    --       rfl
+    --     have closure_le := Subgroup.le_topologicalClosure (GRepW.comp GRepW_base).range
+    --     sorry
+    --   . rfl
+    --simp
+
+  let B' := Subgroup.map reverse_hom B
+  use B'
+  refine ⟨?_, ?_⟩
+  . simp only [B']
+    apply Subgroup.map_isMulCommutative
+  . simp [B']
+    rw [Subgroup.finiteIndex_iff]
+    rw [Subgroup.index_map]
+    simp
+    rw [reverse_hom_ker_bot]
+    simp
+    rw [reverse_hom_range_top]
+    simp
+    exact B_finite_index.index_ne_zero
+  .
+    sorry
+    --rw [← Group.fg_iff_subgroup_fg]
+    --have finite_index: ((map new_map_hom.toMonoidHom my_new_range).subgroupOf mapped_group).FiniteIndex := by
+    --  sorry
+    --apply Subgroup.fg_of_index_ne_zero
 
 
-  have new_weyl_trick := new_weyl_unitarian_trick  (H := mapped_group)
-  obtain ⟨A, ⟨hA⟩⟩ := new_weyl_trick
+
+
+  --have new_weyl_trick := new_weyl_unitarian_trick  (H := mapped_group)
+  --obtain ⟨A, ⟨hA⟩⟩ := new_weyl_trick
 
   -- TODO - fill in with the finite index abelian subgroup from Theorem 3.8
   -- TODO - this is wrong. We should have a subgroup of the input group G for theorem 3.8,
   -- not H (the compact group)
-  have B: Subgroup A := sorry
-  have B_abelian: IsMulCommutative B := sorry
-  have B_finite_index: B.FiniteIndex := sorry
+  --have B: Subgroup A := sorry
+  --have B_abelian: IsMulCommutative B := sorry
+  --have B_finite_index: B.FiniteIndex := sorry
 
   have mapped_group_iso: mapped_group ≃* my_new_range.topologicalClosure := by
     simp [mapped_group]
