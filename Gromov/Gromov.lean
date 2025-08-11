@@ -2064,6 +2064,13 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
           simpa using hab
     . sorry
 
+instance rho_g_FG: Group.FG (rho_g (G := G)) := by
+  have fg_grep: Group.FG ↥(GRepW_base (G := G)).range := by
+    apply Group.fg_range
+  unfold rho_g
+  apply Group.fg_range
+
+
 --#synth NormedAddCommGroup (W (G := G))
 open scoped ComplexInnerProductSpace in
 set_option maxHeartbeats 800000 in
@@ -2654,18 +2661,98 @@ lemma rho_g_contains_abelian: ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutati
     simp
     exact B_finite_index.index_ne_zero
   .
-    rw [Subgroup.subgroupOf_eq_top.mpr ?_]
-    .
-      rw [← Group.fg_def]
-      simp [mapped_group]
+    have base_fg: (map new_map_hom.toMonoidHom my_new_range).FG := by
       apply group_fg_map
       simp [my_new_range]
-    .
-      intro a ha
-      simp [mapped_group] at ha
-      simp
+      have group_fg: Group.FG (GRepW.comp (GRepW_base (G := G))).range := by
+        apply Group.fg_range
+      exact (Group.fg_iff_subgroup_fg (GRepW.comp GRepW_base).range).mp group_fg
 
-    sorry
+    have base_le: (map new_map_hom.toMonoidHom my_new_range) ≤ mapped_group := by
+      intro a ha
+      simp at ha
+      simp [mapped_group]
+      obtain ⟨g, g_mem, g_eq_a⟩ := ha
+      use g
+      refine ⟨?_, g_eq_a⟩
+      apply Subgroup.le_topologicalClosure my_new_range g_mem
+
+
+
+    rw [Subgroup.fg_iff]
+    rw [Subgroup.fg_iff] at base_fg
+    obtain ⟨S, S_eq, S_finite⟩ := base_fg
+
+    have S_in_map: ∀ s ∈ S, s ∈ (map new_map_hom.toMonoidHom my_new_range) := by
+      rw [Subgroup.ext_iff] at S_eq
+      intro s hs
+      apply (S_eq s).mp ?_
+      exact Subgroup.mem_closure.mpr fun K a ↦ a hs
+
+    let S' := Set.range (fun (s: S) => (⟨s.val, base_le (S_in_map s s.property)⟩ : mapped_group))
+    use S'
+    -- TODO - this is a huge mess. This can be a general proof about the closure of Subgroup.subgroupOf
+    refine ⟨?_, ?_⟩
+    .
+      simp only [S']
+      rw [← S_eq]
+      ext a
+      refine ⟨?_, ?_⟩
+      . intro ha
+        rw [Subgroup.mem_subgroupOf]
+        simp at ha
+        induction ha using Subgroup.closure_induction_left with
+        | one => simp
+        | mul_left y hy z hz h_other_z =>
+          simp
+          apply Subgroup.mul_mem
+          . simp at hy
+            obtain ⟨p, p_mem, p_eq_y⟩ := hy
+            rw [← p_eq_y]
+            simp
+            apply Subgroup.mem_closure_of_mem p_mem
+          . exact h_other_z
+        | inv_mul_cancel y hy z hz h_other_z =>
+          simp
+          apply Subgroup.mul_mem
+          . simp
+            simp at hy
+            obtain ⟨p, p_mem, p_eq_y⟩ := hy
+            rw [← p_eq_y]
+            simp
+            apply Subgroup.mem_closure_of_mem p_mem
+          . exact h_other_z
+      . intro ha
+        rw [Subgroup.mem_subgroupOf] at ha
+        rw [Subgroup.mem_closure]
+        intro K hK
+        rw [Subgroup.mem_closure] at ha
+        have a_mem := ha (Subgroup.map mapped_group.subtype K) ?_
+        . simpa using a_mem
+        . simp
+          intro s hs
+          rw [Set.range_subset_iff] at hK
+          have s_mem := hK ⟨s, hs⟩
+          simp
+          simp at s_mem
+          use ?_
+          apply base_le (S_in_map s hs)
+    .
+      simp [S']
+      rw [← Set.finite_coe_iff] at S_finite
+      apply Set.finite_range
+
+    -- rw [Subgroup.subgroupOf_eq_top.mpr ?_]
+    -- .
+    --   rw [← Group.fg_def]
+    --   simp [mapped_group]
+    --   apply group_fg_map
+    --   simp [my_new_range]
+    -- .
+    --   intro a ha
+    --   simp [mapped_group] at ha
+    --   simp
+
     --rw [← Group.fg_iff_subgroup_fg]
     --have finite_index: ((map new_map_hom.toMonoidHom my_new_range).subgroupOf mapped_group).FiniteIndex := by
     --  sorry
@@ -3097,11 +3184,6 @@ noncomputable instance GL_W_DecidableEq: DecidableEq (GL_W (G := G)) := by
 noncomputable instance w_map_DecidableEq: DecidableEq (W (G := G) →ₗ[ℂ] W (G := G)) := by
   apply Classical.typeDecidableEq
 
-instance rho_g_FG: Group.FG (rho_g (G := G)) := by
-  have fg_grep: Group.FG ↥(GRepW_base (G := G)).range := by
-    apply Group.fg_range
-  unfold rho_g
-  apply Group.fg_range
 
 
 -- The input data and proofs for Theorem 3.1 in Vikman
