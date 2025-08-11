@@ -1923,7 +1923,16 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
         simp [my_hom]
       )⟩
       simp [my_hom]
-      sorry
+      have g_prop := g.property
+      simp only [G'] at g_prop
+      rw [Subgroup.mem_map] at g_prop
+      obtain ⟨x, x_mem, g_eq⟩ := g_prop
+      simp_rw [← g_eq]
+      rw [Subgroup.mem_map] at x_mem
+      obtain ⟨y, y_mem, x_eq⟩ := x_mem
+      simp_rw [← x_eq]
+      simp [MonoidHom.ofInjective, MulEquiv.ofBijective, Equiv.ofBijective, Function.surjInv]
+      exact y_mem
 
       -- have g_prop := g.property
       -- simp only [G'] at g_prop
@@ -2053,8 +2062,7 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
                 use H'.subtype (H_equiv_H'.symm a)
                 simp [my_hom]
                 use ?_
-                . simp [MonoidHom.ofInjective, MulEquiv.ofBijective, Equiv.ofBijective]
-                  sorry
+                . simp [MonoidHom.ofInjective, MulEquiv.ofBijective, Equiv.ofBijective, Function.surjInv]
                 . simp [G']
                   use a.val
                   use ?_
