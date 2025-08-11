@@ -1872,3 +1872,5 @@ termination_by (n, G.index)
 decreasing_by
   . apply Prod.Lex.left
     exact data.n_i_lt i
+
+#print axioms central_implies_virtually_abelian

@@ -1882,10 +1882,62 @@ instance T2_W: T2Space (W (G := G)) := TopologicalSpace.t2Space_of_metrizableSpa
 #synth TopologicalSpace (W (G := G) →L[ℂ] W (G := G))
 #synth FiniteDimensional ℂ (W (G := G) →L[ℂ] W (G := G))
 
+-- TODO: upstream to mathlib
+lemma group_fg_map {G G': Type*} [Group G] [Group G'] (H: Subgroup G) (h_fg: H.FG) (f: G →* G'): (Subgroup.map f H).FG := by
+  obtain ⟨s, hs⟩ := h_fg
+  classical
+  rw [Subgroup.fg_iff]
+  use s.image f
+  refine ⟨?_, ?_⟩
+  .
+    rw [Finset.coe_image]
+    rw [← MonoidHom.map_closure]
+    rw [hs]
+  . simp
+    exact Set.toFinite (⇑f '' ↑s)
+
+
 -- Theorem 3.8 in Vikman
+set_option maxHeartbeats 800000 in
 lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V] (H: Subgroup (V →L[ℂ] V)ˣ) (h_compact: CompactSpace H) (G: Subgroup H) (G_fg: G.FG): ∃ A: Subgroup G, IsMulCommutative A ∧ A.FiniteIndex := by
   obtain ⟨H', ⟨H_equiv_H'⟩⟩ := new_weyl_unitarian_trick (V := V) (H := H)
+  --let first := Subgroup.map H'.subtype.restrict_range (Subgroup.map H_equiv_H'.symm.toMonoidHom G)
   let G' := Subgroup.map H'.subtype (Subgroup.map H_equiv_H'.symm.toMonoidHom G)
+  let other := MonoidHom.subgroupComap H'.subtype G'
+
+  let reverse := Subgroup.comap H'.subtype
+
+
+  have G'_to_G: G' →* G := {
+    toFun := fun g => (by
+      have g_prop := g.property
+      simp only [G'] at g_prop
+      rw [Subgroup.mem_map] at g_prop
+      let x := g_prop.choose
+      obtain ⟨x_mem, g_eq⟩ := g_prop.choose_spec
+      simp only [mem_map] at x_mem
+      use x_mem.choose
+      apply x_mem.choose_spec.1
+    )
+    map_one' := by
+      simp
+      ext a
+      simp
+      sorry
+    map_mul' := by
+      intro a b
+      simp
+      ext x
+      simp
+      sorry
+  }
+
+  have G'_fg: G'.FG := by
+    simp [G']
+    apply group_fg_map
+    apply group_fg_map
+    exact G_fg
+
   by_cases dim_le_one: Module.finrank ℂ (V) ≤ 1
   .
     use ⊤
@@ -1912,6 +1964,7 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
       obtain ⟨p, hx⟩ := v_span x.val.val.val
       obtain ⟨q, hy⟩ := v_span y.val.val.val
 
+      -- TODO - upstream to mathlib
       have clm_apply (f: V →L[ℂ] V) (v: V): f v = f.toLinearMap v := rfl
       rw [clm_apply]
       rw [clm_apply]
@@ -1923,13 +1976,66 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
       rw [smul_comm]
     . infer_instance
   .
-    have dim_ge_two: 2 ≤ Module.finrank ℂ (V →L[ℂ] V) := by omega
+    have dim_ge_two: 2 ≤ Module.finrank ℂ (V) := by omega
     by_cases nontrivial_central: ∃ g: G', ∀ z: ℂ, g.val.val ≠ z • 1
     .
-      obtain ⟨g, hg⟩ := nontrivial_central
-      have inductive_data := inductive_lemma _ ?_ G' g hg
-      . sorry
+      obtain ⟨N, N_comm, N_finite_index⟩ := central_implies_virtually_abelian (Module.finrank ℂ V) (by omega) G' G'_fg
+
+      let new_N := N
+      simp [G'] at new_N
+      --let new_N' := H'.subtype
+
+
+      let new_N' := Subgroup.map G'.subtype N
+      have new_N'_le: new_N' ≤ H' := by
+        simp [new_N', G']
+        sorry
+
+
+
+
+
+      let N' := Subgroup.comap H'.subtype (Subgroup.map G'.subtype N)
+      let N'' := Subgroup.map H_equiv_H'.toMonoidHom N'
+      let N''' := N''.subgroupOf G
+
+
+      let new_N' := Subgroup.map G'_to_G N
+      use new_N'
+      refine ⟨?_, ?_⟩
       .
+        simp [new_N']
+        apply Subgroup.map_isMulCommutative
+      .
+        simp [new_N']
+        rw [Subgroup.finiteIndex_iff]
+        rw [Subgroup.index_map_of_injective]
+        . simp
+          refine ⟨?_, ?_⟩
+          . exact N_finite_index.index_ne_zero
+          . sorry
+        . sorry
+
+
+      --use N'''
+      -- refine ⟨?_, ?_⟩
+      -- .
+      --   simp [N''', N'', N']
+      --   apply Subgroup.comap_injective_isMulCommutative
+      --   exact subtype_injective G
+      -- .
+      --   simp [N''']
+      --   have N''_finite: N''.FiniteIndex := by
+      --     simp [N'', N']
+      --     rw [Subgroup.finiteIndex_iff]
+      --     simp
+      --     rw [Subgroup.subgroupOf]
+      --     rw [Subgroup.index_comap]
+      --     simp
+      --   apply Subgroup.instFiniteIndex_subgroupOf
+
+
+
     . sorry
 
 --#synth NormedAddCommGroup (W (G := G))
