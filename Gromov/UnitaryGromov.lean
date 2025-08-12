@@ -98,41 +98,28 @@ lemma diag_mem_unitary (c: ℂ) (hc: ‖c‖ = 1) (n: ℕ): diag_unitary c n ∈
   simp [hc]
 
 -- Note - `1 = det h'` comes from the fact that 'h' is equal to a commutator [a, b]
-lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix (Fin n) (Fin n) ℂ) (h_det: h.det = 1)
-  (c: ℂ) (hc: ‖c‖ = 1) (h_mul: h = diag_unitary c n)
-  : ∃ C: ℝ, ∀ ε : ℝ, ε < C → (‖h - 1‖ < ε) → c = 1 := by
+-- We specialize to 2 <= n, since we handle the 0 and 1 cases earlier in the proof.
+-- This let us put '∃ C' before everything else, which is what we need to obtain a single ε
+-- for all our h_n elements
+lemma small_dist_matrix (n: ℕ) (hn: 2 ≤ n)
+  : ∃ C: ℝ, ∀ ε : ℝ, ε < C → (∀ h: Matrix (Fin n) (Fin n) ℂ, h.det = 1 → ∀ c: ℂ, ‖c‖ = 1 → h = diag_unitary c n →  (‖h - 1‖ < ε) → c = 1) := by
+
+  -- by_cases n_eq_one: n = 1
+  -- . use 1
+  --   intro ε eps_lt h h_det c hc h_mul h_dist
+  --   simp [diag_unitary] at h_mul
+
+  --   have fin_sin_subsingleton: Subsingleton (Fin n) := by
+  --     rw [n_eq_one]
+  --     exact Fin.subsingleton_one
 
 
-  have c_nonzero: c ≠ 0 := by
-    by_contra!
-    rw [this] at hc
-    simp at hc
-
-  have ne_zero_n: NeZero n := by
-    rw [neZero_iff]
-    linarith
-
-  let c_unit: Units ℂ := {
-      val := c,
-      inv := c⁻¹,
-      val_inv := by field_simp
-      inv_val := by field_simp
-    }
 
 
-  have det_eq_c_n: h.det = c^n := by
-    rw [h_mul]
-    simp [diag_unitary]
 
+  have nezero_n: NeZero n := by
+    refine { out := by omega }
 
-  rw [h_det] at det_eq_c_n
-  by_cases n_eq_one: n = 1
-  . rw [n_eq_one] at det_eq_c_n
-    simp at det_eq_c_n
-    rw [eq_comm] at det_eq_c_n
-    simp [det_eq_c_n]
-
-  have n_gt_one: 1 < n := by omega
   let dists := (fun (x: ℂ) => (‖x - 1‖ : ℝ)) '' ((Units.val '' (rootsOfUnity n ℂ).carrier \ {1}))
   --let dists := (fun x => ‖x - (1: ℂ)‖) '' (Units.val '' (rootsOfUnity n ℂ).carrier \ {1})
 
@@ -141,7 +128,31 @@ lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix (Fin n) (Fin n) ℂ) (h_
   obtain ⟨min_dist, h_min_dist⟩ := foo
   . simp [Minimal] at h_min_dist
     use min_dist
-    intro ε eps_lt h_dist
+    intro ε eps_lt h h_det c hc h_mul h_dist
+
+    have c_nonzero: c ≠ 0 := by
+      by_contra!
+      rw [this] at hc
+      simp at hc
+
+    have ne_zero_n: NeZero n := by
+      rw [neZero_iff]
+      linarith
+
+    let c_unit: Units ℂ := {
+        val := c,
+        inv := c⁻¹,
+        val_inv := by field_simp
+        inv_val := by field_simp
+      }
+
+
+    have det_eq_c_n: h.det = c^n := by
+      rw [h_mul]
+      simp [diag_unitary]
+
+
+    rw [h_det] at det_eq_c_n
 
     rw [h_mul] at h_dist
     simp [diag_unitary] at h_dist
@@ -206,11 +217,18 @@ lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix (Fin n) (Fin n) ℂ) (h_
     apply Set.Finite.image
 
 
+
     have fintype_roots := rootsOfUnity.fintype (k := n) (R  := ℂ)
     have finite_roots: Finite ↥(rootsOfUnity n ℂ) := by infer_instance
     -- TODO - how is this working???
     exact finite_roots
   .
+
+
+
+
+    --have n_gt_one: 1 < n := by omega
+
     simp [dists]
     rw [Set.diff_nonempty]
     have roots_mem := Complex.mem_rootsOfUnity (n := n)
@@ -246,15 +264,19 @@ lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix (Fin n) (Fin n) ℂ) (h_
       .
         field_simp at this
         have abs_lt_one: ‖((1: ℂ) / ↑n)‖ < 1 := by
+
           simp
           have div_le := Nat.cast_inv_le_one (α := ℝ) n
           by_cases inv_eq_one: (n : ℝ)⁻¹ = 1
           .
             simp at inv_eq_one
+            simp at div_le
+            rw [inv_eq_one]
             linarith
           .
+            have n_neq_one: n ≠ 1 := by omega
             rw [← ne_iff_lt_iff_le] at div_le
-            simp [n_eq_one] at div_le
+            simp [n_neq_one] at div_le
             exact div_le
         by_cases a_eq_zero: a = 0
         . rw [a_eq_zero] at this
@@ -1427,7 +1449,7 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
 
 #check Pi.commSemigroup
 
-noncomputable def theorem_3_8_h_n {d: ℕ} (hn: d ≠ 0) {ε: ℝ} (heps: 0 < ε) (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ)) (hG: G.FG) (nontrivial_elem: ∃ x: G, ¬ ∃(z : ℂ), x.val.val = z • 1) (n: ℕ): { g: G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) } := match n with
+noncomputable def theorem_3_8_h_n {d: ℕ} (hn: 2 ≤ d) {ε: ℝ} (heps: 0 < ε) (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ)) (hG: G.FG) (nontrivial_elem: ∃ x: G, ¬ ∃(z : ℂ), x.val.val = z • 1) (n: ℕ): { g: G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) } := match n with
   | 0 => ⟨nontrivial_elem.choose, (by
     refine ⟨?_, ?_⟩
     . use nontrivial_elem.choose_spec
@@ -1458,7 +1480,9 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hn: d ≠ 0) {ε: ℝ} (heps: 0 < ε
           simp at det_unitary
           apply CStarRing.norm_of_mem_unitary at det_unitary
           simp at det_unitary
-          have z_pow := (pow_eq_one_iff_of_ne_zero (a := ‖z‖) hn).mp det_unitary
+          have d_ne_zero: d ≠ 0 := by
+            omega
+          have z_pow := (pow_eq_one_iff_of_ne_zero (a := ‖z‖) d_ne_zero).mp det_unitary
           have norm_pos: 0 ≤ ‖z‖ := by
             positivity
           have norm_not_neg: ‖z‖ ≠ -1 := by
@@ -1501,7 +1525,7 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hn: d ≠ 0) {ε: ℝ} (heps: 0 < ε
 
 
 -- Theorem 3.8, case with only trivial elements in the center
-lemma central_trivial_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG) (ε: ℝ) (hε: 0 < ε)
+lemma central_trivial_virtually_abelian (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG) (ε: ℝ) (hε: 0 < ε)
   (G_central_trivial: ∀ g: G, g ∈ Set.center G → ∃ z: ℂ, g.val.val = z • 1)
   (G'_central_trivial: ∀ g: (G' n ε G), g ∈ Set.center (G' n ε G) → ∃ z: ℂ, g.val.val.val = z • 1)
   : ∃ N: Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
