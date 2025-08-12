@@ -1470,7 +1470,13 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
 
 #check Pi.commSemigroup
 
-noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ)) (hG: G.FG) (nontrivial_elem: ∃ x: G, ¬ ∃(z : ℂ), x.val.val = z • 1) (n: ℕ): { g: G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) } := match n with
+-- A sufficiently small epsilon to use for the h_n elements in Theorem 3.8 (independent of the choice of n)
+noncomputable def H_n_eps {d: ℕ} (hd: 2 ≤ d): ℝ := min ((1: ℝ) / 2) ((small_dist_matrix d hd).choose / 2)
+lemma H_n_eps_lt {d: ℕ} (hd: 2 ≤ d): H_n_eps hd < 1 := by
+  simp [H_n_eps]
+  field_simp
+
+noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ)) (S: Set G) (S_generates: closure S = ⊤) (S_finite: S.Finite) (S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ ≤ (H_n_eps hd)) (nontrivial_elem: ∃ x: G, ¬ ∃(z : ℂ), x.val.val = z • 1) (n: ℕ): { g: G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) } := match n with
   | 0 => ⟨nontrivial_elem.choose, (by
     refine ⟨?_, ?_⟩
     . use nontrivial_elem.choose_spec
@@ -1485,17 +1491,15 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.un
       contradiction
   )⟩
   | k => by
-    let S := ((Subgroup.fg_iff _).mp hG).choose
     let C := (small_dist_matrix d hd).choose
     let ε := (C / 2)
     have heps: 0 < ε := by
       simp [ε, C]
-      have spec := (small_dist_matrix d hd).choose_spec.1
-      omega
+      exact (small_dist_matrix d hd).choose_spec.1
 
-    have comm_not_identity: ∃ s : S, ∀ z: ℂ, ⁅s.val, (theorem_3_8_h_n hn heps G hG nontrivial_elem (n - 1)).val.val⁆.val ≠ z • 1 := by
+    have comm_not_identity: ∃ s : S, ∀ z: ℂ, ⁅s.val.val, (theorem_3_8_h_n hd G S S_generates S_finite S_dist nontrivial_elem (n - 1)).val.val⁆.val ≠ z • 1 := by
       by_contra!
-      have comm_eq_id: ∀ s: S, ⁅s.val, (theorem_3_8_h_n hn heps G hG nontrivial_elem (n - 1)).val.val⁆ = 1 := by
+      have comm_eq_id: ∀ s: S, ⁅s.val.val, (theorem_3_8_h_n hd G S S_generates S_finite S_dist nontrivial_elem (n - 1)).val.val⁆ = 1 := by
         intro s
         obtain ⟨z, comm_eq_z⟩ := this s
         have norm_z: ‖z‖ = 1 := by
@@ -1518,7 +1522,7 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.un
 
           simp [norm_not_neg] at z_pow
           exact z_pow
-        have det_one: ⁅s.val, (theorem_3_8_h_n hn heps G hG nontrivial_elem (n - 1)).val.val⁆.val.det = 1 := by
+        have det_one: ⁅s.val.val, (theorem_3_8_h_n hd G S S_generates S_finite S_dist nontrivial_elem (n - 1)).val.val⁆.val.det = 1 := by
           simp [Bracket.bracket]
           rw [Matrix.star_eq_conjTranspose]
           rw [Matrix.star_eq_conjTranspose]
@@ -1535,18 +1539,22 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.un
           rw [Matrix.UnitaryGroup.star_mul_self]
           simp
 
-        have foo := small_dist_matrix d (by omega) _ det_one z norm_z ?_
+        have norm_le := shrinking_conjugators d s.val (theorem_3_8_h_n hd G S S_generates S_finite S_dist nontrivial_elem (n - 1)).val.val
+        rw [comm_eq_z] at norm_le
+        obtain ⟨C, C_pos, small_eps⟩ := small_dist_matrix d hd
         .
-          obtain ⟨C, hC⟩ := foo
-          have norm_le := shrinking_conjugators d s.val (theorem_3_8_h_n hn heps G hG nontrivial_elem (n - 1)).val.val
+          have foo := small_eps (H_n_eps hd)
+
           --rw [comm_eq_z] at norm_le
           simp at norm_le
           sorry
 
-        .
-          simp [diag_unitary]
-          rw [← Matrix.smul_one_eq_diagonal]
-          exact comm_eq_z
+        -- .
+        --   simp [diag_unitary]
+        --   rw [← Matrix.smul_one_eq_diagonal]
+        --   exact comm_eq_z
+        --   sorry
+      sorry
 
 
     sorry
