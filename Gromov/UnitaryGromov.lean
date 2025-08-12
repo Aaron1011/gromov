@@ -1448,6 +1448,24 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hn: d ≠ 0) {ε: ℝ} (heps: 0 < ε
       have comm_eq_id: ∀ s: S, ⁅s.val, (theorem_3_8_h_n hn heps G hG nontrivial_elem (n - 1)).val.val⁆ = 1 := by
         intro s
         obtain ⟨z, comm_eq_z⟩ := this s
+        have norm_z: ‖z‖ = 1 := by
+          have z_mul_unitary: z • 1 ∈ Matrix.unitaryGroup (Fin d) ℂ := by
+            rw [← comm_eq_z]
+            simp
+
+
+          have det_unitary := Matrix.det_of_mem_unitary z_mul_unitary
+          simp at det_unitary
+          apply CStarRing.norm_of_mem_unitary at det_unitary
+          simp at det_unitary
+          have z_pow := (pow_eq_one_iff_of_ne_zero (a := ‖z‖) hn).mp det_unitary
+          have norm_pos: 0 ≤ ‖z‖ := by
+            positivity
+          have norm_not_neg: ‖z‖ ≠ -1 := by
+            linarith
+
+          simp [norm_not_neg] at z_pow
+          exact z_pow
         have det_one: ⁅s.val, (theorem_3_8_h_n hn heps G hG nontrivial_elem (n - 1)).val.val⁆.val.det = 1 := by
           simp [Bracket.bracket]
           rw [Matrix.star_eq_conjTranspose]
@@ -1464,10 +1482,20 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hn: d ≠ 0) {ε: ℝ} (heps: 0 < ε
           rw [← Matrix.det_mul]
           rw [Matrix.UnitaryGroup.star_mul_self]
           simp
-        have norm_le := shrinking_conjugators d s.val (theorem_3_8_h_n hn heps G hG nontrivial_elem (n - 1)).val.val
-        rw [comm_eq_z] at norm_le
-        simp at norm_le
-        have foo := small_dist_matrix d (by omega) _ det_one ε heps
+
+        have foo := small_dist_matrix d (by omega) _ det_one z norm_z ?_
+        .
+          obtain ⟨C, hC⟩ := foo
+          have norm_le := shrinking_conjugators d s.val (theorem_3_8_h_n hn heps G hG nontrivial_elem (n - 1)).val.val
+          --rw [comm_eq_z] at norm_le
+          simp at norm_le
+          sorry
+
+        .
+          simp [diag_unitary]
+          rw [← Matrix.smul_one_eq_diagonal]
+          exact comm_eq_z
+
 
     sorry
 
