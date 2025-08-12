@@ -1424,7 +1424,7 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
 
 #check Pi.commSemigroup
 
-noncomputable def theorem_3_8_h_n {d: ℕ} (hn: d ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ)) (hG: G.FG) (nontrivial_elem: ∃ x: G, ¬ ∃(z : ℂ), x.val.val = z • 1) (n: ℕ): { g: G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) } := match n with
+noncomputable def theorem_3_8_h_n {d: ℕ} (hn: d ≠ 0) {ε: ℝ} (heps: 0 < ε) (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ)) (hG: G.FG) (nontrivial_elem: ∃ x: G, ¬ ∃(z : ℂ), x.val.val = z • 1) (n: ℕ): { g: G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) } := match n with
   | 0 => ⟨nontrivial_elem.choose, (by
     refine ⟨?_, ?_⟩
     . use nontrivial_elem.choose_spec
@@ -1440,13 +1440,27 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hn: d ≠ 0) (G: Subgroup (Matrix.un
   )⟩
   | k => by
     let S := ((Subgroup.fg_iff _).mp hG).choose
-    have comm_not_identity: ∃ s : S, ∀ z: ℂ, ⁅s.val.val, (theorem_3_8_h_n hn G hG nontrivial_elem (n - 1)).val.val.val⁆ ≠ z • 1 := by
+    have comm_not_identity: ∃ s : S, ∀ z: ℂ, ⁅s.val, (theorem_3_8_h_n hn heps G hG nontrivial_elem (n - 1)).val.val⁆.val ≠ z • 1 := by
       by_contra!
-      have comm_eq_id: ∀ s: S, ⁅s.val.val, (theorem_3_8_h_n hn G hG nontrivial_elem (n - 1)).val.val.val⁆ = 1 := by
+      have comm_eq_id: ∀ s: S, ⁅s.val, (theorem_3_8_h_n hn heps G hG nontrivial_elem (n - 1)).val.val⁆ = 1 := by
         intro s
-        have det_one: ⁅s.val.val, (theorem_3_8_h_n hn G hG nontrivial_elem (n - 1)).val.val.val⁆.det = 1 := by
-          sorry
-        have foo := small_dist_matrix d (by omega) _ det_one
+        have det_one: ⁅s.val, (theorem_3_8_h_n hn heps G hG nontrivial_elem (n - 1)).val.val⁆.val.det = 1 := by
+          simp [Bracket.bracket]
+          rw [Matrix.star_eq_conjTranspose]
+          rw [Matrix.star_eq_conjTranspose]
+          rw [mul_comm]
+          rw [mul_assoc]
+          nth_rw 2 [mul_comm]
+          rw [mul_assoc]
+          rw [← Matrix.det_mul]
+          rw [← Matrix.star_eq_conjTranspose]
+          rw [← Matrix.star_eq_conjTranspose]
+          rw [Matrix.UnitaryGroup.star_mul_self]
+          rw [← mul_assoc]
+          rw [← Matrix.det_mul]
+          rw [Matrix.UnitaryGroup.star_mul_self]
+          simp
+        have foo := small_dist_matrix d (by omega) _ det_one ε heps
 
     sorry
 
