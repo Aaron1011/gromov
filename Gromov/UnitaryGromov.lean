@@ -1476,6 +1476,8 @@ lemma H_n_eps_lt {d: ℕ} (hd: 2 ≤ d): H_n_eps hd < 1 := by
   simp [H_n_eps]
   field_simp
 
+set_option maxHeartbeats 1000000 in
+set_option synthInstance.maxHeartbeats 1000000 in
 noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ)) (S: Set G) (S_generates: closure S = ⊤) (S_finite: S.Finite) (S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ ≤ (H_n_eps hd)) (nontrivial_elem: ∃ x: G, ¬ ∃(z : ℂ), x.val.val = z • 1) (n: ℕ): { g: G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) } := match n with
   | 0 => ⟨nontrivial_elem.choose, (by
     refine ⟨?_, ?_⟩
@@ -1543,10 +1545,10 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.un
         rw [comm_eq_z] at norm_le
         obtain ⟨C, C_pos, small_eps⟩ := small_dist_matrix d hd
         .
-          have foo := small_eps (H_n_eps hd)
+          --have foo := small_eps (H_n_eps hd)
 
           --rw [comm_eq_z] at norm_le
-          simp at norm_le
+          --simp at norm_le
           sorry
 
         -- .
@@ -1558,7 +1560,9 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.un
 
 
     sorry
-
+termination_by n
+decreasing_by
+  . sorry
 
 -- Theorem 3.8, case with only trivial elements in the center
 lemma central_trivial_virtually_abelian (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG) (ε: ℝ) (hε: 0 < ε)
