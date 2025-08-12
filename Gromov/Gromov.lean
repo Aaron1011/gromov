@@ -1896,7 +1896,6 @@ lemma group_fg_map {G G': Type*} [Group G] [Group G'] (H: Subgroup G) (h_fg: H.F
   . simp
     exact Set.toFinite (⇑f '' ↑s)
 
-
 -- Theorem 3.8 in Vikman
 set_option maxHeartbeats 500000 in
 lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V] (H: Subgroup (V →L[ℂ] V)ˣ) (h_compact: CompactSpace H) (G: Subgroup H) (G_fg: G.FG): ∃ A: Subgroup G, IsMulCommutative A ∧ A.FiniteIndex := by
@@ -1933,15 +1932,6 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
       simp_rw [← x_eq]
       simp [MonoidHom.ofInjective, MulEquiv.ofBijective, Equiv.ofBijective, Function.surjInv]
       exact y_mem
-
-      -- have g_prop := g.property
-      -- simp only [G'] at g_prop
-      -- rw [Subgroup.mem_map] at g_prop
-      -- let x := g_prop.choose
-      -- obtain ⟨x_mem, g_eq⟩ := g_prop.choose_spec
-      -- simp only [mem_map] at x_mem
-      -- use x_mem.choose
-      -- apply x_mem.choose_spec.1
     )
     map_one' := by simp
     map_mul' := by
@@ -2014,56 +2004,52 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
     . infer_instance
   .
     have dim_ge_two: 2 ≤ Module.finrank ℂ (V) := by omega
-    by_cases nontrivial_central: ∃ g: Subgroup.center G', ∀ z: ℂ, g.val.val.val ≠ z • 1
+    obtain ⟨N, N_comm, N_finite_index⟩ := central_implies_virtually_abelian (Module.finrank ℂ V) (by omega) G' G'_fg
+
+    let new_N := N
+    simp [G'] at new_N
+    --let new_N' := H'.subtype
+
+
+    let new_N' := Subgroup.map G'.subtype N
+
+    let new_N' := Subgroup.map G'_to_G N
+    use new_N'
+    refine ⟨?_, ?_⟩
     .
-      obtain ⟨N, N_comm, N_finite_index⟩ := central_implies_virtually_abelian (Module.finrank ℂ V) (by omega) G' G'_fg
-
-      let new_N := N
-      simp [G'] at new_N
-      --let new_N' := H'.subtype
-
-
-      let new_N' := Subgroup.map G'.subtype N
-
-      let new_N' := Subgroup.map G'_to_G N
-      use new_N'
-      refine ⟨?_, ?_⟩
-      .
-        simp [new_N']
-        apply Subgroup.map_isMulCommutative
-      .
-        simp [new_N']
-        rw [Subgroup.finiteIndex_iff]
-        rw [Subgroup.index_map_of_injective]
-        . simp
-          refine ⟨?_, ?_⟩
-          . exact N_finite_index.index_ne_zero
-          . conv =>
-              arg 1
-              arg 1
-              arg 1
-              equals ⊤ =>
-                rw [MonoidHom.range_eq_top]
-                simp [G'_to_G]
-                intro a
-                simp
-                use H'.subtype (H_equiv_H'.symm a)
-                simp [my_hom]
+      simp [new_N']
+      apply Subgroup.map_isMulCommutative
+    .
+      simp [new_N']
+      rw [Subgroup.finiteIndex_iff]
+      rw [Subgroup.index_map_of_injective]
+      . simp
+        refine ⟨?_, ?_⟩
+        . exact N_finite_index.index_ne_zero
+        . conv =>
+            arg 1
+            arg 1
+            arg 1
+            equals ⊤ =>
+              rw [MonoidHom.range_eq_top]
+              simp [G'_to_G]
+              intro a
+              simp
+              use H'.subtype (H_equiv_H'.symm a)
+              simp [my_hom]
+              use ?_
+              . simp [MonoidHom.ofInjective, MulEquiv.ofBijective, Equiv.ofBijective, Function.surjInv]
+              . simp [G']
+                use a.val
                 use ?_
-                . simp [MonoidHom.ofInjective, MulEquiv.ofBijective, Equiv.ofBijective, Function.surjInv]
-                . simp [G']
-                  use a.val
-                  use ?_
-                  . simp
-                  . simp
+                . simp
+                . simp
 
-            simp
-        .
-          simp [G'_to_G]
-          intro a b hab
-          simpa using hab
-    .
-      sorry
+          simp
+      .
+        simp [G'_to_G]
+        intro a b hab
+        simpa using hab
 
 instance rho_g_FG: Group.FG (rho_g (G := G)) := by
   have fg_grep: Group.FG ↥(GRepW_base (G := G)).range := by

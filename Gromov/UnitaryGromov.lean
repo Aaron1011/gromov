@@ -1432,7 +1432,7 @@ lemma central_trivial_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
 
   sorry
 
--- Theorem 3.8
+-- Helper for theorem 3.8
 set_option synthInstance.maxHeartbeats 100000 in
 set_option maxHeartbeats 1000000 in
 lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG): ∃ N: Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
