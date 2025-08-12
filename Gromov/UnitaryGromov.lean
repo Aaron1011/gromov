@@ -102,7 +102,7 @@ lemma diag_mem_unitary (c: ℂ) (hc: ‖c‖ = 1) (n: ℕ): diag_unitary c n ∈
 -- This let us put '∃ C' before everything else, which is what we need to obtain a single ε
 -- for all our h_n elements
 lemma small_dist_matrix (n: ℕ) (hn: 2 ≤ n)
-  : ∃ C: ℝ, ∀ ε : ℝ, ε < C → (∀ h: Matrix (Fin n) (Fin n) ℂ, h.det = 1 → ∀ c: ℂ, ‖c‖ = 1 → h = diag_unitary c n →  (‖h - 1‖ < ε) → c = 1) := by
+  : ∃ C: ℝ, 0 < C ∧ ∀ ε : ℝ, ε < C → (∀ h: Matrix (Fin n) (Fin n) ℂ, h.det = 1 → ∀ c: ℂ, ‖c‖ = 1 → h = diag_unitary c n →  (‖h - 1‖ < ε) → c = 1) := by
 
   -- by_cases n_eq_one: n = 1
   -- . use 1
@@ -128,6 +128,27 @@ lemma small_dist_matrix (n: ℕ) (hn: 2 ≤ n)
   obtain ⟨min_dist, h_min_dist⟩ := foo
   . simp [Minimal] at h_min_dist
     use min_dist
+    refine ⟨?_, ?_⟩
+    .
+      have h_min := h_min_dist.1
+      simp only [dists] at h_min
+      rw [Set.mem_image] at h_min
+      obtain ⟨x, x_mem, min_dist_eq⟩ := h_min
+      simp at x_mem
+      by_contra!
+      by_cases min_dist_lt: min_dist < 0
+      . rw [← min_dist_eq] at min_dist_lt
+        have norm_nonneg := norm_nonneg (x - 1)
+        linarith
+
+      have min_dist_eq_zero: min_dist = 0 := by
+        linarith
+      rw [min_dist_eq_zero] at min_dist_eq
+      simp at min_dist_eq
+      have x_neq_one := x_mem.2
+      rw [sub_eq_zero] at min_dist_eq
+      contradiction
+
     intro ε eps_lt h h_det c hc h_mul h_dist
 
     have c_nonzero: c ≠ 0 := by
@@ -1449,7 +1470,7 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
 
 #check Pi.commSemigroup
 
-noncomputable def theorem_3_8_h_n {d: ℕ} (hn: 2 ≤ d) {ε: ℝ} (heps: 0 < ε) (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ)) (hG: G.FG) (nontrivial_elem: ∃ x: G, ¬ ∃(z : ℂ), x.val.val = z • 1) (n: ℕ): { g: G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) } := match n with
+noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ)) (hG: G.FG) (nontrivial_elem: ∃ x: G, ¬ ∃(z : ℂ), x.val.val = z • 1) (n: ℕ): { g: G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) } := match n with
   | 0 => ⟨nontrivial_elem.choose, (by
     refine ⟨?_, ?_⟩
     . use nontrivial_elem.choose_spec
@@ -1465,6 +1486,13 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hn: 2 ≤ d) {ε: ℝ} (heps: 0 < ε
   )⟩
   | k => by
     let S := ((Subgroup.fg_iff _).mp hG).choose
+    let C := (small_dist_matrix d hd).choose
+    let ε := (C / 2)
+    have heps: 0 < ε := by
+      simp [ε, C]
+      have spec := (small_dist_matrix d hd).choose_spec.1
+      omega
+
     have comm_not_identity: ∃ s : S, ∀ z: ℂ, ⁅s.val, (theorem_3_8_h_n hn heps G hG nontrivial_elem (n - 1)).val.val⁆.val ≠ z • 1 := by
       by_contra!
       have comm_eq_id: ∀ s: S, ⁅s.val, (theorem_3_8_h_n hn heps G hG nontrivial_elem (n - 1)).val.val⁆ = 1 := by
