@@ -2014,7 +2014,7 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
     . infer_instance
   .
     have dim_ge_two: 2 ≤ Module.finrank ℂ (V) := by omega
-    by_cases nontrivial_central: ∃ g: G', ∀ z: ℂ, g.val.val ≠ z • 1
+    by_cases nontrivial_central: ∃ g: Subgroup.center G', ∀ z: ℂ, g.val.val.val ≠ z • 1
     .
       obtain ⟨N, N_comm, N_finite_index⟩ := central_implies_virtually_abelian (Module.finrank ℂ V) (by omega) G' G'_fg
 
@@ -2062,7 +2062,8 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
           simp [G'_to_G]
           intro a b hab
           simpa using hab
-    . sorry
+    .
+      sorry
 
 instance rho_g_FG: Group.FG (rho_g (G := G)) := by
   have fg_grep: Group.FG ↥(GRepW_base (G := G)).range := by
