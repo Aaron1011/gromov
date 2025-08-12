@@ -1424,13 +1424,55 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
 
 #check Pi.commSemigroup
 
+noncomputable def theorem_3_8_h_n {d: ℕ} (hn: d ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ)) (nontrivial_elem: ∃ x: G, ¬ ∃(z : ℂ), x.val.val = z • 1) (n: ℕ): { g: G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) } := match n with
+  | 0 => ⟨nontrivial_elem.choose, (by
+    refine ⟨?_, ?_⟩
+    . use nontrivial_elem.choose_spec
+    . by_contra!
+      simp at this
+      have my_spec := nontrivial_elem.choose_spec
+      simp at my_spec
+      rw [sub_eq_zero] at this
+      specialize my_spec 1
+      simp at my_spec
+      simp at this
+      contradiction
+  )⟩
+  | k =>
+
+
 -- Theorem 3.8, case with only trivial elements in the center
 lemma central_trivial_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG) (ε: ℝ) (hε: 0 < ε)
   (G_central_trivial: ∀ g: G, g ∈ Set.center G → ∃ z: ℂ, g.val.val = z • 1)
   (G'_central_trivial: ∀ g: (G' n ε G), g ∈ Set.center (G' n ε G) → ∃ z: ℂ, g.val.val.val = z • 1)
   : ∃ N: Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
 
-  sorry
+  by_cases all_mul_identity: ∀ h: G, ∃ z: ℂ, h.val.val = z • 1
+  .
+    use ⊤
+    refine ⟨?_, ?_⟩
+    .
+      refine { is_comm := ?_ }
+      refine { comm := ?_ }
+      intro a b
+      have a_diag := all_mul_identity a
+      have b_diag := all_mul_identity b
+      obtain ⟨a_z, a_eq⟩ := a_diag
+      obtain ⟨b_z, b_eq⟩ := b_diag
+      ext i j
+      simp
+      rw [a_eq, b_eq]
+      simp
+      group
+    . infer_instance
+  .
+    simp [-Subtype.forall, -Subtype.exists] at all_mul_identity
+
+
+    sorry
+
+
+
 
 -- Helper for theorem 3.8
 set_option synthInstance.maxHeartbeats 100000 in
