@@ -98,18 +98,10 @@ lemma diag_mem_unitary (c: ℂ) (hc: ‖c‖ = 1) (n: ℕ): diag_unitary c n ∈
   simp [hc]
 
 -- Note - `1 = det h'` comes from the fact that 'h' is equal to a commutator [a, b]
-lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix (Fin n) (Fin n) ℂ) (h_det: h.det = 1) (ε : ℝ) (hε: 0 < ε)
-  (h_dist: ‖h - 1‖ < ε) (c: ℂ) (hc: ‖c‖ = 1) (h_mul: h = diag_unitary c n): ∃ C: ℝ, ε < C → c = 1 := by
-  rw [h_mul] at h_dist
-  simp [diag_unitary] at h_dist
+lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix (Fin n) (Fin n) ℂ) (h_det: h.det = 1)
+  (c: ℂ) (hc: ‖c‖ = 1) (h_mul: h = diag_unitary c n)
+  : ∃ C: ℝ, ∀ ε : ℝ, ε < C → (‖h - 1‖ < ε) → c = 1 := by
 
-  conv at h_dist =>
-    arg 1
-    arg 1
-    lhs
-    equals c • (Matrix.diagonal (fun _ => 1)) =>
-      rw [← Matrix.smul_one_eq_diagonal]
-      simp
 
   have c_nonzero: c ≠ 0 := by
     by_contra!
@@ -127,22 +119,7 @@ lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix (Fin n) (Fin n) ℂ) (h_
       inv_val := by field_simp
     }
 
-  rw [Matrix.diagonal_one] at h_dist
-  conv at h_dist =>
-    arg 1
-    arg 1
-    rhs
-    equals (1 : ℂ) • 1 =>
-      simp
-  rw [← sub_smul] at h_dist
-  rw [norm_smul] at h_dist
-  conv at h_dist =>
-    lhs
-    rhs
-    equals (1 : ℝ) =>
-      bound
 
-  simp at h_dist
   have det_eq_c_n: h.det = c^n := by
     rw [h_mul]
     simp [diag_unitary]
@@ -164,9 +141,35 @@ lemma small_dist_matrix (n: ℕ) (hn: 0 < n) (h: Matrix (Fin n) (Fin n) ℂ) (h_
   obtain ⟨min_dist, h_min_dist⟩ := foo
   . simp [Minimal] at h_min_dist
     use min_dist
-    intro eps_lt
+    intro ε eps_lt h_dist
 
+    rw [h_mul] at h_dist
+    simp [diag_unitary] at h_dist
 
+    conv at h_dist =>
+      arg 1
+      arg 1
+      lhs
+      equals c • (Matrix.diagonal (fun _ => 1)) =>
+        rw [← Matrix.smul_one_eq_diagonal]
+        simp
+
+    rw [Matrix.diagonal_one] at h_dist
+    conv at h_dist =>
+      arg 1
+      arg 1
+      rhs
+      equals (1 : ℂ) • 1 =>
+        simp
+    rw [← sub_smul] at h_dist
+    rw [norm_smul] at h_dist
+    conv at h_dist =>
+      lhs
+      rhs
+      equals (1 : ℝ) =>
+        bound
+
+    simp at h_dist
 
     by_contra!
 
@@ -1444,6 +1447,7 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hn: d ≠ 0) {ε: ℝ} (heps: 0 < ε
       by_contra!
       have comm_eq_id: ∀ s: S, ⁅s.val, (theorem_3_8_h_n hn heps G hG nontrivial_elem (n - 1)).val.val⁆ = 1 := by
         intro s
+        obtain ⟨z, comm_eq_z⟩ := this s
         have det_one: ⁅s.val, (theorem_3_8_h_n hn heps G hG nontrivial_elem (n - 1)).val.val⁆.val.det = 1 := by
           simp [Bracket.bracket]
           rw [Matrix.star_eq_conjTranspose]
@@ -1460,6 +1464,9 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hn: d ≠ 0) {ε: ℝ} (heps: 0 < ε
           rw [← Matrix.det_mul]
           rw [Matrix.UnitaryGroup.star_mul_self]
           simp
+        have norm_le := shrinking_conjugators d s.val (theorem_3_8_h_n hn heps G hG nontrivial_elem (n - 1)).val.val
+        rw [comm_eq_z] at norm_le
+        simp at norm_le
         have foo := small_dist_matrix d (by omega) _ det_one ε heps
 
     sorry
