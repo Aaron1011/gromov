@@ -2682,7 +2682,10 @@ structure Theorem3_1_Input where
 def HasPolynomialGrowthD (d: ℕ): Prop := ∃ a: ℕ+, ∀ n ≥ 2, #(S ^ n) ≤ a * n ^ d
 def HasPolynomialGrowth: Prop := ∃ d, HasPolynomialGrowthD (S := S) d
 
-lemma theorem_3_1 (data: Theorem3_1_Input (G := G)) (n: ℕ) (h_growth: HasPolynomialGrowthD (S := S) n): Group.IsVirtuallyNilpotent G := by
+open Classical in
+lemma theorem_3_1 (data: Theorem3_1_Input (G := G)) (n: ℕ) (h_growth: HasPolynomialGrowthD (S := S) n)
+(inductive_gromov: ∀ {Q: Type*}, [Group Q] → (Q_fg: Group.FG Q) → (Q_growth : (HasPolynomialGrowthD (S := Q_fg.out.choose) (n - 1))) → Group.IsVirtuallyNilpotent Q)
+: Group.IsVirtuallyNilpotent G := by
 
   sorry
 
@@ -9692,3 +9695,25 @@ lemma three_two_kernel_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialG
 
 #print axioms three_two_gamma_m_generates
 #print axioms three_two_ker_fg
+
+theorem main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD (S := S) n): Group.IsVirtuallyNilpotent G := by
+  induction hn: n generalizing G S n with
+  | zero =>
+    simp [HasPolynomialGrowthD] at h
+    obtain ⟨a, ha⟩ := h
+    simp [hn] at ha
+
+    have S_closure := hGS.generates
+
+    have G_finite: Finite G := by
+      sorry
+
+    rw [Group.IsVirtuallyNilpotent]
+    use ⊤
+    refine ⟨?_, ?_⟩
+    . simp
+      sorry
+      -- TODO - prove that a finite group is nilpotent, and upstream to mathlib
+    . infer_instance
+  | succ k ih =>
+    sorry
