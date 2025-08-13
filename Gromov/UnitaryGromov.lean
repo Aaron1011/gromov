@@ -1499,7 +1499,7 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.un
   )⟩
   | k + 1 => by
     -- TODO - why do we get a heartbeat timeout if we inline 'prev'?
-    let prev := (theorem_3_8_h_n hd G h h_nontrivial S S_generates S_finite S_dist k)
+    let prev := (theorem_3_8_h_n hd G S S_generates S_finite S_dist h h_nontrivial k)
     have comm_not_identity: ∃ s : S, ∀ z: ℂ, ⁅s.val.val, prev.val.val⁆.val ≠ z • 1 := by
       by_contra!
       have comm_eq_id: ∀ s: S, ⁅s.val.val, prev.val.val⁆ = 1 := by
