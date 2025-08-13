@@ -1545,30 +1545,52 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.un
         have prev_prop := prev.property.2.2
         have norm_le := shrinking_conjugators d s.val prev.val.val
         grw [S_dist s, prev_prop] at norm_le
-        have two_mul_le: 2 * (H_n_eps hd) ≤ 1 := by
-          grw [H_n_eps_lt hd]
-          simp
-        grw [two_mul_le] at norm_le
-        simp at norm_le
-        --rw [comm_eq_z] at norm_le
-        let C := (small_dist_matrix d hd).choose
-        obtain ⟨C_pos, small_eps⟩ := (small_dist_matrix d hd).choose_spec
-        have z_eq_one := small_eps (H_n_eps hd)
         .
-          --have foo := small_eps (H_n_eps hd)
-
-          --rw [comm_eq_z] at norm_le
-          --simp at norm_le
-          sorry
-
-        -- .
-        --   simp [diag_unitary]
-        --   rw [← Matrix.smul_one_eq_diagonal]
-        --   exact comm_eq_z
-        --   sorry
-      sorry
+          have two_mul_le: 2 * (H_n_eps hd) ≤ 1 := by
+            grw [H_n_eps_lt hd]
+            simp
+          grw [two_mul_le] at norm_le
+          .
+            simp at norm_le
 
 
+            --rw [comm_eq_z] at norm_le
+            let C := (small_dist_matrix d hd).choose
+
+            have H_eps_lt_C: H_n_eps hd < C := by
+              rw [H_n_eps]
+              unfold C
+              grw [min_le_right]
+              simp
+              have my_spec := (small_dist_matrix d hd).choose_spec
+              have gt_zero := my_spec.1
+              linarith
+
+            unfold C at H_eps_lt_C
+
+
+            obtain ⟨C_pos, small_eps⟩ := (small_dist_matrix d hd).choose_spec
+            have z_eq_one := small_eps ⁅s.val.val, prev.val.val⁆.val det_one z norm_z (by
+              simp [diag_unitary]
+              rw [← Matrix.smul_one_eq_diagonal]
+              exact comm_eq_z
+            ) (by
+              grw [norm_le]
+              exact H_eps_lt_C
+            )
+            simp [z_eq_one] at comm_eq_z
+            exact comm_eq_z
+          .
+            -- TODO - deduplicate this
+            simp [H_n_eps]
+            have C_pos := (small_dist_matrix d hd).choose_spec.1
+            linarith
+        .
+          simp [H_n_eps]
+          have C_pos := (small_dist_matrix d hd).choose_spec.1
+          linarith
+        . simp
+      . sorry
     sorry
 termination_by n
 decreasing_by
