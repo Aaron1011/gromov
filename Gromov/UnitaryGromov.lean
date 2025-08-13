@@ -1479,6 +1479,7 @@ lemma H_n_eps_lt {d: ℕ} (hd: 2 ≤ d) : H_n_eps hd ≤ ((1 : ℝ) / 2) := by
 
 -- 'h' is our initial element - we define ε in terms of ‖h - 1‖, so that we can obtain the proper bound
 -- for the commutators in the inductive case
+set_option maxHeartbeats 500000 in
 noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d)
   (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ))
   (G_central_trivial: ∀ g: G, g ∈ Set.center G → ∃ z: ℂ, g.val.val = z • 1)
@@ -1611,10 +1612,38 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d)
         have prev_trivial := G_central_trivial _ prev_central
         have prev_nontrivial := prev.property.1
         contradiction
-    sorry
+    use ⁅comm_not_identity.choose.val, prev.val⁆
+    refine ⟨?_, ?_, ?_⟩
+    . rw [not_exists]
+      exact comm_not_identity.choose_spec
+    . by_contra!
+      simp at this
+      rw [sub_eq_zero] at this
+      have my_nontrivial := comm_not_identity.choose_spec 1
+      simp at my_nontrivial
+      simp at this
+      rw [commutatorElement_eq_one_iff_mul_comm] at this
+      rw [commutatorElement_eq_one_iff_mul_comm] at my_nontrivial
+      rw [Subtype.ext_iff] at this
+      simp at this
+      contradiction
+    . have my_shrink := shrinking_conjugators d comm_not_identity.choose prev
+      conv =>
+        lhs
+        arg 1
+        lhs
+        equals ⁅ comm_not_identity.choose.val.val, prev.val.val ⁆.val =>
+          rw [commutatorElement_def, commutatorElement_def]
+          rfl
+      grw [my_shrink]
+      -- TODO - we may need to refactor the definitions in order to be able to
+      -- prove that the h_n's are distinct
+      sorry
+      --grw [shrinking_conjugators]
+
 termination_by n
 decreasing_by
-  simp [hn]
+  simp
 
 -- Theorem 3.8, case with only trivial elements in the center
 lemma central_trivial_virtually_abelian (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG) (ε: ℝ) (hε: 0 < ε)
