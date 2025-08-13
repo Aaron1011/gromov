@@ -1471,22 +1471,33 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
 #check Pi.commSemigroup
 
 -- A sufficiently small epsilon to use for the h_n elements in Theorem 3.8 (independent of the choice of n)
-noncomputable def H_n_eps {d: ℕ} (hd: 2 ≤ d): ℝ := min ((1: ℝ) / 2) ((small_dist_matrix d hd).choose / 2)
-lemma H_n_eps_lt {d: ℕ} (hd: 2 ≤ d): H_n_eps hd < 1 := by
+noncomputable def H_n_eps {d: ℕ} (hd: 2 ≤ d) (h: (Matrix.unitaryGroup (Fin d) ℂ)): ℝ := min (‖h.val - 1‖) (min ((1: ℝ) / 2) ((small_dist_matrix d hd).choose / 2))
+
+-- H_n_eps is less than 1
+lemma H_n_eps_lt {d: ℕ} (hd: 2 ≤ d) (h: (Matrix.unitaryGroup (Fin d) ℂ)): H_n_eps hd h < 1 := by
   simp [H_n_eps]
   field_simp
 
-noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ)) (S: Set G) (S_generates: closure S = ⊤) (S_finite: S.Finite) (S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ ≤ (H_n_eps hd)) (nontrivial_elem: ∃ x: G, ¬ ∃(z : ℂ), x.val.val = z • 1) (n: ℕ): { g: G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) } := match hn : n with
-  | 0 => ⟨nontrivial_elem.choose, (by
+-- H_n_eps is less than or equal to ‖h.val - 1‖, where 'h' is our initial non-trivial element
+lemma H_n_eps_lt_h_dist {d: ℕ} (hd: 2 ≤ d) (h: (Matrix.unitaryGroup (Fin d) ℂ)): H_n_eps hd h ≤ ‖h.val - 1‖ := by
+  simp [H_n_eps]
+
+-- 'h' is our initial element - we define ε in terms of ‖h - 1‖, so that we can obtain the proper bound
+-- for the commutators in the inductive case
+noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ))
+  (h: G) (h_nontrivial: ¬ ∃(z : ℂ), h.val.val = z • 1)
+  (S: Set G) (S_generates: closure S = ⊤) (S_finite: S.Finite)
+  (S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ ≤ (H_n_eps hd h))
+  (n: ℕ): { g: G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) } := match hn : n with
+  | 0 => ⟨h, (by
     refine ⟨?_, ?_⟩
-    . use nontrivial_elem.choose_spec
+    . use h_nontrivial
     . by_contra!
       simp at this
-      have my_spec := nontrivial_elem.choose_spec
-      simp at my_spec
       rw [sub_eq_zero] at this
-      specialize my_spec 1
-      simp at my_spec
+      simp at h_nontrivial
+      have h_neq := h_nontrivial 1
+      simp at h_neq
       simp at this
       contradiction
   )⟩
@@ -1498,7 +1509,7 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.un
       exact (small_dist_matrix d hd).choose_spec.1
 
     -- TODO - why do we get a heartbeat timeout if we inline 'prev'?
-    let prev := (theorem_3_8_h_n hd G S S_generates S_finite S_dist nontrivial_elem (n - 1))
+    let prev := (theorem_3_8_h_n hd G h h_nontrivial S S_generates S_finite S_dist k)
     have comm_not_identity: ∃ s : S, ∀ z: ℂ, ⁅s.val.val, prev.val.val⁆.val ≠ z • 1 := by
       by_contra!
       have comm_eq_id: ∀ s: S, ⁅s.val.val, prev.val.val⁆ = 1 := by
@@ -1541,8 +1552,10 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.un
           rw [Matrix.UnitaryGroup.star_mul_self]
           simp
 
+        have prev_prop := prev.property.2
         have norm_le := shrinking_conjugators d s.val prev.val.val
-        rw [comm_eq_z] at norm_le
+        grw [S_dist s] at norm_le
+        --rw [comm_eq_z] at norm_le
         obtain ⟨C, C_pos, small_eps⟩ := small_dist_matrix d hd
         .
           --have foo := small_eps (H_n_eps hd)
