@@ -1480,7 +1480,7 @@ lemma H_n_eps_lt {d: ℕ} (hd: 2 ≤ d) : H_n_eps hd ≤ ((1 : ℝ) / 2) := by
 -- 'h' is our initial element - we define ε in terms of ‖h - 1‖, so that we can obtain the proper bound
 -- for the commutators in the inductive case
 noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ))
-  (S: Set G) (S_generates: closure S = ⊤) (S_finite: S.Finite)
+  (S: Set G) (S_generates: Subgroup.closure S = ⊤) (S_finite: S.Finite)
   (S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ ≤ (H_n_eps hd))
   (h: S) (h_nontrivial: ¬ ∃(z : ℂ), h.val.val.val = z • 1)
   (n: ℕ): { g: G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) ∧ ( ‖g.val.val - 1‖ ≤ (H_n_eps hd)) } := match hn : n with
@@ -1590,7 +1590,26 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.un
           have C_pos := (small_dist_matrix d hd).choose_spec.1
           linarith
         . simp
-      . sorry
+      .
+        have subgroup_le := Subgroup.closure_le_centralizer_centralizer S
+        simp [S_generates] at subgroup_le
+        have prev_mem_centralizer: prev.val ∈ Subgroup.centralizer S := by
+          rw [Subgroup.mem_centralizer_iff]
+          intro s hs
+          have h_comm := comm_eq_id ⟨s, hs⟩
+          simp [Bracket.bracket] at h_comm
+          rw [mul_assoc] at h_comm
+          apply eq_inv_of_mul_eq_one_left at h_comm
+          simp at h_comm
+          rw [Subtype.ext_iff]
+          simp
+          exact h_comm
+
+        have prev_central := subgroup_le prev_mem_centralizer
+
+
+
+        sorry
     sorry
 termination_by n
 decreasing_by
