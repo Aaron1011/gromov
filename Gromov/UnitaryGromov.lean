@@ -2099,7 +2099,8 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
 
         --let foo := Subgroup.comap ((Subgroup.map (G.subtype (G' n ε G))).subtype) N
       .
-        have target := central_trivial_virtually_abelian n hn G G_FG ε hε ?_ ?_
+        simp at hn
+        have target := central_trivial_virtually_abelian n (by omega) G G_FG ε hε ?_ ?_
         . exact target
         .
           intro g hg
