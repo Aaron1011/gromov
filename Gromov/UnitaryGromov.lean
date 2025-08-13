@@ -1479,7 +1479,9 @@ lemma H_n_eps_lt {d: ℕ} (hd: 2 ≤ d) : H_n_eps hd ≤ ((1 : ℝ) / 2) := by
 
 -- 'h' is our initial element - we define ε in terms of ‖h - 1‖, so that we can obtain the proper bound
 -- for the commutators in the inductive case
-noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ))
+noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d)
+  (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ))
+  (G_central_trivial: ∀ g: G, g ∈ Set.center G → ∃ z: ℂ, g.val.val = z • 1)
   (S: Set G) (S_generates: Subgroup.closure S = ⊤) (S_finite: S.Finite)
   (S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ ≤ (H_n_eps hd))
   (h: S) (h_nontrivial: ¬ ∃(z : ℂ), h.val.val.val = z • 1)
@@ -1499,7 +1501,7 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.un
   )⟩
   | k + 1 => by
     -- TODO - why do we get a heartbeat timeout if we inline 'prev'?
-    let prev := (theorem_3_8_h_n hd G S S_generates S_finite S_dist h h_nontrivial k)
+    let prev := (theorem_3_8_h_n hd G G_central_trivial S S_generates S_finite S_dist h h_nontrivial k)
     have comm_not_identity: ∃ s : S, ∀ z: ℂ, ⁅s.val.val, prev.val.val⁆.val ≠ z • 1 := by
       by_contra!
       have comm_eq_id: ∀ s: S, ⁅s.val.val, prev.val.val⁆ = 1 := by
@@ -1606,10 +1608,9 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.un
           exact h_comm
 
         have prev_central := subgroup_le prev_mem_centralizer
-
-
-
-        sorry
+        have prev_trivial := G_central_trivial _ prev_central
+        have prev_nontrivial := prev.property.1
+        contradiction
     sorry
 termination_by n
 decreasing_by
