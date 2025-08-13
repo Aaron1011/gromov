@@ -1476,9 +1476,7 @@ lemma H_n_eps_lt {d: ℕ} (hd: 2 ≤ d): H_n_eps hd < 1 := by
   simp [H_n_eps]
   field_simp
 
-set_option maxHeartbeats 1000000 in
-set_option synthInstance.maxHeartbeats 1000000 in
-noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ)) (S: Set G) (S_generates: closure S = ⊤) (S_finite: S.Finite) (S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ ≤ (H_n_eps hd)) (nontrivial_elem: ∃ x: G, ¬ ∃(z : ℂ), x.val.val = z • 1) (n: ℕ): { g: G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) } := match n with
+noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ)) (S: Set G) (S_generates: closure S = ⊤) (S_finite: S.Finite) (S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ ≤ (H_n_eps hd)) (nontrivial_elem: ∃ x: G, ¬ ∃(z : ℂ), x.val.val = z • 1) (n: ℕ): { g: G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) } := match hn : n with
   | 0 => ⟨nontrivial_elem.choose, (by
     refine ⟨?_, ?_⟩
     . use nontrivial_elem.choose_spec
@@ -1492,16 +1490,18 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.un
       simp at this
       contradiction
   )⟩
-  | k => by
+  | k + 1 => by
     let C := (small_dist_matrix d hd).choose
     let ε := (C / 2)
     have heps: 0 < ε := by
       simp [ε, C]
       exact (small_dist_matrix d hd).choose_spec.1
 
-    have comm_not_identity: ∃ s : S, ∀ z: ℂ, ⁅s.val.val, (theorem_3_8_h_n hd G S S_generates S_finite S_dist nontrivial_elem (n - 1)).val.val⁆.val ≠ z • 1 := by
+    -- TODO - why do we get a heartbeat timeout if we inline 'prev'?
+    let prev := (theorem_3_8_h_n hd G S S_generates S_finite S_dist nontrivial_elem (n - 1))
+    have comm_not_identity: ∃ s : S, ∀ z: ℂ, ⁅s.val.val, prev.val.val⁆.val ≠ z • 1 := by
       by_contra!
-      have comm_eq_id: ∀ s: S, ⁅s.val.val, (theorem_3_8_h_n hd G S S_generates S_finite S_dist nontrivial_elem (n - 1)).val.val⁆ = 1 := by
+      have comm_eq_id: ∀ s: S, ⁅s.val.val, prev.val.val⁆ = 1 := by
         intro s
         obtain ⟨z, comm_eq_z⟩ := this s
         have norm_z: ‖z‖ = 1 := by
@@ -1524,7 +1524,7 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.un
 
           simp [norm_not_neg] at z_pow
           exact z_pow
-        have det_one: ⁅s.val.val, (theorem_3_8_h_n hd G S S_generates S_finite S_dist nontrivial_elem (n - 1)).val.val⁆.val.det = 1 := by
+        have det_one: ⁅s.val.val, prev.val.val⁆.val.det = 1 := by
           simp [Bracket.bracket]
           rw [Matrix.star_eq_conjTranspose]
           rw [Matrix.star_eq_conjTranspose]
@@ -1541,7 +1541,7 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.un
           rw [Matrix.UnitaryGroup.star_mul_self]
           simp
 
-        have norm_le := shrinking_conjugators d s.val (theorem_3_8_h_n hd G S S_generates S_finite S_dist nontrivial_elem (n - 1)).val.val
+        have norm_le := shrinking_conjugators d s.val prev.val.val
         rw [comm_eq_z] at norm_le
         obtain ⟨C, C_pos, small_eps⟩ := small_dist_matrix d hd
         .
@@ -1562,7 +1562,7 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d) (G: Subgroup (Matrix.un
     sorry
 termination_by n
 decreasing_by
-  . sorry
+  simp [hn]
 
 -- Theorem 3.8, case with only trivial elements in the center
 lemma central_trivial_virtually_abelian (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG) (ε: ℝ) (hε: 0 < ε)
