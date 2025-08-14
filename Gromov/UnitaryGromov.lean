@@ -1696,6 +1696,55 @@ lemma H_n_upper_bound (data: HnData) (n: ℕ): ‖(theorem_3_8_h_n data (n + 1))
   grw [data.S_dist]
   simp
 
+lemma H_n_single_pow {n: ℕ} {m: ℕ} (data: HnData): ‖((theorem_3_8_h_n data n).val.val^m).val - 1‖ ≤ m * ‖(theorem_3_8_h_n data n).val.val.val - 1‖ := by
+  induction m with
+  | zero =>
+    simp [pow_zero]
+  | succ m ih =>
+    rw [pow_succ]
+    grw [unitary_shrink]
+    grw [ih]
+    field_simp
+    rw [add_mul]
+    simp
+
+lemma H_n_pow_le {m: ℕ} (pows: Fin m → ℕ) (data: HnData):
+  ‖(List.ofFn (fun (i: Fin m) => (theorem_3_8_h_n data i).val^(pows i))).prod.val.val - 1‖ ≤ ∑ (i: Fin m), (pows i) * ‖(theorem_3_8_h_n data i).val.val.val - 1‖ := by
+  induction m with
+  | zero =>
+    simp [List.ofFn, List.prod_nil]
+  | succ m ih =>
+    simp only [ne_eq, List.ofFn_succ']
+    simp only [Fin.coe_castSucc, Fin.val_last, List.concat_eq_append, List.prod_append,
+      List.prod_cons, List.prod_nil, mul_one, Subgroup.val_list_prod,
+      List.map_ofFn]
+    rw [Subgroup.coe_mul]
+    grw [unitary_shrink]
+    have prev_le := ih (fun i => pows (Fin.castSucc i))
+    grw [prev_le]
+    rw [Finset.sum_fin_eq_sum_range]
+    rw [Finset.sum_fin_eq_sum_range]
+    rw [Finset.sum_range_succ]
+    rw [SubmonoidClass.coe_pow]
+    grw [H_n_single_pow]
+    simp
+    nth_rw 2 [← Finset.sum_attach]
+
+
+    conv =>
+      rhs
+      arg 1
+      arg 2
+      intro x
+      equals if h : ↑x < m then ↑(pows ⟨↑x, by omega⟩) * ‖(theorem_3_8_h_n data ↑x).val.val.val - 1‖ else 0 =>
+        have x_lt_m := x.property
+        rw [Finset.mem_range] at x_lt_m
+        have x_lt_m_succ: x.val < m + 1 := by
+          omega
+        simp [x_lt_m, x_lt_m_succ]
+
+    rw [← Finset.sum_attach]
+    rfl
 -- Theorem 3.8, case with only trivial elements in the center
 lemma central_trivial_virtually_abelian (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG) (ε: ℝ) (hε: 0 < ε)
   (G_central_trivial: ∀ g: G, g ∈ Set.center G → ∃ z: ℂ, g.val.val = z • 1)
