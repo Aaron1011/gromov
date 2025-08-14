@@ -1485,11 +1485,11 @@ lemma H_n_eps_pos {d: ℕ} (hd: 2 ≤ d) : 0 < H_n_eps hd := by
 -- for the commutators in the inductive case
 set_option maxHeartbeats 500000 in
 noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d)
-  (G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ))
+  {G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ)}
   (G_central_trivial: ∀ g: G, g ∈ Set.center G → ∃ z: ℂ, g.val.val = z • 1)
-  (S: Set G) (S_generates: Subgroup.closure S = ⊤) (S_finite: S.Finite)
+  {S: Set G} (S_generates: Subgroup.closure S = ⊤) (S_finite: S.Finite)
   (S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ ≤ (H_n_eps hd))
-  (h: S) (h_nontrivial: ¬ ∃(z : ℂ), h.val.val.val = z • 1)
+  {h: S} (h_nontrivial: ¬ ∃(z : ℂ), h.val.val.val = z • 1)
   (n: ℕ): { g: G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) ∧ ( ‖g.val.val - 1‖ ≤ (H_n_eps hd)) } := match hn : n with
   | 0 => ⟨h, (by
     refine ⟨?_, ?_, ?_⟩
@@ -1506,7 +1506,7 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d)
   )⟩
   | k + 1 => by
     -- TODO - why do we get a heartbeat timeout if we inline 'prev'?
-    let prev := (theorem_3_8_h_n hd G G_central_trivial S S_generates S_finite S_dist h h_nontrivial k)
+    let prev := (theorem_3_8_h_n hd G_central_trivial S_generates S_finite S_dist h_nontrivial k)
     have comm_not_identity: ∃ s : S, ∀ z: ℂ, ⁅s.val.val, prev.val.val⁆.val ≠ z • 1 := by
       by_contra!
       have comm_eq_id: ∀ s: S, ⁅s.val.val, prev.val.val⁆ = 1 := by
