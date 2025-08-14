@@ -1668,6 +1668,20 @@ termination_by n
 decreasing_by
   simp
 
+lemma H_n_upper_bound (data: HnData) (n: ℕ): ‖(theorem_3_8_h_n data (n + 1)).val.val.val - 1‖ ≤ 2 * (H_n_eps data.hd) * ‖(theorem_3_8_h_n data (n)).val.val.val - 1‖ := by
+  conv =>
+    lhs
+    unfold theorem_3_8_h_n
+  simp
+  have coe_comm_g (a b: data.G): ⁅a.val, b.val⁆ = ⁅a, b⁆.val := by
+    rw [commutatorElement_def]
+    rw [commutatorElement_def]
+    norm_cast
+
+  rw [← coe_comm_g]
+  grw [shrinking_conjugators]
+  grw [data.S_dist]
+  simp
 
 -- Theorem 3.8, case with only trivial elements in the center
 lemma central_trivial_virtually_abelian (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG) (ε: ℝ) (hε: 0 < ε)
