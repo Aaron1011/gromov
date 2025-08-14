@@ -1668,6 +1668,19 @@ termination_by n
 decreasing_by
   simp
 
+lemma unitary_shrink {n: ℕ} (a b: Matrix.unitaryGroup (Fin n) ℂ): ‖(a * b).val - 1‖ ≤ ‖a.val - 1‖ + ‖b.val - 1‖ := by
+  conv =>
+    lhs
+    arg 1
+    arg 1
+    equals (a.val - 1) * b + b =>
+      rw [sub_mul]
+      field_simp
+
+  rw [← add_sub]
+  grw [norm_add_le]
+  rw [CStarRing.norm_mul_coe_unitary]
+
 lemma H_n_upper_bound (data: HnData) (n: ℕ): ‖(theorem_3_8_h_n data (n + 1)).val.val.val - 1‖ ≤ 2 * (H_n_eps data.hd) * ‖(theorem_3_8_h_n data (n)).val.val.val - 1‖ := by
   conv =>
     lhs
