@@ -1472,10 +1472,14 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
 -- A sufficiently small epsilon to use for the h_n elements in Theorem 3.8 (independent of the choice of n)
 noncomputable def H_n_eps {d: ℕ} (hd: 2 ≤ d): ℝ := (min ((1: ℝ) / 2) ((small_dist_matrix d hd).choose / 2))
 
--- H_n_eps is less than 1
+-- H_n_eps is less than 1/2
 lemma H_n_eps_lt {d: ℕ} (hd: 2 ≤ d) : H_n_eps hd ≤ ((1 : ℝ) / 2) := by
   simp [H_n_eps]
 
+lemma H_n_eps_pos {d: ℕ} (hd: 2 ≤ d) : 0 < H_n_eps hd := by
+  simp [H_n_eps]
+  have small_pos := (small_dist_matrix d hd).choose_spec
+  linarith
 
 -- 'h' is our initial element - we define ε in terms of ‖h - 1‖, so that we can obtain the proper bound
 -- for the commutators in the inductive case
@@ -1636,10 +1640,20 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d)
           rw [commutatorElement_def, commutatorElement_def]
           rfl
       grw [my_shrink]
-      -- TODO - we may need to refactor the definitions in order to be able to
-      -- prove that the h_n's are distinct
-      sorry
-      --grw [shrinking_conjugators]
+      have prev_prop := prev.property.right.right
+      grw [prev_prop]
+      have comm_choose_le := S_dist comm_not_identity.choose (by simp)
+      grw [comm_choose_le]
+      have two_mul_le: 2 * (H_n_eps hd) ≤ 1 := by
+        grw [H_n_eps_lt hd]
+        simp
+      grw [two_mul_le]
+      . simp
+      . have pos := H_n_eps_pos hd
+        linarith
+      . have pos := H_n_eps_pos hd
+        linarith
+
 
 termination_by n
 decreasing_by
