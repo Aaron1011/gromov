@@ -1481,35 +1481,42 @@ lemma H_n_eps_pos {d: ℕ} (hd: 2 ≤ d) : 0 < H_n_eps hd := by
   have small_pos := (small_dist_matrix d hd).choose_spec
   linarith
 
+structure HnData (d: ℕ) where
+  hd: 2 ≤ d
+  G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ)
+  G_central_trivial: ∀ g: G, g ∈ Set.center G → ∃ z: ℂ, g.val.val = z • 1
+  S: Set G
+  S_generates: Subgroup.closure S = ⊤
+  S_finite: S.Finite
+  S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ ≤ (H_n_eps hd)
+  h: S
+  h_nontrivial: ¬ ∃(z : ℂ), h.val.val.val = z • 1
+
 -- 'h' is our initial element - we define ε in terms of ‖h - 1‖, so that we can obtain the proper bound
 -- for the commutators in the inductive case
 set_option maxHeartbeats 500000 in
-noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d)
-  {G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ)}
-  (G_central_trivial: ∀ g: G, g ∈ Set.center G → ∃ z: ℂ, g.val.val = z • 1)
-  {S: Set G} (S_generates: Subgroup.closure S = ⊤) (S_finite: S.Finite)
-  (S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ ≤ (H_n_eps hd))
-  {h: S} (h_nontrivial: ¬ ∃(z : ℂ), h.val.val.val = z • 1)
-  (n: ℕ): { g: G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) ∧ ( ‖g.val.val - 1‖ ≤ (H_n_eps hd)) } := match hn : n with
-  | 0 => ⟨h, (by
+noncomputable def theorem_3_8_h_n {d: ℕ} (data: HnData d) (n: ℕ):
+  { g: data.G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) ∧ ( ‖g.val.val - 1‖ ≤ (H_n_eps data.hd)) } := match hn : n with
+  | 0 => ⟨data.h, (by
     refine ⟨?_, ?_, ?_⟩
-    . use h_nontrivial
+    . use data.h_nontrivial
     . by_contra!
       simp at this
       rw [sub_eq_zero] at this
+      have h_nontrivial := data.h_nontrivial
       simp at h_nontrivial
       have h_neq := h_nontrivial 1
       simp at h_neq
       simp at this
       contradiction
-    . exact S_dist h h.property
+    . exact data.S_dist data.h data.h.property
   )⟩
   | k + 1 => by
     -- TODO - why do we get a heartbeat timeout if we inline 'prev'?
-    let prev := (theorem_3_8_h_n hd G_central_trivial S_generates S_finite S_dist h_nontrivial k)
-    have comm_not_identity: ∃ s : S, ∀ z: ℂ, ⁅s.val.val, prev.val.val⁆.val ≠ z • 1 := by
+    let prev := (theorem_3_8_h_n data k)
+    have comm_not_identity: ∃ s : data.S, ∀ z: ℂ, ⁅s.val.val, prev.val.val⁆.val ≠ z • 1 := by
       by_contra!
-      have comm_eq_id: ∀ s: S, ⁅s.val.val, prev.val.val⁆ = 1 := by
+      have comm_eq_id: ∀ s: data.S, ⁅s.val.val, prev.val.val⁆ = 1 := by
         intro s
         obtain ⟨z, comm_eq_z⟩ := this s
         have norm_z: ‖z‖ = 1 := by
@@ -1523,6 +1530,7 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d)
           apply CStarRing.norm_of_mem_unitary at det_unitary
           simp at det_unitary
           have d_ne_zero: d ≠ 0 := by
+            have hd := data.hd
             omega
           have z_pow := (pow_eq_one_iff_of_ne_zero (a := ‖z‖) d_ne_zero).mp det_unitary
           have norm_pos: 0 ≤ ‖z‖ := by
@@ -1551,10 +1559,10 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d)
 
         have prev_prop := prev.property.2.2
         have norm_le := shrinking_conjugators d s.val prev.val.val
-        grw [S_dist s, prev_prop] at norm_le
+        grw [data.S_dist s, prev_prop] at norm_le
         .
-          have two_mul_le: 2 * (H_n_eps hd) ≤ 1 := by
-            grw [H_n_eps_lt hd]
+          have two_mul_le: 2 * (H_n_eps data.hd) ≤ 1 := by
+            grw [H_n_eps_lt data.hd]
             simp
           grw [two_mul_le] at norm_le
           .
@@ -1562,21 +1570,21 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d)
 
 
             --rw [comm_eq_z] at norm_le
-            let C := (small_dist_matrix d hd).choose
+            let C := (small_dist_matrix d data.hd).choose
 
-            have H_eps_lt_C: H_n_eps hd < C := by
+            have H_eps_lt_C: H_n_eps data.hd < C := by
               rw [H_n_eps]
               unfold C
               grw [min_le_right]
               simp
-              have my_spec := (small_dist_matrix d hd).choose_spec
+              have my_spec := (small_dist_matrix d data.hd).choose_spec
               have gt_zero := my_spec.1
               linarith
 
             unfold C at H_eps_lt_C
 
 
-            obtain ⟨C_pos, small_eps⟩ := (small_dist_matrix d hd).choose_spec
+            obtain ⟨C_pos, small_eps⟩ := (small_dist_matrix d data.hd).choose_spec
             have z_eq_one := small_eps ⁅s.val.val, prev.val.val⁆.val det_one z norm_z (by
               simp [diag_unitary]
               rw [← Matrix.smul_one_eq_diagonal]
@@ -1590,17 +1598,17 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d)
           .
             -- TODO - deduplicate this
             simp [H_n_eps]
-            have C_pos := (small_dist_matrix d hd).choose_spec.1
+            have C_pos := (small_dist_matrix d data.hd).choose_spec.1
             linarith
         .
           simp [H_n_eps]
-          have C_pos := (small_dist_matrix d hd).choose_spec.1
+          have C_pos := (small_dist_matrix d data.hd).choose_spec.1
           linarith
         . simp
       .
-        have subgroup_le := Subgroup.closure_le_centralizer_centralizer S
+        have subgroup_le := Subgroup.closure_le_centralizer_centralizer data.S
         simp [S_generates] at subgroup_le
-        have prev_mem_centralizer: prev.val ∈ Subgroup.centralizer S := by
+        have prev_mem_centralizer: prev.val ∈ Subgroup.centralizer data.S := by
           rw [Subgroup.mem_centralizer_iff]
           intro s hs
           have h_comm := comm_eq_id ⟨s, hs⟩
@@ -1642,22 +1650,24 @@ noncomputable def theorem_3_8_h_n {d: ℕ} (hd: 2 ≤ d)
       grw [my_shrink]
       have prev_prop := prev.property.right.right
       grw [prev_prop]
-      have comm_choose_le := S_dist comm_not_identity.choose (by simp)
+      have comm_choose_le := data.S_dist comm_not_identity.choose (by simp)
       grw [comm_choose_le]
-      have two_mul_le: 2 * (H_n_eps hd) ≤ 1 := by
-        grw [H_n_eps_lt hd]
+      have two_mul_le: 2 * (H_n_eps data.hd) ≤ 1 := by
+        grw [H_n_eps_lt data.hd]
         simp
       grw [two_mul_le]
       . simp
-      . have pos := H_n_eps_pos hd
+      . have pos := H_n_eps_pos data.hd
         linarith
-      . have pos := H_n_eps_pos hd
+      . have pos := H_n_eps_pos data.hd
         linarith
 
 
 termination_by n
 decreasing_by
   simp
+
+lemma theorem_3_8_h_n_upper_bound
 
 -- Theorem 3.8, case with only trivial elements in the center
 lemma central_trivial_virtually_abelian (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG) (ε: ℝ) (hε: 0 < ε)
