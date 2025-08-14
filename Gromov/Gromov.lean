@@ -9702,7 +9702,7 @@ lemma three_two_kernel_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialG
 #print axioms three_two_gamma_m_generates
 #print axioms three_two_ker_fg
 
-theorem main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD (S := S) n): Group.IsVirtuallyNilpotent G := by
+lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD (S := S) n): Group.IsVirtuallyNilpotent G := by
   induction hn: n generalizing G S n with
   | zero =>
     simp [HasPolynomialGrowthD] at h
@@ -9785,17 +9785,20 @@ theorem main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD (S := S) n): Group
             simp [a_mem_pow, b_mem_pow]
           .
             by_contra!
-            have a_b_mem_succ: a * b ∈ (S ^ (y + 1)) := by
-              sorry
+            have a_b_mem_two: a * b ∈ (S ^ (y * 2)) := by
+              have mem_mul := Finset.mul_mem_mul a_mem_pow b_mem_pow
+              rw [← pow_two] at mem_mul
+              rw [← pow_mul] at mem_mul
+              exact mem_mul
 
-            have card_le := Finset.card_pow_mono (s := S) (m := y) (n := y + 1)  (by omega) (by simp)
-            have subset := Finset.pow_subset_pow_right (s := S) (Generates.one_mem) (m := y) (n := y + 1) (by omega)
+            have card_le := Finset.card_pow_mono (s := S) (m := y) (n := (y * 2))  (by omega) (by omega)
+            have subset := Finset.pow_subset_pow_right (s := S) (Generates.one_mem) (m := y) (n := (y * 2)) (by omega)
 
-            have strict_subset : (S ^ y) ⊂ (S ^ (y + 1)) := by
+            have strict_subset : (S ^ y) ⊂ (S ^ (y * 2)) := by
               rw [Finset.ssubset_iff_of_subset subset]
               use (a * b)
 
-            have card_lt: #(S ^ y) < #(S ^ (y + 1)) := by
+            have card_lt: #(S ^ y) < #(S ^ (y * 2)) := by
               exact Finset.card_lt_card strict_subset
 
 
@@ -9803,7 +9806,7 @@ theorem main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD (S := S) n): Group
             have y_eq := Nat.sSup_def (s := pow_cards) pow_cards_bounded
             have find_le := Nat.find_spec pow_cards_bounded
             rw [← y_eq] at find_le
-            have reverse_le := find_le #(S ^ (y + 1)) ?_
+            have reverse_le := find_le #(S ^ (y * 2)) ?_
             .
               simp [pow_cards] at reverse_le
               linarith
@@ -9817,7 +9820,25 @@ theorem main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD (S := S) n): Group
       have G_finite: Finite G := by
         rw [← Set.finite_univ_iff]
         have univ_eq: (Set.univ : Set G) = (S ^ y) := by
-          sorry
+          simp at S_closure
+
+          apply_fun (fun y => y.carrier) at S_closure
+          conv at S_closure =>
+            rhs
+            equals Set.univ =>
+              exact rfl
+
+          rw [← S_closure]
+          ext a
+          refine ⟨?_, ?_⟩
+          . intro ha
+            simp at ha
+            rw [← Finset.coe_pow]
+            exact all_closure_mem a ha
+          . intro ha
+            simp
+            exact _root_.mem_closure a
+
         rw [univ_eq]
         rw [← Finset.coe_pow]
         exact Finset.finite_toSet (S ^ y)
@@ -9828,7 +9849,11 @@ theorem main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD (S := S) n): Group
       . exact CommGroup.isNilpotent
         -- TODO - prove that a finite group is nilpotent, and upstream to mathlib
       . infer_instance
-    . sorry
-    . sorry
+    .
+      simp [pow_cards]
+      apply Set.range_nonempty
+    .
+      rw [bddAbove_def]
+      exact pow_cards_bounded
   | succ k ih =>
     sorry
