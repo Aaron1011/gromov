@@ -48,8 +48,12 @@ elab_rules : command
     | none =>
       logInfoAt (← getRef) m!"{.ofConstName declName} is sorry-free"
 
+
 set_option linter.style.longLine false
 set_option linter.style.cdot false
+-- TODO - vscode stops reporting underlines if there are too many total underlines / gutter messages
+-- I've disabled some failing lints for now so that error underlines still sho up
+set_option linter.style.commandStart false
 --set_option linter.unusedVariables true
 --set_option linter.unusedVariables.analyzeTactics true
 
@@ -5466,7 +5470,9 @@ lemma norm_conv_mu_le  (f: (Lp ℝ 2 volume (α := G))): ‖conv_mu_lp2 f‖ ≤
       apply (MeasureTheory.Lp.memLp f).2
   . intro s hs
     apply AEStronglyMeasurable.of_discrete
-  . simp
+  .
+    simp
+
 
 lemma inner_laplace_zero (f: (Lp ℝ 2 volume (α := G))) (hf: ⟪Laplace f, f⟫ = 0): Laplace f = 0 := by
   have inner_le := real_inner_le_norm (conv_mu_lp2 f) f
@@ -9705,15 +9711,124 @@ theorem main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD (S := S) n): Group
 
     have S_closure := hGS.generates
 
-    have G_finite: Finite G := by
-      sorry
+    let pow_cards := Set.range (fun (n: ℕ) => #(S ^ n))
+    -- TODO - this can probably be much simpler
+    have pow_cards_bounded: ∃ y, ∀ n ∈ pow_cards, n ≤ y := by
+      use a
+      intro n hn
+      simp [pow_cards] at hn
+      obtain ⟨y, hy⟩ := hn
+      rw [← hy]
 
-    rw [Group.IsVirtuallyNilpotent]
-    use ⊤
-    refine ⟨?_, ?_⟩
-    . simp
-      sorry
-      -- TODO - prove that a finite group is nilpotent, and upstream to mathlib
-    . infer_instance
+      by_cases y_eq_zero: y = 0
+      . simp [y_eq_zero]
+        have foo := a.property
+        -- TODO - why don't omega and linarith work here?
+        exact foo
+      . by_cases y_eq_one: y = 1
+        .
+          simp [y_eq_one]
+          have card_mono := Finset.card_pow_mono (s := S) (m := 1) (n := 2) (by simp) (by simp)
+          have card_two_le := ha 2 (by simp)
+          simp at card_mono
+          linarith
+        .
+          have two_le_y: 2 ≤ y := by
+            omega
+          exact ha y two_le_y
+
+
+
+    classical
+    have max_card_mem := Nat.sSup_mem (s := pow_cards) ?_ ?_
+    . simp [pow_cards] at max_card_mem
+      obtain ⟨y, hy⟩ := max_card_mem
+
+
+
+      have all_closure_mem: ∀ s ∈ (Subgroup.closure (G := G) S), s ∈ (S ^ y) := by
+        intro s hs
+        induction hs using Subgroup.closure_induction with
+        | one =>
+          apply Finset.one_mem_pow
+          exact Generates.one_mem
+        | mem x hx =>
+          by_cases y_eq_zero: y = 0
+          .
+            rw [y_eq_zero]
+            rw [y_eq_zero] at hy
+            simp at hy
+            simp
+            have y_eq := Nat.sSup_def (s := pow_cards) pow_cards_bounded
+            have find_le := Nat.find_spec pow_cards_bounded
+            rw [← y_eq] at find_le
+            have S_one_le := find_le #(S) ?_
+            .
+              simp [pow_cards] at S_one_le
+              rw [← hy] at S_one_le
+              rw [Finset.card_le_one] at S_one_le
+              have one_mem: 1 ∈ S := by exact Generates.one_mem
+              have x_eq := S_one_le 1 one_mem x hx
+              apply x_eq.symm
+            . simp [pow_cards]
+              use 1
+              simp
+          .
+            have pow_mono := Finset.pow_subset_pow_right (s := S) (Generates.one_mem) (n := y) (m := 1) (by omega)
+            simp at pow_mono
+            apply pow_mono hx
+        | mul a b a_mem_closure b_mem_closure a_mem_pow b_mem_pow =>
+          by_cases y_eq_zero: y = 0
+          .
+            simp [y_eq_zero]
+            simp [y_eq_zero] at a_mem_pow b_mem_pow
+            simp [a_mem_pow, b_mem_pow]
+          .
+            by_contra!
+            have a_b_mem_succ: a * b ∈ (S ^ (y + 1)) := by
+              sorry
+
+            have card_le := Finset.card_pow_mono (s := S) (m := y) (n := y + 1)  (by omega) (by simp)
+            have subset := Finset.pow_subset_pow_right (s := S) (Generates.one_mem) (m := y) (n := y + 1) (by omega)
+
+            have strict_subset : (S ^ y) ⊂ (S ^ (y + 1)) := by
+              rw [Finset.ssubset_iff_of_subset subset]
+              use (a * b)
+
+            have card_lt: #(S ^ y) < #(S ^ (y + 1)) := by
+              exact Finset.card_lt_card strict_subset
+
+
+            rw [hy] at card_lt
+            have y_eq := Nat.sSup_def (s := pow_cards) pow_cards_bounded
+            have find_le := Nat.find_spec pow_cards_bounded
+            rw [← y_eq] at find_le
+            have reverse_le := find_le #(S ^ (y + 1)) ?_
+            .
+              simp [pow_cards] at reverse_le
+              linarith
+            . simp [pow_cards]
+        | inv a ha a_mem_pow =>
+          rw [← Finset.mem_inv']
+          rw [← inv_pow]
+          rw [← S_eq_Sinv]
+          exact a_mem_pow
+
+      have G_finite: Finite G := by
+        rw [← Set.finite_univ_iff]
+        have univ_eq: (Set.univ : Set G) = (S ^ y) := by
+          sorry
+        rw [univ_eq]
+        rw [← Finset.coe_pow]
+        exact Finset.finite_toSet (S ^ y)
+
+      rw [Group.IsVirtuallyNilpotent]
+      use ⊥
+      refine ⟨?_, ?_⟩
+      . exact CommGroup.isNilpotent
+        -- TODO - prove that a finite group is nilpotent, and upstream to mathlib
+      . infer_instance
+    . sorry
+    . sorry
   | succ k ih =>
     sorry
