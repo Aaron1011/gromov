@@ -1599,16 +1599,16 @@ noncomputable def theorem_3_8_h_n (data: HnData) (n: ℕ):
           .
             -- TODO - deduplicate this
             simp [H_n_eps]
-            have C_pos := (small_dist_matrix d data.hd).choose_spec.1
+            have C_pos := (small_dist_matrix data.d data.hd).choose_spec.1
             linarith
         .
           simp [H_n_eps]
-          have C_pos := (small_dist_matrix d data.hd).choose_spec.1
+          have C_pos := (small_dist_matrix data.d data.hd).choose_spec.1
           linarith
         . simp
       .
         have subgroup_le := Subgroup.closure_le_centralizer_centralizer data.S
-        simp [S_generates] at subgroup_le
+        simp [data.S_generates] at subgroup_le
         have prev_mem_centralizer: prev.val ∈ Subgroup.centralizer data.S := by
           rw [Subgroup.mem_centralizer_iff]
           intro s hs
@@ -1622,7 +1622,7 @@ noncomputable def theorem_3_8_h_n (data: HnData) (n: ℕ):
           exact h_comm
 
         have prev_central := subgroup_le prev_mem_centralizer
-        have prev_trivial := G_central_trivial _ prev_central
+        have prev_trivial := data.G_central_trivial _ prev_central
         have prev_nontrivial := prev.property.1
         contradiction
     use ⁅comm_not_identity.choose.val, prev.val⁆
