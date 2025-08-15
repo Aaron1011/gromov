@@ -1681,6 +1681,11 @@ lemma unitary_shrink {n: ℕ} (a b: Matrix.unitaryGroup (Fin n) ℂ): ‖(a * b)
   grw [norm_add_le]
   rw [CStarRing.norm_mul_coe_unitary]
 
+lemma coe_comm_g {data: HnData} (a b: data.G): ⁅a.val, b.val⁆ = ⁅a, b⁆.val := by
+  rw [commutatorElement_def]
+  rw [commutatorElement_def]
+  norm_cast
+
 lemma H_n_upper_bound (data: HnData) (n: ℕ): ‖(theorem_3_8_h_n data (n + 1)).val.val.val - 1‖ ≤ 2 * (H_n_eps data.hd) * ‖(theorem_3_8_h_n data (n)).val.val.val - 1‖ := by
   conv =>
     lhs
@@ -1695,6 +1700,32 @@ lemma H_n_upper_bound (data: HnData) (n: ℕ): ‖(theorem_3_8_h_n data (n + 1))
   grw [shrinking_conjugators]
   grw [data.S_dist]
   simp
+
+lemma H_n_upper_bound_iter (data: HnData) (n: ℕ): ‖(theorem_3_8_h_n data (n + 1)).val.val.val - 1‖ ≤ 2^n * (H_n_eps data.hd)^n  := by
+  induction n with
+  | zero =>
+    simp [theorem_3_8_h_n]
+    rw [← coe_comm_g]
+    grw [shrinking_conjugators]
+    grw [data.S_dist]
+    grw [H_n_eps_lt]
+    simp
+    grw [data.S_dist]
+    grw [H_n_eps_lt]
+    . norm_num
+    . simp
+    . simp
+  | succ n ih =>
+    grw [H_n_upper_bound]
+    grw [ih]
+    abel_nf
+    .
+      ring_nf
+      rfl
+    . simp
+      have H_eps_pos := H_n_eps_pos data.hd
+      linarith
+
 
 lemma H_n_single_pow {n: ℕ} {m: ℕ} (data: HnData): ‖((theorem_3_8_h_n data n).val.val^m).val - 1‖ ≤ m * ‖(theorem_3_8_h_n data n).val.val.val - 1‖ := by
   induction m with
@@ -1745,6 +1776,19 @@ lemma H_n_pow_le {m: ℕ} (pows: Fin m → ℕ) (data: HnData):
 
     rw [← Finset.sum_attach]
     rfl
+
+
+lemma H_n_prod_le_k {m: ℕ} {k: ℕ} (c : ℝ) (pows: Fin m → ℕ) (data: HnData)
+ (pows_le: ∀ i: Fin m, (pows i) ≤ c * (H_n_eps data.hd)) :
+  ‖(List.ofFn (fun (i: Fin (m - k)) => (theorem_3_8_h_n data i).val^(pows ⟨i, by omega⟩))).prod.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data k).val.val.val - 1‖ := by
+
+  grw [H_n_pow_le]
+  grw [Finset.sum_le_sum (g := (fun i : Fin (m - k) => (c * (H_n_eps data.hd)) * ‖(theorem_3_8_h_n data i).val.val.val - 1‖))]
+  .
+    sorry
+  . intro i hi
+    grw [pows_le]
+
 -- Theorem 3.8, case with only trivial elements in the center
 lemma central_trivial_virtually_abelian (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG) (ε: ℝ) (hε: 0 < ε)
   (G_central_trivial: ∀ g: G, g ∈ Set.center G → ∃ z: ℂ, g.val.val = z • 1)
