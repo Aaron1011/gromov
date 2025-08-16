@@ -2271,3 +2271,71 @@ lemma f_deriv_lower (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (x: ℝ) (f_zero: (d
       apply Real.log_pos
       simp [a_pos]
     linarith
+
+lemma f_pos_on (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (a_lt: a < 1) (div_a: 3 < 2 / a): ∀ x ∈ Set.Ioc 1 (Real.log 2 / a), 0 < f a x := by
+
+  have deriv_nonzero: ∀ x ∈ Set.Ico 1 (Real.log 2 / a), (deriv (f a)) x ≠  0 := by
+    intro x hx
+    by_contra!
+    have x_eq := f_deriv_lower a ha a_pos x this
+    have x_lt := hx.right
+    linarith
+
+  have f_strict := strictMonoOn_of_deriv_pos (f := f a) (D := Set.Icc 1 (Real.log 2 / a)) (by apply convex_Icc) ?_ ?_
+  .
+    intro x hx
+    have f_lt := f_strict.lt_iff_lt (a := 1) (b := x) ?_ ?_
+    rw [f_one_eq_zero] at f_lt
+    have x_prop := hx.left
+    simp [x_prop] at f_lt
+    exact f_lt
+  . apply Continuous.continuousOn
+    unfold f
+    have one_plus: 1 + a ≠ 0 := by linarith
+    fun_prop (disch:=assumption)
+
+  .
+
+
+
+    intro x hx
+    simp at hx
+
+
+
+
+
+    have deriv_pos: 0 ≤ (deriv (f a)) x := by
+      by_contra!
+      have foo := ContinuousOn.surjOn_Icc (f := deriv (f a)) (a := x) (b := 1) (s := Set.Ico 1 ((Real.log 2) / a)) ?_ ?_ ?_
+
+      have zero_mem: 0 ∈ (Set.Icc (deriv (f a) x) (deriv (f a) 1)) := by
+        simp
+        refine ⟨by linarith, ?_⟩
+        have my_deriv := f_deriv_at_one a a_pos a_lt ha
+        linarith
+
+
+      unfold Set.SurjOn at foo
+      have deriv_zero := foo zero_mem
+      rw [Set.mem_image] at deriv_zero
+      obtain ⟨y, y_mem, y_deriv⟩ := deriv_zero
+      have y_nonzero := deriv_nonzero y y_mem
+      . contradiction
+      . apply Continuous.continuousOn
+        unfold f
+        have one_plus: ∀ x: ℝ, 1 + a ≠ 0 := by
+          intro x
+          linarith
+        fun_prop (disch:=assumption)
+      . simp
+        refine ⟨by linarith, hx.right⟩
+      . simp
+        sorry
+
+
+
+    have not_zero := deriv_nonzero x ?_
+    . exact lt_of_le_of_ne deriv_pos (id (Ne.symm not_zero))
+    . simp
+      refine ⟨by linarith, hx.right⟩
