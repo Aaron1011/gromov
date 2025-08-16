@@ -115,13 +115,7 @@ lemma small_dist_matrix (n : ℕ) (hn : 2 ≤ n) :
   --     rw [n_eq_one]
   --     exact Fin.subsingleton_one
 
-
-
-
-
-  have nezero_n : NeZero n := by
-    refine { out := by omega }
-
+  have nezero_n : NeZero n := ⟨by omega⟩
   let dists := (fun (x : ℂ) => (‖x - 1‖ : ℝ)) '' ((Units.val '' (rootsOfUnity n ℂ).carrier \ {1}))
   --let dists := (fun x => ‖x - (1 : ℂ)‖) '' (Units.val '' (rootsOfUnity n ℂ).carrier \ {1})
 
@@ -137,8 +131,7 @@ lemma small_dist_matrix (n : ℕ) (hn : 2 ≤ n) :
       by_contra!
       by_cases min_dist_lt : min_dist < 0
       · rw [← min_dist_eq] at min_dist_lt
-        have norm_nonneg := norm_nonneg (x - 1)
-        linarith
+        linarith [norm_nonneg (x - 1)]
 
       simp [show min_dist = 0 by linarith, sub_eq_zero] at min_dist_eq
       have x_neq_one := x_mem.2
@@ -380,12 +373,8 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
       obtain ⟨x, hx⟩ := this
       specialize X_subset_A hx
       specialize X_subset_B hx
-      simp at X_subset_A
-      simp at X_subset_B
-      simp [dist, dist_eq_norm_sub] at X_subset_A
-      simp [dist, dist_eq_norm_sub] at X_subset_B
       have triangle := dist_triangle a x b
-      simp [dist, dist_eq_norm_sub] at triangle
+      simp [dist, dist_eq_norm_sub] at X_subset_A X_subset_B triangle
       rw [norm_sub_rev] at X_subset_A
       grw [X_subset_A, X_subset_B] at triangle
       simp at triangle
@@ -393,7 +382,6 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
 
     have translate_ball (d : ℝ) (hd : 0 < d) (g : (Matrix.unitaryGroup (Fin n) ℂ)): Metric.ball g d = (fun x => g * x) '' (Metric.ball (1 : (Matrix.unitaryGroup (Fin n) ℂ)) d) := by
       ext a
-      simp
       simp [dist, dist_eq_norm_sub]
       conv =>
         rhs
@@ -402,9 +390,7 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
         equals (star g) * (a.val - g.val) =>
           rw [mul_sub]
           simp
-      simp
-      rw [CStarRing.norm_mem_unitary_mul]
-      simp
+      simp [CStarRing.norm_mem_unitary_mul]
 
     have volume_sum : MeasureTheory.volume (⋃ (g ∈ I), (Metric.ball g ((ε/2)/2))) ≤ 1 := by
       grw [MeasureTheory.measure_mono (t := Set.univ)]
@@ -432,11 +418,7 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
         arg 1
         intro i
         rw [translate_ball _ (by linarith)]
-      unfold MeasureTheory.volume at volume_sum
-      simp [measure_haar] at volume_sum
-      unfold MeasureTheory.volume
-      simp [measure_haar]
-      exact volume_sum
+      simpa [measure_haar] using volume_sum
       · apply Set.PairwiseDisjoint.countable_of_isOpen (s := fun g => Metric.ball g ((ε / 2)/2))
         · exact disjoint_balls
         · intro i hi
@@ -569,34 +551,25 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
         exact I_subset_G a_mem_i
       )⟩ : G))]
 
-      simp at card_i_le
       rw [le_div_iff₀]
-      · rw [Finset.card_attach]
-        rw [← Set.ncard_eq_toFinset_card']
-
-        rw [← Set.Finite.cast_ncard_eq] at card_i_le
+      · rw [Finset.card_attach, ← Set.ncard_eq_toFinset_card']
         simp at card_i_le
-        rw [← ENNReal.toReal_le_toReal] at card_i_le
-        simp at card_i_le
-        exact card_i_le
+        rw [← Set.Finite.cast_ncard_eq, ENat.toENNReal_coe, ← ENNReal.toReal_le_toReal] at card_i_le
+        simpa using card_i_le
         · apply ENNReal.mul_ne_top
           · simp
-          · unfold MeasureTheory.volume
-            simp [measure_haar]
+          · simp [measure_haar]
         · simp
         · exact card_lt_top
-      · unfold MeasureTheory.volume
-        simp [measure_haar]
+      · simp [measure_haar]
         conv =>
           lhs
           equals (0 : ENNReal).toReal => simp
         rw [ENNReal.toReal_lt_toReal]
-        apply IsOpen.measure_pos
-        exact Metric.isOpen_ball
-        simp [hε]
+        apply IsOpen.measure_pos _ Metric.isOpen_ball (by simp [hε])
         · simp
         · simp
-      · apply cosets_cover
+      · exact cosets_cover
 
     --  (g := fun g => Metric.ball g ((ε / 2) / 2))
 
@@ -608,9 +581,8 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
     --   apply Subgroup.index_le_of_leftCoset_cover_const
     -- sorry
   · intro S S_subset S_chain
-    use Set.sUnion S
-    refine ⟨?_, ?_⟩
-    · simp only [ne_eq, ge_iff_le, Subtype.mk.injEq, Set.mem_setOf_eq,
+    refine ⟨S.sUnion, ?_, ?_⟩
+    · simp only [ne_eq, ge_iff_le, Set.mem_setOf_eq,
       Set.sUnion_subset_iff, Set.mem_sUnion, forall_exists_index, and_imp, I_sets]
 
       refine ⟨?_, ?_⟩
@@ -627,22 +599,19 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
         · rw [M_eq_N] at a_mem_M
           specialize S_subset N_mem_S
           simp at S_subset
-          have a_b_dist := S_subset.2 a (by simp) (by simp [a_mem_M]) b (by simp) (by simp [b_mem_N]) (by simp [a_neq_b])
-          exact a_b_dist
+          exact S_subset.2 a (by simp) (by simp [a_mem_M]) b (by simp) (by simp [b_mem_N]) (by simp [a_neq_b])
         · specialize S_chain M_eq_N
           match S_chain with
           | .inl h =>
             have a_mem_N := h a_mem_M
             specialize S_subset N_mem_S
             simp at S_subset
-            have a_b_dist := S_subset.2 a (by simp) (by simp [a_mem_N]) b (by simp) (by simp [b_mem_N]) (by simp [a_neq_b])
-            exact a_b_dist
+            exact S_subset.2 a (by simp) (by simp [a_mem_N]) b (by simp) (by simp [b_mem_N]) (by simp [a_neq_b])
           | .inr h =>
             have b_mem_M := h b_mem_N
             specialize S_subset M_mem_S
             simp at S_subset
-            have a_b_dist := S_subset.2 a (by simp) (by simp [a_mem_M]) b (by simp) (by simp [b_mem_M]) (by simp [a_neq_b])
-            exact a_b_dist
+            exact S_subset.2 a (by simp) (by simp [a_mem_M]) b (by simp) (by simp [b_mem_M]) (by simp [a_neq_b])
 
 
     · intro s hs
@@ -802,8 +771,7 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
       simp
 
     apply mul_left
-  · 
-    -- finDimVectorspaceEquiv
+  · -- finDimVectorspaceEquiv
     have rank_eq := Module.finrank_eq_rank' ℂ (FreshInnerProduct V)
     have V_equiv := (finDimVectorspaceEquiv (Module.finrank ℂ (FreshInnerProduct V)) rank_eq.symm).toContinuousLinearEquiv
     let V_equiv_fresh : V ≃L[ℂ] (FreshInnerProduct V) := ContinuousLinearEquiv.ofFinrankEq ?_
@@ -2161,9 +2129,7 @@ lemma central_implies_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (
                 -- TODO - make this less horrible
                 intro a
                 obtain ⟨b, b_mem, b_map⟩ := Subgroup.mem_map.mpr a.property
-                have foo := g_mem.comm ⟨b, b_mem⟩
-                simp [Subtype.ext_iff, commute_iff_eq] at foo
-                simpa [Subtype.ext_iff, commute_iff_eq, ← b_map]
+                simpa [Subtype.ext_iff, commute_iff_eq, ← b_map] using g_mem.comm ⟨b, b_mem⟩
               left_assoc := by intros; group
               right_assoc := by intros; group
             }
@@ -2174,20 +2140,12 @@ lemma central_implies_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (
 
         have G'_iso := Subgroup.equivMapOfInjective (G' n ε G) G.subtype (by simp)
         let G'_hom := G'_iso.symm.toMonoidHom
-        let other := Subgroup.map G'_hom N
-        let latest := Subgroup.map (Subgroup.subtype _) other
-        use latest
-        refine ⟨?_, ?_⟩
-        · simp [latest, other, G'_hom]
+        refine ⟨Subgroup.map (Subgroup.subtype _) <| Subgroup.map G'_hom N, ?_, ?_⟩
+        · simp [G'_hom]
           apply Subgroup.map_isMulCommutative
-        · simp [latest, other, G'_hom]
-          rw [Subgroup.finiteIndex_iff]
-          rw [ Subgroup.index_map]
-          simp
-          rw [Subgroup.finiteIndex_iff] at N_finite_index
-          rw [Subgroup.finiteIndex_iff] at G_eps
-          refine ⟨N_finite_index, G_eps.1⟩
-
+        · rw [Subgroup.finiteIndex_iff, Subgroup.index_map]
+          rw [Subgroup.finiteIndex_iff] at N_finite_index G_eps
+          simpa [G'_hom] using ⟨N_finite_index, G_eps.1⟩
 
         -- use Subgroup.comap G.subtype (Subgroup.map (Subgroup.subtype _) N)
         -- refine ⟨?_, ?_⟩
@@ -2241,54 +2199,32 @@ lemma f_deriv (a: ℝ) (ha: 0 < 1 + a) (x: ℝ): (deriv (f a)) x = 2*a - (Real.l
   rw [deriv_const_add]
   rw [← Pi.sub_def]
   rw [deriv_sub]
-  .
-    rw [deriv_mul_const]
-    · rw [deriv_sub_const]
-      rw [deriv_const_mul]
-      .
-        simp
+  · rw [deriv_mul_const]
+    · rw [deriv_sub_const, deriv_const_mul]
+      · simp
         have deriv_pow := (Real.hasStrictDerivAt_const_rpow (a := 1 + a) ha x).hasDerivAt.deriv
-        rw [deriv_pow]
-        rw [mul_comm]
-      . simp
+        simp [deriv_pow, mul_comm]
+      · simp
     · simp
       apply DifferentiableAt.const_mul
       simp
-  .
-    apply DifferentiableAt.mul_const
+  · apply DifferentiableAt.mul_const
     simp
     apply DifferentiableAt.const_mul
     simp
-  .
-    apply (Real.hasStrictDerivAt_const_rpow _ _).hasDerivAt.differentiableAt
+  · apply (Real.hasStrictDerivAt_const_rpow _ _).hasDerivAt.differentiableAt
     exact ha
 
 
 lemma f_deriv_at_one (a: ℝ) (a_pos: 0 < a) (a_lt: a < 1) (ha: 0 < 1 + a): 0 < (deriv (f a) 1) := by
   rw [f_deriv _ ha]
-  simp
   grw [Real.log_le_sub_one_of_pos]
-  .
-    simp
-    rw [mul_add]
-    simp
-    have a_mul_self := mul_lt_of_lt_one_left (a := a) (b := a) (by linarith) (by linarith)
-    have a_le_self: a + a ≤ 2 * a := by
-      linarith
-
-    have a_plus_lt: a + a^2 < a + a := by
-      simp
-      rw [pow_two]
-      exact a_mul_self
-
-
+  · have a_mul_self := mul_lt_of_lt_one_left (a := a) (b := a) (by linarith) (by linarith)
+    have a_le_self: a + a ≤ 2 * a := by linarith
+    have a_plus_lt : a + a^2 < a + a := by simp [pow_two, a_mul_self]
+    simp only [add_sub_cancel_left, Real.rpow_one, sub_pos, gt_iff_lt]
     linarith
-
-
-  apply_fun Real.exp_strictMono.orderIso
-  simp only [StrictMono.orderIso_apply, Subtype.mk_lt_mk]
-  simp
-  exact ha
+  simp [ha]
 
 
 lemma f_deriv_lower (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (x: ℝ) (f_zero: (deriv (f a)) x = 0): (Real.log 2) / a ≤ x := by
@@ -2296,46 +2232,42 @@ lemma f_deriv_lower (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (x: ℝ) (f_zero: (d
   rw [sub_eq_zero] at f_zero
   nth_rw 2 [mul_comm] at f_zero
   apply div_eq_of_eq_mul at f_zero
-  .
-    apply_fun Real.log at f_zero
+  · apply_fun Real.log at f_zero
     rw [Real.log_rpow] at f_zero
     apply div_eq_of_eq_mul at f_zero
-    rw [Real.log_div] at f_zero
-    rw [Real.log_mul] at f_zero
+    rw [Real.log_div, Real.log_mul] at f_zero
     rw [← f_zero]
 
     have log_plus_le: Real.log (1 + a) ≤ a := by
       grw [Real.log_le_sub_one_of_pos]
-      . simp
-      . exact ha
+      · simp
+      · exact ha
 
     grw [log_plus_le]
-    . simp
-    .
-      grw [log_plus_le]
-      . simp
+    · simp
+    · grw [log_plus_le]
+      · simp
         apply Real.log_nonneg
         simp
-      . apply Real.log_pos
+      · apply Real.log_pos
         simp [a_pos]
-    .
-      apply Real.log_pos
+    · apply Real.log_pos
       simp [a_pos]
-    . apply Real.log_pos
+    · apply Real.log_pos
       simp [a_pos]
-    . simp
-    . linarith
-    . linarith
-    . have pos: 0 < Real.log (1 + a) := by
+    · simp
+    · linarith
+    · linarith
+    · have pos: 0 < Real.log (1 + a) := by
         apply Real.log_pos
         simp [a_pos]
       linarith
-    . have pos: 0 < Real.log (1 + a) := by
+    · have pos: 0 < Real.log (1 + a) := by
         apply Real.log_pos
         simp [a_pos]
       linarith
-    . exact ha
-  . have pos: 0 < Real.log (1 + a) := by
+    · exact ha
+  · have pos: 0 < Real.log (1 + a) := by
       apply Real.log_pos
       simp [a_pos]
     linarith
