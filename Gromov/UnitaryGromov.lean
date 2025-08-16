@@ -1771,27 +1771,44 @@ lemma H_n_pow_le  {a k: ℕ } {m: ℕ} (a_k_lt: a + k < m)  (pows: Fin m → ℕ
     rw [← Finset.sum_attach]
 
 
-lemma H_n_prod_le_k {m: ℕ} {k: ℕ} (c : ℝ) (c_pos: 0 < c) (pows: Fin m → ℕ) (data: HnData)
+lemma H_n_prod_le_k {a k: ℕ } {m: ℕ} (a_k_lt: a + k + 1 < m) (c : ℝ) (c_pos: 0 < c) (pows: Fin m → ℕ) (data: HnData)
  (pows_le: ∀ i: Fin m, (pows i) ≤ c * (H_n_eps data.hd)) :
-  ‖(List.ofFn (fun (i: Fin (m - k)) => (theorem_3_8_h_n data (k + i)).val^(pows ⟨(k + i), by omega⟩))).prod.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data (k + 1)).val.val.val - 1‖ / 10 := by
+  ‖(List.ofFn (fun (i: Fin (k)) => (theorem_3_8_h_n data ((a + 1) + i)).val^(pows ⟨((a + 1) + i), by omega⟩))).prod.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data (a)).val.val.val - 1‖ / 10 := by
 
 
   grw [H_n_pow_le]
-  grw [Finset.sum_le_sum (g := (fun i : Fin (m - k) => (c * (H_n_eps data.hd)) * ‖(theorem_3_8_h_n data i).val.val.val - 1‖))]
+  grw [Finset.sum_le_sum (g := (fun i : Fin (k) => (c * (H_n_eps data.hd)) * ‖(theorem_3_8_h_n data ((a + 1) + i)).val.val.val - 1‖))]
   .
     rw [← Finset.mul_sum]
-    rw [Finset.sum_fin_eq_sum_range]
-    grw [Finset.sum_le_sum (g := (fun i : Fin (m - k) => 2^i.val * (H_n_eps data.hd)^i.val))]
-    . sorry
+    grw [Finset.sum_le_sum (g := (fun i : Fin (k) => ‖(theorem_3_8_h_n data (a + 1)).val.val.val - 1‖))]
+    .
+
+      rw [Finset.sum_fin_eq_sum_range]
+
+      sorry
     . simp [c_pos]
       have pos := H_n_eps_pos data.hd
       linarith
     -- H_n_upper_bound_iter
     .
       intro i hi
-      grw [H_n_upper_bound_iter data i]
+      induction i.val with
+      | zero =>
+        simp
+      | succ i ih =>
+        rw [← add_assoc]
+        grw [H_n_upper_bound]
+        grw [ih]
+        have two_mul_le: 2 * (H_n_eps data.hd) ≤ 1 := by
+          grw [H_n_eps_lt data.hd]
+          simp
+        grw [two_mul_le]
+        simp
+        have h_n_pos := H_n_eps_pos data.hd
+        linarith
   . intro i hi
     grw [pows_le]
+  . omega
 
 -- Theorem 3.8, case with only trivial elements in the center
 lemma central_trivial_virtually_abelian (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG) (ε: ℝ) (hε: 0 < ε)
