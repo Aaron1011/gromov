@@ -1701,20 +1701,14 @@ lemma H_n_upper_bound (data: HnData) (n: ℕ): ‖(theorem_3_8_h_n data (n + 1))
   grw [data.S_dist]
   simp
 
-lemma H_n_upper_bound_iter (data: HnData) (n: ℕ): ‖(theorem_3_8_h_n data (n + 1)).val.val.val - 1‖ ≤ 2^n * (H_n_eps data.hd)^n  := by
+lemma H_n_upper_bound_iter (data: HnData) (n: ℕ): ‖(theorem_3_8_h_n data (n )).val.val.val - 1‖ ≤ 2^n * (H_n_eps data.hd)^n  := by
   induction n with
   | zero =>
     simp [theorem_3_8_h_n]
-    rw [← coe_comm_g]
-    grw [shrinking_conjugators]
     grw [data.S_dist]
     grw [H_n_eps_lt]
+    norm_num
     simp
-    grw [data.S_dist]
-    grw [H_n_eps_lt]
-    . norm_num
-    . simp
-    . simp
   | succ n ih =>
     grw [H_n_upper_bound]
     grw [ih]
@@ -1739,19 +1733,20 @@ lemma H_n_single_pow {n: ℕ} {m: ℕ} (data: HnData): ‖((theorem_3_8_h_n data
     rw [add_mul]
     simp
 
-lemma H_n_pow_le {m: ℕ} (pows: Fin m → ℕ) (data: HnData):
-  ‖(List.ofFn (fun (i: Fin m) => (theorem_3_8_h_n data i).val^(pows i))).prod.val.val - 1‖ ≤ ∑ (i: Fin m), (pows i) * ‖(theorem_3_8_h_n data i).val.val.val - 1‖ := by
-  induction m with
+lemma H_n_pow_le  {a k: ℕ } {m: ℕ} (a_k_lt: a + k < m)  (pows: Fin m → ℕ) (data: HnData):
+  ‖(List.ofFn (fun (i: Fin (k)) => (theorem_3_8_h_n data (a + i)).val^(pows ⟨(a + i), by (have foo := i.isLt; omega)⟩))).prod.val.val - 1‖ ≤ ∑ (i: Fin k), (pows ⟨(a + i), by (have foo := i.isLt; omega)⟩) * ‖(theorem_3_8_h_n data (a + i)).val.val.val - 1‖ := by
+  induction k with
   | zero =>
     simp [List.ofFn, List.prod_nil]
-  | succ m ih =>
+  | succ k ih =>
     simp only [ne_eq, List.ofFn_succ']
     simp only [Fin.coe_castSucc, Fin.val_last, List.concat_eq_append, List.prod_append,
       List.prod_cons, List.prod_nil, mul_one, Subgroup.val_list_prod,
       List.map_ofFn]
+
     rw [Subgroup.coe_mul]
     grw [unitary_shrink]
-    have prev_le := ih (fun i => pows (Fin.castSucc i))
+    have prev_le := ih (by linarith)
     grw [prev_le]
     rw [Finset.sum_fin_eq_sum_range]
     rw [Finset.sum_fin_eq_sum_range]
@@ -1764,28 +1759,37 @@ lemma H_n_pow_le {m: ℕ} (pows: Fin m → ℕ) (data: HnData):
 
     conv =>
       rhs
-      arg 1
       arg 2
       intro x
-      equals if h : ↑x < m then ↑(pows ⟨↑x, by omega⟩) * ‖(theorem_3_8_h_n data ↑x).val.val.val - 1‖ else 0 =>
+      equals if h : ↑x < k then ↑(pows ⟨↑(a + x), by omega⟩) * ‖(theorem_3_8_h_n data ↑(a + x)).val.val.val - 1‖ else 0 =>
         have x_lt_m := x.property
         rw [Finset.mem_range] at x_lt_m
-        have x_lt_m_succ: x.val < m + 1 := by
+        have x_lt_m_succ: x.val < k + 1 := by
           omega
         simp [x_lt_m, x_lt_m_succ]
 
     rw [← Finset.sum_attach]
-    rfl
 
 
-lemma H_n_prod_le_k {m: ℕ} {k: ℕ} (c : ℝ) (pows: Fin m → ℕ) (data: HnData)
+lemma H_n_prod_le_k {m: ℕ} {k: ℕ} (c : ℝ) (c_pos: 0 < c) (pows: Fin m → ℕ) (data: HnData)
  (pows_le: ∀ i: Fin m, (pows i) ≤ c * (H_n_eps data.hd)) :
-  ‖(List.ofFn (fun (i: Fin (m - k)) => (theorem_3_8_h_n data i).val^(pows ⟨i, by omega⟩))).prod.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data k).val.val.val - 1‖ := by
+  ‖(List.ofFn (fun (i: Fin (m - k)) => (theorem_3_8_h_n data (k + i)).val^(pows ⟨(k + i), by omega⟩))).prod.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data (k + 1)).val.val.val - 1‖ / 10 := by
+
 
   grw [H_n_pow_le]
   grw [Finset.sum_le_sum (g := (fun i : Fin (m - k) => (c * (H_n_eps data.hd)) * ‖(theorem_3_8_h_n data i).val.val.val - 1‖))]
   .
-    sorry
+    rw [← Finset.mul_sum]
+    rw [Finset.sum_fin_eq_sum_range]
+    grw [Finset.sum_le_sum (g := (fun i : Fin (m - k) => 2^i.val * (H_n_eps data.hd)^i.val))]
+    . sorry
+    . simp [c_pos]
+      have pos := H_n_eps_pos data.hd
+      linarith
+    -- H_n_upper_bound_iter
+    .
+      intro i hi
+      grw [H_n_upper_bound_iter data i]
   . intro i hi
     grw [pows_le]
 
