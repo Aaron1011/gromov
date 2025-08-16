@@ -43,19 +43,14 @@ def G' (n : ℕ) (ε : ℝ) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) : S
 
 --instance unitary_matrix_measure_space : MeasurableSpace (Matrix.unitaryGroup (Fin 2) ℂ) := borel _
 
-
 lemma unitary_implies_det (n : ℕ) (m : Matrix (Fin n) (Fin n) ℂ) :
     m ∈ Matrix.unitaryGroup (Fin n) ℂ → ‖m.det‖ = 1 := by
   intro hm
   have det_unit := Matrix.det_of_mem_unitary hm
-  simp [unitary] at det_unit
-  rw [Complex.mul_conj, Complex.conj_mul'] at det_unit
+  simp [unitary, Complex.mul_conj, Complex.conj_mul'] at det_unit
   norm_cast at det_unit
-  have norm_ne_neg : ‖m.det‖ ≠ -1 := by
-    have nonneg := norm_nonneg (m.det)
-    linarith
-  simp [norm_ne_neg] at det_unit
-  exact det_unit.1
+  have norm_ne_neg : ‖m.det‖ ≠ -1 := by linarith [norm_nonneg (m.det)]
+  simpa [norm_ne_neg] using det_unit.1
 
 lemma unitary_preimage (n : ℕ) :
     (fun (m : Matrix (Fin n) (Fin n) ℂ) => m * (star m)) ⁻¹' {1} =
@@ -88,16 +83,12 @@ instance compact_unitary (n : ℕ) [Nonempty (Fin n)] :
   linarith
 
 
-def diag_unitary (c : ℂ) (n : ℕ) : Matrix (Fin n) (Fin n) ℂ := Matrix.diagonal (fun _ => c)
+abbrev diag_unitary (c : ℂ) (n : ℕ) : Matrix (Fin n) (Fin n) ℂ := Matrix.diagonal (fun _ => c)
 
 lemma diag_mem_unitary (c : ℂ) (hc : ‖c‖ = 1) (n : ℕ) :
-    diag_unitary c n ∈ Matrix.unitaryGroup (Fin n) ℂ := by
-  dsimp [diag_unitary]
-  rw [Matrix.mem_unitaryGroup_iff]
+    diag_unitary c n ∈ Matrix.unitaryGroup (Fin n) ℂ := Matrix.mem_unitaryGroup_iff.mpr <| by
   dsimp [star]
-  simp
-  rw [Complex.mul_conj']
-  simp [hc]
+  simp [Complex.mul_conj', hc]
 
 -- Note - `1 = det h'` comes from the fact that 'h' is equal to a commutator [a, b]
 -- We specialize to 2 <= n, since we handle the 0 and 1 cases earlier in the proof.
@@ -121,11 +112,9 @@ lemma small_dist_matrix (n : ℕ) (hn : 2 ≤ n) :
 
   -- TODO - why can't we combine these into a single line?
   have foo := Set.Finite.exists_minimal (s := dists) ?_ ?_
-  obtain ⟨min_dist, h_min_dist⟩ := foo
+  obtain ⟨min_dist, ⟨h_min, h_min_prop⟩⟩ := foo
   · refine ⟨min_dist, ?_, ?_⟩
-    · have h_min := h_min_dist.1
-      simp only [dists] at h_min
-      rw [Set.mem_image] at h_min
+    · simp only [dists, Set.mem_image] at h_min
       obtain ⟨x, x_mem, min_dist_eq⟩ := h_min
       simp at x_mem
       by_contra!
@@ -158,7 +147,7 @@ lemma small_dist_matrix (n : ℕ) (hn : 2 ≤ n) :
 
     have det_eq_c_n : h.det = c^n := by
       rw [h_mul]
-      simp [diag_unitary]
+      simp
 
 
     rw [h_det] at det_eq_c_n
@@ -201,7 +190,7 @@ lemma small_dist_matrix (n : ℕ) (hn : 2 ≤ n) :
       rw [← det_eq_c_n]
 
     have c_dist_e : min_dist < ‖ c - 1‖ := by
-      have c_dist  := h_min_dist.2 (y := ‖c - 1‖)
+      have c_dist  := h_min_prop (y := ‖c - 1‖)
       simp [dists] at c_dist
       have dist_ge := c_dist c_unit ?_ ?_ ?_
       · by_contra!
@@ -245,13 +234,9 @@ lemma small_dist_matrix (n : ℕ) (hn : 2 ≤ n) :
     refine ⟨?_, ?_⟩
     · ext
       simp
-      rw [← Complex.exp_nat_mul]
-      rw [mul_comm]
+      rw [← Complex.exp_nat_mul, mul_comm]
       field_simp
-    · rw [Units.ext_iff]
-      simp
-      rw [Complex.exp_eq_one_iff]
-      simp
+    · simp [Units.ext_iff, Complex.exp_eq_one_iff]
       intro a
       conv =>
         arg 1
@@ -262,27 +247,18 @@ lemma small_dist_matrix (n : ℕ) (hn : 2 ≤ n) :
       apply mul_left_cancel₀ at this
       · field_simp at this
         have abs_lt_one : ‖((1 : ℂ) / ↑n)‖ < 1 := by
-
           simp
           have div_le := Nat.cast_inv_le_one (α := ℝ) n
           by_cases inv_eq_one : (n : ℝ)⁻¹ = 1
-          · simp at inv_eq_one
-            simp at div_le
-            rw [inv_eq_one]
+          · simp at inv_eq_one div_le
             linarith
-          · have n_neq_one : n ≠ 1 := by omega
-            rw [← ne_iff_lt_iff_le] at div_le
-            simp [n_neq_one] at div_le
-            exact div_le
+          · simpa [← ne_iff_lt_iff_le, show n ≠ 1 by omega] using div_le
         by_cases a_eq_zero : a = 0
-        · rw [a_eq_zero] at this
-          simp at this
+        · simp [a_eq_zero] at this
           omega
-        · have abs_a := Int.one_le_abs a_eq_zero
-          rw [this] at abs_lt_one
-          simp at abs_lt_one
+        · simp [this] at abs_lt_one
           norm_cast at abs_lt_one
-          linarith
+          linarith [Int.one_le_abs a_eq_zero]
       · norm_num
 
 #print axioms small_dist_matrix
@@ -404,13 +380,8 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
       · rw [MeasureTheory.Measure.haarMeasure_self]
       · simp
 
-
-
     have card_i_le : ENat.card I ≤ (1 : ENNReal) / (MeasureTheory.volume ((Metric.ball (1 : (Matrix.unitaryGroup (Fin n) ℂ)) ((ε / 2)/2)))) := by
-      rw [div_eq_mul_inv]
-      rw [mul_comm]
-      rw [← ENNReal.mul_le_iff_le_inv]
-      rw [mul_comm]
+      rw [div_eq_mul_inv, mul_comm, ← ENNReal.mul_le_iff_le_inv, mul_comm]
       simp at volume_sum
       rw [MeasureTheory.measure_biUnion] at volume_sum
       conv at volume_sum =>
@@ -437,7 +408,6 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
       · unfold MeasureTheory.volume
         simp [measure_haar]
     -- Subgroup.index_le_of_leftCoset_cover_const
-
 
     have inter_subset (g) (hg : g ∈ G.carrier): Metric.ball (g : (Matrix.unitaryGroup (Fin n) ℂ)) ε ∩ G.carrier ⊆ (fun x => g * x.val) '' (G' n ε G).carrier := by
       rw [translate_ball]
@@ -1584,10 +1554,8 @@ noncomputable def theorem_3_8_h_n (data : HnData) (n : ℕ):
         norm_num
       grw [two_mul_le]
       · simp
-      · have pos := H_n_eps_pos data.hd
-        linarith
-      · have pos := H_n_eps_pos data.hd
-        linarith
+      · linarith [H_n_eps_pos data.hd]
+      · linarith [H_n_eps_pos data.hd]
 
 
 termination_by n
@@ -1713,11 +1681,8 @@ lemma H_n_prod_le_k {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + k
       rw [Finset.sum_fin_eq_sum_range]
       rw [Finset.sum_congr (s₁ := Finset.range k) (s₂ := Finset.range k) (g := fun i => (2 * H_n_eps data.hd) ^ i)]
 
-      rw [Finset.range_eq_Ico]
       nth_rw 4 [mul_comm]
-      rw [← mul_assoc]
-      rw [← mul_assoc]
-      rw [← mul_assoc]
+      rw [Finset.range_eq_Ico, ← mul_assoc, ← mul_assoc, ← mul_assoc]
       grw [geom_sum_Ico_le_of_lt_one]
       have eps_ne_zero := H_n_eps_pos data.hd
       field_simp
@@ -1915,9 +1880,7 @@ lemma central_implies_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (
         --rw [← Monoid.fg_iff_submonoid_fg] at centralizer_fg
 
         rw [← Subgroup.fg_iff_submonoid_fg] at centralizer_fg
-        rw [← Subgroup.top_toSubmonoid]
-        rw [← Subgroup.fg_iff_submonoid_fg]
-        rw [← Group.fg_def]
+        rw [← Subgroup.top_toSubmonoid, ← Subgroup.fg_iff_submonoid_fg, ← Group.fg_def]
         exact (Group.fg_iff_subgroup_fg (Subgroup.centralizer {g})).mpr centralizer_fg
         -- rw [← Monoid.FG.fg_top]
         -- obtain ⟨S, hS⟩ := centralizer_fg
@@ -1941,15 +1904,8 @@ lemma central_implies_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (
       let inv_image : Fin (data.k) → Subgroup G := fun i : Fin (data.k) => {
         carrier := { a : G | (data.iso ⟨a, all_mem_central a⟩) i ∈ (Classical.choose (Gi' i)) },
         mul_mem' := by
-          intro a b ha hb
-          simp at ha
-          simp at hb
-          have mul_mem := Subgroup.mul_mem _ ha hb
-          rw [← Pi.mul_apply] at mul_mem
-          rw [← MulEquiv.map_mul] at mul_mem
-          simp
-          simp at mul_mem
-          exact mul_mem
+          intro _ _ ha hb
+          simpa [ha, hb, ← Pi.mul_apply, ← MulEquiv.map_mul] using Subgroup.mul_mem _ ha hb
         one_mem' := by
           simp
           conv =>
@@ -1961,8 +1917,7 @@ lemma central_implies_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (
           simp
         inv_mem' := by
           intro a ha
-          simp only [Set.mem_setOf_eq] at ha
-          simp only [Set.mem_setOf_eq]
+          simp only [Set.mem_setOf_eq] at ⊢ ha
 
           conv =>
             arg 2
@@ -1970,10 +1925,7 @@ lemma central_implies_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (
             equals ⟨a, all_mem_central a⟩⁻¹ =>
               ext
               simp
-          rw [MulEquiv.map_inv]
-          rw [Pi.inv_apply]
-          rw [Subgroup.inv_mem_iff]
-          exact ha
+          simpa [MulEquiv.map_inv, Pi.inv_apply, Subgroup.inv_mem_iff]
       }
 
       -- TODO - figure out a way to make this proof less horrible (maybe somehow avoid Classical.choose)
@@ -1993,9 +1945,7 @@ lemma central_implies_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (
         simp only [] at symm_mul
         rw [Subtype.ext_iff] at symm_mul_swap
         simp only [] at symm_mul_swap
-        rw [← symm_mul]
-        rw [← symm_mul_swap]
-        rw [← Subtype.ext_iff]
+        rw [← symm_mul, ← symm_mul_swap, ← Subtype.ext_iff]
         apply congrArg
         funext i
         specialize ha i
