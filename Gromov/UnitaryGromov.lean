@@ -1,18 +1,17 @@
 import Mathlib
 
-open scoped Matrix.L2OpNorm ComplexInnerProductSpace
+open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 --open scoped ComplexInnerProductSpace
 
 
 -- Lemma 3.29 (Shrinking Conjugators)
-set_option maxHeartbeats 500000 in
 lemma shrinking_conjugators (n : ℕ) (g h : Matrix.unitaryGroup (Fin n) ℂ) :
   ‖⁅g, h⁆.val - 1‖ ≤ 2 * ‖g.val - 1‖ * ‖h.val - 1‖ := by
   dsimp only [Bracket.bracket]
   calc
     _ = ‖((g* h).val - (h * g).val) * (g⁻¹ * h⁻¹)‖ := by
       rw [sub_mul]
-      repeat rw [ ← Submonoid.coe_mul]
+      repeat rw [← Submonoid.coe_mul]
       conv =>
         rhs
         arg 1
@@ -81,8 +80,7 @@ instance unitary_proper (n : ℕ) : ProperSpace ↥(Matrix.unitaryGroup (Fin n) 
 
 instance compact_unitary (n : ℕ) [Nonempty (Fin n)] :
     CompactSpace ↥(Matrix.unitaryGroup (Fin n) ℂ) := by
-  rw [Metric.compactSpace_iff_isBounded_univ]
-  rw [Metric.isBounded_iff]
+  rw [Metric.compactSpace_iff_isBounded_univ, Metric.isBounded_iff]
   use 2
   intro x _ y _
   dsimp [dist]
@@ -244,13 +242,7 @@ lemma small_dist_matrix (n : ℕ) (hn : 2 ≤ n) :
     have finite_roots : Finite ↥(rootsOfUnity n ℂ) := by infer_instance
     -- TODO - how is this working???
     exact finite_roots
-  · 
-
-
-
-
-    --have n_gt_one : 1 < n := by omega
-
+  · --have n_gt_one : 1 < n := by omega
     simp [dists]
     rw [Set.diff_nonempty]
     have roots_mem := Complex.mem_rootsOfUnity (n := n)
@@ -270,8 +262,7 @@ lemma small_dist_matrix (n : ℕ) (hn : 2 ≤ n) :
       rw [← Complex.exp_nat_mul]
       rw [mul_comm]
       field_simp
-    · 
-      rw [Units.ext_iff]
+    · rw [Units.ext_iff]
       simp
       rw [Complex.exp_eq_one_iff]
       simp
@@ -283,20 +274,17 @@ lemma small_dist_matrix (n : ℕ) (hn : 2 ≤ n) :
       field_simp
       by_contra!
       apply mul_left_cancel₀ at this
-      · 
-        field_simp at this
+      · field_simp at this
         have abs_lt_one : ‖((1 : ℂ) / ↑n)‖ < 1 := by
 
           simp
           have div_le := Nat.cast_inv_le_one (α := ℝ) n
           by_cases inv_eq_one : (n : ℝ)⁻¹ = 1
-          · 
-            simp at inv_eq_one
+          · simp at inv_eq_one
             simp at div_le
             rw [inv_eq_one]
             linarith
-          · 
-            have n_neq_one : n ≠ 1 := by omega
+          · have n_neq_one : n ≠ 1 := by omega
             rw [← ne_iff_lt_iff_le] at div_le
             simp [n_neq_one] at div_le
             exact div_le
@@ -311,8 +299,6 @@ lemma small_dist_matrix (n : ℕ) (hn : 2 ≤ n) :
           norm_cast at abs_lt_one
           linarith
       · norm_num
-        have pos := Real.pi_pos
-        linarith
 
 #print axioms small_dist_matrix
 
@@ -2165,9 +2151,7 @@ lemma central_implies_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (
         ))
         intro x y hxy
         simp at hxy
-        rw [← QuotientGroup.out_eq' (a := x)]
-        rw [← QuotientGroup.out_eq' (a := y)]
-        rw [QuotientGroup.eq]
+        rw [← QuotientGroup.out_eq' (a := x), ← QuotientGroup.out_eq' (a := y), QuotientGroup.eq]
         simp [inv_image]
 
         rw [QuotientGroup.eq] at hxy
@@ -2176,13 +2160,7 @@ lemma central_implies_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (
           lhs
           equals (data.iso ⟨x.out, all_mem_central _⟩)⁻¹ i =>
             simp
-        rw [← MulEquiv.map_inv] at hxy
-        rw [← Pi.mul_apply] at hxy
-        rw [← MulEquiv.map_mul] at hxy
-        exact hxy
-
-
-
+        rwa [← MulEquiv.map_inv, ← Pi.mul_apply, ← MulEquiv.map_mul] at hxy
 
         --simp [inv_image]
         -- Subgroup.finiteIndex_iff_finite_quotient
