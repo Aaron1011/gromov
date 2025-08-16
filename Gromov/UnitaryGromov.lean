@@ -6,7 +6,7 @@ open scoped Matrix.L2OpNorm ComplexInnerProductSpace
 
 -- Lemma 3.29 (Shrinking Conjugators)
 set_option maxHeartbeats 500000 in
-lemma shrinking_conjugators (n: ℕ) (g h: Matrix.unitaryGroup (Fin n) ℂ):
+lemma shrinking_conjugators (n : ℕ) (g h : Matrix.unitaryGroup (Fin n) ℂ) :
   ‖⁅g, h⁆.val - 1‖ ≤ 2 * ‖g.val - 1‖ * ‖h.val - 1‖ := by
   dsimp only [Bracket.bracket]
   calc
@@ -24,8 +24,7 @@ lemma shrinking_conjugators (n: ℕ) (g h: Matrix.unitaryGroup (Fin n) ℂ):
     _ = ‖((g* h).val - (h * g).val)‖ := by
       rw [ ← Submonoid.coe_mul]
       rw [CStarRing.norm_mul_coe_unitary]
-    _ = ‖(g* h).val - g - h + 1 - ((h*g).val - h - g + 1)‖ := by
-      abel
+    _ = ‖(g* h).val - g - h + 1 - ((h*g).val - h - g + 1)‖ := by abel_nf
     _ = ‖(g.val - 1)*(h.val - 1) - (h.val - 1)*(g.val - 1)‖ := by
       conv =>
         rhs
@@ -41,42 +40,47 @@ lemma shrinking_conjugators (n: ℕ) (g h: Matrix.unitaryGroup (Fin n) ℂ):
       rw [mul_comm] at norm_sub_h
       linarith
 
-def G' (n: ℕ) (ε: ℝ) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)): Subgroup G := Subgroup.closure (Metric.ball (1 : G) ε)
+def G' (n : ℕ) (ε : ℝ) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) : Subgroup G :=
+  Subgroup.closure (Metric.ball (1 : G) ε)
 
 --instance unitary_matrix_measure_space : MeasurableSpace (Matrix.unitaryGroup (Fin 2) ℂ) := borel _
 
 
-lemma unitary_implies_det (n: ℕ) (m: Matrix (Fin n) (Fin n) ℂ): m ∈ Matrix.unitaryGroup (Fin n) ℂ → ‖m.det‖ = 1 := by
+lemma unitary_implies_det (n : ℕ) (m : Matrix (Fin n) (Fin n) ℂ) :
+    m ∈ Matrix.unitaryGroup (Fin n) ℂ → ‖m.det‖ = 1 := by
   intro hm
   have det_unit := Matrix.det_of_mem_unitary hm
   simp [unitary] at det_unit
   rw [Complex.mul_conj, Complex.conj_mul'] at det_unit
   norm_cast at det_unit
-  have norm_ne_neg: ‖m.det‖ ≠ -1 := by
+  have norm_ne_neg : ‖m.det‖ ≠ -1 := by
     have nonneg := norm_nonneg (m.det)
     linarith
   simp [norm_ne_neg] at det_unit
   exact det_unit.1
 
-lemma unitary_preimage (n: ℕ): (fun (m: Matrix (Fin n) (Fin n) ℂ) => m * (star m)) ⁻¹' {1} = (Matrix.unitaryGroup (Fin n) ℂ).carrier := by
+lemma unitary_preimage (n : ℕ) :
+    (fun (m : Matrix (Fin n) (Fin n) ℂ) => m * (star m)) ⁻¹' {1} =
+    (Matrix.unitaryGroup (Fin n) ℂ).carrier := by
   ext a
   simp [Matrix.mem_unitaryGroup_iff]
 
-lemma unitary_closed (n: ℕ): IsClosed (Matrix.unitaryGroup (Fin n) ℂ).carrier := by
+lemma unitary_closed (n : ℕ) : IsClosed (Matrix.unitaryGroup (Fin n) ℂ).carrier := by
   rw [← unitary_preimage]
   apply IsClosed.preimage
-  . fun_prop
-  . simp
+  · fun_prop
+  · simp
 
 
-instance unitary_proper (n: ℕ): ProperSpace ↥(Matrix.unitaryGroup (Fin n) ℂ) := by
+instance unitary_proper (n : ℕ) : ProperSpace ↥(Matrix.unitaryGroup (Fin n) ℂ) := by
   apply ProperSpace.of_isClosed
   apply unitary_closed
 
 #synth Nontrivial (Matrix (Fin 1) (Fin 1) ℂ)
 
 
-instance compact_unitary (n: ℕ) [Nonempty (Fin n)]: CompactSpace ↥(Matrix.unitaryGroup (Fin n) ℂ) := by
+instance compact_unitary (n : ℕ) [Nonempty (Fin n)] :
+    CompactSpace ↥(Matrix.unitaryGroup (Fin n) ℂ) := by
   rw [Metric.compactSpace_iff_isBounded_univ]
   rw [Metric.isBounded_iff]
   use 2
@@ -87,9 +91,10 @@ instance compact_unitary (n: ℕ) [Nonempty (Fin n)]: CompactSpace ↥(Matrix.un
   linarith
 
 
-def diag_unitary (c: ℂ)  (n: ℕ) : Matrix (Fin n) (Fin n) ℂ := Matrix.diagonal (fun _ => c)
+def diag_unitary (c : ℂ) (n : ℕ) : Matrix (Fin n) (Fin n) ℂ := Matrix.diagonal (fun _ => c)
 
-lemma diag_mem_unitary (c: ℂ) (hc: ‖c‖ = 1) (n: ℕ): diag_unitary c n ∈ Matrix.unitaryGroup (Fin n) ℂ := by
+lemma diag_mem_unitary (c : ℂ) (hc : ‖c‖ = 1) (n : ℕ) :
+    diag_unitary c n ∈ Matrix.unitaryGroup (Fin n) ℂ := by
   dsimp [diag_unitary]
   rw [Matrix.mem_unitaryGroup_iff]
   dsimp [star]
@@ -101,15 +106,15 @@ lemma diag_mem_unitary (c: ℂ) (hc: ‖c‖ = 1) (n: ℕ): diag_unitary c n ∈
 -- We specialize to 2 <= n, since we handle the 0 and 1 cases earlier in the proof.
 -- This let us put '∃ C' before everything else, which is what we need to obtain a single ε
 -- for all our h_n elements
-lemma small_dist_matrix (n: ℕ) (hn: 2 ≤ n)
-  : ∃ C: ℝ, 0 < C ∧ (∀ h: Matrix (Fin n) (Fin n) ℂ, h.det = 1 → ∀ c: ℂ, ‖c‖ = 1 → h = diag_unitary c n →  (‖h - 1‖ < C) → c = 1) := by
+lemma small_dist_matrix (n : ℕ) (hn : 2 ≤ n) :
+    ∃ C : ℝ, 0 < C ∧ (∀ h : Matrix (Fin n) (Fin n) ℂ, h.det = 1 → ∀ c : ℂ, ‖c‖ = 1 → h = diag_unitary c n → (‖h - 1‖ < C) → c = 1) := by
 
-  -- by_cases n_eq_one: n = 1
+  -- by_cases n_eq_one : n = 1
   -- . use 1
   --   intro ε eps_lt h h_det c hc h_mul h_dist
   --   simp [diag_unitary] at h_mul
 
-  --   have fin_sin_subsingleton: Subsingleton (Fin n) := by
+  --   have fin_sin_subsingleton : Subsingleton (Fin n) := by
   --     rw [n_eq_one]
   --     exact Fin.subsingleton_one
 
@@ -117,31 +122,30 @@ lemma small_dist_matrix (n: ℕ) (hn: 2 ≤ n)
 
 
 
-  have nezero_n: NeZero n := by
+  have nezero_n : NeZero n := by
     refine { out := by omega }
 
-  let dists := (fun (x: ℂ) => (‖x - 1‖ : ℝ)) '' ((Units.val '' (rootsOfUnity n ℂ).carrier \ {1}))
-  --let dists := (fun x => ‖x - (1: ℂ)‖) '' (Units.val '' (rootsOfUnity n ℂ).carrier \ {1})
+  let dists := (fun (x : ℂ) => (‖x - 1‖ : ℝ)) '' ((Units.val '' (rootsOfUnity n ℂ).carrier \ {1}))
+  --let dists := (fun x => ‖x - (1 : ℂ)‖) '' (Units.val '' (rootsOfUnity n ℂ).carrier \ {1})
 
   -- TODO - why can't we combine these into a single line?
   have foo := Set.Finite.exists_minimal (s := dists) ?_ ?_
   obtain ⟨min_dist, h_min_dist⟩ := foo
-  . simp [Minimal] at h_min_dist
+  · simp [Minimal] at h_min_dist
     use min_dist
     refine ⟨?_, ?_⟩
-    .
-      have h_min := h_min_dist.1
+    · have h_min := h_min_dist.1
       simp only [dists] at h_min
       rw [Set.mem_image] at h_min
       obtain ⟨x, x_mem, min_dist_eq⟩ := h_min
       simp at x_mem
       by_contra!
-      by_cases min_dist_lt: min_dist < 0
-      . rw [← min_dist_eq] at min_dist_lt
+      by_cases min_dist_lt : min_dist < 0
+      · rw [← min_dist_eq] at min_dist_lt
         have norm_nonneg := norm_nonneg (x - 1)
         linarith
 
-      have min_dist_eq_zero: min_dist = 0 := by
+      have min_dist_eq_zero : min_dist = 0 := by
         linarith
       rw [min_dist_eq_zero] at min_dist_eq
       simp at min_dist_eq
@@ -151,16 +155,16 @@ lemma small_dist_matrix (n: ℕ) (hn: 2 ≤ n)
 
     intro h h_det c hc h_mul h_dist
 
-    have c_nonzero: c ≠ 0 := by
+    have c_nonzero : c ≠ 0 := by
       by_contra!
       rw [this] at hc
       simp at hc
 
-    have ne_zero_n: NeZero n := by
+    have ne_zero_n : NeZero n := by
       rw [neZero_iff]
       linarith
 
-    let c_unit: Units ℂ := {
+    let c_unit : Units ℂ := {
         val := c,
         inv := c⁻¹,
         val_inv := by field_simp
@@ -168,7 +172,7 @@ lemma small_dist_matrix (n: ℕ) (hn: 2 ≤ n)
       }
 
 
-    have det_eq_c_n: h.det = c^n := by
+    have det_eq_c_n : h.det = c^n := by
       rw [h_mul]
       simp [diag_unitary]
 
@@ -212,26 +216,24 @@ lemma small_dist_matrix (n: ℕ) (hn: 2 ≤ n)
       simp
       rw [← det_eq_c_n]
 
-    have c_dist_e: min_dist < ‖ c - 1‖ := by
+    have c_dist_e : min_dist < ‖ c - 1‖ := by
       have c_dist  := h_min_dist.2 (y := ‖c - 1‖)
       simp [dists] at c_dist
       have dist_ge := c_dist c_unit ?_ ?_ ?_
-      .
-        by_contra!
+      · by_contra!
         specialize dist_ge (by linarith)
         linarith
-      . simp [c_unit]
+      · simp [c_unit]
         ext
         simp
         rw [det_eq_c_n]
-      . simp [c_unit]
+      · simp [c_unit]
         rw [Units.ext_iff]
         simp
         simp [this]
-      . simp [c_unit]
+      · simp [c_unit]
     linarith
-  .
-    simp [dists]
+  · simp [dists]
     apply Set.Finite.image
     apply Set.Finite.diff
     apply Set.Finite.image
@@ -239,22 +241,22 @@ lemma small_dist_matrix (n: ℕ) (hn: 2 ≤ n)
 
 
     have fintype_roots := rootsOfUnity.fintype (k := n) (R  := ℂ)
-    have finite_roots: Finite ↥(rootsOfUnity n ℂ) := by infer_instance
+    have finite_roots : Finite ↥(rootsOfUnity n ℂ) := by infer_instance
     -- TODO - how is this working???
     exact finite_roots
-  .
+  · 
 
 
 
 
-    --have n_gt_one: 1 < n := by omega
+    --have n_gt_one : 1 < n := by omega
 
     simp [dists]
     rw [Set.diff_nonempty]
     have roots_mem := Complex.mem_rootsOfUnity (n := n)
     simp
 
-    let my_root: Units ℂ := {
+    let my_root : Units ℂ := {
       val := Complex.exp (2 * ↑Real.pi * Complex.I * (1 / ↑n)),
       inv := (Complex.exp (2 * ↑Real.pi * Complex.I * (1 / ↑n)))⁻¹
       val_inv := by simp
@@ -263,12 +265,12 @@ lemma small_dist_matrix (n: ℕ) (hn: 2 ≤ n)
     use my_root
     simp [my_root]
     refine ⟨?_, ?_⟩
-    . ext
+    · ext
       simp
       rw [← Complex.exp_nat_mul]
       rw [mul_comm]
       field_simp
-    .
+    · 
       rw [Units.ext_iff]
       simp
       rw [Complex.exp_eq_one_iff]
@@ -281,34 +283,34 @@ lemma small_dist_matrix (n: ℕ) (hn: 2 ≤ n)
       field_simp
       by_contra!
       apply mul_left_cancel₀ at this
-      .
+      · 
         field_simp at this
-        have abs_lt_one: ‖((1: ℂ) / ↑n)‖ < 1 := by
+        have abs_lt_one : ‖((1 : ℂ) / ↑n)‖ < 1 := by
 
           simp
           have div_le := Nat.cast_inv_le_one (α := ℝ) n
-          by_cases inv_eq_one: (n : ℝ)⁻¹ = 1
-          .
+          by_cases inv_eq_one : (n : ℝ)⁻¹ = 1
+          · 
             simp at inv_eq_one
             simp at div_le
             rw [inv_eq_one]
             linarith
-          .
-            have n_neq_one: n ≠ 1 := by omega
+          · 
+            have n_neq_one : n ≠ 1 := by omega
             rw [← ne_iff_lt_iff_le] at div_le
             simp [n_neq_one] at div_le
             exact div_le
-        by_cases a_eq_zero: a = 0
-        . rw [a_eq_zero] at this
+        by_cases a_eq_zero : a = 0
+        · rw [a_eq_zero] at this
           simp at this
           omega
-        .
+        · 
           have abs_a := Int.one_le_abs a_eq_zero
           rw [this] at abs_lt_one
           simp at abs_lt_one
           norm_cast at abs_lt_one
           linarith
-      . norm_num
+      · norm_num
         have pos := Real.pi_pos
         linarith
 
@@ -318,13 +320,14 @@ lemma small_dist_matrix (n: ℕ) (hn: 2 ≤ n)
 set_option synthInstance.maxHeartbeats 50000 in
 set_option maxHeartbeats 500000 in
 open Pointwise in
-lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, ∀ (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)), (G' n ε G).FiniteIndex ∧ (G' n ε G).index ≤ C := by
+lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
+    ∃ C : ℝ, ∀ (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)), (G' n ε G).FiniteIndex ∧ (G' n ε G).index ≤ C := by
 
 
   have nonempty_fin : Nonempty (Fin n) := by
     exact Fin.pos_iff_nonempty.mp hn
 
-  let compacts_univ: TopologicalSpace.PositiveCompacts (Matrix.unitaryGroup (Fin n) ℂ) := {
+  let compacts_univ : TopologicalSpace.PositiveCompacts (Matrix.unitaryGroup (Fin n) ℂ) := {
     carrier := Set.univ,
     isCompact' := by apply CompactSpace.isCompact_univ
     interior_nonempty' := by
@@ -332,7 +335,7 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
   }
 
   borelize ↥(Matrix.unitaryGroup (Fin n) ℂ)
-  let measure_haar: MeasureTheory.MeasureSpace (Matrix.unitaryGroup (Fin n) ℂ) := {
+  let measure_haar : MeasureTheory.MeasureSpace (Matrix.unitaryGroup (Fin n) ℂ) := {
     volume := MeasureTheory.Measure.haarMeasure compacts_univ
   }
 
@@ -342,44 +345,43 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
   -- We can find a maximal subset I where ||a - b|| ≥ ε for distinct a, b in I
   let I_sets := { S | S ⊆ G.carrier ∧ ∀ x ∈ S, ∀ y ∈ S, x ≠ y → ‖x.val - y.val‖ ≥ ε }
   have maximal_I := zorn_subset I_sets ?_
-  . obtain ⟨I, hI⟩ := maximal_I
-    have balls_cover: G.carrier ⊆ ⋃ (g ∈ I), Metric.ball g ε := by
+  · obtain ⟨I, hI⟩ := maximal_I
+    have balls_cover : G.carrier ⊆ ⋃ (g ∈ I), Metric.ball g ε := by
       intro a ha
-      by_cases a_dist_I: ∀ g ∈ I, ‖a.val - g.val‖ ≥ ε
-      . have a_mem_I: a ∈ I := by
-          have enlarge_I: {a} ∪ I ∈ I_sets := by
+      by_cases a_dist_I : ∀ g ∈ I, ‖a.val - g.val‖ ≥ ε
+      · have a_mem_I : a ∈ I := by
+          have enlarge_I : {a} ∪ I ∈ I_sets := by
             simp [-Subtype.forall, I_sets]
             simp [Maximal] at hI
             have I_prop := hI.1
             simp [-Subtype.forall, I_sets] at I_prop
             refine ⟨?_, ?_⟩
-            . apply Set.insert_subset ha I_prop.1
-            . refine ⟨?_, ?_⟩
-              . intro b hb a_neq_b
+            · apply Set.insert_subset ha I_prop.1
+            · refine ⟨?_, ?_⟩
+              · intro b hb a_neq_b
                 apply a_dist_I b hb
-              . intro c hc
+              · intro c hc
                 refine ⟨?_, ?_⟩
-                . intro c_neq_a
+                · intro c_neq_a
                   rw [norm_sub_rev]
                   apply a_dist_I c hc
-                . intro d hd c_neq_d
+                · intro d hd c_neq_d
                   apply I_prop.2
-                  . apply hc
-                  . apply hd
-                  . apply c_neq_d
+                  · apply hc
+                  · apply hd
+                  · apply c_neq_d
 
           exact Maximal.mem_of_prop_insert hI enlarge_I
 
-        .
-          apply Set.mem_sUnion_of_mem (t := Metric.ball a ε)
-          . simp [hε]
-          . rw [Set.mem_range]
+        · apply Set.mem_sUnion_of_mem (t := Metric.ball a ε)
+          · simp [hε]
+          · rw [Set.mem_range]
             use a
             -- TODO - this is a really weird way of doing this
-            have nonempty_prop: Nonempty (a ∈ I) := by
+            have nonempty_prop : Nonempty (a ∈ I) := by
               exact Nonempty.intro a_mem_I
             rw [Set.iUnion_const]
-      . simp [-Subtype.forall, -Subtype.exists] at a_dist_I
+      · simp [-Subtype.forall, -Subtype.exists] at a_dist_I
         obtain ⟨b, b_mem, b_dist_le⟩ := a_dist_I
         rw [Set.mem_iUnion]
         use b
@@ -388,7 +390,7 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
         rw [dist_eq_norm_sub]
         exact b_dist_le
     -- Note - Vikman uses ε/2, but using ε/4 made things easier (it might actually be false for ε/2)
-    have disjoint_balls: I.PairwiseDisjoint (fun g => Metric.ball g ((ε/2)/2)) := by
+    have disjoint_balls : I.PairwiseDisjoint (fun g => Metric.ball g ((ε/2)/2)) := by
       intro a a_mem b b_mem a_neq_b
       simp [Maximal] at hI
       have I_prop := hI.1
@@ -411,7 +413,7 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
       simp at triangle
       linarith
 
-    have translate_ball (d: ℝ) (hd: 0 < d) (g: (Matrix.unitaryGroup (Fin n) ℂ)): Metric.ball g d = (fun x => g * x) '' (Metric.ball (1: (Matrix.unitaryGroup (Fin n) ℂ)) d) := by
+    have translate_ball (d : ℝ) (hd : 0 < d) (g : (Matrix.unitaryGroup (Fin n) ℂ)): Metric.ball g d = (fun x => g * x) '' (Metric.ball (1 : (Matrix.unitaryGroup (Fin n) ℂ)) d) := by
       ext a
       simp
       simp [dist, dist_eq_norm_sub]
@@ -426,7 +428,7 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
       rw [CStarRing.norm_mem_unitary_mul]
       simp
 
-    have volume_sum: MeasureTheory.volume (⋃ (g ∈ I), (Metric.ball g ((ε/2)/2))) ≤ 1 := by
+    have volume_sum : MeasureTheory.volume (⋃ (g ∈ I), (Metric.ball g ((ε/2)/2))) ≤ 1 := by
       grw [MeasureTheory.measure_mono (t := Set.univ)]
       unfold MeasureTheory.volume
       simp [measure_haar]
@@ -435,12 +437,12 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
         equals ↑compacts_univ =>
           simp [compacts_univ]
 
-      . rw [MeasureTheory.Measure.haarMeasure_self]
-      . simp
+      · rw [MeasureTheory.Measure.haarMeasure_self]
+      · simp
 
 
 
-    have card_i_le: ENat.card I ≤ (1: ENNReal) / (MeasureTheory.volume ((Metric.ball (1: (Matrix.unitaryGroup (Fin n) ℂ)) ((ε / 2)/2)))) := by
+    have card_i_le : ENat.card I ≤ (1 : ENNReal) / (MeasureTheory.volume ((Metric.ball (1 : (Matrix.unitaryGroup (Fin n) ℂ)) ((ε / 2)/2)))) := by
       rw [div_eq_mul_inv]
       rw [mul_comm]
       rw [← ENNReal.mul_le_iff_le_inv]
@@ -457,30 +459,30 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
       unfold MeasureTheory.volume
       simp [measure_haar]
       exact volume_sum
-      .
+      · 
         apply Set.PairwiseDisjoint.countable_of_isOpen (s := fun g => Metric.ball g ((ε / 2)/2))
-        . exact disjoint_balls
-        . intro i hi
+        · exact disjoint_balls
+        · intro i hi
           exact Metric.isOpen_ball
-        . intro i hi
+        · intro i hi
           simp [hε]
-      . exact disjoint_balls
-      . intro i hi
+      · exact disjoint_balls
+      · intro i hi
         exact measurableSet_ball
-      .
+      · 
         apply LT.lt.ne'
         unfold MeasureTheory.volume
         simp [measure_haar]
         apply IsOpen.measure_pos
         exact Metric.isOpen_ball
         simp [hε]
-      .
+      · 
         unfold MeasureTheory.volume
         simp [measure_haar]
     -- Subgroup.index_le_of_leftCoset_cover_const
 
 
-    have inter_subset (g) (hg: g ∈ G.carrier): Metric.ball (g : (Matrix.unitaryGroup (Fin n) ℂ)) ε ∩ G.carrier ⊆ (fun x => g * x.val) '' (G' n ε G).carrier := by
+    have inter_subset (g) (hg : g ∈ G.carrier): Metric.ball (g : (Matrix.unitaryGroup (Fin n) ℂ)) ε ∩ G.carrier ⊆ (fun x => g * x.val) '' (G' n ε G).carrier := by
       rw [translate_ball]
       intro a ha
       simp only [Set.mem_image]
@@ -493,23 +495,23 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
       have g_mul_x := hx.2
       rw [eq_comm] at g_mul_x
       rw [← inv_mul_eq_iff_eq_mul] at g_mul_x
-      have x_mem_g: x ∈ G := by
+      have x_mem_g : x ∈ G := by
         rw [← g_mul_x]
         apply Subgroup.mul_mem
-        . simpa using hg
-        . exact a_mem_g
+        · simpa using hg
+        · exact a_mem_g
 
       use ⟨x, x_mem_g⟩
       refine ⟨?_, ?_⟩
-      .
+      · 
         apply Subgroup.subset_closure
         exact hx.1
-      .
+      · 
         simp_rw [← g_mul_x]
         simp
-      . exact hε
+      · exact hε
 
-    have card_lt_top: (ENat.card I).toENNReal < ⊤ := by
+    have card_lt_top : (ENat.card I).toENNReal < ⊤ := by
       grw [card_i_le]
       simp
       unfold MeasureTheory.volume
@@ -523,22 +525,22 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
     rw [ENat.card_eq_top] at card_lt_top
     simp at card_lt_top
 
-    have fintype_I: Fintype I := by
+    have fintype_I : Fintype I := by
       exact Set.Finite.fintype card_lt_top
 
-    have i_mem_G: ∀ i ∈ I, i ∈ G := by
+    have i_mem_G : ∀ i ∈ I, i ∈ G := by
       intro i i_mem
       simp [Maximal] at hI
       have I_prop := hI.1
       simp [-Subtype.forall, I_sets] at I_prop
       apply (I_prop.1 i_mem)
 
-    --have g_hsmul: HSMul G (Set G) (Set G) := by
+    --have g_hsmul : HSMul G (Set G) (Set G) := by
     --  infer_instance
 
 
-    have cosets_cover: (⋃ i ∈ I.toFinset.attach, (((⟨i.val, i_mem_G i.val (Set.mem_toFinset.mp i.property)⟩ : G) • (((G' n ε G)) : Set G)) : (Set G))) = (Set.univ : Set G) := by
-      have balls_inter_cover: G.carrier ⊆ ⋃ g ∈ I, ((Metric.ball g ε) ∩ G.carrier) := by
+    have cosets_cover : (⋃ i ∈ I.toFinset.attach, (((⟨i.val, i_mem_G i.val (Set.mem_toFinset.mp i.property)⟩ : G) • (((G' n ε G)) : Set G)) : (Set G))) = (Set.univ : Set G) := by
+      have balls_inter_cover : G.carrier ⊆ ⋃ g ∈ I, ((Metric.ball g ε) ∩ G.carrier) := by
         intro g hg
         specialize balls_cover hg
         simp only [Set.mem_iUnion] at balls_cover
@@ -552,11 +554,11 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
       simp
       ext a
       simp only [Set.mem_univ, iff_true]
-      have a_mem_g: a.val ∈ G.carrier := by simp
+      have a_mem_g : a.val ∈ G.carrier := by simp
       specialize balls_inter_cover a_mem_g
       simp only [Set.mem_iUnion] at balls_inter_cover
       obtain ⟨i, i_mem, a_mem_i⟩ := balls_inter_cover
-      have i_mem_G: i ∈ G.carrier := by
+      have i_mem_G : i ∈ G.carrier := by
         simp [Maximal] at hI
         have I_prop := hI.1
         simp [-Subtype.forall, I_sets] at I_prop
@@ -566,23 +568,23 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
       simp only [Set.mem_image] at a_mem
       obtain ⟨x, hx, a_eq_mul⟩ := a_mem
       simp only [Set.mem_iUnion]
-      have i_mem_finset: i ∈ I.toFinset := by
+      have i_mem_finset : i ∈ I.toFinset := by
         exact Set.mem_toFinset.mpr i_mem
       use ⟨i, i_mem_finset⟩
       simp
       rw [Set.mem_smul_set]
       use x
       refine ⟨?_, ?_⟩
-      . exact hx
-      .
+      · exact hx
+      · 
         rw [Subtype.ext_iff]
         simp [a_eq_mul]
 
     refine ⟨?_, ?_⟩
-    .
+    · 
       apply Subgroup.finiteIndex_of_leftCoset_cover_const cosets_cover
-    .
-      have I_subset_G: I ⊆ G := by
+    · 
+      have I_subset_G : I ⊆ G := by
         simp [Maximal] at hI
         have i_mem := hI.1
         simp [I_sets] at i_mem
@@ -592,14 +594,14 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
       norm_cast at card_i_le
       grw [Subgroup.index_le_of_leftCoset_cover_const (s := I.toFinset.attach) (g := fun a => (⟨a.val, by (
         have a_mem := a.prop
-        have a_mem_i: a.val ∈ I := by
+        have a_mem_i : a.val ∈ I := by
           exact Set.mem_toFinset.mp a_mem
         exact I_subset_G a_mem_i
       )⟩ : G))]
 
       simp at card_i_le
       rw [le_div_iff₀]
-      .
+      · 
         rw [Finset.card_attach]
         rw [← Set.ncard_eq_toFinset_card']
 
@@ -608,25 +610,25 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
         rw [← ENNReal.toReal_le_toReal] at card_i_le
         simp at card_i_le
         exact card_i_le
-        . apply ENNReal.mul_ne_top
-          . simp
-          . unfold MeasureTheory.volume
+        · apply ENNReal.mul_ne_top
+          · simp
+          · unfold MeasureTheory.volume
             simp [measure_haar]
-        . simp
-        . exact card_lt_top
-      .
+        · simp
+        · exact card_lt_top
+      · 
         unfold MeasureTheory.volume
         simp [measure_haar]
         conv =>
           lhs
-          equals (0: ENNReal).toReal => simp
+          equals (0 : ENNReal).toReal => simp
         rw [ENNReal.toReal_lt_toReal]
         apply IsOpen.measure_pos
         exact Metric.isOpen_ball
         simp [hε]
-        . simp
-        . simp
-      . apply cosets_cover
+        · simp
+        · simp
+      · apply cosets_cover
 
     --  (g := fun g => Metric.ball g ((ε / 2) / 2))
 
@@ -637,30 +639,30 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
     -- .
     --   apply Subgroup.index_le_of_leftCoset_cover_const
     -- sorry
-  . intro S S_subset S_chain
+  · intro S S_subset S_chain
     use Set.sUnion S
     refine ⟨?_, ?_⟩
-    .
+    · 
       simp only [ne_eq, ge_iff_le, Subtype.mk.injEq, Set.mem_setOf_eq,
       Set.sUnion_subset_iff, Set.mem_sUnion, forall_exists_index, and_imp, I_sets]
 
       refine ⟨?_, ?_⟩
-      . intro s hs
+      · intro s hs
         simp [I_sets] at S_subset
         specialize S_subset hs
         simp at S_subset
         exact S_subset.1
-      . simp [I_sets] at S_subset
+      · simp [I_sets] at S_subset
         intro a M M_mem_S a_mem_M b N N_mem_S b_mem_N a_neq_b
         simp [IsChain] at S_chain
         specialize S_chain M_mem_S N_mem_S
-        by_cases M_eq_N: M = N
-        . rw [M_eq_N] at a_mem_M
+        by_cases M_eq_N : M = N
+        · rw [M_eq_N] at a_mem_M
           specialize S_subset N_mem_S
           simp at S_subset
           have a_b_dist := S_subset.2 a (by simp) (by simp [a_mem_M]) b (by simp) (by simp [b_mem_N]) (by simp [a_neq_b])
           exact a_b_dist
-        .
+        · 
           specialize S_chain M_eq_N
           match S_chain with
           | .inl h =>
@@ -677,20 +679,20 @@ lemma volume_packing (n: ℕ) (hn: 0 < n) (ε: ℝ) (hε : 0 < ε): ∃ C: ℝ, 
             exact a_b_dist
 
 
-    . intro s hs
+    · intro s hs
       exact Set.subset_sUnion_of_subset S s (fun ⦃a⦄ a ↦ a) hs
 
 #print axioms volume_packing
 
 
-def FreshInnerProduct (V: Type*) := V
+def FreshInnerProduct (V : Type*) := V
 
-instance (V: Type*) [base_comm: AddCommGroup V]: AddCommGroup (FreshInnerProduct V) := base_comm
-instance (V: Type*) [AddCommGroup V] [base_module: Module ℂ V]: Module ℂ (FreshInnerProduct V) := base_module
+instance (V : Type*) [base_comm : AddCommGroup V]: AddCommGroup (FreshInnerProduct V) := base_comm
+instance (V : Type*) [AddCommGroup V] [base_module : Module ℂ V]: Module ℂ (FreshInnerProduct V) := base_module
 
 #synth InnerProductSpace ℂ (EuclideanSpace ℂ (Fin 2))
 
-noncomputable def toComplexEuclidean {E: Type*} [AddCommGroup E] [TopologicalSpace E] [IsTopologicalAddGroup E] [T2Space E]
+noncomputable def toComplexEuclidean {E : Type*} [AddCommGroup E] [TopologicalSpace E] [IsTopologicalAddGroup E] [T2Space E]
   [Module ℂ E] [ContinuousSMul ℂ E] [FiniteDimensional ℂ E] : E ≃L[ℂ] EuclideanSpace ℂ (Fin <| Module.finrank ℂ E) := ContinuousLinearEquiv.ofFinrankEq finrank_euclideanSpace_fin.symm
 
 attribute [-simp] PiLp.inner_apply
@@ -699,9 +701,9 @@ attribute [-simp] MeasureTheory.Measure.inv_eq_self
 
 set_option maxHeartbeats 800000 in
 set_option synthInstance.maxHeartbeats 500000 in
-lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V]  (H: Subgroup (V →L[ℂ] V)ˣ)   [LocallyCompactSpace H] [CompactSpace H]: ∃ S: Subgroup ↥(Matrix.unitaryGroup (Fin (Module.finrank ℂ V)) ℂ), Nonempty (S ≃* H) := by
-  let integrand := fun (v w: FreshInnerProduct V) (h: H) => ⟪(h.val.val v), (h.val.val w)⟫
-  have continuous_integrand: ∀ v w: FreshInnerProduct V, Continuous fun h: H => integrand v w h := by
+lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V]  (H : Subgroup (V →L[ℂ] V)ˣ)   [LocallyCompactSpace H] [CompactSpace H]: ∃ S : Subgroup ↥(Matrix.unitaryGroup (Fin (Module.finrank ℂ V)) ℂ), Nonempty (S ≃* H) := by
+  let integrand := fun (v w : FreshInnerProduct V) (h : H) => ⟪(h.val.val v), (h.val.val w)⟫
+  have continuous_integrand : ∀ v w : FreshInnerProduct V, Continuous fun h : H => integrand v w h := by
     intro v w
     simp only [integrand]
     fun_prop
@@ -710,17 +712,17 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
 
   --
 
-  have finite_dimensional_fresh: FiniteDimensional ℂ (FreshInnerProduct V) := inferInstanceAs (FiniteDimensional ℂ V)
+  have finite_dimensional_fresh : FiniteDimensional ℂ (FreshInnerProduct V) := inferInstanceAs (FiniteDimensional ℂ V)
 
-  have integrable_on: ∀ v w: V, MeasureTheory.Integrable (integrand v w) (MeasureTheory.Measure.haar.inv (G := H)) := by
+  have integrable_on : ∀ v w : V, MeasureTheory.Integrable (integrand v w) (MeasureTheory.Measure.haar.inv (G := H)) := by
     intro v w
     rw [← MeasureTheory.integrableOn_univ]
     apply ContinuousOn.integrableOn_compact
-    . exact CompactSpace.isCompact_univ
-    . apply (continuous_integrand v w).continuousOn
+    · exact CompactSpace.isCompact_univ
+    · apply (continuous_integrand v w).continuousOn
 
 
-  let inner_product_core: InnerProductSpace.Core ℂ (FreshInnerProduct V) := {
+  let inner_product_core : InnerProductSpace.Core ℂ (FreshInnerProduct V) := {
     inner := fun v w => MeasureTheory.integral (MeasureTheory.Measure.haar.inv) (integrand v w)
     conj_inner_symm := by
       intro x y
@@ -748,8 +750,8 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
       intro a b c
       simp [integrand]
       rw [MeasureTheory.integral_add]
-      . exact integrable_on a c
-      . exact integrable_on b c
+      · exact integrable_on a c
+      · exact integrable_on b c
     smul_left := by
       intro x y z
       simp [integrand]
@@ -768,7 +770,7 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
       rw [integral_complex_ofReal] at hx
       norm_cast at hx
       rw [MeasureTheory.integral_eq_zero_iff_of_nonneg ?_] at hx
-      .
+      · 
         dsimp only [Filter.EventuallyEq] at hx
         conv at hx =>
           pattern MeasureTheory.Measure.haar.inv
@@ -784,11 +786,11 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
 
         simp at inner_q_zero
         have map_iff_zero := LinearMap.map_eq_zero_iff (f := q.val.val.toLinearMap) (x := x) ?_
-        .
+        · 
           simp at map_iff_zero
           rw [← map_iff_zero]
           exact inner_q_zero
-        .
+        · 
           -- TODO - find a better way of doing this
           let my_map := (ContinuousLinearMap.toLinearMapRingHom (R₁ := ℂ) (M₁ := V)).toMonoidHom
           let f_map := (Units.map my_map) q.val
@@ -797,13 +799,13 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
           have injective_f := (f_as_equiv f_map).injective
           simp [f_as_equiv, f_map] at injective_f
           exact injective_f
-      .
+      · 
         have foo := integrable_on x x
         simp [integrand] at foo
         have re_integrable := MeasureTheory.Integrable.re foo
         simp at re_integrable
         exact re_integrable
-      .
+      · 
         rw [Pi.le_def]
         intro y
         simp
@@ -811,21 +813,21 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
         simp at foo
         exact foo
   }
-  . exact Ne.symm (NeZero.ne' (MeasureTheory.Measure.haar.inv Set.univ))
+  · exact Ne.symm (NeZero.ne' (MeasureTheory.Measure.haar.inv Set.univ))
 
   let new_inner := InnerProductSpace.ofCore inner_product_core
   let normed_add := InnerProductSpace.Core.toNormedAddCommGroup (𝕜 := ℂ) (F := (FreshInnerProduct V))
 
 
-  have proper_fresh: ProperSpace (FreshInnerProduct V) := by
+  have proper_fresh : ProperSpace (FreshInnerProduct V) := by
     apply FiniteDimensional.proper_rclike ℂ _
 
-  have complete_fresh: CompleteSpace (FreshInnerProduct V) := by
+  have complete_fresh : CompleteSpace (FreshInnerProduct V) := by
     apply complete_of_proper
 
-  let apply_rep (h: H) (v: FreshInnerProduct V): FreshInnerProduct V := h.val.val v
+  let apply_rep (h : H) (v : FreshInnerProduct V): FreshInnerProduct V := h.val.val v
 
-  have v_preserves_inner: ∀ h: H, ∀ v w: FreshInnerProduct V, ⟪(apply_rep h v), (apply_rep h w)⟫ = ⟪v, w⟫ := by
+  have v_preserves_inner : ∀ h : H, ∀ v w : FreshInnerProduct V, ⟪(apply_rep h v), (apply_rep h w)⟫ = ⟪v, w⟫ := by
     intro h v w
     unfold inner
     simp [InnerProductSpace.toInner, new_inner]
@@ -846,12 +848,12 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
       simp
 
     apply mul_left
-  .
+  · 
 
     -- finDimVectorspaceEquiv
     have rank_eq := Module.finrank_eq_rank' ℂ (FreshInnerProduct V)
     have V_equiv := (finDimVectorspaceEquiv (Module.finrank ℂ (FreshInnerProduct V)) rank_eq.symm).toContinuousLinearEquiv
-    let V_equiv_fresh: V ≃L[ℂ] (FreshInnerProduct V) := ContinuousLinearEquiv.ofFinrankEq ?_
+    let V_equiv_fresh : V ≃L[ℂ] (FreshInnerProduct V) := ContinuousLinearEquiv.ofFinrankEq ?_
     have V_map_equiv := ContinuousLinearEquiv.arrowCongr V_equiv V_equiv
     have first := V_equiv.toLinearEquiv
     --have V_linear_arrow_congr := LinearEquiv.arrowCongr V_equiv.toLinearEquiv V_equiv.toLinearEquiv
@@ -859,7 +861,7 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
 
     let new_H_matrix := ContinuousLinearMap.toLinearMap '' (Units.val '' H.carrier)
     -- Deliberate defeq abuse, so that things line up with our integral (which is over plain V)
-    let new_H_coe: Set ((FreshInnerProduct V) →ₗ[ℂ] (FreshInnerProduct V)) := new_H_matrix
+    let new_H_coe : Set ((FreshInnerProduct V) →ₗ[ℂ] (FreshInnerProduct V)) := new_H_matrix
 
     have H_hom := Units.coeHom (V →ₗ[ℂ] V)
 
@@ -874,7 +876,7 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
 
 
     --let H_matrix := LinearMap.toMatrix' '' (ContinuousLinearMap.toLinearMap '' (V_fresh_arrow '' (V_map_equiv '' (Units.val '' H.carrier))))
-    have H_mem_unitary: ∀ h ∈ H_matrix, h ∈ Matrix.unitaryGroup (Fin (Module.finrank ℂ (FreshInnerProduct V))) ℂ := by
+    have H_mem_unitary : ∀ h ∈ H_matrix, h ∈ Matrix.unitaryGroup (Fin (Module.finrank ℂ (FreshInnerProduct V))) ℂ := by
       intro h h_mem
       simp [H_matrix, new_H_coe, new_H_matrix] at h_mem
       obtain ⟨a, a_mem, ha⟩ := h_mem
@@ -884,8 +886,8 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
       -- since it might not be the identity, which would break 'mulLeft'
       -- Instead, first convert to plain LinearMap (which we can use defeq abuse with, due to not having
       -- the bundled topology with ContinuousLinearMap)
-      let a_fresh: (FreshInnerProduct V) →ₗ[ℂ] (FreshInnerProduct V) := a.val.toLinearMap
-      let to_fresh (v: V): FreshInnerProduct V := v
+      let a_fresh : (FreshInnerProduct V) →ₗ[ℂ] (FreshInnerProduct V) := a.val.toLinearMap
+      let to_fresh (v : V): FreshInnerProduct V := v
 
       -- LinearMap.norm_map_iff_inner_map_map
       -- have preserves_inner_iff := (LinearMap.norm_map_iff_inner_map_map a_fresh).mpr ?_
@@ -896,7 +898,7 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
       --   apply_fun V_map_equiv at preserves_inner_iff
       --   apply_fun LinearMap.toMatrix' at preserves_inner_iff
       --   sorry
-      have preserves_inner: ∀ (x y : V), ⟪a_fresh x, a_fresh y⟫ = ⟪to_fresh x, to_fresh y⟫ := by
+      have preserves_inner : ∀ (x y : V), ⟪a_fresh x, a_fresh y⟫ = ⟪to_fresh x, to_fresh y⟫ := by
         intro v w
         unfold inner
         simp [InnerProductSpace.toInner, new_inner]
@@ -939,7 +941,7 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
         arg 2
         rw [← Module.End.mul_apply]
 
-      have inner_specialized (x: FreshInnerProduct V) := preserves_inner x x
+      have inner_specialized (x : FreshInnerProduct V) := preserves_inner x x
       rw [ext_inner_map] at inner_specialized
       rw [← ha]
       simp [a_fresh] at inner_specialized
@@ -953,8 +955,8 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
 
 
     let H_carrier := H.carrier
-    let H_matrix_subgroup: Subgroup (Matrix.unitaryGroup (Fin (Module.finrank ℂ V)) ℂ) := {
-      carrier := Set.range (fun (h: H_matrix) => ⟨h.val, H_mem_unitary h (by simp)⟩),
+    let H_matrix_subgroup : Subgroup (Matrix.unitaryGroup (Fin (Module.finrank ℂ V)) ℂ) := {
+      carrier := Set.range (fun (h : H_matrix) => ⟨h.val, H_mem_unitary h (by simp)⟩),
       mul_mem' := by
         intro x y hx hy
         simp
@@ -973,13 +975,13 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
         obtain ⟨x, x_mem, x_eq_p⟩ := p_mem
         simp [new_H_coe, new_H_matrix]
         refine ⟨?_, ?_⟩
-        .
+        · 
           use (x * y)
           refine ⟨?_, ?_⟩
-          . apply Subgroup.mul_mem
-            . exact x_mem
-            . exact y_mem
-          . simp
+          · apply Subgroup.mul_mem
+            · exact x_mem
+            · exact y_mem
+          · simp
             conv =>
               lhs
               arg 2
@@ -987,7 +989,7 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
                 rfl
             rw [LinearMap.toMatrix_mul]
             rw [y_eq_q, x_eq_p, p_eq_a, q_eq_b, ← a_eq_x, ← b_eq_y]
-        . rfl
+        · rfl
       one_mem' := by
         simp [H_matrix, new_H_coe, new_H_matrix]
         use 1
@@ -998,14 +1000,14 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
         intro a ha b hb a_eq_b
         use a⁻¹
         refine ⟨?_, ?_⟩
-        . simp [H_matrix, new_H_coe, new_H_matrix]
+        · simp [H_matrix, new_H_coe, new_H_matrix]
           simp [H_matrix, new_H_coe, new_H_matrix] at hb
           obtain ⟨x, x_mem, x_eq_b⟩ := hb
           use x⁻¹
           refine ⟨?_, ?_⟩
-          . apply Subgroup.inv_mem
+          · apply Subgroup.inv_mem
             exact x_mem
-          . rw [← a_eq_b]
+          · rw [← a_eq_b]
             apply_fun Inv.inv at x_eq_b
             rw [← x_eq_b]
             rw [eq_comm]
@@ -1018,7 +1020,7 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
                 rfl
             simp
             apply LinearMap.toMatrix_one
-        .
+        · 
           rw [Matrix.mem_unitaryGroup_iff] at ha
           apply Matrix.inv_eq_right_inv at ha
           simp_rw [ha]
@@ -1026,9 +1028,9 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
           simp
     }
 
-    let remove_fresh (h: FreshInnerProduct V →ₗ[ℂ] FreshInnerProduct V): (V →ₗ[ℂ] V) := h
+    let remove_fresh (h : FreshInnerProduct V →ₗ[ℂ] FreshInnerProduct V): (V →ₗ[ℂ] V) := h
 
-    . use H_matrix_subgroup
+    · use H_matrix_subgroup
       apply Nonempty.intro
       exact {
         toFun := fun h => ⟨{
@@ -1044,8 +1046,8 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
                 rw [eq_comm]
                 apply Matrix.toLin_mul_apply
             rw [Matrix.mul_nonsing_inv]
-            . simp
-            . apply Matrix.UnitaryGroup.det_isUnit
+            · simp
+            · apply Matrix.UnitaryGroup.det_isUnit
           inv_val := by
             simp [remove_fresh]
             ext a
@@ -1056,8 +1058,8 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
                 rw [eq_comm]
                 apply Matrix.toLin_mul_apply
             rw [Matrix.nonsing_inv_mul]
-            . simp
-            . apply Matrix.UnitaryGroup.det_isUnit
+            · simp
+            · apply Matrix.UnitaryGroup.det_isUnit
         }, by (
           simp [remove_fresh]
           have h_prop := h.property
@@ -1114,31 +1116,31 @@ lemma new_weyl_unitarian_trick {V: Type*} [NormedAddCommGroup V] [InnerProductSp
           simp
           apply Matrix.toLin_mul_apply
       }
-    . rfl
+    · rfl
 
 #print axioms new_weyl_unitarian_trick
 
 -- A product of k unitary groups U(n_1) × U(n_2) × ... × U(n_k), where n_i < n for each n_i
-abbrev UnitaryProd (k: ℕ) (n: ℕ) (n_i: Fin k → Fin n) := (i: Fin k) → Matrix.unitaryGroup (Fin (n_i i)) ℂ
+abbrev UnitaryProd (k : ℕ) (n : ℕ) (n_i : Fin k → Fin n) := (i : Fin k) → Matrix.unitaryGroup (Fin (n_i i)) ℂ
 
-structure InductiveLemmaData (n: ℕ) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) where
-  k: ℕ
-  k_pos: 0 < k
-  n_i: Fin k → ℕ
-  n_i_lt: ∀ i: Fin k, n_i i < n
-  positive_n_i: ∀ i: Fin k, n_i i ≠ 0
-  groups: (i: Fin k) → Subgroup (Matrix.unitaryGroup (Fin (n_i i)) ℂ)
-  iso: Subgroup.centralizer {g} ≃* ((i: Fin k) → (groups i))
+structure InductiveLemmaData (n : ℕ) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g : G) where
+  k : ℕ
+  k_pos : 0 < k
+  n_i : Fin k → ℕ
+  n_i_lt : ∀ i : Fin k, n_i i < n
+  positive_n_i : ∀ i : Fin k, n_i i ≠ 0
+  groups : (i : Fin k) → Subgroup (Matrix.unitaryGroup (Fin (n_i i)) ℂ)
+  iso : Subgroup.centralizer {g} ≃* ((i : Fin k) → (groups i))
 
 -- Lemma 3.30
-lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) (g_not_multiple_I: ∀ z: ℂ, g.val.val ≠ z • 1):
+lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g : G) (g_not_multiple_I : ∀ z : ℂ, g.val.val ≠ z • 1):
   Nonempty (InductiveLemmaData n G g) := by
 
-  let g_end: Module.End ℂ (Fin n → ℂ) := Matrix.toLin' g
+  let g_end : Module.End ℂ (Fin n → ℂ) := Matrix.toLin' g
   -- TODO - is there a better way to write the space as a finite union of generalized eigenspaces?
   have eigenspace_span := Module.End.iSup_maxGenEigenspace_eq_top g_end
   rw [← iSup_ne_bot_subtype] at eigenspace_span
-  have subtype_eq: { z: ℂ // g_end.maxGenEigenspace z ≠ ⊥ } = { z: ℂ // ∃ n, g_end.HasGenEigenvalue z n} := by
+  have subtype_eq : { z : ℂ // g_end.maxGenEigenspace z ≠ ⊥ } = { z : ℂ // ∃ n, g_end.HasGenEigenvalue z n} := by
     simp only [Module.End.maxGenEigenspace]
     simp_rw [Module.End.genEigenspace_top]
     conv =>
@@ -1152,8 +1154,8 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
       rw [← Module.End.hasGenEigenvalue_iff]
 
   have finite_eigenvalues := Module.End.finite_hasEigenvalue g_end
-  have subtype_finite: Finite { z: ℂ // ∃ n, g_end.HasGenEigenvalue z n} := by
-    have finite_setof: Finite (setOf g_end.HasEigenvalue) := by
+  have subtype_finite : Finite { z : ℂ // ∃ n, g_end.HasGenEigenvalue z n} := by
+    have finite_setof : Finite (setOf g_end.HasEigenvalue) := by
       simp
       exact finite_eigenvalues
     apply Finite.of_injective (β := setOf g_end.HasEigenvalue) (f := fun z => (by
@@ -1164,36 +1166,36 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
     simp
     exact Isometry.injective fun x1 ↦ congrFun rfl
 
-  have nontrival_coord: Nontrivial (Fin n → ℂ) := by
-    have nontrivial_fin: Nontrivial (Fin n) := by
+  have nontrival_coord : Nontrivial (Fin n → ℂ) := by
+    have nontrivial_fin : Nontrivial (Fin n) := by
       exact Fin.nontrivial_iff_two_le.mpr hn
     infer_instance
 
-  have n_gt: 0 < n := by omega
+  have n_gt : 0 < n := by omega
 
   let list_eigenvalues := finite_eigenvalues.toFinset.toList
 
-  have two_eigenvalues: 2 ≤ list_eigenvalues.length := by
+  have two_eigenvalues : 2 ≤ list_eigenvalues.length := by
     by_contra!
-    by_cases len_eq_zero: list_eigenvalues.length = 0
-    .
+    by_cases len_eq_zero : list_eigenvalues.length = 0
+    · 
       simp [list_eigenvalues] at len_eq_zero
       obtain ⟨z, hz⟩ := Module.End.exists_eigenvalue g_end
-      have eigenvalues_nonempty: setOf g_end.HasEigenvalue ≠ ∅ := by
+      have eigenvalues_nonempty : setOf g_end.HasEigenvalue ≠ ∅ := by
         rw [← Set.nonempty_iff_ne_empty]
         apply Set.nonempty_of_mem hz
       contradiction
-    .
-      have len_eq_one: list_eigenvalues.length = 1 := by
+    · 
+      have len_eq_one : list_eigenvalues.length = 1 := by
         omega
 
       obtain ⟨z, hz⟩ := Module.End.exists_eigenvalue g_end
-      have z_gen_eigen: g_end.HasGenEigenvalue z 1 := by
+      have z_gen_eigen : g_end.HasGenEigenvalue z 1 := by
         rw [Module.End.hasGenEigenvalue_iff]
         exact hz
       rw [Module.End.hasGenEigenvalue_iff] at z_gen_eigen
       -- Since we only have a single eigenvalue, we only have one non-bot maxGenEigenspace
-      have unique_subtype: Unique { i // g_end.maxGenEigenspace i ≠ ⊥ } := by
+      have unique_subtype : Unique { i // g_end.maxGenEigenspace i ≠ ⊥ } := by
         exact {
           default := ⟨z, by (
             simp only [Module.End.maxGenEigenspace]
@@ -1219,19 +1221,19 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
             rw [Finset.card_eq_one] at len_eq_one
             obtain ⟨p, hp⟩ := len_eq_one
             -- TODO - clean this up
-            have eigenvalues_eq_singleton: setOf g_end.HasEigenvalue = {p} := by
+            have eigenvalues_eq_singleton : setOf g_end.HasEigenvalue = {p} := by
               ext a
               refine ⟨?_, ?_⟩
-              . intro ha
+              · intro ha
                 have foo := Set.Finite.mem_toFinset finite_eigenvalues (a := a)
                 simp only [] at foo
                 simp only [Set.mem_setOf_eq] at ha
                 have mem_finite := foo.mpr ha
                 rw [hp] at mem_finite
                 simpa using mem_finite
-              . intro ha
+              · intro ha
                 simp at ha
-                have a_mem_finset: a ∈ finite_eigenvalues.toFinset := by
+                have a_mem_finset : a ∈ finite_eigenvalues.toFinset := by
                   rw [hp]
                   simp
                   exact ha
@@ -1239,11 +1241,11 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
                 exact a_mem_finset
 
             simp at eigenvalues_eq_singleton
-            have x_mem: x.val ∈ setOf g_end.HasEigenvalue := by
+            have x_mem : x.val ∈ setOf g_end.HasEigenvalue := by
               simp
               exact y_eigen
 
-            have z_mem: z ∈ setOf g_end.HasEigenvalue := by
+            have z_mem : z ∈ setOf g_end.HasEigenvalue := by
               simp
               exact hz
             rw [eigenvalues_eq_singleton] at z_mem
@@ -1278,28 +1280,28 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
       -- rw [Module.End.genEigenspace_one] at eigenspace_span
       -- rw [Module.End.genEigenspace_top] at eigenspace_span
 
-  have nontrivial_len:  Nontrivial (Fin list_eigenvalues.length) := by
+  have nontrivial_len :  Nontrivial (Fin list_eigenvalues.length) := by
     exact Fin.nontrivial_iff_two_le.mpr two_eigenvalues
 
   let first_subspace := Module.End.genEigenspace g_end (list_eigenvalues.get ⟨0, by linarith⟩) ⊤
   obtain ⟨second_subspace, first_compl_second⟩ := Submodule.exists_isCompl first_subspace
   --have i_j_disjoint := Module.End.disjoint_genEigenspace g_end vals_neq ⊤ ⊤
 
-  have first_generalized_eigenvalue: g_end.HasGenEigenvalue (list_eigenvalues.get ⟨0, by linarith⟩) 1 := by
+  have first_generalized_eigenvalue : g_end.HasGenEigenvalue (list_eigenvalues.get ⟨0, by linarith⟩) 1 := by
     rw [Module.End.hasGenEigenvalue_iff_hasEigenvalue]
-    . have zero_mem: list_eigenvalues.get ⟨0, by linarith⟩ ∈ list_eigenvalues := by
+    · have zero_mem : list_eigenvalues.get ⟨0, by linarith⟩ ∈ list_eigenvalues := by
         simp [list_eigenvalues]
 
       unfold list_eigenvalues at zero_mem
       simp only [Finset.mem_toList] at zero_mem
       simp at zero_mem
       exact zero_mem
-    . simp
+    · simp
 
 
   have first_not_bot := Module.End.hasGenEigenvalue_iff.mp first_generalized_eigenvalue
   -- simp [IsCompl] at first_compl_second
-  -- have j_top_not_bot: second_subspace ≠ ⊥ := by
+  -- have j_top_not_bot : second_subspace ≠ ⊥ := by
   --   rw [← bot_lt_iff_ne_bot] at first_not_bot
   --   grw [Module.End.genEigenspace_le_maximal] at first_not_bot
   --   rw [bot_lt_iff_ne_bot] at first_not_bot
@@ -1319,14 +1321,14 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
           apply Submodule.finrank_lt
           by_contra!
           sorry
-          -- have distinct: ∃ j: Fin list_eigenvalues.length, i ≠ j := by
+          -- have distinct : ∃ j : Fin list_eigenvalues.length, i ≠ j := by
           --   have foo := exists_ne i
           --   obtain ⟨j, hj⟩ := foo
           --   use j
           --   exact hj.symm
 
           -- obtain ⟨j, hj⟩ := distinct
-          -- have vals_neq: list_eigenvalues.get i ≠ list_eigenvalues.get j := by
+          -- have vals_neq : list_eigenvalues.get i ≠ list_eigenvalues.get j := by
           --   simp [list_eigenvalues]
           --   have no_dup := Finset.nodup_toList finite_eigenvalues.toFinset
           --   rw [List.Nodup.getElem_inj_iff]
@@ -1338,27 +1340,27 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
           -- let j_subspace := Module.End.genEigenspace g_end (list_eigenvalues.get j) ⊤
           -- have i_j_disjoint := Module.End.disjoint_genEigenspace g_end vals_neq ⊤ ⊤
 
-          -- have j_mem_tolist: list_eigenvalues.get j ∈ list_eigenvalues := by
+          -- have j_mem_tolist : list_eigenvalues.get j ∈ list_eigenvalues := by
           --   simp [list_eigenvalues]
 
           -- unfold list_eigenvalues at j_mem_tolist
           -- simp only [Finset.mem_toList] at j_mem_tolist
           -- simp at j_mem_tolist
-          -- have j_generalized_eigenvalue: g_end.HasGenEigenvalue (list_eigenvalues.get j) 1 := by
+          -- have j_generalized_eigenvalue : g_end.HasGenEigenvalue (list_eigenvalues.get j) 1 := by
           --   rw [Module.End.hasGenEigenvalue_iff_hasEigenvalue]
           --   . exact j_mem_tolist
           --   . simp
 
           -- -- Our 'j' eigenspace is not the trivial (bot) space
           -- have j_not_bot := Module.End.hasGenEigenvalue_iff.mp j_generalized_eigenvalue
-          -- have j_top_not_bot: (g_end.genEigenspace (list_eigenvalues.get j)) ⊤ ≠ ⊥ := by
+          -- have j_top_not_bot : (g_end.genEigenspace (list_eigenvalues.get j)) ⊤ ≠ ⊥ := by
           --   rw [← bot_lt_iff_ne_bot] at j_not_bot
           --   grw [Module.End.genEigenspace_le_maximal] at j_not_bot
           --   rw [bot_lt_iff_ne_bot] at j_not_bot
           --   exact j_not_bot
 
           -- -- The i and j spaces are disjoint and j is not ⊥, so i is not ⊤
-          -- have i_ne_top: (g_end.genEigenspace (list_eigenvalues.get i)) ⊤ ≠ ⊤ := by
+          -- have i_ne_top : (g_end.genEigenspace (list_eigenvalues.get i)) ⊤ ≠ ⊤ := by
           --   by_contra!
           --   rw [this] at i_j_disjoint
           --   simp at i_j_disjoint
@@ -1377,7 +1379,7 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
 
     positive_n_i := by
       -- intro i
-      -- have i_mem_tolist: list_eigenvalues.get i ∈ list_eigenvalues := by
+      -- have i_mem_tolist : list_eigenvalues.get i ∈ list_eigenvalues := by
       --   simp [list_eigenvalues]
 
       -- unfold list_eigenvalues at i_mem_tolist
@@ -1421,13 +1423,13 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
   --   lhs
   --   arg 1
 
-  -- have f_map (h: G) (h_comm: Commute g h): True := by
+  -- have f_map (h : G) (h_comm : Commute g h): True := by
   --   have preserves := Module.End.mapsTo_genEigenspace_of_comm ?_ (f := g_end) (g := Matrix.toLin' h.val.val)
 
   --   -- Module.End.maxGenEigenspace_eq_genEigenspace_finrank
   --   -- LinearMap.toMatrix'
 
-  --   let h_end:  Module.End ℂ (Fin n → ℂ) := Matrix.toLin' h
+  --   let h_end :  Module.End ℂ (Fin n → ℂ) := Matrix.toLin' h
   --   have test_preserves := preserves 1 ⊤
   --   let h_restrict := h_end.restrict test_preserves
   --   have ⟨k, basis⟩ := Submodule.basisOfPid (by sorry) ((g_end.genEigenspace 1) ⊤) (ι := Fin 2)
@@ -1438,7 +1440,7 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
   --   sorry
 
   -- -- TODO - this must already exist somewhere
-  -- have nontrivial_fin_n_c: Nontrivial ((Fin n) → ℂ) := by
+  -- have nontrivial_fin_n_c : Nontrivial ((Fin n) → ℂ) := by
   --   use (fun n => 1)
   --   use (fun n => 2)
   --   by_contra!
@@ -1449,22 +1451,22 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
   -- let g': Module.End _ _ := g.val.val.toLin'
   -- have exists_eigenvalue := Module.End.exists_eigenvalue g'
 
-  -- have nonempty_eigenvalues: Nonempty g'.Eigenvalues := by
+  -- have nonempty_eigenvalues : Nonempty g'.Eigenvalues := by
   --   obtain ⟨c, hc⟩ := exists_eigenvalue
   --   use c
 
-  -- have two_eigenvalues: 2 ≤ Nat.card g'.Eigenvalues := by
+  -- have two_eigenvalues : 2 ≤ Nat.card g'.Eigenvalues := by
   --   by_contra!
-  --   have card_ne_zero: 0 < Nat.card g'.Eigenvalues := by
+  --   have card_ne_zero : 0 < Nat.card g'.Eigenvalues := by
   --     rw [Nat.card_pos_iff]
   --     refine ⟨nonempty_eigenvalues, ?_⟩
   --     exact Finite.of_fintype g'.Eigenvalues
 
-  --   have card_eq_one: Nat.card g'.Eigenvalues = 1 := by
+  --   have card_eq_one : Nat.card g'.Eigenvalues = 1 := by
   --     omega
 
   --   -- TODO - there must be a simpler way of proving this
-  --   have unique_eigenvalues: Unique g'.Eigenvalues := {
+  --   have unique_eigenvalues : Unique g'.Eigenvalues := {
   --     uniq := by
   --       intro x
   --       rw [Nat.card_eq_one_iff_exists] at card_eq_one
@@ -1478,7 +1480,7 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
 
   --   -- obtain ⟨c, hc⟩ := exists_eigenvalue
   --   -- obtain ⟨v, hv⟩ := Module.End.HasEigenvalue.exists_hasEigenvector hc
-  --   -- have has_eigenvalue_iff_c: ∀ z: ℂ, g'.HasEigenvalue z ↔ z = c := by
+  --   -- have has_eigenvalue_iff_c : ∀ z : ℂ, g'.HasEigenvalue z ↔ z = c := by
   --   --   sorry
 
 
@@ -1488,47 +1490,47 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
   --   -- simp at ei
 
 
-  -- -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/DirectSum/LinearMap.html#LinearMap.toMatrix_directSum_collectedBasis_eq_blockDiagonal'
+  -- -- https ://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/DirectSum/LinearMap.html#LinearMap.toMatrix_directSum_collectedBasis_eq_blockDiagonal'
   -- let a := g.val.val.eigenvalues_conjTranspose_mul_self_nonneg
   -- sorry
 
 #check Pi.commSemigroup
 
 -- A sufficiently small epsilon to use for the h_n elements in Theorem 3.8 (independent of the choice of n)
-noncomputable def H_n_eps {d: ℕ} (hd: 2 ≤ d): ℝ := (min ((1: ℝ) / 8) ((small_dist_matrix d hd).choose / 2))
+noncomputable def H_n_eps {d : ℕ} (hd : 2 ≤ d): ℝ := (min ((1 : ℝ) / 8) ((small_dist_matrix d hd).choose / 2))
 
 -- H_n_eps is less than 1/2
-lemma H_n_eps_lt {d: ℕ} (hd: 2 ≤ d) : H_n_eps hd < ((1 : ℝ) / 4) := by
+lemma H_n_eps_lt {d : ℕ} (hd : 2 ≤ d) : H_n_eps hd < ((1 : ℝ) / 4) := by
   simp [H_n_eps]
   left
   norm_num
 
-lemma H_n_eps_pos {d: ℕ} (hd: 2 ≤ d) : 0 < H_n_eps hd := by
+lemma H_n_eps_pos {d : ℕ} (hd : 2 ≤ d) : 0 < H_n_eps hd := by
   simp [H_n_eps]
   have small_pos := (small_dist_matrix d hd).choose_spec
   linarith
 
 structure HnData where
-  d: ℕ
-  hd: 2 ≤ d
-  G: Subgroup (Matrix.unitaryGroup (Fin d) ℂ)
-  G_central_trivial: ∀ g: G, g ∈ Set.center G → ∃ z: ℂ, g.val.val = z • 1
-  S: Set G
-  S_generates: Subgroup.closure S = ⊤
-  S_finite: S.Finite
-  S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ ≤ (H_n_eps hd)
-  h: S
-  h_nontrivial: ¬ ∃(z : ℂ), h.val.val.val = z • 1
+  d : ℕ
+  hd : 2 ≤ d
+  G : Subgroup (Matrix.unitaryGroup (Fin d) ℂ)
+  G_central_trivial : ∀ g : G, g ∈ Set.center G → ∃ z : ℂ, g.val.val = z • 1
+  S : Set G
+  S_generates : Subgroup.closure S = ⊤
+  S_finite : S.Finite
+  S_dist : ∀ s ∈ S, ‖s.val.val - 1‖ ≤ (H_n_eps hd)
+  h : S
+  h_nontrivial : ¬ ∃(z : ℂ), h.val.val.val = z • 1
 
 -- 'h' is our initial element - we define ε in terms of ‖h - 1‖, so that we can obtain the proper bound
 -- for the commutators in the inductive case
 set_option maxHeartbeats 500000 in
-noncomputable def theorem_3_8_h_n (data: HnData) (n: ℕ):
-  { g: data.G // (¬∃ z: ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) ∧ ( ‖g.val.val - 1‖ ≤ (H_n_eps data.hd)) } := match hn : n with
+noncomputable def theorem_3_8_h_n (data : HnData) (n : ℕ):
+  { g : data.G // (¬∃ z : ℂ, g.val.val = z • 1) ∧ ( ‖g.val.val - 1‖ ≠ 0) ∧ ( ‖g.val.val - 1‖ ≤ (H_n_eps data.hd)) } := match hn : n with
   | 0 => ⟨data.h, (by
     refine ⟨?_, ?_, ?_⟩
-    . use data.h_nontrivial
-    . by_contra!
+    · use data.h_nontrivial
+    · by_contra!
       simp at this
       rw [sub_eq_zero] at this
       have h_nontrivial := data.h_nontrivial
@@ -1537,18 +1539,18 @@ noncomputable def theorem_3_8_h_n (data: HnData) (n: ℕ):
       simp at h_neq
       simp at this
       contradiction
-    . exact data.S_dist data.h data.h.property
+    · exact data.S_dist data.h data.h.property
   )⟩
   | k + 1 => by
     -- TODO - why do we get a heartbeat timeout if we inline 'prev'?
     let prev := (theorem_3_8_h_n data k)
-    have comm_not_identity: ∃ s : data.S, ∀ z: ℂ, ⁅s.val.val, prev.val.val⁆.val ≠ z • 1 := by
+    have comm_not_identity : ∃ s : data.S, ∀ z : ℂ, ⁅s.val.val, prev.val.val⁆.val ≠ z • 1 := by
       by_contra!
-      have comm_eq_id: ∀ s: data.S, ⁅s.val.val, prev.val.val⁆ = 1 := by
+      have comm_eq_id : ∀ s : data.S, ⁅s.val.val, prev.val.val⁆ = 1 := by
         intro s
         obtain ⟨z, comm_eq_z⟩ := this s
-        have norm_z: ‖z‖ = 1 := by
-          have z_mul_unitary: z • 1 ∈ Matrix.unitaryGroup (Fin data.d) ℂ := by
+        have norm_z : ‖z‖ = 1 := by
+          have z_mul_unitary : z • 1 ∈ Matrix.unitaryGroup (Fin data.d) ℂ := by
             rw [← comm_eq_z]
             simp
 
@@ -1557,18 +1559,18 @@ noncomputable def theorem_3_8_h_n (data: HnData) (n: ℕ):
           simp at det_unitary
           apply CStarRing.norm_of_mem_unitary at det_unitary
           simp at det_unitary
-          have d_ne_zero: data.d ≠ 0 := by
+          have d_ne_zero : data.d ≠ 0 := by
             have hd := data.hd
             omega
           have z_pow := (pow_eq_one_iff_of_ne_zero (a := ‖z‖) d_ne_zero).mp det_unitary
-          have norm_pos: 0 ≤ ‖z‖ := by
+          have norm_pos : 0 ≤ ‖z‖ := by
             positivity
-          have norm_not_neg: ‖z‖ ≠ -1 := by
+          have norm_not_neg : ‖z‖ ≠ -1 := by
             linarith
 
           simp [norm_not_neg] at z_pow
           exact z_pow
-        have det_one: ⁅s.val.val, prev.val.val⁆.val.det = 1 := by
+        have det_one : ⁅s.val.val, prev.val.val⁆.val.det = 1 := by
           simp [Bracket.bracket]
           rw [Matrix.star_eq_conjTranspose]
           rw [Matrix.star_eq_conjTranspose]
@@ -1588,19 +1590,19 @@ noncomputable def theorem_3_8_h_n (data: HnData) (n: ℕ):
         have prev_prop := prev.property.2.2
         have norm_le := shrinking_conjugators data.d s.val prev.val.val
         grw [data.S_dist s, prev_prop] at norm_le
-        .
-          have two_mul_le: 2 * (H_n_eps data.hd) ≤ 1 := by
+        · 
+          have two_mul_le : 2 * (H_n_eps data.hd) ≤ 1 := by
             grw [H_n_eps_lt data.hd]
             norm_num
           grw [two_mul_le] at norm_le
-          .
+          · 
             simp at norm_le
 
 
             --rw [comm_eq_z] at norm_le
             let C := (small_dist_matrix data.d data.hd).choose
 
-            have H_eps_lt_C: H_n_eps data.hd < C := by
+            have H_eps_lt_C : H_n_eps data.hd < C := by
               rw [H_n_eps]
               unfold C
               grw [min_le_right]
@@ -1623,20 +1625,20 @@ noncomputable def theorem_3_8_h_n (data: HnData) (n: ℕ):
             )
             simp [z_eq_one] at comm_eq_z
             exact comm_eq_z
-          .
+          · 
             -- TODO - deduplicate this
             simp [H_n_eps]
             have C_pos := (small_dist_matrix data.d data.hd).choose_spec.1
             linarith
-        .
+        · 
           simp [H_n_eps]
           have C_pos := (small_dist_matrix data.d data.hd).choose_spec.1
           linarith
-        . simp
-      .
+        · simp
+      · 
         have subgroup_le := Subgroup.closure_le_centralizer_centralizer data.S
         simp [data.S_generates] at subgroup_le
-        have prev_mem_centralizer: prev.val ∈ Subgroup.centralizer data.S := by
+        have prev_mem_centralizer : prev.val ∈ Subgroup.centralizer data.S := by
           rw [Subgroup.mem_centralizer_iff]
           intro s hs
           have h_comm := comm_eq_id ⟨s, hs⟩
@@ -1654,9 +1656,9 @@ noncomputable def theorem_3_8_h_n (data: HnData) (n: ℕ):
         contradiction
     use ⁅comm_not_identity.choose.val, prev.val⁆
     refine ⟨?_, ?_, ?_⟩
-    . rw [not_exists]
+    · rw [not_exists]
       exact comm_not_identity.choose_spec
-    . by_contra!
+    · by_contra!
       simp at this
       rw [sub_eq_zero] at this
       have my_nontrivial := comm_not_identity.choose_spec 1
@@ -1667,7 +1669,7 @@ noncomputable def theorem_3_8_h_n (data: HnData) (n: ℕ):
       rw [Subtype.ext_iff] at this
       simp at this
       contradiction
-    . have my_shrink := shrinking_conjugators data.d comm_not_identity.choose prev
+    · have my_shrink := shrinking_conjugators data.d comm_not_identity.choose prev
       conv =>
         lhs
         arg 1
@@ -1680,14 +1682,14 @@ noncomputable def theorem_3_8_h_n (data: HnData) (n: ℕ):
       grw [prev_prop]
       have comm_choose_le := data.S_dist comm_not_identity.choose (by simp)
       grw [comm_choose_le]
-      have two_mul_le: 2 * (H_n_eps data.hd) ≤ 1 := by
+      have two_mul_le : 2 * (H_n_eps data.hd) ≤ 1 := by
         grw [H_n_eps_lt data.hd]
         norm_num
       grw [two_mul_le]
-      . simp
-      . have pos := H_n_eps_pos data.hd
+      · simp
+      · have pos := H_n_eps_pos data.hd
         linarith
-      . have pos := H_n_eps_pos data.hd
+      · have pos := H_n_eps_pos data.hd
         linarith
 
 
@@ -1695,7 +1697,7 @@ termination_by n
 decreasing_by
   simp
 
-lemma unitary_shrink {n: ℕ} (a b: Matrix.unitaryGroup (Fin n) ℂ): ‖(a * b).val - 1‖ ≤ ‖a.val - 1‖ + ‖b.val - 1‖ := by
+lemma unitary_shrink {n : ℕ} (a b : Matrix.unitaryGroup (Fin n) ℂ): ‖(a * b).val - 1‖ ≤ ‖a.val - 1‖ + ‖b.val - 1‖ := by
   conv =>
     lhs
     arg 1
@@ -1708,17 +1710,17 @@ lemma unitary_shrink {n: ℕ} (a b: Matrix.unitaryGroup (Fin n) ℂ): ‖(a * b)
   grw [norm_add_le]
   rw [CStarRing.norm_mul_coe_unitary]
 
-lemma coe_comm_g {data: HnData} (a b: data.G): ⁅a.val, b.val⁆ = ⁅a, b⁆.val := by
+lemma coe_comm_g {data : HnData} (a b : data.G): ⁅a.val, b.val⁆ = ⁅a, b⁆.val := by
   rw [commutatorElement_def]
   rw [commutatorElement_def]
   norm_cast
 
-lemma H_n_upper_bound (data: HnData) (n: ℕ): ‖(theorem_3_8_h_n data (n + 1)).val.val.val - 1‖ ≤ 2 * (H_n_eps data.hd) * ‖(theorem_3_8_h_n data (n)).val.val.val - 1‖ := by
+lemma H_n_upper_bound (data : HnData) (n : ℕ): ‖(theorem_3_8_h_n data (n + 1)).val.val.val - 1‖ ≤ 2 * (H_n_eps data.hd) * ‖(theorem_3_8_h_n data (n)).val.val.val - 1‖ := by
   conv =>
     lhs
     unfold theorem_3_8_h_n
   simp
-  have coe_comm_g (a b: data.G): ⁅a.val, b.val⁆ = ⁅a, b⁆.val := by
+  have coe_comm_g (a b : data.G): ⁅a.val, b.val⁆ = ⁅a, b⁆.val := by
     rw [commutatorElement_def]
     rw [commutatorElement_def]
     norm_cast
@@ -1728,7 +1730,7 @@ lemma H_n_upper_bound (data: HnData) (n: ℕ): ‖(theorem_3_8_h_n data (n + 1))
   grw [data.S_dist]
   simp
 
-lemma H_n_upper_bound_iter (data: HnData) {a: ℕ} (n: ℕ): ‖(theorem_3_8_h_n data (a + n)).val.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data (a)).val.val.val - 1‖ * 2^n * (H_n_eps data.hd)^n  := by
+lemma H_n_upper_bound_iter (data : HnData) {a : ℕ} (n : ℕ): ‖(theorem_3_8_h_n data (a + n)).val.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data (a)).val.val.val - 1‖ * 2^n * (H_n_eps data.hd)^n  := by
   induction n with
   | zero =>
     simp
@@ -1737,15 +1739,15 @@ lemma H_n_upper_bound_iter (data: HnData) {a: ℕ} (n: ℕ): ‖(theorem_3_8_h_n
     grw [H_n_upper_bound]
     grw [ih]
     abel_nf
-    .
+    · 
       ring_nf
       rfl
-    . simp
+    · simp
       have H_eps_pos := H_n_eps_pos data.hd
       linarith
 
 
-lemma H_n_single_pow {n: ℕ} {m: ℕ} (data: HnData): ‖((theorem_3_8_h_n data n).val.val^m).val - 1‖ ≤ m * ‖(theorem_3_8_h_n data n).val.val.val - 1‖ := by
+lemma H_n_single_pow {n : ℕ} {m : ℕ} (data : HnData): ‖((theorem_3_8_h_n data n).val.val^m).val - 1‖ ≤ m * ‖(theorem_3_8_h_n data n).val.val.val - 1‖ := by
   induction m with
   | zero =>
     simp [pow_zero]
@@ -1757,8 +1759,8 @@ lemma H_n_single_pow {n: ℕ} {m: ℕ} (data: HnData): ‖((theorem_3_8_h_n data
     rw [add_mul]
     simp
 
-lemma H_n_pow_le  {a k: ℕ } {m: ℕ} (a_k_lt: a + k < m)  (pows: Fin m → ℕ) (data: HnData):
-  ‖(List.ofFn (fun (i: Fin (k)) => (theorem_3_8_h_n data (a + i)).val^(pows ⟨(a + i), by (have foo := i.isLt; omega)⟩))).prod.val.val - 1‖ ≤ ∑ (i: Fin k), (pows ⟨(a + i), by (have foo := i.isLt; omega)⟩) * ‖(theorem_3_8_h_n data (a + i)).val.val.val - 1‖ := by
+lemma H_n_pow_le  {a k : ℕ } {m : ℕ} (a_k_lt : a + k < m)  (pows : Fin m → ℕ) (data : HnData):
+  ‖(List.ofFn (fun (i : Fin (k)) => (theorem_3_8_h_n data (a + i)).val^(pows ⟨(a + i), by (have foo := i.isLt; omega)⟩))).prod.val.val - 1‖ ≤ ∑ (i : Fin k), (pows ⟨(a + i), by (have foo := i.isLt; omega)⟩) * ‖(theorem_3_8_h_n data (a + i)).val.val.val - 1‖ := by
   induction k with
   | zero =>
     simp [List.ofFn, List.prod_nil]
@@ -1788,25 +1790,23 @@ lemma H_n_pow_le  {a k: ℕ } {m: ℕ} (a_k_lt: a + k < m)  (pows: Fin m → ℕ
       equals if h : ↑x < k then ↑(pows ⟨↑(a + x), by omega⟩) * ‖(theorem_3_8_h_n data ↑(a + x)).val.val.val - 1‖ else 0 =>
         have x_lt_m := x.property
         rw [Finset.mem_range] at x_lt_m
-        have x_lt_m_succ: x.val < k + 1 := by
+        have x_lt_m_succ : x.val < k + 1 := by
           omega
         simp [x_lt_m, x_lt_m_succ]
 
     rw [← Finset.sum_attach]
 
 
-lemma H_n_prod_le_k {a k: ℕ } (k_ne_zero: k ≠ 0) {m: ℕ} (a_k_lt: a + k + 1 < m) (c : ℝ) (c_pos: 0 < c) (c_lt: c < 1 / 40) (pows: Fin m → ℕ) (data: HnData)
- (pows_le: ∀ i: Fin m, (pows i) ≤ c * (H_n_eps data.hd)⁻¹) :
-  ‖(List.ofFn (fun (i: Fin (k)) => (theorem_3_8_h_n data ((a + 1) + i)).val^(pows ⟨((a + 1) + i), by omega⟩))).prod.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data (a)).val.val.val - 1‖ / 10 := by
+lemma H_n_prod_le_k {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + k + 1 < m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 1 / 40) (pows : Fin m → ℕ) (data : HnData)
+ (pows_le : ∀ i : Fin m, (pows i) ≤ c * (H_n_eps data.hd)⁻¹) :
+  ‖(List.ofFn (fun (i : Fin (k)) => (theorem_3_8_h_n data ((a + 1) + i)).val^(pows ⟨((a + 1) + i), by omega⟩))).prod.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data (a)).val.val.val - 1‖ / 10 := by
 
 
   grw [H_n_pow_le]
   grw [Finset.sum_le_sum (g := (fun i : Fin (k) => (c * (H_n_eps data.hd)⁻¹) * ‖(theorem_3_8_h_n data ((a + 1) + i)).val.val.val - 1‖))]
-  .
-    rw [← Finset.mul_sum]
+  · rw [← Finset.mul_sum]
     grw [Finset.sum_le_sum (g := (fun i : Fin (k) => ‖(theorem_3_8_h_n data (a)).val.val.val - 1‖ * 2^(1 + i.val) * (H_n_eps data.hd)^(1 + i.val)))]
-    .
-      have eps_nonneg := H_n_eps_pos data.hd
+    · have eps_nonneg := H_n_eps_pos data.hd
       simp
       simp_rw [mul_assoc]
       rw [← Finset.mul_sum]
@@ -1826,13 +1826,13 @@ lemma H_n_prod_le_k {a k: ℕ } (k_ne_zero: k ≠ 0) {m: ℕ} (a_k_lt: a + k + 1
       have eps_ne_zero := H_n_eps_pos data.hd
       field_simp
       -- TODO - make this a lemma
-      have two_mul_le: 2 * (H_n_eps data.hd) < (1 / 2) := by
+      have two_mul_le : 2 * (H_n_eps data.hd) < (1 / 2) := by
         have foo := H_n_eps_lt data.hd
         linarith
       nth_grw 2 [two_mul_le]
       field_simp
       norm_num
-      have eps_ne_zero: 0 ≠ (H_n_eps data.hd) := by
+      have eps_ne_zero : 0 ≠ (H_n_eps data.hd) := by
         have foo := H_n_eps_pos data.hd
         linarith
 
@@ -1843,40 +1843,36 @@ lemma H_n_prod_le_k {a k: ℕ } (k_ne_zero: k ≠ 0) {m: ℕ} (a_k_lt: a + k + 1
       grw [c_lt]
       ring
       rfl
-      . positivity
-      . grw [H_n_eps_lt data.hd]
+      · positivity
+      · grw [H_n_eps_lt data.hd]
         norm_num
-      . rfl
-      .
-        intro x hx
+      · rfl
+      · intro x hx
         simp at hx
         simp [hx]
-    . simp [c_pos]
+    · simp [c_pos]
       have pos := H_n_eps_pos data.hd
       linarith
     -- H_n_upper_bound_iter
-    .
-      intro i hi
+    · intro i hi
       rw [add_assoc]
       grw [H_n_upper_bound_iter data]
-  . intro i hi
+  · intro i hi
     grw [pows_le]
-  . omega
+  · omega
 
 #print axioms H_n_prod_le_k
 
 -- Theorem 3.8, case with only trivial elements in the center
-lemma central_trivial_virtually_abelian (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG) (ε: ℝ) (hε: 0 < ε)
-  (G_central_trivial: ∀ g: G, g ∈ Set.center G → ∃ z: ℂ, g.val.val = z • 1)
-  (G'_central_trivial: ∀ g: (G' n ε G), g ∈ Set.center (G' n ε G) → ∃ z: ℂ, g.val.val.val = z • 1)
-  : ∃ N: Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
+lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG) (ε : ℝ) (hε : 0 < ε)
+  (G_central_trivial : ∀ g : G, g ∈ Set.center G → ∃ z : ℂ, g.val.val = z • 1)
+  (G'_central_trivial : ∀ g : (G' n ε G), g ∈ Set.center (G' n ε G) → ∃ z : ℂ, g.val.val.val = z • 1)
+  : ∃ N : Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
 
-  by_cases all_mul_identity: ∀ h: G, ∃ z: ℂ, h.val.val = z • 1
-  .
-    use ⊤
+  by_cases all_mul_identity : ∀ h : G, ∃ z : ℂ, h.val.val = z • 1
+  · use ⊤
     refine ⟨?_, ?_⟩
-    .
-      refine { is_comm := ?_ }
+    · refine { is_comm := ?_ }
       refine { comm := ?_ }
       intro a b
       have a_diag := all_mul_identity a
@@ -1888,9 +1884,8 @@ lemma central_trivial_virtually_abelian (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Mat
       rw [a_eq, b_eq]
       simp
       group
-    . infer_instance
-  .
-    simp [-Subtype.forall, -Subtype.exists] at all_mul_identity
+    · infer_instance
+  · simp [-Subtype.forall, -Subtype.exists] at all_mul_identity
 
 
     sorry
@@ -1901,17 +1896,17 @@ lemma central_trivial_virtually_abelian (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Mat
 -- Helper for theorem 3.8
 set_option synthInstance.maxHeartbeats 100000 in
 set_option maxHeartbeats 1000000 in
-lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG): ∃ N: Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
-  by_cases n_eq_one: n = 1
-  .
-    have fin_sin_subsingleton: Subsingleton (Fin n) := by
+lemma central_implies_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG): ∃ N : Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
+  by_cases n_eq_one : n = 1
+  · 
+    have fin_sin_subsingleton : Subsingleton (Fin n) := by
       rw [n_eq_one]
       exact Fin.subsingleton_one
-    have all_diag: ∀ h: G, h.val.val.IsDiag := by
+    have all_diag : ∀ h : G, h.val.val.IsDiag := by
       intro h
       apply Matrix.isDiag_of_subsingleton
 
-    have all_comm: ∀ (a b: G), a.val.val * b.val.val = b.val.val * a.val.val := by
+    have all_comm : ∀ (a b : G), a.val.val * b.val.val = b.val.val * a.val.val := by
       intro a b
       have diag_a := all_diag a
       have diag_b := all_diag b
@@ -1924,7 +1919,7 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
 
     use ⊤
     refine ⟨?_, ?_⟩
-    .
+    · 
       exact {
         is_comm := by
           exact {
@@ -1939,11 +1934,11 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
               apply all_comm
           }
       }
-    . exact Subgroup.instFiniteIndexTop
-  .
-    have nontrivial_centrer_implies_virtual (G: Subgroup ↥(Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG) (nontrivial_central: ∃ g: G, (∀ z: ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G): ∃ N: Subgroup G, IsMulCommutative ↥N ∧ N.FiniteIndex := by
+    · exact Subgroup.instFiniteIndexTop
+  · 
+    have nontrivial_centrer_implies_virtual (G : Subgroup ↥(Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG) (nontrivial_central : ∃ g : G, (∀ z : ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G): ∃ N : Subgroup G, IsMulCommutative ↥N ∧ N.FiniteIndex := by
       obtain ⟨g, g_not_multiple_I, g_central⟩ := nontrivial_central
-      -- have G_subset_centralizer:  ⊆ (Subgroup.centralizer {g}).carrier := by
+      -- have G_subset_centralizer :  ⊆ (Subgroup.centralizer {g}).carrier := by
       --   intro a ha
       --   simp
       --   rw [Subgroup.mem_centralizer_iff]
@@ -1956,7 +1951,7 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
       --   simp at g_comm
       --   apply g_comm
 
-      have all_mem_central: ∀ a : G, a ∈ Subgroup.centralizer {g} := by
+      have all_mem_central : ∀ a : G, a ∈ Subgroup.centralizer {g} := by
         intro a b b_mem
         simp at b_mem
         rw [b_mem]
@@ -1964,14 +1959,14 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
         have g_comm := g_central.comm a
         exact g_comm
 
-      have n_ge_two: 2 ≤ n := by
+      have n_ge_two : 2 ≤ n := by
         omega
       obtain ⟨data⟩ := inductive_lemma n n_ge_two G g g_not_multiple_I
       -- TODO - PR this to mathlib
-      have subgroup_fg: ∀ i: Fin (data.k), (data.groups i).FG := by
+      have subgroup_fg : ∀ i : Fin (data.k), (data.groups i).FG := by
         intro i
         have iso := data.iso
-        have centralizer_fg: (Subgroup.centralizer {g}).FG := by
+        have centralizer_fg : (Subgroup.centralizer {g}).FG := by
           conv =>
             arg 1
             equals ⊤ =>
@@ -1990,7 +1985,7 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
         }
         rw [Subgroup.fg_iff_submonoid_fg] at centralizer_fg
         have map_prod_fg := Submonoid.FG.map (P := ⊤) ?_ data.iso.toMonoidHom
-        .
+        · 
           simp at map_prod_fg
           rw [← Monoid.fg_def] at map_prod_fg
           have range_fg := Monoid.fg_range i_hom
@@ -2005,7 +2000,7 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
               ext a
               simp
               -- TODO - deduplicate this
-              use (fun j => if hij: i = j then (
+              use (fun j => if hij : i = j then (
                 have group_equiv : data.groups i ≃* data.groups j := by
                   rw [hij]
 
@@ -2013,11 +2008,11 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
               ) else 1)
               simp [i_hom]
           rw [← Monoid.fg_def] at map_factor
-          . exact (Monoid.fg_iff_submonoid_fg (data.groups i).toSubmonoid).mp map_factor
-          . exact Monoid.fg_def.mp map_prod_fg
-          .
+          · exact (Monoid.fg_iff_submonoid_fg (data.groups i).toSubmonoid).mp map_factor
+          · exact Monoid.fg_def.mp map_prod_fg
+          · 
             intro a
-            use (fun j => if hij: i = j then (
+            use (fun j => if hij : i = j then (
               have group_equiv : data.groups i ≃* data.groups j := by
                 rw [hij]
 
@@ -2050,9 +2045,9 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
 
         -- sorry
       -- The abelian subgroup of G_i.
-      let Gi' := fun i: Fin (data.k) => central_implies_virtually_abelian (data.n_i i) (data.positive_n_i i) (data.groups i) (subgroup_fg i)
-      -- Page 48: Let Gᵢ := πᵢ⁻¹(πᵢ(G)′) = {g ∈ G : πᵢ(g) ∈ πᵢ(G)′}
-      let inv_image : Fin (data.k) → Subgroup G := fun i: Fin (data.k) => {
+      let Gi' := fun i : Fin (data.k) => central_implies_virtually_abelian (data.n_i i) (data.positive_n_i i) (data.groups i) (subgroup_fg i)
+      -- Page 48 : Let Gᵢ := πᵢ⁻¹(πᵢ(G)′) = {g ∈ G : πᵢ(g) ∈ πᵢ(G)′}
+      let inv_image : Fin (data.k) → Subgroup G := fun i : Fin (data.k) => {
         carrier := { a : G | (data.iso ⟨a, all_mem_central a⟩) i ∈ (Classical.choose (Gi' i)) },
         mul_mem' := by
           intro a b ha hb
@@ -2091,17 +2086,17 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
       }
 
       -- TODO - figure out a way to make this proof less horrible (maybe somehow avoid Classical.choose)
-      have inv_image_comm (a b) (ha: ∀ i, a ∈ inv_image i) (hb: ∀ i, b ∈ inv_image i): a * b = b * a := by
+      have inv_image_comm (a b) (ha : ∀ i, a ∈ inv_image i) (hb : ∀ i, b ∈ inv_image i): a * b = b * a := by
         simp [inv_image] at ha hb
         have symm_mul := MulEquiv.symm_apply_apply (e := data.iso) ⟨(a * b), (by
           apply Subgroup.mul_mem
-          . apply all_mem_central
-          . apply all_mem_central
+          · apply all_mem_central
+          · apply all_mem_central
         )⟩
         have symm_mul_swap := MulEquiv.symm_apply_apply (e := data.iso) ⟨(b * a), (by
           apply Subgroup.mul_mem
-          . apply all_mem_central
-          . apply all_mem_central
+          · apply all_mem_central
+          · apply all_mem_central
         )⟩
         rw [Subtype.ext_iff] at symm_mul
         simp only [] at symm_mul
@@ -2129,8 +2124,7 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
         conv =>
           rhs
           arg 2
-          equals ⟨b, all_mem_central b⟩ * ⟨a, all_mem_central a⟩ =>
-            simp only [MulMemClass.mk_mul_mk, inv_image]
+          equals ⟨b, all_mem_central b⟩ * ⟨a, all_mem_central a⟩ => simp only [MulMemClass.mk_mul_mk]
 
 
 
@@ -2140,7 +2134,7 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
         rw [a_b_comm]
       let G' := ⨅ (i : Fin (data.k)), inv_image i
 
-      have G'_comm: ∀ a b: G', a * b = b * a := by
+      have G'_comm : ∀ a b : G', a * b = b * a := by
         intro a b
         have a_mem := a.property
         have b_mem := b.property
@@ -2157,7 +2151,7 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
         have a_b_comm := inv_image_comm a b a_val b_val
         exact a_b_comm
 
-      have inv_image_finite_index: ∀ i: Fin (data.k), (inv_image i).FiniteIndex := by
+      have inv_image_finite_index : ∀ i : Fin (data.k), (inv_image i).FiniteIndex := by
         intro i
         have finite_index_subgroup := (Classical.choose_spec (Gi' i)).2
         have finite_quotient := @Subgroup.finite_quotient_of_finiteIndex _ _ _ finite_index_subgroup
@@ -2198,7 +2192,7 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
 
 
       let G' := ⨅ (i : (Fin (data.k))), inv_image i
-      have G'_abeliean: IsMulCommutative G' := by
+      have G'_abeliean : IsMulCommutative G' := by
         exact {
           is_comm := by
             exact {
@@ -2207,17 +2201,16 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
             }
         }
 
-      have G'_finite_index: G'.FiniteIndex := by
+      have G'_finite_index : G'.FiniteIndex := by
         apply Subgroup.finiteIndex_iInf
         apply inv_image_finite_index
 
       --unfold UnitaryProd at centralizer_iso
       use G'
-    by_cases nontrivial_central: ∃ g: G, (∀ z: ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G
-    . exact nontrivial_centrer_implies_virtual G G_FG nontrivial_central
-    .
-      -- Case two - we have no non-trivial central elements
-      simp only [ne_eq, exists_and_left, not_exists, not_and] at nontrivial_central
+    by_cases nontrivial_central : ∃ g : G, (∀ z : ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G
+    · exact nontrivial_centrer_implies_virtual G G_FG nontrivial_central
+    · -- Case two - we have no non-trivial central elements
+      simp only [ne_eq, not_exists, not_and] at nontrivial_central
       let ε: ℝ := 2
       have hε : 0 < ε := by
         simp [ε]
@@ -2226,11 +2219,10 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
       specialize G_eps G
 
 
-      by_cases G'_nontrivial_central: ∃ g: (G' n ε G), (∀ z: ℂ, g.val.val.val ≠ z • 1) ∧ g ∈ Set.center (G' n ε G)
-      .
-        have G'_virtual := nontrivial_centrer_implies_virtual (Subgroup.map G.subtype (G' n ε G)) (by
+      by_cases G'_nontrivial_central : ∃ g : (G' n ε G), (∀ z : ℂ, g.val.val.val ≠ z • 1) ∧ g ∈ Set.center (G' n ε G)
+      · have G'_virtual := nontrivial_centrer_implies_virtual (Subgroup.map G.subtype (G' n ε G)) (by
           have G'_finite := G_eps.1
-          have G_FG_other: Group.FG G := by
+          have G_FG_other : Group.FG G := by
             exact (Group.fg_iff_subgroup_fg G).mpr G_FG
           have G'_FG := Subgroup.fg_of_index_ne_zero (G' n ε G)
           -- TODO - PR this to mathlib
@@ -2242,12 +2234,11 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
           obtain ⟨g, hg⟩ := G'_nontrivial_central
           use ⟨g, by simp⟩
           refine ⟨?_, ?_⟩
-          . intro z
+          · intro z
             simp
             have g_prop := hg.1 z
             simpa using g_prop
-          .
-            have g_mem := hg.2
+          · have g_mem := hg.2
             rw [Set.mem_center_iff]
             rw [Set.mem_center_iff] at g_mem
             exact {
@@ -2289,9 +2280,9 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
         let latest := Subgroup.map (Subgroup.subtype _) other
         use latest
         refine ⟨?_, ?_⟩
-        . simp [latest, other, G'_hom]
+        · simp [latest, other, G'_hom]
           apply Subgroup.map_isMulCommutative
-        . simp [latest, other, G'_hom]
+        · simp [latest, other, G'_hom]
           rw [Subgroup.finiteIndex_iff]
           rw [ Subgroup.index_map]
           simp
@@ -2318,26 +2309,23 @@ lemma central_implies_virtually_abelian (n: ℕ) (hn: n ≠ 0) (G: Subgroup (Mat
         --let foo := Subgroup.map (Subgroup.subtype _) N
 
         --let foo := Subgroup.comap ((Subgroup.map (G.subtype (G' n ε G))).subtype) N
-      .
-        simp at hn
+      · simp at hn
         have target := central_trivial_virtually_abelian n (by omega) G G_FG ε hε ?_ ?_
-        . exact target
-        .
-          intro g hg
+        · exact target
+        · intro g hg
           specialize nontrivial_central g
           rw [← not_imp_not] at nontrivial_central
           simp at nontrivial_central
           exact nontrivial_central hg
-        . intro g hg
-          simp only [ne_eq, exists_and_left, not_exists,
-            not_and] at G'_nontrivial_central
+        · intro g hg
+          simp only [ne_eq, not_exists, not_and] at G'_nontrivial_central
           specialize G'_nontrivial_central g
           rw [← not_imp_not] at G'_nontrivial_central
           simp at G'_nontrivial_central
           exact G'_nontrivial_central hg
 termination_by (n, G.index)
 decreasing_by
-  . apply Prod.Lex.left
+  · apply Prod.Lex.left
     exact data.n_i_lt i
 
 #print axioms central_implies_virtually_abelian
