@@ -1470,11 +1470,13 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
 #check Pi.commSemigroup
 
 -- A sufficiently small epsilon to use for the h_n elements in Theorem 3.8 (independent of the choice of n)
-noncomputable def H_n_eps {d: ℕ} (hd: 2 ≤ d): ℝ := (min ((1: ℝ) / 2) ((small_dist_matrix d hd).choose / 2))
+noncomputable def H_n_eps {d: ℕ} (hd: 2 ≤ d): ℝ := (min ((1: ℝ) / 8) ((small_dist_matrix d hd).choose / 2))
 
 -- H_n_eps is less than 1/2
-lemma H_n_eps_lt {d: ℕ} (hd: 2 ≤ d) : H_n_eps hd ≤ ((1 : ℝ) / 2) := by
+lemma H_n_eps_lt {d: ℕ} (hd: 2 ≤ d) : H_n_eps hd < ((1 : ℝ) / 4) := by
   simp [H_n_eps]
+  left
+  norm_num
 
 lemma H_n_eps_pos {d: ℕ} (hd: 2 ≤ d) : 0 < H_n_eps hd := by
   simp [H_n_eps]
@@ -1564,7 +1566,7 @@ noncomputable def theorem_3_8_h_n (data: HnData) (n: ℕ):
         .
           have two_mul_le: 2 * (H_n_eps data.hd) ≤ 1 := by
             grw [H_n_eps_lt data.hd]
-            simp
+            norm_num
           grw [two_mul_le] at norm_le
           .
             simp at norm_le
@@ -1655,7 +1657,7 @@ noncomputable def theorem_3_8_h_n (data: HnData) (n: ℕ):
       grw [comm_choose_le]
       have two_mul_le: 2 * (H_n_eps data.hd) ≤ 1 := by
         grw [H_n_eps_lt data.hd]
-        simp
+        norm_num
       grw [two_mul_le]
       . simp
       . have pos := H_n_eps_pos data.hd
@@ -1701,15 +1703,12 @@ lemma H_n_upper_bound (data: HnData) (n: ℕ): ‖(theorem_3_8_h_n data (n + 1))
   grw [data.S_dist]
   simp
 
-lemma H_n_upper_bound_iter (data: HnData) (n: ℕ): ‖(theorem_3_8_h_n data (n )).val.val.val - 1‖ ≤ 2^n * (H_n_eps data.hd)^n  := by
+lemma H_n_upper_bound_iter (data: HnData) {a: ℕ} (n: ℕ): ‖(theorem_3_8_h_n data (a + n)).val.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data (a)).val.val.val - 1‖ * 2^n * (H_n_eps data.hd)^n  := by
   induction n with
   | zero =>
-    simp [theorem_3_8_h_n]
-    grw [data.S_dist]
-    grw [H_n_eps_lt]
-    norm_num
     simp
   | succ n ih =>
+    rw [← add_assoc]
     grw [H_n_upper_bound]
     grw [ih]
     abel_nf
@@ -1771,41 +1770,76 @@ lemma H_n_pow_le  {a k: ℕ } {m: ℕ} (a_k_lt: a + k < m)  (pows: Fin m → ℕ
     rw [← Finset.sum_attach]
 
 
-lemma H_n_prod_le_k {a k: ℕ } {m: ℕ} (a_k_lt: a + k + 1 < m) (c : ℝ) (c_pos: 0 < c) (pows: Fin m → ℕ) (data: HnData)
- (pows_le: ∀ i: Fin m, (pows i) ≤ c * (H_n_eps data.hd)) :
+lemma H_n_prod_le_k {a k: ℕ } (k_ne_zero: k ≠ 0) {m: ℕ} (a_k_lt: a + k + 1 < m) (c : ℝ) (c_pos: 0 < c) (c_lt: c < 40⁻¹) (pows: Fin m → ℕ) (data: HnData)
+ (pows_le: ∀ i: Fin m, (pows i) ≤ c * (H_n_eps data.hd)⁻¹) :
   ‖(List.ofFn (fun (i: Fin (k)) => (theorem_3_8_h_n data ((a + 1) + i)).val^(pows ⟨((a + 1) + i), by omega⟩))).prod.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data (a)).val.val.val - 1‖ / 10 := by
 
 
   grw [H_n_pow_le]
-  grw [Finset.sum_le_sum (g := (fun i : Fin (k) => (c * (H_n_eps data.hd)) * ‖(theorem_3_8_h_n data ((a + 1) + i)).val.val.val - 1‖))]
+  grw [Finset.sum_le_sum (g := (fun i : Fin (k) => (c * (H_n_eps data.hd)⁻¹) * ‖(theorem_3_8_h_n data ((a + 1) + i)).val.val.val - 1‖))]
   .
     rw [← Finset.mul_sum]
-    grw [Finset.sum_le_sum (g := (fun i : Fin (k) => ‖(theorem_3_8_h_n data (a + 1)).val.val.val - 1‖))]
+    grw [Finset.sum_le_sum (g := (fun i : Fin (k) => ‖(theorem_3_8_h_n data (a)).val.val.val - 1‖ * 2^(1 + i.val) * (H_n_eps data.hd)^(1 + i.val)))]
     .
-
+      have eps_nonneg := H_n_eps_pos data.hd
+      simp
+      simp_rw [mul_assoc]
+      rw [← Finset.mul_sum]
+      simp_rw [← mul_pow]
+      simp_rw [add_comm]
+      simp_rw [pow_succ]
+      rw [← Finset.sum_mul]
       rw [Finset.sum_fin_eq_sum_range]
+      rw [Finset.sum_congr (s₁ := Finset.range k) (s₂ := Finset.range k) (g := fun i => (2 * H_n_eps data.hd) ^ i)]
 
-      sorry
+      rw [Finset.range_eq_Ico]
+      nth_rw 4 [mul_comm]
+      rw [← mul_assoc]
+      rw [← mul_assoc]
+      rw [← mul_assoc]
+      grw [geom_sum_Ico_le_of_lt_one]
+      have eps_ne_zero := H_n_eps_pos data.hd
+      field_simp
+      -- TODO - make this a lemma
+      have two_mul_le: 2 * (H_n_eps data.hd) < (1 / 2) := by
+        have foo := H_n_eps_lt data.hd
+        linarith
+      nth_grw 2 [two_mul_le]
+      field_simp
+      norm_num
+      have eps_ne_zero: 0 ≠ (H_n_eps data.hd) := by
+        have foo := H_n_eps_pos data.hd
+        linarith
+
+
+      field_simp [eps_ne_zero]
+      rw [mul_comm]
+      rw [← mul_assoc]
+      rw [← mul_assoc]
+      -- TODO - why can't field_simp cancel the denominator without manual mul_assoc/mul_comm rewrites
+      field_simp
+      grw [c_lt]
+      rw [mul_comm]
+      rw [← mul_assoc]
+      rw [← mul_assoc]
+      norm_num
+      . field_simp
+      . positivity
+      . grw [H_n_eps_lt data.hd]
+        norm_num
+      . rfl
+      .
+        intro x hx
+        simp at hx
+        simp [hx]
     . simp [c_pos]
       have pos := H_n_eps_pos data.hd
       linarith
     -- H_n_upper_bound_iter
     .
       intro i hi
-      induction i.val with
-      | zero =>
-        simp
-      | succ i ih =>
-        rw [← add_assoc]
-        grw [H_n_upper_bound]
-        grw [ih]
-        have two_mul_le: 2 * (H_n_eps data.hd) ≤ 1 := by
-          grw [H_n_eps_lt data.hd]
-          simp
-        grw [two_mul_le]
-        simp
-        have h_n_pos := H_n_eps_pos data.hd
-        linarith
+      rw [add_assoc]
+      grw [H_n_upper_bound_iter data]
   . intro i hi
     grw [pows_le]
   . omega
