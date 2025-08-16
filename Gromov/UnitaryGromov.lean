@@ -2287,5 +2287,46 @@ lemma f_deriv_at_one (a: ℝ) (a_pos: 0 < a) (a_lt: a < 1) (ha: 0 < 1 + a): 0 < 
 
   apply_fun Real.exp_strictMono.orderIso
   simp only [StrictMono.orderIso_apply, Subtype.mk_lt_mk]
-  rw [Real.exp_mul]
-  rw [Real.exp_log ha]
+  simp
+  exact ha
+
+
+lemma f_deriv_lower (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (x: ℝ) (x_gt: 1 < x) (f_zero: (deriv (f a)) x = 0): (Real.log 2) / a ≤ x := by
+  rw [f_deriv _ ha] at f_zero
+  rw [sub_eq_zero] at f_zero
+  nth_rw 2 [mul_comm] at f_zero
+  apply div_eq_of_eq_mul at f_zero
+  .
+    apply_fun Real.log at f_zero
+    rw [Real.log_rpow] at f_zero
+    apply div_eq_of_eq_mul at f_zero
+    rw [Real.log_div] at f_zero
+    rw [Real.log_mul] at f_zero
+    rw [← f_zero]
+
+    have log_plus_le: Real.log (1 + a) ≤ a := by
+      grw [Real.log_le_sub_one_of_pos]
+      . simp
+      . exact ha
+
+    grw [log_plus_le]
+    . simp
+    . sorry
+    .
+      apply Real.log_pos
+      simp [a_pos]
+    . apply Real.log_pos
+      simp [a_pos]
+    . simp
+    . linarith
+    . linarith
+    . have pos: 0 < Real.log (1 + a) := by
+        apply Real.log_pos
+        simp [a_pos]
+      linarith
+    . have pos: 0 < Real.log (1 + a) := by
+        apply Real.log_pos
+        simp [a_pos]
+      linarith
+    . exact ha
+  . sorry
