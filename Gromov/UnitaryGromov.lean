@@ -1770,7 +1770,7 @@ lemma H_n_pow_le  {a k: ℕ } {m: ℕ} (a_k_lt: a + k < m)  (pows: Fin m → ℕ
     rw [← Finset.sum_attach]
 
 
-lemma H_n_prod_le_k {a k: ℕ } (k_ne_zero: k ≠ 0) {m: ℕ} (a_k_lt: a + k + 1 < m) (c : ℝ) (c_pos: 0 < c) (c_lt: c < 40⁻¹) (pows: Fin m → ℕ) (data: HnData)
+lemma H_n_prod_le_k {a k: ℕ } (k_ne_zero: k ≠ 0) {m: ℕ} (a_k_lt: a + k + 1 < m) (c : ℝ) (c_pos: 0 < c) (c_lt: c < 1 / 40) (pows: Fin m → ℕ) (data: HnData)
  (pows_le: ∀ i: Fin m, (pows i) ≤ c * (H_n_eps data.hd)⁻¹) :
   ‖(List.ofFn (fun (i: Fin (k)) => (theorem_3_8_h_n data ((a + 1) + i)).val^(pows ⟨((a + 1) + i), by omega⟩))).prod.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data (a)).val.val.val - 1‖ / 10 := by
 
@@ -1843,6 +1843,8 @@ lemma H_n_prod_le_k {a k: ℕ } (k_ne_zero: k ≠ 0) {m: ℕ} (a_k_lt: a + k + 1
   . intro i hi
     grw [pows_le]
   . omega
+
+#print axioms H_n_prod_le_k
 
 -- Theorem 3.8, case with only trivial elements in the center
 lemma central_trivial_virtually_abelian (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG: G.FG) (ε: ℝ) (hε: 0 < ε)
