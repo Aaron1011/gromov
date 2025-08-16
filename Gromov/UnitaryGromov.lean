@@ -2272,7 +2272,7 @@ lemma f_deriv_lower (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (x: ℝ) (f_zero: (d
       simp [a_pos]
     linarith
 
-lemma f_pos_on (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (a_lt: a < 1) (div_a: 3 < 2 / a): ∀ x ∈ Set.Ioc 1 (Real.log 2 / a), 0 < f a x := by
+lemma f_pos_on (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (a_lt: a < 1)  (a_lt_log: a < Real.log 2): ∀ x ∈ Set.Ioc 1 (Real.log 2 / a), 0 < f a x := by
 
   have deriv_nonzero: ∀ x ∈ Set.Ico 1 (Real.log 2 / a), (deriv (f a)) x ≠  0 := by
     intro x hx
@@ -2281,10 +2281,13 @@ lemma f_pos_on (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (a_lt: a < 1) (div_a: 3 <
     have x_lt := hx.right
     linarith
 
-  have one_lt : 1 < Real.log 2 / a := by
-    sorry
+  have one_lt : 1 < Real.log (2) / a := by
+    rw [lt_div_iff₀]
+    . simp
+      exact a_lt_log
+    . exact a_pos
 
-  have f_strict := strictMonoOn_of_deriv_pos (f := f a) (D := Set.Icc 1 (Real.log 2 / a)) (by apply convex_Icc) ?_ ?_
+  have f_strict := strictMonoOn_of_deriv_pos (f := f a) (D := Set.Icc 1 ((Real.log (2 )) / a)) (by apply convex_Icc) ?_ ?_
   .
     intro x hx
     have f_lt := f_strict.lt_iff_lt (a := 1) (b := x) ?_ ?_
@@ -2338,3 +2341,5 @@ lemma f_pos_on (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (a_lt: a < 1) (div_a: 3 <
     . exact lt_of_le_of_ne deriv_pos (id (Ne.symm not_zero))
     . simp
       refine ⟨by linarith, hx.right⟩
+
+#print axioms f_pos_on
