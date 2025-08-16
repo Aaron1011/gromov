@@ -1281,39 +1281,61 @@ lemma inductive_lemma (n: ℕ) (hn: 2 ≤ n) (G: Subgroup (Matrix.unitaryGroup (
   have nontrivial_len:  Nontrivial (Fin list_eigenvalues.length) := by
     exact Fin.nontrivial_iff_two_le.mpr two_eigenvalues
 
+  let first_subspace := Module.End.genEigenspace g_end (list_eigenvalues.get ⟨0, by linarith⟩) ⊤
+  obtain ⟨second_subspace, first_compl_second⟩ := Submodule.exists_isCompl first_subspace
+  --have i_j_disjoint := Module.End.disjoint_genEigenspace g_end vals_neq ⊤ ⊤
+
+  have first_generalized_eigenvalue: g_end.HasGenEigenvalue (list_eigenvalues.get ⟨0, by linarith⟩) 1 := by
+    rw [Module.End.hasGenEigenvalue_iff_hasEigenvalue]
+    . have zero_mem: list_eigenvalues.get ⟨0, by linarith⟩ ∈ list_eigenvalues := by
+        simp [list_eigenvalues]
+
+      unfold list_eigenvalues at zero_mem
+      simp only [Finset.mem_toList] at zero_mem
+      simp at zero_mem
+      exact zero_mem
+    . simp
+
+
+  have first_not_bot := Module.End.hasGenEigenvalue_iff.mp first_generalized_eigenvalue
+  simp [IsCompl] at first_compl_second
+  have j_top_not_bot: second_subspace ≠ ⊥ := by
+    rw [← bot_lt_iff_ne_bot] at first_not_bot
+    grw [Module.End.genEigenspace_le_maximal] at first_not_bot
+    rw [bot_lt_iff_ne_bot] at first_not_bot
+    exact j_not_bot
+
+
   have foo := Module.End.pos_finrank_genEigenspace_of_hasEigenvalue (f := g_end) (μ := 1) (k := 2)
   exact Nonempty.intro {
-    k := list_eigenvalues.length,
+    k := 2,
     k_pos := by
-      simp [list_eigenvalues]
-      obtain ⟨z, hz⟩ := Module.End.exists_eigenvalue g_end
-      exact Set.nonempty_of_mem hz
-    n_i := fun i => (Module.finrank ℂ (Module.End.genEigenspace g_end (list_eigenvalues.get ⟨i, by (
-      simp
-    )⟩) ⊤)),
+      linarith
+    n_i := fun i => if i = 0 then (Module.finrank ℂ (first_subspace)) else Module.finrank ℂ (second_subspace),
     n_i_lt := fun i => by
+      split_ifs
       calc
         _ < Module.finrank ℂ (Fin n → ℂ) := by
           apply Submodule.finrank_lt
           by_contra!
-          have distinct: ∃ j: Fin list_eigenvalues.length, i ≠ j := by
-            have foo := exists_ne i
-            obtain ⟨j, hj⟩ := foo
-            use j
-            exact hj.symm
+          -- have distinct: ∃ j: Fin list_eigenvalues.length, i ≠ j := by
+          --   have foo := exists_ne i
+          --   obtain ⟨j, hj⟩ := foo
+          --   use j
+          --   exact hj.symm
 
-          obtain ⟨j, hj⟩ := distinct
-          have vals_neq: list_eigenvalues.get i ≠ list_eigenvalues.get j := by
-            simp [list_eigenvalues]
-            have no_dup := Finset.nodup_toList finite_eigenvalues.toFinset
-            rw [List.Nodup.getElem_inj_iff]
-            . omega
-            . exact no_dup
+          -- obtain ⟨j, hj⟩ := distinct
+          -- have vals_neq: list_eigenvalues.get i ≠ list_eigenvalues.get j := by
+          --   simp [list_eigenvalues]
+          --   have no_dup := Finset.nodup_toList finite_eigenvalues.toFinset
+          --   rw [List.Nodup.getElem_inj_iff]
+          --   . omega
+          --   . exact no_dup
 
 
-            --rw [List.Nodup.get_inj_iff no_dup]
-          let j_subspace := Module.End.genEigenspace g_end (list_eigenvalues.get j) ⊤
-          have i_j_disjoint := Module.End.disjoint_genEigenspace g_end vals_neq ⊤ ⊤
+          --   --rw [List.Nodup.get_inj_iff no_dup]
+          -- let j_subspace := Module.End.genEigenspace g_end (list_eigenvalues.get j) ⊤
+          -- have i_j_disjoint := Module.End.disjoint_genEigenspace g_end vals_neq ⊤ ⊤
 
           have j_mem_tolist: list_eigenvalues.get j ∈ list_eigenvalues := by
             simp [list_eigenvalues]
