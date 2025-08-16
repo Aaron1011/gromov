@@ -1837,18 +1837,12 @@ lemma H_n_prod_le_k {a k: ℕ } (k_ne_zero: k ≠ 0) {m: ℕ} (a_k_lt: a + k + 1
         linarith
 
 
+      ring_nf
       field_simp [eps_ne_zero]
-      rw [mul_comm]
-      rw [← mul_assoc]
-      rw [← mul_assoc]
-      -- TODO - why can't field_simp cancel the denominator without manual mul_assoc/mul_comm rewrites
-      field_simp
+
       grw [c_lt]
-      rw [mul_comm]
-      rw [← mul_assoc]
-      rw [← mul_assoc]
-      norm_num
-      . field_simp
+      ring
+      rfl
       . positivity
       . grw [H_n_eps_lt data.hd]
         norm_num
