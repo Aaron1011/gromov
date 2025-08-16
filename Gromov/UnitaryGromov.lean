@@ -4,6 +4,9 @@ open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 --open scoped ComplexInnerProductSpace
 
 
+set_option linter.style.longLine false
+set_option linter.style.commandStart false
+
 -- Lemma 3.29 (Shrinking Conjugators)
 lemma shrinking_conjugators (n : ℕ) (g h : Matrix.unitaryGroup (Fin n) ℂ) :
   ‖⁅g, h⁆.val - 1‖ ≤ 2 * ‖g.val - 1‖ * ‖h.val - 1‖ := by
@@ -2307,3 +2310,40 @@ decreasing_by
     exact data.n_i_lt i
 
 #print axioms central_implies_virtually_abelian
+
+
+noncomputable def f (a: ℝ) (x: ℝ): ℝ := 1 + (2*x - 1)*a - (1 + a)^x
+
+lemma f_one_eq_zero (a: ℝ): f a 1 = 0 := by
+  simp [f]
+  ring
+
+lemma f_deriv (a: ℝ) (ha: 0 < 1 + a) (x: ℝ): (deriv (f a)) x = 2*a - (Real.log (1 + a))*(1 + a)^x := by
+  unfold f
+  simp_rw [← add_sub]
+  rw [deriv_const_add]
+  rw [← Pi.sub_def]
+  rw [deriv_sub]
+  .
+    rw [deriv_mul_const]
+    ·
+      rw [deriv_sub_const]
+      rw [deriv_const_mul]
+      .
+        simp
+        have deriv_pow := (Real.hasStrictDerivAt_const_rpow (a := 1 + a) ha x).hasDerivAt.deriv
+        rw [deriv_pow]
+        rw [mul_comm]
+      . simp
+    ·
+      simp
+      apply DifferentiableAt.const_mul
+      simp
+  .
+    apply DifferentiableAt.mul_const
+    simp
+    apply DifferentiableAt.const_mul
+    simp
+  .
+    apply (Real.hasStrictDerivAt_const_rpow _ _).hasDerivAt.differentiableAt
+    exact ha
