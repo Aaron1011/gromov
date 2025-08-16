@@ -2281,6 +2281,9 @@ lemma f_pos_on (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (a_lt: a < 1) (div_a: 3 <
     have x_lt := hx.right
     linarith
 
+  have one_lt : 1 < Real.log 2 / a := by
+    sorry
+
   have f_strict := strictMonoOn_of_deriv_pos (f := f a) (D := Set.Icc 1 (Real.log 2 / a)) (by apply convex_Icc) ?_ ?_
   .
     intro x hx
@@ -2288,22 +2291,20 @@ lemma f_pos_on (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (a_lt: a < 1) (div_a: 3 <
     rw [f_one_eq_zero] at f_lt
     have x_prop := hx.left
     simp [x_prop] at f_lt
-    exact f_lt
+    . exact f_lt
+    . simp
+      linarith
+    . simp
+      simp at hx
+      refine ⟨by linarith, hx.right⟩
   . apply Continuous.continuousOn
     unfold f
     have one_plus: 1 + a ≠ 0 := by linarith
     fun_prop (disch:=assumption)
-
   .
-
-
 
     intro x hx
     simp at hx
-
-
-
-
 
     have deriv_pos: 0 ≤ (deriv (f a)) x := by
       by_contra!
@@ -2331,9 +2332,7 @@ lemma f_pos_on (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (a_lt: a < 1) (div_a: 3 <
       . simp
         refine ⟨by linarith, hx.right⟩
       . simp
-        sorry
-
-
+        exact one_lt
 
     have not_zero := deriv_nonzero x ?_
     . exact lt_of_le_of_ne deriv_pos (id (Ne.symm not_zero))
