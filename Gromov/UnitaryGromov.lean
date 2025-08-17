@@ -2308,7 +2308,7 @@ lemma f_pos_on (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (a_lt: a < 1)  (a_lt_log:
 
 
 
-lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 < m) (data : HnData): ‖((theorem_3_8_h_n data n).val.val^m).val - 1‖ ≥ ‖((theorem_3_8_h_n data n).val.val).val - 1‖ := by
+lemma H_n_single_pow_lower_bound {n : ℕ} (hn: 0 < n) {m : ℕ} (m_gt: 1 < m) (data : HnData): ‖((theorem_3_8_h_n data n).val.val^m).val - 1‖ ≥ ‖((theorem_3_8_h_n data n).val.val).val - 1‖ := by
   push_cast
   conv =>
     lhs
@@ -2343,7 +2343,11 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 < m) (data : HnDat
   have my_sub : m - 1 - 1 + 1 = m - 1 := by
     omega
 
-  have my_pow := Commute.add_pow (y := 1) (x := ((theorem_3_8_h_n data n).val.val.val - 1)) (n := m - 1 + 1) (by simp)
+  have nonempty_d: Nonempty (Fin data.d) := by
+    have data_pos := data.hd
+    exact Fin.pos_iff_nonempty.mp (by linarith)
+
+  have my_pow := Commute.add_pow (y := 1) (x := ‖((theorem_3_8_h_n data n).val.val.val - 1)‖) (n := m - 1 + 1) (by simp)
   rw [Finset.sum_range_succ'] at my_pow
   simp at my_pow
   rw [Finset.sum_range_succ'] at my_pow
@@ -2353,32 +2357,81 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 < m) (data : HnDat
   apply sub_eq_of_eq_add at my_pow
   norm_cast at my_pow
   rw [← m_eq] at my_pow
-  apply_fun Norm.norm at my_pow
-  rw [← my_pow]
+  -- conv at my_pow =>
+  --   rhs
+  --   arg 2
+  --   intro x
+  --   rw [← norm_pow]
+  -- simp_rw [norm_pow] at my_pow
+  grw [norm_sum_le]
 
-  have S_le :‖((theorem_3_8_h_n data n).val ^ m).val.val - (((theorem_3_8_h_n data n).val.val.val - 1) * m + 1)‖ ≤ (m - 1) * ‖(theorem_3_8_h_n data n).val.val.val - 1‖ := by
-    sorry
+  grw [Finset.sum_le_sum (g := fun i => ‖((theorem_3_8_h_n data n).val.val.val - 1)‖ ^ (i + 1 + 1) * (m.choose (i + 1 + 1)))]
+  .
+    rw [← my_pow]
 
-  grw [S_le]
-  nth_rw 2 [sub_mul]
-  rw [mul_comm]
-  rw [← mul_comm]
-  simp
-  have my_smul := norm_smul (m : ℂ) ((theorem_3_8_h_n data n).val.val.val - 1)
-  simp at my_smul
-  rw [← my_smul]
-  conv =>
-    rhs
-    rhs
-    lhs
-    arg 1
-    equals ((theorem_3_8_h_n data n).val.val.val - 1) * m =>
+    have S_le : (1 + ‖((theorem_3_8_h_n data n).val).val.val - 1‖)^m - ((‖(theorem_3_8_h_n data n).val.val.val - 1‖) * (m : ℝ) + 1) ≤ (m - 1) * ‖(theorem_3_8_h_n data n).val.val.val - 1‖ := by
+      have my_bound := f_pos_on ‖((theorem_3_8_h_n data n).val.val.val - 1)‖  ?_ ?_ ?_ ?_ m ?_
+      simp [f] at my_bound
+      rw [two_mul] at my_bound
+      rw [← add_sub] at my_bound
+      rw [add_mul] at my_bound
+      rw [← add_assoc] at my_bound
+      apply sub_left_lt_of_lt_add at my_bound
+      rw [← gt_iff_lt] at my_bound
+      rw [← ge_iff_le]
+      grw [my_bound]
       simp
-      rw [Matrix.smul_eq_mul_diagonal]
-      rw [← Matrix.diagonal_natCast]
+      ring_nf
+      . rfl
+      . positivity
+      . sorry
+      . sorry
+      . sorry
+      . simp
+        refine ⟨by linarith, ?_⟩
+        sorry
 
-  ring_nf
-  rfl
+
+    rw [add_comm]
+    grw [S_le]
+    nth_rw 2 [sub_mul]
+    rw [mul_comm]
+    rw [← mul_comm]
+    simp
+    have my_smul := norm_smul (m : ℂ) ((theorem_3_8_h_n data n).val.val.val - 1)
+    simp at my_smul
+    rw [← my_smul]
+    conv =>
+      rhs
+      rhs
+      lhs
+      arg 1
+      equals ((theorem_3_8_h_n data n).val.val.val - 1) * m =>
+        simp
+        rw [Matrix.smul_eq_mul_diagonal]
+        rw [← Matrix.diagonal_natCast]
+
+    ring_nf
+    rfl
+
+  . intro i hi
+    grw [norm_mul_le]
+    grw [norm_pow_le]
+    --rw [← Matrix.diagonal_natCast']
+    -- TODO - separate this into a lemma about Matrix.l2_opNorm for a diagonal matrix
+    nth_rw 2 [Matrix.l2_opNorm_def]
+    grw [ContinuousLinearMap.opNorm_le_bound (M := m.choose (i + 1 + 1))]
+    . simp
+    .
+      intro x
+      simp
+      rw [Matrix.toEuclideanLin_apply]
+      simp
+      rw [norm_smul]
+      simp
+
+  --apply_fun Norm.norm at my_pow
+
 
   -- have my_bound := f_pos_on ‖((theorem_3_8_h_n data n).val.val.val - 1)‖ ?_ ?_ ?_ ?_
   -- simp [f] at my_bound
