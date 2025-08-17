@@ -1724,6 +1724,18 @@ lemma H_n_prod_le_k {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + k
 
 #print axioms H_n_prod_le_k
 
+#synth Semiring (Matrix (Fin 2) (Fin 2) ℂ)
+
+
+lemma norm_sub_swap (n: ℕ) (a b: Matrix (Fin n) (Fin n) ℂ): ‖a - b‖ = ‖b - a‖ := by
+  rw [← neg_sub]
+  rw [norm_neg]
+
+
+
+
+  --rw [my_sub] at my_pow
+
 -- Theorem 3.8, case with only trivial elements in the center
 lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG) (ε : ℝ) (hε : 0 < ε)
   (G_central_trivial : ∀ g : G, g ∈ Set.center G → ∃ z : ℂ, g.val.val = z • 1)
@@ -2293,3 +2305,80 @@ lemma f_pos_on (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (a_lt: a < 1)  (a_lt_log:
       refine ⟨by linarith, hx.right⟩
 
 #print axioms f_pos_on
+
+
+
+lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 < m) (data : HnData): ‖((theorem_3_8_h_n data n).val.val^m).val - 1‖ ≥ ‖((theorem_3_8_h_n data n).val.val).val - 1‖ := by
+  push_cast
+  conv =>
+    lhs
+    arg 1
+    lhs
+    arg 1
+    equals (1 + ((theorem_3_8_h_n data n).val.val.val - 1)) =>
+      field_simp
+
+  rw [norm_sub_swap]
+  have m_eq: m = (m - 1) + 1 := by
+    omega
+
+  rw[add_comm]
+  rw [Commute.add_pow (by simp)]
+  rw[Finset.sum_range_succ']
+  conv =>
+    lhs
+    arg 1
+    rhs
+    simp
+
+  nth_rw 1 [m_eq]
+  rw [Finset.sum_range_succ']
+  simp
+  rw [← ge_iff_le]
+  rw [← sub_eq_add_neg]
+  grw [(norm_sub_norm_le _ _).ge]
+  rw [norm_neg]
+  --grw [norm_sum_le]
+
+  have my_sub : m - 1 - 1 + 1 = m - 1 := by
+    omega
+
+  have my_pow := Commute.add_pow (y := 1) (x := ((theorem_3_8_h_n data n).val.val.val - 1)) (n := m - 1 + 1) (by simp)
+  rw [Finset.sum_range_succ'] at my_pow
+  simp at my_pow
+  rw [Finset.sum_range_succ'] at my_pow
+  simp at my_pow
+  rw [← m_eq] at my_pow
+  rw [add_assoc] at my_pow
+  apply sub_eq_of_eq_add at my_pow
+  norm_cast at my_pow
+  rw [← m_eq] at my_pow
+  apply_fun Norm.norm at my_pow
+  rw [← my_pow]
+
+  have S_le :‖((theorem_3_8_h_n data n).val ^ m).val.val - (((theorem_3_8_h_n data n).val.val.val - 1) * m + 1)‖ ≤ (m - 1) * ‖(theorem_3_8_h_n data n).val.val.val - 1‖ := by
+    sorry
+
+  grw [S_le]
+  nth_rw 2 [sub_mul]
+  rw [mul_comm]
+  rw [← mul_comm]
+  simp
+  have my_smul := norm_smul (m : ℂ) ((theorem_3_8_h_n data n).val.val.val - 1)
+  simp at my_smul
+  rw [← my_smul]
+  conv =>
+    rhs
+    rhs
+    lhs
+    arg 1
+    equals ((theorem_3_8_h_n data n).val.val.val - 1) * m =>
+      simp
+      rw [Matrix.smul_eq_mul_diagonal]
+      rw [← Matrix.diagonal_natCast]
+
+  ring_nf
+  rfl
+
+  -- have my_bound := f_pos_on ‖((theorem_3_8_h_n data n).val.val.val - 1)‖ ?_ ?_ ?_ ?_
+  -- simp [f] at my_bound
