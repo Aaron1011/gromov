@@ -2617,92 +2617,100 @@ lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + 
     . sorry
     . simp [-SubmonoidClass.coe_list_prod]
 
-  
-  apply_fun (fun y => ‖((theorem_3_8_h_n data (k)).val ^ (-(pows_j ⟨k, by omega⟩ : ℤ))).val.val*y.val.val - 1‖) at offset_eq
 
-  have m_minus_k: m - k - 1 + 1 = m - k := by sorry
-  conv at offset_eq =>
-    rhs
-    arg 1
-    lhs
-    rhs
-    arg 1
-    arg 1
-    arg 1
-    rw [List.ofFn_congr (n := (m - k - 1) + 1) (by
-      rw [m_minus_k]
-    )]
+  have lhs_le: ‖((theorem_3_8_h_n data (k)).val ^ (-(pows_j ⟨k, by omega⟩ : ℤ))).val.val * (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_i ⟨i + k, by omega⟩).prod.val.val - 1‖ ≤ (1 / 10) * ‖(theorem_3_8_h_n data k).val.val.val - 1‖ := by
+    sorry
 
-  rw [List.ofFn_succ] at offset_eq
-  rw [List.prod_cons] at offset_eq
-  norm_cast at offset_eq
-  rw [← mul_assoc] at offset_eq
-  conv at offset_eq =>
-    rhs
-    arg 1
-    arg 1
-    arg 1
-    arg 1
-    arg 1
-    norm_cast
-    arg 2
-    simp
+  rw [ge_iff_le] at lhs_ge
 
+  have one_tenth_lt:  1 / 10 * ‖(theorem_3_8_h_n data ↑k).val.val.val - 1‖ < (9 / 10) * ‖(theorem_3_8_h_n data ↑k).val.val.val - 1‖ := by
+    sorry
 
+  linarith
 
-  rw [← zpow_natCast] at offset_eq
-  rw [← zpow_add] at offset_eq
-  rw [add_comm] at offset_eq
-  rw [← sub_eq_add_neg] at offset_eq
-  rw [sub_self] at offset_eq
-  rw [zpow_zero] at offset_eq
+  -- have m_minus_k: m - k - 1 + 1 = m - k := by sorry
+  -- conv at offset_eq =>
+  --   rhs
+  --   arg 1
+  --   lhs
+  --   rhs
+  --   arg 1
+  --   arg 1
+  --   arg 1
+  --   rw [List.ofFn_congr (n := (m - k - 1) + 1) (by
+  --     rw [m_minus_k]
+  --   )]
 
-  conv at offset_eq =>
-    lhs
-    rw [List.ofFn_congr (n := (m - k - 1) + 1) (by
-      rw [m_minus_k]
-    )]
-  rw [List.ofFn_succ] at offset_eq
-  rw [List.prod_cons] at offset_eq
-  rw [← mul_assoc] at offset_eq
-  conv at offset_eq =>
-    lhs
-    arg 1
-    lhs
-    arg 1
-    arg 1
-    arg 1
-    simp
-    rw [← zpow_neg_one]
-    rw [← zpow_natCast]
-    rw [← zpow_mul]
-    rw [← zpow_natCast]
-    rw [← zpow_add]
-    simp
-
-  conv at offset_eq =>
-    lhs
-    arg 1
-    equals ((((theorem_3_8_h_n data ↑k).val ^ (-(pows_j k : ℤ) + ↑(pows_i k)))).val.val - 1) * (List.ofFn (fun (i : Fin (m - k - 1)) => (theorem_3_8_h_n data (i.succ + k)).val^(pows_i (⟨i.succ + k, by omega⟩) ))).prod + (List.ofFn (fun (i : Fin (m - k - 1)) => (theorem_3_8_h_n data (i.succ + k)).val^(pows_i (⟨i.succ + k, by omega⟩) ))).prod - 1  =>
-      rw [sub_mul]
-      simp
+  -- rw [List.ofFn_succ] at offset_eq
+  -- rw [List.prod_cons] at offset_eq
+  -- norm_cast at offset_eq
+  -- rw [← mul_assoc] at offset_eq
+  -- conv at offset_eq =>
+  --   rhs
+  --   arg 1
+  --   arg 1
+  --   arg 1
+  --   arg 1
+  --   arg 1
+  --   norm_cast
+  --   arg 2
+  --   simp
 
 
 
-  rw [← List.prod_cons] at offset_eq
-  rw [← List.ofFn_succ] at offset_eq
+  -- rw [← zpow_natCast] at offset_eq
+  -- rw [← zpow_add] at offset_eq
+  -- rw [add_comm] at offset_eq
+  -- rw [← sub_eq_add_neg] at offset_eq
+  -- rw [sub_self] at offset_eq
+  -- rw [zpow_zero] at offset_eq
+
+  -- conv at offset_eq =>
+  --   lhs
+  --   rw [List.ofFn_congr (n := (m - k - 1) + 1) (by
+  --     rw [m_minus_k]
+  --   )]
+  -- rw [List.ofFn_succ] at offset_eq
+  -- rw [List.prod_cons] at offset_eq
+  -- rw [← mul_assoc] at offset_eq
+  -- conv at offset_eq =>
+  --   lhs
+  --   arg 1
+  --   lhs
+  --   arg 1
+  --   arg 1
+  --   arg 1
+  --   simp
+  --   rw [← zpow_neg_one]
+  --   rw [← zpow_natCast]
+  --   rw [← zpow_mul]
+  --   rw [← zpow_natCast]
+  --   rw [← zpow_add]
+  --   simp
+
+  -- conv at offset_eq =>
+  --   lhs
+  --   arg 1
+  --   equals ((((theorem_3_8_h_n data ↑k).val ^ (-(pows_j k : ℤ) + ↑(pows_i k)))).val.val - 1) * (List.ofFn (fun (i : Fin (m - k - 1)) => (theorem_3_8_h_n data (i.succ + k)).val^(pows_i (⟨i.succ + k, by omega⟩) ))).prod + (List.ofFn (fun (i : Fin (m - k - 1)) => (theorem_3_8_h_n data (i.succ + k)).val^(pows_i (⟨i.succ + k, by omega⟩) ))).prod - 1  =>
+  --     rw [sub_mul]
+  --     simp
 
 
 
-
-
-    -- List.ofFn_succ
-
-
-
-
+  -- rw [← List.prod_cons] at offset_eq
+  -- rw [← List.ofFn_succ] at offset_eq
 
 
 
 
-  sorry
+
+  --   -- List.ofFn_succ
+
+
+
+
+
+
+
+
+  -- sorry
