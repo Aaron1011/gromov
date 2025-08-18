@@ -2309,7 +2309,7 @@ lemma f_pos_on (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (a_lt: a < 1)  (a_lt_log:
 
 
 
-lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnData): ‖((theorem_3_8_h_n data n).val.val.val^m) - 1‖ ≥ ‖((theorem_3_8_h_n data n).val.val).val - 1‖ := by
+lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnData) (m_lt: m < (1/2) / ‖(theorem_3_8_h_n data n).val.val.val - 1‖) : ‖((theorem_3_8_h_n data n).val.val.val^m) - 1‖ ≥ ‖((theorem_3_8_h_n data n).val.val).val - 1‖ := by
 
   --rw [SubgroupClass.coe_zpow]
   push_cast
@@ -2413,14 +2413,17 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnD
           norm_num
         . simp
           refine ⟨by omega, ?_⟩
-          have val_le := (theorem_3_8_h_n data n).property.right.right
-          grw [val_le]
-          grw [H_n_eps_lt]
-          . simp
-            sorry
-          . apply H_n_eps_pos
-          . have val_ne := (theorem_3_8_h_n data n).property.right.left
+          grw [← ge_iff_le]
+          grw [Real.log_two_gt_d9.gt]
+          simp
+          grw [m_lt]
+          simp
+          apply div_le_div₀
+          . norm_num
+          . norm_num
+          . have ne_zero := (theorem_3_8_h_n data n).property.right.left
             positivity
+          . rfl
 
 
     rw [add_comm]
@@ -2581,7 +2584,7 @@ lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + 
         rw [sub_mul]
         simp
 
-    have i_gt_k: (pows_i k) > (pows_j k) := by
+    have i_gt_k: (pows_j k) < (pows_i k) := by
       sorry
 
     have pows_nat: (-((pows_j k) : ℤ) + (pows_i k)) = (((-(pows_j k) : ℤ) + (pows_i k))).toNat := by
@@ -2642,8 +2645,43 @@ lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + 
     . exact c_pos
     . exact c_lt
     . exact pows_i_le
-    . simp
-      sorry
+    . sorry
+    .
+      conv =>
+        lhs
+        equals (-((pows_j k) : ℝ) + ((pows_i k) : ℝ)) =>
+          rw [add_comm]
+          rw [← sub_eq_add_neg]
+          rw [add_comm]
+          rw [← sub_eq_add_neg]
+          simp
+          rw [Nat.cast_sub (by linarith)]
+
+      rw [add_comm]
+      rw [← sub_eq_add_neg]
+      have pow_j_ge: 0 ≤ (pows_j k : ℝ) := by
+        have pows_j_pos := pows_j_le k
+        positivity
+      grw [pows_i_le]
+      grw [pow_j_ge.ge]
+      simp
+      grw [c_lt]
+      apply mul_lt_mul
+      . norm_num
+      .
+        rw [inv_le_inv₀]
+        .
+          have my_prop := (theorem_3_8_h_n data k).property.right.right
+          exact my_prop
+        . apply H_n_eps_pos
+        . have my_prop := (theorem_3_8_h_n data k).property.right.left
+          positivity
+      . simp
+        apply H_n_eps_pos
+      . norm_num
+      . simp
+        have foo := H_n_eps_pos data.hd
+        linarith
     . simp [-SubmonoidClass.coe_list_prod]
 
 
