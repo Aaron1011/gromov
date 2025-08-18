@@ -2309,7 +2309,12 @@ lemma f_pos_on (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (a_lt: a < 1)  (a_lt_log:
 
 
 lemma H_n_single_pow_lower_bound {n : ℕ} (hn: 0 < n) {m : ℕ} (m_gt: 1 < m) (data : HnData): ‖((theorem_3_8_h_n data n).val.val^m).val - 1‖ ≥ ‖((theorem_3_8_h_n data n).val.val).val - 1‖ := by
+
+  --rw [SubgroupClass.coe_zpow]
   push_cast
+  -- TODO: figure out how to get 'SubgroupClass.coe_zpow' to fire for Matrix.unitaryGroup
+
+  --have my_coe := unitary.coe_zpow (R := Matrix (Fin data.d) (Fin data.d) ℂ) (U := (theorem_3_8_h_n data n).val.val) (z := m)
   conv =>
     lhs
     arg 1
@@ -2435,3 +2440,217 @@ lemma H_n_single_pow_lower_bound {n : ℕ} (hn: 0 < n) {m : ℕ} (m_gt: 1 < m) (
 
   -- have my_bound := f_pos_on ‖((theorem_3_8_h_n data n).val.val.val - 1)‖ ?_ ?_ ?_ ?_
   -- simp [f] at my_bound
+
+-- TODO: upstream to mathlib
+lemma list_ofFn_drop {M: Type*} (a k: ℕ) (f: Fin (k + a) → M): (List.ofFn f).drop a = List.ofFn (fun (i: Fin k) => f ⟨a + i, by omega⟩) := by
+  induction a with
+  | zero =>
+    simp
+  | succ a ih =>
+    rw [List.ofFn_congr (n := (k + a) + 1) (by linarith)]
+    simp
+    have list_eq := ih (fun i => f i.succ)
+    rw [list_eq]
+    simp
+    funext b
+    group
+
+set_option synthInstance.maxHeartbeats 80000 in
+lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + k + 1 < m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 1 / 40)
+ (data : HnData)
+ (pows_i : Fin m → ℕ)
+ (pows_j: Fin m → ℕ)
+ (pows_i_le : ∀ i : Fin m, (pows_i i) ≤ c * (H_n_eps data.hd)⁻¹)
+ (pows_j_le : ∀ i : Fin m, (pows_j i) ≤ c * (H_n_eps data.hd)⁻¹)
+ (pows_ne: ∃ k: Fin m, pows_i k ≠ pows_j k):
+  (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data (i)).val^(pows_i i))).prod ≠ (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data (i)).val^(pows_j i))).prod := by
+
+  have find := Fin.isSome_find_iff.mpr pows_ne
+  let k := (Fin.find (fun i => pows_i i ≠ pows_j i)).get find
+
+  by_contra!
+
+  nth_rw 2 [← List.prod_take_mul_prod_drop (i := k)] at this
+  rw [← List.prod_take_mul_prod_drop (i := k)] at this
+  conv at this =>
+    lhs
+    lhs
+    arg 1
+    equals List.take k (List.ofFn fun (i: Fin k) ↦ ((theorem_3_8_h_n data i).val ^ pows_i ⟨i, by omega⟩)) =>
+
+      induction hl: (List.ofFn fun (i: Fin k) ↦ ((theorem_3_8_h_n data i).val ^ pows_i ⟨i, by omega⟩)) with
+      | nil =>
+        simp at hl
+        rw [hl]
+        simp
+      | cons hd tl ih =>
+        rw [← hl]
+
+        sorry
+
+
+
+
+
+  have pows_lt_eq: ∀ i: Fin m, i < k → pows_i i = pows_j i := by
+    sorry
+
+  conv at this =>
+    lhs
+    lhs
+    arg 1
+    arg 2
+    arg 1
+    intro i
+    rw [pows_lt_eq _ (by
+      have i_prop := i.is_lt
+      exact i_prop
+    )]
+
+  have cancel_lhs: (List.drop (↑k) (List.ofFn fun i ↦ (theorem_3_8_h_n data ↑i).val ^ pows_i i)).prod = (List.drop (↑k) (List.ofFn fun i ↦ (theorem_3_8_h_n data ↑i).val ^ pows_j i)).prod := by
+    sorry
+
+  simp at cancel_lhs
+
+  have offset_eq: (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_i ⟨i + k, by omega⟩).prod = (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_j ⟨i + k, by omega⟩).prod := by
+    sorry
+
+  have lhs_ge: ‖((theorem_3_8_h_n data (k)).val ^ (-(pows_j ⟨k, by omega⟩ : ℤ))).val.val * (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_i ⟨i + k, by omega⟩).prod.val.val - 1‖ ≥ ‖(theorem_3_8_h_n data k).val.val.val - 1‖ := by
+    have m_minus_k: m - k - 1 + 1 = m - k := by sorry
+    conv =>
+      lhs
+      arg 1
+      lhs
+      rhs
+      arg 1
+      arg 1
+      arg 1
+      rw [List.ofFn_congr (n := (m - k - 1) + 1) (by
+        rw [m_minus_k]
+      )]
+
+    rw [List.ofFn_succ]
+    rw [List.prod_cons]
+    norm_cast
+    rw [← mul_assoc]
+    norm_cast
+    rw [← zpow_natCast]
+    conv =>
+      lhs
+      arg 1
+      lhs
+      arg 1
+      arg 1
+      lhs
+      rhs
+      simp
+
+    rw [← zpow_natCast]
+    rw [← zpow_add]
+    conv =>
+      lhs
+      arg 1
+      equals ((((theorem_3_8_h_n data ↑k).val ^ (-(pows_j k : ℤ) + ↑(pows_i k)))).val.val - 1) * (List.ofFn (fun (i : Fin (m - k - 1)) => (theorem_3_8_h_n data (i.succ + k)).val^(pows_i (⟨i.succ + k, by omega⟩) ))).prod + (List.ofFn (fun (i : Fin (m - k - 1)) => (theorem_3_8_h_n data (i.succ + k)).val^(pows_i (⟨i.succ + k, by omega⟩) ))).prod - 1 =>
+        rw [sub_mul]
+        simp
+
+    rw [← add_sub]
+    grw [(norm_sub_le_norm_add _ _).ge]
+    rw [CStarRing.norm_mul_mem_unitary]
+    grw [H_n_single_pow_lower_bound]
+    grw [norm_add_le]
+    rw [offset_eq] at this
+    rw [List.prod_eq_one] at this
+    rw [norm_sub_swap] at this
+    apply_fun Norm.norm at this
+    simp at this
+    exact this
+
+  apply_fun (fun y => ‖((theorem_3_8_h_n data (k)).val ^ (-(pows_j ⟨k, by omega⟩ : ℤ))).val.val*y.val.val - 1‖) at offset_eq
+
+  have m_minus_k: m - k - 1 + 1 = m - k := by sorry
+  conv at offset_eq =>
+    rhs
+    arg 1
+    lhs
+    rhs
+    arg 1
+    arg 1
+    arg 1
+    rw [List.ofFn_congr (n := (m - k - 1) + 1) (by
+      rw [m_minus_k]
+    )]
+
+  rw [List.ofFn_succ] at offset_eq
+  rw [List.prod_cons] at offset_eq
+  norm_cast at offset_eq
+  rw [← mul_assoc] at offset_eq
+  conv at offset_eq =>
+    rhs
+    arg 1
+    arg 1
+    arg 1
+    arg 1
+    arg 1
+    norm_cast
+    arg 2
+    simp
+
+
+
+  rw [← zpow_natCast] at offset_eq
+  rw [← zpow_add] at offset_eq
+  rw [add_comm] at offset_eq
+  rw [← sub_eq_add_neg] at offset_eq
+  rw [sub_self] at offset_eq
+  rw [zpow_zero] at offset_eq
+
+  conv at offset_eq =>
+    lhs
+    rw [List.ofFn_congr (n := (m - k - 1) + 1) (by
+      rw [m_minus_k]
+    )]
+  rw [List.ofFn_succ] at offset_eq
+  rw [List.prod_cons] at offset_eq
+  rw [← mul_assoc] at offset_eq
+  conv at offset_eq =>
+    lhs
+    arg 1
+    lhs
+    arg 1
+    arg 1
+    arg 1
+    simp
+    rw [← zpow_neg_one]
+    rw [← zpow_natCast]
+    rw [← zpow_mul]
+    rw [← zpow_natCast]
+    rw [← zpow_add]
+    simp
+
+  conv at offset_eq =>
+    lhs
+    arg 1
+    equals ((((theorem_3_8_h_n data ↑k).val ^ (-(pows_j k : ℤ) + ↑(pows_i k)))).val.val - 1) * (List.ofFn (fun (i : Fin (m - k - 1)) => (theorem_3_8_h_n data (i.succ + k)).val^(pows_i (⟨i.succ + k, by omega⟩) ))).prod + (List.ofFn (fun (i : Fin (m - k - 1)) => (theorem_3_8_h_n data (i.succ + k)).val^(pows_i (⟨i.succ + k, by omega⟩) ))).prod - 1  =>
+      rw [sub_mul]
+      simp
+
+
+
+  rw [← List.prod_cons] at offset_eq
+  rw [← List.ofFn_succ] at offset_eq
+
+
+
+
+
+    -- List.ofFn_succ
+
+
+
+
+
+
+
+
+  sorry
