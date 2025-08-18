@@ -2308,7 +2308,7 @@ lemma f_pos_on (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (a_lt: a < 1)  (a_lt_log:
 
 
 
-lemma H_n_single_pow_lower_bound {n : ℕ} (hn: 0 < n) {m : ℕ} (m_gt: 1 < m) (data : HnData): ‖((theorem_3_8_h_n data n).val.val.val^m) - 1‖ ≥ ‖((theorem_3_8_h_n data n).val.val).val - 1‖ := by
+lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 < m) (data : HnData): ‖((theorem_3_8_h_n data n).val.val.val^m) - 1‖ ≥ ‖((theorem_3_8_h_n data n).val.val).val - 1‖ := by
 
   --rw [SubgroupClass.coe_zpow]
   push_cast
@@ -2609,10 +2609,10 @@ lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + 
 
     grw [H_n_prod_le_k (c := c)]
     . linarith
-    . sorry
+    .
+      sorry
     . exact c_pos
     . exact c_lt
-    . sorry
     . sorry
     . sorry
     . simp [-SubmonoidClass.coe_list_prod]
@@ -2624,7 +2624,13 @@ lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + 
   rw [ge_iff_le] at lhs_ge
 
   have one_tenth_lt:  1 / 10 * ‖(theorem_3_8_h_n data ↑k).val.val.val - 1‖ < (9 / 10) * ‖(theorem_3_8_h_n data ↑k).val.val.val - 1‖ := by
-    sorry
+    apply mul_lt_mul
+    . norm_num
+    . simp
+    .
+      have ne_zero := (theorem_3_8_h_n data ↑k).property.right.left
+      positivity
+    . norm_num
 
   linarith
 
