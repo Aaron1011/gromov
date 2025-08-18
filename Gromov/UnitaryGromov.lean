@@ -2407,6 +2407,10 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 < m) (data : HnDat
         norm_num
       . simp
         refine ⟨by linarith, ?_⟩
+        have val_le := (theorem_3_8_h_n data n).property.right.right
+        grw [val_le]
+        grw [H_n_eps_lt]
+        simp
 
         sorry
 
@@ -2627,7 +2631,7 @@ lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + 
       sorry
     . exact c_pos
     . exact c_lt
-    . sorry
+    . exact pows_i_le
     . sorry
     . simp [-SubmonoidClass.coe_list_prod]
 
