@@ -2466,6 +2466,19 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnD
 
   --apply_fun Norm.norm at my_pow
 
+#synth DivisionMonoid (Matrix.unitaryGroup (Fin 2) ℂ)
+
+-- --@[norm_cast]
+-- theorem new_coe_inv {R: Type*} [DivInvMonoid R] [StarMul R] (U : unitary R) : ↑U⁻¹ = (U⁻¹ : R) := by
+--   eq_inv_of_mul_eq_one_right <| unitary.coe_mul_star_self _
+
+-- @[norm_cast]
+-- theorem new_coe_zpow {R: Type*} [DivInvMonoid R] [StarMul R] (U : unitary R) (z : ℤ) : ↑(U ^ z) = (U : R) ^ z := by
+--   cases z
+--   · simp [SubmonoidClass.coe_pow]
+--   · simp [new_coe_inv]
+
+#synth DivInvMonoid (Matrix (Fin 2) (Fin 2) ℂ)
 
   -- have my_bound := f_pos_on ‖((theorem_3_8_h_n data n).val.val.val - 1)‖ ?_ ?_ ?_ ?_
   -- simp [f] at my_bound
@@ -2486,7 +2499,7 @@ lemma list_ofFn_drop {M: Type*} (a k: ℕ) (f: Fin (k + a) → M): (List.ofFn f)
 
 set_option synthInstance.maxHeartbeats 80000 in
 set_option maxHeartbeats 600000 in
-lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + k + 1 < m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 1 / 40)
+lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 1 / 40)
  (data : HnData)
  (pows_i : Fin m → ℕ)
  (pows_j: Fin m → ℕ)
@@ -2495,8 +2508,8 @@ lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + 
  (pows_ne: ∃ k: Fin m, pows_i k ≠ pows_j k):
   (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data (i)).val^(pows_i i))).prod ≠ (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data (i)).val^(pows_j i))).prod := by
 
-  have find := Fin.isSome_find_iff.mpr pows_ne
-  let k := (Fin.find (fun i => pows_i i ≠ pows_j i)).get find
+  --have find := Fin.isSome_find_iff.mpr pows_ne
+  --let k := (Fin.find (fun i => pows_i i ≠ pows_j i)).get find
 
   by_contra!
 
@@ -2508,7 +2521,7 @@ lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + 
     lhs
     arg 1
     equals List.take k (List.ofFn fun (i: Fin k) ↦ ((theorem_3_8_h_n data i).val ^ pows_i ⟨i, by omega⟩)) =>
-      clear a_k_lt pows_i_le pows_j_le pows_ne this
+      --clear a_k_lt pows_i_le pows_j_le pows_ne this
       ext i l
       rw [List.getElem?_take]
       rw [List.getElem?_take]
@@ -2687,9 +2700,59 @@ lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + 
         linarith
     . simp [-SubmonoidClass.coe_list_prod]
 
+--#synth GroupWithZero (Matrix (Fin 2) (Fin 2) ℂ)
 
-  have lhs_le: ‖((theorem_3_8_h_n data (k)).val ^ (-(pows_j ⟨k, by omega⟩ : ℤ))).val.val * (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_i ⟨i + k, by omega⟩).prod.val.val - 1‖ ≤ (1 / 10) * ‖(theorem_3_8_h_n data k).val.val.val - 1‖ := by
-    sorry
+  -- have lhs_le: ‖((theorem_3_8_h_n data (k)).val ^ (-(pows_j ⟨k, by omega⟩ : ℤ))).val.val * (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_i ⟨i + k, by omega⟩).prod.val.val - 1‖ ≤ (1 / 10) * ‖(theorem_3_8_h_n data k).val.val.val - 1‖ := by
+
+  --   let foo := (theorem_3_8_h_n data (k)).val.val.val ^ ((-1: ℤ))
+  --   have m_minus_pos: 0 < m - k := by
+  --     omega
+  --   have m_minus_k: m - k - 1 + 1 = m - k := by
+  --     omega
+  --   rw [List.ofFn_congr (n := (m - k - 1) + 1) (by
+  --     rw [m_minus_k]
+  --   )]
+  --   rw [List.ofFn_succ]
+  --   simp [-zpow_neg, -Subgroup.val_list_prod, -SubmonoidClass.coe_list_prod]
+  --   rw [← mul_assoc]
+  --   norm_cast
+  --   rw [← zpow_natCast]
+  --   rw [← zpow_add]
+  --   rw [← List.prod_cons]
+
+  --   let combined_pows (i: Fin (m - k + 1)) := if (i.val - 1) = 0 then ((-(pows_j k : ℤ) + (pows_i k))) else pows_i (⟨i - 1 + k, by omega⟩)
+
+  --   conv =>
+  --     lhs
+  --     arg 1
+  --     lhs
+  --     arg 1
+  --     arg 1
+  --     arg 1
+  --     equals List.ofFn (fun (i: Fin (m - k)) => (theorem_3_8_h_n data (i + k)).val^(combined_pows (⟨i + 1, by omega⟩))) =>
+  --       ext i l
+  --       simp [combined_pows]
+  --       by_cases i_eq_zero: i = 0
+  --       .
+  --         simp [i_eq_zero]
+  --       .
+  --         rw [List.getElem?_cons]
+  --         simp [i_eq_zero]
+  --         by_cases i_lt: i < m - k
+  --         .
+  --           have i_minus_lt: i - 1 < m - k - 1 := by omega
+  --           have i_minus_plus: i - 1 + 1 = i := by omega
+  --           simp [i_lt, i_minus_lt, i_minus_plus]
+  --         .
+  --           simp [i_lt]
+  --           simp at i_lt
+  --           have not_lt: ¬(i - 1 < m - k - 1) := by omega
+  --           simp [not_lt]
+
+
+
+  --   grw [H_n_prod_le_k]
+
 
   rw [ge_iff_le] at lhs_ge
 
@@ -2702,7 +2765,8 @@ lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + 
       positivity
     . norm_num
 
-  linarith
+  sorry
+  --linarith
 
   -- have m_minus_k: m - k - 1 + 1 = m - k := by sorry
   -- conv at offset_eq =>
