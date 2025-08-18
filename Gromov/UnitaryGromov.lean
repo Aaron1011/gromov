@@ -1623,7 +1623,7 @@ lemma H_n_single_pow {n : ℕ} {m : ℕ} (data : HnData): ‖((theorem_3_8_h_n d
     rw [add_mul]
     simp
 
-lemma H_n_pow_le  {a k : ℕ } {m : ℕ} (a_k_lt : a + k < m)  (pows : Fin m → ℕ) (data : HnData):
+lemma H_n_pow_le  {a k : ℕ } {m : ℕ} (a_k_lt : a + k ≤ m)  (pows : Fin m → ℕ) (data : HnData):
   ‖(List.ofFn (fun (i : Fin (k)) => (theorem_3_8_h_n data (a + i)).val^(pows ⟨(a + i), by (have foo := i.isLt; omega)⟩))).prod.val.val - 1‖ ≤ ∑ (i : Fin k), (pows ⟨(a + i), by (have foo := i.isLt; omega)⟩) * ‖(theorem_3_8_h_n data (a + i)).val.val.val - 1‖ := by
   induction k with
   | zero =>
@@ -1661,7 +1661,8 @@ lemma H_n_pow_le  {a k : ℕ } {m : ℕ} (a_k_lt : a + k < m)  (pows : Fin m →
     rw [← Finset.sum_attach]
 
 
-lemma H_n_prod_le_k {a k : ℕ } {m : ℕ} (a_k_lt : a + k + 1 < m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 1 / 40) (pows : Fin m → ℕ) (data : HnData)
+-- Equation 3.16
+lemma H_n_prod_le_k {a k : ℕ } {m : ℕ} (a_k_lt : a + k + 1 ≤ m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 1 / 40) (pows : Fin m → ℕ) (data : HnData)
  (pows_le : ∀ i : Fin m, (pows i) ≤ c * (H_n_eps data.hd)⁻¹) :
   ‖(List.ofFn (fun (i : Fin (k)) => (theorem_3_8_h_n data ((a + 1) + i)).val^(pows ⟨((a + 1) + i), by omega⟩))).prod.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data (a)).val.val.val - 1‖ / 10 := by
 
@@ -2628,6 +2629,9 @@ lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + 
     grw [H_n_prod_le_k (c := c)]
     . linarith
     .
+      rw [add_assoc]
+      rw [m_minus_k]
+
       sorry
     . exact c_pos
     . exact c_lt
