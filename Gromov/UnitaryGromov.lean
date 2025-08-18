@@ -1661,7 +1661,7 @@ lemma H_n_pow_le  {a k : ℕ } {m : ℕ} (a_k_lt : a + k < m)  (pows : Fin m →
     rw [← Finset.sum_attach]
 
 
-lemma H_n_prod_le_k {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + k + 1 < m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 1 / 40) (pows : Fin m → ℕ) (data : HnData)
+lemma H_n_prod_le_k {a k : ℕ } {m : ℕ} (a_k_lt : a + k + 1 < m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 1 / 40) (pows : Fin m → ℕ) (data : HnData)
  (pows_le : ∀ i : Fin m, (pows i) ≤ c * (H_n_eps data.hd)⁻¹) :
   ‖(List.ofFn (fun (i : Fin (k)) => (theorem_3_8_h_n data ((a + 1) + i)).val^(pows ⟨((a + 1) + i), by omega⟩))).prod.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data (a)).val.val.val - 1‖ / 10 := by
 
@@ -2308,7 +2308,7 @@ lemma f_pos_on (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (a_lt: a < 1)  (a_lt_log:
 
 
 
-lemma H_n_single_pow_lower_bound {n : ℕ} (hn: 0 < n) {m : ℕ} (m_gt: 1 < m) (data : HnData): ‖((theorem_3_8_h_n data n).val.val^m).val - 1‖ ≥ ‖((theorem_3_8_h_n data n).val.val).val - 1‖ := by
+lemma H_n_single_pow_lower_bound {n : ℕ} (hn: 0 < n) {m : ℕ} (m_gt: 1 < m) (data : HnData): ‖((theorem_3_8_h_n data n).val.val.val^m) - 1‖ ≥ ‖((theorem_3_8_h_n data n).val.val).val - 1‖ := by
 
   --rw [SubgroupClass.coe_zpow]
   push_cast
@@ -2456,6 +2456,7 @@ lemma list_ofFn_drop {M: Type*} (a k: ℕ) (f: Fin (k + a) → M): (List.ofFn f)
     group
 
 set_option synthInstance.maxHeartbeats 80000 in
+set_option maxHeartbeats 600000 in
 lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + k + 1 < m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 1 / 40)
  (data : HnData)
  (pows_i : Fin m → ℕ)
@@ -2515,7 +2516,7 @@ lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + 
   have offset_eq: (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_i ⟨i + k, by omega⟩).prod = (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_j ⟨i + k, by omega⟩).prod := by
     sorry
 
-  have lhs_ge: ‖((theorem_3_8_h_n data (k)).val ^ (-(pows_j ⟨k, by omega⟩ : ℤ))).val.val * (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_i ⟨i + k, by omega⟩).prod.val.val - 1‖ ≥ ‖(theorem_3_8_h_n data k).val.val.val - 1‖ := by
+  have lhs_ge: ‖((theorem_3_8_h_n data (k)).val ^ (-(pows_j ⟨k, by omega⟩ : ℤ))).val.val * (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_i ⟨i + k, by omega⟩).prod.val.val - 1‖ ≥ (9 / 10) * ‖(theorem_3_8_h_n data k).val.val.val - 1‖ := by
     have m_minus_k: m - k - 1 + 1 = m - k := by sorry
     conv =>
       lhs
@@ -2554,18 +2555,69 @@ lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + 
         rw [sub_mul]
         simp
 
+    have i_gt_k: (pows_i k) > (pows_j k) := by
+      sorry
+
+    have pows_nat: (-((pows_j k) : ℤ) + (pows_i k)) = (((-(pows_j k) : ℤ) + (pows_i k))).toNat := by
+      simp
+      linarith
+
+
     rw [← add_sub]
     grw [(norm_sub_le_norm_add _ _).ge]
     rw [CStarRing.norm_mul_mem_unitary]
+    rw [pows_nat]
+    rw [zpow_natCast]
+    rw [SubmonoidClass.coe_pow]
+    rw [SubmonoidClass.coe_pow]
     grw [H_n_single_pow_lower_bound]
-    grw [norm_add_le]
-    rw [offset_eq] at this
-    rw [List.prod_eq_one] at this
-    rw [norm_sub_swap] at this
-    apply_fun Norm.norm at this
-    simp at this
-    exact this
+    simp only [Fin.val_succ]
 
+    -- TODO : figure out why we can't use 'simp_rw' here
+    conv =>
+      lhs
+      rhs
+      arg 1
+      arg 1
+      arg 1
+      arg 1
+      arg 1
+      arg 1
+      intro i
+      simp only [add_comm]
+      arg 1
+      arg 1
+      arg 2
+      equals (k.val + 1) + i =>
+        group
+
+    conv =>
+      lhs
+      rhs
+      arg 1
+      arg 1
+      arg 1
+      arg 1
+      arg 1
+      arg 1
+      intro i
+      arg 2
+      arg 1
+      arg 1
+      equals (k.val + 1) + i =>
+        group
+
+    grw [H_n_prod_le_k (c := c)]
+    . linarith
+    . sorry
+    . exact c_pos
+    . exact c_lt
+    . sorry
+    . sorry
+    . sorry
+    . simp [-SubmonoidClass.coe_list_prod]
+
+  
   apply_fun (fun y => ‖((theorem_3_8_h_n data (k)).val ^ (-(pows_j ⟨k, by omega⟩ : ℤ))).val.val*y.val.val - 1‖) at offset_eq
 
   have m_minus_k: m - k - 1 + 1 = m - k := by sorry
