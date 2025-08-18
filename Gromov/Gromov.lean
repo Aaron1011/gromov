@@ -2064,7 +2064,7 @@ instance rho_g_FG: Group.FG (rho_g (G := G)) := by
 
 --#synth NormedAddCommGroup (W (G := G))
 open scoped ComplexInnerProductSpace in
-set_option maxHeartbeats 800000 in
+set_option maxHeartbeats 900000 in
 set_option synthInstance.maxHeartbeats 600000 in
 --set_option trace.Meta.synthInstance true in
 lemma rho_g_contains_abelian : ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutative M ∧ M.FiniteIndex := by
@@ -5191,7 +5191,7 @@ noncomputable def laplace_range := LinearMap.range (Laplace_linear (S := S))
 -- We state 'f is harmonc' as 'Laplace_b f = 0', as this is the hypothesis we have where we need to call this lemma
 -- This is true even if it's a local maximum (considered in terms of the  poitns reached by multiply by S), but
 -- we don't need that result yet
-lemma harmonic_exteme_val_implies_const  (f: G → ℂ) (hf: ∀ g: G, f g = ((#S) : ℝ)⁻¹ * ∑ s ∈ S, f (s * g)) (a: G) (h_max: ∀ g: G, ‖f g‖ ≤ ‖f a‖): f = fun _ => f a := by
+lemma harmonic_extreme_val_implies_const  (f: G → ℂ) (hf: ∀ g: G, f g = ((#S) : ℝ)⁻¹ * ∑ s ∈ S, f (s * g)) (a: G) (h_max: ∀ g: G, ‖f g‖ ≤ ‖f a‖): f = fun _ => f a := by
   have path_implies_max (l : List S): f (l.unattach.prod * a) = f a := by
     induction l with
     | nil =>
@@ -5205,6 +5205,38 @@ lemma harmonic_exteme_val_implies_const  (f: G → ℂ) (hf: ∀ g: G, f g = ((#
       -- TODO - is there a 'Finset.expect' theorem we can use?
      -- rw [← Finset.expect_eq_sum_div_card] at f_at_l
      -- TODO - upstream this to mathlib in some form
+
+      have f_s_norm_eq: ∀ s: S, ‖f a‖ = ‖f (s * (l.unattach.prod * a))‖ := by
+        by_contra!
+        simp at this
+        obtain ⟨s, s_mem_s, hs⟩ := this
+        have val_lt: ‖f (s * (l.unattach.prod * a))‖ < ‖f a‖ := by
+          apply lt_of_le_of_ne
+          . exact h_max (s * (l.unattach.prod * a))
+          .
+            exact fun a_1 ↦ hs (id (Eq.symm a_1))
+
+        have sum_strict_lt := Finset.sum_lt_sum (f := fun x => ‖f (x * (l.unattach.prod * a))‖) (g := fun x => ‖f a‖) (s := S) ?_ ?_
+        .
+          simp at sum_strict_lt
+          rw [mul_comm] at sum_strict_lt
+          rw [← div_lt_iff₀] at sum_strict_lt
+
+          apply_fun Norm.norm at f_at_l
+          have f_a_le := le_of_eq f_at_l
+          grw [norm_mul] at f_a_le
+          grw [norm_sum_le] at f_a_le
+          field_simp at f_a_le
+          . linarith
+          .
+            norm_cast
+            simp
+            exact S_nonempty
+        . intro s hs
+          apply h_max
+        .
+          use s
+
       have f_s_eq: ∀ s: S, f a = f (s * (l.unattach.prod * a)) := by
         by_contra!
         simp at this
@@ -5217,7 +5249,7 @@ lemma harmonic_exteme_val_implies_const  (f: G → ℂ) (hf: ∀ g: G, f g = ((#
           --   .
           --    exact fun a_1 ↦ hs (id (Eq.symm a_1))
 
-          have norm_sum_lt: ‖f a‖ < ‖((#S) : ℂ) * ∑ s ∈ S, f (s * (l.unattach.prod * a))‖ := by
+          have norm_sum_lt: ‖f a‖ < ‖((#S) : ℂ)⁻¹ * ∑ s ∈ S, f (s * (l.unattach.prod * a))‖ := by
             sorry
 
           have sum_strict_lt := Finset.sum_lt_sum (f := fun x => ‖f (x * (l.unattach.prod * a))‖) (g := fun x => ‖f a‖) (s := S) ?_ ?_
@@ -5228,9 +5260,9 @@ lemma harmonic_exteme_val_implies_const  (f: G → ℂ) (hf: ∀ g: G, f g = ((#
             .
               apply ne_of_gt at sum_strict_lt
               apply_fun (fun x => ‖x‖) at f_at_l
-              -- TODO - fix S⁻¹ term
-              sorry
-              --linarith
+              field_simp at norm_sum_lt
+              field_simp at f_at_l
+              linarith
             . simpa using hS
           . intro s hs
             apply h_max
@@ -5238,6 +5270,7 @@ lemma harmonic_exteme_val_implies_const  (f: G → ℂ) (hf: ∀ g: G, f g = ((#
             use s
             refine ⟨s_mem_s, ?_⟩
             simp
+
             sorry
 
         .
@@ -5255,7 +5288,7 @@ lemma harmonic_exteme_val_implies_const  (f: G → ℂ) (hf: ∀ g: G, f g = ((#
   rw [h_l_prod] at path_implies_max
   simpa using path_implies_max
 
--- lemma harmonic_exteme_val_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f = 0) (a: G) (h_max: ∀ g: G, |f g| ≤ |f a|): f = fun _ => f a := by
+-- lemma harmonic_extreme_val_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f = 0) (a: G) (h_max: ∀ g: G, |f g| ≤ |f a|): f = fun _ => f a := by
 --   by_cases f_a_pos: 0 ≤ f a
 --   .
 --     have lt_f_a: ∀ g: G, f g ≤ f a := by
@@ -5336,7 +5369,7 @@ lemma laplace_zero_iff_zero (g: (Lp ℝ 2 volume (α := G))) (eq_zero: Laplace g
     simp [Laplace_b] at laplace_b_zero
     simp [f_conv_mu] at laplace_b_zero
     rw [sub_eq_zero] at laplace_b_zero
-    have g_const := harmonic_exteme_val_implies_const (fun x => Complex.ofReal (g x)) (by (
+    have g_const := harmonic_extreme_val_implies_const (fun x => Complex.ofReal (g x)) (by (
       intro a
       simp
       nth_rw 1 [laplace_b_zero]
@@ -7474,7 +7507,7 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
 
       simp at z_mem
       obtain ⟨g, f_g_eq⟩ := z_mem
-      have f_const := harmonic_exteme_val_implies_const (S := S) f.toFun ?_ g ?_
+      have f_const := harmonic_extreme_val_implies_const (S := S) f.toFun ?_ g ?_
       use z
       ext a
       rw [f_const]
