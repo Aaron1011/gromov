@@ -2309,7 +2309,7 @@ lemma f_pos_on (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (a_lt: a < 1)  (a_lt_log:
 
 
 
-lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 < m) (data : HnData): ‖((theorem_3_8_h_n data n).val.val.val^m) - 1‖ ≥ ‖((theorem_3_8_h_n data n).val.val).val - 1‖ := by
+lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnData): ‖((theorem_3_8_h_n data n).val.val.val^m) - 1‖ ≥ ‖((theorem_3_8_h_n data n).val.val).val - 1‖ := by
 
   --rw [SubgroupClass.coe_zpow]
   push_cast
@@ -2346,8 +2346,7 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 < m) (data : HnDat
   rw [norm_neg]
   --grw [norm_sum_le]
 
-  have my_sub : m - 1 - 1 + 1 = m - 1 := by
-    omega
+
 
   have nonempty_d: Nonempty (Fin data.d) := by
     have data_pos := data.hd
@@ -2376,44 +2375,52 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 < m) (data : HnDat
     rw [← my_pow]
 
     have S_le : (1 + ‖((theorem_3_8_h_n data n).val).val.val - 1‖)^m - ((‖(theorem_3_8_h_n data n).val.val.val - 1‖) * (m : ℝ) + 1) ≤ (m - 1) * ‖(theorem_3_8_h_n data n).val.val.val - 1‖ := by
-      have my_bound := f_pos_on ‖((theorem_3_8_h_n data n).val.val.val - 1)‖  ?_ ?_ ?_ ?_ m ?_
-      simp [f] at my_bound
-      rw [two_mul] at my_bound
-      rw [← add_sub] at my_bound
-      rw [add_mul] at my_bound
-      rw [← add_assoc] at my_bound
-      apply sub_left_lt_of_lt_add at my_bound
-      rw [← gt_iff_lt] at my_bound
-      rw [← ge_iff_le]
-      grw [my_bound]
-      simp
-      ring_nf
-      . rfl
-      . positivity
+      by_cases m_eq_one: m = 1
       .
-        have val_ne := (theorem_3_8_h_n data n).property.right.left
-        positivity
+        simp [m_eq_one]
+        rw [add_comm]
       .
-        have val_le := (theorem_3_8_h_n data n).property.right.right
-        grw [val_le]
-        grw [H_n_eps_lt]
-        norm_num
-      .
-        have val_le := (theorem_3_8_h_n data n).property.right.right
-        grw [val_le]
-        grw [H_n_eps_lt]
-        norm_num
-        rw [← gt_iff_lt]
-        grw [Real.log_two_gt_d9.gt]
-        norm_num
-      . simp
-        refine ⟨by linarith, ?_⟩
-        have val_le := (theorem_3_8_h_n data n).property.right.right
-        grw [val_le]
-        grw [H_n_eps_lt]
+        simp at m_eq_one
+        have my_bound := f_pos_on ‖((theorem_3_8_h_n data n).val.val.val - 1)‖  ?_ ?_ ?_ ?_ m ?_
+        simp [f] at my_bound
+        rw [two_mul] at my_bound
+        rw [← add_sub] at my_bound
+        rw [add_mul] at my_bound
+        rw [← add_assoc] at my_bound
+        apply sub_left_lt_of_lt_add at my_bound
+        rw [← gt_iff_lt] at my_bound
+        rw [← ge_iff_le]
+        grw [my_bound]
         simp
-
-        sorry
+        ring_nf
+        . rfl
+        . positivity
+        .
+          have val_ne := (theorem_3_8_h_n data n).property.right.left
+          positivity
+        .
+          have val_le := (theorem_3_8_h_n data n).property.right.right
+          grw [val_le]
+          grw [H_n_eps_lt]
+          norm_num
+        .
+          have val_le := (theorem_3_8_h_n data n).property.right.right
+          grw [val_le]
+          grw [H_n_eps_lt]
+          norm_num
+          rw [← gt_iff_lt]
+          grw [Real.log_two_gt_d9.gt]
+          norm_num
+        . simp
+          refine ⟨by omega, ?_⟩
+          have val_le := (theorem_3_8_h_n data n).property.right.right
+          grw [val_le]
+          grw [H_n_eps_lt]
+          . simp
+            sorry
+          . apply H_n_eps_pos
+          . have val_ne := (theorem_3_8_h_n data n).property.right.left
+            positivity
 
 
     rw [add_comm]
@@ -2635,7 +2642,8 @@ lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + 
     . exact c_pos
     . exact c_lt
     . exact pows_i_le
-    . sorry
+    . simp
+      sorry
     . simp [-SubmonoidClass.coe_list_prod]
 
 
