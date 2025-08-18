@@ -2389,11 +2389,25 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 < m) (data : HnDat
       ring_nf
       . rfl
       . positivity
-      . sorry
-      . sorry
-      . sorry
+      .
+        have val_ne := (theorem_3_8_h_n data n).property.right.left
+        positivity
+      .
+        have val_le := (theorem_3_8_h_n data n).property.right.right
+        grw [val_le]
+        grw [H_n_eps_lt]
+        norm_num
+      .
+        have val_le := (theorem_3_8_h_n data n).property.right.right
+        grw [val_le]
+        grw [H_n_eps_lt]
+        norm_num
+        rw [← gt_iff_lt]
+        grw [Real.log_two_gt_d9.gt]
+        norm_num
       . simp
         refine ⟨by linarith, ?_⟩
+
         sorry
 
 
