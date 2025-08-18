@@ -2631,8 +2631,7 @@ lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + 
     .
       rw [add_assoc]
       rw [m_minus_k]
-
-      sorry
+      simp
     . exact c_pos
     . exact c_lt
     . exact pows_i_le
