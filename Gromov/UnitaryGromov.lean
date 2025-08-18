@@ -2502,21 +2502,23 @@ lemma words_distinct {a k : ℕ } (k_ne_zero : k ≠ 0) {m : ℕ} (a_k_lt : a + 
 
   nth_rw 2 [← List.prod_take_mul_prod_drop (i := k)] at this
   rw [← List.prod_take_mul_prod_drop (i := k)] at this
+  -- TODO - generalize this and PR to mathlib
   conv at this =>
     lhs
     lhs
     arg 1
     equals List.take k (List.ofFn fun (i: Fin k) ↦ ((theorem_3_8_h_n data i).val ^ pows_i ⟨i, by omega⟩)) =>
-
-      induction hl: (List.ofFn fun (i: Fin k) ↦ ((theorem_3_8_h_n data i).val ^ pows_i ⟨i, by omega⟩)) with
-      | nil =>
-        simp at hl
-        rw [hl]
-        simp
-      | cons hd tl ih =>
-        rw [← hl]
-
-        sorry
+      clear a_k_lt pows_i_le pows_j_le pows_ne this
+      ext i l
+      rw [List.getElem?_take]
+      rw [List.getElem?_take]
+      simp
+      by_cases i_lt_k: i < k
+      .
+        simp [i_lt_k]
+        have i_lt_m: i < m := by omega
+        simp [i_lt_m]
+      . simp [i_lt_k]
 
 
 
