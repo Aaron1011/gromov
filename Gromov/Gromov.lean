@@ -5237,6 +5237,7 @@ lemma harmonic_extreme_val_implies_const  (f: G → ℂ) (hf: ∀ g: G, f g = ((
         .
           use s
 
+      -- Split terms into real and imaginary parts.
       have f_s_eq: ∀ s: S, f a = f (s * (l.unattach.prod * a)) := by
         by_contra!
         simp at this
@@ -5249,8 +5250,11 @@ lemma harmonic_extreme_val_implies_const  (f: G → ℂ) (hf: ∀ g: G, f g = ((
           --   .
           --    exact fun a_1 ↦ hs (id (Eq.symm a_1))
 
+          --rw [f_s_norm_eq ⟨s, s_mem_s⟩] at val_le_max
           have norm_sum_lt: ‖f a‖ < ‖((#S) : ℂ)⁻¹ * ∑ s ∈ S, f (s * (l.unattach.prod * a))‖ := by
+
             sorry
+            --linarith
 
           have sum_strict_lt := Finset.sum_lt_sum (f := fun x => ‖f (x * (l.unattach.prod * a))‖) (g := fun x => ‖f a‖) (s := S) ?_ ?_
           .
@@ -5270,6 +5274,8 @@ lemma harmonic_extreme_val_implies_const  (f: G → ℂ) (hf: ∀ g: G, f g = ((
             use s
             refine ⟨s_mem_s, ?_⟩
             simp
+
+
 
             sorry
 

@@ -2560,6 +2560,10 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
   have offset_eq: (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_i ⟨i + k, by omega⟩).prod = (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_j ⟨i + k, by omega⟩).prod := by
     sorry
 
+  -- Fin (5)
+  -- Fin (5 + 0)
+  -- Fin (0 + 5)
+
   have lhs_ge: ‖((theorem_3_8_h_n data (k)).val ^ (-(pows_j ⟨k, by omega⟩ : ℤ))).val.val * (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_i ⟨i + k, by omega⟩).prod.val.val - 1‖ ≥ (9 / 10) * ‖(theorem_3_8_h_n data k).val.val.val - 1‖ := by
     have m_minus_k: m - k - 1 + 1 = m - k := by sorry
     conv =>
