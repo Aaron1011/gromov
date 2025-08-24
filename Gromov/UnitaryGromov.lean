@@ -2498,7 +2498,7 @@ lemma list_ofFn_drop {M: Type*} (a k: ℕ) (f: Fin (k + a) → M): (List.ofFn f)
     group
 
 set_option synthInstance.maxHeartbeats 80000 in
-set_option maxHeartbeats 600000 in
+set_option maxHeartbeats 900000 in
 lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 1 / 40)
  (data : HnData)
  (pows_i : Fin m → ℕ)
@@ -2638,43 +2638,42 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
   -- Fin (5 + 0)
   -- Fin (0 + 5)
 
-  have lhs_ge: ‖((theorem_3_8_h_n data (k)).val ^ (-(pows_j ⟨k, by omega⟩ : ℤ))).val.val * (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_i ⟨i + k, by omega⟩).prod.val.val - 1‖ ≥ (9 / 10) * ‖(theorem_3_8_h_n data k).val.val.val - 1‖ := by
+  have lhs_ge: ‖((theorem_3_8_h_n data (k)).val ^ (-(pows_j ⟨k, by omega⟩ : ℤ) + (pows_i ⟨k, by omega⟩))).val.val * (List.ofFn fun (i: Fin (m - k - 1)) ↦ (theorem_3_8_h_n data (1 + i + k)).val ^ pows_i ⟨1 + i + k, by omega⟩).prod.val.val - 1‖ ≥ (9 / 10) * ‖(theorem_3_8_h_n data k).val.val.val - 1‖ := by
     have m_minus_k: m - k - 1 + 1 = m - k := by
       omega
-    conv =>
-      lhs
-      arg 1
-      lhs
-      rhs
-      arg 1
-      arg 1
-      arg 1
-      rw [List.ofFn_congr (n := (m - k - 1) + 1) (by
-        rw [m_minus_k]
-      )]
+    -- conv =>
+    --   lhs
+    --   arg 1
+    --   lhs
+    --   rhs
+    --   arg 1
+    --   arg 1
+    --   arg 1
+    --   rw [List.ofFn_congr (n := (m - k - 1 - 1) + 1) (by
+    --     omega
+    --   )]
 
-    rw [List.ofFn_succ]
-    rw [List.prod_cons]
-    norm_cast
-    rw [← mul_assoc]
-    norm_cast
-    rw [← zpow_natCast]
-    conv =>
-      lhs
-      arg 1
-      lhs
-      arg 1
-      arg 1
-      lhs
-      rhs
-      simp
+    -- rw [List.ofFn_succ]
+    -- rw [List.prod_cons]
+    -- norm_cast
+    -- rw [← mul_assoc]
+    -- norm_cast
+    -- rw [← zpow_natCast]
+    -- conv =>
+    --   lhs
+    --   arg 1
+    --   lhs
+    --   arg 1
+    --   arg 1
+    --   lhs
+    --   rhs
+    --   simp
 
-    rw [← zpow_natCast]
-    rw [← zpow_add]
+    --rw [← zpow_natCast]
     conv =>
       lhs
       arg 1
-      equals ((((theorem_3_8_h_n data ↑k).val ^ (-(pows_j k : ℤ) + ↑(pows_i k)))).val.val - 1) * (List.ofFn (fun (i : Fin (m - k - 1)) => (theorem_3_8_h_n data (i.succ + k)).val^(pows_i (⟨i.succ + k, by omega⟩) ))).prod + (List.ofFn (fun (i : Fin (m - k - 1)) => (theorem_3_8_h_n data (i.succ + k)).val^(pows_i (⟨i.succ + k, by omega⟩) ))).prod - 1 =>
+      equals ((((theorem_3_8_h_n data ↑k).val ^ (-(pows_j k : ℤ) + ↑(pows_i k)))).val.val - 1) * (List.ofFn (fun (i : Fin (m - k - 1)) => (theorem_3_8_h_n data (1 + i + k)).val^(pows_i (⟨1 + i + k, by omega⟩) ))).prod + (List.ofFn (fun (i : Fin (m - k - 1)) => (theorem_3_8_h_n data (1 + i + k)).val^(pows_i (⟨1 + i + k, by omega⟩) ))).prod - 1 =>
         rw [sub_mul]
         simp
 
@@ -2692,7 +2691,6 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
     rw [SubmonoidClass.coe_pow]
     rw [SubmonoidClass.coe_pow]
     grw [H_n_single_pow_lower_bound]
-    simp only [Fin.val_succ]
 
     -- TODO : figure out why we can't use 'simp_rw' here
     conv =>
@@ -2846,8 +2844,37 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
     . norm_num
 
 
-  
-  sorry
+
+
+  have add_swap (a b : ℕ): 1 + a + b = 1 + b + a := by
+    omega
+
+  have add_swap_pows_i (a b: ℕ) (add_lt: 1 + a + b < m): pows_i ⟨1 + a + b, by omega⟩ = pows_i ⟨1 + b + a, by omega⟩ := by
+    simp_rw [add_swap]
+
+
+  grw [lhs_ge] at one_tenth_lt
+  ring_nf at one_tenth_lt
+  conv at rhs_le =>
+    lhs
+    arg 1
+    lhs
+    rhs
+    rhs
+    rhs
+    arg 1
+    arg 1
+    intro i
+    rw [add_swap_pows_i]
+    lhs
+    rw [add_swap]
+
+
+  norm_cast at rhs_le
+  norm_cast at one_tenth_lt
+  --have new_le := lt_of_lt_of_le one_tenth_lt rhs_le
+  grw [rhs_le] at one_tenth_lt
+  simp at one_tenth_lt
   --linarith
 
   -- have m_minus_k: m - k - 1 + 1 = m - k := by sorry
@@ -2936,3 +2963,5 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
 
 
   -- sorry
+
+#synth MulOneClass ℝ
