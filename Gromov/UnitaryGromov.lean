@@ -2505,7 +2505,8 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
  (pows_j: Fin m → ℕ)
  (pows_i_le : ∀ i : Fin m, (pows_i i) ≤ c * (H_n_eps data.hd)⁻¹)
  (pows_j_le : ∀ i : Fin m, (pows_j i) ≤ c * (H_n_eps data.hd)⁻¹)
- (pows_ne: ∃ k: Fin m, pows_i k ≠ pows_j k):
+ (pows_ne: pows_i k ≠ pows_j k)
+ (pows_lt_eq: ∀ j : Fin m, j < k → pows_i j = pows_j j):
   (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data (i)).val^(pows_i i))).prod ≠ (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data (i)).val^(pows_j i))).prod := by
 
   --have find := Fin.isSome_find_iff.mpr pows_ne
@@ -2534,12 +2535,6 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
       . simp [i_lt_k]
 
 
-
-
-
-  have pows_lt_eq: ∀ i: Fin m, i < k → pows_i i = pows_j i := by
-    sorry
-
   conv at this =>
     lhs
     lhs
@@ -2552,13 +2547,24 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
       exact i_prop
     )]
 
-  have cancel_lhs: (List.drop (↑k) (List.ofFn fun i ↦ (theorem_3_8_h_n data ↑i).val ^ pows_i i)).prod = (List.drop (↑k) (List.ofFn fun i ↦ (theorem_3_8_h_n data ↑i).val ^ pows_j i)).prod := by
+
+  have tail_eq: (List.drop (↑k) (List.ofFn fun i ↦ (theorem_3_8_h_n data ↑i).val ^ pows_i i)).prod = (List.drop (↑k) (List.ofFn fun i ↦ (theorem_3_8_h_n data ↑i).val ^ pows_j i)).prod := by
+    nth_rw 2 [List.ofFn_congr (n := m - k + k) (by
+      omega
+    )]
+    rw [List.ofFn_congr (n := m - k + k) (by
+      omega
+    )]
+    rw [list_ofFn_drop]
+    rw [list_ofFn_drop]
+
+
     sorry
 
-  simp at cancel_lhs
+  --simp at cancel_lhs
 
   have offset_eq: (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_i ⟨i + k, by omega⟩).prod = (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_j ⟨i + k, by omega⟩).prod := by
-    sorry
+    --rw [list_ofFn_drop]
 
   -- Fin (5)
   -- Fin (5 + 0)
