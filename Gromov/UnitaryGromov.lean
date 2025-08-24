@@ -2630,8 +2630,6 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
   rw [← this] at rhs_le
 
 
-  have offset_eq: (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_i ⟨i + k, by omega⟩).prod = (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_j ⟨i + k, by omega⟩).prod := by
-    sorry
     --rw [list_ofFn_drop]
 
   -- Fin (5)
@@ -2964,4 +2962,4 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
 
   -- sorry
 
-#synth MulOneClass ℝ
+#print axioms words_distinct
