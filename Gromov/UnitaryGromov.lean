@@ -3079,7 +3079,10 @@ lemma h_n_exp_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.va
       grw [(one_le_pow₀ ?_).ge]
       . norm_num
       . simp
-    . positivity
+    . simp [theorem_3_8_h_n]
+      rw [matrix_l2_norm_one]
+      have pos := H_n_eps_pos data.hd
+      positivity
 
     -- have foo := H_n_eps_pos data.hd
 
@@ -3113,5 +3116,3 @@ lemma h_n_exp_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.va
 
     -- .
     --   simp
-
-    sorry
