@@ -2963,3 +2963,155 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
   -- sorry
 
 #print axioms words_distinct
+
+
+lemma matrix_l2_norm_one (d: ℕ): ‖(1: Matrix (Fin d) (Fin d) ℂ)‖ = 1 := by
+  sorry
+
+set_option synthInstance.maxHeartbeats 90000 in
+set_option maxHeartbeats 1200000 in
+lemma h_n_exp_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.val.val‖ ≤ 4 * (2 ^ (n)) := by
+
+
+
+  have s_norm_le (s: data.S): ‖s.val.val.val‖ ≤ 2 := by
+    conv =>
+      lhs
+      equals ‖(s.val.val.val + -1) + 1‖ => simp
+    grw [norm_add_le]
+    conv =>
+      lhs
+      rhs
+      equals 1 =>
+        apply matrix_l2_norm_one
+
+    rw [← sub_eq_add_neg]
+    grw [data.S_dist _ (by simp)]
+    grw [H_n_eps_lt]
+    norm_num
+
+  induction n with
+  | zero =>
+    simp [theorem_3_8_h_n]
+    grw [s_norm_le]
+    norm_num
+  | succ n ih =>
+    simp [theorem_3_8_h_n]
+    simp [Bracket.bracket]
+    grw [Matrix.l2_opNorm_mul]
+    grw [Matrix.l2_opNorm_mul]
+    grw [Matrix.l2_opNorm_mul]
+    simp
+
+    have eq_sub_minus: ‖(theorem_3_8_h_n data n).val.val.val‖ = ‖((theorem_3_8_h_n data n).val.val.val - 1) + 1‖ := by
+      simp
+
+    grw [eq_sub_minus]
+    --grw [norm_add_le]
+    -- H_n_upper_bound_iter
+    grw [s_norm_le]
+    grw [norm_add_le]
+
+    have n_eq_zero_plus: n = 0 + n := by simp
+    rw [n_eq_zero_plus]
+    grw [H_n_upper_bound_iter]
+    simp [theorem_3_8_h_n]
+    have foo := H_n_eps_pos data.hd
+    have four_inv: (4: ℝ)⁻¹ = (2: ℝ)^(-2 : ℤ) := by norm_num
+
+    grw [data.S_dist _ (by simp)]
+    .
+      grw [H_n_eps_lt]
+      simp [matrix_l2_norm_one]
+      norm_num
+      simp
+      rw [mul_add]
+      simp
+      rw [mul_add]
+      ring
+      rw [mul_assoc]
+      rw [← pow_succ]
+      rw [four_inv]
+      rw [← zpow_natCast]
+      rw [← zpow_mul]
+      rw [← zpow_natCast]
+      rw [← zpow_add₀ (by simp)]
+
+      rw [← zpow_natCast]
+      rw [← zpow_mul]
+      rw [← zpow_natCast]
+      rw [← zpow_add₀ (by simp)]
+      rw [add_assoc]
+      conv =>
+        lhs
+        arg 2
+        rhs
+        lhs
+        equals 2^(-(n * 2 : ℤ)) =>
+          ring
+          rfl
+
+      conv =>
+        lhs
+        arg 2
+        lhs
+        equals 2^(-(n : ℤ) + 1) =>
+          ring
+          simp
+          rw [mul_two]
+          simp
+          ring
+
+      have neg_le: (2: ℝ) ^ (-(n: ℤ) + 1) ≤ (2 ^ (1 : ℤ)) := by
+        apply zpow_le_zpow_right₀
+        . simp
+        . simp
+
+      have neg_mul_le: (2: ℝ) ^ (-(n * 2: ℤ)) ≤ 1 := by
+        apply zpow_le_one_of_nonpos₀
+        . simp
+        . simp
+
+      grw [neg_le]
+      grw [neg_mul_le]
+      norm_num
+      rw [← ge_iff_le]
+      grw [(one_le_pow₀ ?_).ge]
+      . norm_num
+      . simp
+    . positivity
+
+    -- have foo := H_n_eps_pos data.hd
+
+    -- by_cases n_eq_zero: n = 0
+    -- .
+    --   simp [n_eq_zero]
+    --   simp [theorem_3_8_h_n]
+    --   grw [data.S_dist _ (by simp)]
+    --   .
+    --     simp [matrix_l2_norm_one]
+    --     grw [H_n_eps_lt]
+    --     norm_num
+
+
+    -- have n_sub_eq: n = n - 1 + 1 := by
+    --   omega
+    -- rw [n_sub_eq]
+    -- grw [H_n_upper_bound_iter]
+    -- ring_nf
+    -- rw [← le_div_iff₀]
+    -- .
+    --   rw [div_eq_mul_inv]
+    --   rw [mul_assoc]
+    --   norm_num
+    --   -- TODO - we get a terrible error message without the simp:
+    --   -- "Tactic `grewrite` failed: ‖↑↑↑(theorem_3_8_h_n data n)‖ ≤ 4 * 2 ^ n is not a relation"
+    --   simp at ih
+    --   grw [ih]
+    --   ring_nf
+
+
+    -- .
+    --   simp
+
+    sorry
