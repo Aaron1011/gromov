@@ -2624,6 +2624,12 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
   rw [← zpow_add] at this
 
 
+  ring_nf at this
+  have rhs_le := H_n_prod_le_k (c := c) (m := m) (k := (m - k - 1)) (a := k) (by omega) c_pos c_lt pows_j data pows_j_le
+  ring_nf at rhs_le
+  rw [← this] at rhs_le
+
+
   have offset_eq: (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_i ⟨i + k, by omega⟩).prod = (List.ofFn fun (i: Fin (m - k)) ↦ (theorem_3_8_h_n data (i + k)).val ^ pows_j ⟨i + k, by omega⟩).prod := by
     sorry
     --rw [list_ofFn_drop]
@@ -2840,6 +2846,7 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
     . norm_num
 
 
+  
   sorry
   --linarith
 
