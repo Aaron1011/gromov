@@ -2999,13 +2999,14 @@ lemma matrix_l2_norm_one {d: ℕ} (hd: 0 < d): ‖(1: Matrix (Fin d) (Fin d) ℂ
 instance matrix_norm_one_class (n: ℕ) (hd: Nonempty (Fin n)) : NormOneClass (Matrix (Fin n) (Fin n) ℂ) where
   norm_one := matrix_l2_norm_one (by exact Fin.pos')
 
+def H_n_C: ℝ := 8
 
 -- Note - Vikman proves a much weaker statement (an upper boud n terms of 2^n)
 -- The norms are actually bounded by a constant, which makes the rest of the proof easier
 -- (it's not obvious how to get the "It follows that all the words" part to work with the exponential bound)
 set_option synthInstance.maxHeartbeats 90000 in
 set_option maxHeartbeats 1200000 in
-lemma h_n_norm_const_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.val.val‖ ≤ 8 := by
+lemma h_n_norm_const_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.val.val‖ ≤ H_n_C := by
 
 
   have d_pos: 0 < data.d := by linarith [data.hd]
@@ -3024,11 +3025,11 @@ lemma h_n_norm_const_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n)
 
   induction n with
   | zero =>
-    simp [theorem_3_8_h_n]
+    simp [theorem_3_8_h_n, H_n_C]
     grw [s_norm_le]
     norm_num
   | succ n ih =>
-    simp [theorem_3_8_h_n]
+    simp [theorem_3_8_h_n, H_n_C]
     simp [Bracket.bracket]
     grw [Matrix.l2_opNorm_mul]
     grw [Matrix.l2_opNorm_mul]
@@ -3145,16 +3146,39 @@ lemma h_n_norm_const_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n)
     -- .
     --   simp
 
-#print axioms h_n_exp_bound
+#print axioms h_n_norm_const_bound
 
 
-lemma H_n_prod_exp_bound {m : ℕ} (data : HnData) (pows : Fin m → ℕ):
-  ‖(List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).val^(pows i))).prod.val.val‖₊ ≤ 4 * m * 2^m := by
+lemma H_n_prod_exp_bound {m : ℕ} (k: ℝ) (data : HnData) (pows : Fin m → ℕ)
+  (pows_le: ∀ i : Fin m, (pows i) ≤ k):
+  ‖(List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).val^(pows i))).prod.val.val‖₊ ≤ 8^(k * m) := by
 
   have nontrivial_fin: Nonempty (Fin data.d) := by
     refine Fin.pos_iff_nonempty.mp (by linarith [data.hd])
 
   simp
   grw [List.nnnorm_prod_le]
-  simp
-  grw [List.prod_le_pow_card]
+  grw [List.prod_le_pow_card (M := NNReal) (n := ⟨H_n_C ^ k, by (
+    simp [H_n_C]
+    apply Real.rpow_nonneg
+    norm_num
+  )⟩)]
+  .
+    simp
+    simp [H_n_C]
+    rw [NNReal.rpow_mul]
+    simp
+    norm_cast
+  .
+    intro x hx
+    simp at hx
+    obtain ⟨i, hi⟩ := hx
+    rw [← hi]
+    have toReal_le: ‖((theorem_3_8_h_n data ↑i).val.val.val ^ pows i)‖ ≤ H_n_C ^ k := by
+      grw [norm_pow_le]
+      grw [h_n_norm_const_bound]
+      rw [← Real.rpow_natCast]
+      grw [pows_le]
+      . simp [H_n_C]
+
+    exact toReal_le
