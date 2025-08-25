@@ -2996,11 +2996,16 @@ lemma matrix_l2_norm_one {d: ℕ} (hd: 0 < d): ‖(1: Matrix (Fin d) (Fin d) ℂ
     linarith
 
 
+instance matrix_norm_one_class (n: ℕ) (hd: Nonempty (Fin n)) : NormOneClass (Matrix (Fin n) (Fin n) ℂ) where
+  norm_one := matrix_l2_norm_one (by exact Fin.pos')
 
 
+-- Note - Vikman proves a much weaker statement (an upper boud n terms of 2^n)
+-- The norms are actually bounded by a constant, which makes the rest of the proof easier
+-- (it's not obvious how to get the "It follows that all the words" part to work with the exponential bound)
 set_option synthInstance.maxHeartbeats 90000 in
 set_option maxHeartbeats 1200000 in
-lemma h_n_exp_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.val.val‖ ≤ 4 * (2 ^ (n)) := by
+lemma h_n_norm_const_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.val.val‖ ≤ 8 := by
 
 
   have d_pos: 0 < data.d := by linarith [data.hd]
@@ -3102,13 +3107,10 @@ lemma h_n_exp_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.va
       grw [neg_le]
       grw [neg_mul_le]
       norm_num
-      rw [← ge_iff_le]
-      grw [(one_le_pow₀ ?_).ge]
-      . norm_num
-      . simp
     . simp [theorem_3_8_h_n]
       have pos := H_n_eps_pos data.hd
       positivity
+
 
     -- have foo := H_n_eps_pos data.hd
 
@@ -3144,3 +3146,15 @@ lemma h_n_exp_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.va
     --   simp
 
 #print axioms h_n_exp_bound
+
+
+lemma H_n_prod_exp_bound {m : ℕ} (data : HnData) (pows : Fin m → ℕ):
+  ‖(List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).val^(pows i))).prod.val.val‖₊ ≤ 4 * m * 2^m := by
+
+  have nontrivial_fin: Nonempty (Fin data.d) := by
+    refine Fin.pos_iff_nonempty.mp (by linarith [data.hd])
+
+  simp
+  grw [List.nnnorm_prod_le]
+  simp
+  grw [List.prod_le_pow_card]
