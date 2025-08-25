@@ -2964,16 +2964,39 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
 
 #print axioms words_distinct
 
+-- ContinuousLinearMap.norm_id
 
-lemma matrix_l2_norm_one (d: ℕ): ‖(1: Matrix (Fin d) (Fin d) ℂ)‖ ≤ 1 := by
+-- TODO: can we relax 'hd' to 'd ≠ 0'?
+lemma matrix_l2_norm_one {d: ℕ} (hd: 2 ≤ d): ‖(1: Matrix (Fin d) (Fin d) ℂ)‖ = 1 := by
   rw [Matrix.l2_opNorm_def]
-  rw [ContinuousLinearMap.opNorm_le_iff]
+  have nontrivial_fin: Nontrivial (Fin d) := by
+    apply Fin.nontrivial_iff_two_le.mpr
+    exact hd
+  apply ContinuousLinearMap.opNorm_eq_of_bounds (by simp)
   .
     intro x
     simp
     rw [Matrix.toEuclideanLin_apply]
     simp
-  . simp
+  . intro N hN mat_le
+    simp at mat_le
+    simp [Matrix.toEuclideanLin_apply] at mat_le
+    by_contra!
+    have x_lt (x: EuclideanSpace ℂ (Fin d)) (x_ne: x ≠ 0): N * ‖x‖ < ‖x‖ := by
+      apply mul_lt_of_lt_one_left
+      . simpa using x_ne
+      . exact this
+
+    have nonzero_x: ∃ x: EuclideanSpace ℂ (Fin d), x ≠ 0 := by
+      rw [← nontrivial_iff_exists_ne]
+      infer_instance
+
+    obtain ⟨x, x_ne⟩ := nonzero_x
+    have my_lt := x_lt x x_ne
+    have my_le := mat_le x
+    linarith
+
+
 
 
 set_option synthInstance.maxHeartbeats 90000 in
@@ -2987,7 +3010,7 @@ lemma h_n_exp_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.va
       lhs
       equals ‖(s.val.val.val + -1) + 1‖ => simp
     grw [norm_add_le]
-    grw [matrix_l2_norm_one]
+    rw [matrix_l2_norm_one data.hd]
 
     rw [← sub_eq_add_neg]
     grw [data.S_dist _ (by simp)]
@@ -3026,7 +3049,7 @@ lemma h_n_exp_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.va
     grw [data.S_dist _ (by simp)]
     .
       grw [H_n_eps_lt]
-      grw [matrix_l2_norm_one]
+      rw [matrix_l2_norm_one data.hd]
       norm_num
       simp
       rw [mul_add]
@@ -3084,7 +3107,6 @@ lemma h_n_exp_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.va
       . norm_num
       . simp
     . simp [theorem_3_8_h_n]
-      grw [matrix_l2_norm_one]
       have pos := H_n_eps_pos data.hd
       positivity
 
@@ -3120,3 +3142,5 @@ lemma h_n_exp_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.va
 
     -- .
     --   simp
+
+#print axioms h_n_exp_bound
