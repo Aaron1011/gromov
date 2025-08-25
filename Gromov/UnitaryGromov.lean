@@ -3149,36 +3149,98 @@ lemma h_n_norm_const_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n)
 #print axioms h_n_norm_const_bound
 
 
-lemma H_n_prod_exp_bound {m : ℕ} (k: ℝ) (data : HnData) (pows : Fin m → ℕ)
-  (pows_le: ∀ i : Fin m, (pows i) ≤ k):
-  ‖(List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).val^(pows i))).prod.val.val‖₊ ≤ 8^(k * m) := by
+lemma H_n_eps_pow_lt_self (data: HnData) (n: ℕ) (hn: 0 < n): (H_n_eps data.hd) ^ n ≤ H_n_eps data.hd := by
+  by_cases hn_eq_one: n = 1
+  . simp [hn_eq_one]
+  apply (pow_lt_self_of_lt_one₀ ?_ ?_ ?_).le
+  . apply H_n_eps_pos
+  .
+    linarith [H_n_eps_lt data.hd]
+  . omega
 
-  have nontrivial_fin: Nonempty (Fin data.d) := by
-    refine Fin.pos_iff_nonempty.mp (by linarith [data.hd])
+lemma H_n_prod_exp_bound {m : ℕ}
+  (m_gt: 0 < m) (k: ℝ) (data : HnData) (pows : Fin m → ℕ)
+  (pows_le: ∀ i : Fin m, (pows i) ≤ k)
+  (c: ℝ)
+  (c_pos: 0 < c)
+  (c_lt: c < 1 / 40)
+  (pows_le : ∀ i : Fin m, (pows i) ≤ c * (H_n_eps data.hd)⁻¹):
+  ‖(List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).val^(pows i))).prod.val.val‖ ≤ 2 * m * (2 ^ m) := by
 
-  simp
-  grw [List.nnnorm_prod_le]
-  grw [List.prod_le_pow_card (M := NNReal) (n := ⟨H_n_C ^ k, by (
-    simp [H_n_C]
-    apply Real.rpow_nonneg
-    norm_num
-  )⟩)]
+  have new_bound := H_n_pow_le (m := m) (k := m) (a := 0) (by omega) pows data
+  simp [-Subgroup.val_list_prod, -SubmonoidClass.coe_list_prod] at new_bound
+
+  have norm_add_sub (a: Matrix (Fin data.d) (Fin data.d) ℂ): ‖a‖ = ‖a - 1 + 1‖ := by
+    simp
+
+  rw [norm_add_sub]
+  grw [norm_add_le]
+  grw [new_bound]
+
+  have d_pos: 0 < data.d := by linarith [data.hd]
+
+  grw [Finset.sum_le_card_nsmul (n := c * (2^m))]
   .
     simp
-    simp [H_n_C]
-    rw [NNReal.rpow_mul]
+    rw [matrix_l2_norm_one d_pos]
+    rw [mul_assoc]
+    grw [c_lt]
+    have one_fourty_le: (1 / 40: ℝ) ≤ 1 := by norm_num
+    grw [one_fourty_le]
     simp
-    norm_cast
-  .
-    intro x hx
-    simp at hx
-    obtain ⟨i, hi⟩ := hx
-    rw [← hi]
-    have toReal_le: ‖((theorem_3_8_h_n data ↑i).val.val.val ^ pows i)‖ ≤ H_n_C ^ k := by
-      grw [norm_pow_le]
-      grw [h_n_norm_const_bound]
-      rw [← Real.rpow_natCast]
-      grw [pows_le]
-      . simp [H_n_C]
+    rw [two_mul]
+    apply add_le_add
+    . ring_nf
+      rfl
+    .
+      conv =>
+        rhs
+        equals (m * 2^m : ℝ) =>
+          ring
 
-    exact toReal_le
+      norm_cast
+      apply one_le_mul
+      . omega
+      . exact Nat.one_le_two_pow
+
+  . intro x _
+    grw [pows_le]
+    have h_pos := H_n_eps_pos data.hd
+    by_cases x_eq_zero: x = ⟨0, by omega⟩
+    .
+      simp [x_eq_zero, theorem_3_8_h_n]
+      grw [data.S_dist _ (by simp)]
+      field_simp
+      apply one_le_pow₀
+      simp
+    .
+      simp at x_eq_zero
+      have x_val_ne: x.val ≠ 0 := by
+        by_contra!
+        simp_rw [← this] at x_eq_zero
+        simp at x_eq_zero
+      have x_sub_eq: x.val = 0 + x.val := by
+        grind
+      rw [x_sub_eq]
+      grw [H_n_upper_bound_iter]
+      simp [theorem_3_8_h_n]
+      grw [data.S_dist _ (by simp)]
+      ring
+      field_simp
+      grw [H_n_eps_pow_lt_self]
+      ring
+      rw [pow_two]
+      ring_nf
+      rw [pow_two]
+      rw [← mul_assoc]
+      rw [mul_comm]
+      rw [mul_assoc]
+      field_simp
+      grw [H_n_eps_lt]
+      ring_nf
+      grw [x.isLt]
+      have one_four_le: (1 / 4: ℝ) ≤ 1 := by norm_num
+      grw [one_four_le]
+      . simp
+      . simp
+      . grind
