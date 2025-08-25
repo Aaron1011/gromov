@@ -2966,12 +2966,11 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
 
 -- ContinuousLinearMap.norm_id
 
--- TODO: can we relax 'hd' to 'd ≠ 0'?
-lemma matrix_l2_norm_one {d: ℕ} (hd: 2 ≤ d): ‖(1: Matrix (Fin d) (Fin d) ℂ)‖ = 1 := by
+
+lemma matrix_l2_norm_one {d: ℕ} (hd: 0 < d): ‖(1: Matrix (Fin d) (Fin d) ℂ)‖ = 1 := by
   rw [Matrix.l2_opNorm_def]
-  have nontrivial_fin: Nontrivial (Fin d) := by
-    apply Fin.nontrivial_iff_two_le.mpr
-    exact hd
+  have nonempty_fin: Nonempty (Fin d) := by
+    refine Fin.pos_iff_nonempty.mp hd
   apply ContinuousLinearMap.opNorm_eq_of_bounds (by simp)
   .
     intro x
@@ -3004,13 +3003,14 @@ set_option maxHeartbeats 1200000 in
 lemma h_n_exp_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.val.val‖ ≤ 4 * (2 ^ (n)) := by
 
 
+  have d_pos: 0 < data.d := by linarith [data.hd]
 
   have s_norm_le (s: data.S): ‖s.val.val.val‖ ≤ 2 := by
     conv =>
       lhs
       equals ‖(s.val.val.val + -1) + 1‖ => simp
     grw [norm_add_le]
-    rw [matrix_l2_norm_one data.hd]
+    rw [matrix_l2_norm_one d_pos]
 
     rw [← sub_eq_add_neg]
     grw [data.S_dist _ (by simp)]
@@ -3049,7 +3049,7 @@ lemma h_n_exp_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.va
     grw [data.S_dist _ (by simp)]
     .
       grw [H_n_eps_lt]
-      rw [matrix_l2_norm_one data.hd]
+      rw [matrix_l2_norm_one d_pos]
       norm_num
       simp
       rw [mul_add]
