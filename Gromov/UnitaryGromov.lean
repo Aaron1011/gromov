@@ -2965,8 +2965,16 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
 #print axioms words_distinct
 
 
-lemma matrix_l2_norm_one (d: ℕ): ‖(1: Matrix (Fin d) (Fin d) ℂ)‖ = 1 := by
-  sorry
+lemma matrix_l2_norm_one (d: ℕ): ‖(1: Matrix (Fin d) (Fin d) ℂ)‖ ≤ 1 := by
+  rw [Matrix.l2_opNorm_def]
+  rw [ContinuousLinearMap.opNorm_le_iff]
+  .
+    intro x
+    simp
+    rw [Matrix.toEuclideanLin_apply]
+    simp
+  . simp
+
 
 set_option synthInstance.maxHeartbeats 90000 in
 set_option maxHeartbeats 1200000 in
@@ -2979,11 +2987,7 @@ lemma h_n_exp_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.va
       lhs
       equals ‖(s.val.val.val + -1) + 1‖ => simp
     grw [norm_add_le]
-    conv =>
-      lhs
-      rhs
-      equals 1 =>
-        apply matrix_l2_norm_one
+    grw [matrix_l2_norm_one]
 
     rw [← sub_eq_add_neg]
     grw [data.S_dist _ (by simp)]
@@ -3022,7 +3026,7 @@ lemma h_n_exp_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.va
     grw [data.S_dist _ (by simp)]
     .
       grw [H_n_eps_lt]
-      simp [matrix_l2_norm_one]
+      grw [matrix_l2_norm_one]
       norm_num
       simp
       rw [mul_add]
@@ -3080,7 +3084,7 @@ lemma h_n_exp_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.va
       . norm_num
       . simp
     . simp [theorem_3_8_h_n]
-      rw [matrix_l2_norm_one]
+      grw [matrix_l2_norm_one]
       have pos := H_n_eps_pos data.hd
       positivity
 
