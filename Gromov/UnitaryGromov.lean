@@ -1390,6 +1390,7 @@ structure HnData where
   S : Set G
   S_generates : Subgroup.closure S = ⊤
   S_finite : S.Finite
+  S_inv: ∀ s ∈ S, s⁻¹ ∈ S
   S_dist : ∀ s ∈ S, ‖s.val.val - 1‖ ≤ (H_n_eps hd)
   h : S
   h_nontrivial : ¬ ∃(z : ℂ), h.val.val.val = z • 1
@@ -1401,6 +1402,7 @@ structure Theorem3_8_Data (data: HnData) where
   g_dist : ‖g.val.val - 1‖ ≤ (H_n_eps data.hd)
 
 
+-- The element of S in the left-hand side of the commutator in theorem_3_8_h_n
 theorem theorem_3_8_h_n_left_S (data: HnData) (prev: Theorem3_8_Data data): ∃ s : data.S, ∀ z : ℂ, ⁅s.val.val, prev.g.val⁆.val ≠ z • 1 := by
   by_contra!
   have comm_eq_id : ∀ s : data.S, ⁅s.val.val, prev.g.val⁆ = 1 := by
@@ -3117,15 +3119,47 @@ lemma H_n_pows_mem_ball_G {m : ℕ}
 
 #print axioms H_n_pows_mem_ball_G
 
-noncomputable def theorem_3_8_h_n_list (data: HnData) (m: ℕ): List (data.G) :=
+-- Unfold the commutators from theorem_3_8_h_n as a list of elements
+noncomputable def theorem_3_8_h_n_list (data: HnData) (m: ℕ): List (data.S) :=
   match m with
-  | 0 => []
-  | a + 1 => (by
-    let foo := theorem_3_8_h_n data (a + 1)
-    have my_eq := theorem_3_8_h_n.eq_def data (a + 1)
-    simp at my_eq
-    sorry
-  )
+  | 0 => [data.h]
+  | a + 1 => [(theorem_3_8_h_n_left_S data (theorem_3_8_h_n data a)).choose]
+              ++ theorem_3_8_h_n_list data a
+              ++ [⟨(theorem_3_8_h_n_left_S data (theorem_3_8_h_n data a)).choose.val⁻¹, (by
+                apply data.S_inv
+                simp
+              )⟩]
+              ++ (List.map (fun s => ⟨s.val⁻¹, by apply data.S_inv; simp⟩) (theorem_3_8_h_n_list data a)).reverse
+
+
+set_option synthInstance.maxHeartbeats 80000 in
+set_option maxHeartbeats 900000 in
+lemma theorem_3_8_h_n_list_prod_eq (data: HnData) (m: ℕ): (theorem_3_8_h_n_list data m).unattach.prod = (theorem_3_8_h_n data m).g := by
+  induction m with
+  | zero =>
+    unfold theorem_3_8_h_n_list
+    simp [theorem_3_8_h_n]
+  | succ a ih =>
+    unfold theorem_3_8_h_n_list
+    simp [theorem_3_8_h_n]
+    simp [Bracket.bracket]
+    rw [ih]
+    conv =>
+      lhs
+      rhs
+      rhs
+      rhs
+      arg 1
+      arg 1
+      equals List.map Inv.inv (theorem_3_8_h_n_list data a).unattach =>
+        ext i g
+        simp
+
+
+    rw [← List.prod_inv_reverse]
+    rw [ih]
+    group
+
 
 lemma H_n_pows_mem_ball_S {m : ℕ}
   (m_gt: 0 < m) (k: ℝ) (data : HnData) (pows : Fin m → ℕ)
