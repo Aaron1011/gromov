@@ -3001,12 +3001,92 @@ instance matrix_norm_one_class (n: ℕ) (hd: Nonempty (Fin n)) : NormOneClass (M
 
 def H_n_C: ℝ := 8
 
+open scoped Finset
+open scoped Pointwise
+
+lemma H_n_pows_mem_ball {m : ℕ}
+  (ε: ℝ)  (ε_pos: 0 < ε)
+  (m_gt: 0 < m) (k: ℝ) (data : HnData) (pows : Fin m → ℕ)
+  (pows_le: ∀ i : Fin m, (pows i) ≤ k)
+  (c: ℝ)
+  (c_pos: 0 < c)
+  (c_lt: c < 1 / 40)
+  (c_eps_mul: 1 ≤ c * ε⁻¹)
+  (pows_le : ∀ i : Fin m, (pows i) ≤ c * (H_n_eps data.hd)⁻¹):
+  (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).val^(pows i))).prod.val ∈ (data.G.carrier ^ (2 * (Nat.floor (c * ε⁻¹)) * (2 ^ m))) := by
+
+  let replicate_pow (i: Fin m) := List.replicate (pows i) ((theorem_3_8_h_n data i).val)
+  let nested_list := List.ofFn (fun (i : Fin (m)) => replicate_pow i)
+  let nested_prod := List.prod_flatten (l := nested_list)
+  conv at nested_prod =>
+    rhs
+    equals (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).val^(pows i))).prod =>
+      simp [nested_list, replicate_pow]
+      apply congr (rfl)
+      ext i g
+      simp
+
+
+
+  --rw [← nested_prod]
+  rw [Set.mem_pow]
+  -- We have an upper bound for the list, so pad out the list with '1's to reach the upper bound
+  let base_list := (fun (i: Fin (nested_list.flatten.length)) => nested_list.flatten[i])
+  let full_list := Fin.append base_list (fun (i: Fin (2 * (Nat.floor (c * ε⁻¹)) * (2 ^ m) - nested_list.flatten.length)) => 1)
+  --let full_list_new := nested_list.flatten ++ (List.replicate (2 * (Nat.floor (c * ε⁻¹)) * (2 ^ m) - nested_list.flatten.length) 1)
+
+  have len_le_upper: nested_list.flatten.length ≤ (2 * (Nat.floor (c * ε⁻¹)) * (2 ^ m)) := by
+    sorry
+
+  use (fun i => full_list (i.cast (by omega)))
+  .
+
+
+    conv =>
+      lhs
+      equals (List.ofFn (fun (i: Fin ((2 * (Nat.floor (c * ε⁻¹)) * (2 ^ m)))) => (full_list (i.cast (by omega))))).prod.val =>
+        simp
+        apply congr (rfl)
+        ext i g
+        simp
+
+
+
+    simp only [full_list, base_list]
+    rw [← List.ofFn_congr]
+    rw [List.ofFn_fin_append]
+    simp [nested_list]
+    conv =>
+      lhs
+      equals (List.ofFn (fun (i: Fin ((List.map List.length nested_list).sum)) => nested_list.flatten[i].val)).prod =>
+
+        sorry
+
+    .
+      sorry
+    . omega
+
+    -- by_cases i_lt_m: i < nested_list.flatten.length
+    -- .
+    --   simp [i_lt_m]
+    --   have i_lt_mul: i < 2 * (Nat.floor (c * ε⁻¹)) * (2 ^ m) := by
+    --     rw [← gt_iff_lt]
+    --     grw [c_eps_mul.ge]
+    --     simp
+    --     grw [i_lt_m]
+
+    --     have foo := Nat.lt_two_pow_self (n := m)
+    --     --linarith
+    --   --simp only [i_lt_mul, base_list, Fin.addCases]
+
+
 -- Note - Vikman proves a much weaker statement (an upper boud n terms of 2^n)
 -- The norms are actually bounded by a constant, which makes the rest of the proof easier
 -- (it's not obvious how to get the "It follows that all the words" part to work with the exponential bound)
+-- WRONG - this should be using the word norm, not the matrix norm
 set_option synthInstance.maxHeartbeats 90000 in
 set_option maxHeartbeats 1200000 in
-lemma h_n_norm_const_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.val.val‖ ≤ H_n_C := by
+lemma bad_h_n_norm_const_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.val.val‖ ≤ H_n_C := by
 
 
   have d_pos: 0 < data.d := by linarith [data.hd]
@@ -3146,7 +3226,7 @@ lemma h_n_norm_const_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n)
     -- .
     --   simp
 
-#print axioms h_n_norm_const_bound
+--#print axioms h_n_norm_const_bound
 
 
 lemma H_n_eps_pow_lt_self (data: HnData) (n: ℕ) (hn: 0 < n): (H_n_eps data.hd) ^ n ≤ H_n_eps data.hd := by
@@ -3158,7 +3238,12 @@ lemma H_n_eps_pow_lt_self (data: HnData) (n: ℕ) (hn: 0 < n): (H_n_eps data.hd)
     linarith [H_n_eps_lt data.hd]
   . omega
 
-lemma H_n_prod_exp_bound {m : ℕ}
+
+
+-- Note that the right-hand side of the bound doesn't end up using 'c'
+-- WRONG: We need to be using the word distance (norm) here, not the matrix norm
+-- The norm ‖x‖ in Vikman is the matrix norm, while |x| is the word norm
+lemma bad_H_n_prod_exp_bound {m : ℕ}
   (m_gt: 0 < m) (k: ℝ) (data : HnData) (pows : Fin m → ℕ)
   (pows_le: ∀ i : Fin m, (pows i) ≤ k)
   (c: ℝ)
@@ -3244,3 +3329,17 @@ lemma H_n_prod_exp_bound {m : ℕ}
       . simp
       . simp
       . grind
+
+
+open scoped Finset
+open scoped Pointwise
+
+-- lemma S_ball_card_bound (data: HnData) (m: ℕ) (ε: ℝ)
+--   (c: ℝ)
+--   (c_pos: 0 < c)
+--   (c_lt: c < 1 / 40)
+--   (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ))
+-- : (1 + c * (H_n_eps data.hd)⁻¹)^m ≤ #((G' n ε G).carrier ^ (2 * m * (2 ^ m)) ) := by
+
+
+--   simp
