@@ -2320,7 +2320,7 @@ lemma f_pos_on (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (a_lt: a < 1)  (a_lt_log:
 
 
 
-lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnData) (m_lt: m < (1/2) / ‖(theorem_3_8_h_n data n).val.val.val - 1‖) : ‖((theorem_3_8_h_n data n).val.val.val^m) - 1‖ ≥ ‖((theorem_3_8_h_n data n).val.val).val - 1‖ := by
+lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnData) (m_lt: m < (1/2) / ‖(theorem_3_8_h_n data n).g.val.val - 1‖) : ‖((theorem_3_8_h_n data n).g.val.val^m) - 1‖ ≥ ‖((theorem_3_8_h_n data n).g.val).val - 1‖ := by
 
   --rw [SubgroupClass.coe_zpow]
   push_cast
@@ -2332,7 +2332,7 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnD
     arg 1
     lhs
     arg 1
-    equals (1 + ((theorem_3_8_h_n data n).val.val.val - 1)) =>
+    equals (1 + ((theorem_3_8_h_n data n).g.val.val - 1)) =>
       field_simp
 
   rw [norm_sub_swap]
@@ -2363,7 +2363,7 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnD
     have data_pos := data.hd
     exact Fin.pos_iff_nonempty.mp (by linarith)
 
-  have my_pow := Commute.add_pow (y := 1) (x := ‖((theorem_3_8_h_n data n).val.val.val - 1)‖) (n := m - 1 + 1) (by simp)
+  have my_pow := Commute.add_pow (y := 1) (x := ‖((theorem_3_8_h_n data n).g.val.val - 1)‖) (n := m - 1 + 1) (by simp)
   rw [Finset.sum_range_succ'] at my_pow
   simp at my_pow
   rw [Finset.sum_range_succ'] at my_pow
@@ -2381,18 +2381,18 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnD
   -- simp_rw [norm_pow] at my_pow
   grw [norm_sum_le]
 
-  grw [Finset.sum_le_sum (g := fun i => ‖((theorem_3_8_h_n data n).val.val.val - 1)‖ ^ (i + 1 + 1) * (m.choose (i + 1 + 1)))]
+  grw [Finset.sum_le_sum (g := fun i => ‖((theorem_3_8_h_n data n).g.val.val - 1)‖ ^ (i + 1 + 1) * (m.choose (i + 1 + 1)))]
   .
     rw [← my_pow]
 
-    have S_le : (1 + ‖((theorem_3_8_h_n data n).val).val.val - 1‖)^m - ((‖(theorem_3_8_h_n data n).val.val.val - 1‖) * (m : ℝ) + 1) ≤ (m - 1) * ‖(theorem_3_8_h_n data n).val.val.val - 1‖ := by
+    have S_le : (1 + ‖((theorem_3_8_h_n data n).g).val.val - 1‖)^m - ((‖(theorem_3_8_h_n data n).g.val.val - 1‖) * (m : ℝ) + 1) ≤ (m - 1) * ‖(theorem_3_8_h_n data n).g.val.val - 1‖ := by
       by_cases m_eq_one: m = 1
       .
         simp [m_eq_one]
         rw [add_comm]
       .
         simp at m_eq_one
-        have my_bound := f_pos_on ‖((theorem_3_8_h_n data n).val.val.val - 1)‖  ?_ ?_ ?_ ?_ m ?_
+        have my_bound := f_pos_on ‖((theorem_3_8_h_n data n).g.val.val - 1)‖  ?_ ?_ ?_ ?_ m ?_
         simp [f] at my_bound
         rw [two_mul] at my_bound
         rw [← add_sub] at my_bound
@@ -2407,15 +2407,15 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnD
         . rfl
         . positivity
         .
-          have val_ne := (theorem_3_8_h_n data n).property.right.left
+          have val_ne := (theorem_3_8_h_n data n).g_dist_nonzero
           positivity
         .
-          have val_le := (theorem_3_8_h_n data n).property.right.right
+          have val_le := (theorem_3_8_h_n data n).g_dist
           grw [val_le]
           grw [H_n_eps_lt]
           norm_num
         .
-          have val_le := (theorem_3_8_h_n data n).property.right.right
+          have val_le := (theorem_3_8_h_n data n).g_dist
           grw [val_le]
           grw [H_n_eps_lt]
           norm_num
@@ -2432,7 +2432,7 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnD
           apply div_le_div₀
           . norm_num
           . norm_num
-          . have ne_zero := (theorem_3_8_h_n data n).property.right.left
+          . have ne_zero := (theorem_3_8_h_n data n).g_dist_nonzero
             positivity
           . rfl
 
@@ -2443,7 +2443,7 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnD
     rw [mul_comm]
     rw [← mul_comm]
     simp
-    have my_smul := norm_smul (m : ℂ) ((theorem_3_8_h_n data n).val.val.val - 1)
+    have my_smul := norm_smul (m : ℂ) ((theorem_3_8_h_n data n).g.val.val - 1)
     simp at my_smul
     rw [← my_smul]
     conv =>
@@ -2451,8 +2451,7 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnD
       rhs
       lhs
       arg 1
-      equals ((theorem_3_8_h_n data n).val.val.val - 1) * m =>
-        simp
+      equals ((theorem_3_8_h_n data n).g.val.val - 1) * m =>
         rw [Matrix.smul_eq_mul_diagonal]
         rw [← Matrix.diagonal_natCast]
 
@@ -2519,7 +2518,7 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
  (pows_ne: pows_i k ≠ pows_j k)
  (pows_lt_eq: ∀ j : Fin m, j < k → pows_i j = pows_j j)
  (pows_j_lt_k: (pows_j k) < (pows_i k)):
-  (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data (i)).val^(pows_i i))).prod ≠ (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data (i)).val^(pows_j i))).prod := by
+  (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data (i)).g^(pows_i i))).prod ≠ (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data (i)).g^(pows_j i))).prod := by
 
   --have find := Fin.isSome_find_iff.mpr pows_ne
   --let k := (Fin.find (fun i => pows_i i ≠ pows_j i)).get find
@@ -2533,7 +2532,7 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
     lhs
     lhs
     arg 1
-    equals List.take k (List.ofFn fun (i: Fin k) ↦ ((theorem_3_8_h_n data i).val ^ pows_i ⟨i, by omega⟩)) =>
+    equals List.take k (List.ofFn fun (i: Fin k) ↦ ((theorem_3_8_h_n data i).g ^ pows_i ⟨i, by omega⟩)) =>
       --clear a_k_lt pows_i_le pows_j_le pows_ne this
       ext i l
       rw [List.getElem?_take]
@@ -2550,7 +2549,7 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
     rhs
     lhs
     arg 1
-    equals List.take k (List.ofFn fun (i: Fin k) ↦ ((theorem_3_8_h_n data i).val ^ pows_j ⟨i, by omega⟩)) =>
+    equals List.take k (List.ofFn fun (i: Fin k) ↦ ((theorem_3_8_h_n data i).g ^ pows_j ⟨i, by omega⟩)) =>
       --clear a_k_lt pows_i_le pows_j_le pows_ne this
       ext i l
       rw [List.getElem?_take]
@@ -2647,7 +2646,7 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
   -- Fin (5 + 0)
   -- Fin (0 + 5)
 
-  have lhs_ge: ‖((theorem_3_8_h_n data (k)).val ^ (-(pows_j ⟨k, by omega⟩ : ℤ) + (pows_i ⟨k, by omega⟩))).val.val * (List.ofFn fun (i: Fin (m - k - 1)) ↦ (theorem_3_8_h_n data (1 + i + k)).val ^ pows_i ⟨1 + i + k, by omega⟩).prod.val.val - 1‖ ≥ (9 / 10) * ‖(theorem_3_8_h_n data k).val.val.val - 1‖ := by
+  have lhs_ge: ‖((theorem_3_8_h_n data (k)).g ^ (-(pows_j ⟨k, by omega⟩ : ℤ) + (pows_i ⟨k, by omega⟩))).val.val * (List.ofFn fun (i: Fin (m - k - 1)) ↦ (theorem_3_8_h_n data (1 + i + k)).g ^ pows_i ⟨1 + i + k, by omega⟩).prod.val.val - 1‖ ≥ (9 / 10) * ‖(theorem_3_8_h_n data k).g.val.val - 1‖ := by
     have m_minus_k: m - k - 1 + 1 = m - k := by
       omega
     -- conv =>
@@ -2682,7 +2681,7 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
     conv =>
       lhs
       arg 1
-      equals ((((theorem_3_8_h_n data ↑k).val ^ (-(pows_j k : ℤ) + ↑(pows_i k)))).val.val - 1) * (List.ofFn (fun (i : Fin (m - k - 1)) => (theorem_3_8_h_n data (1 + i + k)).val^(pows_i (⟨1 + i + k, by omega⟩) ))).prod + (List.ofFn (fun (i : Fin (m - k - 1)) => (theorem_3_8_h_n data (1 + i + k)).val^(pows_i (⟨1 + i + k, by omega⟩) ))).prod - 1 =>
+      equals ((((theorem_3_8_h_n data ↑k).g ^ (-(pows_j k : ℤ) + ↑(pows_i k)))).val.val - 1) * (List.ofFn (fun (i : Fin (m - k - 1)) => (theorem_3_8_h_n data (1 + i + k)).g^(pows_i (⟨1 + i + k, by omega⟩) ))).prod + (List.ofFn (fun (i : Fin (m - k - 1)) => (theorem_3_8_h_n data (1 + i + k)).g^(pows_i (⟨1 + i + k, by omega⟩) ))).prod - 1 =>
         rw [sub_mul]
         simp
 
@@ -2771,10 +2770,10 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
       .
         rw [inv_le_inv₀]
         .
-          have my_prop := (theorem_3_8_h_n data k).property.right.right
+          have my_prop := (theorem_3_8_h_n data k).g_dist
           exact my_prop
         . apply H_n_eps_pos
-        . have my_prop := (theorem_3_8_h_n data k).property.right.left
+        . have my_prop := (theorem_3_8_h_n data k).g_dist_nonzero
           positivity
       . simp
         apply H_n_eps_pos
@@ -2843,12 +2842,12 @@ lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : �
 
   rw [ge_iff_le] at lhs_ge
 
-  have one_tenth_lt:  1 / 10 * ‖(theorem_3_8_h_n data ↑k).val.val.val - 1‖ < (9 / 10) * ‖(theorem_3_8_h_n data ↑k).val.val.val - 1‖ := by
+  have one_tenth_lt:  1 / 10 * ‖(theorem_3_8_h_n data ↑k).g.val.val - 1‖ < (9 / 10) * ‖(theorem_3_8_h_n data ↑k).g.val.val - 1‖ := by
     apply mul_lt_mul
     . norm_num
     . simp
     .
-      have ne_zero := (theorem_3_8_h_n data ↑k).property.right.left
+      have ne_zero := (theorem_3_8_h_n data ↑k).g_dist_nonzero
       positivity
     . norm_num
 
@@ -3050,14 +3049,14 @@ lemma H_n_pows_mem_ball_G {m : ℕ}
   (c_pos: 0 < c)
   (c_lt: c < 1 / 40)
   (pows_le : ∀ i : Fin m, (pows i) ≤ ⌊c * (H_n_eps data.hd)⁻¹⌋₊):
-  (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).val^(pows i))).prod.val ∈ (data.G.carrier ^ (m * (Nat.floor (c * (H_n_eps data.hd)⁻¹)))) := by
+  (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).g^(pows i))).prod.val ∈ (data.G.carrier ^ (m * (Nat.floor (c * (H_n_eps data.hd)⁻¹)))) := by
 
-  let replicate_pow (i: Fin m) := List.replicate (pows i) ((theorem_3_8_h_n data i).val)
+  let replicate_pow (i: Fin m) := List.replicate (pows i) ((theorem_3_8_h_n data i).g)
   let nested_list := List.ofFn (fun (i : Fin (m)) => replicate_pow i)
   let nested_prod := List.prod_flatten (l := nested_list)
   conv at nested_prod =>
     rhs
-    equals (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).val^(pows i))).prod =>
+    equals (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).g^(pows i))).prod =>
       simp [nested_list, replicate_pow]
       apply congr (rfl)
       ext i g
@@ -3125,6 +3124,7 @@ noncomputable def theorem_3_8_h_n_list (data: HnData) (m: ℕ): List (data.G) :=
     let foo := theorem_3_8_h_n data (a + 1)
     have my_eq := theorem_3_8_h_n.eq_def data (a + 1)
     simp at my_eq
+    sorry
   )
 
 lemma H_n_pows_mem_ball_S {m : ℕ}
@@ -3133,17 +3133,18 @@ lemma H_n_pows_mem_ball_S {m : ℕ}
   (c_pos: 0 < c)
   (c_lt: c < 1 / 40)
   (pows_le : ∀ i : Fin m, (pows i) ≤ ⌊c * (H_n_eps data.hd)⁻¹⌋₊):
-  (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).val^(pows i))).prod.val ∈ Subtype.val '' (data.S ^ ( 2 * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m))) := by
+  (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).g^(pows i))).prod.val ∈ Subtype.val '' (data.S ^ ( 2 * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m))) := by
 
   rw [Set.mem_image]
   simp_rw [Set.mem_pow]
-  use (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).val^(pows i))).prod
+  use (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).g^(pows i))).prod
 
   have g_list_mem := H_n_pows_mem_ball_G m_gt k data pows c c_pos c_lt pows_le
   rw [Set.mem_pow] at g_list_mem
   obtain ⟨g_list, g_list_prod⟩ := g_list_mem
 
-  let unfold_comm (i: Fin m) := (theorem_3_8_h_n data ↑i).val.val
+  let unfold_comm (i: Fin m) := (theorem_3_8_h_n data ↑i).g.val
+  sorry
 
 
 
@@ -3153,7 +3154,7 @@ lemma H_n_pows_mem_ball_S {m : ℕ}
 -- WRONG - this should be using the word norm, not the matrix norm
 set_option synthInstance.maxHeartbeats 90000 in
 set_option maxHeartbeats 1200000 in
-lemma bad_h_n_norm_const_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).val.val.val‖ ≤ H_n_C := by
+lemma bad_h_n_norm_const_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n data n).g.val.val‖ ≤ H_n_C := by
 
 
   have d_pos: 0 < data.d := by linarith [data.hd]
@@ -3183,7 +3184,7 @@ lemma bad_h_n_norm_const_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n dat
     grw [Matrix.l2_opNorm_mul]
     simp
 
-    have eq_sub_minus: ‖(theorem_3_8_h_n data n).val.val.val‖ = ‖((theorem_3_8_h_n data n).val.val.val - 1) + 1‖ := by
+    have eq_sub_minus: ‖(theorem_3_8_h_n data n).g.val.val‖ = ‖((theorem_3_8_h_n data n).g.val.val - 1) + 1‖ := by
       simp
 
     grw [eq_sub_minus]
@@ -3317,7 +3318,7 @@ lemma bad_H_n_prod_exp_bound {m : ℕ}
   (c_pos: 0 < c)
   (c_lt: c < 1 / 40)
   (pows_le : ∀ i : Fin m, (pows i) ≤ c * (H_n_eps data.hd)⁻¹):
-  ‖(List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).val^(pows i))).prod.val.val‖ ≤ 2 * m * (2 ^ m) := by
+  ‖(List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).g^(pows i))).prod.val.val‖ ≤ 2 * m * (2 ^ m) := by
 
   have new_bound := H_n_pow_le (m := m) (k := m) (a := 0) (by omega) pows data
   simp [-Subgroup.val_list_prod, -SubmonoidClass.coe_list_prod] at new_bound
