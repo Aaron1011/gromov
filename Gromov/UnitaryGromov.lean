@@ -3064,7 +3064,10 @@ lemma H_n_pows_mem_ball {m : ℕ}
   --let full_list_new := nested_list.flatten ++ (List.replicate (2 * (Nat.floor (c * ε⁻¹)) * (2 ^ m) - nested_list.flatten.length) 1)
 
   have len_le_upper: nested_list.flatten.length ≤ (2 * (Nat.floor (c * ε⁻¹)) * (2 ^ m)) := by
-    sorry
+    simp [nested_list, replicate_pow]
+    simp [Fin.sum_ofFn]
+    
+
 
   use (fun i => full_list (i.cast (by omega)))
   .
