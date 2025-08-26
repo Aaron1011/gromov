@@ -1591,7 +1591,7 @@ lemma coe_comm_g {data : HnData} (a b : data.G): ⁅a.val, b.val⁆ = ⁅a, b⁆
   rw [commutatorElement_def]
   norm_cast
 
-lemma H_n_upper_bound (data : HnData) (n : ℕ): ‖(theorem_3_8_h_n data (n + 1)).val.val.val - 1‖ ≤ 2 * (H_n_eps data.hd) * ‖(theorem_3_8_h_n data (n)).val.val.val - 1‖ := by
+lemma H_n_upper_bound (data : HnData) (n : ℕ): ‖(theorem_3_8_h_n data (n + 1)).g.val.val - 1‖ ≤ 2 * (H_n_eps data.hd) * ‖(theorem_3_8_h_n data (n)).g.val.val - 1‖ := by
   conv =>
     lhs
     unfold theorem_3_8_h_n
@@ -1606,7 +1606,7 @@ lemma H_n_upper_bound (data : HnData) (n : ℕ): ‖(theorem_3_8_h_n data (n + 1
   grw [data.S_dist]
   simp
 
-lemma H_n_upper_bound_iter (data : HnData) {a : ℕ} (n : ℕ): ‖(theorem_3_8_h_n data (a + n)).val.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data (a)).val.val.val - 1‖ * 2^n * (H_n_eps data.hd)^n  := by
+lemma H_n_upper_bound_iter (data : HnData) {a : ℕ} (n : ℕ): ‖(theorem_3_8_h_n data (a + n)).g.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data (a)).g.val.val - 1‖ * 2^n * (H_n_eps data.hd)^n  := by
   induction n with
   | zero =>
     simp
@@ -1622,7 +1622,7 @@ lemma H_n_upper_bound_iter (data : HnData) {a : ℕ} (n : ℕ): ‖(theorem_3_8_
       linarith
 
 
-lemma H_n_single_pow {n : ℕ} {m : ℕ} (data : HnData): ‖((theorem_3_8_h_n data n).val.val^m).val - 1‖ ≤ m * ‖(theorem_3_8_h_n data n).val.val.val - 1‖ := by
+lemma H_n_single_pow {n : ℕ} {m : ℕ} (data : HnData): ‖((theorem_3_8_h_n data n).g.val^m).val - 1‖ ≤ m * ‖(theorem_3_8_h_n data n).g.val.val - 1‖ := by
   induction m with
   | zero =>
     simp [pow_zero]
@@ -1635,7 +1635,7 @@ lemma H_n_single_pow {n : ℕ} {m : ℕ} (data : HnData): ‖((theorem_3_8_h_n d
     simp
 
 lemma H_n_pow_le  {a k : ℕ } {m : ℕ} (a_k_lt : a + k ≤ m)  (pows : Fin m → ℕ) (data : HnData):
-  ‖(List.ofFn (fun (i : Fin (k)) => (theorem_3_8_h_n data (a + i)).val^(pows ⟨(a + i), by (have foo := i.isLt; omega)⟩))).prod.val.val - 1‖ ≤ ∑ (i : Fin k), (pows ⟨(a + i), by (have foo := i.isLt; omega)⟩) * ‖(theorem_3_8_h_n data (a + i)).val.val.val - 1‖ := by
+  ‖(List.ofFn (fun (i : Fin (k)) => (theorem_3_8_h_n data (a + i)).g^(pows ⟨(a + i), by (have foo := i.isLt; omega)⟩))).prod.val.val - 1‖ ≤ ∑ (i : Fin k), (pows ⟨(a + i), by (have foo := i.isLt; omega)⟩) * ‖(theorem_3_8_h_n data (a + i)).g.val.val - 1‖ := by
   induction k with
   | zero =>
     simp [List.ofFn, List.prod_nil]
@@ -1662,7 +1662,7 @@ lemma H_n_pow_le  {a k : ℕ } {m : ℕ} (a_k_lt : a + k ≤ m)  (pows : Fin m �
       rhs
       arg 2
       intro x
-      equals if h : ↑x < k then ↑(pows ⟨↑(a + x), by omega⟩) * ‖(theorem_3_8_h_n data ↑(a + x)).val.val.val - 1‖ else 0 =>
+      equals if h : ↑x < k then ↑(pows ⟨↑(a + x), by omega⟩) * ‖(theorem_3_8_h_n data ↑(a + x)).g.val.val - 1‖ else 0 =>
         have x_lt_m := x.property
         rw [Finset.mem_range] at x_lt_m
         have x_lt_m_succ : x.val < k + 1 := by
@@ -1675,13 +1675,13 @@ lemma H_n_pow_le  {a k : ℕ } {m : ℕ} (a_k_lt : a + k ≤ m)  (pows : Fin m �
 -- Equation 3.16
 lemma H_n_prod_le_k {a k : ℕ } {m : ℕ} (a_k_lt : a + k + 1 ≤ m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 1 / 40) (pows : Fin m → ℕ) (data : HnData)
  (pows_le : ∀ i : Fin m, (pows i) ≤ c * (H_n_eps data.hd)⁻¹) :
-  ‖(List.ofFn (fun (i : Fin (k)) => (theorem_3_8_h_n data ((a + 1) + i)).val^(pows ⟨((a + 1) + i), by omega⟩))).prod.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data (a)).val.val.val - 1‖ / 10 := by
+  ‖(List.ofFn (fun (i : Fin (k)) => (theorem_3_8_h_n data ((a + 1) + i)).g^(pows ⟨((a + 1) + i), by omega⟩))).prod.val.val - 1‖ ≤ ‖(theorem_3_8_h_n data (a)).g.val.val - 1‖ / 10 := by
 
 
   grw [H_n_pow_le]
-  grw [Finset.sum_le_sum (g := (fun i : Fin (k) => (c * (H_n_eps data.hd)⁻¹) * ‖(theorem_3_8_h_n data ((a + 1) + i)).val.val.val - 1‖))]
+  grw [Finset.sum_le_sum (g := (fun i : Fin (k) => (c * (H_n_eps data.hd)⁻¹) * ‖(theorem_3_8_h_n data ((a + 1) + i)).g.val.val - 1‖))]
   · rw [← Finset.mul_sum]
-    grw [Finset.sum_le_sum (g := (fun i : Fin (k) => ‖(theorem_3_8_h_n data (a)).val.val.val - 1‖ * 2^(1 + i.val) * (H_n_eps data.hd)^(1 + i.val)))]
+    grw [Finset.sum_le_sum (g := (fun i : Fin (k) => ‖(theorem_3_8_h_n data (a)).g.val.val - 1‖ * 2^(1 + i.val) * (H_n_eps data.hd)^(1 + i.val)))]
     · have eps_nonneg := H_n_eps_pos data.hd
       simp
       simp_rw [mul_assoc]
