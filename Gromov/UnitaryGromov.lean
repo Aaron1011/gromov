@@ -1394,120 +1394,119 @@ structure HnData where
   h : S
   h_nontrivial : ¬ ∃(z : ℂ), h.val.val.val = z • 1
 
-noncomputable def theorem_3_8_h_n_left_S (data: HnData) (prev: data.G) (n: ℕ): data.S := by
-  have comm_not_identity : ∃ s : data.S, ∀ z : ℂ, ⁅s.val.val, prev.val⁆.val ≠ z • 1 := by
-    by_contra!
-    have comm_eq_id : ∀ s : data.S, ⁅s.val.val, prev.val⁆ = 1 := by
-      intro s
-      obtain ⟨z, comm_eq_z⟩ := this s
-      have norm_z : ‖z‖ = 1 := by
-        have z_mul_unitary : z • 1 ∈ Matrix.unitaryGroup (Fin data.d) ℂ := by
-          rw [← comm_eq_z]
-          simp
-
-
-        have det_unitary := Matrix.det_of_mem_unitary z_mul_unitary
-        simp at det_unitary
-        apply CStarRing.norm_of_mem_unitary at det_unitary
-        simp at det_unitary
-        have d_ne_zero : data.d ≠ 0 := by
-          have hd := data.hd
-          omega
-        have z_pow := (pow_eq_one_iff_of_ne_zero (a := ‖z‖) d_ne_zero).mp det_unitary
-        have norm_pos : 0 ≤ ‖z‖ := by
-          positivity
-        have norm_not_neg : ‖z‖ ≠ -1 := by
-          linarith
-
-        simp [norm_not_neg] at z_pow
-        exact z_pow
-      have det_one : ⁅s.val.val, prev.val⁆.val.det = 1 := by
-        simp [Bracket.bracket]
-        rw [Matrix.star_eq_conjTranspose]
-        rw [Matrix.star_eq_conjTranspose]
-        rw [mul_comm]
-        rw [mul_assoc]
-        nth_rw 2 [mul_comm]
-        rw [mul_assoc]
-        rw [← Matrix.det_mul]
-        rw [← Matrix.star_eq_conjTranspose]
-        rw [← Matrix.star_eq_conjTranspose]
-        rw [Matrix.UnitaryGroup.star_mul_self]
-        rw [← mul_assoc]
-        rw [← Matrix.det_mul]
-        rw [Matrix.UnitaryGroup.star_mul_self]
-        simp
-
-      have prev_prop := prev.property
-      have norm_le := shrinking_conjugators data.d s.val prev.val
-      grw [data.S_dist s, prev_prop] at norm_le
-      · have two_mul_le : 2 * (H_n_eps data.hd) ≤ 1 := by
-          grw [H_n_eps_lt data.hd]
-          norm_num
-        grw [two_mul_le] at norm_le
-        · simp at norm_le
-
-
-          --rw [comm_eq_z] at norm_le
-          let C := (small_dist_matrix data.d data.hd).choose
-
-          have H_eps_lt_C : H_n_eps data.hd < C := by
-            rw [H_n_eps]
-            unfold C
-            grw [min_le_right]
-            simp
-            have my_spec := (small_dist_matrix data.d data.hd).choose_spec
-            have gt_zero := my_spec.1
-            linarith
-
-          unfold C at H_eps_lt_C
-
-
-          obtain ⟨C_pos, small_eps⟩ := (small_dist_matrix data.d data.hd).choose_spec
-          have z_eq_one := small_eps ⁅s.val.val, prev.val.val⁆.val det_one z norm_z (by
-            simp [diag_unitary]
-            rw [← Matrix.smul_one_eq_diagonal]
-            exact comm_eq_z
-          ) (by
-            grw [norm_le]
-            exact H_eps_lt_C
-          )
-          simp [z_eq_one] at comm_eq_z
-          exact comm_eq_z
-        · -- TODO - deduplicate this
-          simp [H_n_eps]
-          have C_pos := (small_dist_matrix data.d data.hd).choose_spec.1
-          linarith
-      · simp [H_n_eps]
-        have C_pos := (small_dist_matrix data.d data.hd).choose_spec.1
-        linarith
-      · simp
-    · have subgroup_le := Subgroup.closure_le_centralizer_centralizer data.S
-      simp [data.S_generates] at subgroup_le
-      have prev_mem_centralizer : prev.val ∈ Subgroup.centralizer data.S := by
-        rw [Subgroup.mem_centralizer_iff]
-        intro s hs
-        have h_comm := comm_eq_id ⟨s, hs⟩
-        simp [Bracket.bracket] at h_comm
-        rw [mul_assoc] at h_comm
-        apply eq_inv_of_mul_eq_one_left at h_comm
-        simp at h_comm
-        rw [Subtype.ext_iff]
-        simp
-        exact h_comm
-
-      have prev_central := subgroup_le prev_mem_centralizer
-      have prev_trivial := data.G_central_trivial _ prev_central
-      have prev_nontrivial := prev.property.1
-      contradiction
-  use comm_not_identity.choose.val.val
-
-
 structure Theorem3_8_Data (data: HnData) where
   g: data.G
   g_nontrivial : ¬ ∃ z : ℂ, g.val.val = z • 1
   g_dist_nonzero : ‖g.val.val - 1‖ ≠ 0
   g_dist : ‖g.val.val - 1‖ ≤ (H_n_eps data.hd)
+
+
+theorem theorem_3_8_h_n_left_S (data: HnData) (prev: Theorem3_8_Data data): ∃ s : data.S, ∀ z : ℂ, ⁅s.val.val, prev.g.val⁆.val ≠ z • 1 := by
+  by_contra!
+  have comm_eq_id : ∀ s : data.S, ⁅s.val.val, prev.g.val⁆ = 1 := by
+    intro s
+    obtain ⟨z, comm_eq_z⟩ := this s
+    have norm_z : ‖z‖ = 1 := by
+      have z_mul_unitary : z • 1 ∈ Matrix.unitaryGroup (Fin data.d) ℂ := by
+        rw [← comm_eq_z]
+        simp
+
+
+      have det_unitary := Matrix.det_of_mem_unitary z_mul_unitary
+      simp at det_unitary
+      apply CStarRing.norm_of_mem_unitary at det_unitary
+      simp at det_unitary
+      have d_ne_zero : data.d ≠ 0 := by
+        have hd := data.hd
+        omega
+      have z_pow := (pow_eq_one_iff_of_ne_zero (a := ‖z‖) d_ne_zero).mp det_unitary
+      have norm_pos : 0 ≤ ‖z‖ := by
+        positivity
+      have norm_not_neg : ‖z‖ ≠ -1 := by
+        linarith
+
+      simp [norm_not_neg] at z_pow
+      exact z_pow
+    have det_one : ⁅s.val.val, prev.g.val⁆.val.det = 1 := by
+      simp [Bracket.bracket]
+      rw [Matrix.star_eq_conjTranspose]
+      rw [Matrix.star_eq_conjTranspose]
+      rw [mul_comm]
+      rw [mul_assoc]
+      nth_rw 2 [mul_comm]
+      rw [mul_assoc]
+      rw [← Matrix.det_mul]
+      rw [← Matrix.star_eq_conjTranspose]
+      rw [← Matrix.star_eq_conjTranspose]
+      rw [Matrix.UnitaryGroup.star_mul_self]
+      rw [← mul_assoc]
+      rw [← Matrix.det_mul]
+      rw [Matrix.UnitaryGroup.star_mul_self]
+      simp
+
+    have prev_prop := prev.g_dist
+    have norm_le := shrinking_conjugators data.d s.val prev.g.val
+    grw [data.S_dist s, prev_prop] at norm_le
+    · have two_mul_le : 2 * (H_n_eps data.hd) ≤ 1 := by
+        grw [H_n_eps_lt data.hd]
+        norm_num
+      grw [two_mul_le] at norm_le
+      · simp at norm_le
+
+
+        --rw [comm_eq_z] at norm_le
+        let C := (small_dist_matrix data.d data.hd).choose
+
+        have H_eps_lt_C : H_n_eps data.hd < C := by
+          rw [H_n_eps]
+          unfold C
+          grw [min_le_right]
+          simp
+          have my_spec := (small_dist_matrix data.d data.hd).choose_spec
+          have gt_zero := my_spec.1
+          linarith
+
+        unfold C at H_eps_lt_C
+
+
+        obtain ⟨C_pos, small_eps⟩ := (small_dist_matrix data.d data.hd).choose_spec
+        have z_eq_one := small_eps ⁅s.val.val, prev.g.val⁆.val det_one z norm_z (by
+          simp [diag_unitary]
+          rw [← Matrix.smul_one_eq_diagonal]
+          exact comm_eq_z
+        ) (by
+          grw [norm_le]
+          exact H_eps_lt_C
+        )
+        simp [z_eq_one] at comm_eq_z
+        exact comm_eq_z
+      · -- TODO - deduplicate this
+        simp [H_n_eps]
+        have C_pos := (small_dist_matrix data.d data.hd).choose_spec.1
+        linarith
+    · simp [H_n_eps]
+      have C_pos := (small_dist_matrix data.d data.hd).choose_spec.1
+      linarith
+    · simp
+  · have subgroup_le := Subgroup.closure_le_centralizer_centralizer data.S
+    simp [data.S_generates] at subgroup_le
+    have prev_mem_centralizer : prev.g ∈ Subgroup.centralizer data.S := by
+      rw [Subgroup.mem_centralizer_iff]
+      intro s hs
+      have h_comm := comm_eq_id ⟨s, hs⟩
+      simp [Bracket.bracket] at h_comm
+      rw [mul_assoc] at h_comm
+      apply eq_inv_of_mul_eq_one_left at h_comm
+      simp at h_comm
+      rw [Subtype.ext_iff]
+      simp
+      exact h_comm
+
+    have prev_central := subgroup_le prev_mem_centralizer
+    have prev_trivial := data.G_central_trivial _ prev_central
+    have prev_nontrivial := prev.g_nontrivial
+    contradiction
+
 
 -- 'h' is our initial element - we define ε in terms of ‖h - 1‖, so that we can obtain the proper bound
 -- for the commutators in the inductive case
@@ -1532,119 +1531,13 @@ noncomputable def theorem_3_8_h_n (data : HnData) (n : ℕ): Theorem3_8_Data dat
   | k + 1 => by
     -- TODO - why do we get a heartbeat timeout if we inline 'prev'?
     let prev := (theorem_3_8_h_n data k)
-    have comm_not_identity : ∃ s : data.S, ∀ z : ℂ, ⁅s.val.val, prev.g.val⁆.val ≠ z • 1 := by
-      by_contra!
-      have comm_eq_id : ∀ s : data.S, ⁅s.val.val, prev.g.val⁆ = 1 := by
-        intro s
-        obtain ⟨z, comm_eq_z⟩ := this s
-        have norm_z : ‖z‖ = 1 := by
-          have z_mul_unitary : z • 1 ∈ Matrix.unitaryGroup (Fin data.d) ℂ := by
-            rw [← comm_eq_z]
-            simp
-
-
-          have det_unitary := Matrix.det_of_mem_unitary z_mul_unitary
-          simp at det_unitary
-          apply CStarRing.norm_of_mem_unitary at det_unitary
-          simp at det_unitary
-          have d_ne_zero : data.d ≠ 0 := by
-            have hd := data.hd
-            omega
-          have z_pow := (pow_eq_one_iff_of_ne_zero (a := ‖z‖) d_ne_zero).mp det_unitary
-          have norm_pos : 0 ≤ ‖z‖ := by
-            positivity
-          have norm_not_neg : ‖z‖ ≠ -1 := by
-            linarith
-
-          simp [norm_not_neg] at z_pow
-          exact z_pow
-        have det_one : ⁅s.val.val, prev.g.val⁆.val.det = 1 := by
-          simp [Bracket.bracket]
-          rw [Matrix.star_eq_conjTranspose]
-          rw [Matrix.star_eq_conjTranspose]
-          rw [mul_comm]
-          rw [mul_assoc]
-          nth_rw 2 [mul_comm]
-          rw [mul_assoc]
-          rw [← Matrix.det_mul]
-          rw [← Matrix.star_eq_conjTranspose]
-          rw [← Matrix.star_eq_conjTranspose]
-          rw [Matrix.UnitaryGroup.star_mul_self]
-          rw [← mul_assoc]
-          rw [← Matrix.det_mul]
-          rw [Matrix.UnitaryGroup.star_mul_self]
-          simp
-
-        have prev_prop := prev.g_dist
-        have norm_le := shrinking_conjugators data.d s.val prev.g.val
-        grw [data.S_dist s, prev_prop] at norm_le
-        · have two_mul_le : 2 * (H_n_eps data.hd) ≤ 1 := by
-            grw [H_n_eps_lt data.hd]
-            norm_num
-          grw [two_mul_le] at norm_le
-          · simp at norm_le
-
-
-            --rw [comm_eq_z] at norm_le
-            let C := (small_dist_matrix data.d data.hd).choose
-
-            have H_eps_lt_C : H_n_eps data.hd < C := by
-              rw [H_n_eps]
-              unfold C
-              grw [min_le_right]
-              simp
-              have my_spec := (small_dist_matrix data.d data.hd).choose_spec
-              have gt_zero := my_spec.1
-              linarith
-
-            unfold C at H_eps_lt_C
-
-
-            obtain ⟨C_pos, small_eps⟩ := (small_dist_matrix data.d data.hd).choose_spec
-            have z_eq_one := small_eps ⁅s.val.val, prev.g.val⁆.val det_one z norm_z (by
-              simp [diag_unitary]
-              rw [← Matrix.smul_one_eq_diagonal]
-              exact comm_eq_z
-            ) (by
-              grw [norm_le]
-              exact H_eps_lt_C
-            )
-            simp [z_eq_one] at comm_eq_z
-            exact comm_eq_z
-          · -- TODO - deduplicate this
-            simp [H_n_eps]
-            have C_pos := (small_dist_matrix data.d data.hd).choose_spec.1
-            linarith
-        · simp [H_n_eps]
-          have C_pos := (small_dist_matrix data.d data.hd).choose_spec.1
-          linarith
-        · simp
-      · have subgroup_le := Subgroup.closure_le_centralizer_centralizer data.S
-        simp [data.S_generates] at subgroup_le
-        have prev_mem_centralizer : prev.g ∈ Subgroup.centralizer data.S := by
-          rw [Subgroup.mem_centralizer_iff]
-          intro s hs
-          have h_comm := comm_eq_id ⟨s, hs⟩
-          simp [Bracket.bracket] at h_comm
-          rw [mul_assoc] at h_comm
-          apply eq_inv_of_mul_eq_one_left at h_comm
-          simp at h_comm
-          rw [Subtype.ext_iff]
-          simp
-          exact h_comm
-
-        have prev_central := subgroup_le prev_mem_centralizer
-        have prev_trivial := data.G_central_trivial _ prev_central
-        have prev_nontrivial := prev.g_nontrivial
-        contradiction
-    let new_s := comm_not_identity.choose.val
-    use ⁅new_s, prev.g⁆
+    use ⁅(theorem_3_8_h_n_left_S data prev).choose.val, prev.g⁆
     · rw [not_exists]
-      exact comm_not_identity.choose_spec
+      exact (theorem_3_8_h_n_left_S data prev).choose_spec
     · by_contra!
       simp at this
       rw [sub_eq_zero] at this
-      have my_nontrivial := comm_not_identity.choose_spec 1
+      have my_nontrivial := (theorem_3_8_h_n_left_S data prev).choose_spec 1
       simp at my_nontrivial
       simp at this
       rw [commutatorElement_eq_one_iff_mul_comm] at this
@@ -1652,18 +1545,18 @@ noncomputable def theorem_3_8_h_n (data : HnData) (n : ℕ): Theorem3_8_Data dat
       rw [Subtype.ext_iff] at this
       simp at this
       contradiction
-    · have my_shrink := shrinking_conjugators data.d comm_not_identity.choose prev.g
+    · have my_shrink := shrinking_conjugators data.d (theorem_3_8_h_n_left_S data prev).choose prev.g
       conv =>
         lhs
         arg 1
         lhs
-        equals ⁅ comm_not_identity.choose.val.val, prev.g.val ⁆.val =>
+        equals ⁅ (theorem_3_8_h_n_left_S data prev).choose.val.val, prev.g.val ⁆.val =>
           rw [commutatorElement_def, commutatorElement_def]
           rfl
       grw [my_shrink]
       have prev_prop := prev.g_dist
       grw [prev_prop]
-      have comm_choose_le := data.S_dist comm_not_identity.choose (by simp)
+      have comm_choose_le := data.S_dist (theorem_3_8_h_n_left_S data prev).choose (by simp)
       grw [comm_choose_le]
       have two_mul_le : 2 * (H_n_eps data.hd) ≤ 1 := by
         grw [H_n_eps_lt data.hd]
