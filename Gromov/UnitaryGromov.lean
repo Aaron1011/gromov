@@ -3033,15 +3033,12 @@ lemma list_prod_pow_new {T: Type*} [Group T] (m: ℕ) (elems: Fin m → T) (pows
 
 
 lemma H_n_pows_mem_ball {m : ℕ}
-  (ε: ℝ)  (ε_pos: 0 < ε)
   (m_gt: 0 < m) (k: ℝ) (data : HnData) (pows : Fin m → ℕ)
-  (pows_le: ∀ i : Fin m, (pows i) ≤ k)
   (c: ℝ)
   (c_pos: 0 < c)
   (c_lt: c < 1 / 40)
-  (c_eps_mul: 1 ≤ c * ε⁻¹)
-  (pows_le : ∀ i : Fin m, (pows i) ≤ c * (H_n_eps data.hd)⁻¹):
-  (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).val^(pows i))).prod.val ∈ (data.G.carrier ^ (2 * (Nat.floor (c * ε⁻¹)) * (2 ^ m))) := by
+  (pows_le : ∀ i : Fin m, (pows i) ≤ ⌊c * (H_n_eps data.hd)⁻¹⌋₊):
+  (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).val^(pows i))).prod.val ∈ (data.G.carrier ^ (m * (Nat.floor (c * (H_n_eps data.hd)⁻¹)))) := by
 
   let replicate_pow (i: Fin m) := List.replicate (pows i) ((theorem_3_8_h_n data i).val)
   let nested_list := List.ofFn (fun (i : Fin (m)) => replicate_pow i)
@@ -3060,13 +3057,17 @@ lemma H_n_pows_mem_ball {m : ℕ}
   rw [Set.mem_pow]
   -- We have an upper bound for the list, so pad out the list with '1's to reach the upper bound
   let base_list := (fun (i: Fin (nested_list.flatten.length)) => nested_list.flatten[i])
-  let full_list := Fin.append base_list (fun (i: Fin (2 * (Nat.floor (c * ε⁻¹)) * (2 ^ m) - nested_list.flatten.length)) => 1)
+  let full_list := Fin.append base_list (fun (i: Fin (m * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) - nested_list.flatten.length)) => 1)
   --let full_list_new := nested_list.flatten ++ (List.replicate (2 * (Nat.floor (c * ε⁻¹)) * (2 ^ m) - nested_list.flatten.length) 1)
 
-  have len_le_upper: nested_list.flatten.length ≤ (2 * (Nat.floor (c * ε⁻¹)) * (2 ^ m)) := by
+  have len_le_upper: nested_list.flatten.length ≤ (m * (Nat.floor (c * (H_n_eps data.hd)⁻¹))) := by
     simp [nested_list, replicate_pow]
     simp [Fin.sum_ofFn]
-    
+    grw [Finset.sum_le_card_nsmul (n := ⌊ (c * (H_n_eps data.hd)⁻¹)⌋₊)]
+    . simp
+    . intro x _
+      apply pows_le
+
 
 
   use (fun i => full_list (i.cast (by omega)))
@@ -3075,7 +3076,7 @@ lemma H_n_pows_mem_ball {m : ℕ}
 
     conv =>
       lhs
-      equals (List.ofFn (fun (i: Fin ((2 * (Nat.floor (c * ε⁻¹)) * (2 ^ m)))) => (full_list (i.cast (by omega))))).prod.val =>
+      equals (List.ofFn (fun (i: Fin ((m * (Nat.floor (c * (H_n_eps data.hd)⁻¹))))) => (full_list (i.cast (by omega))))).prod.val =>
         simp
         apply congr (rfl)
         ext i g
@@ -3103,33 +3104,7 @@ lemma H_n_pows_mem_ball {m : ℕ}
     . omega
 
 
-
-
-    -- by_cases i_lt_m: i < m
-    -- .
-    --   simp [i_lt_m]
-
-
-    -- conv =>
-    --   lhs
-    --   equals (List.ofFn (fun (i: Fin ((List.map List.length nested_list).sum)) => nested_list.flatten[i].val)).prod =>
-    --     sorry
-
-    -- .
-    --   sorry
-
-    -- by_cases i_lt_m: i < nested_list.flatten.length
-    -- .
-    --   simp [i_lt_m]
-    --   have i_lt_mul: i < 2 * (Nat.floor (c * ε⁻¹)) * (2 ^ m) := by
-    --     rw [← gt_iff_lt]
-    --     grw [c_eps_mul.ge]
-    --     simp
-    --     grw [i_lt_m]
-
-    --     have foo := Nat.lt_two_pow_self (n := m)
-    --     --linarith
-    --   --simp only [i_lt_mul, base_list, Fin.addCases]
+#print axioms H_n_pows_mem_ball
 
 
 -- Note - Vikman proves a much weaker statement (an upper boud n terms of 2^n)
