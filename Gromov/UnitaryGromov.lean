@@ -3160,6 +3160,50 @@ lemma theorem_3_8_h_n_list_prod_eq (data: HnData) (m: ℕ): (theorem_3_8_h_n_lis
     rw [ih]
     group
 
+-- We specialize the constant c' to 2, as that's easier to deal with in Lean
+lemma theorem_3_8_h_n_list_length  (data: HnData) (m: ℕ): (theorem_3_8_h_n_list data (m)).length ≤ (3 * (2 ^ (m))) - 2 := by
+  induction m with
+  | zero =>
+    unfold theorem_3_8_h_n_list
+    simp
+  | succ a ih =>
+    unfold theorem_3_8_h_n_list
+    -- TODO - can grind somehow solve all of this?
+    simp
+    grw [ih]
+    ring
+    rw [Nat.sub_mul]
+    ring
+    zify
+    rw [Nat.cast_sub]
+    .
+      push_cast
+      ring
+      rw [Nat.cast_sub]
+      . push_cast
+        ring
+        rfl
+      .
+        by_cases a_eq_zero: a = 0
+        .
+          simp [a_eq_zero]
+        .
+          have a_eq_sub_succ: a = (a - 1) + 1 := by omega
+          rw [a_eq_sub_succ]
+          rw [Nat.pow_succ]
+          rw [mul_assoc]
+          rw [mul_comm]
+          rw [mul_assoc]
+          apply Nat.le_mul_of_pos_right
+          positivity
+    .
+      rw [← ge_iff_le]
+      grw [(Nat.one_le_pow _ _ ?_).ge]
+      . norm_num
+      . norm_num
+
+
+
 
 lemma H_n_pows_mem_ball_S {m : ℕ}
   (m_gt: 0 < m) (k: ℝ) (data : HnData) (pows : Fin m → ℕ)
