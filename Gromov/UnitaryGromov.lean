@@ -3004,6 +3004,34 @@ def H_n_C: ℝ := 8
 open scoped Finset
 open scoped Pointwise
 
+lemma list_prod_pow {T: Type*} [Group T] (m: ℕ) (elems: Fin m → T) (pows: Fin m → ℕ):
+  (List.ofFn (fun (i: Fin m) => (elems i)^(pows i))).prod = (List.ofFn (fun (i : Fin m) => List.replicate (pows i) (elems i))).flatten.prod := by
+
+  induction m with
+  | zero =>
+    simp
+  | succ m ih =>
+    have prod_eq := ih (Fin.init elems) (Fin.init pows)
+    rw [List.ofFn_succ']
+    rw [List.ofFn_succ']
+    simp
+    simpa using prod_eq
+
+lemma list_prod_pow_new {T: Type*} [Group T] (m: ℕ) (elems: Fin m → T) (pows: Fin m → ℕ):
+  (List.ofFn (fun (i: Fin m) => (elems i)^(pows i))).prod = (List.ofFn (fun (i : Fin m) => List.replicate (pows i) (elems i))).flatten.prod := by
+
+  induction m with
+  | zero =>
+    simp
+  | succ m ih =>
+    have prod_eq := ih (Fin.init elems) (Fin.init pows)
+    rw [List.ofFn_succ']
+    rw [List.ofFn_succ']
+    simp
+    simpa using prod_eq
+
+
+
 lemma H_n_pows_mem_ball {m : ℕ}
   (ε: ℝ)  (ε_pos: 0 < ε)
   (m_gt: 0 < m) (k: ℝ) (data : HnData) (pows : Fin m → ℕ)
@@ -3055,16 +3083,37 @@ lemma H_n_pows_mem_ball {m : ℕ}
     simp only [full_list, base_list]
     rw [← List.ofFn_congr]
     rw [List.ofFn_fin_append]
-    simp [nested_list]
+    rw [list_prod_pow]
     conv =>
       lhs
-      equals (List.ofFn (fun (i: Fin ((List.map List.length nested_list).sum)) => nested_list.flatten[i].val)).prod =>
+      arg 1
+      arg 1
+      lhs
+      equals nested_list.flatten =>
+        ext i g
+        simp
+        grind
 
-        sorry
-
-    .
-      sorry
+    dsimp [nested_list, replicate_pow]
+    rw [List.prod_append]
+    . simp [-List.prod_flatten]
     . omega
+
+
+
+
+    -- by_cases i_lt_m: i < m
+    -- .
+    --   simp [i_lt_m]
+
+
+    -- conv =>
+    --   lhs
+    --   equals (List.ofFn (fun (i: Fin ((List.map List.length nested_list).sum)) => nested_list.flatten[i].val)).prod =>
+    --     sorry
+
+    -- .
+    --   sorry
 
     -- by_cases i_lt_m: i < nested_list.flatten.length
     -- .
