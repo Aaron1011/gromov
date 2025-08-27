@@ -3350,7 +3350,7 @@ lemma H_n_pows_mem_ball_S {m : ℕ}
 -- However, the proof works fine with the weaker lower bound ⌊c * (H_n_eps data.hd)⁻¹⌋₊
 -- so I'm using that instead (since it avoids the need to deal with different Fin values)
 lemma H_n_ball_S_card {m : ℕ}
-  (m_gt: 0 < m) (k: ℝ) (data : HnData)
+  (m_gt: 0 < m) (data : HnData)
   (c: ℝ)
   (c_pos: 0 < c)
   (c_lt: c < 1 / 40):
@@ -3440,6 +3440,52 @@ lemma H_n_ball_S_card {m : ℕ}
 
 
 #print axioms H_n_ball_S_card
+
+-- Our lower bound gives us a contradiction with polynomial growth
+-- Note that we specify the constant in polynomial growth as a natural number, to
+-- make the types easier to deal with.
+-- We can just ues the ceiling of a real number when invoking this
+lemma H_n_contradiction {m : ℕ}
+  (m_gt: 0 < m) (data : HnData)
+  (c: ℝ)
+  (c_pos: 0 < c)
+  (c_lt: c < 1 / 40)
+  (S_poly: ∃ a: ℕ, ∃ d: ℕ, a ≠ 0 ∧ #(data.S_finite.toFinset ^ ( c' * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m))) ≤ a * (( c' * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m))^d))
+  : False := by
+
+  obtain ⟨a, d, a_neq_zero, upper_bound⟩ := S_poly
+  have lower_bound := H_n_ball_S_card m_gt data c c_pos c_lt
+  have ineq := le_trans lower_bound upper_bound
+  rify at ineq
+  rw [← Real.log_le_log_iff] at ineq
+  .
+    simp at ineq
+    rw [Real.log_mul] at ineq
+    .
+      simp at ineq
+      rw [Real.log_mul] at ineq
+      simp at ineq
+      rw [mul_add] at ineq
+      rw [← add_assoc] at ineq
+      rw [← tsub_le_iff_right] at ineq
+      rw [add_comm] at ineq
+      rw [← mul_assoc] at ineq
+      nth_rw 4 [mul_comm] at ineq
+      rw [mul_assoc] at ineq
+      rw [← mul_sub] at ineq
+      . sorry
+      . sorry
+      . simp
+
+    . simpa using a_neq_zero
+    .
+      sorry
+  .
+    norm_cast
+    apply Nat.pow_pos
+    rw [Nat.floor_pos]
+    sorry
+  . sorry
 
 
 -- Note - Vikman proves a much weaker statement (an upper boud n terms of 2^n)
