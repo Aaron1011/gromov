@@ -3160,8 +3160,8 @@ lemma theorem_3_8_h_n_list_prod_eq (data: HnData) (m: ℕ): (theorem_3_8_h_n_lis
     rw [ih]
     group
 
--- We specialize the constant c' to 2, as that's easier to deal with in Lean
-lemma theorem_3_8_h_n_list_length  (data: HnData) (m: ℕ): (theorem_3_8_h_n_list data (m)).length ≤ (3 * (2 ^ (m))) - 2 := by
+-- Note - this is (2^(m - 1)) in Vikman, since the list in indexed starting at 1 in the paper
+lemma theorem_3_8_h_n_list_length_initial_upper_bound  (data: HnData) (m: ℕ): (theorem_3_8_h_n_list data (m)).length ≤ (3 * (2 ^ (m))) - 2 := by
   induction m with
   | zero =>
     unfold theorem_3_8_h_n_list
@@ -3204,6 +3204,18 @@ lemma theorem_3_8_h_n_list_length  (data: HnData) (m: ℕ): (theorem_3_8_h_n_lis
 
 
 
+-- The c' constant from Vikman
+def c' := 3
+
+-- TODO - figure out how to merge this with 'theorem_3_8_h_n_list_length_initial_upper_bound'
+lemma theorem_3_8_h_n_list_length_upper_bound  (data: HnData) (m: ℕ): (theorem_3_8_h_n_list data (m)).length ≤ c' * (2 ^ m) := by
+  grw [theorem_3_8_h_n_list_length_initial_upper_bound data m]
+  simp [c']
+
+
+lemma list_concat_unattach {T: Type*} {p: T → Prop} (l: List { x: T // p x}) (a: { x: T // p x}): (l.concat a).unattach = l.unattach.concat a.val := by
+  simp
+
 
 lemma H_n_pows_mem_ball_S {m : ℕ}
   (m_gt: 0 < m) (k: ℝ) (data : HnData) (pows : Fin m → ℕ)
@@ -3217,9 +3229,79 @@ lemma H_n_pows_mem_ball_S {m : ℕ}
   simp_rw [Set.mem_pow]
   use (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).g^(pows i))).prod
 
+
+  -- A list with the same product as g_list, but expressed in terms of elements of S
+  let g_as_s_list := (List.ofFn (fun (i: Fin m) => List.replicate (pows i) (theorem_3_8_h_n_list data i))).flatten.flatten
+
+
+
+  have g_as_list_prod_eq_pow: g_as_s_list.unattach.prod = (List.ofFn (fun (i: Fin m) => (List.replicate (pows i) (theorem_3_8_h_n_list data i)).flatten.unattach.prod)).unattach.prod := by
+    dsimp [g_as_s_list]
+    clear m_gt
+    induction m with
+    | zero =>
+      simp
+    | succ m ih =>
+      have prev_prod := ih (Fin.init pows) (by
+        intro i
+        apply pows_le
+      )
+      nth_rw 2 [List.ofFn_succ']
+      simp only [Fin.init] at prev_prod
+      conv =>
+        rhs
+        pattern List.ofFn _
+        arg 1
+        intro i
+        simp
+
+
+      rw [List.ofFn_succ']
+      conv at prev_prod =>
+        rhs
+        pattern List.ofFn _
+        arg 1
+        intro i
+        simp
+
+
+      rw [list_concat_unattach]
+      rw [List.prod_concat]
+      rw [← prev_prod]
+      simp
+
+
   have g_list_mem := H_n_pows_mem_ball_G m_gt k data pows c c_pos c_lt pows_le
   rw [Set.mem_pow] at g_list_mem
   obtain ⟨g_list, g_list_prod⟩ := g_list_mem
+
+
+  have lists_prod_eq: g_as_s_list.unattach.prod = (List.ofFn g_list).unattach.prod := by
+    unfold List.unattach
+    simp only [List.map_ofFn]
+    rw [Function.comp_def]
+    rw [g_list_prod]
+    have my_prod := theorem_3_8_h_n_list_prod_eq data m
+    conv =>
+      rhs
+      arg 1
+      arg 1
+      arg 1
+      intro i
+      rw [← theorem_3_8_h_n_list_prod_eq]
+
+
+
+    simp only [g_as_s_list]
+    rw [List.flatten_flatten]
+
+
+    unfold List.unattach at my_prod
+    have my_list_pow := list_prod_pow m sorry pows
+    simp_rw [← list_prod_pow_new]
+    simp_rw [← my_prod]
+
+
 
   let unfold_comm (i: Fin m) := (theorem_3_8_h_n data ↑i).g.val
   sorry
