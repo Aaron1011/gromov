@@ -3448,15 +3448,18 @@ lemma H_n_ball_S_card {m : ℕ}
 #print axioms H_n_ball_S_card
 
 -- Our lower bound gives us a contradiction with polynomial growth
-lemma H_n_contradiction {m : ℕ}
-  (m_gt: 0 < m) (data : HnData)
+lemma H_n_contradiction (data : HnData)
   (c: ℝ)
   (c_pos: 0 < c)
   (c_lt: c < 1 / 40)
   (c_mul_pos: 1 ≤ c * (H_n_eps data.hd)⁻¹)
+  (eps_lt_div: (H_n_eps data.hd) <  c / (2 + 2 ^ (data.S_poly_deg)))
   : False := by
 
 
+
+  have m: ℕ := 1
+  have m_gt: 0 < m := by sorry
 
   have ne_zero_of_pos (r: ℝ): 0 < r → r ≠ 0 := by
     intro r_pos r_eq
@@ -3483,7 +3486,35 @@ lemma H_n_contradiction {m : ℕ}
       nth_rw 4 [mul_comm] at ineq
       rw [mul_assoc] at ineq
       rw [← mul_sub] at ineq
-      . sorry
+      .
+
+        rw [← le_div_iff₀] at ineq
+        .
+          sorry
+        .
+          rw [sub_pos]
+          rw [← Real.exp_lt_exp]
+          rw [mul_comm]
+          rw [← Real.rpow_def_of_pos]
+          rw [Real.exp_log]
+          .
+            simp
+            rw [← gt_iff_lt]
+            grw [(Nat.sub_one_lt_floor _).gt]
+            rw [gt_iff_lt]
+            rw [lt_tsub_iff_left]
+            field_simp
+            rw [lt_div_iff₀]
+            .
+              rw [← lt_div_iff₀']
+              . sorry
+              . positivity
+            apply H_n_eps_pos data.hd
+          .
+            simp
+            rw [Nat.floor_pos]
+            exact c_mul_pos
+          . simp
       .
         have m_ne_zero: m ≠ 0 := by
           omega
