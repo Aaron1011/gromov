@@ -3442,9 +3442,6 @@ lemma H_n_ball_S_card {m : ℕ}
 #print axioms H_n_ball_S_card
 
 -- Our lower bound gives us a contradiction with polynomial growth
--- Note that we specify the constant in polynomial growth as a natural number, to
--- make the types easier to deal with.
--- We can just ues the ceiling of a real number when invoking this
 lemma H_n_contradiction {m : ℕ}
   (m_gt: 0 < m) (data : HnData)
   (c: ℝ)
@@ -3474,7 +3471,12 @@ lemma H_n_contradiction {m : ℕ}
       rw [mul_assoc] at ineq
       rw [← mul_sub] at ineq
       . sorry
-      . sorry
+      .
+        have m_ne_zero: m ≠ 0 := by
+          omega
+        simp [c', m_ne_zero]
+        sorry
+
       . simp
 
     . simpa using a_neq_zero
