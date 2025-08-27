@@ -3390,32 +3390,36 @@ lemma H_n_ball_S_card {m : ℕ}
 
     have exists_minimal_k := exists_minimal_of_wellFoundedLT (fun (i: Fin m) => pows_i i ≠ pows_j i) pows_neq
     obtain ⟨k, k_minimal⟩ := exists_minimal_k
-    simp at k_minimal
+    -- TODO - figure out why this pushes a goal of 'False' if we don't use 'generalizing'
+    wlog pow_j_lt_i: (pows_j k).val < (pows_i k).val generalizing pows_i pows_j
 
-    have eps_pos := H_n_eps_pos data.hd
+    . sorry
+    .
+      simp at k_minimal
 
-    have prods_neq := words_distinct (m := m) k c c_pos c_lt data (fun i => pows_i i) (fun i => pows_j i) ?_ ?_ ?_ ?_
-    . simpa using prods_neq
-    .
-      intro i
-      simp
-      rw [← Nat.le_floor_iff]
-      omega
-      positivity
-    . intro i
-      simp
-      rw [← Nat.le_floor_iff]
-      omega
-      positivity
-    .
-      intro j hk
-      simp
-      have foo := Minimal.not_prop_of_lt k_minimal hk
-      simp at foo
-      exact congrArg Fin.val foo
-    .
-      simp
-      sorry
+      have eps_pos := H_n_eps_pos data.hd
+
+      have prods_neq := words_distinct (m := m) k c c_pos c_lt data (fun i => pows_i i) (fun i => pows_j i) ?_ ?_ ?_ ?_
+      . simpa using prods_neq
+      .
+        intro i
+        simp
+        rw [← Nat.le_floor_iff]
+        omega
+        positivity
+      . intro i
+        simp
+        rw [← Nat.le_floor_iff]
+        omega
+        positivity
+      .
+        intro j hk
+        simp
+        have foo := Minimal.not_prop_of_lt k_minimal hk
+        simp at foo
+        exact congrArg Fin.val foo
+      .
+        simpa using pow_j_lt_i
 
 
 
