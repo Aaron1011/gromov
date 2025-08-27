@@ -3291,8 +3291,10 @@ lemma H_n_pows_mem_ball_S {m : ℕ}
 
 
 
-  let unfold_comm (i: Fin m) := (theorem_3_8_h_n data ↑i).g.val
-  sorry
+  refine ⟨?_, rfl⟩
+  .
+    --use g_list
+    sorry
 
 
 
