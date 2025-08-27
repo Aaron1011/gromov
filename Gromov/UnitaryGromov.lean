@@ -3460,8 +3460,10 @@ lemma H_n_contradiction (data : HnData)
 
 
 
-  have m: ℕ := 1
-  have m_gt: 0 < m := by sorry
+  let m: ℕ := ⌈1 + |(↑data.S_poly_deg - Real.log ↑data.S_poly_const)|⌉₊
+  have m_gt: 0 < m := by
+    simp [m]
+    positivity
   have ne_zero_of_pos (r: ℝ): 0 < r → r ≠ 0 := by
     intro r_pos r_eq
     rw [r_eq] at r_pos
@@ -3512,7 +3514,11 @@ lemma H_n_contradiction (data : HnData)
           sorry
 
         have m_gt_abs: m > |(↑data.S_poly_deg - Real.log ↑data.S_poly_const)| := by
-          sorry
+          simp [m]
+          rw [← gt_iff_lt]
+          grw [(Nat.le_ceil _).ge]
+          simp
+
 
 
         grw [log_sub_gt]
