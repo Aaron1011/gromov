@@ -2512,7 +2512,7 @@ lemma list_ofFn_drop {M: Type*} (a k: ℕ) (f: Fin (k + a) → M): (List.ofFn f)
 
 set_option synthInstance.maxHeartbeats 80000 in
 set_option maxHeartbeats 900000 in
-lemma words_distinct {m : ℕ} (k: Fin m)  (a_k_lt : k + 1 < m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 1 / 40)
+lemma words_distinct {m : ℕ} (k: Fin m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 1 / 40)
  (data : HnData)
  (pows_i : Fin m → ℕ)
  (pows_j: Fin m → ℕ)
@@ -3346,17 +3346,20 @@ lemma H_n_pows_mem_ball_S {m : ℕ}
 #print axioms H_n_pows_mem_ball_S
 
 
+-- In Vikman, this is (1 + ⌊c * (H_n_eps data.hd)⁻¹⌋₊) (since the powers include the upper bound of c*ε ⁻¹)
+-- However, the proof works fine with the weaker lower bound ⌊c * (H_n_eps data.hd)⁻¹⌋₊
+-- so I'm using that instead (since it avoids the need to deal with different Fin values)
 lemma H_n_ball_S_card {m : ℕ}
   (m_gt: 0 < m) (k: ℝ) (data : HnData)
   (c: ℝ)
   (c_pos: 0 < c)
   (c_lt: c < 1 / 40):
-  (1 + ⌊c * (H_n_eps data.hd)⁻¹⌋₊)^m ≤  #(data.S_finite.toFinset ^ ( c' * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m))) := by
+  (⌊c * (H_n_eps data.hd)⁻¹⌋₊)^m ≤  #(data.S_finite.toFinset ^ ( c' * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m))) := by
 
 
 
   let my_set: Finset (Fin m → Fin (⌊c * (H_n_eps data.hd)⁻¹⌋₊)) := Finset.univ
-  have my_card := Finset.card_univ (α := (Fin m → Fin (1 + ⌊c * (H_n_eps data.hd)⁻¹⌋₊)))
+  have my_card := Finset.card_univ (α := (Fin m → Fin (⌊c * (H_n_eps data.hd)⁻¹⌋₊)))
   rw [Fintype.card_pi_const] at my_card
   conv at my_card =>
     rhs
@@ -3378,7 +3381,6 @@ lemma H_n_ball_S_card {m : ℕ}
       exact g_mem
     . intro i
       simp
-      omega
   .
     intro pows_i _ pows_j _
     contrapose
@@ -3390,8 +3392,32 @@ lemma H_n_ball_S_card {m : ℕ}
     obtain ⟨k, k_minimal⟩ := exists_minimal_k
     simp at k_minimal
 
+    have eps_pos := H_n_eps_pos data.hd
 
-    have prods_neq := words_distinct (m := m) k (by omega)
+    have prods_neq := words_distinct (m := m) k c c_pos c_lt data (fun i => pows_i i) (fun i => pows_j i) ?_ ?_ ?_ ?_
+    . simpa using prods_neq
+    .
+      intro i
+      simp
+      rw [← Nat.le_floor_iff]
+      omega
+      positivity
+    . intro i
+      simp
+      rw [← Nat.le_floor_iff]
+      omega
+      positivity
+    .
+      intro j hk
+      simp
+      have foo := Minimal.not_prop_of_lt k_minimal hk
+      simp at foo
+      exact congrArg Fin.val foo
+    .
+      simp
+      sorry
+
+
 
 
 
