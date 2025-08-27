@@ -3526,62 +3526,14 @@ lemma H_n_contradiction (data : HnData)
             simp
             sorry
           . simp
-
-
-        grw [Real.log_le_rpow_div (ε := (1 / (↑c' * ↑⌊c * (H_n_eps data.hd)⁻¹⌋₊)))]
-        field_simp
-
-        grw [Real.log_le_sub_one_of_pos]
-        rw [mul_sub]
-        rw [← mul_assoc]
-        rw [mul_comm]
-        rw [← sub_pos]
-
-        rw [sub_add]
-        rw [sub_sub_eq_add_sub]
-        rw [sub_eq_add_neg]
-        rw [add_assoc]
-        nth_rw 2 [add_comm]
-        rw [← add_assoc]
-        rw [← sub_eq_add_neg]
-        rw [← mul_sub]
-
-        rw [← gt_iff_lt]
-        rw [mul_sub]
-
-        have log_sub_gt: (Real.log ↑⌊c * (H_n_eps data.hd)⁻¹⌋₊ - ↑data.S_poly_deg * Real.log 2) > 1 + data.S_poly_deg * (↑c' * ↑⌊c * (H_n_eps data.hd)⁻¹⌋₊) := by
-
-          sorry
-
-        have m_gt_abs: m > |(↑data.S_poly_deg - Real.log ↑data.S_poly_const)| := by
-          simp [m]
-          rw [← gt_iff_lt]
-          grw [(Nat.le_ceil _).ge]
-          simp
-
-
-
-        grw [log_sub_gt]
-        rw [← mul_sub]
-        simp
-
-        have foo := neg_abs_le (a := (↑data.S_poly_deg - Real.log ↑data.S_poly_const))
-
-        rw [← gt_iff_lt]
-        grw [foo.ge]
-        simpa using m_gt_abs
-        .
-          have eps_pos := H_n_eps_pos data.hd
-          simp [c']
-          apply mul_pos
-          . apply mul_pos
-            . simp
-            .
-              simp
-              rw [Nat.floor_pos]
-              exact c_mul_pos
           . simp
-            exact m_gt
+          . simp
+        .
+          simp
+          refine ⟨by simp [c'], ?_⟩
+          exact c_mul_pos
+        . simp
+          omega
 
       unfold swap_le at reverse_ineq
       . linarith
@@ -3592,50 +3544,6 @@ lemma H_n_contradiction (data : HnData)
 
       . simp
 
-      -- .
-
-      --   rw [← le_div_iff₀] at ineq
-      --   .
-      --     rw [Real.log_mul] at ineq
-      --     . rw [mul_add] at ineq
-      --       nth_rw 2 [add_comm] at ineq
-      --       rw [add_assoc] at ineq
-      --       rw [add_div] at ineq
-      --       rw [← tsub_le_iff_left] at ineq
-      --       sorry
-      --     . sorry
-      --     . sorry
-      --   .
-      --     rw [sub_pos]
-      --     rw [← Real.exp_lt_exp]
-      --     rw [mul_comm]
-      --     rw [← Real.rpow_def_of_pos]
-      --     rw [Real.exp_log]
-      --     .
-      --       simp
-      --       rw [← gt_iff_lt]
-      --       grw [(Nat.sub_one_lt_floor _).gt]
-      --       rw [gt_iff_lt]
-      --       rw [lt_tsub_iff_left]
-      --       field_simp
-      --       rw [lt_div_iff₀]
-      --       .
-      --         rw [← lt_div_iff₀']
-      --         . sorry
-      --         . positivity
-      --       apply H_n_eps_pos data.hd
-      --     .
-      --       simp
-      --       rw [Nat.floor_pos]
-      --       exact c_mul_pos
-      --     . simp
-      -- .
-      --   have m_ne_zero: m ≠ 0 := by
-      --     omega
-      --   simp [c', m_ne_zero]
-      --   exact c_mul_pos
-
-      -- . simp
 
     .
       exact Nat.cast_ne_zero.mpr (id (Ne.symm data.S_poly_const_pos))
