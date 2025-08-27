@@ -3531,7 +3531,24 @@ lemma H_n_contradiction (data : HnData)
             simp
           .
             simp
-            sorry
+            rw [lt_tsub_iff_right]
+            rw [← Real.exp_lt_exp]
+            rw [Real.exp_log]
+            .
+              rw [← gt_iff_lt]
+              grw [(Nat.sub_one_lt_floor _).gt]
+              rw [gt_iff_lt]
+              rw [lt_tsub_iff_right]
+              field_simp
+              rw [lt_div_iff₀']
+              rw [← lt_div_iff₀]
+              . sorry
+              . positivity
+              . apply H_n_eps_pos
+            .
+              simp
+              rw [Nat.floor_pos]
+              exact c_mul_pos
           . simp
           . simp
           . simp
