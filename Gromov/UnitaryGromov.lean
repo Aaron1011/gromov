@@ -3393,7 +3393,24 @@ lemma H_n_ball_S_card {m : ℕ}
     -- TODO - figure out why this pushes a goal of 'False' if we don't use 'generalizing'
     wlog pow_j_lt_i: (pows_j k).val < (pows_i k).val generalizing pows_i pows_j
 
-    . sorry
+    .
+      conv at k_minimal =>
+        arg 1
+        intro i
+        rw [ne_comm]
+
+
+      have words_neq := this (pows_j := pows_i) (pows_i := pows_j) (by simp) (by simp) ?_ k_minimal ?_
+      .
+        rw [eq_comm]
+        exact words_neq
+      .
+        obtain ⟨x, hx⟩ := pows_neq
+        use x
+        exact fun a ↦ hx (id (Eq.symm a))
+      .
+        have k_neq := k_minimal.prop
+        omega
     .
       simp at k_minimal
 
@@ -3422,7 +3439,7 @@ lemma H_n_ball_S_card {m : ℕ}
         simpa using pow_j_lt_i
 
 
-
+#print axioms H_n_ball_S_card
 
 
 -- Note - Vikman proves a much weaker statement (an upper boud n terms of 2^n)
