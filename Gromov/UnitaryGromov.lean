@@ -3460,10 +3460,11 @@ lemma H_n_contradiction (data : HnData)
 
 
 
-  let m: ℕ := ⌈1 + |(↑data.S_poly_deg - Real.log ↑data.S_poly_const)|⌉₊
+  let m: ℕ := max (⌈1 + |(↑data.S_poly_deg - Real.log ↑data.S_poly_const)|⌉₊) (1 + ⌈((Real.log ↑data.S_poly_const + ↑data.S_poly_deg * Real.log (↑c' * ↑⌊c * (H_n_eps data.hd)⁻¹⌋₊)) /
+    (Real.log ↑⌊c * (H_n_eps data.hd)⁻¹⌋₊ - ↑data.S_poly_deg * Real.log 2 - 4))⌉₊)
+
   have m_gt: 0 < m := by
     simp [m]
-    positivity
   have ne_zero_of_pos (r: ℝ): 0 < r → r ≠ 0 := by
     intro r_pos r_eq
     rw [r_eq] at r_pos
@@ -3492,6 +3493,44 @@ lemma H_n_contradiction (data : HnData)
 
       have reverse_ineq: swap_le ineq := by
         unfold swap_le
+
+        have log_m_gt:  ↑data.S_poly_deg < Real.log ↑m := by
+          sorry
+
+
+        rw [Real.log_mul]
+        .
+          rw [mul_add]
+          rw [add_comm]
+          rw [← add_assoc]
+          nth_grw 2 [log_m_gt]
+          rw [← pow_two]
+          nth_grw 3 [Real.log_le_rpow_div (ε := (1 / 2))]
+          simp
+          rw [mul_pow]
+          rw [← Real.rpow_natCast]
+          rw [← Real.rpow_mul]
+          simp
+          norm_num
+          rw [← lt_tsub_iff_right]
+          rw [← mul_sub]
+          rw [← div_lt_iff₀]
+          .
+            dsimp [m]
+            simp
+            right
+            rw [← gt_iff_lt]
+            grw [(Nat.le_ceil _).ge]
+            simp
+          .
+            simp
+            sorry
+          . simp
+
+
+        grw [Real.log_le_rpow_div (ε := (1 / (↑c' * ↑⌊c * (H_n_eps data.hd)⁻¹⌋₊)))]
+        field_simp
+
         grw [Real.log_le_sub_one_of_pos]
         rw [mul_sub]
         rw [← mul_assoc]
@@ -3511,6 +3550,7 @@ lemma H_n_contradiction (data : HnData)
         rw [mul_sub]
 
         have log_sub_gt: (Real.log ↑⌊c * (H_n_eps data.hd)⁻¹⌋₊ - ↑data.S_poly_deg * Real.log 2) > 1 + data.S_poly_deg * (↑c' * ↑⌊c * (H_n_eps data.hd)⁻¹⌋₊) := by
+
           sorry
 
         have m_gt_abs: m > |(↑data.S_poly_deg - Real.log ↑data.S_poly_const)| := by
