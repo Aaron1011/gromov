@@ -3447,8 +3447,15 @@ lemma H_n_contradiction {m : ℕ}
   (c: ℝ)
   (c_pos: 0 < c)
   (c_lt: c < 1 / 40)
+  (c_mul_pos: 1 ≤ c * (H_n_eps data.hd)⁻¹)
   (S_poly: ∃ a: ℕ, ∃ d: ℕ, a ≠ 0 ∧ #(data.S_finite.toFinset ^ ( c' * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m))) ≤ a * (( c' * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m))^d))
   : False := by
+
+
+  have ne_zero_of_pos (r: ℝ): 0 < r → r ≠ 0 := by
+    intro r_pos r_eq
+    rw [r_eq] at r_pos
+    linarith
 
   obtain ⟨a, d, a_neq_zero, upper_bound⟩ := S_poly
   have lower_bound := H_n_ball_S_card m_gt data c c_pos c_lt
@@ -3475,19 +3482,40 @@ lemma H_n_contradiction {m : ℕ}
         have m_ne_zero: m ≠ 0 := by
           omega
         simp [c', m_ne_zero]
-        sorry
+        exact c_mul_pos
 
       . simp
 
     . simpa using a_neq_zero
     .
-      sorry
+
+
+      apply ne_zero_of_pos
+      apply pow_pos
+      simp
+      apply mul_pos
+      .
+        simp [c']
+        rw [Nat.floor_pos]
+        exact c_mul_pos
+      . exact Nat.cast_pos'.mpr m_gt
   .
     norm_cast
     apply Nat.pow_pos
     rw [Nat.floor_pos]
-    sorry
-  . sorry
+    exact c_mul_pos
+  .
+    apply mul_pos
+    . simp
+      omega
+    .
+      apply pow_pos
+      simp [c']
+      apply mul_pos
+      . simp
+        rw [Nat.floor_pos]
+        exact c_mul_pos
+      . exact Nat.cast_pos'.mpr m_gt
 
 
 -- Note - Vikman proves a much weaker statement (an upper boud n terms of 2^n)
