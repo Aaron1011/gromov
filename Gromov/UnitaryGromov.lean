@@ -3327,7 +3327,7 @@ lemma H_n_pows_mem_ball_S {m : ℕ}
         apply congr (rfl)
         ext i g
         nth_rw 2 [List.ofFn_congr (n := (c' * ⌊c * (H_n_eps data.hd)⁻¹⌋₊ * m * 2 ^ m))]
-        . sorry
+        . simp
         . omega
 
 
@@ -3343,6 +3343,7 @@ lemma H_n_pows_mem_ball_S {m : ℕ}
         simp
     rw [g_list_prod]
 
+#print axioms H_n_pows_mem_ball_S
 
 
 -- Note - Vikman proves a much weaker statement (an upper boud n terms of 2^n)
