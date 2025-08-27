@@ -3277,29 +3277,17 @@ lemma H_n_pows_mem_ball_S {m : ℕ}
 
 
   have lists_prod_eq: g_as_s_list.unattach.prod = (List.ofFn g_list).unattach.prod := by
-    unfold List.unattach
+    rw [g_as_list_prod_eq_pow]
+    conv =>
+      rhs
+      unfold List.unattach
     simp only [List.map_ofFn]
     rw [Function.comp_def]
     rw [g_list_prod]
-    have my_prod := theorem_3_8_h_n_list_prod_eq data m
-    conv =>
-      rhs
-      arg 1
-      arg 1
-      arg 1
-      intro i
-      rw [← theorem_3_8_h_n_list_prod_eq]
-
-
-
-    simp only [g_as_s_list]
-    rw [List.flatten_flatten]
-
-
-    unfold List.unattach at my_prod
-    have my_list_pow := list_prod_pow m sorry pows
-    simp_rw [← list_prod_pow_new]
-    simp_rw [← my_prod]
+    simp
+    simp_rw [theorem_3_8_h_n_list_prod_eq]
+    unfold List.unattach
+    simp [Function.comp_def]
 
 
 
