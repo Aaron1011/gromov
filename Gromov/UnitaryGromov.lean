@@ -3492,7 +3492,8 @@ lemma H_n_contradiction {m : ℕ}
 
       . simp
 
-    . exact data.S_poly_const_pos
+    .
+      exact Nat.cast_ne_zero.mpr (id (Ne.symm data.S_poly_const_pos))
     .
 
 
@@ -3513,7 +3514,7 @@ lemma H_n_contradiction {m : ℕ}
   .
     apply mul_pos
     . simp
-      omega
+      exact Nat.zero_lt_of_ne_zero (id (Ne.symm data.S_poly_const_pos))
     .
       apply pow_pos
       simp [c']
