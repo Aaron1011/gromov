@@ -3490,7 +3490,52 @@ lemma H_n_contradiction (data : HnData)
 
       have reverse_ineq: swap_le ineq := by
         unfold swap_le
-        sorry
+        grw [Real.log_le_sub_one_of_pos]
+        rw [mul_sub]
+        rw [← mul_assoc]
+        rw [mul_comm]
+        rw [← sub_pos]
+
+        rw [sub_add]
+        rw [sub_sub_eq_add_sub]
+        rw [sub_eq_add_neg]
+        rw [add_assoc]
+        nth_rw 2 [add_comm]
+        rw [← add_assoc]
+        rw [← sub_eq_add_neg]
+        rw [← mul_sub]
+
+        rw [← gt_iff_lt]
+        rw [mul_sub]
+
+        have log_sub_gt: (Real.log ↑⌊c * (H_n_eps data.hd)⁻¹⌋₊ - ↑data.S_poly_deg * Real.log 2) > 1 + data.S_poly_deg * (↑c' * ↑⌊c * (H_n_eps data.hd)⁻¹⌋₊) := by
+          sorry
+
+        have m_gt_abs: m > |(↑data.S_poly_deg - Real.log ↑data.S_poly_const)| := by
+          sorry
+
+
+        grw [log_sub_gt]
+        rw [← mul_sub]
+        simp
+
+        have foo := neg_abs_le (a := (↑data.S_poly_deg - Real.log ↑data.S_poly_const))
+
+        rw [← gt_iff_lt]
+        grw [foo.ge]
+        simpa using m_gt_abs
+        .
+          have eps_pos := H_n_eps_pos data.hd
+          simp [c']
+          apply mul_pos
+          . apply mul_pos
+            . simp
+            .
+              simp
+              rw [Nat.floor_pos]
+              exact c_mul_pos
+          . simp
+            exact m_gt
 
       unfold swap_le at reverse_ineq
       . linarith
