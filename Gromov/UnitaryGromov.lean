@@ -1390,6 +1390,7 @@ structure HnData where
   S : Set G
   S_generates : Subgroup.closure S = ⊤
   S_finite : S.Finite
+  S_one: 1 ∈ S
   S_inv: ∀ s ∈ S, s⁻¹ ∈ S
   S_dist : ∀ s ∈ S, ‖s.val.val - 1‖ ≤ (H_n_eps hd)
   h : S
@@ -3223,7 +3224,7 @@ lemma H_n_pows_mem_ball_S {m : ℕ}
   (c_pos: 0 < c)
   (c_lt: c < 1 / 40)
   (pows_le : ∀ i : Fin m, (pows i) ≤ ⌊c * (H_n_eps data.hd)⁻¹⌋₊):
-  (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).g^(pows i))).prod.val ∈ Subtype.val '' (data.S ^ ( 2 * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m))) := by
+  (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data i).g^(pows i))).prod.val ∈ Subtype.val '' (data.S ^ ( c' * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m))) := by
 
   rw [Set.mem_image]
   simp_rw [Set.mem_pow]
@@ -3311,12 +3312,36 @@ lemma H_n_pows_mem_ball_S {m : ℕ}
       simp
 
 
+  let padded_list := Fin.append (fun (i: Fin (g_as_s_list.length)) => g_as_s_list[i]) (fun (i: Fin (((c' * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m)) - g_as_s_list.length))) => ⟨1, data.S_one⟩)
+
 
 
   refine ⟨?_, rfl⟩
   .
     --use g_list
-    sorry
+    use (fun i => padded_list (i.cast (by omega)))
+    conv =>
+      lhs
+      equals (List.ofFn (fun i => padded_list i)).unattach.prod =>
+        simp
+        apply congr (rfl)
+        ext i g
+        nth_rw 2 [List.ofFn_congr (n := (c' * ⌊c * (H_n_eps data.hd)⁻¹⌋₊ * m * 2 ^ m))]
+        . sorry
+        . omega
+
+
+    rw [List.ofFn_fin_append]
+    simp
+    rw [Subtype.ext_iff]
+    rw [lists_prod_eq]
+    conv at g_list_prod =>
+      lhs
+      equals (List.ofFn g_list).unattach.prod =>
+        apply congr rfl
+        ext i g
+        simp
+    rw [g_list_prod]
 
 
 
