@@ -3460,8 +3460,8 @@ lemma H_n_contradiction (data : HnData)
 
 
 
-  let m: ℕ := max (⌈1 + |(↑data.S_poly_deg - Real.log ↑data.S_poly_const)|⌉₊) (1 + ⌈((Real.log ↑data.S_poly_const + ↑data.S_poly_deg * Real.log (↑c' * ↑⌊c * (H_n_eps data.hd)⁻¹⌋₊)) /
-    (Real.log ↑⌊c * (H_n_eps data.hd)⁻¹⌋₊ - ↑data.S_poly_deg * Real.log 2 - 4))⌉₊)
+  let m: ℕ := max (max (⌈1 + |(↑data.S_poly_deg - Real.log ↑data.S_poly_const)|⌉₊) (1 + ⌈((Real.log ↑data.S_poly_const + ↑data.S_poly_deg * Real.log (↑c' * ↑⌊c * (H_n_eps data.hd)⁻¹⌋₊)) /
+    (Real.log ↑⌊c * (H_n_eps data.hd)⁻¹⌋₊ - ↑data.S_poly_deg * Real.log 2 - 4))⌉₊)) (1 + ⌈Real.exp ↑data.S_poly_deg⌉₊)
 
   have m_gt: 0 < m := by
     simp [m]
@@ -3495,7 +3495,15 @@ lemma H_n_contradiction (data : HnData)
         unfold swap_le
 
         have log_m_gt:  ↑data.S_poly_deg < Real.log ↑m := by
-          sorry
+          rw [← Real.exp_lt_exp]
+          rw [Real.exp_log]
+          .
+            unfold m
+            apply Nat.lt_of_ceil_lt
+            apply lt_max_of_lt_right
+            simp
+          . simp
+            omega
 
 
         rw [Real.log_mul]
@@ -3517,10 +3525,9 @@ lemma H_n_contradiction (data : HnData)
           rw [← div_lt_iff₀]
           .
             dsimp [m]
-            simp
-            right
-            rw [← gt_iff_lt]
-            grw [(Nat.le_ceil _).ge]
+            apply Nat.lt_of_ceil_lt
+            apply lt_max_of_lt_left
+            apply lt_max_of_lt_right
             simp
           .
             simp
