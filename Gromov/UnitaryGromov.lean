@@ -3290,6 +3290,28 @@ lemma H_n_pows_mem_ball_S {m : ℕ}
     simp [Function.comp_def]
 
 
+  have g_as_s_list_len: g_as_s_list.length ≤ c' * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m) := by
+    simp [g_as_s_list]
+    rw [List.sum_ofFn]
+    simp
+    grw [Finset.sum_le_sum (g := fun i => (pows i) * c' * (2 ^ m))]
+    .
+      grw [Finset.sum_le_card_nsmul (n := ⌊c * (H_n_eps data.hd)⁻¹⌋₊ * c' * (2^m))]
+      .
+        simp
+        ring
+        rfl
+      .
+        intro i _
+        grw [pows_le]
+    . intro i _
+      grw [theorem_3_8_h_n_list_length_upper_bound]
+      ring
+      grw [i.isLt]
+      simp
+
+
+
 
   refine ⟨?_, rfl⟩
   .
