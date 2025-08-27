@@ -3447,6 +3447,8 @@ lemma H_n_ball_S_card {m : ℕ}
 
 #print axioms H_n_ball_S_card
 
+abbrev swap_le {a b: ℝ} (_: a ≤ b): Prop := b < a
+
 -- Our lower bound gives us a contradiction with polynomial growth
 lemma H_n_contradiction (data : HnData)
   (c: ℝ)
@@ -3460,7 +3462,6 @@ lemma H_n_contradiction (data : HnData)
 
   have m: ℕ := 1
   have m_gt: 0 < m := by sorry
-
   have ne_zero_of_pos (r: ℝ): 0 < r → r ≠ 0 := by
     intro r_pos r_eq
     rw [r_eq] at r_pos
@@ -3486,42 +3487,64 @@ lemma H_n_contradiction (data : HnData)
       nth_rw 4 [mul_comm] at ineq
       rw [mul_assoc] at ineq
       rw [← mul_sub] at ineq
-      .
 
-        rw [← le_div_iff₀] at ineq
-        .
-          sorry
-        .
-          rw [sub_pos]
-          rw [← Real.exp_lt_exp]
-          rw [mul_comm]
-          rw [← Real.rpow_def_of_pos]
-          rw [Real.exp_log]
-          .
-            simp
-            rw [← gt_iff_lt]
-            grw [(Nat.sub_one_lt_floor _).gt]
-            rw [gt_iff_lt]
-            rw [lt_tsub_iff_left]
-            field_simp
-            rw [lt_div_iff₀]
-            .
-              rw [← lt_div_iff₀']
-              . sorry
-              . positivity
-            apply H_n_eps_pos data.hd
-          .
-            simp
-            rw [Nat.floor_pos]
-            exact c_mul_pos
-          . simp
-      .
-        have m_ne_zero: m ≠ 0 := by
+      have reverse_ineq: swap_le ineq := by
+        unfold swap_le
+        sorry
+
+      unfold swap_le at reverse_ineq
+      . linarith
+      . have m_ne_zero: m ≠ 0 := by
           omega
         simp [c', m_ne_zero]
         exact c_mul_pos
 
       . simp
+
+      -- .
+
+      --   rw [← le_div_iff₀] at ineq
+      --   .
+      --     rw [Real.log_mul] at ineq
+      --     . rw [mul_add] at ineq
+      --       nth_rw 2 [add_comm] at ineq
+      --       rw [add_assoc] at ineq
+      --       rw [add_div] at ineq
+      --       rw [← tsub_le_iff_left] at ineq
+      --       sorry
+      --     . sorry
+      --     . sorry
+      --   .
+      --     rw [sub_pos]
+      --     rw [← Real.exp_lt_exp]
+      --     rw [mul_comm]
+      --     rw [← Real.rpow_def_of_pos]
+      --     rw [Real.exp_log]
+      --     .
+      --       simp
+      --       rw [← gt_iff_lt]
+      --       grw [(Nat.sub_one_lt_floor _).gt]
+      --       rw [gt_iff_lt]
+      --       rw [lt_tsub_iff_left]
+      --       field_simp
+      --       rw [lt_div_iff₀]
+      --       .
+      --         rw [← lt_div_iff₀']
+      --         . sorry
+      --         . positivity
+      --       apply H_n_eps_pos data.hd
+      --     .
+      --       simp
+      --       rw [Nat.floor_pos]
+      --       exact c_mul_pos
+      --     . simp
+      -- .
+      --   have m_ne_zero: m ≠ 0 := by
+      --     omega
+      --   simp [c', m_ne_zero]
+      --   exact c_mul_pos
+
+      -- . simp
 
     .
       exact Nat.cast_ne_zero.mpr (id (Ne.symm data.S_poly_const_pos))
