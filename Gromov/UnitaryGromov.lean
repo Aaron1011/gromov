@@ -1382,6 +1382,11 @@ lemma H_n_eps_pos {d : ℕ} (hd : 2 ≤ d) : 0 < H_n_eps hd := by
   have small_pos := (small_dist_matrix d hd).choose_spec
   linarith
 
+
+open scoped Finset
+open scoped Pointwise
+
+
 structure HnData where
   d : ℕ
   hd : 2 ≤ d
@@ -1393,6 +1398,10 @@ structure HnData where
   S_one: 1 ∈ S
   S_inv: ∀ s ∈ S, s⁻¹ ∈ S
   S_dist : ∀ s ∈ S, ‖s.val.val - 1‖ ≤ (H_n_eps hd)
+  S_poly_const: ℕ
+  S_poly_const_pos: 0 ≠ S_poly_const
+  S_poly_deg: ℕ
+  S_poly: ∀ r: ℕ, #(S_finite.toFinset ^ r) ≤ S_poly_const * (r ^ S_poly_deg)
   h : S
   h_nontrivial : ¬ ∃(z : ℂ), h.val.val.val = z • 1
 
@@ -3013,9 +3022,6 @@ instance matrix_norm_one_class (n: ℕ) (hd: Nonempty (Fin n)) : NormOneClass (M
 
 def H_n_C: ℝ := 8
 
-open scoped Finset
-open scoped Pointwise
-
 lemma list_prod_pow {T: Type*} [Group T] (m: ℕ) (elems: Fin m → T) (pows: Fin m → ℕ):
   (List.ofFn (fun (i: Fin m) => (elems i)^(pows i))).prod = (List.ofFn (fun (i : Fin m) => List.replicate (pows i) (elems i))).flatten.prod := by
 
@@ -3448,8 +3454,8 @@ lemma H_n_contradiction {m : ℕ}
   (c_pos: 0 < c)
   (c_lt: c < 1 / 40)
   (c_mul_pos: 1 ≤ c * (H_n_eps data.hd)⁻¹)
-  (S_poly: ∃ a: ℕ, ∃ d: ℕ, a ≠ 0 ∧ #(data.S_finite.toFinset ^ ( c' * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m))) ≤ a * (( c' * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m))^d))
   : False := by
+
 
 
   have ne_zero_of_pos (r: ℝ): 0 < r → r ≠ 0 := by
@@ -3457,7 +3463,7 @@ lemma H_n_contradiction {m : ℕ}
     rw [r_eq] at r_pos
     linarith
 
-  obtain ⟨a, d, a_neq_zero, upper_bound⟩ := S_poly
+  have upper_bound := data.S_poly ( c' * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m))
   have lower_bound := H_n_ball_S_card m_gt data c c_pos c_lt
   have ineq := le_trans lower_bound upper_bound
   rify at ineq
@@ -3486,7 +3492,7 @@ lemma H_n_contradiction {m : ℕ}
 
       . simp
 
-    . simpa using a_neq_zero
+    . exact data.S_poly_const_pos
     .
 
 
