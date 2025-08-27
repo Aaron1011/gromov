@@ -2512,13 +2512,12 @@ lemma list_ofFn_drop {M: Type*} (a k: ℕ) (f: Fin (k + a) → M): (List.ofFn f)
 
 set_option synthInstance.maxHeartbeats 80000 in
 set_option maxHeartbeats 900000 in
-lemma words_distinct {a } {m : ℕ} (k: Fin m)  (a_k_lt : a + k + 1 < m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 1 / 40)
+lemma words_distinct {m : ℕ} (k: Fin m)  (a_k_lt : k + 1 < m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 1 / 40)
  (data : HnData)
  (pows_i : Fin m → ℕ)
  (pows_j: Fin m → ℕ)
  (pows_i_le : ∀ i : Fin m, (pows_i i) ≤ c * (H_n_eps data.hd)⁻¹)
  (pows_j_le : ∀ i : Fin m, (pows_j i) ≤ c * (H_n_eps data.hd)⁻¹)
- (pows_ne: pows_i k ≠ pows_j k)
  (pows_lt_eq: ∀ j : Fin m, j < k → pows_i j = pows_j j)
  (pows_j_lt_k: (pows_j k) < (pows_i k)):
   (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data (i)).g^(pows_i i))).prod ≠ (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data (i)).g^(pows_j i))).prod := by
@@ -3045,9 +3044,10 @@ lemma list_prod_pow_new {T: Type*} [Group T] (m: ℕ) (elems: Fin m → T) (pows
 
 
 
+
 -- This lemma is in terms of elements of G - we use this to build up our statement in terms of elements of the finite generate set S
 lemma H_n_pows_mem_ball_G {m : ℕ}
-  (m_gt: 0 < m) (k: ℝ) (data : HnData) (pows : Fin m → ℕ)
+  (m_gt: 0 < m) (data : HnData) (pows : Fin m → ℕ)
   (c: ℝ)
   (c_pos: 0 < c)
   (c_lt: c < 1 / 40)
@@ -3219,7 +3219,7 @@ lemma list_concat_unattach {T: Type*} {p: T → Prop} (l: List { x: T // p x}) (
 
 
 lemma H_n_pows_mem_ball_S {m : ℕ}
-  (m_gt: 0 < m) (k: ℝ) (data : HnData) (pows : Fin m → ℕ)
+  (m_gt: 0 < m) (data : HnData) (pows : Fin m → ℕ)
   (c: ℝ)
   (c_pos: 0 < c)
   (c_lt: c < 1 / 40)
@@ -3272,7 +3272,7 @@ lemma H_n_pows_mem_ball_S {m : ℕ}
       simp
 
 
-  have g_list_mem := H_n_pows_mem_ball_G m_gt k data pows c c_pos c_lt pows_le
+  have g_list_mem := H_n_pows_mem_ball_G m_gt data pows c c_pos c_lt pows_le
   rw [Set.mem_pow] at g_list_mem
   obtain ⟨g_list, g_list_prod⟩ := g_list_mem
 
@@ -3344,6 +3344,55 @@ lemma H_n_pows_mem_ball_S {m : ℕ}
     rw [g_list_prod]
 
 #print axioms H_n_pows_mem_ball_S
+
+
+lemma H_n_ball_S_card {m : ℕ}
+  (m_gt: 0 < m) (k: ℝ) (data : HnData)
+  (c: ℝ)
+  (c_pos: 0 < c)
+  (c_lt: c < 1 / 40):
+  (1 + ⌊c * (H_n_eps data.hd)⁻¹⌋₊)^m ≤  #(data.S_finite.toFinset ^ ( c' * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m))) := by
+
+
+
+  let my_set: Finset (Fin m → Fin (⌊c * (H_n_eps data.hd)⁻¹⌋₊)) := Finset.univ
+  have my_card := Finset.card_univ (α := (Fin m → Fin (1 + ⌊c * (H_n_eps data.hd)⁻¹⌋₊)))
+  rw [Fintype.card_pi_const] at my_card
+  conv at my_card =>
+    rhs
+    simp
+
+
+  rw [← my_card]
+  apply Finset.card_le_card_of_injOn (f := fun pows => (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data (i)).g^((pows i).val))).prod)
+  .
+    intro pows _
+    simp
+    -- TODO - modify H_n_pows_mem_ball_S so that this can just be 'apply'
+    have my_pows := H_n_pows_mem_ball_S m_gt data (fun i => (pows i).val) c c_pos c_lt ?_
+    .
+      rw [Set.mem_image] at my_pows
+      obtain ⟨g, g_mem, g_eq⟩ := my_pows
+      rw [← Subtype.ext_iff] at g_eq
+      rw [← g_eq]
+      exact g_mem
+    . intro i
+      simp
+      omega
+  .
+    intro pows_i _ pows_j _
+    contrapose
+    intro pows_neq
+    rw [funext_iff] at pows_neq
+    simp at pows_neq
+
+    have exists_minimal_k := exists_minimal_of_wellFoundedLT (fun (i: Fin m) => pows_i i ≠ pows_j i) pows_neq
+    obtain ⟨k, k_minimal⟩ := exists_minimal_k
+    simp at k_minimal
+
+
+    have prods_neq := words_distinct (m := m) k (by omega)
+
 
 
 -- Note - Vikman proves a much weaker statement (an upper boud n terms of 2^n)
