@@ -3455,7 +3455,7 @@ lemma H_n_contradiction (data : HnData)
   (c_pos: 0 < c)
   (c_lt: c < 1 / 40)
   (c_mul_pos: 1 ≤ c * (H_n_eps data.hd)⁻¹)
-  (eps_lt_div: (H_n_eps data.hd) <  c / (2 + 2 ^ (data.S_poly_deg)))
+  (eps_div_lt: (H_n_eps data.hd) < c / (Real.exp (4 + ↑data.S_poly_deg * Real.log 2) + 1))
   : False := by
 
 
@@ -3543,7 +3543,7 @@ lemma H_n_contradiction (data : HnData)
               rw [lt_div_iff₀']
               rw [← lt_div_iff₀]
               .
-                sorry
+                exact eps_div_lt
               . positivity
               . apply H_n_eps_pos
             .
@@ -3602,6 +3602,8 @@ lemma H_n_contradiction (data : HnData)
         exact c_mul_pos
       . exact Nat.cast_pos'.mpr m_gt
 
+
+#print axioms H_n_contradiction
 
 -- Note - Vikman proves a much weaker statement (an upper boud n terms of 2^n)
 -- The norms are actually bounded by a constant, which makes the rest of the proof easier
