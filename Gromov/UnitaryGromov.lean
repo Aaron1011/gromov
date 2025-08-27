@@ -3542,7 +3542,8 @@ lemma H_n_contradiction (data : HnData)
               field_simp
               rw [lt_div_iff₀']
               rw [← lt_div_iff₀]
-              . sorry
+              .
+                sorry
               . positivity
               . apply H_n_eps_pos
             .
