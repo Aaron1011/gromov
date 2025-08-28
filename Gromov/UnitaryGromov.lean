@@ -1369,10 +1369,15 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
 #check Pi.commSemigroup
 
 -- A sufficiently small epsilon to use for the h_n elements in Theorem 3.8 (independent of the choice of n)
-noncomputable def H_n_eps {d : ℕ} (hd : 2 ≤ d): ℝ := (min ((1 : ℝ) / 8) ((small_dist_matrix d hd).choose / 2))
+noncomputable def H_n_eps {d : ℕ} (hd : 2 ≤ d): ℝ := (min ((1 : ℝ) / 60) ((small_dist_matrix d hd).choose / 2))
 
 -- H_n_eps is less than 1/2
 lemma H_n_eps_lt {d : ℕ} (hd : 2 ≤ d) : H_n_eps hd < ((1 : ℝ) / 4) := by
+  simp [H_n_eps]
+  left
+  norm_num
+
+lemma H_n_eps_lt_one_fifty {d : ℕ} (hd : 2 ≤ d) : H_n_eps hd < ((1 : ℝ) / 50) := by
   simp [H_n_eps]
   left
   norm_num
@@ -3619,8 +3624,21 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
     . simp
     . simp
       norm_num
-    . sorry
-    . sorry
+    .
+      rw [← div_le_iff₀']
+      .
+        rw [le_inv_comm₀]
+        .
+          simp
+          simp [H_n_eps]
+          left
+          norm_num
+        . simp
+        . apply H_n_eps_pos
+      . simp
+    .
+      simp
+      sorry
 
 
 -- Helper for theorem 3.8
