@@ -3692,6 +3692,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         apply Set.Finite.image
         apply S_finite
       S_one := by
+        simp
         sorry
       S_inv := by
         intro s hs
@@ -3715,7 +3716,15 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       S_poly_const_pos := sorry
       S_poly_deg := sorry
       S_poly := sorry
-      h := ⟨⟨h.val.val, by sorry⟩, by sorry⟩
+      h := ⟨⟨h.val.val, by (
+        have h_prop := h.property
+        simp only [S] at h_prop
+        simp
+        rw [Set.mem_iUnion] at h_prop
+        obtain ⟨y, y_mem⟩ := h_prop
+        simp at y_mem
+        sorry
+      )⟩, by simp⟩
       h_nontrivial := by
         simpa using h_nontrivial
     }
@@ -3745,7 +3754,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
 -- Helper for theorem 3.8
 -- TODO - the name is bad, rename it to not include 'central'
 set_option synthInstance.maxHeartbeats 100000 in
-set_option maxHeartbeats 1000000 in
+set_option maxHeartbeats 2000000 in
 lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG): ∃ N : Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
   by_cases n_eq_one : n = 1
   · have fin_sin_subsingleton : Subsingleton (Fin n) := by
@@ -4032,10 +4041,14 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
     by_cases nontrivial_central : ∃ g : G, (∀ z : ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G
     · exact nontrivial_centrer_implies_virtual G G_FG nontrivial_central
     · -- Case two - we have no non-trivial central elements
+
+      have two_le_n: 2 ≤ n := by
+        omega
       simp only [ne_eq, not_exists, not_and] at nontrivial_central
-      let ε: ℝ := 2
+      let ε: ℝ := (H_n_eps two_le_n)
       have hε : 0 < ε := by
         simp [ε]
+        apply H_n_eps_pos
 
       obtain ⟨C, G_eps⟩:= volume_packing n (by omega) ε hε
       specialize G_eps G
