@@ -3481,14 +3481,14 @@ open Classical
 -- Theorem 3.8, case with only trivial elements in the center
 set_option synthInstance.maxHeartbeats 100000 in
 set_option maxHeartbeats 500000 in
-lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG) (ε : ℝ) (hε : 0 < ε)
+lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG)
   (G_central_trivial : ∀ g : G, g ∈ Set.center G → ∃ z : ℂ, g.val.val = z • 1)
-  (G'_central_trivial : ∀ g : (G' n ε G), g ∈ Set.center (G' n ε G) → ∃ z : ℂ, g.val.val.val = z • 1)
-  (G'_finite_index: (G' n ε G).FiniteIndex)
+  (G'_central_trivial : ∀ g : (G' n (H_n_eps hn) G), g ∈ Set.center (G' n (H_n_eps hn) G) → ∃ z : ℂ, g.val.val.val = z • 1)
+  (G'_finite_index: (G' n (H_n_eps hn) G).FiniteIndex)
   : ∃ N : Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
 
-  by_cases all_mul_identity : ∀ h : (G' n ε G), ∃ z : ℂ, h.val.val.val = z • 1
-  · use (G' n ε G)
+  by_cases all_mul_identity : ∀ h : (G' n (H_n_eps hn) G), ∃ z : ℂ, h.val.val.val = z • 1
+  · use (G' n (H_n_eps hn) G)
     refine ⟨?_, ?_⟩
     · refine { is_comm := ?_ }
       refine { comm := ?_ }
@@ -3510,7 +3510,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
     have G_fg: Group.FG G := by
       exact (Group.fg_iff_subgroup_fg G).mpr G_FG
 
-    have G'_fg := Subgroup.fg_of_index_ne_zero (G' n ε G)
+    have G'_fg := Subgroup.fg_of_index_ne_zero (G' n (H_n_eps hn) G)
 
     rw [Group.fg_def] at G'_fg
     rw [Subgroup.fg_iff] at G'_fg
@@ -3543,7 +3543,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       simp [S'_generates]
 
 
-    have s_list (s: S'') := (mem_closure_prod_list ((Metric.ball (1 : G) ε) ∪ (Metric.ball (1 : G) ε)⁻¹) (by
+    have s_list (s: S'') := (mem_closure_prod_list ((Metric.ball (1 : G) (H_n_eps hn)) ∪ (Metric.ball (1 : G) (H_n_eps hn))⁻¹) (by
       simp
       rw [Set.union_comm]
     ) s (by
@@ -3669,7 +3669,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
     let h_n_data: HnData := {
       d := n
       hd := hn
-      G := Subgroup.map G.subtype (G' n ε G)
+      G := Subgroup.map G.subtype (G' n (H_n_eps hn) G)
       G_central_trivial := by
         intro g hg
         apply G'_central_trivial ⟨⟨⟨g.val.val, by simp⟩, by (
