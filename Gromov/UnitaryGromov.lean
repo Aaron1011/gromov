@@ -3530,7 +3530,36 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       obtain ⟨l, l_mem, l_prod_eq⟩ := Submonoid.exists_list_of_mem_closure x_mem_closure
       simp_rw [S_union_Sinv] at l_mem
 
-      sorry
+      have list_prod_trivial: ∃ z: ℂ, l.unattach.unattach.unattach.prod = z • 1 := by
+        apply List.prod_induction (p := fun a => ∃ z: ℂ, a = z • 1)
+        .
+          intro a b a_diag b_diag
+          obtain ⟨a_z, a_eq⟩ := a_diag
+          obtain ⟨b_z, b_eq⟩ := b_diag
+          use b_z * a_z
+          rw [a_eq, b_eq]
+          rw [mul_smul]
+          simp
+        . use 1
+          simp
+        .
+          intro x x_mem
+          rw [List.mem_unattach] at x_mem
+          obtain ⟨a, ha⟩ := x_mem
+          rw [List.mem_unattach] at ha
+          obtain ⟨b, hb⟩ := ha
+          rw [List.mem_unattach] at hb
+          obtain ⟨c, hc⟩ := hb
+          have mem_s := l_mem _ hc
+          have x_diag := this ⟨_, mem_s⟩
+          exact x_diag
+
+      obtain ⟨z, l_prod_eq_diag⟩ := list_prod_trivial
+      have x_neq := hx z
+      rw [← l_prod_eq_diag] at x_neq
+      rw [← l_prod_eq] at x_neq
+      dsimp [List.unattach] at x_neq
+      simp at x_neq
 
     obtain ⟨h, h_nontrivial⟩ := nontrivial_h
 
@@ -3563,7 +3592,8 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       S := (fun a => ⟨a.val, by (
         simp
       )⟩) '' S
-      S_generates := sorry
+      S_generates := by
+        sorry
       S_finite := by
         apply Set.Finite.image
         apply S_finite
@@ -3573,7 +3603,8 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         intro s hs
         rw [S_eq_Sinv]
         sorry
-      S_dist := sorry
+      S_dist := by
+        sorry
       S_poly_const := sorry
       S_poly_const_pos := sorry
       S_poly_deg := sorry
