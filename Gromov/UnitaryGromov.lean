@@ -3543,25 +3543,47 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       simp [S'_generates]
 
 
-    have s_list (s: S'') := (mem_closure_prod_list S'' S''_eq_S''inv s (by
-      rw [S''_generates]
+    have s_list (s: S'') := (mem_closure_prod_list ((Metric.ball (1 : G) ε) ∪ (Metric.ball (1 : G) ε)⁻¹) (by
       simp
+      rw [Set.union_comm]
+    ) s (by
+      have s_prop := s.val.property
+      simp only [G'] at s_prop
+      rw [Subgroup.closure_union]
+      simp [s_prop]
     ))
 
-    -- TOOD - this needs to be interms of the closure of the ball from G'
+    -- TOOD - this needs to be in terms of the closure of the ball from G'
     let S := ⋃ s : S''_finite.toFinset, (s_list ⟨s, by (
       have foo := s.property
       rw [Set.Finite.mem_toFinset] at foo
       exact foo
     )⟩).choose.unattach.toFinset.toSet
 
-    have S_dist: ∀ s ∈ S, ‖s.val.val.val - 1‖ ≤ H_n_eps hn := by
+    have S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ ≤ H_n_eps hn := by
       intro s hs
       dsimp [S] at hs
       rw [Set.mem_iUnion] at hs
       obtain ⟨y, y_mem⟩ := hs
-      simp at y_mem
+      simp only [List.coe_toFinset, List.mem_unattach, Set.mem_union, Set.mem_inv,
+        Set.mem_setOf_eq] at y_mem
       obtain ⟨s_mem_S'', s_mem_choose⟩ := y_mem
+      simp at s_mem_S''
+      simp [dist] at s_mem_S''
+      rw [dist_eq_norm_sub] at s_mem_S''
+      rw [dist_eq_norm_sub] at s_mem_S''
+      conv at s_mem_S'' =>
+        right
+        arg 1
+        arg 1
+        equals (star s.val.val * 1 - (star s.val.val) * s.val.val) =>
+          simp
+
+      rw [← mul_sub] at s_mem_S''
+      rw [← unitary.coe_star] at s_mem_S''
+      rw [CStarRing.norm_coe_unitary_mul] at s_mem_S''
+      nth_rw 2 [norm_sub_rev] at s_mem_S''
+      simp at s_mem_S''
       sorry
       -- simp [s_list] at s_mem_choose
       -- have s_spec := (s_list ⟨s, s_mem_S''⟩).choose_spec
