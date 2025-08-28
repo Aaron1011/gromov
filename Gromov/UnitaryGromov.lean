@@ -3695,8 +3695,15 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         sorry
       S_inv := by
         intro s hs
-        rw [S_eq_Sinv]
-        sorry
+        rw [Set.mem_image] at hs
+        obtain ⟨x, x_mem, s_eq⟩ := hs
+        rw [Set.mem_image]
+        rw [S_eq_Sinv] at x_mem
+        simp at x_mem
+        use x⁻¹
+        refine ⟨x_mem, ?_⟩
+        rw [← s_eq]
+        rfl
       S_dist := by
         intro s hs
         rw [Set.mem_image] at hs
