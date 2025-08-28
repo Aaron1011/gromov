@@ -3693,6 +3693,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
 
       S := (fun a => ⟨a.val, by (
         simp
+        sorry
       )⟩) '' S
       S_generates := by
         sorry
@@ -3700,7 +3701,6 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         apply Set.Finite.image
         apply S_finite
       S_one := by
-        simp [S]
         sorry
       S_inv := by
         intro s hs
@@ -3717,7 +3717,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       S_poly_const_pos := sorry
       S_poly_deg := sorry
       S_poly := sorry
-      h := ⟨⟨h.val.val, by simp⟩, by simp⟩
+      h := ⟨⟨h.val.val, by sorry⟩, by sorry⟩
       h_nontrivial := by
         simpa using h_nontrivial
     }
