@@ -3584,16 +3584,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       rw [CStarRing.norm_coe_unitary_mul] at s_mem_S''
       nth_rw 2 [norm_sub_rev] at s_mem_S''
       simp at s_mem_S''
-      sorry
-      -- simp [s_list] at s_mem_choose
-      -- have s_spec := (s_list ⟨s, s_mem_S''⟩).choose_spec
-
-      -- simp at s_spec
-
-
-      -- rw [Set.mem_setOf] at a_mem
-      -- simp at a_mem
-      -- sorry
+      linarith
 
     have S_generates: Subgroup.closure S = ⊤ := by
       simp [S]
@@ -4107,7 +4098,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
         --let foo := Subgroup.comap ((Subgroup.map (G.subtype (G' n ε G))).subtype) N
       · simp at hn
-        have target := central_trivial_virtually_abelian n (by omega) G G_FG ε hε ?_ ?_ G_eps.1
+        have target := central_trivial_virtually_abelian n (by omega) G G_FG ?_ ?_ G_eps.1
         · exact target
         · intro g hg
           specialize nontrivial_central g
