@@ -3461,6 +3461,23 @@ lemma bad_H_n_prod_exp_bound {m : ℕ}
 --   simp
 
 
+-- TODO - deduplicate with with 'mem_S_prod_list'
+lemma mem_closure_prod_list {G: Type*} [Group G] (S: Set G) (S_eq_Sinv: S = S⁻¹) (x: G) (hx: x ∈ Subgroup.closure S): ∃ l: List S, l.unattach.prod = x := by
+  -- https://leanprover.zulipchat.com/#narrow/channel/287929-mathlib4/topic/Group.20.28.2FMonoid.2Fetc.29.20closures.20are.20a.20finite.20product.2Fsum/near/477951441
+  have foo := Submonoid.exists_list_of_mem_closure (s := S ∪ S⁻¹) (x := x)
+  rw [← Subgroup.closure_toSubmonoid _] at foo
+  specialize foo hx
+  obtain ⟨l, ⟨mem_s, prod_eq⟩⟩ := foo
+  conv at mem_s =>
+    intro y hy
+    rw [← S_eq_Sinv]
+    simp
+  use (l.attach).map (fun x => ⟨x.val, mem_s (x.val) x.property⟩)
+  unfold List.unattach
+  simp [prod_eq]
+
+open Classical
+
 -- Theorem 3.8, case with only trivial elements in the center
 set_option synthInstance.maxHeartbeats 100000 in
 set_option maxHeartbeats 500000 in
@@ -3498,30 +3515,57 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
     rw [Group.fg_def] at G'_fg
     rw [Subgroup.fg_iff] at G'_fg
     obtain ⟨S', S'_generates, S'_finite⟩ := G'_fg
+
     -- Add identity and inverses to S' to make things easier
-    let S := S' ∪ {1} ∪ S'⁻¹
-    have S_finite: Set.Finite S := by
-      dsimp [S]
+    let S'' := S' ∪ {1} ∪ S'⁻¹
+    have S''_finite: Set.Finite S'' := by
+      dsimp [S'']
       rw [Set.finite_union]
       rw [Set.finite_union]
       simp [S'_finite]
 
-    have S_union_Sinv: S ∪ S⁻¹ = S := by
-      dsimp [S]
+    have S''_union_S''inv: S'' ∪ S''⁻¹ = S'' := by
+      dsimp [S'']
       simp [-Set.union_singleton]
       rw [Set.union_assoc]
       apply Set.subset_union_left
 
-    have S_eq_Sinv: S = S⁻¹ := by
-      rw [← S_union_Sinv]
+    have S''_eq_S''inv: S'' = S''⁻¹ := by
+      rw [← S''_union_S''inv]
       simp
       rw [Set.union_comm]
 
-    have S_generates: Subgroup.closure S = ⊤ := by
-      dsimp [S]
+
+    have S''_generates: Subgroup.closure S'' = ⊤ := by
+      dsimp [S'']
       rw [Subgroup.closure_union]
       rw [Subgroup.closure_union]
       simp [S'_generates]
+
+
+    have s_list (s: S'') := (mem_closure_prod_list S'' S''_eq_S''inv s (by
+      rw [S''_generates]
+      simp
+    ))
+
+    let S := ⋃ s : S''_finite.toFinset, (s_list ⟨s, by (
+      have foo := s.property
+      rw [Set.Finite.mem_toFinset] at foo
+      exact foo
+    )⟩).choose.unattach.toFinset.toSet
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     have nontrivial_h: ∃ h: S, ∀ z: ℂ,  h.val.val.val.val ≠ z • 1 := by
       by_contra!
