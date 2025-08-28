@@ -3507,6 +3507,11 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       rw [Set.union_assoc]
       apply Set.subset_union_left
 
+    have S_eq_Sinv: S = S⁻¹ := by
+      rw [← S_union_Sinv]
+      simp
+      rw [Set.union_comm]
+
     have S_generates: Subgroup.closure S = ⊤ := by
       dsimp [S]
       rw [Subgroup.closure_union]
@@ -3559,9 +3564,15 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         simp
       )⟩) '' S
       S_generates := sorry
-      S_finite := sorry
-      S_one := sorry
-      S_inv := sorry
+      S_finite := by
+        apply Set.Finite.image
+        apply S_finite
+      S_one := by
+        simp [S]
+      S_inv := by
+        intro s hs
+        rw [S_eq_Sinv]
+        sorry
       S_dist := sorry
       S_poly_const := sorry
       S_poly_const_pos := sorry
