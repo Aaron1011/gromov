@@ -3548,19 +3548,52 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       simp
     ))
 
+    -- TOOD - this needs to be interms of the closure of the ball from G'
     let S := ⋃ s : S''_finite.toFinset, (s_list ⟨s, by (
       have foo := s.property
       rw [Set.Finite.mem_toFinset] at foo
       exact foo
     )⟩).choose.unattach.toFinset.toSet
 
+    have S_dist: ∀ s ∈ S, ‖s.val.val.val - 1‖ ≤ H_n_eps hn := by
+      intro s hs
+      dsimp [S] at hs
+      rw [Set.mem_iUnion] at hs
+      obtain ⟨y, y_mem⟩ := hs
+      simp at y_mem
+      obtain ⟨s_mem_S'', s_mem_choose⟩ := y_mem
+      sorry
+      -- simp [s_list] at s_mem_choose
+      -- have s_spec := (s_list ⟨s, s_mem_S''⟩).choose_spec
+
+      -- simp at s_spec
 
 
+      -- rw [Set.mem_setOf] at a_mem
+      -- simp at a_mem
+      -- sorry
 
+    have S_generates: Subgroup.closure S = ⊤ := by
+      simp [S]
+      sorry
 
+    have S_finite: Set.Finite S := by
+      simp [S]
+      apply Set.Finite.sUnion
+      .
+        apply Set.finite_range
+      .
+        intro y hy
+        rw [Set.mem_range] at hy
+        obtain ⟨x, x_mem, y_eq⟩ := hy
+        sorry
 
+    have S_union_Sinv: S ∪ S⁻¹ = S := by
+      sorry
 
-
+    have S_eq_Sinv: S = S⁻¹ := by
+      simp [S]
+      sorry
 
 
 
@@ -3648,12 +3681,18 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         apply S_finite
       S_one := by
         simp [S]
+        sorry
       S_inv := by
         intro s hs
         rw [S_eq_Sinv]
         sorry
       S_dist := by
-        sorry
+        intro s hs
+        rw [Set.mem_image] at hs
+        obtain ⟨x, x_mem, s_eq⟩ := hs
+        have s_dist := S_dist x x_mem
+        rw [← s_eq]
+        exact s_dist
       S_poly_const := sorry
       S_poly_const_pos := sorry
       S_poly_deg := sorry
