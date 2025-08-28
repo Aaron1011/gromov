@@ -3585,7 +3585,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
 -- TODO - the name is bad, rename it to not include 'central'
 set_option synthInstance.maxHeartbeats 100000 in
 set_option maxHeartbeats 1000000 in
-lemma central_implies_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG): ∃ N : Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
+lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG): ∃ N : Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
   by_cases n_eq_one : n = 1
   · have fin_sin_subsingleton : Subsingleton (Fin n) := by
       rw [n_eq_one]
@@ -3727,7 +3727,7 @@ lemma central_implies_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (
 
         -- sorry
       -- The abelian subgroup of G_i.
-      let Gi' := fun i : Fin (data.k) => central_implies_virtually_abelian (data.n_i i) (data.positive_n_i i) (data.groups i) (subgroup_fg i)
+      let Gi' := fun i : Fin (data.k) => compact_lie_virtually_abelian (data.n_i i) (data.positive_n_i i) (data.groups i) (subgroup_fg i)
       -- Page 48 : Let Gᵢ := πᵢ⁻¹(πᵢ(G)′) = {g ∈ G : πᵢ(g) ∈ πᵢ(G)′}
       let inv_image : Fin (data.k) → Subgroup G := fun i : Fin (data.k) => {
         carrier := { a : G | (data.iso ⟨a, all_mem_central a⟩) i ∈ (Classical.choose (Gi' i)) },
@@ -3962,4 +3962,4 @@ decreasing_by
   · apply Prod.Lex.left
     exact data.n_i_lt i
 
-#print axioms central_implies_virtually_abelian
+#print axioms compact_lie_virtually_abelian

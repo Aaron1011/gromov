@@ -2008,7 +2008,7 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
     . infer_instance
   .
     have dim_ge_two: 2 ≤ Module.finrank ℂ (V) := by omega
-    obtain ⟨N, N_comm, N_finite_index⟩ := central_implies_virtually_abelian (Module.finrank ℂ V) (by omega) G' G'_fg
+    obtain ⟨N, N_comm, N_finite_index⟩ := compact_lie_virtually_abelian (Module.finrank ℂ V) (by omega) G' G'_fg
 
     let new_N := N
     simp [G'] at new_N
