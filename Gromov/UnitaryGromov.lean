@@ -3622,10 +3622,10 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
 
 
 
-    have nontrivial_h: ∃ h: S, ∀ z: ℂ,  h.val.val.val.val ≠ z • 1 := by
+    have nontrivial_h: ∃ h: S, ∀ z: ℂ,  h.val.val.val ≠ z • 1 := by
       by_contra!
 
-      have x_mem_closure: x ∈ Subgroup.closure S := by
+      have x_mem_closure: x.val ∈ Subgroup.closure S := by
         rw [S_generates]
         simp
 
@@ -3634,7 +3634,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       obtain ⟨l, l_mem, l_prod_eq⟩ := Submonoid.exists_list_of_mem_closure x_mem_closure
       simp_rw [S_union_Sinv] at l_mem
 
-      have list_prod_trivial: ∃ z: ℂ, l.unattach.unattach.unattach.prod = z • 1 := by
+      have list_prod_trivial: ∃ z: ℂ, l.unattach.unattach.prod = z • 1 := by
         apply List.prod_induction (p := fun a => ∃ z: ℂ, a = z • 1)
         .
           intro a b a_diag b_diag
@@ -3652,9 +3652,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
           obtain ⟨a, ha⟩ := x_mem
           rw [List.mem_unattach] at ha
           obtain ⟨b, hb⟩ := ha
-          rw [List.mem_unattach] at hb
-          obtain ⟨c, hc⟩ := hb
-          have mem_s := l_mem _ hc
+          have mem_s := l_mem _ hb
           have x_diag := this ⟨_, mem_s⟩
           exact x_diag
 
