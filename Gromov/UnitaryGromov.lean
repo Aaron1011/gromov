@@ -3480,7 +3480,7 @@ open Classical
 
 -- Theorem 3.8, case with only trivial elements in the center
 set_option synthInstance.maxHeartbeats 100000 in
-set_option maxHeartbeats 800000 in
+set_option maxHeartbeats 1000000 in
 lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG)
   (G_central_trivial : ∀ g : G, g ∈ Set.center G → ∃ z : ℂ, g.val.val = z • 1)
   (G'_central_trivial : ∀ g : (G' n (H_n_eps hn) G), g ∈ Set.center (G' n (H_n_eps hn) G) → ∃ z : ℂ, g.val.val.val = z • 1)
@@ -3741,9 +3741,12 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
           exact x_prop
       S_dist := by
         intro s hs
+        rw [Finset.coe_image] at hs
         rw [Set.mem_image] at hs
         obtain ⟨x, x_mem, s_eq⟩ := hs
-        have s_dist := S_dist x x_mem
+        have x_prop := x.property
+        simp at x_prop
+        have s_dist := S_dist x x_prop
         rw [← s_eq]
         linarith
       S_poly_const := sorry
