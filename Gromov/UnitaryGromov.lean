@@ -3688,13 +3688,23 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         simp
         sorry
 
-      S := (fun a => ⟨a.val, by (
+      S := (Finset.image (fun a => (⟨a.val.val, by (
         simp
-        sorry
-      )⟩) '' S
+        simp [G']
+        apply Subgroup.mem_closure_of_mem
+        simp
+        simp [dist]
+        rw [dist_eq_norm_sub]
+        have a_prop := a.property
+        simp at a_prop
+        have a_dist := S_dist a a_prop
+        exact a_dist
+
+      )⟩: (Subgroup.map G.subtype (G' n (H_n_eps hn) G)))) S_finite.toFinset.attach).toSet
       S_generates := by
         sorry
       S_finite := by
+        simp
         apply Set.Finite.image
         apply S_finite
       S_one := by
