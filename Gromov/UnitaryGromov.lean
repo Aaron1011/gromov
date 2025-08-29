@@ -3705,8 +3705,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         sorry
       S_finite := by
         simp
-        apply Set.Finite.image
-        apply S_finite
+        apply Set.finite_range
       S_one := by
         simp
         dsimp [S]
@@ -3723,15 +3722,23 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
           simp
       S_inv := by
         intro s hs
+        rw [Finset.coe_image]
+        rw [Finset.coe_image] at hs
         rw [Set.mem_image] at hs
         obtain ⟨x, x_mem, s_eq⟩ := hs
         rw [Set.mem_image]
-        rw [S_eq_Sinv] at x_mem
         simp at x_mem
-        use x⁻¹
-        refine ⟨x_mem, ?_⟩
-        rw [← s_eq]
-        rfl
+        use ⟨x⁻¹, ?_⟩
+        .
+          simp
+          rw [← s_eq]
+          rfl
+        . simp
+          nth_rw 1 [S_eq_Sinv]
+          simp
+          have x_prop := x.property
+          simp at x_prop
+          exact x_prop
       S_dist := by
         intro s hs
         rw [Set.mem_image] at hs
