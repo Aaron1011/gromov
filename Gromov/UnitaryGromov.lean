@@ -3480,7 +3480,7 @@ open Classical
 
 -- Theorem 3.8, case with only trivial elements in the center
 set_option synthInstance.maxHeartbeats 100000 in
-set_option maxHeartbeats 500000 in
+set_option maxHeartbeats 800000 in
 lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG)
   (G_central_trivial : ∀ g : G, g ∈ Set.center G → ∃ z : ℂ, g.val.val = z • 1)
   (G'_central_trivial : ∀ g : (G' n (H_n_eps hn) G), g ∈ Set.center (G' n (H_n_eps hn) G) → ∃ z : ℂ, g.val.val.val = z • 1)
@@ -3558,7 +3558,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       have foo := s.property
       rw [Set.Finite.mem_toFinset] at foo
       exact foo
-    )⟩).choose.unattach.toFinset.toSet
+    )⟩).choose.unattach.toFinset.toSet ∪ {1}
 
     have S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ ≤ H_n_eps hn := by
       intro s hs
@@ -3584,7 +3584,13 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       rw [CStarRing.norm_coe_unitary_mul] at s_mem_S''
       nth_rw 2 [norm_sub_rev] at s_mem_S''
       simp at s_mem_S''
-      linarith
+      . linarith
+      .
+        rename_i s_eq_one
+        simp at s_eq_one
+        simp [s_eq_one]
+        have foo := H_n_eps_pos hn
+        linarith
 
     have S_generates: Subgroup.closure S = ⊤ := by
       simp [S]
@@ -3693,7 +3699,18 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         apply S_finite
       S_one := by
         simp
-        sorry
+        dsimp [S]
+        rw [Set.mem_iUnion]
+        use ⟨1, ?_⟩
+        .
+          apply Set.mem_union_right
+          simp
+        .
+          simp
+          unfold S''
+          apply Set.mem_union_left
+          apply Set.mem_union_right
+          simp
       S_inv := by
         intro s hs
         rw [Set.mem_image] at hs
