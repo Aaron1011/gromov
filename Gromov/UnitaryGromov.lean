@@ -3560,7 +3560,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       exact foo
     )⟩).choose.unattach.toFinset.toSet ∪ {1}
 
-    have S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ ≤ H_n_eps hn := by
+    have S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ < H_n_eps hn := by
       intro s hs
       dsimp [S] at hs
       rw [Set.mem_iUnion] at hs
@@ -3584,7 +3584,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       rw [CStarRing.norm_coe_unitary_mul] at s_mem_S''
       nth_rw 2 [norm_sub_rev] at s_mem_S''
       simp at s_mem_S''
-      . linarith
+      . exact s_mem_S''
       .
         rename_i s_eq_one
         simp at s_eq_one
@@ -3728,7 +3728,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         obtain ⟨x, x_mem, s_eq⟩ := hs
         have s_dist := S_dist x x_mem
         rw [← s_eq]
-        exact s_dist
+        linarith
       S_poly_const := sorry
       S_poly_const_pos := sorry
       S_poly_deg := sorry
@@ -3739,8 +3739,14 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         simp
         rw [Set.mem_iUnion] at h_prop
         obtain ⟨y, y_mem⟩ := h_prop
-        simp at y_mem
-        sorry
+        simp [-Set.mem_inv] at y_mem
+        have h_dist := S_dist h (by simp)
+        simp [G']
+        apply Subgroup.mem_closure_of_mem
+        simp
+        simp [dist]
+        rw [dist_eq_norm_sub]
+        exact h_dist
       )⟩, by simp⟩
       h_nontrivial := by
         simpa using h_nontrivial
