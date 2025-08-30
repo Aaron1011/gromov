@@ -3752,7 +3752,11 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         rw [Subgroup.mem_center_iff]
         rw [Subgroup.mem_center_iff] at hg
         intro a
-        have foo := hg ⟨⟨a.val, sorry⟩, sorry⟩
+        have foo := hg ⟨⟨a.val, by (
+          simp
+        )⟩, by(
+          simp
+        )⟩
         simp at foo
         simp [Subtype.ext_iff]
         rw [Subtype.ext_iff] at foo
