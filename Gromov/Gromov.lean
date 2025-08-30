@@ -5383,6 +5383,7 @@ lemma laplace_zero_iff_zero (g: (Lp ℝ 2 volume (α := G))) (eq_zero: Laplace g
       simp
 
     )) a (by simpa using ha)
+    -- Use `MeasureTheory.memLp_const_iff_enorm` instead
     have g_const_zero := MeasureTheory.memLp_const_iff (p := 2) (by simp) (by simp) (c := g a) (μ := volume (α := G))
     apply_fun (fun x => Complex.re ∘ x) at g_const
     simp [Function.comp_def] at g_const
