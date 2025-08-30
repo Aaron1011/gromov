@@ -3642,12 +3642,37 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
           have foo := H_n_eps_pos hn
           linarith
 
-    have S_generates: Subgroup.closure S = ⊤ := by
-      dsimp [S, pre_S]
-      simp_rw [Subgroup.closure_union]
-      rw [Subgroup.closure_iUnion]
-      simp
-      sorry
+    have subsset_closure_top (A B: Set G) (hA: Subgroup.closure A = ⊤) (a_subset: A ⊆ Subgroup.closure B): Subgroup.closure B = ⊤ := by
+      apply Subgroup.closure_mono at a_subset
+      rw [hA] at a_subset
+      simp at a_subset
+      exact a_subset
+    -- have S_generates: Subgroup.closure S = ⊤ := by
+    --   dsimp [S, pre_S]
+    --   simp_rw [Subgroup.closure_union]
+    --   conv =>
+    --     lhs
+    --     lhs
+    --     lhs
+    --     equals ⊤ =>
+
+    --       --have foo := ⨆ (i: { x // x ∈ S''_finite.toFinset }) i = ⊤ := by
+    --       --  sorry
+    --       -- { x // x ∈ S''_finite.toFinset }
+    --       --have iunion_s_eq_top:
+
+    --       apply subsset_closure_top (A := ((G' n (H_n_eps hn) G)).subtype '' S'')
+    --       .
+    --         rw [← MonoidHom.map_closure]
+    --         rw [S''_generates]
+    --         sorry
+
+
+    --       . intro a ha
+    --         simp at ha
+    --       sorry
+    --   sorry
+    --   --simp
 
     have S_finite: Set.Finite S := by
       dsimp [S]
@@ -3777,6 +3802,13 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         exact a_dist
       )⟩: (Subgroup.map G.subtype (G' n (H_n_eps hn) G)))) S_finite.toFinset.attach).toSet
       S_generates := by
+        simp
+        ext g
+        simp
+        have g_prop := g.property
+        rw [Subgroup.mem_map] at g_prop
+        rw [Subgroup.ext_iff] at S''_generates
+
         sorry
       S_finite := by
         simp
