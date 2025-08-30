@@ -3522,29 +3522,25 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
     obtain ⟨S', S'_generates, S'_finite⟩ := G'_fg
 
     -- Add identity and inverses to S' to make things easier
-    let S'' := S' ∪ {1} ∪ S'⁻¹
+    let S'' := S'
     have S''_finite: Set.Finite S'' := by
       dsimp [S'']
-      rw [Set.finite_union]
-      rw [Set.finite_union]
-      simp [S'_finite]
+      apply S'_finite
 
-    have S''_union_S''inv: S'' ∪ S''⁻¹ = S'' := by
-      dsimp [S'']
-      simp [-Set.union_singleton]
-      rw [Set.union_assoc]
-      apply Set.subset_union_left
+    -- have S''_union_S''inv: S'' ∪ S''⁻¹ = S'' := by
+    --   dsimp [S'']
+    --   simp [-Set.union_singleton]
+    --   rw [Set.union_assoc]
+    --   apply Set.subset_union_left
 
-    have S''_eq_S''inv: S'' = S''⁻¹ := by
-      rw [← S''_union_S''inv]
-      simp
-      rw [Set.union_comm]
+    -- have S''_eq_S''inv: S'' = S''⁻¹ := by
+    --   rw [← S''_union_S''inv]
+    --   simp
+    --   rw [Set.union_comm]
 
 
     have S''_generates: Subgroup.closure S'' = ⊤ := by
       dsimp [S'']
-      rw [Subgroup.closure_union]
-      rw [Subgroup.closure_union]
       simp [S'_generates]
 
 
@@ -3565,162 +3561,222 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       rw [Set.Finite.mem_toFinset] at foo
       exact foo
     )⟩).choose.unattach.toFinset.toSet ∪ {1}
-    let S := pre_S ∪ pre_S⁻¹
+    let S := pre_S ∪ pre_S⁻¹ ∪ {1}
 
     have S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ < H_n_eps hn := by
       intro s hs
       dsimp [S] at hs
-      rw [Set.mem_iUnion] at hs
-      obtain ⟨y, y_mem⟩ := hs
-      simp only [List.coe_toFinset, List.mem_unattach, Set.mem_union, Set.mem_inv,
-        Set.mem_setOf_eq] at y_mem
-      obtain ⟨s_mem_S'', s_mem_choose⟩ := y_mem
-      simp at s_mem_S''
-      simp [dist] at s_mem_S''
-      rw [dist_eq_norm_sub] at s_mem_S''
-      rw [dist_eq_norm_sub] at s_mem_S''
-      conv at s_mem_S'' =>
-        right
-        arg 1
-        arg 1
-        equals (star s.val.val * 1 - (star s.val.val) * s.val.val) =>
-          simp
 
-      rw [← mul_sub] at s_mem_S''
-      rw [← unitary.coe_star] at s_mem_S''
-      rw [CStarRing.norm_coe_unitary_mul] at s_mem_S''
-      nth_rw 2 [norm_sub_rev] at s_mem_S''
-      simp at s_mem_S''
-      . exact s_mem_S''
+      rw [Set.union_assoc] at hs
+      cases hs
+      . rename_i s_mem
+        dsimp [pre_S] at s_mem
+        rw [Set.mem_iUnion] at s_mem
+        obtain ⟨y, y_mem⟩ := s_mem
+        simp only [List.coe_toFinset, List.mem_unattach, Set.mem_union, Set.mem_inv,
+          Set.mem_setOf_eq] at y_mem
+        obtain ⟨s_mem_S'', s_mem_choose⟩ := y_mem
+        simp at s_mem_S''
+        simp [dist] at s_mem_S''
+        rw [dist_eq_norm_sub] at s_mem_S''
+        rw [dist_eq_norm_sub] at s_mem_S''
+        conv at s_mem_S'' =>
+          right
+          arg 1
+          arg 1
+          equals (star s.val.val * 1 - (star s.val.val) * s.val.val) =>
+            simp
+
+        rw [← mul_sub] at s_mem_S''
+        rw [← unitary.coe_star] at s_mem_S''
+        rw [CStarRing.norm_coe_unitary_mul] at s_mem_S''
+        nth_rw 2 [norm_sub_rev] at s_mem_S''
+        simp at s_mem_S''
+        . exact s_mem_S''
+        .
+          rename_i s_eq_one
+          simp at s_eq_one
+          simp [s_eq_one]
+          have foo := H_n_eps_pos hn
+          linarith
       .
-        rename_i s_eq_one
-        simp at s_eq_one
-        simp [s_eq_one]
-        have foo := H_n_eps_pos hn
-        linarith
+        -- TODO - deduplicate most of this with the above case
+        rename_i s_mem
+        rw [Set.union_comm] at s_mem
+        cases s_mem
+        . rename_i s_mem_one
+          simp at s_mem_one
+          simp [s_mem_one]
+          apply H_n_eps_pos
+
+        rename_i s_mem
+        dsimp [pre_S] at s_mem
+        rw [Set.iUnion_inv] at s_mem
+        rw [Set.mem_iUnion] at s_mem
+        obtain ⟨y, y_mem⟩ := s_mem
+        simp only [List.coe_toFinset, List.mem_unattach, Set.mem_union, Set.mem_inv,
+          Set.mem_setOf_eq] at y_mem
+        obtain ⟨s_mem_S'', s_mem_choose⟩ := y_mem
+        simp at s_mem_S''
+        simp [dist] at s_mem_S''
+        rw [dist_eq_norm_sub] at s_mem_S''
+        rw [dist_eq_norm_sub] at s_mem_S''
+        rw [or_comm] at s_mem_S''
+        conv at s_mem_S'' =>
+          right
+          arg 1
+          arg 1
+          equals (star s.val.val * 1 - (star s.val.val) * s.val.val) =>
+            simp
+
+        rw [← mul_sub] at s_mem_S''
+        rw [← unitary.coe_star] at s_mem_S''
+        rw [CStarRing.norm_coe_unitary_mul] at s_mem_S''
+        nth_rw 2 [norm_sub_rev] at s_mem_S''
+        simp at s_mem_S''
+        . exact s_mem_S''
+        .
+          rename_i s_eq_one
+          simp at s_eq_one
+          simp [s_eq_one]
+          have foo := H_n_eps_pos hn
+          linarith
 
     have S_generates: Subgroup.closure S = ⊤ := by
-      dsimp [S]
-      rw [Subgroup.closure_iUnion]
+      dsimp [S, pre_S]
       simp_rw [Subgroup.closure_union]
+      rw [Subgroup.closure_iUnion]
       simp
       sorry
 
     have S_finite: Set.Finite S := by
       dsimp [S]
-      apply Set.Finite.sUnion
+      apply Set.Finite.union
       .
-        apply Set.finite_range
-      .
-        intro y hy
-        rw [Set.mem_range] at hy
-        obtain ⟨x, x_mem, y_eq⟩ := hy
-        apply Set.Finite.union
-        . apply Finset.finite_toSet
-        . simp
+        simp
+        dsimp [pre_S]
+        apply Set.Finite.sUnion
+        .
+          apply Set.finite_range
+        .
+          intro y hy
+          rw [Set.mem_range] at hy
+          obtain ⟨x, x_mem, y_eq⟩ := hy
+          apply Set.Finite.union
+          . apply Finset.finite_toSet
+          . simp
+      . simp
     --let extract_body {A B: Type*} {b: B} {f: A → B} (f_eq: f = fun _ => b) := b
-    let my_cast {T: Type*} {i: (G' n (H_n_eps hn) G)} (f: (i ∈ S''_finite.toFinset) → T): (i ∈ S''_finite.toFinset⁻¹) → T := fun hi => f (by
-      simp
-      rw [S''_eq_S''inv]
-      simpa using hi
-    )
+    -- let my_cast {T: Type*} {i: (G' n (H_n_eps hn) G)} (f: (i ∈ S''_finite.toFinset) → T): (i ∈ S''_finite.toFinset⁻¹) → T := fun hi => f (by
+    --   simp
+    --   rw [S''_eq_S''inv]
+    --   simpa using hi
+    -- )
 
-    have my_cast_eq {T: Type*} {i: (G' n (H_n_eps hn) G)} (f: (i ∈ S''_finite.toFinset) → T): f = (fun (hi: i ∈ S''_finite.toFinset) => f (by
-      simp
-      rw [S''_eq_S''inv]
-      sorry
-    )) := by
-      rfl
+    -- have my_cast_eq {T: Type*} {i: (G' n (H_n_eps hn) G)} (f: (i ∈ S''_finite.toFinset) → T): f = (fun (hi: i ∈ S''_finite.toFinset) => f (by
+    --   simp
+    --   rw [S''_eq_S''inv]
+    --   sorry
+    -- )) := by
+    --   rfl
+
+    -- have S_union_Sinv: S ∪ S⁻¹ = S := by
+    --   unfold S
+    --   ext a
+    --   refine ⟨?_, ?_⟩
+    --   . intro a_mem
+    --     rw [Set.mem_union] at a_mem
+    --     cases a_mem
+    --     . rename_i mem_base
+    --       apply mem_base
+    --     .
+    --       rename_i mem_inv
+    --       rw [Set.iUnion_inv] at mem_inv
+    --       rw [Set.mem_iUnion] at mem_inv
+    --       obtain ⟨y, y_mem⟩ := mem_inv
+    --       rw [Set.union_inv] at y_mem
+    --       cases y_mem
+    --       .
+    --         rename_i mem_base
+    --         simp at mem_base
+    --         rw [Set.mem_iUnion]
+    --         use ⟨y.val⁻¹, by (
+    --           simp
+    --           nth_rw 1 [S''_eq_S''inv]
+    --           simp
+    --           have foo := y.property
+    --           rw [Set.Finite.mem_toFinset] at foo
+    --           exact foo
+    --         )⟩
+    --         apply Set.mem_union_left
+    --         simp
+    --         obtain ⟨dist_le, a_mem⟩ := mem_base
+    --         rw [or_comm] at dist_le
+    --         use dist_le
+    --         apply mem_list_choose at a_mem
+    --         obtain ⟨l, a_mem, l_mem⟩ := a_mem
+
+
+
+    --         simp
+    --         simp
+    --         obtain ⟨dist_le, a_mem⟩ := mem_base
+    --         use a.val.val
+    --         use ?_
+    --         . use ?_
+    --           .
+    --             simp
+    --             use ?_
+    --             . use ?_
+    --             .
+    --               simp [G']
+    --               apply Subgroup.mem_closure_of_mem
+    --               simp
+
+    --           . simp
+    --         . simp
+    --       . rename_i mem_one
+    --         simp at mem_one
+    --         rw [Set.mem_iUnion]
+    --         use ⟨1, ?_⟩
+    --         . apply Set.mem_union_right
+    --           simpa using mem_one
+    --         . simp [S'']
+
+    --   . intro ha
+    --     apply Set.mem_union_left
+    --     apply ha
+    --   rw [Set.iUnion_inv]
+    --   simp_rw [Set.union_inv]
+    --   simp only [Set.inv_singleton]
+    --   simp_rw [inv_one]
+    --   nth_rw 2 [Set.iUnion_subtype]
+    --   conv =>
+    --     lhs
+    --     rhs
+    --     arg 1
+    --     intro i
+    --     arg 1
+    --     --rw [S''_eq_S''inv]
+
+
+
+    --   sorry
+
+    -- have S_eq_Sinv: S = S⁻¹ := by
+    --   simp [S]
+    --   sorry
+
 
     have S_union_Sinv: S ∪ S⁻¹ = S := by
-      unfold S
-      ext a
-      refine ⟨?_, ?_⟩
-      . intro a_mem
-        rw [Set.mem_union] at a_mem
-        cases a_mem
-        . rename_i mem_base
-          apply mem_base
-        .
-          rename_i mem_inv
-          rw [Set.iUnion_inv] at mem_inv
-          rw [Set.mem_iUnion] at mem_inv
-          obtain ⟨y, y_mem⟩ := mem_inv
-          rw [Set.union_inv] at y_mem
-          cases y_mem
-          .
-            rename_i mem_base
-            simp at mem_base
-            rw [Set.mem_iUnion]
-            use ⟨y.val⁻¹, by (
-              simp
-              nth_rw 1 [S''_eq_S''inv]
-              simp
-              have foo := y.property
-              rw [Set.Finite.mem_toFinset] at foo
-              exact foo
-            )⟩
-            apply Set.mem_union_left
-            simp
-            obtain ⟨dist_le, a_mem⟩ := mem_base
-            rw [or_comm] at dist_le
-            use dist_le
-            apply mem_list_choose at a_mem
-            obtain ⟨l, a_mem, l_mem⟩ := a_mem
-
-
-
-            simp
-            simp
-            obtain ⟨dist_le, a_mem⟩ := mem_base
-            use a.val.val
-            use ?_
-            . use ?_
-              .
-                simp
-                use ?_
-                . use ?_
-                .
-                  simp [G']
-                  apply Subgroup.mem_closure_of_mem
-                  simp
-
-              . simp
-            . simp
-          . rename_i mem_one
-            simp at mem_one
-            rw [Set.mem_iUnion]
-            use ⟨1, ?_⟩
-            . apply Set.mem_union_right
-              simpa using mem_one
-            . simp [S'']
-
-      . intro ha
-        apply Set.mem_union_left
-        apply ha
-      rw [Set.iUnion_inv]
-      simp_rw [Set.union_inv]
-      simp only [Set.inv_singleton]
-      simp_rw [inv_one]
-      nth_rw 2 [Set.iUnion_subtype]
-      conv =>
-        lhs
-        rhs
-        arg 1
-        intro i
-        arg 1
-        --rw [S''_eq_S''inv]
-
-
-
-      sorry
+      dsimp [S]
+      simp [-Set.union_singleton]
+      grind
 
     have S_eq_Sinv: S = S⁻¹ := by
-      simp [S]
-      sorry
-
-
-
+      rw [← S_union_Sinv]
+      simp
+      rw [Set.union_comm]
 
 
 
@@ -3801,10 +3857,9 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         simp [dist]
         rw [dist_eq_norm_sub]
         have a_prop := a.property
-        simp at a_prop
+        rw [Set.Finite.mem_toFinset] at a_prop
         have a_dist := S_dist a a_prop
         exact a_dist
-
       )⟩: (Subgroup.map G.subtype (G' n (H_n_eps hn) G)))) S_finite.toFinset.attach).toSet
       S_generates := by
         sorry
@@ -3814,19 +3869,8 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       S_one := by
         simp
         dsimp [S]
-        apply Set.mem_union_left
-        dsimp [pre_S]
-        rw [Set.mem_iUnion]
-        use ⟨1, ?_⟩
-        .
-          apply Set.mem_union_right
-          simp
-        .
-          simp
-          unfold S''
-          apply Set.mem_union_left
-          apply Set.mem_union_right
-          simp
+        apply Set.mem_union_right
+        simp
       S_inv := by
         intro s hs
         rw [Finset.coe_image]
@@ -3834,17 +3878,17 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         rw [Set.mem_image] at hs
         obtain ⟨x, x_mem, s_eq⟩ := hs
         rw [Set.mem_image]
-        simp at x_mem
         use ⟨x⁻¹, ?_⟩
         .
           simp
           rw [← s_eq]
           rfl
         . simp
+
           nth_rw 1 [S_eq_Sinv]
           simp
           have x_prop := x.property
-          simp at x_prop
+          rw [Set.Finite.mem_toFinset] at x_prop
           exact x_prop
       S_dist := by
         intro s hs
@@ -3852,7 +3896,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         rw [Set.mem_image] at hs
         obtain ⟨x, x_mem, s_eq⟩ := hs
         have x_prop := x.property
-        simp at x_prop
+        rw [Set.Finite.mem_toFinset] at x_prop
         have s_dist := S_dist x x_prop
         rw [← s_eq]
         linarith
@@ -3864,16 +3908,39 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         have h_prop := h.property
         simp only [S] at h_prop
         simp
-        rw [Set.mem_iUnion] at h_prop
-        obtain ⟨y, y_mem⟩ := h_prop
-        simp [-Set.mem_inv] at y_mem
-        have h_dist := S_dist h (by simp)
-        simp [G']
-        apply Subgroup.mem_closure_of_mem
-        simp
-        simp [dist]
-        rw [dist_eq_norm_sub]
-        exact h_dist
+        cases h_prop
+        . rename_i h_mem
+          . cases h_mem
+            . rename_i h_prop
+              dsimp [pre_S] at h_prop
+              rw [Set.mem_iUnion] at h_prop
+              obtain ⟨y, y_mem⟩ := h_prop
+              simp [-Set.mem_inv] at y_mem
+              have h_dist := S_dist h (by simp)
+              simp [G']
+              apply Subgroup.mem_closure_of_mem
+              simp
+              simp [dist]
+              rw [dist_eq_norm_sub]
+              exact h_dist
+            . rename_i h_prop
+              -- TODo: deduplicate
+              dsimp [pre_S] at h_prop
+              simp_rw [Set.iUnion_inv] at h_prop
+              rw [Set.mem_iUnion] at h_prop
+              obtain ⟨y, y_mem⟩ := h_prop
+              simp [-Set.mem_inv] at y_mem
+              have h_dist := S_dist h (by simp)
+              simp [G']
+              apply Subgroup.mem_closure_of_mem
+              simp
+              simp [dist]
+              rw [dist_eq_norm_sub]
+              exact h_dist
+        . rename_i h_mem
+          simp at h_mem
+          simp [G']
+          simp [h_mem]
       )⟩, by simp⟩
       h_nontrivial := by
         simpa using h_nontrivial
