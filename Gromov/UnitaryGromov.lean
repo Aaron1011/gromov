@@ -3702,42 +3702,17 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       simp
       rw [Set.union_comm]
 
+    have S_generates: Subgroup.closure S = (G' n (H_n_eps hn) G) := by
+      sorry
+
 
 
     have nontrivial_h: ∃ h: S, ∀ z: ℂ,  h.val.val.val ≠ z • 1 := by
       by_contra!
 
       have x_mem_closure: x.val ∈ Subgroup.closure S := by
-        unfold S
-        rw [Subgroup.closure_union]
+        rw [S_generates]
         simp
-        rw [Subgroup.closure_union]
-        simp
-        have G'_subset_closure: (G' n (H_n_eps hn) G).carrier ⊆ (Subgroup.closure pre_S) := by
-          intro g hg
-
-          have foo := Submonoid.exists_list_of_mem_closure (s := S'' ∪ (S'')⁻¹) (x := x)
-          rw [← Subgroup.closure_toSubmonoid _] at foo
-          rw [S''_generates] at foo
-          specialize foo (by simp)
-
-          obtain ⟨l, l_lem, l_prod_eq⟩ := foo
-
-
-          have x_mem_S''_closure: x ∈ Subgroup.closure S'' := by
-            rw [S''_generates]
-            simp
-
-          sorry
-
-
-        have foo := Subgroup.closure_mono G'_subset_closure
-        rw [Subgroup.closure_eq] at foo
-        have x_mem_closure := Subgroup.mem_closure_of_mem (x.property)
-        apply foo x_mem_closure
-
-
-
 
 
       rw [← Subgroup.mem_toSubmonoid] at x_mem_closure
