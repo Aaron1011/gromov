@@ -3708,8 +3708,9 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       by_contra!
 
       have x_mem_closure: x.val ∈ Subgroup.closure S := by
-        rw [S_generates]
-        simp
+        --rw [S_generates]
+        --simp
+        sorry
 
       rw [← Subgroup.mem_toSubmonoid] at x_mem_closure
       rw [Subgroup.closure_toSubmonoid] at x_mem_closure
