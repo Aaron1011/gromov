@@ -3478,6 +3478,11 @@ lemma mem_closure_prod_list {G: Type*} [Group G] (S: Set G) (S_eq_Sinv: S = S⁻
 
 open Classical
 
+lemma mem_list_choose {T: Type*} (p: List T → Prop) {h: ∃ l, p l} {x: T} (hx: x ∈ h.choose): ∃ l, x ∈ l ∧ p l := by
+  use h.choose
+  refine ⟨hx, h.choose_spec⟩
+
+
 -- Theorem 3.8, case with only trivial elements in the center
 set_option synthInstance.maxHeartbeats 100000 in
 set_option maxHeartbeats 1000000 in
@@ -3553,12 +3558,14 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       simp [s_prop]
     ))
 
-    -- TOOD - this needs to be in terms of the closure of the ball from G'
-    let S := ⋃ s : S''_finite.toFinset, (s_list ⟨s, by (
+    -- We may need to manually union this with S⁻¹, since the inverse of the produces
+    -- could be chosen to be built with different elements (not the inverses of the ones in the original list)
+    let pre_S := ⋃ s : S''_finite.toFinset, (s_list ⟨s, by (
       have foo := s.property
       rw [Set.Finite.mem_toFinset] at foo
       exact foo
     )⟩).choose.unattach.toFinset.toSet ∪ {1}
+    let S := pre_S ∪ pre_S⁻¹
 
     have S_dist: ∀ s ∈ S, ‖s.val.val - 1‖ < H_n_eps hn := by
       intro s hs
@@ -3593,11 +3600,14 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         linarith
 
     have S_generates: Subgroup.closure S = ⊤ := by
-      simp [S]
+      dsimp [S]
+      rw [Subgroup.closure_iUnion]
+      simp_rw [Subgroup.closure_union]
+      simp
       sorry
 
     have S_finite: Set.Finite S := by
-      simp [S]
+      dsimp [S]
       apply Set.Finite.sUnion
       .
         apply Set.finite_range
@@ -3605,9 +3615,104 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         intro y hy
         rw [Set.mem_range] at hy
         obtain ⟨x, x_mem, y_eq⟩ := hy
-        sorry
+        apply Set.Finite.union
+        . apply Finset.finite_toSet
+        . simp
+    --let extract_body {A B: Type*} {b: B} {f: A → B} (f_eq: f = fun _ => b) := b
+    let my_cast {T: Type*} {i: (G' n (H_n_eps hn) G)} (f: (i ∈ S''_finite.toFinset) → T): (i ∈ S''_finite.toFinset⁻¹) → T := fun hi => f (by
+      simp
+      rw [S''_eq_S''inv]
+      simpa using hi
+    )
+
+    have my_cast_eq {T: Type*} {i: (G' n (H_n_eps hn) G)} (f: (i ∈ S''_finite.toFinset) → T): f = (fun (hi: i ∈ S''_finite.toFinset) => f (by
+      simp
+      rw [S''_eq_S''inv]
+      sorry
+    )) := by
+      rfl
 
     have S_union_Sinv: S ∪ S⁻¹ = S := by
+      unfold S
+      ext a
+      refine ⟨?_, ?_⟩
+      . intro a_mem
+        rw [Set.mem_union] at a_mem
+        cases a_mem
+        . rename_i mem_base
+          apply mem_base
+        .
+          rename_i mem_inv
+          rw [Set.iUnion_inv] at mem_inv
+          rw [Set.mem_iUnion] at mem_inv
+          obtain ⟨y, y_mem⟩ := mem_inv
+          rw [Set.union_inv] at y_mem
+          cases y_mem
+          .
+            rename_i mem_base
+            simp at mem_base
+            rw [Set.mem_iUnion]
+            use ⟨y.val⁻¹, by (
+              simp
+              nth_rw 1 [S''_eq_S''inv]
+              simp
+              have foo := y.property
+              rw [Set.Finite.mem_toFinset] at foo
+              exact foo
+            )⟩
+            apply Set.mem_union_left
+            simp
+            obtain ⟨dist_le, a_mem⟩ := mem_base
+            rw [or_comm] at dist_le
+            use dist_le
+            apply mem_list_choose at a_mem
+            obtain ⟨l, a_mem, l_mem⟩ := a_mem
+
+
+
+            simp
+            simp
+            obtain ⟨dist_le, a_mem⟩ := mem_base
+            use a.val.val
+            use ?_
+            . use ?_
+              .
+                simp
+                use ?_
+                . use ?_
+                .
+                  simp [G']
+                  apply Subgroup.mem_closure_of_mem
+                  simp
+
+              . simp
+            . simp
+          . rename_i mem_one
+            simp at mem_one
+            rw [Set.mem_iUnion]
+            use ⟨1, ?_⟩
+            . apply Set.mem_union_right
+              simpa using mem_one
+            . simp [S'']
+
+      . intro ha
+        apply Set.mem_union_left
+        apply ha
+      rw [Set.iUnion_inv]
+      simp_rw [Set.union_inv]
+      simp only [Set.inv_singleton]
+      simp_rw [inv_one]
+      nth_rw 2 [Set.iUnion_subtype]
+      conv =>
+        lhs
+        rhs
+        arg 1
+        intro i
+        arg 1
+        --rw [S''_eq_S''inv]
+
+
+
       sorry
 
     have S_eq_Sinv: S = S⁻¹ := by
@@ -3709,6 +3814,8 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       S_one := by
         simp
         dsimp [S]
+        apply Set.mem_union_left
+        dsimp [pre_S]
         rw [Set.mem_iUnion]
         use ⟨1, ?_⟩
         .
