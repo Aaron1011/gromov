@@ -3811,7 +3811,18 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
           apply Set.mem_union_left
           simpa using b_mem
         . rename_i x_mem_inv
-          sorry
+          apply Subgroup.mem_iSup_of_mem (i := ⟨⟨x, x_mem_g'⟩, (by simp; apply x_mem_inv)⟩)
+          have my_spec := (s_list  ⟨⟨x, x_mem_g'⟩, x_mem_inv⟩).choose_spec
+          simp at my_spec
+          conv =>
+            arg 2
+            rw [← my_spec]
+
+          apply Subgroup.list_prod_mem
+          intro b b_mem
+          apply Subgroup.mem_closure_of_mem
+          apply Set.mem_union_left
+          simpa using b_mem
 
 
         -- intro ha
