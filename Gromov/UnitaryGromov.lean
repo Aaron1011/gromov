@@ -4058,13 +4058,12 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
 
               .
                 simp
-                simp [G']
-                apply Subgroup.mem_closure_of_mem
-                simp [dist]
-                rw [dist_eq_norm_sub]
-                apply S_dist
-                simp
-
+                rw [Subgroup.mem_map] at a_val_mem
+                obtain ⟨b, b_mem, a_eq_b⟩ := a_val_mem
+                have b_prop := b.property
+                simp at a_eq_b
+                rw [← a_eq_b]
+                apply b_prop
               -- rw [Subgroup.mem_map] at ha
               -- obtain ⟨b, b_mem, a_eq_b⟩ := ha
               -- have b_prop := b.property
