@@ -4221,8 +4221,7 @@ open scoped Pointwise in
 structure SPolyData {n : ℕ} (hn : n ≠ 0) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) where
   S: Set G
   S_finite: Set.Finite S
-  G_FG: G.FG
-  S_eq: G_FG.choose = Subtype.val '' S
+  S_generates: Subgroup.closure S = ⊤
   S_poly_const: ℕ
   S_poly_const_pos: 0 ≠ S_poly_const
   S_poly_deg: ℕ
@@ -4381,12 +4380,50 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
         -- sorry
       -- The abelian subgroup of G_i.
       -- TODO - we need to construct a generating set for the smaller subgroup
-      have new_S := fun i : Fin (data.k) => (fun a: G => data.iso (⟨a, all_mem_central a⟩ : (Subgroup.centralizer {g})) i) '' S_data.S
+      -- TODO - is there existing API for this in mathlib?
+      let g_to_central: G ≃* (Subgroup.centralizer {g}) := {
+        toFun := fun a => ⟨a, all_mem_central a⟩,
+        invFun := fun a => a.val
+        map_mul' := by
+          intro a b
+          simp
+        left_inv := by
+          intro a
+          simp
+        right_inv := by
+          intro a
+          simp
+      }
+      let new_S := fun i: Fin (data.k) => (Pi.evalMonoidHom _ i) '' (data.iso.toMonoidHom '' (g_to_central.toMonoidHom '' S_data.S))
+      --let new_S := fun i : Fin (data.k) => (fun a: G => data.iso (⟨a, all_mem_central a⟩ : (Subgroup.centralizer {g})) i) '' S_data.S
       let new_S_data := fun i : Fin (data.k) => ({
         S := new_S i,
-        S_finite := sorry
-        G_FG := sorry
-        S_eq := sorry
+        S_finite := by
+          simp [new_S]
+          apply Set.Finite.image
+          apply Set.Finite.image
+          apply Set.Finite.image
+          apply S_data.S_finite
+        S_generates := by
+          rw [← MonoidHom.map_closure]
+          beta_reduce
+          rw [← MonoidHom.map_closure]
+          rw [← MonoidHom.map_closure]
+          rw [S_data.S_generates]
+          simp
+          apply Subgroup.map_top_of_surjective
+          intro a
+          simp
+          use (fun k => if h_eq: i = k then ⟨⟨a.val.val.reindex (l := Fin (data.n_i k)) (o := Fin (data.n_i k)) (finCongr (by rw [h_eq])) (finCongr (by rw [h_eq])), ?_⟩, ?_⟩ else 1)
+          . simp
+          .
+            simp
+            sorry
+          .
+            simp
+            have a_prop := a.property
+            sorry
+
         S_poly_const := S_data.S_poly_const
         S_poly_const_pos := S_data.S_poly_const_pos
         S_poly_deg := S_data.S_poly_deg
