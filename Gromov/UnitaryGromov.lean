@@ -3959,8 +3959,20 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
             equals (G' n (H_n_eps hn) G) =>
               ext a
               rw [Subgroup.mem_map]
-              simp
-              sorry
+              refine ⟨?_, ?_⟩
+              .
+                intro exists_x
+                obtain ⟨x, x_mem, a_eq⟩ := exists_x
+                simp at a_eq
+                have x_prop := x.property
+                rw [Subgroup.mem_map] at x_prop
+                obtain ⟨y, y_mem, x_eq_y⟩ := x_prop
+                rw [← a_eq]
+                conv =>
+                  arg 2
+                  simp [← x_eq_y]
+                exact y_mem
+              . sorry
 
           conv =>
             rhs
@@ -3972,12 +3984,18 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
             intro ha
             simp at ha
             simp
-            obtain ⟨b, b_mem, a_mem_g, other⟩ := ha
+            obtain ⟨b, b_mem, a_mem_g, b_mem_closure, a_eq_b⟩ := ha
             use ?_
-            . sorry
+            . conv =>
+                arg 2
+                simp only [← a_eq_b]
+
+              simp at b_mem_closure
+              simp
             . sorry
           . intro ha
             simp
+            sorry
       S_finite := by
         simp
         apply Set.finite_range
