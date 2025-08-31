@@ -3485,7 +3485,7 @@ lemma mem_list_choose {T: Type*} (p: List T → Prop) {h: ∃ l, p l} {x: T} (hx
 
 -- Theorem 3.8, case with only trivial elements in the center
 set_option synthInstance.maxHeartbeats 100000 in
-set_option maxHeartbeats 1000000 in
+set_option maxHeartbeats 1200000 in
 lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG)
   (G_central_trivial : ∀ g : G, g ∈ Set.center G → ∃ z : ℂ, g.val.val = z • 1)
   (G'_central_trivial : ∀ g : (G' n (H_n_eps hn) G), g ∈ Set.center (G' n (H_n_eps hn) G) → ∃ z : ℂ, g.val.val.val = z • 1)
@@ -4031,6 +4031,16 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
                 refine ⟨?_, ?_⟩
                 .
 
+                  nth_rw 1 [Set.mem_setOf]
+                  intro p p_mem
+                  apply Set.mem_union_left
+                  rw [List.mem_map] at p_mem
+                  rw [Set.mem_range]
+                  obtain ⟨z, z_mem, z_eq_p⟩ := p_mem
+                  use ⟨z, by simp⟩
+                  rw [← z_eq_p]
+                  rfl
+
                   sorry
                 .
                   conv =>
@@ -4063,7 +4073,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
                 have b_prop := b.property
                 simp at a_eq_b
                 rw [← a_eq_b]
-                apply b_prop
+                apply b_mem
               -- rw [Subgroup.mem_map] at ha
               -- obtain ⟨b, b_mem, a_eq_b⟩ := ha
               -- have b_prop := b.property
