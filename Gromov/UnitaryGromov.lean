@@ -4213,11 +4213,27 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
 
 end HnEpsData
 
+open scoped Finset
+open scoped Pointwise
+
+
+open scoped Pointwise in
+structure SPolyData {n : ℕ} (hn : n ≠ 0) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) where
+  S: Set G
+  S_finite: Set.Finite S
+  G_FG: G.FG
+  S_eq: G_FG.choose = Subtype.val '' S
+  S_poly_const: ℕ
+  S_poly_const_pos: 0 ≠ S_poly_const
+  S_poly_deg: ℕ
+  S_poly: ∀ r: ℕ, #(S_finite.toFinset ^ r) ≤ S_poly_const * (r ^ S_poly_deg)
+
 -- Helper for theorem 3.8
 -- TODO - the name is bad, rename it to not include 'central'
 set_option synthInstance.maxHeartbeats 100000 in
 set_option maxHeartbeats 2000000 in
-lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG): ∃ N : Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
+lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG)
+  (S_data: SPolyData hn G): ∃ N : Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
 
   have _ : HnEpsData := {
     degree := 1
@@ -4259,7 +4275,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           }
       }
     · exact Subgroup.instFiniteIndexTop
-  · have nontrivial_centrer_implies_virtual (G : Subgroup ↥(Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG) (nontrivial_central : ∃ g : G, (∀ z : ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G): ∃ N : Subgroup G, IsMulCommutative ↥N ∧ N.FiniteIndex := by
+  · have nontrivial_centrer_implies_virtual (G : Subgroup ↥(Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG) (S_data: SPolyData hn G) (nontrivial_central : ∃ g : G, (∀ z : ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G): ∃ N : Subgroup G, IsMulCommutative ↥N ∧ N.FiniteIndex := by
       obtain ⟨g, g_not_multiple_I, g_central⟩ := nontrivial_central
       -- have G_subset_centralizer :  ⊆ (Subgroup.centralizer {g}).carrier := by
       --   intro a ha
@@ -4288,7 +4304,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       -- TODO - PR this to mathlib
       have subgroup_fg : ∀ i : Fin (data.k), (data.groups i).FG := by
         intro i
-        have iso := data.iso
+
         have centralizer_fg : (Subgroup.centralizer {g}).FG := by
           conv =>
             arg 1
@@ -4364,7 +4380,20 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
         -- sorry
       -- The abelian subgroup of G_i.
-      let Gi' := fun i : Fin (data.k) => compact_lie_virtually_abelian (data.n_i i) (data.positive_n_i i) (data.groups i) (subgroup_fg i)
+      -- TODO - we need to construct a generating set for the smaller subgroup
+      have new_S := fun i : Fin (data.k) => (fun a: G => data.iso (⟨a, all_mem_central a⟩ : (Subgroup.centralizer {g})) i) '' S_data.S
+      let new_S_data := fun i : Fin (data.k) => ({
+        S := new_S i,
+        S_finite := sorry
+        G_FG := sorry
+        S_eq := sorry
+        S_poly_const := S_data.S_poly_const
+        S_poly_const_pos := S_data.S_poly_const_pos
+        S_poly_deg := S_data.S_poly_deg
+        S_poly := sorry
+      } : SPolyData (n := (data.n_i i)) (by sorry) ((data.groups i) ))
+
+      let Gi' := fun i : Fin (data.k) => compact_lie_virtually_abelian (data.n_i i) (data.positive_n_i i) (data.groups i) (subgroup_fg i) (new_S_data i)
       -- Page 48 : Let Gᵢ := πᵢ⁻¹(πᵢ(G)′) = {g ∈ G : πᵢ(g) ∈ πᵢ(G)′}
       let inv_image : Fin (data.k) → Subgroup G := fun i : Fin (data.k) => {
         carrier := { a : G | (data.iso ⟨a, all_mem_central a⟩) i ∈ (Classical.choose (Gi' i)) },
@@ -4506,7 +4535,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       --unfold UnitaryProd at centralizer_iso
       use G'
     by_cases nontrivial_central : ∃ g : G, (∀ z : ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G
-    · exact nontrivial_centrer_implies_virtual G G_FG nontrivial_central
+    · exact nontrivial_centrer_implies_virtual G G_FG sorry nontrivial_central
     · -- Case two - we have no non-trivial central elements
 
       have two_le_n: 2 ≤ n := by
@@ -4532,7 +4561,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           apply Submonoid.FG.map
           rw [← Subgroup.fg_iff_submonoid_fg]
           exact (Group.fg_iff_subgroup_fg (G' n ε G)).mp G'_FG
-        ) (by
+        ) sorry (by
           obtain ⟨g, hg⟩ := G'_nontrivial_central
           use ⟨g, by simp⟩
           refine ⟨?_, ?_⟩
