@@ -3720,6 +3720,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       unfold pre_S
       refine ⟨?_, ?_⟩
       . intro ha
+        -- TODO - only the 'mem' case is non-trivial. We probably don't actually need a full induction proof
         induction ha using Subgroup.closure_induction with
         | one =>
           simp [G']
@@ -3769,10 +3770,67 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         | inv x hx x_mem =>
           apply Subgroup.inv_mem
           exact x_mem
-
       .
         intro ha
-        sorry
+        apply_fun (Subgroup.map (G' n (H_n_eps hn) G).subtype) at S''_generates
+        conv at S''_generates =>
+          rhs
+          equals (G' n (H_n_eps hn) G) =>
+            ext a
+            simp
+
+        rw [← S''_generates] at ha
+        simp at ha
+        obtain ⟨a_mem_g', a_mem_closure⟩ := ha
+        rw [← Subgroup.mem_toSubmonoid] at a_mem_closure
+        rw [Subgroup.closure_toSubmonoid] at a_mem_closure
+        obtain ⟨l, l_mem, l_prod_eq⟩ := Submonoid.exists_list_of_mem_closure a_mem_closure
+        rw [Subtype.ext_iff] at l_prod_eq
+        simp at l_prod_eq
+        rw [← l_prod_eq]
+        apply Subgroup.list_prod_mem
+        intro x x_mem_l
+        simp at x_mem_l
+        obtain ⟨x_mem_g', x_mem_l⟩ := x_mem_l
+        have x_mem_ball := l_mem _ x_mem_l
+
+        rw [Subgroup.closure_iUnion]
+        cases x_mem_ball
+        .
+          rename_i x_mem_S''
+          apply Subgroup.mem_iSup_of_mem (i := ⟨⟨x, x_mem_g'⟩, sorry⟩)
+          have my_spec := (s_list  ⟨⟨x, x_mem_g'⟩, sorry⟩).choose_spec
+          simp at my_spec
+          conv =>
+            arg 2
+            rw [← my_spec]
+
+          apply Subgroup.list_prod_mem
+          intro b b_mem
+          apply Subgroup.mem_closure_of_mem
+          apply Set.mem_union_left
+          simpa using b_mem
+        . rename_i x_mem_inv
+          sorry
+
+
+        -- intro ha
+        -- unfold G' at ha
+        -- induction ha using Subgroup.closure_induction with
+        -- | mem x hx =>
+
+        --   sorry
+        -- | one =>
+        --   simp
+        -- | mul x y hx hy x_mem y_mem =>
+        --   apply Subgroup.mul_mem
+        --   exact x_mem
+        --   exact y_mem
+        -- | inv x hx x_mem =>
+        --   apply Subgroup.inv_mem
+        --   exact x_mem
+
+
 
 
 
