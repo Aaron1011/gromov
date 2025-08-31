@@ -3998,11 +3998,21 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
                 arg 2
                 simp only [← a_eq_b]
 
+              sorry
 
-            . sorry
+
+            . obtain ⟨b_mem, b_mem_g'⟩ := a_mem_g
+              rw [← a_eq_b]
+              simp [b_mem_g']
           . intro ha
-            simp
-            sorry
+            use ⟨a, ?_⟩
+            . refine ⟨?_, by simp⟩
+              simp
+              sorry
+            . simp at ha
+              simp
+              obtain ⟨a_mem_g', a_mem_closure⟩ := ha
+              apply a_mem_g'
       S_finite := by
         simp
         apply Set.finite_range
