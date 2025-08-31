@@ -4177,6 +4177,11 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       h_nontrivial := by
         simpa using h_nontrivial
     }
+    .
+      apply Subgroup.map_injective
+      simp
+      intro x y hxy
+      simpa using hxy
 
     have contra := H_n_contradiction h_n_data (1 / 50) ?_ ?_ ?_ ?_
     . contradiction
