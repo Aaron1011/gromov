@@ -3933,14 +3933,51 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       )⟩: (Subgroup.map G.subtype (G' n (H_n_eps hn) G)))) S_finite.toFinset.attach).toSet
       S_generates := by
         simp
-        ext g
-        simp
-        have g_prop := g.property
-        rw [Subgroup.mem_map] at g_prop
-        rw [Subgroup.ext_iff] at S''_generates
+        apply_fun (Subgroup.map (G' n (H_n_eps hn) G).subtype) at S''_generates
+        conv at S''_generates =>
+          rhs
+          equals (G' n (H_n_eps hn) G) =>
+            ext a
+            simp
 
-        have my_generates := S_generates
-        sorry
+        apply_fun (Subgroup.map ({
+          toFun := fun a => (⟨a.val, (by
+            have prop := a.property
+            rw [Subgroup.mem_map] at prop
+            obtain ⟨x, x_mem, x_eq⟩ := prop
+            rw [← x_eq]
+            simp
+          )⟩ : G),
+          map_one' := by
+            simp
+          map_mul' := by
+            intro a b
+            simp
+        })) using (?_)
+        . conv =>
+            rhs
+            equals (G' n (H_n_eps hn) G) =>
+              ext a
+              rw [Subgroup.mem_map]
+              simp
+              sorry
+
+          conv =>
+            rhs
+            rw [← S''_generates]
+          ext a
+          rw [Subgroup.mem_map]
+          refine ⟨?_, ?_⟩
+          .
+            intro ha
+            simp at ha
+            simp
+            obtain ⟨b, b_mem, a_mem_g, other⟩ := ha
+            use ?_
+            . sorry
+            . sorry
+          . intro ha
+            simp
       S_finite := by
         simp
         apply Set.finite_range
