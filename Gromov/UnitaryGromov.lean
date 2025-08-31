@@ -4030,8 +4030,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
               .
                 refine ⟨?_, ?_⟩
                 .
-
-                  nth_rw 1 [Set.mem_setOf]
+                  rw [Set.mem_setOf (a := List.map _ _)]
                   intro p p_mem
                   apply Set.mem_union_left
                   rw [List.mem_map] at p_mem
@@ -4039,9 +4038,14 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
                   obtain ⟨z, z_mem, z_eq_p⟩ := p_mem
                   use ⟨z, by simp⟩
                   rw [← z_eq_p]
-                  rfl
-
-                  sorry
+                  -- TODO - why is rw [Set.mem_setOf] pushing new goals???
+                  .
+                    simp [G']
+                    apply Subgroup.mem_closure_of_mem
+                    simp [dist]
+                    rw [dist_eq_norm_sub]
+                    apply S_dist
+                    simp
                 .
                   conv =>
                     rhs
