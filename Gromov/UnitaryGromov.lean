@@ -3798,8 +3798,8 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         cases x_mem_ball
         .
           rename_i x_mem_S''
-          apply Subgroup.mem_iSup_of_mem (i := ⟨⟨x, x_mem_g'⟩, sorry⟩)
-          have my_spec := (s_list  ⟨⟨x, x_mem_g'⟩, sorry⟩).choose_spec
+          apply Subgroup.mem_iSup_of_mem (i := ⟨⟨x, x_mem_g'⟩, (by simp; apply x_mem_S'')⟩)
+          have my_spec := (s_list  ⟨⟨x, x_mem_g'⟩, x_mem_S''⟩).choose_spec
           simp at my_spec
           conv =>
             arg 2
