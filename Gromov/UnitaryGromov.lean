@@ -4007,8 +4007,24 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
           . intro ha
             use ⟨a, ?_⟩
             . refine ⟨?_, by simp⟩
-              simp
-              sorry
+              rw [Subgroup.mem_map] at ha
+              obtain ⟨b, b_mem, a_eq_b⟩ := ha
+              have b_prop := b.property
+              conv at b_prop =>
+                arg 1
+                rw [← S_generates]
+
+              conv =>
+                arg 2
+                simp [← a_eq_b]
+
+              rw [←  Subgroup.mem_map_iff_mem (f := Subgroup.subtype _)]
+              conv =>
+                arg 1
+                equals Subgroup.map G.subtype (G' n (H_n_eps hn) G) =>
+                  sorry
+              . simp
+              . simp
             . simp at ha
               simp
               obtain ⟨a_mem_g', a_mem_closure⟩ := ha
