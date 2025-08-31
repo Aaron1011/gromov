@@ -3703,7 +3703,76 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       rw [Set.union_comm]
 
     have S_generates: Subgroup.closure S = (G' n (H_n_eps hn) G) := by
-      sorry
+      -- apply_fun (Subgroup.map (G' n (H_n_eps hn) G).subtype) at S''_generates
+      -- conv at S''_generates =>
+      --   rhs
+      --   equals (G' n (H_n_eps hn) G) =>
+      --     ext a
+      --     simp
+
+      -- rw [← S''_generates]
+      ext a
+      unfold S
+      rw [Subgroup.closure_union]
+      simp
+      rw [Subgroup.closure_union]
+      simp
+      unfold pre_S
+      refine ⟨?_, ?_⟩
+      . intro ha
+        induction ha using Subgroup.closure_induction with
+        | one =>
+          simp [G']
+        | mem x hx =>
+          rw [Set.mem_iUnion] at hx
+          obtain ⟨y, y_mem⟩ := hx
+          have y_prop := y.property
+          rw [Set.Finite.mem_toFinset] at y_prop
+          have my_spec := (s_list ⟨y, y_prop⟩).choose_spec
+          cases y_mem
+          .
+            rename_i y_mem
+            simp at y_mem
+            obtain ⟨x_dist, x_mem⟩ := y_mem
+            simp [G']
+            apply Subgroup.mem_closure_of_mem
+            simp
+            cases x_dist
+            . rename_i x_dist_le
+              exact x_dist_le
+            . rename_i x_inv_dist
+
+              -- TODO - deduplicate this, in particular the 'CStarRing.norm_coe_unitary_mul' code
+              simp [dist] at x_inv_dist
+              rw [dist_eq_norm_sub] at x_inv_dist
+              conv at x_inv_dist =>
+                lhs
+                arg 1
+                equals (star x.val.val * 1 - (star x.val.val) * x.val.val) =>
+                  simp
+
+              rw [← mul_sub] at x_inv_dist
+              rw [← unitary.coe_star] at x_inv_dist
+              rw [CStarRing.norm_coe_unitary_mul] at x_inv_dist
+              rw [norm_sub_rev] at x_inv_dist
+              simp [dist]
+              rw [dist_eq_norm_sub]
+              exact x_inv_dist
+          .
+            rename_i x_mem_one
+            simp at x_mem_one
+            simp [x_mem_one]
+        | mul x y hx hy x_mem y_mem =>
+          apply Subgroup.mul_mem
+          . exact x_mem
+          . exact y_mem
+        | inv x hx x_mem =>
+          apply Subgroup.inv_mem
+          exact x_mem
+
+      .
+        intro ha
+        sorry
 
 
 
@@ -3813,6 +3882,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         rw [Subgroup.mem_map] at g_prop
         rw [Subgroup.ext_iff] at S''_generates
 
+        have my_generates := S_generates
         sorry
       S_finite := by
         simp
