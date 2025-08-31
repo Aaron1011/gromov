@@ -3522,9 +3522,10 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
     obtain ⟨S', S'_generates, S'_finite⟩ := G'_fg
 
     -- Add identity and inverses to S' to make things easier
-    let S'' := S'
+    let S'' := S' ∪ S'⁻¹
     have S''_finite: Set.Finite S'' := by
       dsimp [S'']
+      simp
       apply S'_finite
 
     -- have S''_union_S''inv: S'' ∪ S''⁻¹ = S'' := by
@@ -3533,14 +3534,15 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
     --   rw [Set.union_assoc]
     --   apply Set.subset_union_left
 
-    -- have S''_eq_S''inv: S'' = S''⁻¹ := by
-    --   rw [← S''_union_S''inv]
-    --   simp
-    --   rw [Set.union_comm]
+    have S''_eq_S''inv: S'' = S''⁻¹ := by
+      unfold S''
+      simp
+      rw [Set.union_comm]
 
 
     have S''_generates: Subgroup.closure S'' = ⊤ := by
       dsimp [S'']
+      rw [Subgroup.closure_union]
       simp [S'_generates]
 
 
@@ -3795,34 +3797,20 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         have x_mem_ball := l_mem _ x_mem_l
 
         rw [Subgroup.closure_iUnion]
-        cases x_mem_ball
-        .
-          rename_i x_mem_S''
-          apply Subgroup.mem_iSup_of_mem (i := ⟨⟨x, x_mem_g'⟩, (by simp; apply x_mem_S'')⟩)
-          have my_spec := (s_list  ⟨⟨x, x_mem_g'⟩, x_mem_S''⟩).choose_spec
-          simp at my_spec
-          conv =>
-            arg 2
-            rw [← my_spec]
+        rw [← S''_eq_S''inv] at x_mem_ball
+        simp at x_mem_ball
+        apply Subgroup.mem_iSup_of_mem (i := ⟨⟨x, x_mem_g'⟩, (by simp; apply x_mem_ball)⟩)
+        have my_spec := (s_list  ⟨⟨x, x_mem_g'⟩, x_mem_ball⟩).choose_spec
+        simp at my_spec
+        conv =>
+          arg 2
+          rw [← my_spec]
 
-          apply Subgroup.list_prod_mem
-          intro b b_mem
-          apply Subgroup.mem_closure_of_mem
-          apply Set.mem_union_left
-          simpa using b_mem
-        . rename_i x_mem_inv
-          apply Subgroup.mem_iSup_of_mem (i := ⟨⟨x, x_mem_g'⟩, (by simp; apply x_mem_inv)⟩)
-          have my_spec := (s_list  ⟨⟨x, x_mem_g'⟩, x_mem_inv⟩).choose_spec
-          simp at my_spec
-          conv =>
-            arg 2
-            rw [← my_spec]
-
-          apply Subgroup.list_prod_mem
-          intro b b_mem
-          apply Subgroup.mem_closure_of_mem
-          apply Set.mem_union_left
-          simpa using b_mem
+        apply Subgroup.list_prod_mem
+        intro b b_mem
+        apply Subgroup.mem_closure_of_mem
+        apply Set.mem_union_left
+        simpa using b_mem
 
 
         -- intro ha
