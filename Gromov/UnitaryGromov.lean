@@ -4005,30 +4005,73 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
               rw [← a_eq_b]
               simp [b_mem_g']
           . intro ha
+            have a_val_mem: a.val ∈ Subgroup.map G.subtype (G' n (H_n_eps hn) G) := by
+              simp at ha
+              simp
+              obtain ⟨a_mem_g', a_mem_closure⟩ := ha
+              apply a_mem_g'
+
             use ⟨a, ?_⟩
             . refine ⟨?_, by simp⟩
+              rw [←  Subgroup.mem_toSubmonoid]
+              rw [Subgroup.closure_toSubmonoid]
+              rw [← SetLike.mem_coe]
+              rw [Submonoid.closure_eq_image_prod]
+              rw [Set.mem_image]
               rw [Subgroup.mem_map] at ha
               obtain ⟨b, b_mem, a_eq_b⟩ := ha
               have b_prop := b.property
               conv at b_prop =>
                 arg 1
                 rw [← S_generates]
+              have b_list := mem_closure_prod_list S S_eq_Sinv b b_prop
+              obtain ⟨l, l_prod⟩ := b_list
+              use List.map (fun a => ⟨a.val, ?_⟩) l
+              .
+                refine ⟨?_, ?_⟩
+                .
 
-              conv =>
-                arg 2
-                simp [← a_eq_b]
-
-              rw [←  Subgroup.mem_map_iff_mem (f := Subgroup.subtype _)]
-              conv =>
-                arg 1
-                equals Subgroup.map G.subtype (G' n (H_n_eps hn) G) =>
                   sorry
-              . simp
-              . simp
-            . simp at ha
-              simp
-              obtain ⟨a_mem_g', a_mem_closure⟩ := ha
-              apply a_mem_g'
+                .
+                  simp
+                  sorry
+              .
+                simp
+                simp [G']
+                apply Subgroup.mem_closure_of_mem
+                simp [dist]
+                rw [dist_eq_norm_sub]
+                apply S_dist
+                simp
+
+              -- rw [Subgroup.mem_map] at ha
+              -- obtain ⟨b, b_mem, a_eq_b⟩ := ha
+              -- have b_prop := b.property
+              -- conv at b_prop =>
+              --   arg 1
+              --   rw [← S_generates]
+
+              -- conv =>
+              --   arg 2
+              --   simp [← a_eq_b]
+
+              -- rw [←  Subgroup.mem_map_iff_mem (f := Subgroup.subtype _)]
+              -- conv =>
+              --   arg 1
+              --   equals Subgroup.map G.subtype (G' n (H_n_eps hn) G) =>
+              --     ext p
+              --     simp
+              --     refine ⟨?_, ?_⟩
+              --     . intro exists_x
+              --       obtain ⟨x, x_mem⟩ := exists_x
+              --       simp at p_eq
+              --       sorry
+              --     . intro other
+              --       simp
+              --       sorry
+              -- . simp
+              -- . simp
+            . apply a_val_mem
       S_finite := by
         simp
         apply Set.finite_range
