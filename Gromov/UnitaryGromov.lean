@@ -3998,6 +3998,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
                 arg 2
                 simp only [← a_eq_b]
 
+              grind
               sorry
 
 
