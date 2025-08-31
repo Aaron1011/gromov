@@ -3933,6 +3933,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       )⟩: (Subgroup.map G.subtype (G' n (H_n_eps hn) G)))) S_finite.toFinset.attach).toSet
       S_generates := by
         simp
+        have orig_S'' := S''_generates
         apply_fun (Subgroup.map (G' n (H_n_eps hn) G).subtype) at S''_generates
         conv at S''_generates =>
           rhs
@@ -3998,10 +3999,8 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
                 arg 2
                 simp only [← a_eq_b]
 
-              grind
-              sorry
-
-
+              rw [orig_S'']
+              simp
             . obtain ⟨b_mem, b_mem_g'⟩ := a_mem_g
               rw [← a_eq_b]
               simp [b_mem_g']
