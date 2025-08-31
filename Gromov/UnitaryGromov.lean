@@ -4033,8 +4033,29 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
 
                   sorry
                 .
+                  conv =>
+                    rhs
+                    simp [← a_eq_b]
+                  conv =>
+                    rhs
+                    simp [← l_prod]
+                  apply Subtype.ext
                   simp
-                  sorry
+                  rw [List.comp_map]
+                  apply congr rfl
+                  ext i g
+                  simp
+                  rw [Subgroup.mem_map]
+                  use ⟨a.val, ?_⟩
+                  .
+                    simp [G']
+                    apply Subgroup.mem_closure_of_mem
+                    simp [dist]
+                    rw [dist_eq_norm_sub]
+                    apply S_dist
+                    simp
+                  . simp
+
               .
                 simp
                 simp [G']
