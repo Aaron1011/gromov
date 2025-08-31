@@ -3972,7 +3972,15 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
                   arg 2
                   simp [← x_eq_y]
                 exact y_mem
-              . sorry
+              . intro a_mem
+                use ⟨a, ?_⟩
+                . refine ⟨by simp, ?_⟩
+                  simp
+                . rw [Subgroup.mem_map]
+                  use ⟨a, ?_⟩
+                  . refine ⟨by simp; apply a_mem, ?_⟩
+                    simp
+                  . simp
 
           conv =>
             rhs
@@ -3990,8 +3998,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
                 arg 2
                 simp only [← a_eq_b]
 
-              simp at b_mem_closure
-              simp
+
             . sorry
           . intro ha
             simp
