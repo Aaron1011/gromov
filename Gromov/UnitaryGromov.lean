@@ -4059,16 +4059,6 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
                   apply congr rfl
                   ext i g
                   simp
-                  rw [Subgroup.mem_map]
-                  use ⟨a.val, ?_⟩
-                  .
-                    simp [G']
-                    apply Subgroup.mem_closure_of_mem
-                    simp [dist]
-                    rw [dist_eq_norm_sub]
-                    apply S_dist
-                    simp
-                  . simp
 
               .
                 simp
@@ -4105,7 +4095,6 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
               --       sorry
               -- . simp
               -- . simp
-            . apply a_val_mem
       S_finite := by
         simp
         apply Set.finite_range
