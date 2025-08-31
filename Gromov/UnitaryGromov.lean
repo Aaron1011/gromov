@@ -1368,6 +1368,27 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
 
 #check Pi.commSemigroup
 
+class HnEpsData where
+  degree: ℕ
+
+-- TODO - deduplicate with with 'mem_S_prod_list'
+lemma mem_closure_prod_list {G: Type*} [Group G] (S: Set G) (S_eq_Sinv: S = S⁻¹) (x: G) (hx: x ∈ Subgroup.closure S): ∃ l: List S, l.unattach.prod = x := by
+  -- https://leanprover.zulipchat.com/#narrow/channel/287929-mathlib4/topic/Group.20.28.2FMonoid.2Fetc.29.20closures.20are.20a.20finite.20product.2Fsum/near/477951441
+  have foo := Submonoid.exists_list_of_mem_closure (s := S ∪ S⁻¹) (x := x)
+  rw [← Subgroup.closure_toSubmonoid _] at foo
+  specialize foo hx
+  obtain ⟨l, ⟨mem_s, prod_eq⟩⟩ := foo
+  conv at mem_s =>
+    intro y hy
+    rw [← S_eq_Sinv]
+    simp
+  use (l.attach).map (fun x => ⟨x.val, mem_s (x.val) x.property⟩)
+  unfold List.unattach
+  simp [prod_eq]
+
+namespace HnEpsData
+variable [HnEpsData]
+
 -- A sufficiently small epsilon to use for the h_n elements in Theorem 3.8 (independent of the choice of n)
 noncomputable def H_n_eps {d : ℕ} (hd : 2 ≤ d): ℝ := (min ((1 : ℝ) / 60) ((small_dist_matrix d hd).choose / 2))
 
@@ -3461,20 +3482,6 @@ lemma bad_H_n_prod_exp_bound {m : ℕ}
 --   simp
 
 
--- TODO - deduplicate with with 'mem_S_prod_list'
-lemma mem_closure_prod_list {G: Type*} [Group G] (S: Set G) (S_eq_Sinv: S = S⁻¹) (x: G) (hx: x ∈ Subgroup.closure S): ∃ l: List S, l.unattach.prod = x := by
-  -- https://leanprover.zulipchat.com/#narrow/channel/287929-mathlib4/topic/Group.20.28.2FMonoid.2Fetc.29.20closures.20are.20a.20finite.20product.2Fsum/near/477951441
-  have foo := Submonoid.exists_list_of_mem_closure (s := S ∪ S⁻¹) (x := x)
-  rw [← Subgroup.closure_toSubmonoid _] at foo
-  specialize foo hx
-  obtain ⟨l, ⟨mem_s, prod_eq⟩⟩ := foo
-  conv at mem_s =>
-    intro y hy
-    rw [← S_eq_Sinv]
-    simp
-  use (l.attach).map (fun x => ⟨x.val, mem_s (x.val) x.property⟩)
-  unfold List.unattach
-  simp [prod_eq]
 
 open Classical
 
@@ -4204,12 +4211,18 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       simp
       sorry
 
+end HnEpsData
 
 -- Helper for theorem 3.8
 -- TODO - the name is bad, rename it to not include 'central'
 set_option synthInstance.maxHeartbeats 100000 in
 set_option maxHeartbeats 2000000 in
 lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG): ∃ N : Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
+
+  have _ : HnEpsData := {
+    degree := 1
+  }
+
   by_cases n_eq_one : n = 1
   · have fin_sin_subsingleton : Subsingleton (Fin n) := by
       rw [n_eq_one]
@@ -4499,10 +4512,10 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       have two_le_n: 2 ≤ n := by
         omega
       simp only [ne_eq, not_exists, not_and] at nontrivial_central
-      let ε: ℝ := (H_n_eps two_le_n)
+      let ε: ℝ := (HnEpsData.H_n_eps two_le_n)
       have hε : 0 < ε := by
         simp [ε]
-        apply H_n_eps_pos
+        apply HnEpsData.H_n_eps_pos
 
       obtain ⟨C, G_eps⟩:= volume_packing n (by omega) ε hε
       specialize G_eps G
@@ -4572,7 +4585,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
         --let foo := Subgroup.comap ((Subgroup.map (G.subtype (G' n ε G))).subtype) N
       · simp at hn
-        have target := central_trivial_virtually_abelian n (by omega) G G_FG ?_ ?_ G_eps.1
+        have target := HnEpsData.central_trivial_virtually_abelian n (by omega) G G_FG ?_ ?_ G_eps.1
         · exact target
         · intro g hg
           specialize nontrivial_central g
