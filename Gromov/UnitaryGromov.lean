@@ -4466,68 +4466,70 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       have n_ge_two : 2 ≤ n := by
         omega
       obtain ⟨data⟩ := inductive_lemma n n_ge_two G g g_not_multiple_I
-      -- TODO - PR this to mathlib
-      have subgroup_fg : ∀ i : Fin (data.k), (data.groups i).FG := by
-        intro i
 
-        have centralizer_fg : (Subgroup.centralizer {g}).FG := by
-          conv =>
-            arg 1
-            equals ⊤ =>
-              simp
-              exact g_central
-          rw [← Group.fg_def]
-          exact (Group.fg_iff_subgroup_fg G).mpr G_FG
-        -- TODO - why doesn't `Pi.evalMonoidHom' work here?
-        let i_hom : ((j : Fin data.k) → ↥(data.groups j)) →* (data.groups i) := {
-          toFun := fun f => f i,
-          map_one' := Pi.one_apply i,
-          map_mul' := by
-            intro x y
-            simp
+      -- TODO - extract this into a general lemma about finitely generated products of subgroups, and PR to mathlib
+      -- have subgroup_fg : ∀ i : Fin (data.k), (data.groups i).FG := by
+      --   intro i
 
-        }
-        rw [Subgroup.fg_iff_submonoid_fg] at centralizer_fg
-        have map_prod_fg := Submonoid.FG.map (P := ⊤) ?_ data.iso.toMonoidHom
-        · simp at map_prod_fg
-          rw [← Monoid.fg_def] at map_prod_fg
-          have range_fg := Monoid.fg_range i_hom
-          rw [MonoidHom.mrange_eq_top.mpr] at range_fg
-          rw [Monoid.fg_def] at range_fg
-          --simp [i_hom] at range_fg
-          have map_factor := Submonoid.FG.map (P := ⊤) ?_ i_hom
-          rw [Subgroup.fg_iff_submonoid_fg]
-          conv at map_factor =>
-            arg 1
-            equals ⊤ =>
-              ext a
-              simp
-              -- TODO - deduplicate this
-              use (fun j => if hij : i = j then (
-                have group_equiv : data.groups i ≃* data.groups j := by
-                  rw [hij]
+      --   have centralizer_fg : (Subgroup.centralizer {g}).FG := by
+      --     conv =>
+      --       arg 1
+      --       equals ⊤ =>
+      --         simp
+      --         exact g_central
+      --     rw [← Group.fg_def]
+      --     exact (Group.fg_iff_subgroup_fg G).mpr G_FG
+      --   -- TODO - why doesn't `Pi.evalMonoidHom' work here?
+      --   let i_hom : ((j : Fin data.k) → ↥(data.groups j)) →* (data.groups i) := {
+      --     toFun := fun f => f i,
+      --     map_one' := Pi.one_apply i,
+      --     map_mul' := by
+      --       intro x y
+      --       simp
 
-                group_equiv a
-              ) else 1)
-              simp [i_hom]
-          rw [← Monoid.fg_def] at map_factor
-          · exact (Monoid.fg_iff_submonoid_fg (data.groups i).toSubmonoid).mp map_factor
-          · exact Monoid.fg_def.mp map_prod_fg
-          · intro a
-            use (fun j => if hij : i = j then (
-              have group_equiv : data.groups i ≃* data.groups j := by
-                rw [hij]
+      --   }
+      --   rw [Subgroup.fg_iff_submonoid_fg] at centralizer_fg
+      --   have map_prod_fg := Submonoid.FG.map (P := ⊤) ?_ data.iso.toMonoidHom
+      --   · simp at map_prod_fg
+      --     rw [← Monoid.fg_def] at map_prod_fg
+      --     have range_fg := Monoid.fg_range i_hom
+      --     rw [MonoidHom.mrange_eq_top.mpr] at range_fg
+      --     rw [Monoid.fg_def] at range_fg
+      --     --simp [i_hom] at range_fg
+      --     have map_factor := Submonoid.FG.map (P := ⊤) ?_ i_hom
+      --     rw [Subgroup.fg_iff_submonoid_fg]
+      --     conv at map_factor =>
+      --       arg 1
+      --       equals ⊤ =>
+      --         ext a
+      --         simp
+      --         -- TODO - deduplicate this
+      --         use (fun j => if hij : i = j then (
+      --           have group_equiv : data.groups i ≃* data.groups j := by
+      --             rw [hij]
 
-              group_equiv a
-            ) else 1)
-            simp [i_hom]
+      --           group_equiv a
+      --         ) else 1)
+      --         simp [i_hom]
+      --     rw [← Monoid.fg_def] at map_factor
+      --     · exact (Monoid.fg_iff_submonoid_fg (data.groups i).toSubmonoid).mp map_factor
+      --     · exact Monoid.fg_def.mp map_prod_fg
+      --     · intro a
+      --       use (fun j => if hij : i = j then (
+      --         have group_equiv : data.groups i ≃* data.groups j := by
+      --           rw [hij]
+
+      --         group_equiv a
+      --       ) else 1)
+      --       simp [i_hom]
 
 
         --rw [← Monoid.fg_iff_submonoid_fg] at centralizer_fg
 
-        rw [← Subgroup.fg_iff_submonoid_fg] at centralizer_fg
-        rw [← Subgroup.top_toSubmonoid, ← Subgroup.fg_iff_submonoid_fg, ← Group.fg_def]
-        exact (Group.fg_iff_subgroup_fg (Subgroup.centralizer {g})).mpr centralizer_fg
+        --rw [← Subgroup.fg_iff_submonoid_fg] at centralizer_fg
+        --rw [← Subgroup.top_toSubmonoid, ← Subgroup.fg_iff_submonoid_fg, ← Group.fg_def]
+        --exact (Group.fg_iff_subgroup_fg (Subgroup.centralizer {g})).mpr centralizer_fg
+
         -- rw [← Monoid.FG.fg_top]
         -- obtain ⟨S, hS⟩ := centralizer_fg
         -- let pre_S' := Finset.image (fun s => (⟨s, all_mem_central s⟩: (Subgroup.centralizer {g}))) S
@@ -4560,159 +4562,298 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           intro a
           simp
       }
-      let new_S := fun i: Fin (data.k) => (Pi.evalMonoidHom _ i) '' (data.iso.toMonoidHom '' (g_to_central.toMonoidHom '' S_data.S))
-      --let new_S := fun i : Fin (data.k) => (fun a: G => data.iso (⟨a, all_mem_central a⟩ : (Subgroup.centralizer {g})) i) '' S_data.S
-      let new_S_data := fun i : Fin (data.k) => ({
-        S := new_S i,
+
+      let first_new_data: SPolyData (n := (data.first_n)) (by linarith [data.first_n_pos]) (data.first_group) := {
+        S := (MonoidHom.fst _ _ '' (data.iso.toMonoidHom '' (g_to_central.toMonoidHom '' S_data.S))),
         S_finite := by
-          simp [new_S]
           apply Set.Finite.image
           apply Set.Finite.image
           apply Set.Finite.image
           apply S_data.S_finite
         S_generates := by
           rw [← MonoidHom.map_closure]
-          beta_reduce
           rw [← MonoidHom.map_closure]
           rw [← MonoidHom.map_closure]
           rw [S_data.S_generates]
-          simp
-          apply Subgroup.map_top_of_surjective
-          intro a
-          simp
-          use (fun k => if h_eq: i = k then ⟨⟨a.val.val.reindex (l := Fin (data.n_i k)) (o := Fin (data.n_i k)) (finCongr (by rw [h_eq])) (finCongr (by rw [h_eq])), ?_⟩, ?_⟩ else 1)
+          rw [Subgroup.map_top_of_surjective]
+          .
+            simp
+            rw [Subgroup.map_top_of_surjective]
+            intro a
+            simp
           . simp
-          .
-            simp
-            sorry
-          .
-            simp
-            have a_prop := a.property
-            sorry
-
+            exact MulEquiv.surjective g_to_central
         S_poly_const := S_data.S_poly_const
         S_poly_const_pos := S_data.S_poly_const_pos
         S_poly_deg := S_data.S_poly_deg
         S_poly := sorry
-      } : SPolyData (n := (data.n_i i)) (by sorry) ((data.groups i) ))
-
-      let Gi' := fun i : Fin (data.k) => compact_lie_virtually_abelian (data.n_i i) (data.positive_n_i i) (data.groups i) (subgroup_fg i) (new_S_data i)
-      -- Page 48 : Let Gᵢ := πᵢ⁻¹(πᵢ(G)′) = {g ∈ G : πᵢ(g) ∈ πᵢ(G)′}
-      let inv_image : Fin (data.k) → Subgroup G := fun i : Fin (data.k) => {
-        carrier := { a : G | (data.iso ⟨a, all_mem_central a⟩) i ∈ (Classical.choose (Gi' i)) },
-        mul_mem' := by
-          intro _ _ ha hb
-          simpa [ha, hb, ← Pi.mul_apply, ← MulEquiv.map_mul] using Subgroup.mul_mem _ ha hb
-        one_mem' := by
-          simp
-          conv =>
-            arg 2
-            arg 2
-            equals 1 => simp
-
-          rw [MulEquiv.map_one]
-          simp
-        inv_mem' := by
-          intro a ha
-          simp only [Set.mem_setOf_eq] at ⊢ ha
-
-          conv =>
-            arg 2
-            arg 2
-            equals ⟨a, all_mem_central a⟩⁻¹ =>
-              ext
-              simp
-          simpa [MulEquiv.map_inv, Pi.inv_apply, Subgroup.inv_mem_iff]
       }
 
-      -- TODO - figure out a way to make this proof less horrible (maybe somehow avoid Classical.choose)
-      have inv_image_comm (a b) (ha : ∀ i, a ∈ inv_image i) (hb : ∀ i, b ∈ inv_image i): a * b = b * a := by
-        simp [inv_image] at ha hb
-        have symm_mul := MulEquiv.symm_apply_apply (e := data.iso) ⟨(a * b), (by
-          apply Subgroup.mul_mem
-          · apply all_mem_central
-          · apply all_mem_central
-        )⟩
-        have symm_mul_swap := MulEquiv.symm_apply_apply (e := data.iso) ⟨(b * a), (by
-          apply Subgroup.mul_mem
-          · apply all_mem_central
-          · apply all_mem_central
-        )⟩
-        rw [Subtype.ext_iff] at symm_mul
-        simp only [] at symm_mul
-        rw [Subtype.ext_iff] at symm_mul_swap
-        simp only [] at symm_mul_swap
-        rw [← symm_mul, ← symm_mul_swap, ← Subtype.ext_iff]
-        apply congrArg
-        funext i
-        specialize ha i
-        specialize hb i
+      -- TODO - deduplicate 'first_new_data' and 'second_new_data'
+      let second_new_data: SPolyData (n := (data.second_n)) (by linarith [data.second_n_pos]) (data.second_group) := {
+        S := (MonoidHom.snd _ _ '' (data.iso.toMonoidHom '' (g_to_central.toMonoidHom '' S_data.S))),
+        S_finite := by
+          apply Set.Finite.image
+          apply Set.Finite.image
+          apply Set.Finite.image
+          apply S_data.S_finite
+        S_generates := by
+          rw [← MonoidHom.map_closure]
+          rw [← MonoidHom.map_closure]
+          rw [← MonoidHom.map_closure]
+          rw [S_data.S_generates]
+          rw [Subgroup.map_top_of_surjective]
+          .
+            simp
+            rw [Subgroup.map_top_of_surjective]
+            intro a
+            simp
+          . simp
+            exact MulEquiv.surjective g_to_central
+        S_poly_const := S_data.S_poly_const
+        S_poly_const_pos := S_data.S_poly_const_pos
+        S_poly_deg := S_data.S_poly_deg
+        S_poly := sorry
+      }
 
-        have comm_subgroup := (Classical.choose_spec (Gi' i)).1.is_comm.comm
-        have a_b_comm := comm_subgroup ⟨_, ha⟩ ⟨_, hb⟩
-        rw [Subtype.ext_iff] at a_b_comm
-        simp at a_b_comm
+      -- let new_S := fun i: Fin (data.k) => (Pi.evalMonoidHom _ i) '' (data.iso.toMonoidHom '' (g_to_central.toMonoidHom '' S_data.S))
+      -- --let new_S := fun i : Fin (data.k) => (fun a: G => data.iso (⟨a, all_mem_central a⟩ : (Subgroup.centralizer {g})) i) '' S_data.S
+      -- let new_S_data := fun i : Fin (data.k) => ({
+      --   S := new_S i,
+      --   S_finite := by
+      --     simp [new_S]
+      --     apply Set.Finite.image
+      --     apply Set.Finite.image
+      --     apply Set.Finite.image
+      --     apply S_data.S_finite
+      --   S_generates := by
+      --     rw [← MonoidHom.map_closure]
+      --     beta_reduce
+      --     rw [← MonoidHom.map_closure]
+      --     rw [← MonoidHom.map_closure]
+      --     rw [S_data.S_generates]
+      --     simp
+      --     apply Subgroup.map_top_of_surjective
+      --     intro a
+      --     simp
+      --     use (fun k => if h_eq: i = k then ⟨⟨a.val.val.reindex (l := Fin (data.n_i k)) (o := Fin (data.n_i k)) (finCongr (by rw [h_eq])) (finCongr (by rw [h_eq])), ?_⟩, ?_⟩ else 1)
+      --     . simp
+      --     .
+      --       simp
+      --       sorry
+      --     .
+      --       simp
+      --       have a_prop := a.property
+      --       sorry
 
-        conv =>
-          lhs
-          arg 2
-          equals ⟨a, all_mem_central a⟩ * ⟨b, all_mem_central b⟩ =>
-            simp only [MulMemClass.mk_mul_mk]
-
-        conv =>
-          rhs
-          arg 2
-          equals ⟨b, all_mem_central b⟩ * ⟨a, all_mem_central a⟩ => simp only [MulMemClass.mk_mul_mk]
+      --   S_poly_const := S_data.S_poly_const
+      --   S_poly_const_pos := S_data.S_poly_const_pos
+      --   S_poly_deg := S_data.S_poly_deg
+      --   S_poly := sorry
+      -- } : SPolyData (n := (data.n_i i)) (by sorry) ((data.groups i) ))
 
 
+      obtain ⟨first_subgroup, first_subgroup_abelian, first_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.first_n) (by linarith [data.first_n_pos]) (data.first_group) (sorry) (first_new_data)
+      obtain ⟨second_subgroup, second_subgroup_abelian, second_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.second_n) (by linarith [data.second_n_pos]) (data.second_group) (sorry) (second_new_data)
 
-        rw [MulEquiv.map_mul]
-        rw [MulEquiv.map_mul]
-        simp
-        rw [a_b_comm]
-      let G' := ⨅ (i : Fin (data.k)), inv_image i
+      let iso := Subgroup.map data.iso.symm.toMonoidHom
+      --let Gi' := fun i : Fin (data.k) => compact_lie_virtually_abelian (data.n_i i) (data.positive_n_i i) (data.groups i) (subgroup_fg i) (new_S_data i)
 
-      have G'_comm : ∀ a b : G', a * b = b * a := by
+      --let first_inv := data.iso.sym ''
+
+      -- let inv_image : Fin (data.k) → Subgroup G := fun i : Fin (data.k) => {
+      --   carrier := { a : G | (data.iso ⟨a, all_mem_central a⟩) i ∈ (Classical.choose (Gi' i)) },
+      --   mul_mem' := by
+      --     intro _ _ ha hb
+      --     simpa [ha, hb, ← Pi.mul_apply, ← MulEquiv.map_mul] using Subgroup.mul_mem _ ha hb
+      --   one_mem' := by
+      --     simp
+      --     conv =>
+      --       arg 2
+      --       arg 2
+      --       equals 1 => simp
+
+      --     rw [MulEquiv.map_one]
+      --     simp
+      --   inv_mem' := by
+      --     intro a ha
+      --     simp only [Set.mem_setOf_eq] at ⊢ ha
+
+      --     conv =>
+      --       arg 2
+      --       arg 2
+      --       equals ⟨a, all_mem_central a⟩⁻¹ =>
+      --         ext
+      --         simp
+      --     simpa [MulEquiv.map_inv, Pi.inv_apply, Subgroup.inv_mem_iff]
+      -- }
+
+      -- -- TODO - figure out a way to make this proof less horrible (maybe somehow avoid Classical.choose)
+      -- have inv_image_comm (a b) (ha : ∀ i, a ∈ inv_image i) (hb : ∀ i, b ∈ inv_image i): a * b = b * a := by
+      --   simp [inv_image] at ha hb
+      --   have symm_mul := MulEquiv.symm_apply_apply (e := data.iso) ⟨(a * b), (by
+      --     apply Subgroup.mul_mem
+      --     · apply all_mem_central
+      --     · apply all_mem_central
+      --   )⟩
+      --   have symm_mul_swap := MulEquiv.symm_apply_apply (e := data.iso) ⟨(b * a), (by
+      --     apply Subgroup.mul_mem
+      --     · apply all_mem_central
+      --     · apply all_mem_central
+      --   )⟩
+      --   rw [Subtype.ext_iff] at symm_mul
+      --   simp only [] at symm_mul
+      --   rw [Subtype.ext_iff] at symm_mul_swap
+      --   simp only [] at symm_mul_swap
+      --   rw [← symm_mul, ← symm_mul_swap, ← Subtype.ext_iff]
+      --   apply congrArg
+      --   funext i
+      --   specialize ha i
+      --   specialize hb i
+
+      --   have comm_subgroup := (Classical.choose_spec (Gi' i)).1.is_comm.comm
+      --   have a_b_comm := comm_subgroup ⟨_, ha⟩ ⟨_, hb⟩
+      --   rw [Subtype.ext_iff] at a_b_comm
+      --   simp at a_b_comm
+
+      --   conv =>
+      --     lhs
+      --     arg 2
+      --     equals ⟨a, all_mem_central a⟩ * ⟨b, all_mem_central b⟩ =>
+      --       simp only [MulMemClass.mk_mul_mk]
+
+      --   conv =>
+      --     rhs
+      --     arg 2
+      --     equals ⟨b, all_mem_central b⟩ * ⟨a, all_mem_central a⟩ => simp only [MulMemClass.mk_mul_mk]
+
+
+
+      --   rw [MulEquiv.map_mul]
+      --   rw [MulEquiv.map_mul]
+      --   simp
+      --   rw [a_b_comm]
+
+
+      -- Page 48 : Let Gᵢ := πᵢ⁻¹(πᵢ(G)′) = {g ∈ G : πᵢ(g) ∈ πᵢ(G)′}
+      let G_1 := Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.fst data.first_group data.second_group) first_subgroup)
+      let G_2 := Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.snd data.first_group data.second_group) second_subgroup)
+
+      let pre_G' := G_1 ⊓ G_2
+
+      have central_equiv: Subgroup.centralizer {g} ≃* G := {
+        toFun := fun a => a.val,
+        invFun := fun a => ⟨a, all_mem_central a⟩,
+        map_mul' := by simp
+      }
+
+      let G' := Subgroup.map central_equiv.toMonoidHom pre_G'
+
+      have pre_G'_abeliean : IsMulCommutative pre_G' := by
+        unfold pre_G'
+        refine { is_comm := ?_ }
+        refine { comm := ?_ }
         intro a b
         have a_mem := a.property
         have b_mem := b.property
-        rw [Subgroup.mem_iInf] at a_mem
-        apply Subtype.ext_val
+        rw [Subgroup.mem_inf] at a_mem b_mem
+        have a_first := a_mem.1
+        have b_first := b_mem.1
+        have a_second := a_mem.2
+        have b_second := b_mem.2
+        unfold G_1 at a_first b_first
+        unfold G_2 at a_second b_second
+
+        rw [Subgroup.mem_map] at a_first b_first
+        obtain ⟨a_pre, a_pre_mem, a_eq⟩ := a_first
+        obtain ⟨b_pre, b_pre_mem, b_eq⟩ := b_first
+        rw [Subgroup.mem_comap] at a_pre_mem b_pre_mem
+        simp at a_pre_mem b_pre_mem
+
+        rw [Subgroup.mem_map] at a_second b_second
+        obtain ⟨a2_pre, a2_pre_mem, a2_eq⟩ := a_second
+        obtain ⟨b2_pre, b2_pre_mem, b2_eq⟩ := b_second
+        rw [Subgroup.mem_comap] at a2_pre_mem b2_pre_mem
+        simp at a2_pre_mem b2_pre_mem
+
+        have first_comm := first_subgroup_abelian.is_comm.comm ⟨a_pre.1, a_pre_mem⟩ ⟨b_pre.1, b_pre_mem⟩
+        have second_comm := second_subgroup_abelian.is_comm.comm ⟨a2_pre.2, a2_pre_mem⟩ ⟨b2_pre.2, b2_pre_mem⟩
+        simp at a_eq
+        simp at b_eq
+        simp at first_comm second_comm
+        rw [Subtype.ext_iff]
         simp
+        apply_fun data.iso
+        simp
+        apply Prod.ext
+        . simp
+          rw [← a_eq, ← b_eq]
+          simp
+          exact first_comm
+        . simp
+          rw [← a2_eq, ← b2_eq]
+          simp
+          exact second_comm
 
-        have a_val := a.property
-        have b_val := b.property
-        dsimp [G'] at a_val
-        dsimp [G'] at b_val
-        rw [Subgroup.mem_iInf] at a_val
-        rw [Subgroup.mem_iInf] at b_val
-        have a_b_comm := inv_image_comm a b a_val b_val
-        exact a_b_comm
+      have G'_abeliean : IsMulCommutative G' := by
+        apply Subgroup.map_isMulCommutative
 
-      have inv_image_finite_index : ∀ i : Fin (data.k), (inv_image i).FiniteIndex := by
-        intro i
-        have finite_index_subgroup := (Classical.choose_spec (Gi' i)).2
-        have finite_quotient := @Subgroup.finite_quotient_of_finiteIndex _ _ _ finite_index_subgroup
+      -- have G'_comm : ∀ a b : G', a * b = b * a := by
+      --   intro a b
+      --   have a_mem := a.property
+      --   have b_mem := b.property
+      --   rw [Subgroup.mem_iInf] at a_mem
+      --   apply Subtype.ext_val
+      --   simp
 
-        have subgroup_union_coset := QuotientGroup.univ_eq_iUnion_smul ((Classical.choose (Gi' i)))
-        --apply Subgroup.finiteIndex_of_leftCoset_cover_const (g := id)
+      --   have a_val := a.property
+      --   have b_val := b.property
+      --   dsimp [G'] at a_val
+      --   dsimp [G'] at b_val
+      --   rw [Subgroup.mem_iInf] at a_val
+      --   rw [Subgroup.mem_iInf] at b_val
+      --   have a_b_comm := inv_image_comm a b a_val b_val
+      --   exact a_b_comm
 
-        apply @Subgroup.finiteIndex_of_finite_quotient _ _ _ ?_
-        apply Finite.of_injective (β := (data.groups i) ⧸ (Classical.choose (Gi' i))) (f := fun a => (
-          data.iso ⟨a.out, all_mem_central _⟩ i
-        ))
-        intro x y hxy
-        simp at hxy
-        rw [← QuotientGroup.out_eq' (a := x), ← QuotientGroup.out_eq' (a := y), QuotientGroup.eq]
-        simp [inv_image]
-
-        rw [QuotientGroup.eq] at hxy
-        conv at hxy =>
-          arg 2
-          lhs
-          equals (data.iso ⟨x.out, all_mem_central _⟩)⁻¹ i =>
+      have pre_G'_finite_index : pre_G'.FiniteIndex := by
+        unfold pre_G'
+        rw [Subgroup.finiteIndex_iff]
+        apply Subgroup.index_inf_ne_zero
+        .
+          simp [G_1]
+          rw [Subgroup.index_comap_of_surjective]
+          . exact Subgroup.finiteIndex_iff.mp first_subgroup_finite_index
+          . intro a
             simp
-        rwa [← MulEquiv.map_inv, ← Pi.mul_apply, ← MulEquiv.map_mul] at hxy
+        . simp [G_2]
+          rw [Subgroup.index_comap_of_surjective]
+          . exact Subgroup.finiteIndex_iff.mp second_subgroup_finite_index
+          . intro a
+            simp
+      -- have inv_image_finite_index : ∀ i : Fin (data.k), (inv_image i).FiniteIndex := by
+      --   intro i
+      --   have finite_index_subgroup := (Classical.choose_spec (Gi' i)).2
+      --   have finite_quotient := @Subgroup.finite_quotient_of_finiteIndex _ _ _ finite_index_subgroup
+
+      --   have subgroup_union_coset := QuotientGroup.univ_eq_iUnion_smul ((Classical.choose (Gi' i)))
+      --   --apply Subgroup.finiteIndex_of_leftCoset_cover_const (g := id)
+
+      --   apply @Subgroup.finiteIndex_of_finite_quotient _ _ _ ?_
+      --   apply Finite.of_injective (β := (data.groups i) ⧸ (Classical.choose (Gi' i))) (f := fun a => (
+      --     data.iso ⟨a.out, all_mem_central _⟩ i
+      --   ))
+      --   intro x y hxy
+      --   simp at hxy
+      --   rw [← QuotientGroup.out_eq' (a := x), ← QuotientGroup.out_eq' (a := y), QuotientGroup.eq]
+      --   simp [inv_image]
+
+      --   rw [QuotientGroup.eq] at hxy
+      --   conv at hxy =>
+      --     arg 2
+      --     lhs
+      --     equals (data.iso ⟨x.out, all_mem_central _⟩)⁻¹ i =>
+      --       simp
+      --   rwa [← MulEquiv.map_inv, ← Pi.mul_apply, ← MulEquiv.map_mul] at hxy
 
         --simp [inv_image]
         -- Subgroup.finiteIndex_iff_finite_quotient
@@ -4721,19 +4862,21 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
 
 
-      let G' := ⨅ (i : (Fin (data.k))), inv_image i
-      have G'_abeliean : IsMulCommutative G' := by
-        exact {
-          is_comm := by
-            exact {
-              comm := by
-                exact G'_comm
-            }
-        }
+      -- let G' := ⨅ (i : (Fin (data.k))), inv_image i
+      -- have G'_abeliean : IsMulCommutative G' := by
+      --   exact {
+      --     is_comm := by
+      --       exact {
+      --         comm := by
+      --           exact G'_comm
+      --       }
+      --   }
 
       have G'_finite_index : G'.FiniteIndex := by
-        apply Subgroup.finiteIndex_iInf
-        apply inv_image_finite_index
+        unfold G'
+        rw [Subgroup.finiteIndex_iff]
+        simp
+        exact Subgroup.finiteIndex_iff.mp pre_G'_finite_index
 
       --unfold UnitaryProd at centralizer_iso
       use G'
