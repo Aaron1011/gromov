@@ -4976,6 +4976,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 termination_by (n, G.index)
 decreasing_by
   · apply Prod.Lex.left
-    exact data.n_i_lt i
-
+    apply data.first_n_lt
+  . apply Prod.Lex.left
+    apply data.second_n_lt
 #print axioms compact_lie_virtually_abelian
