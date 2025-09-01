@@ -1206,52 +1206,57 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
   have rank_eq := Submodule.finrank_eq_rank _ _ first_subspace
   let mapped := Submodule.map g.val.val.toLin' first_subspace
 
+  have first_n_pos: 0 < Module.finrank ℂ ↥first_subspace := by
+    unfold first_subspace
+    apply Module.End.pos_finrank_genEigenspace_of_hasEigenvalue
+    .
+      apply Module.End.hasEigenvalue_of_hasGenEigenvalue (k := n)
+      apply first_generalized_eigenvalue
+    . omega
+
+  have first_n_lt: Module.finrank ℂ ↥first_subspace < n := by
+    simp [first_subspace]
+    have my_lt := Submodule.finrank_lt (s := first_subspace) ?_
+    . simpa using my_lt
+    .
+      simp [first_subspace]
+      have disjoint_other := Module.End.disjoint_genEigenspace (f := g_end)
+        (μ₁ := list_eigenvalues.get ⟨0, by linarith⟩)
+        (μ₂ := list_eigenvalues.get ⟨1, by linarith⟩)
+        (k := n)
+        (l := n) ?_
+
+      .
+        rw [Module.End.hasGenEigenvalue_iff] at second_generalized_eigenvalue
+        by_contra!
+        simp at disjoint_other
+        rw [this] at disjoint_other
+        simp at disjoint_other
+        simp at second_generalized_eigenvalue
+        contradiction
+      .
+        simp [list_eigenvalues]
+        rw [List.Nodup.getElem_inj_iff]
+        . simp
+        . exact Finset.nodup_toList finite_eigenvalues.toFinset
+
+
   --let my_map := LinearMap.toMatrix' (m := Fin n) (n := Fin n) (R := ℂ) g_end_first
   --have foo := Module.End.pos_finrank_genEigenspace_of_hasEigenvalue (f := g_end) (μ := 1) (k := 2)
   exact Nonempty.intro {
     first_group := ⊤,
     second_group := ⊤,
     first_n := Module.finrank ℂ first_subspace
-    second_n := Module.finrank ℂ second_subspace
-    first_n_lt := by
-      simp [first_subspace]
-      have my_lt := Submodule.finrank_lt (s := first_subspace) ?_
-      . simpa using my_lt
-      .
-        simp [first_subspace]
-        have disjoint_other := Module.End.disjoint_genEigenspace (f := g_end)
-          (μ₁ := list_eigenvalues.get ⟨0, by linarith⟩)
-          (μ₂ := list_eigenvalues.get ⟨1, by linarith⟩)
-          (k := n)
-          (l := n) ?_
-
-        .
-          rw [Module.End.hasGenEigenvalue_iff] at second_generalized_eigenvalue
-          by_contra!
-          simp at disjoint_other
-          rw [this] at disjoint_other
-          simp at disjoint_other
-          simp at second_generalized_eigenvalue
-          contradiction
-        .
-          simp [list_eigenvalues]
-          rw [List.Nodup.getElem_inj_iff]
-          . simp
-          . exact Finset.nodup_toList finite_eigenvalues.toFinset
-
-
-
-    second_n_lt := sorry
-    first_n_pos := by
-      unfold first_subspace
-      apply Module.End.pos_finrank_genEigenspace_of_hasEigenvalue
-      .
-        apply Module.End.hasEigenvalue_of_hasGenEigenvalue (k := n)
-        apply first_generalized_eigenvalue
-      . omega
-    second_n_pos := sorry
+    second_n := n - Module.finrank ℂ first_subspace
+    first_n_lt := first_n_lt
+    first_n_pos := first_n_pos
+    second_n_lt := by
+      simp
+      refine ⟨by omega, by omega⟩
+    second_n_pos := by
+      simp
+      omega
     iso := sorry,
-
   }
   -- exact Nonempty.intro {
   --   k := 2,
