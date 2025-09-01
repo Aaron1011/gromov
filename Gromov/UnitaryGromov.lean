@@ -998,13 +998,15 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
 abbrev UnitaryProd (k : ℕ) (n : ℕ) (n_i : Fin k → Fin n) := (i : Fin k) → Matrix.unitaryGroup (Fin (n_i i)) ℂ
 
 structure InductiveLemmaData (n : ℕ) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g : G) where
-  k : ℕ
-  k_pos : 0 < k
-  n_i : Fin k → ℕ
-  n_i_lt : ∀ i : Fin k, n_i i < n
-  positive_n_i : ∀ i : Fin k, n_i i ≠ 0
-  groups : (i : Fin k) → Subgroup (Matrix.unitaryGroup (Fin (n_i i)) ℂ)
-  iso : Subgroup.centralizer {g} ≃* ((i : Fin k) → (groups i))
+  first_n: ℕ
+  second_n: ℕ
+  first_n_lt: first_n < n
+  second_n_lt: second_n < n
+  first_n_pos: 0 < first_n
+  second_n_pos: 0 < second_n
+  first_group: Subgroup (Matrix.unitaryGroup (Fin first_n) ℂ)
+  second_group: Subgroup (Matrix.unitaryGroup (Fin second_n) ℂ)
+  iso : Subgroup.centralizer {g} ≃* first_group × second_group
 
 -- Lemma 3.30
 lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g : G) (g_not_multiple_I : ∀ z : ℂ, g.val.val ≠ z • 1):
@@ -1155,11 +1157,11 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
   have nontrivial_len :  Nontrivial (Fin list_eigenvalues.length) := by
     exact Fin.nontrivial_iff_two_le.mpr two_eigenvalues
 
-  let first_subspace := Module.End.genEigenspace g_end (list_eigenvalues.get ⟨0, by linarith⟩) ⊤
+  let first_subspace := Module.End.genEigenspace g_end (list_eigenvalues.get ⟨0, by linarith⟩) n
   obtain ⟨second_subspace, first_compl_second⟩ := Submodule.exists_isCompl first_subspace
   --have i_j_disjoint := Module.End.disjoint_genEigenspace g_end vals_neq ⊤ ⊤
 
-  have first_generalized_eigenvalue : g_end.HasGenEigenvalue (list_eigenvalues.get ⟨0, by linarith⟩) 1 := by
+  have first_generalized_eigenvalue : g_end.HasGenEigenvalue (list_eigenvalues.get ⟨0, by linarith⟩) n := by
     rw [Module.End.hasGenEigenvalue_iff_hasEigenvalue]
     · have zero_mem : list_eigenvalues.get ⟨0, by linarith⟩ ∈ list_eigenvalues := by
         simp [list_eigenvalues]
@@ -1168,7 +1170,18 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
       simp only [Finset.mem_toList] at zero_mem
       simp at zero_mem
       exact zero_mem
-    · simp
+    · linarith
+
+  have second_generalized_eigenvalue : g_end.HasGenEigenvalue (list_eigenvalues.get ⟨1, by linarith⟩) n := by
+    rw [Module.End.hasGenEigenvalue_iff_hasEigenvalue]
+    · have one_mem : list_eigenvalues.get ⟨1, by linarith⟩ ∈ list_eigenvalues := by
+        simp [list_eigenvalues]
+
+      unfold list_eigenvalues at one_mem
+      simp only [Finset.mem_toList] at one_mem
+      simp at one_mem
+      exact one_mem
+    · linarith
 
 
   have first_not_bot := Module.End.hasGenEigenvalue_iff.mp first_generalized_eigenvalue
@@ -1179,109 +1192,168 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
   --   rw [bot_lt_iff_ne_bot] at first_not_bot
   --   exact j_not_bot
 
+  -- LinearMap.toMatrix'
 
-  have foo := Module.End.pos_finrank_genEigenspace_of_hasEigenvalue (f := g_end) (μ := 1) (k := 2)
+  -- TODO - is there version of this with a nicer name when f = g ?
+  have preserves_first_eigenspace := Module.End.mapsTo_genEigenspace_of_comm (f := g_end) (g := g_end) (by simp) (list_eigenvalues.get ⟨0, by linarith⟩) n
+  have g_restrict := g_end.restrict (p := first_subspace) (q := first_subspace) preserves_first_eigenspace
+
+  let dim := (Module.finrank ℂ (Module.End.genEigenspace g_end (list_eigenvalues.get ⟨0, by linarith⟩) n))
+  have ⟨k, basis⟩ := Submodule.basisOfPid (Pi.basisFun _ _) first_subspace (ι := Fin (n))
+  let my_map := (LinearMap.toMatrix basis basis)
+  let foo := LinearMap.range my_map
+  let g_restrict_matrix := (LinearMap.toMatrix basis basis) g_restrict
+  have rank_eq := Submodule.finrank_eq_rank _ _ first_subspace
+  let mapped := Submodule.map g.val.val.toLin' first_subspace
+
+  --let my_map := LinearMap.toMatrix' (m := Fin n) (n := Fin n) (R := ℂ) g_end_first
+  --have foo := Module.End.pos_finrank_genEigenspace_of_hasEigenvalue (f := g_end) (μ := 1) (k := 2)
   exact Nonempty.intro {
-    k := 2,
-    k_pos := by
-      linarith
-    n_i := fun i => if i = 0 then (Module.finrank ℂ (first_subspace)) else Module.finrank ℂ (second_subspace),
-    n_i_lt := fun i => by
-      split_ifs
-      calc
-        _ < Module.finrank ℂ (Fin n → ℂ) := by
-          apply Submodule.finrank_lt
+    first_group := ⊤,
+    second_group := ⊤,
+    first_n := Module.finrank ℂ first_subspace
+    second_n := Module.finrank ℂ second_subspace
+    first_n_lt := by
+      simp [first_subspace]
+      have my_lt := Submodule.finrank_lt (s := first_subspace) ?_
+      . simpa using my_lt
+      .
+        simp [first_subspace]
+        have disjoint_other := Module.End.disjoint_genEigenspace (f := g_end)
+          (μ₁ := list_eigenvalues.get ⟨0, by linarith⟩)
+          (μ₂ := list_eigenvalues.get ⟨1, by linarith⟩)
+          (k := n)
+          (l := n) ?_
+
+        .
+          rw [Module.End.hasGenEigenvalue_iff] at second_generalized_eigenvalue
           by_contra!
-          sorry
-          -- have distinct : ∃ j : Fin list_eigenvalues.length, i ≠ j := by
-          --   have foo := exists_ne i
-          --   obtain ⟨j, hj⟩ := foo
-          --   use j
-          --   exact hj.symm
-
-          -- obtain ⟨j, hj⟩ := distinct
-          -- have vals_neq : list_eigenvalues.get i ≠ list_eigenvalues.get j := by
-          --   simp [list_eigenvalues]
-          --   have no_dup := Finset.nodup_toList finite_eigenvalues.toFinset
-          --   rw [List.Nodup.getElem_inj_iff]
-          --   . omega
-          --   . exact no_dup
-
-
-          --   --rw [List.Nodup.get_inj_iff no_dup]
-          -- let j_subspace := Module.End.genEigenspace g_end (list_eigenvalues.get j) ⊤
-          -- have i_j_disjoint := Module.End.disjoint_genEigenspace g_end vals_neq ⊤ ⊤
-
-          -- have j_mem_tolist : list_eigenvalues.get j ∈ list_eigenvalues := by
-          --   simp [list_eigenvalues]
-
-          -- unfold list_eigenvalues at j_mem_tolist
-          -- simp only [Finset.mem_toList] at j_mem_tolist
-          -- simp at j_mem_tolist
-          -- have j_generalized_eigenvalue : g_end.HasGenEigenvalue (list_eigenvalues.get j) 1 := by
-          --   rw [Module.End.hasGenEigenvalue_iff_hasEigenvalue]
-          --   . exact j_mem_tolist
-          --   . simp
-
-          -- -- Our 'j' eigenspace is not the trivial (bot) space
-          -- have j_not_bot := Module.End.hasGenEigenvalue_iff.mp j_generalized_eigenvalue
-          -- have j_top_not_bot : (g_end.genEigenspace (list_eigenvalues.get j)) ⊤ ≠ ⊥ := by
-          --   rw [← bot_lt_iff_ne_bot] at j_not_bot
-          --   grw [Module.End.genEigenspace_le_maximal] at j_not_bot
-          --   rw [bot_lt_iff_ne_bot] at j_not_bot
-          --   exact j_not_bot
-
-          -- -- The i and j spaces are disjoint and j is not ⊥, so i is not ⊤
-          -- have i_ne_top : (g_end.genEigenspace (list_eigenvalues.get i)) ⊤ ≠ ⊤ := by
-          --   by_contra!
-          --   rw [this] at i_j_disjoint
-          --   simp at i_j_disjoint
-          --   contradiction
-
-          -- contradiction
+          simp at disjoint_other
+          rw [this] at disjoint_other
+          simp at disjoint_other
+          simp at second_generalized_eigenvalue
+          contradiction
+        .
+          simp [list_eigenvalues]
+          rw [List.Nodup.getElem_inj_iff]
+          . simp
+          . exact Finset.nodup_toList finite_eigenvalues.toFinset
 
 
 
-        _ ≤ n := by
-          simp
-      sorry
+    second_n_lt := sorry
+    first_n_pos := by
+      unfold first_subspace
+      apply Module.End.pos_finrank_genEigenspace_of_hasEigenvalue
+      .
+        apply Module.End.hasEigenvalue_of_hasGenEigenvalue (k := n)
+        apply first_generalized_eigenvalue
+      . omega
+    second_n_pos := sorry
+    iso := sorry,
 
-
-
-
-    positive_n_i := by
-      -- intro i
-      -- have i_mem_tolist : list_eigenvalues.get i ∈ list_eigenvalues := by
-      --   simp [list_eigenvalues]
-
-      -- unfold list_eigenvalues at i_mem_tolist
-      -- simp only [Finset.mem_toList] at i_mem_tolist
-      -- simp at i_mem_tolist
-      -- have increasing := Module.End.genEigenspace_le_maximal g_end (list_eigenvalues.get i) 1
-      -- apply Submodule.finrank_mono at increasing
-      -- have pos_rank := Module.End.pos_finrank_genEigenspace_of_hasEigenvalue (k := 1) i_mem_tolist (by simp)
-      -- simp at pos_rank
-      -- simp at increasing
-      -- grw [increasing] at pos_rank
-      -- simp only [Fin.eta, List.get_eq_getElem, ne_eq, list_eigenvalues]
-      sorry
-      --linarith
-    groups := fun i => (by
-    --  --let mapped := Submodule.map g.val.val.toLin' (g_end.genEigenspace (list_eigenvalues.get i) ⊤)
-    --  let g_restrict := g_end.restrict (p := g_end.genEigenspace (list_eigenvalues.get i) ⊤) (q := g_end.genEigenspace (list_eigenvalues.get i) ⊤) (by sorry)
-
-    --  let dim := (Module.finrank ℂ (Module.End.genEigenspace g_end (list_eigenvalues.get ⟨i, by (
-    --   simp
-    -- )⟩) ⊤))
-    --  have ⟨k, basis⟩ := Submodule.basisOfPid (Pi.basisFun _ _) ((g_end.genEigenspace (list_eigenvalues.get i)) ⊤) (ι := Fin (n))
-    --  let g_restrict_matrix := (LinearMap.toMatrix basis basis) g_restrict
-    --  have rank_eq := Submodule.finrank_eq_rank _ _ ((g_end.genEigenspace 1) ⊤)
-     sorry
-      --have preserves := Module.End.mapsTo_genEigenspace_of_comm ?_ (f := g_end) (g := Matrix.toLin' g)
-    )
-    iso := by sorry
-    --iso := Subgroup.centralizer {g} ≃* (fun i => G)
   }
+  -- exact Nonempty.intro {
+  --   k := 2,
+  --   k_pos := by
+  --     linarith
+  --   n_i := fun i => if i = 0 then (Module.finrank ℂ (first_subspace)) else Module.finrank ℂ (second_subspace),
+  --   n_i_lt := fun i => by
+  --     split_ifs
+  --     calc
+  --       _ < Module.finrank ℂ (Fin n → ℂ) := by
+  --         apply Submodule.finrank_lt
+  --         by_contra!
+  --         sorry
+  --         -- have distinct : ∃ j : Fin list_eigenvalues.length, i ≠ j := by
+  --         --   have foo := exists_ne i
+  --         --   obtain ⟨j, hj⟩ := foo
+  --         --   use j
+  --         --   exact hj.symm
+
+  --         -- obtain ⟨j, hj⟩ := distinct
+  --         -- have vals_neq : list_eigenvalues.get i ≠ list_eigenvalues.get j := by
+  --         --   simp [list_eigenvalues]
+  --         --   have no_dup := Finset.nodup_toList finite_eigenvalues.toFinset
+  --         --   rw [List.Nodup.getElem_inj_iff]
+  --         --   . omega
+  --         --   . exact no_dup
+
+
+  --         --   --rw [List.Nodup.get_inj_iff no_dup]
+  --         -- let j_subspace := Module.End.genEigenspace g_end (list_eigenvalues.get j) ⊤
+  --         -- have i_j_disjoint := Module.End.disjoint_genEigenspace g_end vals_neq ⊤ ⊤
+
+  --         -- have j_mem_tolist : list_eigenvalues.get j ∈ list_eigenvalues := by
+  --         --   simp [list_eigenvalues]
+
+  --         -- unfold list_eigenvalues at j_mem_tolist
+  --         -- simp only [Finset.mem_toList] at j_mem_tolist
+  --         -- simp at j_mem_tolist
+  --         -- have j_generalized_eigenvalue : g_end.HasGenEigenvalue (list_eigenvalues.get j) 1 := by
+  --         --   rw [Module.End.hasGenEigenvalue_iff_hasEigenvalue]
+  --         --   . exact j_mem_tolist
+  --         --   . simp
+
+  --         -- -- Our 'j' eigenspace is not the trivial (bot) space
+  --         -- have j_not_bot := Module.End.hasGenEigenvalue_iff.mp j_generalized_eigenvalue
+  --         -- have j_top_not_bot : (g_end.genEigenspace (list_eigenvalues.get j)) ⊤ ≠ ⊥ := by
+  --         --   rw [← bot_lt_iff_ne_bot] at j_not_bot
+  --         --   grw [Module.End.genEigenspace_le_maximal] at j_not_bot
+  --         --   rw [bot_lt_iff_ne_bot] at j_not_bot
+  --         --   exact j_not_bot
+
+  --         -- -- The i and j spaces are disjoint and j is not ⊥, so i is not ⊤
+  --         -- have i_ne_top : (g_end.genEigenspace (list_eigenvalues.get i)) ⊤ ≠ ⊤ := by
+  --         --   by_contra!
+  --         --   rw [this] at i_j_disjoint
+  --         --   simp at i_j_disjoint
+  --         --   contradiction
+
+  --         -- contradiction
+
+
+
+  --       _ ≤ n := by
+  --         simp
+  --     sorry
+
+
+
+
+  --   positive_n_i := by
+  --     -- intro i
+  --     -- have i_mem_tolist : list_eigenvalues.get i ∈ list_eigenvalues := by
+  --     --   simp [list_eigenvalues]
+
+  --     -- unfold list_eigenvalues at i_mem_tolist
+  --     -- simp only [Finset.mem_toList] at i_mem_tolist
+  --     -- simp at i_mem_tolist
+  --     -- have increasing := Module.End.genEigenspace_le_maximal g_end (list_eigenvalues.get i) 1
+  --     -- apply Submodule.finrank_mono at increasing
+  --     -- have pos_rank := Module.End.pos_finrank_genEigenspace_of_hasEigenvalue (k := 1) i_mem_tolist (by simp)
+  --     -- simp at pos_rank
+  --     -- simp at increasing
+  --     -- grw [increasing] at pos_rank
+  --     -- simp only [Fin.eta, List.get_eq_getElem, ne_eq, list_eigenvalues]
+  --     sorry
+  --     --linarith
+  --   groups := fun i => (by
+  --   --  --let mapped := Submodule.map g.val.val.toLin' (g_end.genEigenspace (list_eigenvalues.get i) ⊤)
+  --   --  let g_restrict := g_end.restrict (p := g_end.genEigenspace (list_eigenvalues.get i) ⊤) (q := g_end.genEigenspace (list_eigenvalues.get i) ⊤) (by sorry)
+
+  --   --  let dim := (Module.finrank ℂ (Module.End.genEigenspace g_end (list_eigenvalues.get ⟨i, by (
+  --   --   simp
+  --   -- )⟩) ⊤))
+  --   --  have ⟨k, basis⟩ := Submodule.basisOfPid (Pi.basisFun _ _) ((g_end.genEigenspace (list_eigenvalues.get i)) ⊤) (ι := Fin (n))
+  --   --  let g_restrict_matrix := (LinearMap.toMatrix basis basis) g_restrict
+  --   --  have rank_eq := Submodule.finrank_eq_rank _ _ ((g_end.genEigenspace 1) ⊤)
+  --    sorry
+  --     --have preserves := Module.End.mapsTo_genEigenspace_of_comm ?_ (f := g_end) (g := Matrix.toLin' g)
+  --   )
+  --   iso := by sorry
+  --   --iso := Subgroup.centralizer {g} ≃* (fun i => G)
+  -- }
 
   -- Module.End.maxGenEigenspace_eq_genEigenspace_finrank
 
