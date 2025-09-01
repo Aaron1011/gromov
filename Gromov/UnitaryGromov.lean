@@ -1009,6 +1009,7 @@ structure InductiveLemmaData (n : ℕ) (G : Subgroup (Matrix.unitaryGroup (Fin n
   iso : Subgroup.centralizer {g} ≃* first_group × second_group
 
 -- Lemma 3.30
+set_option maxHeartbeats 300000 in
 lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g : G) (g_not_multiple_I : ∀ z : ℂ, g.val.val ≠ z • 1):
   Nonempty (InductiveLemmaData n G g) := by
 
@@ -1283,10 +1284,35 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
     -- Otherwise, it's an eigenspace for a distinct eigenvalue, so the eigenspaces are disjoint, so it's not in the first eigenspace
     --sorry
 
+
+  have my_equiv := finDimVectorspaceEquiv (n := Module.finrank ℂ first_subspace) (by simp) (M := first_subspace) (R := ℂ)
+  have first_subspace_to_matrix := LinearEquiv.arrowCongr (R₁' := ℂ) (R₁ := ℂ) (σ₁₁' := RingHom.id ℂ) (R₂' := ℂ) my_equiv my_equiv
+
+  let my_range := Submodule.map first_subspace_to_matrix ⊤
+
+  have first_subspace_unitary: ∀ x ∈ first_subspace, (Matrix.toLin' (g.val * (star g.val))) x = x := by
+    simp
+
+  have second_subspace_unitary: ∀ x ∈ second_space, (Matrix.toLin' (g.val * (star g.val))) x = x := by
+    simp
+
   have g_restrict_first_dom := g_end.domRestrict (p := first_subspace)
   let g_restrict_compl := g_end.domRestrict (p := second_space)
 
   have g_reconstruct := LinearMap.ofIsCompl second_is_compl g_restrict_first_dom g_restrict_compl
+
+  let first_map: G → Matrix.unitaryGroup (Fin (Module.finrank ℂ ↥first_subspace)) ℂ := fun g => ⟨(first_subspace_to_matrix ((Matrix.toLin' g.val.val).restrict (p := first_subspace) (q := first_subspace) (by
+    -- Module.End.mapsTo_genEigenspace_of_comm (f := g_end) (g := g_end) (by simp) (list_eigenvalues.get ⟨0, by linarith⟩) n
+    sorry
+  ))).toMatrix', by sorry⟩
+
+  let first_map_hom: G →*  Matrix.unitaryGroup (Fin (Module.finrank ℂ ↥first_subspace)) ℂ := {
+    toFun := first_map,
+    map_one' := by
+      sorry
+    map_mul' := by
+      sorry
+  }
 
   -- have g_restrict_first_star := g_restrict_first_dom.toMatrix'
   --   sorry
@@ -1296,10 +1322,10 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
   -- LinearMap.ofIsCompl
 
 
-  --let my_map := LinearMap.toMatrix' (m := Fin n) (n := Fin n) (R := ℂ) g_end_first
+  --let my_map := LinearMap.toMatrix' (m := Fin n) (n := Fin n) (R := ℂ) g_restrict
   --have foo := Module.End.pos_finrank_genEigenspace_of_hasEigenvalue (f := g_end) (μ := 1) (k := 2)
   exact Nonempty.intro {
-    first_group := ⊤,
+    first_group := first_map_hom.range,
     second_group := ⊤,
     first_n := Module.finrank ℂ first_subspace
     second_n := n - Module.finrank ℂ first_subspace
