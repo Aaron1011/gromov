@@ -1285,8 +1285,8 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
     --sorry
 
 
-  have my_equiv := finDimVectorspaceEquiv (n := Module.finrank ℂ first_subspace) (by simp) (M := first_subspace) (R := ℂ)
-  have first_subspace_to_matrix := LinearEquiv.arrowCongr (R₁' := ℂ) (R₁ := ℂ) (σ₁₁' := RingHom.id ℂ) (R₂' := ℂ) my_equiv my_equiv
+  let my_equiv := finDimVectorspaceEquiv (n := Module.finrank ℂ first_subspace) (by simp) (M := first_subspace) (R := ℂ)
+  let first_subspace_to_matrix := LinearEquiv.arrowCongr (R₁' := ℂ) (R₁ := ℂ) (σ₁₁' := RingHom.id ℂ) (R₂' := ℂ) my_equiv my_equiv
 
   let my_range := Submodule.map first_subspace_to_matrix ⊤
 
@@ -1309,8 +1309,16 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
   let first_map_hom: G →*  Matrix.unitaryGroup (Fin (Module.finrank ℂ ↥first_subspace)) ℂ := {
     toFun := first_map,
     map_one' := by
+      simp [first_map, first_subspace_to_matrix, my_equiv]
+      ext i j
+      simp
       sorry
     map_mul' := by
+      intro x y
+      simp [first_map]
+      rw [← LinearMap.toMatrix'_mul]
+      simp
+      simp [first_subspace_to_matrix]
       sorry
   }
 
