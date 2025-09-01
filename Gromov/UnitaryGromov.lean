@@ -1240,6 +1240,61 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
         . simp
         . exact Finset.nodup_toList finite_eigenvalues.toFinset
 
+  obtain ⟨second_space, second_is_compl⟩ := Submodule.exists_isCompl first_subspace
+  have union_spans := IsCompl.sup_eq_top second_is_compl
+
+  have preserves_second_space: ∀ x ∈ second_space, g_end x ∈ second_space := by
+    intro x hx
+    have spans := Module.End.iSup_maxGenEigenspace_eq_top g_end
+    rw [iSup_split_single _ ((list_eigenvalues[0]))] at spans
+    have x_mem_union : x ∈ (⊤ : (Submodule ℂ (Fin n → ℂ))) := by simp
+    rw [← spans] at x_mem_union
+    simp at x_mem_union
+    by_cases x_eq_zero: x = 0
+    . simp [x_eq_zero]
+    .
+      have first_disjoint := second_is_compl.disjoint
+      rw [Submodule.disjoint_def] at first_disjoint
+      by_cases x_mem_first: x ∈ first_subspace
+      . have x_zero := first_disjoint x x_mem_first hx
+        simp [x_zero]
+      .
+
+
+        rw [Submodule.mem_sup] at x_mem_union
+        obtain ⟨a, a_mem, b, b_mem, a_b_sum⟩ := x_mem_union
+
+
+
+        have sup_top := IsCompl.sup_eq_top second_is_compl
+        rw [Submodule.sup_eq_top_iff] at sup_top
+        obtain ⟨a, a_mem, b, b_mem, a_b_sum⟩ := sup_top x
+        apply sub_eq_of_eq_add at a_b_sum
+        have sub_mem := Submodule.sub_mem _ hx b_mem
+        rw [a_b_sum] at sub_mem
+
+        have first_disjoint := second_is_compl.disjoint
+        rw [Submodule.disjoint_def] at first_disjoint
+        have a_zero := first_disjoint a a_mem sub_mem
+        sorry
+
+    -- Write ⊤ as a union of eigenspaces.
+    -- The output of g_end must fall in a particular eigenspace - if it's the first one, we get a contradiction with second_is_compl
+    -- Otherwise, it's an eigenspace for a distinct eigenvalue, so the eigenspaces are disjoint, so it's not in the first eigenspace
+    --sorry
+
+  have g_restrict_first_dom := g_end.domRestrict (p := first_subspace)
+  let g_restrict_compl := g_end.domRestrict (p := second_space)
+
+  have g_reconstruct := LinearMap.ofIsCompl second_is_compl g_restrict_first_dom g_restrict_compl
+
+  -- have g_restrict_first_star := g_restrict_first_dom.toMatrix'
+  --   sorry
+
+
+
+  -- LinearMap.ofIsCompl
+
 
   --let my_map := LinearMap.toMatrix' (m := Fin n) (n := Fin n) (R := ℂ) g_end_first
   --have foo := Module.End.pos_finrank_genEigenspace_of_hasEigenvalue (f := g_end) (μ := 1) (k := 2)
