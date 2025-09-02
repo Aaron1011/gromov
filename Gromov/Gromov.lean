@@ -7618,6 +7618,31 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
       obtain ⟨g_re, f_g_re_eq⟩ := z_re_mem
 
 
+      have f_max_im := Set.Finite.exists_maximalFor (fun y => ‖y.im‖) (Set.range f) ?_ ?_
+      obtain ⟨z_im, z_im_mem, hz_im⟩ := f_max_im
+
+      have z_im_max: ∀ p ∈ Set.range f, ‖p.im‖ ≤ ‖z_im.im‖ := by
+        intro p hp
+        simp at hp
+        obtain ⟨y, hy⟩ := hp
+        by_cases p_le_z: ‖p.im‖ ≤ ‖z_im.im‖
+        . exact p_le_z
+        . simp at p_le_z
+
+          have f_le := hz_im (j := f.toFun y) ?_ ?_
+          .
+            simp at f_le
+            rw [← hy]
+            exact f_le
+          . simp
+          . simp
+            rw [← hy] at p_le_z
+            linarith
+
+      simp at z_im_mem
+      obtain ⟨g_im, f_g_im_eq⟩ := z_im_mem
+
+
       have f_max := Set.Finite.exists_maximalFor (fun y => ‖y‖) (Set.range f) ?_ ?_
       obtain ⟨z, z_mem, hz⟩ := f_max
       -- TODO - there must be an easier way to do this
@@ -7663,25 +7688,55 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
         simpa using z_re_max
       )
 
+      have f_im_const := harmonic_abs_max_implies_const (S := S) (Complex.im ∘ f.toFun) (by
+        have f_harmonic := f.harmonic
+        simp [Harmonic] at f_harmonic
+        simp [Laplace_b, f_conv_mu]
+        ext x
+        simp
+        have f_harmonic_real := f_harmonic x
+        apply_fun Complex.im at f_harmonic_real
+        simp at f_harmonic_real
+        rw [sub_eq_zero]
+        exact f_harmonic_real
+      ) g_im (by
+        intro a
+        specialize z_im_max ((f.toFun a)) (by (
+          simp
+        ))
+        rw [← f_g_im_eq] at z_im_max
+        simpa using z_im_max
+      )
 
-      have f_const := harmonic_extreme_val_implies_const (S := S) f.toFun ?_ g ?_
-      use z
+      let const_val: ℂ := {
+        re := (f g_re).re,
+        im := (f g_im).im
+      }
+
+      have f_const: f.toFun = fun x ↦ const_val  := by
+        ext g
+        apply Complex.ext
+        .
+          have app_re := congrFun f_re_const g
+          simpa using app_re
+        . have app_im := congrFun f_im_const g
+          simpa using app_im
+
+
+
+
+
+      --have f_const := harmonic_extreme_val_implies_const (S := S) f.toFun ?_ g ?_
+      use const_val
       ext a
       rw [f_const]
       simp [ConstLipschitzH]
-      exact f_g_eq
       .
-        have f_harmonic := f.harmonic
-        simp [Harmonic] at f_harmonic
-        simpa using f_harmonic
+        rw [f_range_eq]
+        apply Set.finite_range
+      . apply Set.range_nonempty
       .
-        intro a
-        specialize z_max (f.toFun a) (by (
-          simp
-        ))
-        rw [← f_g_eq] at z_max
-        exact z_max
-      . rw [f_range_eq]
+        rw [f_range_eq]
         apply Set.finite_range
       . apply Set.range_nonempty
       .
