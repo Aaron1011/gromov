@@ -1304,7 +1304,15 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
   let first_map: G → Matrix.unitaryGroup (Fin (Module.finrank ℂ ↥first_subspace)) ℂ := fun g => ⟨(first_subspace_to_matrix ((Matrix.toLin' g.val.val).restrict (p := first_subspace) (q := first_subspace) (by
     -- Module.End.mapsTo_genEigenspace_of_comm (f := g_end) (g := g_end) (by simp) (list_eigenvalues.get ⟨0, by linarith⟩) n
     sorry
-  ))).toMatrix', by sorry⟩
+  ))).toMatrix', by (
+    rw [Matrix.mem_unitaryGroup_iff]
+
+    apply Matrix.ext_of_mulVec_single
+    intro a
+    simp
+    sorry
+
+  )⟩
 
   let first_map_hom: G →*  Matrix.unitaryGroup (Fin (Module.finrank ℂ ↥first_subspace)) ℂ := {
     toFun := first_map,
