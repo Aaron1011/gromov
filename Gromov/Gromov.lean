@@ -2683,7 +2683,7 @@ structure Theorem3_1_Input where
 
 -- Based on https://github.com/YaelDillies/LeanCamCombi/blob/b6312bee17293272af6bdcdb47b3ffe98fca46a4/LeanCamCombi/GrowthInGroups/Lecture1.lean#L41
 -- and the Vikman paper
-def HasPolynomialGrowthD (d: ℕ): Prop := ∃ a: ℕ+, ∀ n ≥ 2, #(S ^ n) ≤ a * n ^ d
+def HasPolynomialGrowthD (d: ℕ): Prop := ∃ a: ℕ, ∀ n ≥ 1, #(S ^ n) ≤ a * n ^ d
 def HasPolynomialGrowth: Prop := ∃ d, HasPolynomialGrowthD (S := S) d
 
 open Classical in
@@ -7611,13 +7611,9 @@ lemma poly_growth_implies (d: ℕ) (hd: HasPolynomialGrowthD (S := S) d): HasPol
   simp [HasPolynomialGrowthD] at hd
   obtain ⟨a, s_poly⟩ := hd
   simp [HasPolynomialGrowthD]
-  have b: ℕ+ := 1
+  have b: ℕ := 1
   have C: ℕ := 0
-  use ⟨#(S ^ C) * ↑a, (by
-    simp only [PNat.pos, mul_pos_iff_of_pos_right, Finset.card_pos]
-    refine Finset.Nonempty.pow ?_
-    exact Finset.nonempty_coe_sort.mp hS
-  )⟩
+  use #(S ^ C) * ↑a
   intro n hn
   --have inject_s_card := Finset.card_le_card_of_injOn (s := S') (t := S ^ C) sorry sorry sorry
   specialize s_poly n hn
@@ -7639,7 +7635,6 @@ lemma poly_growth_implies (d: ℕ) (hd: HasPolynomialGrowthD (S := S) d): HasPol
     --   exact Nat.pow_le_pow_left s_poly C
 
   rw [← mul_assoc]
-  simp
   -- calc
   --   #(S' ^ n) ≤ #(S') ^ n := by apply Finset.card_pow_le
   --   _ ≤ #(S ^ C) ^ n := by exact Nat.pow_le_pow_left inject_s_card n
@@ -8275,6 +8270,15 @@ lemma new_three_two_poly_growth (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD 
 
 
   obtain ⟨a, hG⟩ := hG
+
+  have a_ne_zero: a ≠ 0 := by
+    by_contra!
+    rw [this] at hG
+    have hg_one := hG 1 (by omega)
+    simp at hg_one
+    have one_mem := hGS.one_mem
+    rw [hg_one] at one_mem
+    simp at one_mem
 
   have mul_four := Asymptotics.IsLittleO.const_mul_left little_o_poly (a * 4^d)
   rw [← Asymptotics.isLittleO_const_mul_right_iff (c := 2^(-N : ℤ)) (hc := (by simp))] at mul_four
@@ -9781,9 +9785,18 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD (S := S) n): Group.I
 
       by_cases y_eq_zero: y = 0
       . simp [y_eq_zero]
-        have foo := a.property
-        -- TODO - why don't omega and linarith work here?
-        exact foo
+
+        -- TODO - deduplicate this
+        have a_ne_zero: a ≠ 0 := by
+          by_contra!
+          rw [this] at ha
+          have hg_one := ha 1 (by omega)
+          simp at hg_one
+          have one_mem := hGS.one_mem
+          rw [hg_one] at one_mem
+          simp at one_mem
+
+        omega
       . by_cases y_eq_one: y = 1
         .
           simp [y_eq_one]
@@ -9792,9 +9805,7 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD (S := S) n): Group.I
           simp at card_mono
           linarith
         .
-          have two_le_y: 2 ≤ y := by
-            omega
-          exact ha y two_le_y
+          exact ha y (by omega)
 
 
 
