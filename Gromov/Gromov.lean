@@ -2008,7 +2008,7 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
     . infer_instance
   .
     have dim_ge_two: 2 ≤ Module.finrank ℂ (V) := by omega
-    obtain ⟨N, N_comm, N_finite_index⟩ := compact_lie_virtually_abelian (Module.finrank ℂ V) (by omega) G' G'_fg
+    obtain ⟨N, N_comm, N_finite_index⟩ := compact_lie_virtually_abelian (Module.finrank ℂ V) (by omega) G' G'_fg sorry
 
     let new_N := N
     simp [G'] at new_N
@@ -5191,6 +5191,113 @@ noncomputable def laplace_range := LinearMap.range (Laplace_linear (S := S))
 -- We state 'f is harmonc' as 'Laplace_b f = 0', as this is the hypothesis we have where we need to call this lemma
 -- This is true even if it's a local maximum (considered in terms of the  poitns reached by multiply by S), but
 -- we don't need that result yet
+lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f = 0) (a: G) (h_max: ∀ g: G, f g ≤ f a): f = fun _ => f a := by
+  have path_implies_max (l : List S): f (l.unattach.prod * a) = f a := by
+    induction l with
+    | nil =>
+      simp
+    | cons s l ih =>
+      simp
+      simp [Laplace_b, f_conv_mu] at hf
+      have f_at_l := congrFun hf (l.unattach.prod * a)
+      simp at f_at_l
+      rw [sub_eq_zero] at f_at_l
+      rw [ih] at f_at_l
+      field_simp at f_at_l
+
+      -- TODO - is there a 'Finset.expect' theorem we can use?
+     -- rw [← Finset.expect_eq_sum_div_card] at f_at_l
+     -- TODO - upstream this to mathlib in some form
+      have f_s_eq: ∀ s: S, f a = f (s * (l.unattach.prod * a)) := by
+        by_contra!
+        simp at this
+        obtain ⟨s, s_mem_s, hs⟩ := this
+        by_cases val_le_max: f (s * (l.unattach.prod * a)) ≤ f a
+        .
+          have val_lt_max: f (s * (l.unattach.prod * a)) < f a := by
+            exact lt_of_le_of_ne (h_max (↑s * (l.unattach.prod * a))) (id (Ne.symm hs))
+
+          have sum_strict_lt := Finset.sum_lt_sum (f := fun x => f (x * (l.unattach.prod * a))) (g := fun x => f a) (s := S) ?_ ?_
+          .
+            simp at sum_strict_lt
+            rw [mul_comm] at sum_strict_lt
+            rw [← div_lt_iff₀] at sum_strict_lt
+            .
+              apply ne_of_gt at sum_strict_lt
+              contradiction
+            . simpa using hS
+          . intro s hs
+            apply h_max
+          . use s
+        .
+          have val_gt := h_max (s * (l.unattach.prod * a))
+          simp at val_le_max
+          linarith
+      specialize f_s_eq s
+      rw [f_s_eq]
+      rw [mul_assoc]
+  ext g
+
+  obtain ⟨l, h_l_prod⟩ := mem_S_prod_list (g * a⁻¹)
+  simp [ProdS] at h_l_prod
+  specialize path_implies_max l
+  rw [h_l_prod] at path_implies_max
+  simpa using path_implies_max
+
+
+lemma harmonic_abs_max_implies_const (f: G → ℝ) (hf: Laplace_b (S := S) f = 0) (a: G) (h_max: ∀ g: G, |f g| ≤ |f a|): f = fun _ => f a := by
+  by_cases f_a_pos: 0 ≤ f a
+  .
+    have lt_f_a: ∀ g: G, f g ≤ f a := by
+      intro g
+      by_cases f_g_pos: 0 ≤ f g
+      . specialize h_max g
+        rw [abs_eq_self.mpr ?_] at h_max
+        rw [abs_eq_self.mpr f_a_pos] at h_max
+        . exact h_max
+        . exact f_g_pos
+      . linarith
+    exact harmonic_maximum_implies_const f hf a lt_f_a
+  .
+    have f_neg_le: ∀ g, (-f) g ≤ (-f) a := by
+      intro g
+      simp at f_a_pos
+      simp
+      specialize h_max g
+      rw [abs_of_neg f_a_pos] at h_max
+      by_cases f_g_pos: 0 ≤ f g
+      . rw [abs_of_nonneg f_g_pos] at h_max
+        linarith
+      . simp at f_g_pos
+        rw [abs_of_neg f_g_pos] at h_max
+        linarith
+    have neg_const := harmonic_maximum_implies_const (-f) ?_ a f_neg_le
+    .
+      apply_fun (fun h => -h) at neg_const
+      simp at neg_const
+      rw [Pi.neg_def] at neg_const
+      simpa using neg_const
+    .
+      simp_rw [Laplace_b]
+      simp_rw [Laplace_b] at hf
+      conv =>
+        lhs
+        rhs
+        arg 1
+        equals (-1 : ℝ) • f =>
+          simp
+      rw [conv_smul]
+      simp
+      rw [add_comm]
+      rw [← sub_eq_add_neg]
+      rw [sub_eq_zero]
+      rw [sub_eq_zero] at hf
+      exact hf.symm
+
+-- If a harmonic function has a maximum value, then it must be a constant function
+-- We state 'f is harmonc' as 'Laplace_b f = 0', as this is the hypothesis we have where we need to call this lemma
+-- This is true even if it's a local maximum (considered in terms of the  poitns reached by multiply by S), but
+-- we don't need that result yet
 lemma harmonic_extreme_val_implies_const  (f: G → ℂ) (hf: ∀ g: G, f g = ((#S) : ℝ)⁻¹ * ∑ s ∈ S, f (s * g)) (a: G) (h_max: ∀ g: G, ‖f g‖ ≤ ‖f a‖): f = fun _ => f a := by
   have path_implies_max (l : List S): f (l.unattach.prod * a) = f a := by
     induction l with
@@ -5375,26 +5482,32 @@ lemma laplace_zero_iff_zero (g: (Lp ℝ 2 volume (α := G))) (eq_zero: Laplace g
     simp [Laplace_b] at laplace_b_zero
     simp [f_conv_mu] at laplace_b_zero
     rw [sub_eq_zero] at laplace_b_zero
-    have g_const := harmonic_extreme_val_implies_const (fun x => Complex.ofReal (g x)) (by (
-      intro a
-      simp
-      nth_rw 1 [laplace_b_zero]
-      beta_reduce
-      simp
 
-    )) a (by simpa using ha)
+    have other := harmonic_abs_max_implies_const g (by
+      simp [Laplace_b]
+      simp [f_conv_mu]
+      nth_rw 1 [laplace_b_zero]
+      simp
+    ) a (by simpa using ha)
+    have new_g_const_zero := MeasureTheory.memLp_const_iff_enorm (p := 2) (by simp) (by simp) (c := g a) (μ := volume (α := G)) (by simp)
+    rw [← other] at new_g_const_zero
+    simp [MeasureTheory.Lp.memLp] at new_g_const_zero
+    simp [volume, my_haar_eq_count] at new_g_const_zero
+    simp [hGS.g_infinite] at new_g_const_zero
+
+
     -- Use `MeasureTheory.memLp_const_iff_enorm` instead
-    have g_const_zero := MeasureTheory.memLp_const_iff (p := 2) (by simp) (by simp) (c := g a) (μ := volume (α := G))
-    apply_fun (fun x => Complex.re ∘ x) at g_const
-    simp [Function.comp_def] at g_const
-    eta_reduce at g_const
-    rw [← g_const] at g_const_zero
-    simp [MeasureTheory.Lp.memLp] at g_const_zero
-    simp [volume, my_haar_eq_count] at g_const_zero
-    simp [hGS.g_infinite] at g_const_zero
+    -- have g_const_zero := MeasureTheory.memLp_const_iff (p := 2) (by simp) (by simp) (c := g a) (μ := volume (α := G))
+    -- apply_fun (fun x => Complex.re ∘ x) at g_const
+    -- simp [Function.comp_def] at g_const
+    -- eta_reduce at g_const
+    -- rw [← g_const] at g_const_zero
+    -- simp [MeasureTheory.Lp.memLp] at g_const_zero
+    -- simp [volume, my_haar_eq_count] at g_const_zero
+    -- simp [hGS.g_infinite] at g_const_zero
     have g_eq_zero: g.val.cast = 0 := by
-      rw [g_const]
-      rw [g_const_zero]
+      rw [other]
+      rw [new_g_const_zero]
       ext a
       simp
 
