@@ -5483,30 +5483,20 @@ lemma laplace_zero_iff_zero (g: (Lp ℝ 2 volume (α := G))) (eq_zero: Laplace g
     simp [f_conv_mu] at laplace_b_zero
     rw [sub_eq_zero] at laplace_b_zero
 
-    have other := harmonic_abs_max_implies_const g (by
+    have g_const := harmonic_abs_max_implies_const g (by
       simp [Laplace_b]
       simp [f_conv_mu]
       nth_rw 1 [laplace_b_zero]
       simp
     ) a (by simpa using ha)
     have new_g_const_zero := MeasureTheory.memLp_const_iff_enorm (p := 2) (by simp) (by simp) (c := g a) (μ := volume (α := G)) (by simp)
-    rw [← other] at new_g_const_zero
+    rw [← g_const] at new_g_const_zero
     simp [MeasureTheory.Lp.memLp] at new_g_const_zero
     simp [volume, my_haar_eq_count] at new_g_const_zero
     simp [hGS.g_infinite] at new_g_const_zero
 
-
-    -- Use `MeasureTheory.memLp_const_iff_enorm` instead
-    -- have g_const_zero := MeasureTheory.memLp_const_iff (p := 2) (by simp) (by simp) (c := g a) (μ := volume (α := G))
-    -- apply_fun (fun x => Complex.re ∘ x) at g_const
-    -- simp [Function.comp_def] at g_const
-    -- eta_reduce at g_const
-    -- rw [← g_const] at g_const_zero
-    -- simp [MeasureTheory.Lp.memLp] at g_const_zero
-    -- simp [volume, my_haar_eq_count] at g_const_zero
-    -- simp [hGS.g_infinite] at g_const_zero
     have g_eq_zero: g.val.cast = 0 := by
-      rw [other]
+      rw [g_const]
       rw [new_g_const_zero]
       ext a
       simp
