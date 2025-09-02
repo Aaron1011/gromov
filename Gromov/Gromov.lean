@@ -7593,8 +7593,32 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
 
 
     have all_f_const (f: LipschitzH (S := S)): ∃ z: ℂ, f = ConstLipschitzH z := by
-      have f_max := Set.Finite.exists_maximalFor (fun y => ‖y‖) (Set.range f) ?_ ?_
+      have f_max_re := Set.Finite.exists_maximalFor (fun y => ‖y.re‖) (Set.range f) ?_ ?_
+      obtain ⟨z_re, z_re_mem, hz_re⟩ := f_max_re
 
+      have z_re_max: ∀ p ∈ Set.range f, ‖p.re‖ ≤ ‖z_re.re‖ := by
+        intro p hp
+        simp at hp
+        obtain ⟨y, hy⟩ := hp
+        by_cases p_le_z: ‖p.re‖ ≤ ‖z_re.re‖
+        . exact p_le_z
+        . simp at p_le_z
+
+          have f_le := hz_re (j := f.toFun y) ?_ ?_
+          .
+            simp at f_le
+            rw [← hy]
+            exact f_le
+          . simp
+          . simp
+            rw [← hy] at p_le_z
+            linarith
+
+      simp at z_re_mem
+      obtain ⟨g_re, f_g_re_eq⟩ := z_re_mem
+
+
+      have f_max := Set.Finite.exists_maximalFor (fun y => ‖y‖) (Set.range f) ?_ ?_
       obtain ⟨z, z_mem, hz⟩ := f_max
       -- TODO - there must be an easier way to do this
       have z_max: ∀ p ∈ Set.range f, ‖p‖ ≤ ‖z‖ := by
@@ -7615,8 +7639,31 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
             rw [← hy] at p_le_z
             linarith
 
+
       simp at z_mem
       obtain ⟨g, f_g_eq⟩ := z_mem
+
+      have f_re_const := harmonic_abs_max_implies_const (S := S) (Complex.re ∘ f.toFun) (by
+        have f_harmonic := f.harmonic
+        simp [Harmonic] at f_harmonic
+        simp [Laplace_b, f_conv_mu]
+        ext x
+        simp
+        have f_harmonic_real := f_harmonic x
+        apply_fun Complex.re at f_harmonic_real
+        simp at f_harmonic_real
+        rw [sub_eq_zero]
+        exact f_harmonic_real
+      ) g_re (by
+        intro a
+        specialize z_re_max ((f.toFun a)) (by (
+          simp
+        ))
+        rw [← f_g_re_eq] at z_re_max
+        simpa using z_re_max
+      )
+
+
       have f_const := harmonic_extreme_val_implies_const (S := S) f.toFun ?_ g ?_
       use z
       ext a
@@ -7635,6 +7682,10 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g (G := G)))): Nonempty (Theorem3_1
         rw [← f_g_eq] at z_max
         exact z_max
       . rw [f_range_eq]
+        apply Set.finite_range
+      . apply Set.range_nonempty
+      .
+        rw [f_range_eq]
         apply Set.finite_range
       . apply Set.range_nonempty
 
