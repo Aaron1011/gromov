@@ -31,7 +31,7 @@ lemma shrinking_conjugators (n : ℕ) (g h : Matrix.unitaryGroup (Fin n) ℂ) :
         rhs
         repeat rw [mul_sub]
         repeat rw [sub_mul]
-      field_simp
+      simp
       abel_nf
     _ ≤ ‖(g.val - 1)*(h.val - 1)‖ + ‖(h.val - 1)*(g.val - 1)‖ := norm_sub_le _ _
     _ ≤ 2 * ‖g.val - 1‖ * ‖h.val - 1‖ := by
@@ -236,6 +236,7 @@ lemma small_dist_matrix (n : ℕ) (hn : 2 ≤ n) :
       simp
       rw [← Complex.exp_nat_mul, mul_comm]
       field_simp
+      simp
     · simp [Units.ext_iff, Complex.exp_eq_one_iff]
       intro a
       conv =>
@@ -244,27 +245,26 @@ lemma small_dist_matrix (n : ℕ) (hn : 2 ≤ n) :
         rw [mul_comm]
       field_simp
       by_contra!
-      apply mul_left_cancel₀ at this
-      · field_simp at this
-        have abs_lt_one : ‖((1 : ℂ) / ↑n)‖ < 1 := by
-          simp
-          have div_le := Nat.cast_inv_le_one (α := ℝ) n
-          by_cases inv_eq_one : (n : ℝ)⁻¹ = 1
-          · simp at inv_eq_one div_le
-            linarith
-          · simpa [← ne_iff_lt_iff_le, show n ≠ 1 by omega] using div_le
-        by_cases a_eq_zero : a = 0
-        · simp [a_eq_zero] at this
-          omega
-        · simp [this] at abs_lt_one
-          norm_cast at abs_lt_one
-          linarith [Int.one_le_abs a_eq_zero]
-      · norm_num
+      simp at this
+      field_simp at this
+      have abs_lt_one : ‖((1 : ℂ) / ↑n)‖ < 1 := by
+        simp
+        have div_le := Nat.cast_inv_le_one (α := ℝ) n
+        by_cases inv_eq_one : (n : ℝ)⁻¹ = 1
+        · simp at inv_eq_one div_le
+          linarith
+        · simpa [← ne_iff_lt_iff_le, show n ≠ 1 by omega] using div_le
+      by_cases a_eq_zero : a = 0
+      · simp [a_eq_zero] at this
+        omega
+      · simp [this] at abs_lt_one
+        norm_cast at abs_lt_one
+        linarith [Int.one_le_abs a_eq_zero]
 
 #print axioms small_dist_matrix
 
 -- Lemma 3.31 (Volume Packing)
-set_option synthInstance.maxHeartbeats 50000 in
+set_option synthInstance.maxHeartbeats 80000 in
 set_option maxHeartbeats 500000 in
 open Pointwise in
 lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
@@ -683,7 +683,7 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
         conv at inner_q_zero =>
           equals ⟪(q.val.val x), (q.val.val x)⟫ = 0 =>
             rw [← inner_self_ofReal_re]
-            field_simp
+            simp
 
 
         simp at inner_q_zero
@@ -1792,7 +1792,7 @@ lemma unitary_shrink {n : ℕ} (a b : Matrix.unitaryGroup (Fin n) ℂ): ‖(a * 
     arg 1
     equals (a.val - 1) * b + b =>
       rw [sub_mul]
-      field_simp
+      simp
 
   rw [← add_sub]
   grw [norm_add_le]
@@ -1842,7 +1842,7 @@ lemma H_n_single_pow {n : ℕ} {m : ℕ} (data : HnData): ‖((theorem_3_8_h_n d
     rw [pow_succ]
     grw [unitary_shrink]
     grw [ih]
-    field_simp
+    simp
     rw [add_mul]
     simp
 
@@ -1909,7 +1909,7 @@ lemma H_n_prod_le_k {a k : ℕ } {m : ℕ} (a_k_lt : a + k + 1 ≤ m) (c : ℝ) 
       rw [Finset.range_eq_Ico, ← mul_assoc, ← mul_assoc, ← mul_assoc]
       grw [geom_sum_Ico_le_of_lt_one]
       have eps_ne_zero := H_n_eps_pos data.hd
-      field_simp
+      simp
       -- TODO - make this a lemma
       have two_mul_le : 2 * (H_n_eps data.hd) < (1 / 2) := by
         have foo := H_n_eps_lt data.hd
@@ -2134,7 +2134,7 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnD
     lhs
     arg 1
     equals (1 + ((theorem_3_8_h_n data n).g.val.val - 1)) =>
-      field_simp
+      simp
 
   rw [norm_sub_swap]
   have m_eq: m = (m - 1) + 1 := by
@@ -3610,8 +3610,11 @@ lemma bad_H_n_prod_exp_bound {m : ℕ}
       simp [x_eq_zero, theorem_3_8_h_n]
       grw [data.S_dist _ (by simp)]
       field_simp
-      apply one_le_pow₀
-      simp
+      rw [← div_le_div_iff_of_pos_right (c := c)]
+      . field_simp
+        apply one_le_pow₀
+        simp
+      . exact c_pos
     .
       simp at x_eq_zero
       have x_val_ne: x.val ≠ 0 := by
@@ -3628,12 +3631,6 @@ lemma bad_H_n_prod_exp_bound {m : ℕ}
       field_simp
       grw [H_n_eps_pow_lt_self]
       ring
-      rw [pow_two]
-      ring_nf
-      rw [pow_two]
-      rw [← mul_assoc]
-      rw [mul_comm]
-      rw [mul_assoc]
       field_simp
       grw [H_n_eps_lt]
       ring_nf
