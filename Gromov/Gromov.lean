@@ -926,7 +926,7 @@ lemma lipschitz_norm_triangle (x y z: G → ℂ) (hx: IsLipschitz x) (hy: IsLips
   conv =>
     pattern x - z
     equals (x - y) + (y - z) =>
-      field_simp
+      simp
 
 
   have sum_norm_mem: (LipschitzSemiNorm (x - y)) + (LipschitzSemiNorm (y - z)) ∈ { k: NNReal | LipschitzWith k ((x - y) + (y - z)) } := by
@@ -956,7 +956,7 @@ lemma lipschitz_norm_triangle (x y z: G → ℂ) (hx: IsLipschitz x) (hy: IsLips
   conv at sinf_le_sum =>
     pattern x - z
     equals (x - y) + (y - z) =>
-      field_simp
+      simp
   exact sinf_le_sum
 
 
@@ -2003,7 +2003,7 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
       rw [clm_apply]
 
       rw [← hx, ← hy]
-      field_simp
+      simp
       rw [smul_comm]
     . infer_instance
   .
@@ -3422,7 +3422,29 @@ lemma conv_eq_sum {f h: G → ℝ} (hconv: ConvExists f h) (g: G): Conv f h g = 
     simp_rw [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
     simp [MeasureTheory.Measure.addHaarMeasure_self]
     field_simp
-    rfl
+
+    -- TODO - avoid defeq abuse here
+    conv =>
+      lhs
+      arg 1
+      intro a
+      rhs
+      equals h (Additive.ofMul g - a) =>
+        rfl
+
+    conv =>
+      rhs
+      arg 1
+      intro a
+      rhs
+      arg 1
+      equals Additive.ofMul g - a =>
+        unfold Additive.toMul
+        unfold Additive.ofMul
+        simp
+        rw [sub_eq_add_neg]
+        rfl
+
   . exact (hconv (opAdd g))
 
 lemma conv_eq_sum'  {f h: G → ℝ} (hconv: ConvExists f h): Conv f h = fun g => ∑' (a : Additive G), f ((Additive.toMul a)) * h (g * (Additive.toMul a)⁻¹) := by
@@ -3487,7 +3509,7 @@ lemma conv_assoc {f g h: G → ℝ} (h_fg: ConvExists f g) (h_gh: ConvExists g h
   rw [MeasureTheory.convolution_assoc (L := ContinuousLinearMap.mul ℝ ℝ) (L₂ := ContinuousLinearMap.mul ℝ ℝ) (L₃ := ContinuousLinearMap.mul ℝ ℝ) (L₄ := ContinuousLinearMap.mul ℝ ℝ)]
   . rfl
   . intro x y z
-    field_simp
+    simp
     rw [mul_assoc]
   . apply MeasureTheory.AEStronglyMeasurable.of_discrete
   . apply MeasureTheory.AEStronglyMeasurable.of_discrete
@@ -3815,7 +3837,8 @@ lemma f_conv_mu (f: G → ℝ): (Conv (S := S) f (mu (S := S))) = fun g => ((1 :
             rw [← hz.1]
             simp
           --apply f_mul_mu_summable
-        . field_simp
+        .
+          simp [card_zero]
   . apply conv_exists_fin_supp
     right
     apply mu_finsupp
@@ -3951,9 +3974,7 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
       by_contra this
       .
         simp at this
-        apply Finset.nonempty_of_ne_empty at this
-        obtain ⟨x, hx⟩ := Finset.Nonempty.exists_mem this
-        simp at hx
+        obtain ⟨x, hx⟩ := this
         rw [← hx] at g_in_s
         simp at g_in_s
   | succ n ih =>
@@ -4232,13 +4253,18 @@ lemma mu_norm_one (m: ℕ): MeasureTheory.eLpNorm (muConv (S := S) m) 1 = 1 := b
     rw [Real.enorm_of_nonneg (by
       simp
     )]
+    field_simp
+    rw [← ENNReal.ofReal_natCast]
+    rw [← ENNReal.ofReal_pow]
     rw [← ENNReal.ofReal_mul]
     .
       field_simp
+      simp
       apply div_self
       simp
       simp at hS
       exact Finset.nonempty_iff_ne_empty.mp hS
+    . simp
     . simp
   .
     -- TODO - deduplicate this with the above goal
@@ -4323,6 +4349,7 @@ theorem f_n_norm_one (n: ℕ): MeasureTheory.eLpNorm (f_n (S := S) n) 1 = 1 := b
     rw [← ENNReal.ofReal_mul]
     .
       field_simp
+      simp
     . simp
       linarith
   .
@@ -4459,7 +4486,7 @@ theorem f_n_sub_conv (n: ℕ): MeasureTheory.eLpNorm ((f_n (S := S) n) - (Conv (
         rw [mul_comm]
         field_simp
         simp
-        linarith
+        positivity
   . exact mu_finsupp
 
   --   MeasureTheory.eLpNorm_add_le
@@ -4684,7 +4711,7 @@ lemma laplace_bounded (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G
     simp
     exact Finset.nonempty_iff_ne_empty.mp hS
   )]
-  field_simp
+  simp
   rw [two_mul]
   . simp
   -- TODO - inline these in the right places
@@ -5426,7 +5453,8 @@ lemma norm_conv_mu_le  (f: (Lp ℝ 2 volume (α := G))): ‖conv_mu_lp2 f‖ ≤
         simp [MeasureTheory.volume]
     }
   )]
-  . field_simp
+  . simp
+    field_simp
     rfl
   .
     apply WithTop.mul_ne_top
@@ -5588,8 +5616,11 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
         rw [← Real.rpow_mul]
         field_simp
         simp
+        rw [Real.rpow_neg]
         rw [inv_lt_inv₀]
-        rw [zpow_two]
+        field_simp
+        norm_cast
+        rw [pow_two]
         ring
         norm_cast
         rw [mul_two]
@@ -5604,6 +5635,7 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
           positivity
         . norm_cast
           positivity
+        . positivity
       . positivity
       . positivity
       . simp
@@ -5661,8 +5693,11 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
           rw [← Real.rpow_mul]
           field_simp
           simp
+          rw [Real.rpow_neg]
           rw [inv_lt_inv₀]
-          rw [zpow_two]
+          norm_num
+          norm_cast
+          rw [pow_two]
           ring
           norm_cast
           rw [mul_two]
@@ -5677,6 +5712,7 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
             positivity
           . norm_cast
             positivity
+          . positivity
         . positivity
         . positivity
         . simp
@@ -5871,7 +5907,7 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
   apply_fun (fun x => x^2) at f_norm
   nth_rw 2 [← Real.rpow_natCast] at f_norm
   rw [← Real.rpow_mul] at f_norm
-  field_simp at f_norm
+  simp at f_norm
   have f_summable := lp_summable (p := 2) (by simp) f (S := S)
   conv =>
     lhs
@@ -6187,7 +6223,7 @@ lemma laplace_conv_eq_laplace_right (f g: G → ℝ) (hfg: ConvExists f g) (g_no
     specialize hfg (s * a)
     simp only [neg_mul]
     apply MeasureTheory.Integrable.neg
-    field_simp
+    simp_rw [mul_div]
     exact hfg
   . exact hfg
   .
@@ -6346,6 +6382,12 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     . rw [Pi.le_def]
       intro n
       simp [Laplace_b, f_conv_mu]
+
+      have card_ne_zero: #(S) ≠ 0 := by
+        have foo := S_nonempty (S := S)
+        simp at foo
+        simp
+        exact Finset.nonempty_iff_ne_empty.mp foo
 
       conv =>
         lhs
@@ -6712,7 +6754,6 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     rw [ENNReal.ofReal_eq_ofReal_iff]
     rw [← Function.Injective.tsum_eq (γ := G) (β := Additive (G)) (g := fun a => Additive.ofMul (a⁻¹))]
     simp
-    field_simp
     unfold Additive.ofMul
     simp
     simp [Neg.neg, Multiplicative.ofAdd]
@@ -6722,7 +6763,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     rw [abs_of_nonneg]
     .
       apply tsum_nonneg
-      exact H_n_diff_pos n
+      apply H_n_diff_pos n
     .
       simp
       apply Function.Injective.comp
@@ -8335,10 +8376,12 @@ lemma new_three_two_poly_growth (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD 
     apply helper_lemma (b := 2⁻¹)
     .
       field_simp
+      positivity
     . simp
     . simp
     . exact m_pow_lt
-    . field_simp
+    . norm_num
+
 
 
     -- apply lt_or_eq_of_le at m_pow_lt
@@ -9660,11 +9703,11 @@ lemma three_two_ker_fg (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD d (S := S
         arg 2
         equals (ofMul s + -(φ (ofMul s) • γ)) => rfl
       simp [phi_gamma]
-    | one =>
+    | zero =>
       simp
-    | mul y z y_mem z_mem hy hz =>
+    | add y z y_mem z_mem hy hz =>
       exact (AddSubgroup.add_mem_cancel_right φ.ker hz).mpr hy
-    | inv x x_mem hx =>
+    | neg x x_mem hx =>
       exact AddSubgroup.neg_mem φ.ker hx
   . intro hz
     have generates_ker := three_two_gamma_m_generates φ hφ γ phi_gamma
