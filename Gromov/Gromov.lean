@@ -1,54 +1,6 @@
 import Mathlib
 import Mathlib.Algebra.Group.Gromov.UnitaryGromov
 
-open Lean Syntax Elab.Command
-
-namespace TrackSorry
-/-- Type of intermediate computation of axiom-tracking. -/
-structure State where
-  /-- The set of already visited declarations. -/
-  visited : NameSet := {}
-  /-- The uses of axioms that were found. -/
-  axioms  : Array (Name × Name) := #[]
-
-/-- Collect all uses of `c` inside `origin`. -/
-partial def collect (origin c : Name) : ReaderT Environment (StateM State) Unit := do
-  let collectExpr (origin : Name) (e : Expr) : ReaderT Environment (StateM State) Unit :=
-    e.getUsedConstants.forM (collect origin)
-  let s ← get
-  unless s.visited.contains c do
-    modify fun s => { s with visited := s.visited.insert c }
-    let env ← read
-    match env.find? c with
-    | some (.axiomInfo _)  => modify fun s => { s with axioms := s.axioms.push (origin, c) }
-    | some (.defnInfo v)   => collectExpr c v.type *> collectExpr c v.value
-    | some (.thmInfo v)    => collectExpr c v.type *> collectExpr c v.value
-    | some (.opaqueInfo v) => collectExpr c v.type *> collectExpr c v.value
-    | some (.quotInfo _)   => pure ()
-    | some (.ctorInfo v)   => collectExpr c v.type
-    | some (.recInfo v)    => collectExpr c v.type
-    | some (.inductInfo v) => collectExpr c v.type *> v.ctors.forM (collect c)
-    | none                 => pure ()
-
-end TrackSorry
-
-/-- `#track_sorry foo` returns a non-sorry-free declaration `bar` which `foo` depends on,
-if such `bar` exists. -/
-syntax (name := trackSorryStx) "#track_sorry" ident : command
-
-elab_rules : command
-  | `(#track_sorry $decl:ident) => do
-    let env ← getEnv
-    let declName ← liftCoreM <| realizeGlobalConstNoOverload decl
-    let (_, s) := ((TrackSorry.collect declName declName).run env).run {}
-    match s.axioms.find? (·.2 == `sorryAx) with
-    | some (sorryDeclName, _) =>
-      logInfoAt (← getRef)
-        m!"{.ofConstName declName} depends on {.ofConstName sorryDeclName} which isn't sorry-free"
-    | none =>
-      logInfoAt (← getRef) m!"{.ofConstName declName} is sorry-free"
-
-
 set_option linter.style.longLine false
 set_option linter.style.cdot false
 -- TODO - vscode stops reporting underlines if there are too many total underlines / gutter messages
@@ -6107,7 +6059,7 @@ lemma g_sub_norm_gt (n: ℕ) (hn: 0 < n): ∃ s: S, ‖(G_n n hn) - (conv_finsup
   field_simp at sum_norm
   sorry
 
-#track_sorry proposition_3_18
+#print sorries proposition_3_18
 #print axioms proposition_3_18
 #print axioms laplace_range_dense
 
@@ -7226,7 +7178,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
   rw [eq_comm] at app_s_inv_eq
   contradiction
 
-#track_sorry nontrivial_harmonic_case_two
+#print sorries nontrivial_harmonic_case_two
 
 #synth OrderTopology ENNReal
 
