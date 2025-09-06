@@ -1541,6 +1541,17 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
   -- sorry
 
 #check Pi.commSemigroup
+open scoped Pointwise Finset
+open Classical
+
+structure SPolyData {n : ℕ} (hn : n ≠ 0) {T: Type*} [Group T] (G : Subgroup T) where
+  S: Set G
+  S_finite: Set.Finite S
+  S_generates: Subgroup.closure S = ⊤
+  S_poly_const: ℕ
+  S_poly_const_pos: 0 ≠ S_poly_const
+  S_poly_deg: ℕ
+  S_poly: ∀ r: ℕ, #(S_finite.toFinset ^ r) ≤ S_poly_const * (r ^ S_poly_deg)
 
 class HnEpsData where
   degree: ℕ
@@ -3661,6 +3672,10 @@ lemma mem_list_choose {T: Type*} (p: List T → Prop) {h: ∃ l, p l} {x: T} (hx
   refine ⟨hx, h.choose_spec⟩
 
 
+open scoped Pointwise
+
+
+
 -- Theorem 3.8, case with only trivial elements in the center
 set_option synthInstance.maxHeartbeats 100000 in
 set_option maxHeartbeats 1200000 in
@@ -3668,6 +3683,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
   (G_central_trivial : ∀ g : G, g ∈ Set.center G → ∃ z : ℂ, g.val.val = z • 1)
   (G'_central_trivial : ∀ g : (G' n (H_n_eps hn) G), g ∈ Set.center (G' n (H_n_eps hn) G) → ∃ z : ℂ, g.val.val.val = z • 1)
   (G'_finite_index: (G' n (H_n_eps hn) G).FiniteIndex)
+  (S_poly_data: SPolyData (n := n) (by omega) (G' n (H_n_eps hn) G))
   : ∃ N : Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
 
   by_cases all_mul_identity : ∀ h : (G' n (H_n_eps hn) G), ∃ z : ℂ, h.val.val.val = z • 1
@@ -3695,9 +3711,9 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
 
     have G'_fg := Subgroup.fg_of_index_ne_zero (G' n (H_n_eps hn) G)
 
-    rw [Group.fg_def] at G'_fg
-    rw [Subgroup.fg_iff] at G'_fg
-    obtain ⟨S', S'_generates, S'_finite⟩ := G'_fg
+    let S' := S_poly_data.S
+    have S'_generates := S_poly_data.S_generates
+    have S'_finite := S_poly_data.S_finite
 
     -- Add identity and inverses to S' to make things easier
     let S'' := S' ∪ S'⁻¹
@@ -3722,6 +3738,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       dsimp [S'']
       rw [Subgroup.closure_union]
       simp [S'_generates]
+      apply S'_generates
 
 
     have s_list (s: S'') := (mem_closure_prod_list ((Metric.ball (1 : G) (H_n_eps hn)) ∪ (Metric.ball (1 : G) (H_n_eps hn))⁻¹) (by
@@ -4055,6 +4072,19 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
 
     obtain ⟨h, h_nontrivial⟩ := nontrivial_h
 
+    let s_to_map: S_finite.toFinset → (Subgroup.map G.subtype (G' n (H_n_eps hn) G)) := (fun a => (⟨a.val.val, by (
+        simp
+        simp [G']
+        apply Subgroup.mem_closure_of_mem
+        simp
+        simp [dist]
+        rw [dist_eq_norm_sub]
+        have a_prop := a.property
+        rw [Set.Finite.mem_toFinset] at a_prop
+        have a_dist := S_dist a a_prop
+        exact a_dist
+      )⟩))
+
 
     let h_n_data: HnData := {
       d := n
@@ -4097,18 +4127,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         rw [Subtype.ext_iff] at foo
         simpa using foo
 
-      S := (Finset.image (fun a => (⟨a.val.val, by (
-        simp
-        simp [G']
-        apply Subgroup.mem_closure_of_mem
-        simp
-        simp [dist]
-        rw [dist_eq_norm_sub]
-        have a_prop := a.property
-        rw [Set.Finite.mem_toFinset] at a_prop
-        have a_dist := S_dist a a_prop
-        exact a_dist
-      )⟩: (Subgroup.map G.subtype (G' n (H_n_eps hn) G)))) S_finite.toFinset.attach).toSet
+      S := ((Finset.image s_to_map) S_finite.toFinset.attach).toSet
       S_generates := by
         simp
         have orig_S'' := S''_generates
@@ -4310,10 +4329,38 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         have s_dist := S_dist x x_prop
         rw [← s_eq]
         linarith
-      S_poly_const := sorry
-      S_poly_const_pos := sorry
-      S_poly_deg := sorry
-      S_poly := sorry
+      S_poly_const := S_poly_data.S_poly_const
+      S_poly_const_pos := S_poly_data.S_poly_const_pos
+      S_poly_deg := S_poly_data.S_poly_deg
+      S_poly := by
+        intro r
+        have existing := S_poly_data.S_poly r
+        simp
+        conv =>
+          lhs
+          equals #(Finset.image (fun a => a.val) ((Finset.image s_to_map S_finite.toFinset.attach) ^ r)) =>
+            rw [Finset.card_image_of_injective]
+            simp
+
+            --ext g
+            --simp
+
+        conv =>
+          lhs
+          equals #(Finset.image (Subtype.val) (S_finite.toFinset ^ r)) =>
+            apply congrArg
+            ext g
+            simp [s_to_map]
+            sorry
+
+        grw [Finset.card_image_le]
+        rw [← Nat.card_eq_card_finite_toFinset]
+        simp [S, pre_S]
+        -- Finset.pow_subset_pow
+        grw [Finset.card_le_card (Finset.pow_subset_pow)]
+        grw [Finset.card_pow_le]
+        simp
+
       h := ⟨⟨h.val.val, by (
         have h_prop := h.property
         simp only [S] at h_prop
@@ -4388,15 +4435,7 @@ open scoped Finset
 open scoped Pointwise
 
 
-open scoped Pointwise in
-structure SPolyData {n : ℕ} (hn : n ≠ 0) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) where
-  S: Set G
-  S_finite: Set.Finite S
-  S_generates: Subgroup.closure S = ⊤
-  S_poly_const: ℕ
-  S_poly_const_pos: 0 ≠ S_poly_const
-  S_poly_deg: ℕ
-  S_poly: ∀ r: ℕ, #(S_finite.toFinset ^ r) ≤ S_poly_const * (r ^ S_poly_deg)
+
 
 -- Helper for theorem 3.8
 -- TODO - the name is bad, rename it to not include 'central'
@@ -4964,8 +5003,21 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
         --let foo := Subgroup.map (Subgroup.subtype _) N
 
         --let foo := Subgroup.comap ((Subgroup.map (G.subtype (G' n ε G))).subtype) N
-      · simp at hn
-        have target := HnEpsData.central_trivial_virtually_abelian n (by omega) G G_FG ?_ ?_ G_eps.1
+      ·
+
+        let S_data_G': SPolyData hn ((G' n ε G)) := {
+          S := sorry,
+          S_finite := sorry,
+          S_generates := by
+            sorry
+          S_poly_const := S_data.S_poly_const
+          S_poly_const_pos := S_data.S_poly_const_pos
+          S_poly_deg := S_data.S_poly_deg
+          S_poly := sorry
+        }
+
+        simp at hn
+        have target := HnEpsData.central_trivial_virtually_abelian n (by omega) G G_FG ?_ ?_ G_eps.1 S_data_G'
         · exact target
         · intro g hg
           specialize nontrivial_central g
