@@ -3665,7 +3665,6 @@ lemma bad_H_n_prod_exp_bound {m : ℕ}
 
 
 
-open Classical
 
 lemma mem_list_choose {T: Type*} (p: List T → Prop) {h: ∃ l, p l} {x: T} (hx: x ∈ h.choose): ∃ l, x ∈ l ∧ p l := by
   use h.choose
@@ -4085,6 +4084,29 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         exact a_dist
       )⟩))
 
+    have my_map (r: ℕ): #(Finset.image s_to_map S_finite.toFinset.attach ^ r) ≤ S_poly_data.S_poly_const * r ^ S_poly_data.S_poly_deg := by
+      have existing := S_poly_data.S_poly r
+      rw [← (Finset.card_image_iff (f := (Subgroup.subtype _).comp (Subgroup.subtype _))).mpr] at existing
+      rw [Finset.image_pow] at existing
+      simp at existing
+      rw [← (Finset.card_image_iff (f := (Subgroup.subtype _))).mpr]
+      rw [Finset.image_pow]
+      simp
+      conv =>
+        lhs
+        arg 1
+        lhs
+        equals Finset.image (Subtype.val ∘ Subtype.val) S_poly_data.S_finite.toFinset =>
+          ext a
+          simp
+          sorry
+
+      . exact existing
+      . simp
+      . simp
+
+
+
 
     let h_n_data: HnData := {
       d := n
@@ -4334,33 +4356,8 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       S_poly_deg := S_poly_data.S_poly_deg
       S_poly := by
         intro r
-        have existing := S_poly_data.S_poly r
         simp
-        conv =>
-          lhs
-          equals #(Finset.image (fun a => a.val) ((Finset.image s_to_map S_finite.toFinset.attach) ^ r)) =>
-            rw [Finset.card_image_of_injective]
-            simp
-
-            --ext g
-            --simp
-
-        conv =>
-          lhs
-          equals #(Finset.image (Subtype.val) (S_finite.toFinset ^ r)) =>
-            apply congrArg
-            ext g
-            simp [s_to_map]
-            sorry
-
-        grw [Finset.card_image_le]
-        rw [← Nat.card_eq_card_finite_toFinset]
-        simp [S, pre_S]
-        -- Finset.pow_subset_pow
-        grw [Finset.card_le_card (Finset.pow_subset_pow)]
-        grw [Finset.card_pow_le]
-        simp
-
+        apply my_map
       h := ⟨⟨h.val.val, by (
         have h_prop := h.property
         simp only [S] at h_prop
