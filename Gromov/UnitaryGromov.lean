@@ -1542,11 +1542,11 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
 
 #check Pi.commSemigroup
 open scoped Pointwise Finset
-open Classical
 
-structure SPolyData {n : ℕ} (hn : n ≠ 0) {T: Type*} [Group T] (G : Subgroup T) where
+structure SPolyData {n : ℕ} (hn : n ≠ 0) {T: Type*} [DecidableEq T] [Group T] (G : Subgroup T) where
   S: Set G
   S_finite: Set.Finite S
+  S_inv: S = S⁻¹
   S_generates: Subgroup.closure S = ⊤
   S_poly_const: ℕ
   S_poly_const_pos: 0 ≠ S_poly_const
@@ -3673,6 +3673,8 @@ lemma mem_list_choose {T: Type*} (p: List T → Prop) {h: ∃ l, p l} {x: T} (hx
 
 open scoped Pointwise
 
+-- TODO - figure out why this causes a diamond when we use 'open Classical'
+
 
 
 -- Theorem 3.8, case with only trivial elements in the center
@@ -3684,6 +3686,8 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
   (G'_finite_index: (G' n (H_n_eps hn) G).FiniteIndex)
   (S_poly_data: SPolyData (n := n) (by omega) (G' n (H_n_eps hn) G))
   : ∃ N : Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
+
+  classical
 
   by_cases all_mul_identity : ∀ h : (G' n (H_n_eps hn) G), ∃ z : ℂ, h.val.val.val = z • 1
   · use (G' n (H_n_eps hn) G)
@@ -3715,10 +3719,9 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
     have S'_finite := S_poly_data.S_finite
 
     -- Add identity and inverses to S' to make things easier
-    let S'' := S' ∪ S'⁻¹
+    let S'' := S'
     have S''_finite: Set.Finite S'' := by
       dsimp [S'']
-      simp
       apply S'_finite
 
     -- have S''_union_S''inv: S'' ∪ S''⁻¹ = S'' := by
@@ -3729,15 +3732,12 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
 
     have S''_eq_S''inv: S'' = S''⁻¹ := by
       unfold S''
-      simp
-      rw [Set.union_comm]
+      apply S_poly_data.S_inv
 
 
     have S''_generates: Subgroup.closure S'' = ⊤ := by
       dsimp [S'']
-      rw [Subgroup.closure_union]
-      simp [S'_generates]
-      apply S'_generates
+      apply S_poly_data.S_generates
 
 
     have s_list (s: S'') := (mem_closure_prod_list ((Metric.ball (1 : G) (H_n_eps hn)) ∪ (Metric.ball (1 : G) (H_n_eps hn))⁻¹) (by
@@ -3750,6 +3750,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       simp [s_prop]
     ))
 
+    -- Write each element in S'' as a product of elements of S', and then collect all of the used elements into a set
     -- We may need to manually union this with S⁻¹, since the inverse of the produces
     -- could be chosen to be built with different elements (not the inverses of the ones in the original list)
     let pre_S := ⋃ s : S''_finite.toFinset, (s_list ⟨s, by (
@@ -4085,21 +4086,80 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       )⟩))
 
     have pre_S_finite: pre_S.Finite := by
-      sorry
+      unfold S at S_finite
+      exact Set.toFinite pre_S
 
-    have pre_S_inv_finite: pre_S⁻¹.Finite := by
-      sorry
+    -- have pre_S_inv_finite: pre_S⁻¹.Finite := by
+    --   unfold S at S_finite
+    --   exact Set.finite_inv.mpr pre_S_finite
 
     have one_finite: ({(1 : G)} : Set G).Finite := by
       simp
 
-    have my_map (r: ℕ): #(Finset.image s_to_map S_finite.toFinset.attach ^ r) ≤ S_poly_data.S_poly_const * r ^ S_poly_data.S_poly_deg := by
+    -- have fintype_S: Fintype ↑S' := by
+    --   refine Set.Finite.fintype ?_
+    --   exact S'_finite
+
+    -- have fintype_S_inv: Fintype ↑(S'⁻¹) := by
+    --   refine Set.Finite.fintype ?_
+    --   exact Set.finite_inv.mpr S'_finite
+
+    have my_map (r: ℕ): #(Finset.image s_to_map S_finite.toFinset.attach ^ r) ≤ (S_poly_data.S_poly_const ^ #pre_S.toFinset) * r ^ ((S_poly_data.S_poly_deg * #pre_S.toFinset)) := by
       have existing := S_poly_data.S_poly r
       -- unfold S at S_finite
       -- unfold Set.Finite.toFinset
       -- unfold S
       -- simp
       unfold S at S_finite
+      rw [← Finset.card_image_of_injective (f := Subtype.val)]
+      grw [Finset.card_le_card (t := (((Finset.image (Subtype.val ∘ Subtype.val) S''_finite.toFinset)) ^ r) ^ (#(pre_S_finite.toFinset)))]
+      grw [Finset.card_pow_le]
+      unfold Set.Finite.toFinset
+      unfold S''
+      grw [Nat.pow_le_pow_left (m := #(S'_finite.toFinset ^ r))]
+      . unfold S'
+        have s_bound := S_poly_data.S_poly r
+        grw [s_bound]
+        rw [Nat.mul_pow]
+        rw [← Nat.pow_mul]
+        conv =>
+          rhs
+          arg 1
+          arg 2
+          equals #(pre_S_finite.toFinset) =>
+            rw [Set.toFinset_card]
+            exact Eq.symm (Set.Finite.card_toFinset pre_S_finite)
+
+        conv =>
+          rhs
+          arg 2
+          arg 2
+          arg 2
+          equals #(pre_S_finite.toFinset) =>
+            rw [Set.toFinset_card]
+            exact Eq.symm (Set.Finite.card_toFinset pre_S_finite)
+        apply le_refl
+      .
+
+        apply Finset.card_le_card
+        grw [Finset.card_le_card (t := S'.toFinset ^ r)]
+        .
+          sorry
+        . rfl
+      rw [Set.toFinset_union, Finset.image_union]
+      grw [Finset.card_union_le]
+      unfold S'
+      have s_bound := S_poly_data.S_poly
+      by_cases card_image_le: #(Finset.image (Subtype.val ∘ Subtype.val) S_poly_data.S.toFinset) ≤ #(Finset.image (Subtype.val ∘ Subtype.val) S_poly_data.S⁻¹.toFinset)
+      .
+        sorry
+      .
+        grw [Nat.pow_le_pow_left (m := 2 * #(Finset.image (Subtype.val ∘ Subtype.val) S_poly_data.S.toFinset))]
+        . rw [Nat.mul_pow]
+          grw [Finset.card_image_le]
+          simp at s_bound
+          grw [s_bound]
+        . omega
       conv =>
         lhs
         arg 1
@@ -4159,7 +4219,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
 
       rw [Finset.image_union]
       rw [Finset.image_union]
-      
+      grw [Finset.card_union_le]
       nth_rw 3 [Set.toFinset_union]
 
 
