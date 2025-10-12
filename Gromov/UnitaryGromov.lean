@@ -4084,8 +4084,85 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         exact a_dist
       )⟩))
 
+    have pre_S_finite: pre_S.Finite := by
+      sorry
+
+    have pre_S_inv_finite: pre_S⁻¹.Finite := by
+      sorry
+
+    have one_finite: ({(1 : G)} : Set G).Finite := by
+      simp
+
     have my_map (r: ℕ): #(Finset.image s_to_map S_finite.toFinset.attach ^ r) ≤ S_poly_data.S_poly_const * r ^ S_poly_data.S_poly_deg := by
       have existing := S_poly_data.S_poly r
+      -- unfold S at S_finite
+      -- unfold Set.Finite.toFinset
+      -- unfold S
+      -- simp
+      unfold S at S_finite
+      conv =>
+        lhs
+        arg 1
+        arg 1
+        arg 2
+
+        equals (Finset.image (fun a => ⟨a, by (
+          unfold S
+          refine (Set.Finite.mem_toFinset S_finite).mpr ?_
+          apply Set.mem_union_left
+          apply Set.mem_union_left
+          have prop := a.property
+          exact (Set.Finite.mem_toFinset pre_S_finite).mp prop
+        )⟩) pre_S_finite.toFinset.attach) ∪ (Finset.image (fun a => ⟨a, by (
+          unfold S
+          refine (Set.Finite.mem_toFinset S_finite).mpr ?_
+          apply Set.mem_union_left
+          apply Set.mem_union_right
+          have prop := a.property
+          exact (Set.Finite.mem_toFinset pre_S_inv_finite).mp prop
+        )⟩) pre_S_inv_finite.toFinset.attach) ∪ {⟨1, by simp [S]⟩}=>
+          ext a
+          conv =>
+            lhs
+            simp
+          rw [true_iff]
+          have a_prop := a.property
+          simp [-Finset.coe_mem] at a_prop
+          unfold S at a_prop
+          rw [Set.mem_union] at a_prop
+          rw [Set.mem_union] at a_prop
+          cases a_prop
+          . rename_i a_mem_s_or_inv
+            cases a_mem_s_or_inv
+            . rename_i a_mem_pre_s
+              apply Finset.mem_union_left
+              apply Finset.mem_union_left
+              rw [Finset.mem_image]
+              use ⟨a.val, by (
+                simpa using a_mem_pre_s
+              )⟩
+              simp
+            . rename_i a_mem_pre_s_inv
+              apply Finset.mem_union_left
+              apply Finset.mem_union_right
+              rw [Finset.mem_image]
+              use ⟨a.val, by (
+                simpa using a_mem_pre_s_inv
+              )⟩
+              simp
+          . rename_i a_mem_one
+            simp at a_mem_one
+            apply Finset.mem_union_right
+            simp
+            simp_rw [← a_mem_one]
+
+
+      rw [Finset.image_union]
+      rw [Finset.image_union]
+      
+      nth_rw 3 [Set.toFinset_union]
+
+
       rw [← (Finset.card_image_iff (f := (Subgroup.subtype _).comp (Subgroup.subtype _))).mpr] at existing
       rw [Finset.image_pow] at existing
       simp at existing
@@ -4096,10 +4173,35 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         lhs
         arg 1
         lhs
+        -- WRONG - our S is made of elements in lists which have products in S_poly_data.S
         equals Finset.image (Subtype.val ∘ Subtype.val) S_poly_data.S_finite.toFinset =>
           ext a
-          simp
-          sorry
+          simp only [s_to_map]
+          rw [Finset.mem_image]
+          rw [Finset.mem_image]
+          refine ⟨?_, ?_⟩
+          .
+            intro ha
+            obtain ⟨b, b_mem, a_eq⟩ := ha
+            use ⟨⟨b.val, by (
+              have foo := b.property
+              sorry
+            )⟩, sorry⟩
+            simp
+            refine ⟨?_, a_eq⟩
+          . intro ha
+            obtain ⟨b, b_mem, a_eq⟩ := ha
+            use ⟨b.val, sorry⟩
+            simp
+            simp at a_eq
+            refine ⟨?_, a_eq⟩
+            simp at b_mem
+            unfold S
+            apply Set.mem_union_left
+            apply Set.mem_union_left
+            unfold pre_S
+            rw [Set.mem_iUnion]
+
 
       . exact existing
       . simp
