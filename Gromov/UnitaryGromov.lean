@@ -4153,8 +4153,18 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
             --simp_rw [← hf]
             simp
             have prod_mem := Subgroup.list_prod_mem G (l := List.ofFn fun i => (f i).val) ?_
-            rw [hf] at prod_mem
-            exact prod_mem
+            .
+              rw [hf] at prod_mem
+              exact prod_mem
+            . intro x hx
+              simp at hx
+              obtain ⟨b, hb⟩ := hx
+              rw [← hb]
+              have f_prop := (f b).property
+              rw [Finset.mem_image] at f_prop
+              obtain ⟨c, c_mem, c_eq⟩ := f_prop
+              rw [← c_eq]
+              simp
           )⟩, by (
             simp
             sorry
