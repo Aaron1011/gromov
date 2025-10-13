@@ -47,9 +47,7 @@ lemma mem_closure_prod_list {G: Type*} [Group G] (S: Set G) (S_eq_Sinv: S = S⁻
 lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
   (S S': Finset G)
   (S_symm: S = S⁻¹)
-  (S'_symm: S' = S'⁻¹)
   (S_one: 1 ∈ S)
-  (S'_one: 1 ∈ S')
   (S_generates: Subgroup.closure S.toSet = ⊤)
   (S'_generates: Subgroup.closure S'.toSet = ⊤)
   (s_poly: ∀ n ≥ 1, #(S ^ n) ≤ a * n ^ d):
@@ -1769,7 +1767,7 @@ structure SPolyData {n : ℕ} (hn : n ≠ 0) {T: Type*} [DecidableEq T] [Group T
   S_poly_const: ℕ
   S_poly_const_pos: 0 ≠ S_poly_const
   S_poly_deg: ℕ
-  S_poly: ∀ r: ℕ, #(S_finite.toFinset ^ r) ≤ S_poly_const * (r ^ S_poly_deg)
+  S_poly: ∀ r ≥ 1, #(S_finite.toFinset ^ r) ≤ S_poly_const * (r ^ S_poly_deg)
 
 class HnEpsData where
   degree: ℕ
@@ -1816,7 +1814,7 @@ structure HnData where
   S_poly_const: ℕ
   S_poly_const_pos: 0 ≠ S_poly_const
   S_poly_deg: ℕ
-  S_poly: ∀ r: ℕ, #(S_finite.toFinset ^ r) ≤ S_poly_const * (r ^ S_poly_deg)
+  S_poly: ∀ r ≥ 1, #(S_finite.toFinset ^ r) ≤ S_poly_const * (r ^ S_poly_deg)
   h : S
   h_nontrivial : ¬ ∃(z : ℂ), h.val.val.val = z • 1
 
@@ -3474,7 +3472,19 @@ lemma H_n_contradiction (data : HnData)
     rw [r_eq] at r_pos
     linarith
 
-  have upper_bound := data.S_poly ( c' * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m))
+  have upper_bound := data.S_poly ( c' * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m)) (by
+    simp [c']
+    rw [Nat.one_le_iff_ne_zero]
+    apply Nat.mul_ne_zero
+    . apply Nat.mul_ne_zero
+      . apply Nat.mul_ne_zero
+        . simp
+        .
+          simp
+          apply c_mul_pos
+      . omega
+    . simp
+  )
   have lower_bound := H_n_ball_S_card m_gt data c c_pos c_lt
   have ineq := le_trans lower_bound upper_bound
   rify at ineq
@@ -4308,12 +4318,97 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
     --   refine Set.Finite.fintype ?_
     --   exact Set.finite_inv.mpr S'_finite
 
-    have my_map (r: ℕ): #(Finset.image s_to_map S_finite.toFinset.attach ^ r) ≤ (S_poly_data.S_poly_const ^ #pre_S.toFinset) * r ^ ((S_poly_data.S_poly_deg * #pre_S.toFinset)) := by
-      have existing := S_poly_data.S_poly r
-      -- unfold S at S_finite
-      -- unfold Set.Finite.toFinset
-      -- unfold S
-      -- simp
+    have my_map: ∃ a: ℕ, ∀ r ≥ 1, #(Finset.image s_to_map S_finite.toFinset.attach ^ r) ≤  a * r ^ (S_poly_data.S_poly_deg) := by
+      have new_try := poly_growth_equiv S_poly_data.S_poly_const S_poly_data.S_poly_deg (Finset.image (Subgroup.subtype _) S_poly_data.S_finite.toFinset) S_finite.toFinset ?_ ?_ ?_ ?_ ?_
+      .
+        obtain ⟨b, hb⟩ := new_try
+        use b
+        intro r hr
+        rw [← Finset.card_image_of_injective (f := Subgroup.subtype _) _ (by apply subtype_injective)]
+        rw [Finset.image_pow]
+        rw [Finset.image_image]
+        simp
+        conv =>
+          arg 1
+          arg 1
+          arg 1
+          equals Finset.image (Subgroup.subtype _) S_finite.toFinset =>
+            ext a
+            rw [Finset.mem_image]
+            refine ⟨?_, ?_⟩
+            . intro x
+              obtain ⟨y, y_mem, y_eq⟩ := x
+              rw [Finset.mem_image]
+              use y
+              rw [← y_eq]
+              simp [s_to_map]
+            . intro x_mem
+              rw [Finset.mem_image] at x_mem
+              obtain ⟨y, y_mem, y_eq⟩ := x_mem
+              use ⟨y, y_mem⟩
+              simp [s_to_map]
+              exact y_eq
+
+
+
+        specialize hb r hr
+        rw [← Finset.card_image_of_injective (f := Subgroup.subtype _) _ (by apply subtype_injective)] at hb
+        rw [Finset.image_pow] at hb
+        exact hb
+      .
+        have fintype_s:  Fintype ↑S_poly_data.S := by
+          refine Set.Finite.fintype ?_
+          exact S_poly_data.S_finite
+
+        have fintype_s_inv: Fintype ↑(S_poly_data.S⁻¹) := by
+          refine Set.Finite.fintype ?_
+          exact Set.finite_inv.mpr S_poly_data.S_finite
+
+        rw [← Finset.image_inv]
+        conv =>
+          rhs
+          rhs
+          unfold Set.Finite.toFinset
+          equals (S_poly_data.S).toFinset =>
+            ext a
+            simp
+            nth_rw 2 [S_poly_data.S_inv]
+            simp
+
+        simp
+      .
+        simp
+        apply S_poly_data.S_one
+      .
+        simp
+        have s_gen := S_poly_data.S_generates
+        conv =>
+          arg 1
+          arg 1
+          equals (Subgroup.subtype _) '' S_poly_data.S =>
+            rfl
+
+        rw [← MonoidHom.map_closure]
+        rw [s_gen]
+        sorry
+
+      . simp
+        rw [S_generates]
+        sorry
+      .
+        intro n hn
+        have S_poly := S_poly_data.S_poly n hn
+        sorry
+
+
+
+      unfold S at S_finite
+      unfold Set.Finite.toFinset
+      unfold S
+      simp
+
+      use 1
+      intro r hr
       unfold S at S_finite
       rw [← Finset.card_image_of_injective (f := Subtype.val)]
       grw [Finset.card_le_card (t := (((Finset.image (Subtype.val ∘ Subtype.val) S''_finite.toFinset)) ^ r) ^ (#(pre_S_finite.toFinset)))]
