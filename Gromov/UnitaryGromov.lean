@@ -37,6 +37,13 @@ lemma mem_closure_prod_list {G: Type*} [Group G] (S: Set G) (S_eq_Sinv: S = S⁻
   unfold List.unattach
   simp [prod_eq]
 
+-- Proof of proposition 3.18
+-- Note - we additionaly assume that the generating set contains 1, as this us use a simpler
+-- definition of polynomial growth (since S^n ⊆ S^(n+1))
+-- We use this requirement throughout the entire proof, so it's fine
+-- At the very start of the proof, we'll use a more general definition of polynomial growth
+-- (using the word metric) to drop the assumptions on our generating set,
+-- and then reduce the proof to the case of a symmetric generating set containing 1
 lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
   (S S': Finset G)
   (S_symm: S = S⁻¹)
@@ -52,20 +59,6 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
 
   by_cases g_nontrivial: Nontrivial G
   .
-
-
-    have eventually_one_mem: ∃ n: ℕ, 1 ∈ S ^ n := by
-      obtain ⟨one_list, one_list_prod⟩ := mem_closure_prod_list S.toSet (by
-        nth_rw 1 [S_symm]
-        simp
-      ) 1 (by simp)
-      use one_list.length
-      rw [Finset.mem_pow]
-      use (fun i => one_list[i])
-      simp [one_list_prod]
-
-
-
     let S'_prod := fun (s: S') => (weak_mem_closure_prod_list S s.val (by
       simp [S_generates]
     )).choose
@@ -117,16 +110,12 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
       exact Nat.one_le_pow d n hn
 
     .
-
-      obtain ⟨one_pos, h_one_pos⟩ := eventually_one_mem
-      let start_pos := max one_pos max_len
-
-      have start_pos_nonzero: 1 ≤ start_pos := by omega
-      use a * (start_pos ^ d)
+      have start_pos_nonzero: 1 ≤ max_len := by omega
+      use a * (max_len ^ d)
       intro n hn
 
 
-      grw [Finset.card_le_card (t := (S ^ start_pos) ^ n)]
+      grw [Finset.card_le_card (t := (S ^ max_len) ^ n)]
 
       .
         rw [← pow_mul]
@@ -136,38 +125,90 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
       .
         intro s' hs'
 
-        obtain ⟨l, l_prod⟩ := (weak_mem_closure_prod_list S s' (by
-          simp [S_generates]
-        ))
+        have S'_subset_s_pow: S' ⊆ (S ^ max_len) := by
+          intro a a'
 
-        have S'_subset_s_pow: S' ⊆ (S ^ start_pos) := by
-          intro a ha
+
+          let exists_list := (weak_mem_closure_prod_list S a (by
+            simp [S_generates]
+          ))
+          let l := exists_list.choose
+          have l_prop := exists_list.choose_spec
+
+          have len_le_max: l.length ≤ max_len := by
+            unfold max_len
+            apply le_sup
+            simp [all_lists]
+            use a
+            use a'
+
+
+
+          let foo := Fin.append (fun i => l[i].val) (fun (i: Fin (max_len - l.length)) => 1)
           rw [Finset.mem_pow]
+          use (fun i => ⟨(foo ⟨i.val, by omega⟩), by (
+            unfold foo
+            simp
+            unfold Fin.append
+            unfold Fin.addCases
+            simp
+            split_ifs
+            .
+              rename_i i_lt
+              have l_i_prop := l[i].property
+              nth_rw 2 [S_symm] at l_i_prop
+              simp at l_i_prop
+              exact l_i_prop
+            . apply S_one
+          )⟩)
+          conv =>
+            rhs
+            rw [← l_prop]
+          unfold foo
+          simp
+          have add_sub: max_len = l.length + (max_len - l.length)  := by omega
+          rw [List.ofFn_congr add_sub]
+          simp
+          rfl
+
+        have pow_subset := Finset.pow_subset_pow S'_subset_s_pow (m := n) (n := n) (by
+          have S_subset: S^1 ⊆ S^max_len := by
+            apply Finset.pow_subset_pow
+            . simp
+            . apply S_one
+            . omega
+
+          simp at S_subset
+          exact S_subset S_one
+        ) (by omega)
+
+        exact pow_subset hs'
 
 
-        rw [Finset.mem_pow]
-        rw [Finset.mem_pow] at hs'
-        obtain ⟨f, hf⟩ := hs'
+
+        -- rw [Finset.mem_pow]
+        -- rw [Finset.mem_pow] at hs'
+        -- obtain ⟨f, hf⟩ := hs'
 
 
 
 
-        use (fun i => if hi: i < l.length then l[i]'hi else sorry)
+        -- use (fun i => if hi: i < l.length then l[i]'hi else sorry)
 
 
 
-        have len_le_max: l.length ≤ start_pos := by
-          unfold start_pos
-          apply le_max_of_le_right
-          unfold max_len
-          apply Finset.le_sup
-          simp [all_lists]
-          use s'
+        -- have len_le_max: l.length ≤ start_pos := by
+        --   unfold start_pos
+        --   apply le_max_of_le_right
+        --   unfold max_len
+        --   apply Finset.le_sup
+        --   simp [all_lists]
+        --   use s'
 
-          use s'
+        --   use s'
 
 
-        sorry
+        -- sorry
   .
     rw [← not_subsingleton_iff_nontrivial] at g_nontrivial
     simp at g_nontrivial
@@ -180,6 +221,7 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
     exact Nat.one_le_pow d n hn
 
 
+#print axioms poly_growth_equiv
 
 
 -- Lemma 3.29 (Shrinking Conjugators)
