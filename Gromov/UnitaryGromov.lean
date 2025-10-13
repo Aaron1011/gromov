@@ -4147,7 +4147,18 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
           apply Finset.card_le_card
           intro a ha
           rw [Finset.mem_image]
-          use ⟨⟨⟨a.val, by simp⟩, by sorry⟩, by sorry⟩
+          use ⟨⟨⟨a.val, by simp⟩, by (
+            rw [Finset.mem_pow] at ha
+            obtain ⟨f, hf⟩ := ha
+            --simp_rw [← hf]
+            simp
+            have prod_mem := Subgroup.list_prod_mem G (l := List.ofFn fun i => (f i).val) ?_
+            rw [hf] at prod_mem
+            exact prod_mem
+          )⟩, by (
+            simp
+            sorry
+          )⟩
           refine ⟨?_, ?_⟩
           .
             simp
@@ -4167,7 +4178,29 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
               use ?_
               .
                 rw [Finset.mem_pow]
-                use fun i => ⟨⟨⟨(f i).val, sorry⟩, sorry⟩, sorry⟩
+                use fun i => ⟨⟨⟨(f i).val, (by
+                  have f_prop := (f i).property
+                  rw [Finset.mem_image] at f_prop
+                  obtain ⟨c, c_mem, c_eq⟩ := f_prop
+                  rw [← c_eq]
+                  simp
+                )⟩, (by
+                  have f_prop := (f i).property
+                  rw [Finset.mem_image] at f_prop
+                  obtain ⟨c, c_mem, c_eq⟩ := f_prop
+                  simp_rw [← c_eq]
+                  simp
+                )⟩, (by
+                  simp
+                  have f_prop := (f i).property
+                  rw [Finset.mem_image] at f_prop
+                  obtain ⟨c, c_mem, c_eq⟩ := f_prop
+                  simp_rw [← c_eq]
+                  simp
+                  unfold S' at c_mem
+                  simp at c_mem
+                  exact c_mem
+                )⟩
                 simp
                 simp_rw [← hf]
                 rw [Subtype.ext_iff]
