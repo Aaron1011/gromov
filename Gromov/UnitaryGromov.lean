@@ -7,6 +7,181 @@ open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 set_option linter.style.longLine false
 set_option linter.style.commandStart false
 
+open Subgroup Pointwise Finset
+open scoped Pointwise Finset
+
+-- Like 'mem_closure_prod_list', but without requring that the generating set be symmetric
+lemma weak_mem_closure_prod_list {G: Type*} [Group G] (S: Set G) (x: G) (hx: x ∈ Subgroup.closure S): ∃ l: List (↑(S ∪ S⁻¹)), l.unattach.prod = x := by
+  -- https://leanprover.zulipchat.com/#narrow/channel/287929-mathlib4/topic/Group.20.28.2FMonoid.2Fetc.29.20closures.20are.20a.20finite.20product.2Fsum/near/477951441
+  have foo := Submonoid.exists_list_of_mem_closure (s := S ∪ S⁻¹) (x := x)
+  rw [← Subgroup.closure_toSubmonoid _] at foo
+  specialize foo hx
+  obtain ⟨l, ⟨mem_s, prod_eq⟩⟩ := foo
+  use (l.attach).map (fun x => ⟨x.val, mem_s (x.val) x.property⟩)
+  unfold List.unattach
+  simp [prod_eq]
+
+
+-- TODO - deduplicate with with 'mem_S_prod_list'
+lemma mem_closure_prod_list {G: Type*} [Group G] (S: Set G) (S_eq_Sinv: S = S⁻¹) (x: G) (hx: x ∈ Subgroup.closure S): ∃ l: List S, l.unattach.prod = x := by
+  -- https://leanprover.zulipchat.com/#narrow/channel/287929-mathlib4/topic/Group.20.28.2FMonoid.2Fetc.29.20closures.20are.20a.20finite.20product.2Fsum/near/477951441
+  have foo := Submonoid.exists_list_of_mem_closure (s := S ∪ S⁻¹) (x := x)
+  rw [← Subgroup.closure_toSubmonoid _] at foo
+  specialize foo hx
+  obtain ⟨l, ⟨mem_s, prod_eq⟩⟩ := foo
+  conv at mem_s =>
+    intro y hy
+    rw [← S_eq_Sinv]
+    simp
+  use (l.attach).map (fun x => ⟨x.val, mem_s (x.val) x.property⟩)
+  unfold List.unattach
+  simp [prod_eq]
+
+lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
+  (S S': Finset G)
+  (S_symm: S = S⁻¹)
+  (S'_symm: S' = S'⁻¹)
+  (S_one: 1 ∈ S)
+  (S'_one: 1 ∈ S')
+  (S_generates: Subgroup.closure S.toSet = ⊤)
+  (S'_generates: Subgroup.closure S'.toSet = ⊤)
+  (s_poly: ∀ n ≥ 1, #(S ^ n) ≤ a * n ^ d):
+  ∃ b: ℕ, ∀ n ≥ 1, #(S' ^ n) ≤ b * n^d := by
+
+
+
+  by_cases g_nontrivial: Nontrivial G
+  .
+
+
+    have eventually_one_mem: ∃ n: ℕ, 1 ∈ S ^ n := by
+      obtain ⟨one_list, one_list_prod⟩ := mem_closure_prod_list S.toSet (by
+        nth_rw 1 [S_symm]
+        simp
+      ) 1 (by simp)
+      use one_list.length
+      rw [Finset.mem_pow]
+      use (fun i => one_list[i])
+      simp [one_list_prod]
+
+
+
+    let S'_prod := fun (s: S') => (weak_mem_closure_prod_list S s.val (by
+      simp [S_generates]
+    )).choose
+
+    let all_lists := (Finset.image S'_prod Finset.univ)
+    let max_len := all_lists.sup (fun l => l.length)
+    by_cases max_len_zero: max_len = 0
+    .
+      unfold max_len at max_len_zero
+      simp at max_len_zero
+      simp [all_lists] at max_len_zero
+      have S_nonempty : S.Nonempty := by
+        by_contra!
+        simp at this
+        rw [this] at S_generates
+        simp at S_generates
+
+      have S'_nonempty : S'.Nonempty := by
+        by_contra!
+        simp at this
+        rw [this] at S'_generates
+        simp at S'_generates
+
+      have S'_one: S' ⊆ {1} := by
+        intro s' hs'
+        have bad_prod := max_len_zero (S'_prod ⟨s', hs'⟩) s' hs' rfl
+        simp [S'_prod] at bad_prod
+        have s'_prod := (weak_mem_closure_prod_list S s' (by
+          simp [S_generates]
+        )).choose_spec
+        rw [bad_prod] at s'_prod
+        simp at s'_prod
+        rw [← s'_prod]
+        simp
+
+      have S'_le: #(S') ≤ 1 := by
+        grw [Finset.card_le_card (t := {1})]
+        simp
+        apply S'_one
+
+
+
+      use 1
+      intro n hn
+      simp
+      grw [Finset.card_pow_le]
+      grw [S'_le]
+      simp
+      exact Nat.one_le_pow d n hn
+
+    .
+
+      obtain ⟨one_pos, h_one_pos⟩ := eventually_one_mem
+      let start_pos := max one_pos max_len
+
+      have start_pos_nonzero: 1 ≤ start_pos := by omega
+      use a * (start_pos ^ d)
+      intro n hn
+
+
+      grw [Finset.card_le_card (t := (S ^ start_pos) ^ n)]
+
+      .
+        rw [← pow_mul]
+        grw [s_poly _ (by exact Right.one_le_mul start_pos_nonzero hn)]
+        rw [mul_pow]
+        rw [← mul_assoc]
+      .
+        intro s' hs'
+
+        obtain ⟨l, l_prod⟩ := (weak_mem_closure_prod_list S s' (by
+          simp [S_generates]
+        ))
+
+        have S'_subset_s_pow: S' ⊆ (S ^ start_pos) := by
+          intro a ha
+          rw [Finset.mem_pow]
+
+
+        rw [Finset.mem_pow]
+        rw [Finset.mem_pow] at hs'
+        obtain ⟨f, hf⟩ := hs'
+
+
+
+
+        use (fun i => if hi: i < l.length then l[i]'hi else sorry)
+
+
+
+        have len_le_max: l.length ≤ start_pos := by
+          unfold start_pos
+          apply le_max_of_le_right
+          unfold max_len
+          apply Finset.le_sup
+          simp [all_lists]
+          use s'
+
+          use s'
+
+
+        sorry
+  .
+    rw [← not_subsingleton_iff_nontrivial] at g_nontrivial
+    simp at g_nontrivial
+    use 1
+    intro n hn
+    simp
+    grw [Finset.card_pow_le]
+    grw [Finset.card_le_one_of_subsingleton]
+    simp
+    exact Nat.one_le_pow d n hn
+
+
+
+
 -- Lemma 3.29 (Shrinking Conjugators)
 lemma shrinking_conjugators (n : ℕ) (g h : Matrix.unitaryGroup (Fin n) ℂ) :
   ‖⁅g, h⁆.val - 1‖ ≤ 2 * ‖g.val - 1‖ * ‖h.val - 1‖ := by
@@ -1557,20 +1732,6 @@ structure SPolyData {n : ℕ} (hn : n ≠ 0) {T: Type*} [DecidableEq T] [Group T
 class HnEpsData where
   degree: ℕ
 
--- TODO - deduplicate with with 'mem_S_prod_list'
-lemma mem_closure_prod_list {G: Type*} [Group G] (S: Set G) (S_eq_Sinv: S = S⁻¹) (x: G) (hx: x ∈ Subgroup.closure S): ∃ l: List S, l.unattach.prod = x := by
-  -- https://leanprover.zulipchat.com/#narrow/channel/287929-mathlib4/topic/Group.20.28.2FMonoid.2Fetc.29.20closures.20are.20a.20finite.20product.2Fsum/near/477951441
-  have foo := Submonoid.exists_list_of_mem_closure (s := S ∪ S⁻¹) (x := x)
-  rw [← Subgroup.closure_toSubmonoid _] at foo
-  specialize foo hx
-  obtain ⟨l, ⟨mem_s, prod_eq⟩⟩ := foo
-  conv at mem_s =>
-    intro y hy
-    rw [← S_eq_Sinv]
-    simp
-  use (l.attach).map (fun x => ⟨x.val, mem_s (x.val) x.property⟩)
-  unfold List.unattach
-  simp [prod_eq]
 
 namespace HnEpsData
 variable [HnEpsData]
@@ -4201,6 +4362,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
               exact foo
 
             . exact Subgroup.subtype_injective G
+            . sorry
           )⟩
           refine ⟨?_, ?_⟩
           .
@@ -4879,9 +5041,6 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       sorry
 
 end HnEpsData
-
-open scoped Finset
-open scoped Pointwise
 
 
 
