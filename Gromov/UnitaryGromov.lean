@@ -4301,7 +4301,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
               have f_prop := (f b).property
               rw [Finset.mem_image] at f_prop
               obtain ⟨c, c_mem, c_eq⟩ := f_prop
-              rw [← hb, ← c_eq]
+              simp_rw [← hb, ← c_eq]
               simp
           . simp
         . intro a b hab
