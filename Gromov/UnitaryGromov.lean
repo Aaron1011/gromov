@@ -4144,6 +4144,8 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
 
         nth_rw 2 [← Finset.card_image_of_injective (f := (fun a => a.val.val))]
         .
+
+
           apply Finset.card_le_card
           intro a ha
           rw [Finset.mem_image]
@@ -4167,7 +4169,38 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
               simp
           )⟩, by (
             simp
-            sorry
+            rw [Finset.mem_pow] at ha
+            obtain ⟨f, hf⟩ := ha
+            have prod_mem_G' := Subgroup.list_prod_mem (G' n (H_n_eps hn) G) (l := List.ofFn fun i => ⟨(f i), by (
+              have f_prop := (f i).property
+              rw [Finset.mem_image] at f_prop
+              obtain ⟨a, a_mem, ha⟩ := f_prop
+              rw [← ha]
+              simp
+            )⟩) ?_
+            -- TODO - deduplicate all of this
+            have foo := Set.mem_image_of_mem (Subgroup.subtype _) prod_mem_G'
+            rw [← List.prod_hom] at foo
+            rw [List.map_ofFn] at foo
+            conv at foo =>
+              arg 2
+              arg 1
+              arg 1
+              equals fun i => (f i).val =>
+                rfl
+
+
+            rw [← Subgroup.mem_carrier]
+            rw [← Function.Injective.mem_set_image (f := Subgroup.subtype _)]
+            conv =>
+              arg 2
+              simp
+
+
+            . rw [← hf]
+              exact foo
+
+            . exact Subgroup.subtype_injective G
           )⟩
           refine ⟨?_, ?_⟩
           .
@@ -4180,7 +4213,13 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
             simp
             rw [Finset.mem_pow] at ha
             obtain ⟨f, hf⟩ := ha
-            have prod_mem_G' := Subgroup.list_prod_mem (G' n (H_n_eps hn) G) (l := List.ofFn fun i => ⟨(f i), by sorry⟩) ?_
+            have prod_mem_G' := Subgroup.list_prod_mem (G' n (H_n_eps hn) G) (l := List.ofFn fun i => ⟨(f i), by (
+              have f_prop := (f i).property
+              rw [Finset.mem_image] at f_prop
+              obtain ⟨a, a_mem, ha⟩ := f_prop
+              rw [← ha]
+              simp
+            )⟩) ?_
             have prod_mem := Subgroup.list_prod_mem G (l := List.ofFn fun i => f i) ?_
             .
               rw [hf] at prod_mem
