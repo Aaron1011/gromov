@@ -49,7 +49,7 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
   (S_symm: S = S⁻¹)
   (S_one: 1 ∈ S)
   (S_generates: Subgroup.closure S.toSet = ⊤)
-  (S'_generates: Subgroup.closure S'.toSet = ⊤)
+  --(S'_generates: Subgroup.closure S'.toSet = ⊤)
   (s_poly: ∀ n ≥ 1, #(S ^ n) ≤ a * n ^ d):
   ∃ b: ℕ, ∀ n ≥ 1, #(S' ^ n) ≤ b * n^d := by
 
@@ -77,8 +77,9 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
       have S'_nonempty : S'.Nonempty := by
         by_contra!
         simp at this
-        rw [this] at S'_generates
-        simp at S'_generates
+        sorry
+        --rw [this] at S'_generates
+        --simp at S'_generates
 
       have S'_one: S' ⊆ {1} := by
         intro s' hs'
@@ -4319,7 +4320,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
     --   exact Set.finite_inv.mpr S'_finite
 
     have my_map: ∃ a: ℕ, ∀ r ≥ 1, #(Finset.image s_to_map S_finite.toFinset.attach ^ r) ≤  a * r ^ (S_poly_data.S_poly_deg) := by
-      have new_try := poly_growth_equiv S_poly_data.S_poly_const S_poly_data.S_poly_deg (Finset.image (Subgroup.subtype _) S_poly_data.S_finite.toFinset) S_finite.toFinset ?_ ?_ ?_ ?_ ?_
+      have new_try := poly_growth_equiv S_poly_data.S_poly_const S_poly_data.S_poly_deg (S_poly_data.S_finite.toFinset) (Finset.image (fun a => ⟨⟨(s_to_map a).val, by sorry⟩, by sorry⟩) S_finite.toFinset.attach) ?_ ?_ ?_ ?_
       .
         obtain ⟨b, hb⟩ := new_try
         use b
@@ -4354,6 +4355,41 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         specialize hb r hr
         rw [← Finset.card_image_of_injective (f := Subgroup.subtype _) _ (by apply subtype_injective)] at hb
         rw [Finset.image_pow] at hb
+        rw [← Finset.card_image_of_injective (f := Subgroup.subtype _) _ (by apply subtype_injective)] at hb
+        rw [Finset.image_pow] at hb
+        conv at hb =>
+          arg 1
+          arg 1
+          arg 1
+          equals Finset.image (Subgroup.subtype _) S_finite.toFinset =>
+            ext a
+            rw [Finset.mem_image]
+            refine ⟨?_, ?_⟩
+            . intro x
+              obtain ⟨y, y_mem, y_eq⟩ := x
+              rw [Finset.mem_image]
+              use y
+              rw [← y_eq]
+              simp [s_to_map]
+              rw [Finset.image_image] at y_mem
+              rw [Finset.mem_image] at y_mem
+              obtain ⟨z, z_mem, z_eq⟩ := y_mem
+              simp at z_eq
+              rw [← z_eq]
+              simp [s_to_map]
+              have z_prop := z.property
+              rw [Set.Finite.mem_toFinset] at z_prop
+              exact z_prop
+            . intro x_mem
+              rw [Finset.mem_image] at x_mem
+              obtain ⟨y, y_mem, y_eq⟩ := x_mem
+              use y
+              refine ⟨?_, y_eq⟩
+              rw [Finset.image_image]
+              rw [Finset.mem_image]
+              simp at y_mem
+              use ⟨y, by simp [y_mem]⟩
+              simp [s_to_map]
         exact hb
       .
         have fintype_s:  Fintype ↑S_poly_data.S := by
@@ -4364,37 +4400,21 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
           refine Set.Finite.fintype ?_
           exact Set.finite_inv.mpr S_poly_data.S_finite
 
-        rw [← Finset.image_inv]
+        simp
         conv =>
-          rhs
           rhs
           unfold Set.Finite.toFinset
           equals (S_poly_data.S).toFinset =>
             ext a
             simp
-            nth_rw 2 [S_poly_data.S_inv]
+            nth_rw 1 [S_poly_data.S_inv]
             simp
-
-        simp
       .
         simp
         apply S_poly_data.S_one
       .
         simp
-        have s_gen := S_poly_data.S_generates
-        conv =>
-          arg 1
-          arg 1
-          equals (Subgroup.subtype _) '' S_poly_data.S =>
-            rfl
-
-        rw [← MonoidHom.map_closure]
-        rw [s_gen]
-        sorry
-
-      . simp
-        rw [S_generates]
-        sorry
+        exact S_poly_data.S_generates
       .
         intro n hn
         have S_poly := S_poly_data.S_poly n hn
