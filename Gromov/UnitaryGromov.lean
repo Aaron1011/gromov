@@ -5161,8 +5161,11 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
           simp [G']
           simp [h_mem]
       )⟩, by
-
-        simp⟩
+        rw [Finset.mem_coe]
+        rw [Finset.mem_image]
+        use ⟨h.val, by simp⟩
+        simp [s_to_map]
+      ⟩
       h_nontrivial := by
         simpa using h_nontrivial
     }
