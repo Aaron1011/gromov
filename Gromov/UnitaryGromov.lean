@@ -5477,7 +5477,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       -- } : SPolyData (n := (data.n_i i)) (by sorry) ((data.groups i) ))
 
 
-      obtain ⟨first_subgroup, first_subgroup_abelian, first_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.first_n) (by linarith [data.first_n_pos]) (data.first_group) (sorry) (first_new_data)
+      obtain ⟨first_subgroup, first_subgroup_abelian, first_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.first_n) (by linarith [data.first_n_pos]) (data.first_group) (by sorry) (first_new_data)
       obtain ⟨second_subgroup, second_subgroup_abelian, second_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.second_n) (by linarith [data.second_n_pos]) (data.second_group) (sorry) (second_new_data)
 
       let iso := Subgroup.map data.iso.symm.toMonoidHom
@@ -5705,7 +5705,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       --unfold UnitaryProd at centralizer_iso
       use G'
     by_cases nontrivial_central : ∃ g : G, (∀ z : ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G
-    · exact nontrivial_centrer_implies_virtual G G_FG sorry nontrivial_central
+    · exact nontrivial_centrer_implies_virtual G G_FG (by sorry) nontrivial_central
     · -- Case two - we have no non-trivial central elements
 
       have two_le_n: 2 ≤ n := by
