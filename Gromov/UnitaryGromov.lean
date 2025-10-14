@@ -45,13 +45,14 @@ lemma mem_closure_prod_list {G: Type*} [Group G] (S: Set G) (S_eq_Sinv: S = S⁻
 -- (using the word metric) to drop the assumptions on our generating set,
 -- and then reduce the proof to the case of a symmetric generating set containing 1
 lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
+  (a_pos: 0 < a)
   (S S': Finset G)
   (S_symm: S = S⁻¹)
   (S_one: 1 ∈ S)
   (S_generates: Subgroup.closure S.toSet = ⊤)
   --(S'_generates: Subgroup.closure S'.toSet = ⊤)
   (s_poly: ∀ n ≥ 1, #(S ^ n) ≤ a * n ^ d):
-  ∃ b: ℕ, ∀ n ≥ 1, #(S' ^ n) ≤ b * n^d := by
+  ∃ b: ℕ, 1 ≤ b ∧ ∀ n ≥ 1, #(S' ^ n) ≤ b * n^d := by
 
 
 
@@ -74,12 +75,7 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
         rw [this] at S_generates
         simp at S_generates
 
-      have S'_nonempty : S'.Nonempty := by
-        by_contra!
-        simp at this
-        sorry
-        --rw [this] at S'_generates
-        --simp at S'_generates
+
 
       have S'_one: S' ⊆ {1} := by
         intro s' hs'
@@ -101,6 +97,7 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
 
 
       use 1
+      refine ⟨by simp, ?_⟩
       intro n hn
       simp
       grw [Finset.card_pow_le]
@@ -111,6 +108,15 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
     .
       have start_pos_nonzero: 1 ≤ max_len := by omega
       use a * (max_len ^ d)
+      refine ⟨?_, ?_⟩
+      .
+        rw [Nat.one_le_iff_ne_zero]
+        apply Nat.mul_ne_zero
+        . omega
+        .
+          rw [← Nat.pos_iff_ne_zero]
+          apply Nat.pow_pos
+          omega
       intro n hn
 
 
@@ -212,6 +218,7 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
     rw [← not_subsingleton_iff_nontrivial] at g_nontrivial
     simp at g_nontrivial
     use 1
+    refine ⟨by simp, ?_⟩
     intro n hn
     simp
     grw [Finset.card_pow_le]
@@ -4319,12 +4326,21 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
     --   refine Set.Finite.fintype ?_
     --   exact Set.finite_inv.mpr S'_finite
 
+    have poly_pos := S_poly_data.S_poly_const_pos
+
     have my_map: ∃ a: ℕ, a ≥ 1 ∧ ∀ r ≥ 1, #(Finset.image s_to_map S_finite.toFinset.attach ^ r) ≤  a * r ^ (S_poly_data.S_poly_deg) := by
-      have new_try := poly_growth_equiv S_poly_data.S_poly_const S_poly_data.S_poly_deg (S_poly_data.S_finite.toFinset) (Finset.image (fun a => ⟨⟨(s_to_map a).val, by sorry⟩, by sorry⟩) S_finite.toFinset.attach) ?_ ?_ ?_ ?_
+      have new_try := poly_growth_equiv S_poly_data.S_poly_const S_poly_data.S_poly_deg (by omega) (S_poly_data.S_finite.toFinset)
+        (Finset.image (fun a => ⟨⟨(s_to_map a).val, by (apply SetLike.coe_mem)⟩, by (
+          have foo := (s_to_map a).property
+          rw [Subgroup.mem_map] at foo
+          obtain ⟨x, x_mem, x_eq⟩ := foo
+          simp_rw [← x_eq]
+          simp [x_mem]
+        )⟩) S_finite.toFinset.attach) ?_ ?_ ?_ ?_
       .
-        obtain ⟨b, hb⟩ := new_try
+        obtain ⟨b, b_pos, hb⟩ := new_try
         use b
-        refine ⟨by sorry, ?_⟩
+        refine ⟨b_pos, ?_⟩
         intro r hr
         rw [← Finset.card_image_of_injective (f := Subgroup.subtype _) _ (by apply subtype_injective)]
         rw [Finset.image_pow]
