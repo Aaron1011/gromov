@@ -4418,7 +4418,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       .
         intro n hn
         have S_poly := S_poly_data.S_poly n hn
-        sorry
+        exact S_poly
 
 
 
