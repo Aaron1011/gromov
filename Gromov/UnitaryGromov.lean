@@ -5843,6 +5843,13 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           rw [← not_imp_not] at G'_nontrivial_central
           simp at G'_nontrivial_central
           exact G'_nontrivial_central hg
+        .
+          ext a
+          simp
+          nth_rw 1 [S_data.S_inv]
+          simp
+        . simp
+          apply S_data.S_one
 termination_by (n, G.index)
 decreasing_by
   · apply Prod.Lex.left
