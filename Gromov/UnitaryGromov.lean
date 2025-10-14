@@ -4319,11 +4319,12 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
     --   refine Set.Finite.fintype ?_
     --   exact Set.finite_inv.mpr S'_finite
 
-    have my_map: ∃ a: ℕ, ∀ r ≥ 1, #(Finset.image s_to_map S_finite.toFinset.attach ^ r) ≤  a * r ^ (S_poly_data.S_poly_deg) := by
+    have my_map: ∃ a: ℕ, a ≥ 1 ∧ ∀ r ≥ 1, #(Finset.image s_to_map S_finite.toFinset.attach ^ r) ≤  a * r ^ (S_poly_data.S_poly_deg) := by
       have new_try := poly_growth_equiv S_poly_data.S_poly_const S_poly_data.S_poly_deg (S_poly_data.S_finite.toFinset) (Finset.image (fun a => ⟨⟨(s_to_map a).val, by sorry⟩, by sorry⟩) S_finite.toFinset.attach) ?_ ?_ ?_ ?_
       .
         obtain ⟨b, hb⟩ := new_try
         use b
+        refine ⟨by sorry, ?_⟩
         intro r hr
         rw [← Finset.card_image_of_injective (f := Subgroup.subtype _) _ (by apply subtype_injective)]
         rw [Finset.image_pow]
@@ -4865,6 +4866,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       -- . simp
 
 
+    obtain ⟨new_const, new_const_pos, h_poly_new_const⟩ := my_map
 
 
     let h_n_data: HnData := {
@@ -5115,18 +5117,13 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         have s_dist := S_dist x x_prop
         rw [← s_eq]
         linarith
-      S_poly_const := S_poly_data.S_poly_const ^ #pre_S.toFinset
+      S_poly_const := new_const
       S_poly_const_pos := by
-        apply Ne.symm
-        rw [← Nat.pos_iff_ne_zero]
-        apply Nat.pow_pos
-        have foo := S_poly_data.S_poly_const_pos
         omega
-      S_poly_deg := S_poly_data.S_poly_deg * #pre_S.toFinset
+      S_poly_deg := S_poly_data.S_poly_deg
       S_poly := by
-        intro r
-        have foo := my_map r
-        simpa using foo
+        simp
+        apply h_poly_new_const
       h := ⟨⟨h.val.val, by (
         have h_prop := h.property
         simp only [S] at h_prop
