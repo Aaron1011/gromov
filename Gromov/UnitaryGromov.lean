@@ -487,7 +487,7 @@ lemma small_dist_matrix (n : ℕ) (hn : 2 ≤ n) :
 #print axioms small_dist_matrix
 
 -- Lemma 3.31 (Volume Packing)
-set_option synthInstance.maxHeartbeats 80000 in
+set_option synthInstance.maxHeartbeats 100000 in
 set_option maxHeartbeats 500000 in
 open Pointwise in
 lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
@@ -670,7 +670,7 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
     norm_cast at card_lt_top
     rw [WithTop.lt_top_iff_ne_top] at card_lt_top
     simp at card_lt_top
-    rw [ENat.card_eq_top] at card_lt_top
+    rw [Set.encard_eq_top_iff] at card_lt_top
     simp at card_lt_top
 
     have fintype_I : Fintype I := by
@@ -4298,6 +4298,10 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
 
     obtain ⟨h, h_nontrivial⟩ := nontrivial_h
 
+    have S_mem_G': ∀ s ∈ S, s ∈ (G' n (H_n_eps hn) G) := by
+      rw [← S_generates]
+      apply Subgroup.mem_closure_of_mem
+
     let s_to_map: S_finite.toFinset → (Subgroup.map G.subtype (G' n (H_n_eps hn) G)) := (fun a => (⟨a.val.val, by (
         simp
         simp [G']
@@ -5025,7 +5029,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
                 rw [← S_generates]
               have b_list := mem_closure_prod_list S S_eq_Sinv b b_prop
               obtain ⟨l, l_prod⟩ := b_list
-              use List.map (fun a => ⟨a.val, ?_⟩) l
+              use List.map (fun d => ⟨d.val, ?_⟩) l
               .
                 refine ⟨?_, ?_⟩
                 .
@@ -5037,14 +5041,6 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
                   obtain ⟨z, z_mem, z_eq_p⟩ := p_mem
                   use ⟨z, by simp⟩
                   rw [← z_eq_p]
-                  -- TODO - why is rw [Set.mem_setOf] pushing new goals???
-                  .
-                    simp [G']
-                    apply Subgroup.mem_closure_of_mem
-                    simp [dist]
-                    rw [dist_eq_norm_sub]
-                    apply S_dist
-                    simp
                 .
                   conv =>
                     rhs
@@ -5055,45 +5051,17 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
                   apply Subtype.ext
                   simp
                   rw [List.comp_map]
-                  apply congr rfl
+                  simp
+                  apply congrArg
                   ext i g
                   simp
 
               .
-                simp
-                rw [Subgroup.mem_map] at a_val_mem
-                obtain ⟨b, b_mem, a_eq_b⟩ := a_val_mem
-                have b_prop := b.property
-                simp at a_eq_b
-                rw [← a_eq_b]
-                apply b_mem
-              -- rw [Subgroup.mem_map] at ha
-              -- obtain ⟨b, b_mem, a_eq_b⟩ := ha
-              -- have b_prop := b.property
-              -- conv at b_prop =>
-              --   arg 1
-              --   rw [← S_generates]
+                have my_mem := S_mem_G' d (by simp)
+                apply Subgroup.mem_map_of_mem
+                apply my_mem
+            . exact a_val_mem
 
-              -- conv =>
-              --   arg 2
-              --   simp [← a_eq_b]
-
-              -- rw [←  Subgroup.mem_map_iff_mem (f := Subgroup.subtype _)]
-              -- conv =>
-              --   arg 1
-              --   equals Subgroup.map G.subtype (G' n (H_n_eps hn) G) =>
-              --     ext p
-              --     simp
-              --     refine ⟨?_, ?_⟩
-              --     . intro exists_x
-              --       obtain ⟨x, x_mem⟩ := exists_x
-              --       simp at p_eq
-              --       sorry
-              --     . intro other
-              --       simp
-              --       sorry
-              -- . simp
-              -- . simp
       S_finite := by
         simp
         apply Set.finite_range
