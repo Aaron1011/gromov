@@ -2500,21 +2500,21 @@ lemma rho_g_contains_abelian : ∃ M: Subgroup ((rho_g (G := G))), IsMulCommutat
           . ext f
             rw [← hg]
             rfl
-        .
-          simp [mapped_group, my_new_range]
-          have x_prop := x.property
-          rw [MonoidHom.mem_range] at x_prop
-          obtain ⟨g, hg⟩ := x_prop
-          use (plain_linear_to_clm x.val)
-          refine ⟨?_, ?_⟩
-          .
-            have mem_range: plain_linear_to_clm ↑x ∈ (GRepW.comp GRepW_base).range := by
-              simp
-              use g
-              rw [← hg]
-              rfl
-            apply Subgroup.le_topologicalClosure (GRepW.comp (GRepW_base (G := G))).range mem_range
-          . rfl
+    .
+      simp [mapped_group, my_new_range]
+      have x_prop := x.property
+      rw [MonoidHom.mem_range] at x_prop
+      obtain ⟨g, hg⟩ := x_prop
+      use (plain_linear_to_clm x.val)
+      refine ⟨?_, ?_⟩
+      .
+        have mem_range: plain_linear_to_clm ↑x ∈ (GRepW.comp GRepW_base).range := by
+          simp
+          use g
+          rw [← hg]
+          rfl
+        apply Subgroup.le_topologicalClosure (GRepW.comp (GRepW_base (G := G))).range mem_range
+      . rfl
 
 
 
@@ -2675,7 +2675,6 @@ lemma g_hom_abelian {T: Type*} [Group T] (A: Subgroup G) (A_finite_index: A.Fini
 
   have j_nonempty: Nonempty j := by
     by_contra!
-    simp at this
     simp [this] at iso
     have H_finite : Finite H := by
       rw [Equiv.finite_iff iso.toEquiv]
@@ -2741,7 +2740,6 @@ lemma g_hom_abelian {T: Type*} [Group T] (A: Subgroup G) (A_finite_index: A.Fini
       index_ne_zero := by
         simp
         rw [Subgroup.index_comap]
-        simp [Subgroup.relindex]
         -- apply somehow found this - how does it work???
         exact Subgroup.FiniteIndex.index_ne_zero
     }
@@ -3722,7 +3720,7 @@ lemma f_conv_mu (f: G → ℝ): (Conv (S := S) f (mu (S := S))) = fun g => ((1 :
         lhs
         rhs
         intro x
-        rhs
+        arg 1
         intro b
         rw [mul_comm]
         rw [mul_assoc]
@@ -5143,8 +5141,18 @@ noncomputable def Laplace_linear: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G
         right
         apply mu_finsupp
       )]
+
     rw [MeasureTheory.MemLp.toLp_add]
-    abel
+    . abel
+    .
+      have foo := MeasureTheory.Lp.memLp (conv_mu_lp2 x)
+      simp [conv_mu_lp2] at foo
+      rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)] at foo
+      exact foo
+    . have foo := MeasureTheory.Lp.memLp (conv_mu_lp2 y)
+      simp [conv_mu_lp2] at foo
+      rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)] at foo
+      exact foo
   map_smul' := by
     intro c f
     simp [Laplace, conv_mu_lp2]
@@ -5569,7 +5577,7 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
         field_simp
         simp
         rw [Real.rpow_neg]
-        rw [inv_lt_inv₀]
+        rw [mul_inv_lt_iff₀']
         field_simp
         norm_cast
         rw [pow_two]
@@ -5581,13 +5589,13 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
           norm_cast
           positivity
         . norm_cast
+          omega
         . norm_cast
           linarith
         . norm_cast
           positivity
         . norm_cast
           positivity
-        . positivity
       . positivity
       . positivity
       . simp
@@ -5646,7 +5654,7 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
           field_simp
           simp
           rw [Real.rpow_neg]
-          rw [inv_lt_inv₀]
+          rw [mul_inv_lt_iff₀']
           norm_num
           norm_cast
           rw [pow_two]
@@ -5658,13 +5666,13 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
             norm_cast
             positivity
           . norm_cast
+            simp
           . norm_cast
             linarith
           . norm_cast
             positivity
           . norm_cast
             positivity
-          . positivity
         . positivity
         . positivity
         . simp
@@ -8407,7 +8415,7 @@ lemma closure_iterate_mulact {T: Type*} [Group T] [DecidableEq T] (a b: T) (n: �
               .
                 simp at m_lt_n_sub
                 exact m_lt_n_sub
-              . exact add_right_strictMono
+              . exact StrictMono.add_const (fun ⦃a b⦄ a ↦ a) 1
           .
             rw [← mul_self_zpow]
             simp
@@ -8485,7 +8493,7 @@ lemma closure_iterate_mulact {T: Type*} [Group T] [DecidableEq T] (a b: T) (n: �
               .
                 simp at m_lt_n_sub
                 omega
-              . exact add_right_strictMono
+              . exact StrictMono.add_const (fun ⦃a b⦄ a ↦ a) (-1)
           .
             repeat rw [← mul_assoc]
             nth_rw 2 [← zpow_neg_one]
