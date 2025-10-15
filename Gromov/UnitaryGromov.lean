@@ -5895,7 +5895,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
 
         simp at hn
-        have target := HnEpsData.central_trivial_virtually_abelian n (by omega) G G_FG ?_ ?_ G_eps.1 S_data_G'
+        have target := HnEpsData.central_trivial_virtually_abelian n (by omega) G G_FG ?_ ?_ G_eps.1 S_data_G' ?_
         · exact target
         · intro g hg
           specialize nontrivial_central g
@@ -5908,6 +5908,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           rw [← not_imp_not] at G'_nontrivial_central
           simp at G'_nontrivial_central
           exact G'_nontrivial_central hg
+        . rfl
       .
         ext a
         simp
