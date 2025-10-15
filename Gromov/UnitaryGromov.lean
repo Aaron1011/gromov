@@ -5389,6 +5389,8 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
       let first_new_data: SPolyData (n := (data.first_n)) (by linarith [data.first_n_pos]) (data.first_group) := {
         S := (MonoidHom.fst _ _ '' (data.iso.toMonoidHom '' (g_to_central.toMonoidHom '' S_data.S))),
+        S_one := sorry
+        S_inv := sorry
         S_finite := by
           apply Set.Finite.image
           apply Set.Finite.image
@@ -5416,6 +5418,8 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       -- TODO - deduplicate 'first_new_data' and 'second_new_data'
       let second_new_data: SPolyData (n := (data.second_n)) (by linarith [data.second_n_pos]) (data.second_group) := {
         S := (MonoidHom.snd _ _ '' (data.iso.toMonoidHom '' (g_to_central.toMonoidHom '' S_data.S))),
+        S_one := sorry
+        S_inv := sorry
         S_finite := by
           apply Set.Finite.image
           apply Set.Finite.image
@@ -5719,6 +5723,92 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       obtain ⟨C, G_eps⟩:= volume_packing n (by omega) ε hε
       specialize G_eps G
 
+      have new_G_FG: Group.FG G := by
+        exact (Group.fg_iff_subgroup_fg G).mpr G_FG
+
+      have G'_finite := G_eps.1
+      have G'_fg := Subgroup.fg_of_index_ne_zero (G' n ε G)
+
+      obtain ⟨pre_S, h_pre_S⟩ := G'_fg
+
+      have pos := S_data.S_poly_const_pos
+      have my_equiv := poly_growth_equiv S_data.S_poly_const S_data.S_poly_deg (by omega)
+        S_data.S_finite.toFinset (Finset.image (Subgroup.subtype _) (pre_S ∪ pre_S⁻¹ ∪ {1})) ?_ ?_ (by simp [S_data.S_generates]) S_data.S_poly
+
+      obtain ⟨b, hb, new_poly⟩ := my_equiv
+
+      let S_data_G': SPolyData hn ((G' n ε G)) := {
+        S := pre_S ∪ pre_S⁻¹ ∪ {1},
+        S_finite := by simp,
+        S_generates := by
+          rw [Subgroup.closure_union]
+          rw [Subgroup.closure_union]
+          simp [h_pre_S]
+        S_one := by
+          simp
+        S_inv := by
+          simp
+          rw [Set.union_comm]
+        S_poly_const := b
+        S_poly_const_pos := by omega
+        S_poly_deg := S_data.S_poly_deg
+        S_poly := by
+          intro r hr
+          unfold Set.Finite.toFinset
+          specialize new_poly r hr
+          rw [← Finset.image_pow] at new_poly
+          rw [Finset.card_image_of_injective] at new_poly
+          -- TODO(mathlib) - figure out what @[norm_cast] attribute to apply to make 'norm_cast' work with the {1} set
+          have one_eq: ({1}: Set (G' n ε G)) = ({1}: Finset (G' n ε G)) := by simp
+          norm_cast
+          simp_rw [one_eq]
+          norm_cast
+          . simpa using new_poly
+          . exact subtype_injective (G' n ε G)
+      }
+
+      let map_set (Q: Finset (G' n ε G)) := Finset.image (fun a => (⟨a.val, by simp⟩ : (Subgroup.map G.subtype (G' n ε G)))) Q
+      let other := G.subtype '' (((G' n ε G).subtype) '' (pre_S))
+
+      -- WRONG - viewed as a subgroup of the unitary group, it does not generate ⊤
+      -- let S_data_G'_subgroup: SPolyData hn (Subgroup.map G.subtype (G' n ε G)) := {
+      --   S := Finset.image (MonoidHom.subgroupMap G.subtype (G' n ε G)) (pre_S ∪ pre_S⁻¹ ∪ {1}),
+      --   S_finite := by
+      --     apply Finset.finite_toSet
+
+      --   S_generates := by
+      --     rw [Finset.coe_image]
+      --     rw [← MonoidHom.map_closure]
+      --     push_cast
+      --     rw [Subgroup.closure_union]
+      --     rw [Subgroup.closure_union]
+      --     simp [h_pre_S]
+      --   S_one := by
+      --     simp
+      --     left
+      --     rfl
+      --   S_inv := by
+      --     simp
+      --     rw [Set.union_comm]
+      --     sorry
+      --   S_poly_const := b
+      --   S_poly_const_pos := by omega
+      --   S_poly_deg := S_data.S_poly_deg
+      --   S_poly := by
+      --     intro r hr
+      --     unfold Set.Finite.toFinset
+      --     specialize new_poly r hr
+      --     rw [← Finset.image_pow] at new_poly
+      --     rw [Finset.card_image_of_injective] at new_poly
+      --     -- TODO(mathlib) - figure out what @[norm_cast] attribute to apply to make 'norm_cast' work with the {1} set
+      --     have one_eq: ({1}: Set (G' n ε G)) = ({1}: Finset (G' n ε G)) := by simp
+      --     norm_cast
+      --     dsimp [map_set]
+      --     rw [one_eq]
+      --     norm_cast
+      --     . simpa using new_poly
+      --     . exact subtype_injective (G' n ε G)
+      -- }
 
       by_cases G'_nontrivial_central : ∃ g : (G' n ε G), (∀ z : ℂ, g.val.val.val ≠ z • 1) ∧ g ∈ Set.center (G' n ε G)
       · have G'_virtual := nontrivial_centrer_implies_virtual (Subgroup.map G.subtype (G' n ε G)) (by
@@ -5731,7 +5821,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           apply Submonoid.FG.map
           rw [← Subgroup.fg_iff_submonoid_fg]
           exact (Group.fg_iff_subgroup_fg (G' n ε G)).mp G'_FG
-        ) (by sorry) (by
+        ) S_data_G'_subgroup (by
           obtain ⟨g, hg⟩ := G'_nontrivial_central
           use ⟨g, by simp⟩
           refine ⟨?_, ?_⟩
@@ -5785,50 +5875,6 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
         --let foo := Subgroup.comap ((Subgroup.map (G.subtype (G' n ε G))).subtype) N
       ·
 
-        have new_G_FG: Group.FG G := by
-          exact (Group.fg_iff_subgroup_fg G).mpr G_FG
-
-        have G'_finite := G_eps.1
-        have G'_fg := Subgroup.fg_of_index_ne_zero (G' n ε G)
-
-        obtain ⟨pre_S, h_pre_S⟩ := G'_fg
-
-        have pos := S_data.S_poly_const_pos
-        have my_equiv := poly_growth_equiv S_data.S_poly_const S_data.S_poly_deg (by omega)
-          S_data.S_finite.toFinset (Finset.image (Subgroup.subtype _) (pre_S ∪ pre_S⁻¹ ∪ {1})) ?_ ?_ (by simp [S_data.S_generates]) S_data.S_poly
-
-        obtain ⟨b, hb, new_poly⟩ := my_equiv
-
-        let S_data_G': SPolyData hn ((G' n ε G)) := {
-          S := pre_S ∪ pre_S⁻¹ ∪ {1},
-          S_finite := by simp,
-          S_generates := by
-            rw [Subgroup.closure_union]
-            rw [Subgroup.closure_union]
-            simp [h_pre_S]
-          S_one := by
-            simp
-          S_inv := by
-            simp
-            rw [Set.union_comm]
-          S_poly_const := b
-          S_poly_const_pos := by omega
-          S_poly_deg := S_data.S_poly_deg
-          S_poly := by
-            intro r hr
-            unfold Set.Finite.toFinset
-            specialize new_poly r hr
-            rw [← Finset.image_pow] at new_poly
-            rw [Finset.card_image_of_injective] at new_poly
-            -- TODO(mathlib) - figure out what @[norm_cast] attribute to apply to make 'norm_cast' work with the {1} set
-            have one_eq: ({1}: Set (G' n ε G)) = ({1}: Finset (G' n ε G)) := by simp
-            norm_cast
-            simp_rw [one_eq]
-            norm_cast
-            . simpa using new_poly
-            . exact subtype_injective (G' n ε G)
-        }
-
         simp at hn
         have target := HnEpsData.central_trivial_virtually_abelian n (by omega) G G_FG ?_ ?_ G_eps.1 S_data_G'
         · exact target
@@ -5843,13 +5889,13 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           rw [← not_imp_not] at G'_nontrivial_central
           simp at G'_nontrivial_central
           exact G'_nontrivial_central hg
-        .
-          ext a
-          simp
-          nth_rw 1 [S_data.S_inv]
-          simp
-        . simp
-          apply S_data.S_one
+      .
+        ext a
+        simp
+        nth_rw 1 [S_data.S_inv]
+        simp
+      . simp
+        apply S_data.S_one
 termination_by (n, G.index)
 decreasing_by
   · apply Prod.Lex.left
