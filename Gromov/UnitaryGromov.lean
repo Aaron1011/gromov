@@ -5240,6 +5240,12 @@ set_option maxHeartbeats 2000000 in
 lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG)
   (S_data: SPolyData hn G): ∃ N : Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
 
+
+  -- This will get used for the 'h_n_eps_data' variable via instance synthesis
+  let _ : HnEpsData := {
+    degree := S_data.S_poly_deg
+  }
+
   by_cases n_eq_one : n = 1
   · have fin_sin_subsingleton : Subsingleton (Fin n) := by
       rw [n_eq_one]
@@ -5888,9 +5894,6 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       ·
 
 
-        let _ : HnEpsData := {
-          degree := S_data.S_poly_deg
-        }
 
         simp at hn
         have target := HnEpsData.central_trivial_virtually_abelian n (by omega) G G_FG ?_ ?_ G_eps.1 S_data_G'
