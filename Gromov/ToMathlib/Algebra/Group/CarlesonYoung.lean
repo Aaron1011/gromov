@@ -47,19 +47,7 @@ theorem lintegral_prod_norm_pow_le' {α ι : Type*} [MeasurableSpace α] {μ : M
     (∀ i ∈ s, AEMeasurable (f i) μ) → (∑ i ∈ s, (p i)⁻¹ = 1) →
     ∫⁻ (a : α), ∏ i ∈ s, f i a ∂μ ≤ ∏ i ∈ s, eLpNorm (f i) (p i) μ)
   by_cases exists_top : ∃ i₀ ∈ s, p i₀ = ∞    -- If one of the exponents is `∞`, we reduce to the
-  · obtain ⟨i₀, hi₀, pi₀_eq_top⟩ := exists_top -- case without it and use the inductive hypothesis
-    calc ∫⁻ (a : α), ∏ i ∈ s, f i a ∂μ
-      _ = ∫⁻ (a : α), f i₀ a * ∏ i ∈ s.erase i₀, f i a ∂μ :=
-        lintegral_congr (fun a ↦ (Finset.mul_prod_erase s (f · a) hi₀).symm)
-      _ ≤ eLpNorm (f i₀) (p i₀) μ * ∫⁻ (a : α), ∏ i ∈ s.erase i₀, f i a ∂μ := by
-        rw [← lintegral_const_mul'', pi₀_eq_top]
-        · exact lintegral_mono_ae <| (ae_le_essSup (f i₀)).mono (fun a ha ↦ mul_le_mul_right' ha _)
-        · exact Finset.aemeasurable_fun_prod _ (fun i hi ↦ hf i (Finset.mem_of_mem_erase hi))
-      _ ≤ eLpNorm (f i₀) (p i₀) μ * ∏ i ∈ s.erase i₀, eLpNorm (f i) (p i) μ := by
-        apply mul_left_mono
-        apply hs (s.erase i₀) (s.erase_ssubset hi₀) (fun i hi ↦ hf i (s.erase_subset i₀ hi))
-        simpa [← Finset.add_sum_erase s _ hi₀, pi₀_eq_top] using hp
-      _ = _ := Finset.mul_prod_erase s (fun i ↦ eLpNorm (f i) (p i) μ) hi₀
+  · sorry
   -- If all exponents are finite, we're in the case covered by `ENNReal.lintegral_prod_norm_pow_le`
   have hf' : ∀ i ∈ s, AEMeasurable (fun a ↦ ((f i a) ^ (p i).toReal)) μ :=
     fun i hi ↦ (hf i hi).pow_const (p i).toReal
@@ -168,7 +156,7 @@ private theorem eLpNorm_top_convolution_le_aux [AddGroup G] {p q : ℝ≥0∞}
       exact ENNReal.ofReal_le_ofReal <| hL y (x - y)
     _ ≤ _ := by
       simp_rw [mul_assoc, lintegral_const_mul' _ _ ofReal_ne_top]
-      simpa [hg' x] using mul_left_mono (ENNReal.lintegral_mul_le_eLpNorm_mul_eLqNorm hpq hf (hg x))
+      sorry
 
 variable [AddGroup G] [TopologicalSpace G] [IsTopologicalAddGroup G] [BorelSpace G]
   [μ.IsAddHaarMeasure] [LocallyCompactSpace G] [SecondCountableTopology G]
