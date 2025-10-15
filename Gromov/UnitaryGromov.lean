@@ -1782,10 +1782,10 @@ class HnEpsData where
 
 
 namespace HnEpsData
-variable [HnEpsData]
+variable [h_n_eps_data: HnEpsData]
 
 -- A sufficiently small epsilon to use for the h_n elements in Theorem 3.8 (independent of the choice of n)
-noncomputable def H_n_eps {d : ℕ} (hd : 2 ≤ d): ℝ := (min ((1 : ℝ) / 60) ((small_dist_matrix d hd).choose / 2))
+noncomputable def H_n_eps {d : ℕ} (hd : 2 ≤ d): ℝ := min (((1 : ℝ) / 60)) (min (((1 : ℝ) / 60) / ((Real.exp (4 + h_n_eps_data.degree * Real.log 2) + 1))) ((small_dist_matrix d hd).choose / 2))
 
 -- H_n_eps is less than 1/2
 lemma H_n_eps_lt {d : ℕ} (hd : 2 ≤ d) : H_n_eps hd < ((1 : ℝ) / 4) := by
@@ -1800,8 +1800,11 @@ lemma H_n_eps_lt_one_fifty {d : ℕ} (hd : 2 ≤ d) : H_n_eps hd < ((1 : ℝ) / 
 
 lemma H_n_eps_pos {d : ℕ} (hd : 2 ≤ d) : 0 < H_n_eps hd := by
   simp [H_n_eps]
-  have small_pos := (small_dist_matrix d hd).choose_spec
-  linarith
+  refine ⟨?_, ?_⟩
+  . positivity
+  .
+    have small_pos := (small_dist_matrix d hd).choose_spec
+    linarith
 
 
 open scoped Finset
@@ -1895,6 +1898,7 @@ theorem theorem_3_8_h_n_left_S (data: HnData) (prev: Theorem3_8_Data data): ∃ 
           unfold C
           grw [min_le_right]
           simp
+          right
           have my_spec := (small_dist_matrix data.d data.hd).choose_spec
           have gt_zero := my_spec.1
           linarith
@@ -1914,11 +1918,9 @@ theorem theorem_3_8_h_n_left_S (data: HnData) (prev: Theorem3_8_Data data): ∃ 
         simp [z_eq_one] at comm_eq_z
         exact comm_eq_z
       · -- TODO - deduplicate this
-        simp [H_n_eps]
-        have C_pos := (small_dist_matrix data.d data.hd).choose_spec.1
+        have foo := H_n_eps_pos data.hd
         linarith
-    · simp [H_n_eps]
-      have C_pos := (small_dist_matrix data.d data.hd).choose_spec.1
+    · have foo := H_n_eps_pos data.hd
       linarith
     · simp
   · have subgroup_le := Subgroup.closure_le_centralizer_centralizer data.S
@@ -3907,6 +3909,8 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
   (G'_central_trivial : ∀ g : (G' n (H_n_eps hn) G), g ∈ Set.center (G' n (H_n_eps hn) G) → ∃ z : ℂ, g.val.val.val = z • 1)
   (G'_finite_index: (G' n (H_n_eps hn) G).FiniteIndex)
   (S_poly_data: SPolyData (n := n) (by omega) (G' n (H_n_eps hn) G))
+  -- This parameter is kind of hack - ideally, we would refactor so that just 'h_n_eps_data' is enough
+  (data_eq_degree: h_n_eps_data.degree = S_poly_data.S_poly_deg)
   : ∃ N : Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
 
   classical
@@ -5210,7 +5214,19 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       . simp
     .
       simp
-      sorry
+      unfold H_n_eps
+
+      simp
+      right
+      left
+      rw [data_eq_degree]
+      simp [h_n_data]
+      norm_num
+      apply div_lt_div₀
+      . norm_num
+      . apply le_refl
+      . norm_num
+      . positivity
 
 end HnEpsData
 
@@ -5223,10 +5239,6 @@ set_option synthInstance.maxHeartbeats 100000 in
 set_option maxHeartbeats 2000000 in
 lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG)
   (S_data: SPolyData hn G): ∃ N : Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
-
-  have _ : HnEpsData := {
-    degree := 1
-  }
 
   by_cases n_eq_one : n = 1
   · have fin_sin_subsingleton : Subsingleton (Fin n) := by
@@ -5821,7 +5833,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           apply Submonoid.FG.map
           rw [← Subgroup.fg_iff_submonoid_fg]
           exact (Group.fg_iff_subgroup_fg (G' n ε G)).mp G'_FG
-        ) S_data_G'_subgroup (by
+        ) (sorry /-S_data_G'_subgroup-/) (by
           obtain ⟨g, hg⟩ := G'_nontrivial_central
           use ⟨g, by simp⟩
           refine ⟨?_, ?_⟩
@@ -5874,6 +5886,11 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
         --let foo := Subgroup.comap ((Subgroup.map (G.subtype (G' n ε G))).subtype) N
       ·
+
+
+        let _ : HnEpsData := {
+          degree := S_data.S_poly_deg
+        }
 
         simp at hn
         have target := HnEpsData.central_trivial_virtually_abelian n (by omega) G G_FG ?_ ?_ G_eps.1 S_data_G'
