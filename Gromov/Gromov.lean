@@ -14,32 +14,38 @@ open scoped Finset
 open scoped Pointwise
 
 
-variable {G : Type*} [hG: Group G] [DecidableEq G]
-
 -- TODO - I don't really understand why `S` needs to be an `outParam`?
 -- If I remove that, then the `PseudoMetricSpace G` starts erroring
 -- See also:
 -- * `set_option synthInstance.checkSynthOrder false`
-class Generates {S: outParam (Finset G)}: Prop where
+class Generates where
+  G: Type*
+  g_group: Group G
+  g_eq: DecidableEq G
+  S: Finset G
+  hS: Nonempty S
   generates : ((closure (S : Set G) : Set G) = ⊤)
   -- This should be fine, since the growth rate doesn't depend on the generating set
   one_mem: (1 : G) ∈ S
   has_inv: ∀ g ∈ S, g⁻¹ ∈ S
   g_infinite: Infinite G
 
+namespace GeneratesNS
+open Generates
 
+variable [hGS: Generates]
+include hGS
 
-
-variable {S S' : Finset G} [hGS: Generates (G := G) (S := S)] [hS: Nonempty S]
+instance G_group: Group G := hGS.g_group
+instance G_dec_eq: DecidableEq G := hGS.g_eq
 -- [hGS': Generates (G := G) (S := S')] [hS': Nonempty S]
 
 
-lemma s_union_sinv : (S: Set G) ∪ (S: Set G)⁻¹ = S := by
+lemma s_union_sinv : S ∪ S⁻¹ = S := by
   ext a
   have foo := hGS.has_inv (a⁻¹)
   simp only [inv_inv] at foo
-  simp only [Set.mem_union, Finset.mem_coe, Set.mem_inv, or_iff_left_iff_imp]
-  exact foo
+  simpa using foo
 
 lemma S_eq_Sinv: S = S⁻¹ := by
   ext a
@@ -79,6 +85,7 @@ lemma mem_S_prod_list (x: G): ∃ l: List S, ProdS x l := by
   rw [← Subgroup.closure_toSubmonoid _] at foo
   simp only [mem_toSubmonoid, Finset.mem_coe] at foo
   specialize foo (mem_closure x)
+  norm_cast at foo
   rw [s_union_sinv] at foo
   obtain ⟨l, ⟨mem_s, prod_eq⟩⟩ := foo
   use (l.attach).map (fun x => ⟨x.val, mem_s (x.val) x.property⟩)
@@ -92,7 +99,7 @@ lemma list_tail_unattach (T: Type*)  {p : T → Prop} (l: List { x : T // p x}):
 
 noncomputable def WordNorm (g: G) := sInf {n: ℕ | ∃ l: List S, l.length = n ∧ ProdS g l}
 
-lemma word_norm_prod (g: G) (n: ℕ) (hgn: WordNorm (S := S) g = n): ∃ l: List S, ProdS g l ∧ l.length = n := by
+lemma word_norm_prod (g: G) (n: ℕ) (hgn: WordNorm g = n): ∃ l: List S, ProdS g l ∧ l.length = n := by
   have foo := Nat.sInf_mem (s := {n: ℕ | ∃ l: List S, l.length = n ∧ ProdS g l})
   obtain ⟨l, hl⟩ := mem_S_prod_list (S := S) g
   unfold ProdS at hl
