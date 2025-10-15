@@ -5234,7 +5234,6 @@ end HnEpsData
 
 
 -- Helper for theorem 3.8
--- TODO - the name is bad, rename it to not include 'central'
 set_option synthInstance.maxHeartbeats 100000 in
 set_option maxHeartbeats 2000000 in
 lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG)
