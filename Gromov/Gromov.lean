@@ -9540,6 +9540,8 @@ lemma three_two_gamma_m_generates(φ: (Additive G) →+ ℤ) (hφ: Function.Surj
       termination_by list.length
       decreasing_by {
         simp
+        have inhabited_g : Inhabited G := by
+          use 1
         split_ifs
         .
           simp
@@ -9931,7 +9933,7 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
             exact all_closure_mem a ha
           . intro ha
             simp
-            exact _root_.mem_closure a
+            exact mem_closure a
 
         rw [univ_eq]
         rw [← Finset.coe_pow]
