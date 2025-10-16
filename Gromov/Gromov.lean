@@ -9799,7 +9799,7 @@ lemma bad_three_two_kernel_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynom
   let S_n_ker_phi: Finset φ.ker := (three_two_S_n S φ γ n).attach.image (fun x => ⟨x.val, (by
     have foo := (three_two_S_n_subset_ker φ γ hγ n) x.property
     simpa using foo
-  )⟩)
+  )⟩) ∪ {0}
 
 
   -- The kernel is an additive group, so we use hsmul instead of hpow for repeatedly adding elements in the group
@@ -9877,7 +9877,7 @@ lemma bad_three_two_kernel_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynom
 
 
 
-    have card_union_le: #((((S_n_ker_phi.image Multiplicative.ofAdd) ^ r).image ofMul).biUnion (fun a => Finset.image (mul_by_i a.val) Finset.univ)) ≤ #(((three_two_S_n S φ γ n) ∪ {γ}) ^ (2 * r)) := by
+    have card_union_le: #((((S_n_ker_phi.image Multiplicative.ofAdd) ^ r).image ofMul).biUnion (fun a => Finset.image (mul_by_i a.val) Finset.univ)) ≤ #(((three_two_S_n S φ γ n) ∪ {γ} ∪ {1}) ^ (2 * r)) := by
       grw [Finset.card_le_card]
       intro a ha
       rw [Finset.mem_biUnion] at ha
@@ -9904,12 +9904,19 @@ lemma bad_three_two_kernel_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynom
           rw [Finset.mem_image] at f_prop
           obtain ⟨g, g_mem, hg⟩ := f_prop
           rw [← hg]
-          rw [Finset.mem_image] at g_mem
-          obtain ⟨z, z_mem, hz⟩ := g_mem
-          rw [← hz]
-          have z_prop := z.property
-          apply Finset.mem_union_left
-          exact z_prop
+          simp at g_mem
+          cases g_mem
+          .
+            rename_i g_eq_zero
+            simp [g_eq_zero]
+            left
+            rfl
+          . rename_i g_eq_nonzero
+            obtain ⟨z, z_mem, hz⟩ := g_eq_nonzero
+            rw [← hz]
+            apply Finset.mem_union_left
+            apply Finset.mem_union_left
+            exact z_mem
         )⟩)
         rw [← hf]
         simp
@@ -9921,11 +9928,28 @@ lemma bad_three_two_kernel_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynom
           apply Finset.pow_subset_pow_left
           simp
 
-        have gamma_k_mem: γ ^ k.val ∈ ({γ} : Finset G)^r := by
+
+
+        have gamma_r_subset: ({γ, 1} : Finset G)^r ⊆ (three_two_S_n S φ γ n ∪ {γ} ∪ {1})^r := by
+          apply Finset.pow_subset_pow
+          . grind
+          . grind
+          . simp
+
+        have gamma_subset: ({γ, 1} : Finset G)^k.val ⊆ ({γ, 1} : Finset G)^r := by
+          apply Finset.pow_subset_pow
+          . simp
+          . simp
+          . simp
+
+
+        have gamma_mem_self: γ^k.val ∈ ({γ, 1} : Finset G)^k.val := by
+          apply Finset.pow_mem_pow
           simp
 
+        grind
 
-        apply gamma_pow_subset gamma_k_mem
+
 
 
     sorry
