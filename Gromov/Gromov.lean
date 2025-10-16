@@ -7620,42 +7620,42 @@ lemma exists_theorem_3_1_input [hGS: Generates ]: Nonempty (Theorem3_1_Input G) 
   . exact rho_g_case_finite (by simpa using rho_g_infinite)
 
 
-lemma poly_growth_implies (S': Finset G) (d: ℕ) (hd: HasPolynomialGrowthD S d): HasPolynomialGrowthD S' d := by
+-- lemma poly_growth_implies (S': Finset G) (d: ℕ) (hd: HasPolynomialGrowthD S d): HasPolynomialGrowthD S' d := by
 
-  simp [HasPolynomialGrowthD] at hd
-  obtain ⟨a, s_poly⟩ := hd
-  simp [HasPolynomialGrowthD]
-  have b: ℕ := 1
-  have C: ℕ := 0
-  use #(S ^ C) * ↑a
-  intro n hn
-  --have inject_s_card := Finset.card_le_card_of_injOn (s := S') (t := S ^ C) sorry sorry sorry
-  specialize s_poly n hn
-  have le_pow := Finset.card_pow_le (s := S') (n := n)
+--   simp [HasPolynomialGrowthD] at hd
+--   obtain ⟨a, s_poly⟩ := hd
+--   simp [HasPolynomialGrowthD]
+--   have b: ℕ := 1
+--   have C: ℕ := 0
+--   use #(S ^ C) * ↑a
+--   intro n hn
+--   --have inject_s_card := Finset.card_le_card_of_injOn (s := S') (t := S ^ C) sorry sorry sorry
+--   specialize s_poly n hn
+--   have le_pow := Finset.card_pow_le (s := S') (n := n)
 
-  calc
-    #(S' ^ n) ≤ #((S ^ C) * S^n) := sorry
-    _ ≤ #((S ^ C)) * #(S ^ n) := by
-      exact Finset.card_mul_le
-    _ ≤ #((S ^ C)) * (↑a * n ^ d) := by
-      exact Nat.mul_le_mul_left (#(S ^ C)) s_poly
+--   calc
+--     #(S' ^ n) ≤ #((S ^ C) * S^n) := sorry
+--     _ ≤ #((S ^ C)) * #(S ^ n) := by
+--       exact Finset.card_mul_le
+--     _ ≤ #((S ^ C)) * (↑a * n ^ d) := by
+--       exact Nat.mul_le_mul_left (#(S ^ C)) s_poly
 
-    -- _ = #((S ^ n) ^ C) := by
-    --   rw [← pow_mul]
-    --   rw [mul_comm]
-    --   rw [pow_mul]
-    -- _ ≤ #(S ^ n)^C := by exact Finset.card_pow_le
-    -- _ ≤ (↑a * n ^ d)^C := by
-    --   exact Nat.pow_le_pow_left s_poly C
+--     -- _ = #((S ^ n) ^ C) := by
+--     --   rw [← pow_mul]
+--     --   rw [mul_comm]
+--     --   rw [pow_mul]
+--     -- _ ≤ #(S ^ n)^C := by exact Finset.card_pow_le
+--     -- _ ≤ (↑a * n ^ d)^C := by
+--     --   exact Nat.pow_le_pow_left s_poly C
 
-  rw [← mul_assoc]
-  -- calc
-  --   #(S' ^ n) ≤ #(S') ^ n := by apply Finset.card_pow_le
-  --   _ ≤ #(S ^ C) ^ n := by exact Nat.pow_le_pow_left inject_s_card n
-  --   _ ≤ (↑a * C ^ d)^n := by exact Nat.pow_le_pow_left s_poly n
+--   rw [← mul_assoc]
+--   -- calc
+--   --   #(S' ^ n) ≤ #(S') ^ n := by apply Finset.card_pow_le
+--   --   _ ≤ #(S ^ C) ^ n := by exact Nat.pow_le_pow_left inject_s_card n
+--   --   _ ≤ (↑a * C ^ d)^n := by exact Nat.pow_le_pow_left s_poly n
 
 
-#print axioms poly_growth_implies
+-- #print axioms poly_growth_implies
 
 
 
@@ -9694,7 +9694,7 @@ lemma three_two_S_n_subset_ker  (φ: (Additive G) →+ ℤ) (γ: G) (phi_gamma: 
   simp
   exact id (Eq.symm prod_eq_x)
 
-lemma three_two_ker_fg  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (g: G) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ): φ.ker.FG := by
+lemma three_two_ker_fg  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ): φ.ker.FG := by
   simp only [AddSubgroup.FG]
   obtain ⟨γ, phi_gamma⟩ := hφ 1
   --obtain ⟨n, hn⟩ := three_two_poly_growth d hd hG γ φ hφ phi_gamma
@@ -9774,8 +9774,8 @@ lemma three_two_ker_fg  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (g
       exact hn
 
 -- Extract a generatating set for the kernel of φ
-noncomputable def phi_S (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (g: G) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ): Finset (φ.ker) := by
-  have fg := three_two_ker_fg d hd hG g φ hφ
+noncomputable def phi_S (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ): Finset (φ.ker) := by
+  have fg := three_two_ker_fg d hd hG φ hφ
   rw [AddSubgroup.fg_iff] at fg
   let S := Classical.choose fg
   have s_generates := (Classical.choose_spec fg).1
@@ -9798,6 +9798,21 @@ def S_n_ker_phi (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1) (n: ℕ)  
 have foo := (three_two_S_n_subset_ker φ γ hγ n) x.property
 simpa using foo
 )⟩) ∪ {0}
+
+omit hGS in
+lemma poly_growth_equiv_generates (hG: Generates) (S': Finset hG.G) {d: ℕ} (h_poly: HasPolynomialGrowthD hG.S d): HasPolynomialGrowthD S' d := by
+  unfold HasPolynomialGrowthD at h_poly
+  obtain ⟨a, ha⟩ := h_poly
+  have a_ne_zero: a ≠ 0 := by
+    by_contra a_eq_zero
+    simp [a_eq_zero] at ha
+    specialize ha 1 (by simp)
+    simp at ha
+    have s_nonempty := hG.one_mem
+    grind
+  have poly := poly_growth_equiv a d (by omega) hG.S S' (S_eq_Sinv) (hG.one_mem) (by simpa using hG.generates) ha
+  obtain ⟨b, b_ge, hb⟩ := poly
+  use b
 
 
 lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1) (hφ: Function.Surjective φ)
@@ -10066,9 +10081,10 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
 #print axioms three_two_kernel_poly_growth
 
 
-
-lemma theorem_3_1 (data: Theorem3_1_Input G) (d: ℕ) (hd: 1 ≤ d) (h_growth: HasPolynomialGrowthD S d)
-(inductive_gromov: ∀ {Q: Type*}, [DecidableEq Q] → [Group Q] → (Q_fg: Group.FG Q) → (Q_growth : (HasPolynomialGrowthD (Q_fg.out.choose) (d - 1))) → Group.IsVirtuallyNilpotent Q)
+-- TODO - add an explicit top-level universe parameter to avoid this 'omit hGS' hack
+omit hGS in
+lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (hd: 1 ≤ d) (h_growth: HasPolynomialGrowthD S d)
+(inductive_gromov: ∀ {Q: Type u}, [DecidableEq Q] → [Group Q] → (Q_fg: Group.FG Q) → (Q_growth : (HasPolynomialGrowthD (Q_fg.out.choose) (d - 1))) → Group.IsVirtuallyNilpotent Q)
 : Group.IsVirtuallyNilpotent G := by
 
   have G'_finite_index := data.finite_index
@@ -10109,8 +10125,10 @@ lemma theorem_3_1 (data: Theorem3_1_Input G) (d: ℕ) (hd: 1 ≤ d) (h_growth: H
     use 1
     simp
 
+  have inhabited_G: Inhabited G := by
+    use 1
 
-
+  -- TODO - figure out how to avoid registering this instance
   let new_generates: Generates := {
     G := data.G'
     g_group := by infer_instance
@@ -10145,9 +10163,25 @@ lemma theorem_3_1 (data: Theorem3_1_Input G) (d: ℕ) (hd: 1 ≤ d) (h_growth: H
       contradiction
   }
 
+
   obtain ⟨γ, hγ⟩ := data.hφ 1
   have kernel_poly := three_two_kernel_poly_growth (hGS := new_generates) d hd 1 G'_poly data.φ γ hγ data.hφ
-  sorry
+
+  have kernel_fg := three_two_ker_fg d hd G'_poly data.φ data.hφ
+  --have kernel_poly_fg_out := poly_growth_equiv_generates new_generates kernel_fg.choose (d := 2)
+
+
+
+
+  rw [← AddGroup.fg_iff_addSubgroup_fg] at kernel_fg
+  rw [AddGroup.fg_iff_mul_fg] at kernel_fg
+  --have kernel_poly_fg_out := poly_growth_equiv_generates hGS (sorry) kernel_poly
+
+  --have h_new_growth := poly_growth_equiv_generates hGS S_G'
+  have kernel_virtually_nilpotent := inductive_gromov (Q := ↑(Multiplicative data.φ.ker)) kernel_fg ?_
+  . sorry
+  .
+    sorry
 
 lemma three_two_kernel_virtually_nilpotent (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d) (g: G) (φ: (Additive G) →+ ℤ) (γ: G)  (hγ : φ γ = 1) (phi_gromov: Group.IsVirtuallyNilpotent (Multiplicative φ.ker))
  : HasPolynomialGrowthD (d - 1) (S := phi_generating n φ γ ) := by
