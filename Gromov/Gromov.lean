@@ -2638,6 +2638,7 @@ noncomputable instance w_map_DecidableEq: DecidableEq (W →ₗ[ℂ] W) := by
 
 
 -- The input data and proofs for Theorem 3.1 in Vikman
+omit hGS in
 structure Theorem3_1_Input where
   -- A finite index subgroup G' of G
   G': Subgroup G
@@ -10065,17 +10066,20 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
 #print axioms three_two_kernel_poly_growth
 
 
-open Classical in
+
 lemma theorem_3_1 (data: Theorem3_1_Input) (d: ℕ) (hd: 1 ≤ d) (h_growth: HasPolynomialGrowthD S d)
-(inductive_gromov: ∀ {Q: Type*}, [Group Q] → (Q_fg: Group.FG Q) → (Q_growth : (HasPolynomialGrowthD (Q_fg.out.choose) (d - 1))) → Group.IsVirtuallyNilpotent Q)
+(inductive_gromov: ∀ {Q: Type*}, [DecidableEq Q] → [Group Q] → (Q_fg: Group.FG Q) → (Q_growth : (HasPolynomialGrowthD (Q_fg.out.choose) (d - 1))) → Group.IsVirtuallyNilpotent Q)
 : Group.IsVirtuallyNilpotent G := by
 
   have G'_finite_index := data.finite_index
   have G'_fg: Group.FG data.G' := by
     apply Subgroup.fg_of_index_ne_zero
 
+  -- A symmetric generating set for G'
+  let S_G' := G'_fg.out.choose ∪  G'_fg.out.choose⁻¹ ∪ {1}
+
   -- TODO - factor out this proof that a subgroup has polynomial growth
-  have G'_poly: HasPolynomialGrowthD (G := data.G') G'_fg.out.choose  d := by
+  have G'_poly: HasPolynomialGrowthD (G := data.G') S_G' d := by
     unfold HasPolynomialGrowthD
     obtain ⟨a, ha⟩ := h_growth
 
@@ -10088,7 +10092,7 @@ lemma theorem_3_1 (data: Theorem3_1_Input) (d: ℕ) (hd: 1 ≤ d) (h_growth: Has
       have s_one := hGS.one_mem
       grind
 
-    have my_equiv := poly_growth_equiv a d a_pos S (Finset.image Subtype.val G'_fg.out.choose)
+    have my_equiv := poly_growth_equiv a d a_pos S (Finset.image Subtype.val S_G')
       S_eq_Sinv hGS.one_mem (by simpa using hGS.generates) ha
 
     obtain ⟨b, hb, poly_growth_G'⟩ := my_equiv
@@ -10101,9 +10105,47 @@ lemma theorem_3_1 (data: Theorem3_1_Input) (d: ℕ) (hd: 1 ≤ d) (h_growth: Has
       exact poly_growth_G' n hn
     . simp
 
+  have inhabited_G': Inhabited data.G' := by
+    use 1
+    simp
 
 
-  have kernel_poly := three_two_kernel_poly_growth d hd 1 G'_poly
+  let new_generates: Generates := {
+    G := data.G'
+    g_group := by infer_instance
+    g_eq := by infer_instance
+    S := S_G'
+    hS := by
+      simp [S_G']
+    generates := by
+      simp [S_G']
+      rw [Subgroup.closure_union]
+      rw [G'_fg.out.choose_spec]
+      simp
+    one_mem := by
+      simp [S_G']
+    has_inv := by
+      intro g hg
+      unfold S_G'
+      unfold S_G' at hg
+      rw [← Finset.mem_inv']
+      simp
+      simp at hg
+      grind
+    g_infinite := by
+      have index_ne := G'_finite_index.index_ne_zero
+      simp [Subgroup.index] at index_ne
+      -- TODO - generalize and upstream this to mathlib
+      by_contra!
+      have finite_iff := Subgroup.finite_iff_finite_and_finiteIndex data.G'
+      simp [this, G'_finite_index] at finite_iff
+      have G_infinite := hGS.g_infinite
+      rw [← not_finite_iff_infinite] at G_infinite
+      contradiction
+  }
+
+
+  have kernel_poly := three_two_kernel_poly_growth (hGS := new_generates) d hd 1 G'_poly data.φ
   sorry
 
 lemma three_two_kernel_virtually_nilpotent (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d) (g: G) (φ: (Additive G) →+ ℤ) (γ: G)  (hγ : φ γ = 1) (phi_gromov: Group.IsVirtuallyNilpotent (Multiplicative φ.ker))
