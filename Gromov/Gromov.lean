@@ -10145,8 +10145,8 @@ lemma theorem_3_1 (data: Theorem3_1_Input G) (d: ℕ) (hd: 1 ≤ d) (h_growth: H
       contradiction
   }
 
-
-  have kernel_poly := three_two_kernel_poly_growth (hGS := new_generates) d hd 1 G'_poly data.φ
+  obtain ⟨γ, hγ⟩ := data.hφ 1
+  have kernel_poly := three_two_kernel_poly_growth (hGS := new_generates) d hd 1 G'_poly data.φ γ hγ data.hφ
   sorry
 
 lemma three_two_kernel_virtually_nilpotent (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d) (g: G) (φ: (Additive G) →+ ℤ) (γ: G)  (hγ : φ γ = 1) (phi_gromov: Group.IsVirtuallyNilpotent (Multiplicative φ.ker))
