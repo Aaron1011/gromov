@@ -9866,7 +9866,44 @@ lemma three_two_kernel_poly_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyno
       simp_rw [card_mul_range]
       simp
       rw [mul_comm]
-      sorry
+      conv =>
+        lhs
+        arg 2
+        arg 1
+        equals r • S_n_ker_phi φ γ hγ n =>
+          ext a
+          rw [Finset.mem_image]
+          simp_rw [Finset.mem_pow]
+          rw [Finset.mem_nsmul]
+          refine ⟨?_, ?_⟩
+          . intro h
+            obtain ⟨b, ⟨f, hf⟩, b_eq_a⟩ := h
+            use (fun i => ⟨(f i).val, (by
+              have f_prop := (f i).property
+              rw [Finset.mem_image] at f_prop
+              obtain ⟨g, g_mem, hg⟩ := f_prop
+              rw [← hg]
+              exact g_mem
+            )⟩)
+            rw [← b_eq_a]
+            rw [← hf]
+            rfl
+          . intro h
+            obtain ⟨f, hf⟩ := h
+            use a
+            refine ⟨?_, rfl⟩
+            use (fun i => ⟨(f i).val, (by
+              have f_prop := (f i).property
+              rw [Finset.mem_image]
+              use (f i).val
+              refine ⟨f_prop, ?_⟩
+              rfl
+            )⟩)
+            rw [← hf]
+            rfl
+
+
+
     .
       intro a ha b hb hab x h_first h_second
       simp at h_first
@@ -10002,20 +10039,26 @@ lemma three_two_kernel_poly_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyno
       nth_rw 3 [← pow_one (a := r)] at card_union_le
       rw [Nat.pow_div] at card_union_le
       .
-        sorry
-        -- simp [HSMul.hSMul] at card_union_le
-        -- simp [SMul.smul] at card_union_le
-        -- simp [HPow.hPow]
-        -- simp [Pow.pow]
-        -- simp
-
-        -- exact card_union_le
-        -- conv =>
-        --   lhs
-        --   arg 1
-        --   equals r • (S_n_ker_phi φ γ hγ n) =>
-        --     sorry
-        -- sorry
+        -- TODO - get rid of this obnoxious  Additive/Multiplicative defeq abuse
+        conv =>
+          lhs
+          arg 1
+          equals r • (S_n_ker_phi φ γ hγ n) =>
+            ext a
+            rw [Finset.mem_pow]
+            -- TODO - why do we need explicit args here
+            rw [Finset.mem_nsmul (a := a) (s := S_n_ker_phi φ γ hγ n) (n := r)]
+            refine ⟨?_, ?_⟩
+            .
+              intro hf
+              obtain ⟨f, hf⟩ := hf
+              use f
+              exact hf
+            . intro hf
+              obtain ⟨f, hf⟩ := hf
+              use f
+              exact hf
+        exact card_union_le
       . omega
       . omega
 
@@ -10025,7 +10068,7 @@ lemma three_two_kernel_poly_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyno
       omega
   . omega
 
-
+#print axioms three_two_kernel_poly_growth
 
 --have poly_r: ∀ r: ℕ, r * #()
 
