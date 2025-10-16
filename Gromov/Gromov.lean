@@ -9806,6 +9806,9 @@ lemma bad_three_two_kernel_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynom
   have poly_r: ∀ r: ℕ, r * #(r • S_n_ker_phi) ≤ #((three_two_S_n S φ γ n)) := by
     intro r
 
+    by_cases r_zero: r = 0
+    . simp [r_zero]
+
     let mul_by_i := fun (g: G) (i: Fin r) => g * (γ ^ i.val)
     have new_phi_gamma: φ (Additive.ofMul γ) = 1 := hγ
     have card_mul_range (g: G): #(Finset.image (mul_by_i g) Finset.univ) = r := by
@@ -9820,7 +9823,7 @@ lemma bad_three_two_kernel_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynom
         rw [Fin.ext_iff]
         exact mul_eq
 
-    have card_union: #(S_n_ker_phi.biUnion (fun a => Finset.image (mul_by_i a.val) Finset.univ)) = r *#(S_n_ker_phi) := by
+    have card_union: #((r • S_n_ker_phi).biUnion (fun a => Finset.image (mul_by_i a.val) Finset.univ)) = r * #(r • S_n_ker_phi) := by
       rw [Finset.card_biUnion]
       .
         simp_rw [card_mul_range]
@@ -9871,6 +9874,60 @@ lemma bad_three_two_kernel_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynom
         simp [mul_by_i] at orig_hz
         rw [eq_comm] at orig_hz
         contradiction
+
+
+
+    have card_union_le: #((((S_n_ker_phi.image Multiplicative.ofAdd) ^ r).image ofMul).biUnion (fun a => Finset.image (mul_by_i a.val) Finset.univ)) ≤ #(((three_two_S_n S φ γ n) ∪ {γ}) ^ (2 * r)) := by
+      grw [Finset.card_le_card]
+      intro a ha
+      rw [Finset.mem_biUnion] at ha
+      obtain ⟨s, s_mem, a_mem⟩ := ha
+      rw [Finset.mem_image] at a_mem
+      obtain ⟨k, _, hk⟩ := a_mem
+      simp [mul_by_i] at hk
+      rw [← hk]
+      rw [two_mul]
+      rw [pow_add]
+      apply Finset.mul_mem_mul
+      .
+        unfold S_n_ker_phi at s_mem
+
+        rw [Finset.mem_image] at s_mem
+        obtain ⟨z, z_mem, hz⟩ := s_mem
+        rw [← hz]
+
+        rw [Finset.mem_pow] at z_mem
+        obtain ⟨f, hf⟩ := z_mem
+        rw [Finset.mem_pow]
+        use (fun i => ⟨(f i).val.val, (by
+          have f_prop := (f i).property
+          rw [Finset.mem_image] at f_prop
+          obtain ⟨g, g_mem, hg⟩ := f_prop
+          rw [← hg]
+          rw [Finset.mem_image] at g_mem
+          obtain ⟨z, z_mem, hz⟩ := g_mem
+          rw [← hz]
+          have z_prop := z.property
+          apply Finset.mem_union_left
+          exact z_prop
+        )⟩)
+        rw [← hf]
+        simp
+        rw [AddSubgroup.val_list_sum]
+        simp
+        rfl
+      .
+        have gamma_pow_subset: {γ}^r ⊆ (three_two_S_n S φ γ n ∪ {γ})^r := by
+          apply Finset.pow_subset_pow_left
+          simp
+
+        have gamma_k_mem: γ ^ k.val ∈ ({γ} : Finset G)^r := by
+          simp
+
+
+        apply gamma_pow_subset gamma_k_mem
+
+
     sorry
 
 
