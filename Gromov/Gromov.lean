@@ -2649,12 +2649,6 @@ structure Theorem3_1_Input where
 
 
 
-open Classical in
-lemma theorem_3_1 (data: Theorem3_1_Input) (n: ℕ) (h_growth: HasPolynomialGrowthD S n)
-(inductive_gromov: ∀ {Q: Type*}, [Group Q] → (Q_fg: Group.FG Q) → (Q_growth : (HasPolynomialGrowthD (Q_fg.out.choose) (n - 1))) → Group.IsVirtuallyNilpotent Q)
-: Group.IsVirtuallyNilpotent G := by
-
-  sorry
 
 #synth Group.FG (rho_g)
 
@@ -9781,23 +9775,6 @@ noncomputable def phi_S (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (g
   exact s_fin
 
 
-lemma bad_three_two_kernel_poly_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d) (g: G) (φ: (Additive G) →+ ℤ) (γ: G)  (hγ : φ γ = 1) (phi_gromov: Group.IsVirtuallyNilpotent (Multiplicative φ.ker))
- : HasPolynomialGrowthD (d - 1) (S := phi_generating n φ γ ) := by
-  unfold HasPolynomialGrowthD
-  unfold Group.IsVirtuallyNilpotent at phi_gromov
-  obtain ⟨pre_N, nilpotent_pre_N, old_finite_index_pre_N⟩ := phi_gromov
-  let N := pre_N.normalCore
-  have nilpotent_N: Group.IsNilpotent N := by
-    rw [nilpotent_iff_lowerCentralSeries]
-    rw [nilpotent_iff_lowerCentralSeries] at nilpotent_pre_N
-    obtain ⟨n, hn⟩ := nilpotent_pre_N
-    have := lowerCentralSeries_map_subtype_le N n
-    simp at this
-    sorry
-  have N_normal: N.Normal := by
-    simp [N]
-    apply Subgroup.normalCore_normal
-  sorry
 
 def S_n_ker_phi (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1) (n: ℕ)  : Finset φ.ker := (three_two_S_n S φ γ n).attach.image (fun x => ⟨x.val, (by
 have foo := (three_two_S_n_subset_ker φ γ hγ n) x.property
@@ -9805,7 +9782,7 @@ simpa using foo
 )⟩) ∪ {0}
 
 
-lemma three_two_kernel_poly_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d ) (g: G) (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1) (hφ: Function.Surjective φ)
+lemma three_two_kernel_poly_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1) (hφ: Function.Surjective φ)
  : HasPolynomialGrowthD (G := Multiplicative φ.ker) (d - 1) (S := (S_n_ker_phi φ γ hγ n)) := by
 
   -- The set S_n, viewed a subset of ker φ
@@ -10069,6 +10046,64 @@ lemma three_two_kernel_poly_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyno
   . omega
 
 #print axioms three_two_kernel_poly_growth
+
+
+open Classical in
+lemma theorem_3_1 (data: Theorem3_1_Input) (d: ℕ) (hd: 1 ≤ d) (h_growth: HasPolynomialGrowthD S d)
+(inductive_gromov: ∀ {Q: Type*}, [Group Q] → (Q_fg: Group.FG Q) → (Q_growth : (HasPolynomialGrowthD (Q_fg.out.choose) (d - 1))) → Group.IsVirtuallyNilpotent Q)
+: Group.IsVirtuallyNilpotent G := by
+
+  have G'_finite_index := data.finite_index
+  have G'_fg: Group.FG data.G' := by
+    apply Subgroup.fg_of_index_ne_zero
+
+  have G'_poly: HasPolynomialGrowthD (G := data.G') G'_fg.out.choose  d := by
+    unfold HasPolynomialGrowthD
+    obtain ⟨a, ha⟩ := h_growth
+
+    have a_pos: 0 < a := by
+      by_contra!
+      simp at this
+      simp [this] at ha
+      specialize ha 1 (by simp)
+      simp at ha
+      have s_one := hGS.one_mem
+      grind
+
+    have my_equiv := poly_growth_equiv a d a_pos S (Finset.image Subtype.val G'_fg.out.choose)
+      S_eq_Sinv hGS.one_mem (by simpa using hGS.generates) ha
+
+    obtain ⟨b, hb, poly_growth_G'⟩ := my_equiv
+
+    use b
+    intro n hn
+    rw [← Finset.card_image_of_injective (f := data.G'.subtype)]
+    .
+      rw [Finset.image_pow]
+      exact poly_growth_G' n hn
+    . simp
+
+
+  have kernel_poly := three_two_kernel_poly_growth d hd 1 h_growth data.φ
+  sorry
+
+lemma three_two_kernel_virtually_nilpotent (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d) (g: G) (φ: (Additive G) →+ ℤ) (γ: G)  (hγ : φ γ = 1) (phi_gromov: Group.IsVirtuallyNilpotent (Multiplicative φ.ker))
+ : HasPolynomialGrowthD (d - 1) (S := phi_generating n φ γ ) := by
+  unfold HasPolynomialGrowthD
+  unfold Group.IsVirtuallyNilpotent at phi_gromov
+  obtain ⟨pre_N, nilpotent_pre_N, old_finite_index_pre_N⟩ := phi_gromov
+  let N := pre_N.normalCore
+  have nilpotent_N: Group.IsNilpotent N := by
+    rw [nilpotent_iff_lowerCentralSeries]
+    rw [nilpotent_iff_lowerCentralSeries] at nilpotent_pre_N
+    obtain ⟨n, hn⟩ := nilpotent_pre_N
+    have := lowerCentralSeries_map_subtype_le N n
+    simp at this
+    sorry
+  have N_normal: N.Normal := by
+    simp [N]
+    apply Subgroup.normalCore_normal
+  sorry
 
 --have poly_r: ∀ r: ℕ, r * #()
 
