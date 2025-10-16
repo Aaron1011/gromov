@@ -2639,7 +2639,7 @@ noncomputable instance w_map_DecidableEq: DecidableEq (W →ₗ[ℂ] W) := by
 
 -- The input data and proofs for Theorem 3.1 in Vikman
 omit hGS in
-structure Theorem3_1_Input where
+structure Theorem3_1_Input (G: Type*) [Group G] where
   -- A finite index subgroup G' of G
   G': Subgroup G
   finite_index: G'.FiniteIndex
@@ -2656,7 +2656,7 @@ structure Theorem3_1_Input where
 
 
 
-lemma g_hom_abelian {T: Type*} [Group T] (A: Subgroup G) (A_finite_index: A.FiniteIndex) (hom: A →* T) (hom_surjective: Function.Surjective hom) (H: Subgroup T) (H_infinite: Infinite H) (H_abeliean: IsMulCommutative H) (H_finite_index: H.FiniteIndex) (H_FG: Group.FG H): Nonempty (Theorem3_1_Input) := by
+lemma g_hom_abelian {T: Type*} [Group T] (A: Subgroup G) (A_finite_index: A.FiniteIndex) (hom: A →* T) (hom_surjective: Function.Surjective hom) (H: Subgroup T) (H_infinite: Infinite H) (H_abeliean: IsMulCommutative H) (H_finite_index: H.FiniteIndex) (H_FG: Group.FG H): Nonempty (Theorem3_1_Input G) := by
   -- TODO - generalize this to a lemma: finite-index subgroup of an infinite group is infinite
   -- and upstream to mathlib
 
@@ -2828,7 +2828,7 @@ lemma g_hom_abelian {T: Type*} [Group T] (A: Subgroup G) (A_finite_index: A.Fini
 #print axioms g_hom_abelian
 
 -- Case 1 in Section 3.3 of Vikman, where the representation ρ(G) is infinite
-lemma rho_g_case_infinite (hr: Infinite (↥(rho_g))): Nonempty (Theorem3_1_Input) := by
+lemma rho_g_case_infinite (hr: Infinite (↥(rho_g))): Nonempty (Theorem3_1_Input G) := by
   obtain ⟨H, H_abelian, H_finite_index⟩ := rho_g_contains_abelian
 
 
@@ -7226,7 +7226,7 @@ lemma rangeRestrict_range {A B: Type*} [Group A] [Group B] (f: A →* B): f.rang
   simp [hx]
 
 
-lemma rho_g_case_finite (hr: Finite (↥(rho_g))): Nonempty (Theorem3_1_Input) := by
+lemma rho_g_case_finite (hr: Finite (↥(rho_g))): Nonempty (Theorem3_1_Input G) := by
   have quotient_iso := QuotientGroup.quotientKerEquivRange (GRepW_base)
   unfold rho_g at hr
 
@@ -7614,7 +7614,7 @@ lemma mem_closure_iff_mem_pow (g: G): g ∈ Subgroup.closure S ↔ ∃ n, g ∈ 
     apply mem_closure g
 
 -- TODO - get rid of the duplicate 'hGS'
-lemma exists_theorem_3_1_input [hGS: Generates ]: Nonempty (Theorem3_1_Input) := by
+lemma exists_theorem_3_1_input [hGS: Generates ]: Nonempty (Theorem3_1_Input G) := by
   by_cases rho_g_infinite: Infinite (↥(rho_g))
   . exact rho_g_case_infinite rho_g_infinite
   . exact rho_g_case_finite (by simpa using rho_g_infinite)
@@ -10067,7 +10067,7 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
 
 
 
-lemma theorem_3_1 (data: Theorem3_1_Input) (d: ℕ) (hd: 1 ≤ d) (h_growth: HasPolynomialGrowthD S d)
+lemma theorem_3_1 (data: Theorem3_1_Input G) (d: ℕ) (hd: 1 ≤ d) (h_growth: HasPolynomialGrowthD S d)
 (inductive_gromov: ∀ {Q: Type*}, [DecidableEq Q] → [Group Q] → (Q_fg: Group.FG Q) → (Q_growth : (HasPolynomialGrowthD (Q_fg.out.choose) (d - 1))) → Group.IsVirtuallyNilpotent Q)
 : Group.IsVirtuallyNilpotent G := by
 
@@ -10108,6 +10108,7 @@ lemma theorem_3_1 (data: Theorem3_1_Input) (d: ℕ) (hd: 1 ≤ d) (h_growth: Has
   have inhabited_G': Inhabited data.G' := by
     use 1
     simp
+
 
 
   let new_generates: Generates := {
