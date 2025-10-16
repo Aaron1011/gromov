@@ -9835,6 +9835,8 @@ lemma bad_three_two_kernel_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynom
         by_contra!
         rw [← Finset.nonempty_iff_ne_empty] at this
         obtain ⟨p, hp⟩ := this
+        have orig_h_first := h_first hp
+        have orig_h_second := h_second hp
         specialize h_first hp
         specialize h_second hp
 
@@ -9843,16 +9845,32 @@ lemma bad_three_two_kernel_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynom
 
         obtain ⟨y, hy⟩ := h_first
         obtain ⟨z, hz⟩ := h_second
+
+        have orig_hy := hy
+        have orig_hz := hz
+
         rw [← hz] at hy
         simp [mul_by_i] at hy
         apply_fun φ ∘ (Additive.ofMul) at hy
         simp [new_phi_gamma] at hy
 
+        have a_ker: a.val ∈ φ.ker := by
+          simp
 
+        have b_ker: b.val ∈ φ.ker := by
+          simp
 
+        rw [AddMonoidHom.mem_ker] at a_ker
+        rw [AddMonoidHom.mem_ker] at b_ker
+        simp [ofMul] at hy
+        simp [a_ker, b_ker] at hy
 
-
-
+        rw [← Fin.ext_iff] at hy
+        rw [hy] at orig_hy
+        rw [← orig_hy] at orig_hz
+        simp [mul_by_i] at orig_hz
+        rw [eq_comm] at orig_hz
+        contradiction
     sorry
 
 
