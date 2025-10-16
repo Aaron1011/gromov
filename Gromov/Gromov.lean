@@ -9762,19 +9762,26 @@ lemma three_two_ker_fg (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (g:
       exact hn
 
 -- Extract a generatating set for the kernel of φ
-noncomputable def phi_S (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (g: G) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ): Finset ((G)) := by
+noncomputable def phi_S (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (g: G) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ): Finset (φ.ker) := by
   have fg := three_two_ker_fg d hd hG g φ hφ
   rw [AddSubgroup.fg_iff] at fg
   let S := Classical.choose fg
+  have s_generates := (Classical.choose_spec fg).1
   have s_finite := (Classical.choose_spec fg).2
   have fintype : Fintype S := by
     exact s_finite.fintype
 
-  let s_fin := S.toFinset
+  let s_fin: Finset φ.ker := S.toFinset.attach.image (fun a => ⟨a.val, (by
+    rw [← s_generates]
+    apply AddSubgroup.mem_closure_of_mem
+    have a_prop := a.property
+    rw [Set.mem_toFinset] at a_prop
+    exact a_prop
+  )⟩)
   exact s_fin
 
 
-lemma bad_three_two_kernel_poly_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d) (g: G) (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1) (phi_gromov: Group.IsVirtuallyNilpotent (Multiplicative φ.ker))
+lemma bad_three_two_kernel_poly_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d) (g: G) (φ: (Additive G) →+ ℤ) (γ: G)  (hγ : φ γ = 1) (phi_gromov: Group.IsVirtuallyNilpotent (Multiplicative φ.ker))
  : HasPolynomialGrowthD (d - 1) (S := phi_generating n φ γ ) := by
   unfold HasPolynomialGrowthD
   unfold Group.IsVirtuallyNilpotent at phi_gromov
@@ -9792,173 +9799,235 @@ lemma bad_three_two_kernel_poly_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPo
     apply Subgroup.normalCore_normal
   sorry
 
-lemma bad_three_two_kernel_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d ) (g: G) (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1)
- : HasPolynomialGrowthD (d - 1) (S := phi_generating n φ γ ) := by
+def S_n_ker_phi (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1) (n: ℕ)  : Finset φ.ker := (three_two_S_n S φ γ n).attach.image (fun x => ⟨x.val, (by
+have foo := (three_two_S_n_subset_ker φ γ hγ n) x.property
+simpa using foo
+)⟩) ∪ {0}
+
+
+lemma three_two_kernel_poly_growth (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d ) (g: G) (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1) (hφ: Function.Surjective φ)
+ : HasPolynomialGrowthD (G := Multiplicative φ.ker) (d - 1) (S := (S_n_ker_phi φ γ hγ n)) := by
 
   -- The set S_n, viewed a subset of ker φ
-  let S_n_ker_phi: Finset φ.ker := (three_two_S_n S φ γ n).attach.image (fun x => ⟨x.val, (by
-    have foo := (three_two_S_n_subset_ker φ γ hγ n) x.property
-    simpa using foo
-  )⟩) ∪ {0}
 
 
-  -- The kernel is an additive group, so we use hsmul instead of hpow for repeatedly adding elements in the group
-  have poly_r: ∀ r: ℕ, r * #(r • S_n_ker_phi) ≤ #((three_two_S_n S φ γ n)) := by
-    intro r
 
-    by_cases r_zero: r = 0
-    . simp [r_zero]
+  obtain ⟨a, ha⟩ := hG
 
-    let mul_by_i := fun (g: G) (i: Fin r) => g * (γ ^ i.val)
-    have new_phi_gamma: φ (Additive.ofMul γ) = 1 := hγ
-    have card_mul_range (g: G): #(Finset.image (mul_by_i g) Finset.univ) = r := by
-      rw [Finset.card_image_of_injOn]
-      . simp
-      .
+  by_cases a_eq_zero: a = 0
+  .
+    simp [a_eq_zero] at ha
+    specialize ha 1 (by simp)
+    simp at ha
+    have s_nonempty := hGS.one_mem
+    grind
 
-        intro j _ k _ mul_eq
-        simp [mul_by_i] at mul_eq
-        apply_fun φ ∘ (Additive.ofMul) at mul_eq
-        simp [new_phi_gamma] at mul_eq
-        rw [Fin.ext_iff]
-        exact mul_eq
 
-    have card_union: #((r • S_n_ker_phi).biUnion (fun a => Finset.image (mul_by_i a.val) Finset.univ)) = r * #(r • S_n_ker_phi) := by
-      rw [Finset.card_biUnion]
-      .
-        simp_rw [card_mul_range]
+
+  unfold HasPolynomialGrowthD
+
+
+
+
+  have S_n_poly := poly_growth_equiv a d (by omega) S (three_two_S_n S φ γ n ∪ {γ} ∪ {1}) S_eq_Sinv hGS.one_mem (by simpa using hGS.generates) ha
+  obtain ⟨b, hb, ker_poly⟩ := S_n_poly
+
+
+
+  use b * (2 ^ d)
+
+  intro r hr
+  specialize ker_poly (2 * r) (by omega)
+
+  -- -- The kernel is an additive group, so we use hsmul instead of hpow for repeatedly adding elements in the group
+  -- have poly_r: ∀ r: ℕ, r * #(r • S_n_ker_phi) ≤ #((three_two_S_n S φ γ n)) := by
+  --   intro r
+
+  --   by_cases r_zero: r = 0
+  --   . simp [r_zero]
+
+  let mul_by_i := fun (g: G) (i: Fin r) => g * (γ ^ i.val)
+  have new_phi_gamma: φ (Additive.ofMul γ) = 1 := hγ
+  have card_mul_range (g: G): #(Finset.image (mul_by_i g) Finset.univ) = r := by
+    rw [Finset.card_image_of_injOn]
+    . simp
+    .
+
+      intro j _ k _ mul_eq
+      simp [mul_by_i] at mul_eq
+      apply_fun φ ∘ (Additive.ofMul) at mul_eq
+      simp [new_phi_gamma] at mul_eq
+      rw [Fin.ext_iff]
+      exact mul_eq
+
+  have card_union: #(((((S_n_ker_phi φ γ hγ n).image Multiplicative.ofAdd) ^ r).image ofMul).biUnion (fun a => Finset.image (mul_by_i a.val) Finset.univ)) = r * #(r • (S_n_ker_phi φ γ hγ n)) := by
+    rw [Finset.card_biUnion]
+    .
+      simp_rw [card_mul_range]
+      simp
+      rw [mul_comm]
+      sorry
+    .
+      intro a ha b hb hab x h_first h_second
+      simp at h_first
+      simp at h_second
+      simp
+
+      by_contra!
+      rw [← Finset.nonempty_iff_ne_empty] at this
+      obtain ⟨p, hp⟩ := this
+      have orig_h_first := h_first hp
+      have orig_h_second := h_second hp
+      specialize h_first hp
+      specialize h_second hp
+
+      simp at h_first
+      simp at h_second
+
+      obtain ⟨y, hy⟩ := h_first
+      obtain ⟨z, hz⟩ := h_second
+
+      have orig_hy := hy
+      have orig_hz := hz
+
+      rw [← hz] at hy
+      simp [mul_by_i] at hy
+      apply_fun φ ∘ (Additive.ofMul) at hy
+      simp [new_phi_gamma] at hy
+
+      have a_ker: a.val ∈ φ.ker := by
         simp
-        rw [mul_comm]
-      .
-        intro a ha b hb hab x h_first h_second
-        simp at h_first
-        simp at h_second
+
+      have b_ker: b.val ∈ φ.ker := by
         simp
 
-        by_contra!
-        rw [← Finset.nonempty_iff_ne_empty] at this
-        obtain ⟨p, hp⟩ := this
-        have orig_h_first := h_first hp
-        have orig_h_second := h_second hp
-        specialize h_first hp
-        specialize h_second hp
+      rw [AddMonoidHom.mem_ker] at a_ker
+      rw [AddMonoidHom.mem_ker] at b_ker
+      simp [ofMul] at hy
+      simp [a_ker, b_ker] at hy
 
-        simp at h_first
-        simp at h_second
-
-        obtain ⟨y, hy⟩ := h_first
-        obtain ⟨z, hz⟩ := h_second
-
-        have orig_hy := hy
-        have orig_hz := hz
-
-        rw [← hz] at hy
-        simp [mul_by_i] at hy
-        apply_fun φ ∘ (Additive.ofMul) at hy
-        simp [new_phi_gamma] at hy
-
-        have a_ker: a.val ∈ φ.ker := by
-          simp
-
-        have b_ker: b.val ∈ φ.ker := by
-          simp
-
-        rw [AddMonoidHom.mem_ker] at a_ker
-        rw [AddMonoidHom.mem_ker] at b_ker
-        simp [ofMul] at hy
-        simp [a_ker, b_ker] at hy
-
-        rw [← Fin.ext_iff] at hy
-        rw [hy] at orig_hy
-        rw [← orig_hy] at orig_hz
-        simp [mul_by_i] at orig_hz
-        rw [eq_comm] at orig_hz
-        contradiction
+      rw [← Fin.ext_iff] at hy
+      rw [hy] at orig_hy
+      rw [← orig_hy] at orig_hz
+      simp [mul_by_i] at orig_hz
+      rw [eq_comm] at orig_hz
+      contradiction
 
 
 
-    have card_union_le: #((((S_n_ker_phi.image Multiplicative.ofAdd) ^ r).image ofMul).biUnion (fun a => Finset.image (mul_by_i a.val) Finset.univ)) ≤ #(((three_two_S_n S φ γ n) ∪ {γ} ∪ {1}) ^ (2 * r)) := by
-      grw [Finset.card_le_card]
-      intro a ha
-      rw [Finset.mem_biUnion] at ha
-      obtain ⟨s, s_mem, a_mem⟩ := ha
-      rw [Finset.mem_image] at a_mem
-      obtain ⟨k, _, hk⟩ := a_mem
-      simp [mul_by_i] at hk
-      rw [← hk]
-      rw [two_mul]
-      rw [pow_add]
-      apply Finset.mul_mem_mul
-      .
-        unfold S_n_ker_phi at s_mem
+  have card_union_le: #(((((S_n_ker_phi φ γ hγ n).image Multiplicative.ofAdd) ^ r).image ofMul).biUnion (fun a => Finset.image (mul_by_i a.val) Finset.univ)) ≤ #(((three_two_S_n S φ γ n) ∪ {γ} ∪ {1}) ^ (2 * r)) := by
+    grw [Finset.card_le_card]
+    intro a ha
+    rw [Finset.mem_biUnion] at ha
+    obtain ⟨s, s_mem, a_mem⟩ := ha
+    rw [Finset.mem_image] at a_mem
+    obtain ⟨k, _, hk⟩ := a_mem
+    simp [mul_by_i] at hk
+    rw [← hk]
+    rw [two_mul]
+    rw [pow_add]
+    apply Finset.mul_mem_mul
+    .
+      unfold S_n_ker_phi at s_mem
 
-        rw [Finset.mem_image] at s_mem
-        obtain ⟨z, z_mem, hz⟩ := s_mem
-        rw [← hz]
+      rw [Finset.mem_image] at s_mem
+      obtain ⟨z, z_mem, hz⟩ := s_mem
+      rw [← hz]
 
-        rw [Finset.mem_pow] at z_mem
-        obtain ⟨f, hf⟩ := z_mem
-        rw [Finset.mem_pow]
-        use (fun i => ⟨(f i).val.val, (by
-          have f_prop := (f i).property
-          rw [Finset.mem_image] at f_prop
-          obtain ⟨g, g_mem, hg⟩ := f_prop
-          rw [← hg]
-          simp at g_mem
-          cases g_mem
-          .
-            rename_i g_eq_zero
-            simp [g_eq_zero]
-            left
-            rfl
-          . rename_i g_eq_nonzero
-            obtain ⟨z, z_mem, hz⟩ := g_eq_nonzero
-            rw [← hz]
-            apply Finset.mem_union_left
-            apply Finset.mem_union_left
-            exact z_mem
-        )⟩)
-        rw [← hf]
+      rw [Finset.mem_pow] at z_mem
+      obtain ⟨f, hf⟩ := z_mem
+      rw [Finset.mem_pow]
+      use (fun i => ⟨(f i).val.val, (by
+        have f_prop := (f i).property
+        rw [Finset.mem_image] at f_prop
+        obtain ⟨g, g_mem, hg⟩ := f_prop
+        rw [← hg]
+        simp at g_mem
+        cases g_mem
+        .
+          rename_i g_eq_zero
+          simp [g_eq_zero]
+          left
+          rfl
+        . rename_i g_eq_nonzero
+          obtain ⟨z, z_mem, hz⟩ := g_eq_nonzero
+          rw [← hz]
+          apply Finset.mem_union_left
+          apply Finset.mem_union_left
+          exact z_mem
+      )⟩)
+      rw [← hf]
+      simp
+      rw [AddSubgroup.val_list_sum]
+      simp
+      rfl
+    .
+      have gamma_pow_subset: {γ}^r ⊆ (three_two_S_n S φ γ n ∪ {γ})^r := by
+        apply Finset.pow_subset_pow_left
         simp
-        rw [AddSubgroup.val_list_sum]
+
+
+
+      have gamma_r_subset: ({γ, 1} : Finset G)^r ⊆ (three_two_S_n S φ γ n ∪ {γ} ∪ {1})^r := by
+        apply Finset.pow_subset_pow
+        . grind
+        . grind
+        . simp
+
+      have gamma_subset: ({γ, 1} : Finset G)^k.val ⊆ ({γ, 1} : Finset G)^r := by
+        apply Finset.pow_subset_pow
+        . simp
+        . simp
+        . simp
+
+
+      have gamma_mem_self: γ^k.val ∈ ({γ, 1} : Finset G)^k.val := by
+        apply Finset.pow_mem_pow
         simp
-        rfl
+
+      grind
+
+
+
+
+  rw [card_union] at card_union_le
+  grw [ker_poly] at card_union_le
+  rw [mul_pow] at card_union_le
+  rw [← mul_assoc] at card_union_le
+  rw [mul_comm] at card_union_le
+  rw [← Nat.le_div_iff_mul_le] at card_union_le
+  .
+    rw [Nat.mul_div_assoc] at card_union_le
+    .
+      nth_rw 3 [← pow_one (a := r)] at card_union_le
+      rw [Nat.pow_div] at card_union_le
       .
-        have gamma_pow_subset: {γ}^r ⊆ (three_two_S_n S φ γ n ∪ {γ})^r := by
-          apply Finset.pow_subset_pow_left
-          simp
+        sorry
+        -- simp [HSMul.hSMul] at card_union_le
+        -- simp [SMul.smul] at card_union_le
+        -- simp [HPow.hPow]
+        -- simp [Pow.pow]
+        -- simp
+
+        -- exact card_union_le
+        -- conv =>
+        --   lhs
+        --   arg 1
+        --   equals r • (S_n_ker_phi φ γ hγ n) =>
+        --     sorry
+        -- sorry
+      . omega
+      . omega
+
+    .
+      nth_rw 1 [← pow_one (a := r)]
+      apply Nat.pow_dvd_pow
+      omega
+  . omega
 
 
 
-        have gamma_r_subset: ({γ, 1} : Finset G)^r ⊆ (three_two_S_n S φ γ n ∪ {γ} ∪ {1})^r := by
-          apply Finset.pow_subset_pow
-          . grind
-          . grind
-          . simp
-
-        have gamma_subset: ({γ, 1} : Finset G)^k.val ⊆ ({γ, 1} : Finset G)^r := by
-          apply Finset.pow_subset_pow
-          . simp
-          . simp
-          . simp
-
-
-        have gamma_mem_self: γ^k.val ∈ ({γ, 1} : Finset G)^k.val := by
-          apply Finset.pow_mem_pow
-          simp
-
-        grind
-
-
-
-
-    sorry
-
-
-
-  --have poly_r: ∀ r: ℕ, r * #()
-
-  sorry
+--have poly_r: ∀ r: ℕ, r * #()
 
   --let new_elem := fun (s: G) => s * (γ ^ )
 
