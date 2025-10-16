@@ -8711,7 +8711,7 @@ lemma closure_iterate_mulact {T: Type*} [Group T] [DecidableEq T] (a b: T) (n: �
 
 --- Consequence of `three_two_poly_growth` - the set of all 'γ^n *e_i γ^(-n)' is contained the closure of S_n
 lemma three_poly_poly_growth_all_s_n (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (γ: G) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ) (hγ: φ γ = 1)
-  : ∃ n, ∀ m, (Finset.image (gamma_m_helper  φ γ m) S).toSet ⊆ Subgroup.closure (three_two_S_n S  φ γ (n)).toSet := by
+  : ∃ n, ∀ m, (Finset.image (gamma_m_helper φ γ m) S).toSet ⊆ Subgroup.closure (three_two_S_n S  φ γ (n)).toSet := by
   let r: ℕ := Finset.max' (Finset.image (fun s => (by
     exact sInf { n: ℕ | three_two_S_n (S := {s}) φ γ (n + 1) ⊆ ((three_two_B_n (S := {s}) φ γ n) * (three_two_B_n (S := {s}) φ γ n)⁻¹) }
     --exact {Classical.choose (new_three_two_poly_growth  d hd hG γ φ hφ hγ s)}
@@ -8744,6 +8744,8 @@ lemma three_poly_poly_growth_all_s_n (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGro
 
   have my_iter := closure_iterate_mulact γ (e_i_regular_helper φ γ s) (n + 1)
   simp [three_two_S_n, gamma_m_helper] at s_n_subset
+  unfold gamma_m_helper at s_n_subset
+  simp at s_n_subset
   have closure_eq := my_iter ?_ ?_
   .
     have x_mem_closure_range: x ∈ Subgroup.closure (Set.range fun (m : ℤ) ↦ γ ^ m * e_i_regular_helper φ γ s * γ ^ (-m : ℤ)) := by
@@ -8793,6 +8795,7 @@ lemma three_poly_poly_growth_all_s_n (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGro
         omega
   .
     specialize s_n_subset (n + 1) (by omega) (by omega) s rfl
+    --specialize s_n_subset ⟨s, hs⟩
     simp [three_two_B_n] at s_n_subset
     rw [Finset.mem_mul] at s_n_subset
     obtain ⟨val, val_in_image, other_val, ⟨other_val_in_image, prod_vals_eq⟩⟩ := s_n_subset
@@ -8962,7 +8965,8 @@ lemma three_two_gamma_m_generates(φ: (Additive G) →+ ℤ) (hφ: Function.Surj
       rw [← generates] at x_in_top
       specialize foo x_in_top
       obtain ⟨l, ⟨l_mem_s, l_prod⟩⟩ := foo
-      simp [s_union_sinv] at l_mem_s
+      norm_cast at l_mem_s
+      rw [s_union_sinv] at l_mem_s
 
       let l_attach := l.attach
       let list_with_mem: List S := (l_attach).map (fun a => ⟨a.val, l_mem_s a.val a.prop⟩)
@@ -9712,11 +9716,22 @@ lemma three_two_ker_fg (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (g:
     simp at l_mem
     match l_mem with
     | .inl l_mem =>
+      obtain ⟨p, ⟨b, hb⟩⟩ := l_mem
+      rw [← hb]
+      rw [← Subgroup.toAddSubgroup'_closure]
+      simp [three_two_S_n]
+      specialize hn p
+      simp at hn
+
+
+
       obtain ⟨p, s, s_mem, helper_eq_a⟩ := l_mem
       specialize hn p
       simp at hn
-      rw [Set.range_subset_iff] at hn
-      specialize hn ⟨s, s_mem⟩
+      have s_mem_coe: s ∈ (S : Set G) := by
+        simp
+        apply s_mem
+      specialize hn hs
       simp at hn
       rw [← helper_eq_a]
       rw [← Subgroup.toAddSubgroup'_closure]
@@ -9737,7 +9752,7 @@ lemma three_two_ker_fg (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (g:
       exact hn
 
 -- Extract a generatating set for the kernel of φ
-noncomputable def phi_S (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD d ) (g: G) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ): Finset ((G)) := by
+noncomputable def phi_S (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (g: G) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ): Finset ((G)) := by
   have fg := three_two_ker_fg d hd hG g φ hφ
   rw [AddSubgroup.fg_iff] at fg
   let S := Classical.choose fg
