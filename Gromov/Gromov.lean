@@ -9815,7 +9815,7 @@ lemma poly_growth_equiv_generates (hG: Generates) (S': Finset hG.G) {d: ℕ} (h_
   use b
 
 
-lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1) (hφ: Function.Surjective φ)
+lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1)
  : HasPolynomialGrowthD (G := Multiplicative φ.ker) (d - 1) (S := (S_n_ker_phi φ γ hγ n)) := by
 
   -- The set S_n, viewed a subset of ker φ
@@ -10165,7 +10165,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
 
   obtain ⟨γ, hγ⟩ := data.hφ 1
-  have kernel_poly := three_two_kernel_poly_growth (hGS := new_generates) d hd 1 G'_poly data.φ γ hγ data.hφ
+  have kernel_poly := three_two_kernel_poly_growth (hGS := new_generates) d hd 1 G'_poly data.φ γ hγ
 
   have kernel_fg := three_two_ker_fg d hd G'_poly data.φ data.hφ
   --have kernel_poly_fg_out := poly_growth_equiv_generates new_generates kernel_fg.choose (d := 2)
@@ -10179,8 +10179,87 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
   --have h_new_growth := poly_growth_equiv_generates hGS S_G'
   have kernel_virtually_nilpotent := inductive_gromov (Q := ↑(Multiplicative data.φ.ker)) kernel_fg ?_
-  . sorry
   .
+    obtain ⟨pre_N, pre_N_nilpotent, pre_N_finiteindex⟩ := kernel_virtually_nilpotent
+    let N := pre_N.normalCore
+    have N_normal: N.Normal := Subgroup.normalCore_normal pre_N
+    have N_finite_index: N.FiniteIndex := Subgroup.finiteIndex_normalCore pre_N
+    have N_nilpotent: Group.IsNilpotent N := by
+      rw [nilpotent_iff_lowerCentralSeries]
+      rw [nilpotent_iff_lowerCentralSeries] at pre_N_nilpotent
+      sorry
+
+
+    rw [Subgroup.finiteIndex_iff] at N_finite_index
+    let N' := Subgroup.closure (Set.range (fun (a: Multiplicative data.φ.ker) => a ^ N.index))
+
+    have N'_le_N: N' ≤ N := by
+      unfold N'
+      simp
+      intro n hn
+      rw [Set.mem_range] at hn
+      obtain ⟨a, ha⟩ := hn
+      rw [← ha]
+      apply Subgroup.pow_index_mem
+
+    have N'_char: Subgroup.Characteristic N' := by
+      rw [Subgroup.characteristic_iff_map_eq]
+      intro f
+      unfold N'
+      simp
+      rw [MonoidHom.map_closure]
+      simp
+      congr
+      ext a
+      refine ⟨?_, ?_⟩
+      . intro ha
+        rw [Set.mem_image] at ha
+        obtain ⟨b, hb, ab_eq⟩ := ha
+        rw [Set.mem_range] at hb
+        obtain ⟨c, hc⟩ := hb
+        rw [← hc] at ab_eq
+        simp at ab_eq
+        grind
+      . intro ha
+        rw [Set.mem_range] at ha
+        obtain ⟨b, hb⟩ := ha
+        rw [← hb]
+        rw [Set.mem_image]
+        use f⁻¹ (b ^ N.index)
+        refine ⟨?_, by simp⟩
+        simp
+  
+
+
+
+
+
+
+    let a := (MulAut.conj (Additive.toMul γ))
+
+    have N'_conj_gamma: (MulAut.conj (Additive.toMul γ)) N' = N' := by
+      unfold N'
+      apply Subgroup.conj_pow_subgroup_eq
+      exact N_normal
+
+
+
+
+
+
+    sorry
+  .
+    let ker_generatse: Generates := {
+      G := Multiplicative data.φ.ker
+      g_group := by infer_instance
+      g_eq := by infer_instance
+      S := (S_n_ker_phi φ γ hγ n)
+      hS := sorry
+      generates := sorry
+      one_mem := sorry
+      has_inv := sorry
+      g_infinite := sorry
+    }
     sorry
 
 lemma three_two_kernel_virtually_nilpotent (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d) (g: G) (φ: (Additive G) →+ ℤ) (γ: G)  (hγ : φ γ = 1) (phi_gromov: Group.IsVirtuallyNilpotent (Multiplicative φ.ker))
