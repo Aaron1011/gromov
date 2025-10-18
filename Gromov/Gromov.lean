@@ -10082,6 +10082,7 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
 
 
 -- TODO - add an explicit top-level universe parameter to avoid this 'omit hGS' hack
+set_option maxHeartbeats 2500000 in
 omit hGS in
 lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (hd: 1 ≤ d) (h_growth: HasPolynomialGrowthD S d)
 (inductive_gromov: ∀ {Q: Type u}, [DecidableEq Q] → [Group Q] → (Q_fg: Group.FG Q) → (Q_growth : (HasPolynomialGrowthD (Q_fg.out.choose) (d - 1))) → Group.IsVirtuallyNilpotent Q)
@@ -10185,13 +10186,21 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     have N_normal: N.Normal := Subgroup.normalCore_normal pre_N
     have N_finite_index: N.FiniteIndex := Subgroup.finiteIndex_normalCore pre_N
     have N_nilpotent: Group.IsNilpotent N := by
-      rw [nilpotent_iff_lowerCentralSeries]
-      rw [nilpotent_iff_lowerCentralSeries] at pre_N_nilpotent
-      sorry
-
+      have normalCore_iso := Subgroup.subgroupOfEquivOfLe (Subgroup.normalCore_le pre_N)
+      unfold N
+      rw [← Group.isNilpotent_congr normalCore_iso]
+      apply Subgroup.isNilpotent
 
     rw [Subgroup.finiteIndex_iff] at N_finite_index
     let N' := Subgroup.closure (Set.range (fun (a: Multiplicative data.φ.ker) => a ^ N.index))
+
+
+
+    -- Page 24 of Vikman, "G′′ is virtually nilpotent:"
+    have alpha_unipotent: ∃ α: ℕ, ∃ m: ℕ, ∀ g ∈ N', Nat.iterate (fun x => ⁅x, γ.toMul^α⁆) m g.val = 1 := by
+      sorry
+
+    obtain ⟨α, m, alpha_is_unipotent⟩ := alpha_unipotent
 
     have N'_le_N: N' ≤ N := by
       unfold N'
@@ -10201,6 +10210,10 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       obtain ⟨a, ha⟩ := hn
       rw [← ha]
       apply Subgroup.pow_index_mem
+
+    have N'_nilpotent: Group.IsNilpotent N' := by
+      rw [← Group.isNilpotent_congr (Subgroup.subgroupOfEquivOfLe N'_le_N)]
+      exact isNilpotent (N'.subgroupOf N)
 
     have N'_char: Subgroup.Characteristic N' := by
       rw [Subgroup.characteristic_iff_map_eq]
@@ -10228,19 +10241,135 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
         use f⁻¹ (b ^ N.index)
         refine ⟨?_, by simp⟩
         simp
-  
+
+
+    let G'' := Subgroup.closure (((Additive.toMul ∘ data.φ.ker.subtype) '' N'.carrier) ∪ {γ.toMul})
+
+    let conj_gamma: N' ≃* N' := {
+      toFun := fun n => ⟨⟨Additive.ofMul (γ.toMul * n.val.val.toMul * γ.toMul⁻¹), by (
+        simp
+        have n_prop := n.val.property
+        exact n_prop
+      )⟩, by (
+        simp [N']
+        sorry
+      )⟩
+      left_inv := sorry
+      right_inv := sorry
+    }
+
+    let conj_gamma_pow (z: ℤ): N' ≃* N' := {
+      toFun := fun n => ⟨⟨Additive.ofMul (γ.toMul^(-z) * n.val.val.toMul * γ.toMul^z), by (
+        simp
+        have n_prop := n.val.property
+        exact n_prop
+      )⟩, by (
+        simp [N']
+        sorry
+        -- simp [N']
+        -- have n_prop := n.val.property
+        -- apply Subgroup.mem_closure_of_mem
+        -- rw [Set.mem_range]
+        -- use ⟨ofMul (γ.toMul * n.val.val.toMul * γ.toMul⁻¹), by (
+        --   simp
+        --   exact n_prop
+        -- )⟩
+
+        -- simp
+
+        -- let N'_as_G' := (Subgroup.map data.φ.ker.subtype.toMultiplicative N').toAddSubgroup'.toSubgroup'
+        -- have N'_normal: N'.Normal := by
+        --   infer_instance
+        -- have N'_as_G'_normal: N'_as_G'.Normal := by
+        --   simp [N'_as_G']
+        --   simp [AddSubgroup.toSubgroup']
+
+        --   apply Subgroup.Normal.map
+        --   . exact N'_normal
+        --   .
+        --     simp [AddMonoidHom.toMultiplicative]
+        --     intro a
+        --     use a
+        -- have N'_conj := Subgroup.Normal.conj_smul_eq_self ((γ.toMul)^z) N'_as_G'
+        -- sorry
+      )⟩
+      invFun := fun n => ⟨⟨Additive.ofMul (γ.toMul^(z) * n.val.val.toMul * γ.toMul^(-z)), by (
+        simp
+        have n_prop := n.val.property
+        exact n_prop
+      )⟩, by (
+        simp [N']
+        sorry
+      )⟩
+      left_inv := by
+        simp
+        intro a
+        simp
+        simp_rw [← add_assoc]
+        simp
+      right_inv := by
+        simp
+        intro a
+        simp
+        simp_rw [← add_assoc]
+        simp
+      map_mul' := by
+        intro a b
+        conv =>
+          rhs
+          simp
+        simp
+        apply_fun Additive.toMul
+        conv =>
+          rhs
+          simp
+        simp
+        sorry
+    }
+
+    --let foo := SemidirectProduct.mulEquivSubgroup (G := G'') (H := N')
+
+    let aut_map: Multiplicative ℤ →* MulAut N' := {
+      toFun := fun z => conj_gamma_pow z.toAdd
+      map_one' := by
+        simp [conj_gamma_pow]
+        rfl
+      map_mul' := by
+        intro p q
+        simp [conj_gamma_pow]
+        ext z
+        simp
+        sorry
+    }
+
+    --let new_G'': (N' ⋊[aut_map] (Multiplicative ℤ)) := ⊤
+
+
+    let G''_iso: G'' ≃* (N' ⋊[aut_map] (Multiplicative ℤ)) := {
+      toFun := fun g => sorry
+      invFun := fun g => sorry
+      left_inv := sorry
+      right_inv := sorry
+      map_mul' := sorry
+    }
+
+
+
+    --let N'_of_G' := Subgroup.map (data.φ.ker).subtype ⊥
+
+    --let G'' := Subgroup.closure (((Subgroup.subtype _ ) '' N'.carrier) ∪ ({γ.toMul} : (Set data.G')))
 
 
 
 
 
 
-    let a := (MulAut.conj (Additive.toMul γ))
+    -- let a := (MulAut.conj (Additive.toMul γ))
 
-    have N'_conj_gamma: (MulAut.conj (Additive.toMul γ)) N' = N' := by
-      unfold N'
-      apply Subgroup.conj_pow_subgroup_eq
-      exact N_normal
+    -- have N'_conj_gamma: (MulAut.conj (Additive.toMul γ)) N' = N' := by
+    --   unfold N'
+    --   apply Subgroup.conj_pow_subgroup_eq
+    --   exact N_normal
 
 
 
