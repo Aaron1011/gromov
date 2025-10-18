@@ -10080,6 +10080,72 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
 
 #print axioms three_two_kernel_poly_growth
 
+def iteratedCommutator {T: Type*} [Group T] {M: Subgroup T} (base right: M) (n: ℕ) := Nat.iterate (fun x => ⁅base, x⁆) n right
+
+structure G''CommData {T: Type*} [Group T] (M: Subgroup T) where
+  -- Our 'γ^α' element
+  gamma_alpha: M
+  -- The result of repeatedly applying commutators
+  cur: M
+
+  -- When we take a commutator, we increment the second component if we take a commutator with 'right',
+  -- and reset it to zero and increment the first component if we take a commutator with anything else
+  -- As a result, 'pos' strictly increases at each step
+  pos: Lex (ℕ × ℕ)
+  -- The first component of our position is our index in the lower central series of M
+  pos_first: cur ∈ (lowerCentralSeries M pos.1)
+  -- The second component is the number of copies of 'right' that occur in successive adjacent commutators
+  pos_second: pos.2 ≠ 0 → ∃ b: M, cur = iteratedCommutator b gamma_alpha pos.2
+
+set_option trace.profiler true in
+set_option trace.Elab.command true in
+set_option tactic.simp.trace true in
+open Classical in
+noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Normal) {M: Subgroup T} (gamma_alpha base next: M) (gamma_N: gamma_alpha.val ∈ N) (n: ℕ): G''CommData M := match n with
+| 0 => {
+  gamma_alpha := gamma_alpha
+  cur := base
+  pos := (0, 0)
+  pos_first := by
+    simp [lowerCentralSeries]
+  pos_second := by
+    simp
+}
+| n + 1 => {
+  gamma_alpha := gamma_alpha
+  cur := ⁅(G''_comm N_normal gamma_alpha base next gamma_N n).cur, next⁆
+  pos := if (next = gamma_alpha) then ((G''_comm N_normal gamma_alpha base next gamma_N n).pos.1, (G''_comm N_normal gamma_alpha base next gamma_N n).pos.2 + 1)
+         else ((G''_comm N_normal gamma_alpha base next gamma_N n).pos.1 + 1, 0)
+  pos_first := by
+    split_ifs
+    .
+      rename_i next_eq_gamma
+      simp [next_eq_gamma]
+      sorry
+    . sorry
+  pos_second := by
+    split_ifs
+    . rename_i next_eq_gamma
+      intro _
+      have prev := (G''_comm N_normal gamma_alpha base next gamma_N n).pos_second
+      by_cases prev_zero: (G''_comm N_normal gamma_alpha base next gamma_N n).pos.2 = 0
+      . use (G''_comm N_normal gamma_alpha base next gamma_N n).cur
+        simp [prev_zero]
+        simp [prev_zero, next_eq_gamma, iteratedCommutator]
+      . have prev_eq := prev prev_zero
+        obtain ⟨b, b_eq⟩ := prev_eq
+        use b
+        simp [next_eq_gamma, iteratedCommutator]
+        sorry
+    .
+      rename_i next_ne_gamma
+      simp
+}
+termination_by n
+decreasing_by
+  all_goals { sorry }
+-- StrictMono.not_bddAbove_range_of_wellFoundedLT
+
 
 -- TODO - add an explicit top-level universe parameter to avoid this 'omit hGS' hack
 set_option maxHeartbeats 2500000 in
@@ -10244,6 +10310,24 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
 
     let G'' := Subgroup.closure (((Additive.toMul ∘ data.φ.ker.subtype) '' N'.carrier) ∪ {γ.toMul})
+
+    -- Take some base element, and repeatedly take commutators with γ^α on the right
+    let repeat_comm_gamma := Nat.iterate (fun x => ⁅x, γ.toMul^α⁆)
+
+
+    have G''_nilpotent: Group.IsNilpotent G'' := by
+      -- Idea: Each time we take a cummutator ⁅g'', a], we either have:
+      -- g'' = γ^α, in which case we stay in the same subgroup
+      -- g'' ∈ N', in which case we move upward in the central series of N'
+      -- We want to either hit α copies of γ in a row, or reach the nilpotency class of N'
+      -- Our position is (n'_level, gamma_count) under a lexical ordering
+      -- We want to show that at each step of the lower central series for G'', this position strictly increases
+      -- So, it must either reach (_, m) or (nilpotency_class_N', _), at which point we are done
+      sorry
+
+    have G''_finite_index: G''.FiniteIndex := by
+      unfold G''
+      simp
 
     let conj_gamma: N' ≃* N' := {
       toFun := fun n => ⟨⟨Additive.ofMul (γ.toMul * n.val.val.toMul * γ.toMul⁻¹), by (
