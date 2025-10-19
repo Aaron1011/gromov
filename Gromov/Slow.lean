@@ -279,6 +279,39 @@ noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
       simp
 }
 
+-- TODO ' add simp lemma to avoid the need for all of the 'conv' steps, and upstream to mathlib
+lemma G''_comm_strict_mono {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Normal) (gamma_alpha cur: T) (h_cur: ∀ {g: T}, g ≠ gamma_alpha → g ∈ N) (prev: G''CommData N gamma_alpha):
+  prev.pos < (G''_comm N_normal gamma_alpha cur h_cur prev).pos := by
+
+  simp [G''_comm]
+  split_ifs
+  .
+    rw [Prod.Lex.lt_iff]
+    right
+    refine ⟨?_, ?_⟩
+    .
+      conv =>
+        lhs
+        equals prev.pos.1 => rfl
+      conv =>
+        rhs
+        equals (prev.pos.1) => rfl
+    . conv =>
+        lhs
+        equals (prev.pos.2) => rfl
+      conv =>
+        rhs
+        equals (prev.pos.2 + 1) => rfl
+      omega
+  . rw [Prod.Lex.lt_iff]
+    left
+    conv =>
+      lhs
+      equals prev.pos.1 => rfl
+    conv =>
+      rhs
+      equals (prev.pos.1 + 1) => rfl
+    omega
 #print axioms G''_comm
 
 open Classical in
