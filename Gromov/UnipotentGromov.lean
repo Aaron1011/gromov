@@ -535,8 +535,66 @@ lemma RepeatComm_eventually_le {G: Type*} [Group G] {N: Subgroup G} (N_normal: N
 
 
 
+-- lemma closure_mem_repeatComm {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (n: ℕ):
+--   ∀ g ∈ lowerCentralSeries (Subgroup.closure ↑(N.carrier ∪ {gamma_alpha})) (n + 1), ∃ data ∈ RepeatComm N_normal gamma_alpha (n + 1), g = data.cur := by
+
+--     intro g g_mem
+--     induction n with
+--     | zero =>
+--       let f := g.val
+--       have g_prop := g.property
+--       apply Subgroup.closure_induction (p := fun g hg => ∃ data ∈ RepeatComm N_normal gamma_alpha (0 + 1), g = data.cur) (k := N.carrier ∪ {gamma_alpha}) g_mem
+--       .
+--         rw [RepeatComm]
+--         use {
+--           cur := 1
+--           pos := (1, 0)
+--           pos_first := by
+--             simp [lowerCentralSeries]
+--           pos_second := by
+--             simp
+--         }
+--         rw [Set.mem_sUnion]
+--         refine ⟨?_, by simp⟩
+--         simp
+--         use {
+--           cur := 1
+--           pos := (0, 0)
+--           pos_first := by
+--             simp [lowerCentralSeries]
+--           pos_second := by
+--             simp
+--         }
+--         simp [RepeatComm]
+--         use 1
+--         use (by simp)
+--         simp [G''_comm]
+--         -- TODO - take this as a hypothesis
+--         have gamma_alpha_ne_one: 1 ≠ gamma_alpha := by
+--           sorry
+--         simp [gamma_alpha_ne_one]
+--       .
+--         intro x y hx hy x_cur y_cur
+--         rw [RepeatComm] at x_cur
+--         rw [RepeatComm] at y_cur
+--         obtain ⟨x_data, x_data_in, x_eq⟩ := x_cur
+--         obtain ⟨y_data, y_data_in, y_eq⟩ := y_cur
 
 
+--       simp at g_mem
+--       simp [RepeatComm]
+--       use {
+--         cur := g
+--         pos := (0, 0)
+--         pos_first := by
+--           simp [lowerCentralSeries]
+--         pos_second := by
+--           simp
+--       }
+
+
+--     | succ k ih =>
+--       sorry
 
 -- | 0 => {
 --   cur := cur
