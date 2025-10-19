@@ -1,5 +1,6 @@
 import Mathlib
 import Mathlib.Algebra.Group.Gromov.UnitaryGromov
+import Mathlib.Algebra.Group.Gromov.UnipotentGromov
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false
@@ -10307,15 +10308,54 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
         use f⁻¹ (b ^ N.index)
         refine ⟨?_, by simp⟩
         simp
-
-
     let G'' := Subgroup.closure (((Additive.toMul ∘ data.φ.ker.subtype) '' N'.carrier) ∪ {γ.toMul})
 
+
+    let new_N'_as_G'' := (AddSubgroup.map (AddSubgroup.subtype _) (Subgroup.toAddSubgroup' N')).toSubgroup'
+
+    let N'_as_G'' := (Subgroup.map data.φ.ker.subtype.toMultiplicative N').toAddSubgroup'.toSubgroup'.subgroupOf G''
+
+
+    --let N'_as_G' := (Subgroup.map data.φ.ker.subtype.toMultiplicative N').toAddSubgroup'.toSubgroup'
+
+    have N'_normal: N'.Normal := by
+      infer_instance
+
+    have new_N'_as_G''_normal: new_N'_as_G''.Normal := by
+      simp [new_N'_as_G'']
+      simp [AddSubgroup.toSubgroup']
+      exact {
+        conj_mem n := by
+          intro hn g
+          
+      }
+
+    have N'_as_G''_normal: N'_as_G''.Normal := by
+      unfold N'_as_G''
+      --simp [AddSubgroup.toSubgroup']
+      apply Subgroup.Normal.subgroupOf
+      exact {
+        conj_mem n := by
+          intro hn g
+          unfold AddSubgroup.toSubgroup'
+          unfold toAddSubgroup'
+          sorry
+      }
+
+
+
+
+
+    --have N'_normal: ((Subgroup.map (Subgroup.subtype _) N').subgroupOf G'').Normal := by
+
+    --have G''_lower_subset: ∀ n: ℕ, (lowerCentralSeries G'' (n + 1)) ≤ (lowerCentralSeries N' )
+
     -- Take some base element, and repeatedly take commutators with γ^α on the right
-    let repeat_comm_gamma := Nat.iterate (fun x => ⁅x, γ.toMul^α⁆)
+    --let repeat_comm_gamma := Nat.iterate (fun x => ⁅x, γ.toMul^α⁆)
 
 
     have G''_nilpotent: Group.IsNilpotent G'' := by
+      have eventually_le := RepeatComm_eventually_le N'
       -- Idea: Each time we take a cummutator ⁅g'', a], we either have:
       -- g'' = γ^α, in which case we stay in the same subgroup
       -- g'' ∈ N', in which case we move upward in the central series of N'
