@@ -371,7 +371,7 @@ lemma G''_comm_strict_mono {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
 -- }
 
 open Classical in
-def RepeatComm {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ {g : G}, g ≠ gamma_alpha → g ∈ N) (n: ℕ): Set (G''CommData N gamma_alpha) :=
+def RepeatComm {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (n: ℕ): Set (G''CommData N gamma_alpha) :=
 match n with
 | 0 => Set.range (fun (g: N) =>{
     cur := g
@@ -382,24 +382,32 @@ match n with
       simp
   })
 | n + 1 => Set.sUnion (Set.image (fun prev => (
-  Set.range (fun (g: G) => G''_comm N_normal gamma_alpha g hN prev)
-)) (RepeatComm N_normal gamma_alpha hN n))
+  Set.range (fun (g: ↑((N.carrier) ∪ {gamma_alpha})) => G''_comm N_normal gamma_alpha g (by
 
-lemma RepeatComm_wf {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ {g : G}, g ≠ gamma_alpha → g ∈ N) (n: ℕ):
-  ((fun a => a.pos) '' (RepeatComm N_normal gamma_alpha hN n)).IsWF := by
+    have g_prop := g.prop
+    intro hg
+    simp [hg] at g_prop
+    exact g_prop
+  ) prev)
+)) (RepeatComm N_normal gamma_alpha n))
+
+lemma RepeatComm_wf {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (n: ℕ):
+  ((fun a => a.pos) '' (RepeatComm N_normal gamma_alpha n)).IsWF := by
   apply Set.IsWF.of_wellFoundedLT
 
-lemma RepeatComm_nonempty {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ {g : G}, g ≠ gamma_alpha → g ∈ N) (n: ℕ):
-  (RepeatComm N_normal gamma_alpha hN n).Nonempty := by
+lemma RepeatComm_nonempty {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (n: ℕ):
+  (RepeatComm N_normal gamma_alpha n).Nonempty := by
   rw [RepeatComm.eq_def]
   split
   . apply Set.range_nonempty
   .
     rename_i j k
     simp
-    obtain ⟨a, ha⟩ := RepeatComm_nonempty N_normal gamma_alpha hN k
+    obtain ⟨a, ha⟩ := RepeatComm_nonempty N_normal gamma_alpha k
     use a
     refine ⟨ha, ?_⟩
+    have nonempty_union: Nonempty ↑(N.carrier ∪ {gamma_alpha}) := by
+      simp
     apply Set.range_nonempty
 
 
@@ -434,14 +442,14 @@ theorem Set.IsWF.lt_min_iff {α: Type*} [LinearOrder α] {s: Set α} {a : α} (h
       exact ha
 
 
-noncomputable def RepeatComm_min {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ {g : G}, g ≠ gamma_alpha → g ∈ N) (n: ℕ) :=
-  (RepeatComm_wf N_normal gamma_alpha hN n).min (by
+noncomputable def RepeatComm_min {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (n: ℕ) :=
+  (RepeatComm_wf N_normal gamma_alpha n).min (by
     simp
     apply RepeatComm_nonempty
   )
 
-lemma RepeatComm_min_strict_mono' {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ {g : G}, g ≠ gamma_alpha → g ∈ N) (n: ℕ):
-  (RepeatComm_min N_normal gamma_alpha hN n) < RepeatComm_min N_normal gamma_alpha hN (n + 1)  := by
+lemma RepeatComm_min_strict_mono' {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (n: ℕ):
+  (RepeatComm_min N_normal gamma_alpha n) < RepeatComm_min N_normal gamma_alpha (n + 1)  := by
   simp [RepeatComm_min]
   rw [Set.IsWF.lt_min_iff]
   intro a ha
@@ -449,12 +457,12 @@ lemma RepeatComm_min_strict_mono' {G: Type*} [Group G] {N: Subgroup G} (N_normal
   obtain ⟨data, data_in, ha_eq⟩ := ha
   simp [RepeatComm] at data_in
   obtain ⟨prev, prev_in, h_prev⟩ := data_in
-  obtain ⟨g, hg⟩ := h_prev
+  obtain ⟨g, ⟨h_eq, prev_eq_data⟩⟩ := h_prev
   rw [← ha_eq]
-  rw [← hg]
-  by_cases min_eq_prev: prev.pos = (RepeatComm_min N_normal gamma_alpha hN n)
+  rw [← prev_eq_data]
+  by_cases min_eq_prev: prev.pos = (RepeatComm_min N_normal gamma_alpha n)
   .
-    have min_mem := Set.IsWF.min_mem (RepeatComm_wf N_normal gamma_alpha hN n) (by
+    have min_mem := Set.IsWF.min_mem (RepeatComm_wf N_normal gamma_alpha n) (by
       simp
       apply RepeatComm_nonempty
     )
@@ -467,7 +475,7 @@ lemma RepeatComm_min_strict_mono' {G: Type*} [Group G] {N: Subgroup G} (N_normal
     apply G''_comm_strict_mono
   .
     simp [RepeatComm_min] at min_eq_prev
-    have prev_not_lt := Set.IsWF.not_lt_min (RepeatComm_wf N_normal gamma_alpha hN n) (by
+    have prev_not_lt := Set.IsWF.not_lt_min (RepeatComm_wf N_normal gamma_alpha n) (by
       simp
       apply RepeatComm_nonempty
     ) (a := prev.pos) (by
@@ -478,11 +486,15 @@ lemma RepeatComm_min_strict_mono' {G: Type*} [Group G] {N: Subgroup G} (N_normal
     simp [min_eq_prev] at prev_not_lt
 
 
-    have prev_mono := G''_comm_strict_mono N_normal gamma_alpha g hN prev
+    have prev_mono := G''_comm_strict_mono N_normal gamma_alpha g (by
+      intro hg
+      simp [hg] at h_eq
+      exact h_eq
+    ) prev
     exact gt_trans prev_mono prev_not_lt
 
-lemma RepeatComm_min_strict_mono {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ {g : G}, g ≠ gamma_alpha → g ∈ N):
-  StrictMono (fun n => RepeatComm_min N_normal gamma_alpha hN n) := by
+lemma RepeatComm_min_strict_mono {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) :
+  StrictMono (fun n => RepeatComm_min N_normal gamma_alpha n) := by
   intro a b ab
   simp
   apply strictMono_of_lt_succ
@@ -492,10 +504,10 @@ lemma RepeatComm_min_strict_mono {G: Type*} [Group G] {N: Subgroup G} (N_normal:
   . exact ab
 
 
-lemma RepeatComm_eventually_le {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ {g : G}, g ≠ gamma_alpha → g ∈ N) (a b: ℕ):
-  ∃ n: ℕ, a ≤ (RepeatComm_min N_normal gamma_alpha hN n).fst ∨ b ≤ (RepeatComm_min N_normal gamma_alpha hN n).snd := by
+lemma RepeatComm_eventually_le {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (a b: ℕ):
+  ∃ n: ℕ, a ≤ (RepeatComm_min N_normal gamma_alpha n).fst ∨ b ≤ (RepeatComm_min N_normal gamma_alpha n).snd := by
 
-  have unbounded := prod_lex_has_unbounded (RepeatComm_min_strict_mono N_normal gamma_alpha hN)
+  have unbounded := prod_lex_has_unbounded (RepeatComm_min_strict_mono N_normal gamma_alpha)
   -- TODO - deduplicate most of these cases
   cases unbounded
   .
