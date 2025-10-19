@@ -34,7 +34,7 @@ instance lower_central_characteristic {G: Type*} [Group G] (n: ℕ): (lowerCentr
     infer_instance
 
 open Classical in
-noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Normal) (gamma_alpha cur: T) (prev: G''CommData N gamma_alpha): G''CommData N gamma_alpha := {
+noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Normal) (gamma_alpha cur: T) (h_cur: cur ≠ gamma_alpha → cur ∈ N) (prev: G''CommData N gamma_alpha): G''CommData N gamma_alpha := {
   cur := ⁅prev.cur, cur⁆
   pos := (if (cur = gamma_alpha) then (prev.pos.1, prev.pos.2 + 1)
         else (prev.pos.1 + 1, 0))
@@ -88,7 +88,59 @@ noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
       simp at new_prod_mem
       obtain ⟨a, ha⟩ := new_prod_mem
       exact ha
-    . sorry
+    .
+      rename_i cur_neq
+      specialize h_cur cur_neq
+
+      simp
+      have prev_mem := prev.pos_first
+      simp at prev_mem
+      obtain ⟨prev_cur_mem_N, prev_cur_mem_lower⟩ := prev_mem
+      use ?_
+      .
+        dsimp [Bracket.bracket]
+        have lower_normal : (lowerCentralSeries N prev.pos.1).Normal := by infer_instance
+        have conj_mem := lower_normal.conj_mem ⟨prev.cur⁻¹, by exact (Subgroup.inv_mem_iff N).mpr prev_cur_mem_N⟩ (by
+          rw [← Subgroup.mem_map_iff_mem (f := Subgroup.subtype N)]
+          rw [Subgroup.subtype_apply]
+          simp
+          use ?_
+          . exact prev_cur_mem_N
+          . exact Subgroup.subtype_injective N
+        ) ⟨cur, h_cur⟩
+        rw [← Subgroup.mem_map_iff_mem (f := Subgroup.subtype N)]
+        rw [Subgroup.subtype_apply]
+        simp only []
+        simp
+        use ?_
+        .
+          rw [mem_lowerCentralSeries_succ_iff]
+          apply Subgroup.mem_closure_of_mem
+          simp
+          use prev.cur
+          use prev_cur_mem_N
+          refine ⟨prev_cur_mem_lower, ?_⟩
+          use cur
+          use h_cur
+          rfl
+
+        . apply Subgroup.mul_mem
+          . apply Subgroup.mul_mem
+            . apply Subgroup.mul_mem
+              . exact prev_cur_mem_N
+              . exact h_cur
+            . exact (Subgroup.inv_mem_iff N).mpr prev_cur_mem_N
+          . exact (Subgroup.inv_mem_iff N).mpr h_cur
+        exact Subgroup.subtype_injective N
+      .
+        dsimp [Bracket.bracket]
+        apply Subgroup.mul_mem
+        . apply Subgroup.mul_mem
+          . apply Subgroup.mul_mem
+            . exact prev_cur_mem_N
+            . exact h_cur
+          . exact (Subgroup.inv_mem_iff N).mpr prev_cur_mem_N
+        . exact (Subgroup.inv_mem_iff N).mpr h_cur
   pos_second := by
     sorry
 }
