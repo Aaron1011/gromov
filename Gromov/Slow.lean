@@ -282,29 +282,19 @@ noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
 #print axioms G''_comm
 
 open Classical in
-def RepeatComm {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ g : G, g ≠ gamma_alpha → g ∈ N) (n: ℕ): Set (G''CommData N gamma_alpha) :=
+def RepeatComm {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ {g : G}, g ≠ gamma_alpha → g ∈ N) (n: ℕ): Set (G''CommData N gamma_alpha) :=
 match n with
-| 0 => Set.range (fun (g: G) => (if g_neq: g ≠ gamma_alpha then {
+| 0 => Set.range (fun (g: N) =>{
     cur := g
     pos := (0, 0)
     pos_first := by
       simp
-      apply hN g g_neq
     pos_second := by
       simp
-  }
-  else {
-    cur := g
-    pos := (0, 1)
-    pos_first := by
-      simp at g_neq
-      simp
-
-    pos_second := by
-      simp
-  }
-))
-| n + 1 => sorry
+  })
+| n + 1 => Set.sUnion (Set.image (fun prev => (
+  Set.range (fun (g: G) => G''_comm N_normal gamma_alpha g hN prev)
+)) (RepeatComm N_normal gamma_alpha hN n))
 -- | 0 => {
 --   cur := cur
 --   pos := (0, 0)
