@@ -1,6 +1,6 @@
 import Mathlib
 
-def iteratedCommutator {T: Type*} [Group T] (base right: T) (n: ℕ) := Nat.iterate (fun x => ⁅base, x⁆) n right
+def iteratedCommutator {T: Type*} [Group T] (base right: T) (n: ℕ) := Nat.iterate (fun x => ⁅x, right⁆) n base
 
 structure G''CommData {T: Type*} [Group T] (N: Subgroup T) (gamma_alpha: T) where
   -- The result of repeatedly applying commutators
@@ -24,6 +24,7 @@ set_option Elab.async false
 --set_option trace.Elab.command true in
 --open Classical in
 
+-- TODO - upstream to mathlib
 instance lower_central_characteristic {G: Type*} [Group G] (n: ℕ): (lowerCentralSeries G n).Characteristic := by
   induction n with
   | zero =>
@@ -142,7 +143,33 @@ noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
           . exact (Subgroup.inv_mem_iff N).mpr prev_cur_mem_N
         . exact (Subgroup.inv_mem_iff N).mpr h_cur
   pos_second := by
-    sorry
+    split_ifs
+    . rename_i cur_eq
+      intro _
+      unfold iteratedCommutator
+      have prev_val := prev.pos_second
+      match h_pos: prev.pos.2 with
+      | 0 =>
+        use prev.cur
+        simp [cur_eq]
+      | k + 1 =>
+        specialize prev_val (by omega)
+        obtain ⟨b, b_eq⟩ := prev_val
+        unfold iteratedCommutator at b_eq
+        simp at h_pos
+        rw [h_pos] at b_eq
+        rw [Function.iterate_succ'] at b_eq
+        simp at b_eq
+        use b
+        rw [Function.iterate_succ']
+        rw [Function.comp_def]
+        beta_reduce
+        rw [b_eq]
+        rw [cur_eq]
+        rw [Function.iterate_succ']
+        simp
+    . rename_i cur_neq
+      sorry
 }
 
 -- | 0 => {
