@@ -35,7 +35,7 @@ instance lower_central_characteristic {G: Type*} [Group G] (n: ℕ): (lowerCentr
     infer_instance
 
 -- TODO - generalize and upstream to mathlib
-lemma prod_lex_has_unbounded (f: ℕ → Lex (ℕ × ℕ)) (hf: StrictMono f):
+lemma prod_lex_has_unbounded {f: ℕ → Lex (ℕ × ℕ)} (hf: StrictMono f):
   ¬BddAbove (Set.range (Prod.fst ∘ f)) ∨ ¬BddAbove (Set.range (Prod.snd ∘ f)) := by
   by_contra!
   obtain ⟨fst_bounded, snd_bounded⟩ := this
@@ -439,7 +439,7 @@ noncomputable def RepeatComm_min {G: Type*} [Group G] {N: Subgroup G} (N_normal:
     apply RepeatComm_nonempty
   )
 
-lemma RepeatComm_min_strict_mono {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ {g : G}, g ≠ gamma_alpha → g ∈ N) (n: ℕ):
+lemma RepeatComm_min_strict_mono' {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ {g : G}, g ≠ gamma_alpha → g ∈ N) (n: ℕ):
   (RepeatComm_min N_normal gamma_alpha hN n) < RepeatComm_min N_normal gamma_alpha hN (n + 1)  := by
   simp [RepeatComm_min]
   rw [Set.IsWF.lt_min_iff]
@@ -480,7 +480,45 @@ lemma RepeatComm_min_strict_mono {G: Type*} [Group G] {N: Subgroup G} (N_normal:
     have prev_mono := G''_comm_strict_mono N_normal gamma_alpha g hN prev
     exact gt_trans prev_mono prev_not_lt
 
+lemma RepeatComm_min_strict_mono {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ {g : G}, g ≠ gamma_alpha → g ∈ N):
+  StrictMono (fun n => RepeatComm_min N_normal gamma_alpha hN n) := by
+  intro a b ab
+  simp
+  apply strictMono_of_lt_succ
+  .
+    intro a _
+    apply RepeatComm_min_strict_mono'
+  . exact ab
 
+
+lemma RepeatComm_eventually_le {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ {g : G}, g ≠ gamma_alpha → g ∈ N) (a b: ℕ):
+  ∃ n: ℕ, a ≤ (RepeatComm_min N_normal gamma_alpha hN n).fst ∨ b ≤ (RepeatComm_min N_normal gamma_alpha hN n).snd := by
+
+  have unbounded := prod_lex_has_unbounded (RepeatComm_min_strict_mono N_normal gamma_alpha hN)
+  -- TODO - deduplicate most of these cases
+  cases unbounded
+  .
+    rename_i fst_unbounded
+    rw [not_bddAbove_iff] at fst_unbounded
+    specialize fst_unbounded a
+    obtain ⟨n, hn⟩ := fst_unbounded
+    simp at hn
+    obtain ⟨⟨c, c_eq⟩, a_lt_n⟩ := hn
+    use c
+    left
+    rw [c_eq]
+    exact Nat.le_of_succ_le a_lt_n
+  .
+    rename_i snd_unbounded
+    rw [not_bddAbove_iff] at snd_unbounded
+    specialize snd_unbounded b
+    obtain ⟨n, hn⟩ := snd_unbounded
+    simp at hn
+    obtain ⟨⟨c, c_eq⟩, b_lt_n⟩ := hn
+    use c
+    right
+    rw [c_eq]
+    exact Nat.le_of_succ_le b_lt_n
 
 
 
