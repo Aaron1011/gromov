@@ -370,6 +370,19 @@ lemma G''_comm_strict_mono {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
 --   le_csInf := _
 -- }
 
+lemma normal_comm_mem {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (a b: G) (ha: a ∈ N) :
+  ⁅a, b⁆ ∈ N := by
+
+  dsimp [Bracket.bracket]
+  have conj_mem := N_normal.conj_mem a⁻¹ (by simp [ha]) b
+  conv =>
+    arg 2
+    equals a * (b * a⁻¹ * b⁻¹) => group
+
+  apply Subgroup.mul_mem
+  . exact ha
+  . exact conj_mem
+
 open Classical in
 def RepeatComm {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (n: ℕ): Set (G''CommData N gamma_alpha) :=
 match n with
@@ -382,12 +395,29 @@ match n with
       simp
   })
 | n + 1 => Set.sUnion (Set.image (fun prev => (
-  Set.range (fun (g: ↑((N.carrier) ∪ {gamma_alpha})) => G''_comm N_normal gamma_alpha g (by
+  Set.range (fun (g: ↑((N.carrier) ∪ {gamma_alpha})) => G''_comm N_normal gamma_alpha ⁅prev.cur, g⁆ (by
 
     have g_prop := g.prop
     intro hg
     simp [hg] at g_prop
-    exact g_prop
+    have prev_mem := prev.pos_first
+    simp at prev_mem
+    obtain ⟨prev_cur_mem_N, prev_cur_mem_lower⟩ := prev_mem
+    cases g_prop
+    .
+      rename_i g_eq_gamma
+      apply normal_comm_mem N_normal prev.cur
+      apply prev_cur_mem_N
+    .
+      rename_i g_in_N
+      simp [Bracket.bracket]
+      apply Subgroup.mul_mem
+      . apply Subgroup.mul_mem
+        . apply Subgroup.mul_mem
+          . exact prev_cur_mem_N
+          . exact g_in_N
+        . simp [prev_cur_mem_N]
+      . simp [g_in_N]
   ) prev)
 )) (RepeatComm N_normal gamma_alpha n))
 
@@ -486,10 +516,13 @@ lemma RepeatComm_min_strict_mono' {G: Type*} [Group G] {N: Subgroup G} (N_normal
     simp [min_eq_prev] at prev_not_lt
 
 
-    have prev_mono := G''_comm_strict_mono N_normal gamma_alpha g (by
+    have prev_mono := G''_comm_strict_mono N_normal gamma_alpha ⁅prev.cur, g⁆ (by
       intro hg
-      simp [hg] at h_eq
-      exact h_eq
+      apply normal_comm_mem N_normal
+      have prev_cur_mem_N := prev.pos_first
+      simp at prev_cur_mem_N
+      obtain ⟨prev_cur_mem, _⟩ := prev_cur_mem_N
+      exact prev_cur_mem
     ) prev
     exact gt_trans prev_mono prev_not_lt
 
