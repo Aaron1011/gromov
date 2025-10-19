@@ -11,7 +11,7 @@ structure G''CommData {T: Type*} [Group T] (N: Subgroup T) (gamma_alpha: T) wher
   -- As a result, 'pos' strictly increases at each step
   pos: Lex (ℕ × ℕ)
   -- The first component of our position is our index in the lower central series of M
-  pos_first: cur ∈ Subgroup.map N.subtype (lowerCentralSeries N pos.1)
+  pos_first: pos.1 ≠ 0 → cur ∈ Subgroup.map N.subtype (lowerCentralSeries N pos.1)
   -- The second component is the number of copies of 'right' that occur in successive adjacent commutators
   pos_second: pos.2 ≠ 0 → ∃ b: T, cur = iteratedCommutator b gamma_alpha pos.2
 
@@ -123,16 +123,18 @@ lemma prod_lex_has_unbounded (f: ℕ → Lex (ℕ × ℕ)) (hf: StrictMono f):
 
 
 open Classical in
-noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Normal) (gamma_alpha cur: T) (h_cur: cur ≠ gamma_alpha → cur ∈ N) (prev: G''CommData N gamma_alpha): G''CommData N gamma_alpha := {
+noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Normal) (gamma_alpha cur: T) (h_cur: ∀ {g: T}, g ≠ gamma_alpha → g ∈ N) (prev: G''CommData N gamma_alpha): G''CommData N gamma_alpha := {
   cur := ⁅prev.cur, cur⁆
   pos := (if (cur = gamma_alpha) then (prev.pos.1, prev.pos.2 + 1)
         else (prev.pos.1 + 1, 0))
   pos_first := by
+    intro pos_ne_zero
     split_ifs
     .
       rename_i next_eq_gamma
+      simp [next_eq_gamma] at pos_ne_zero
       have prev_mem: prev.cur ∈ N := by
-        have foo := prev.pos_first
+        have foo := prev.pos_first pos_ne_zero
         simp at foo
         obtain ⟨a, a_eq⟩ := foo
         use a
@@ -154,7 +156,7 @@ noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
       rw [← mul_assoc] at prod_mem
       simp
       use prod_mem
-      have prev_cur_mem := prev.pos_first
+      have prev_cur_mem := prev.pos_first pos_ne_zero
 
       have lower_normal: (lowerCentralSeries (↥N) prev.pos.1).Normal := by
         infer_instance
@@ -179,10 +181,29 @@ noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
       exact ha
     .
       rename_i cur_neq
-      specialize h_cur cur_neq
+      have h_cur_neq := h_cur cur_neq
+
+      by_cases prev_pos_eq_zero: prev.pos.1 = 0
+      . simp [prev_pos_eq_zero]
+        have conj_mem := N_normal.conj_mem cur (h_cur_neq) prev.cur
+        use ?_
+        .
+
+          -- by_cases prev_eq_gamma: prev.cur = gamma_alpha
+          -- .
+          --   simp_rw [prev_eq_gamma]
+          simp [commutator]
+          simp [Bracket.bracket]
+          apply Subgroup.mem_closure_of_mem
+
+          sorry
+        . simp [Bracket.bracket]
+          apply Subgroup.mul_mem
+          . exact conj_mem
+          . exact (Subgroup.inv_mem_iff N).mpr h_cur_neq
 
       simp
-      have prev_mem := prev.pos_first
+      have prev_mem := prev.pos_first prev_pos_eq_zero
       simp at prev_mem
       obtain ⟨prev_cur_mem_N, prev_cur_mem_lower⟩ := prev_mem
       use ?_
@@ -196,7 +217,7 @@ noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
           use ?_
           . exact prev_cur_mem_N
           . exact Subgroup.subtype_injective N
-        ) ⟨cur, h_cur⟩
+        ) ⟨cur, h_cur_neq⟩
         rw [← Subgroup.mem_map_iff_mem (f := Subgroup.subtype N)]
         rw [Subgroup.subtype_apply]
         simp only []
@@ -210,16 +231,16 @@ noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
           use prev_cur_mem_N
           refine ⟨prev_cur_mem_lower, ?_⟩
           use cur
-          use h_cur
+          use h_cur_neq
           rfl
 
         . apply Subgroup.mul_mem
           . apply Subgroup.mul_mem
             . apply Subgroup.mul_mem
               . exact prev_cur_mem_N
-              . exact h_cur
+              . exact h_cur_neq
             . exact (Subgroup.inv_mem_iff N).mpr prev_cur_mem_N
-          . exact (Subgroup.inv_mem_iff N).mpr h_cur
+          . exact (Subgroup.inv_mem_iff N).mpr h_cur_neq
         exact Subgroup.subtype_injective N
       .
         dsimp [Bracket.bracket]
@@ -227,9 +248,9 @@ noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
         . apply Subgroup.mul_mem
           . apply Subgroup.mul_mem
             . exact prev_cur_mem_N
-            . exact h_cur
+            . exact h_cur_neq
           . exact (Subgroup.inv_mem_iff N).mpr prev_cur_mem_N
-        . exact (Subgroup.inv_mem_iff N).mpr h_cur
+        . exact (Subgroup.inv_mem_iff N).mpr h_cur_neq
   pos_second := by
     split_ifs
     . rename_i cur_eq
@@ -260,6 +281,30 @@ noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
       simp
 }
 
+open Classical in
+def RepeatComm {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ g : G, g ≠ gamma_alpha → g ∈ N) (n: ℕ): Set (G''CommData N gamma_alpha) :=
+match n with
+| 0 => Set.range (fun (g: G) => (if g_neq: g ≠ gamma_alpha then {
+    cur := g
+    pos := (0, 0)
+    pos_first := by
+      simp
+      apply hN g g_neq
+    pos_second := by
+      simp
+  }
+  else {
+    cur := g
+    pos := (0, 1)
+    pos_first := by
+      simp at g_neq
+      simp
+
+    pos_second := by
+      simp
+  }
+))
+| n + 1 => sorry
 -- | 0 => {
 --   cur := cur
 --   pos := (0, 0)
