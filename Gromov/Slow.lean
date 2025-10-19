@@ -314,6 +314,61 @@ lemma G''_comm_strict_mono {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
     omega
 #print axioms G''_comm
 
+-- noncomputable instance inf_lex: InfSet (Lex (ℕ × ℕ)) := {
+--   sInf := fun s => (sInf (Prod.fst '' s), sInf (Prod.snd '' s))
+-- }
+
+-- instance lattice_lex: ConditionallyCompleteLattice  (Lex (ℕ × ℕ)) := {
+--   sSup :=  fun s => (sSup (Prod.fst '' s), sSup (Prod.snd '' s))
+--   le_csSup := by
+--     intro s a hs ha
+--     unfold BddAbove at hs
+--     obtain ⟨upper, h_upper⟩ := hs
+--     simp [upperBounds] at h_upper
+--     specialize h_upper a.fst a.snd ha
+--     rw [Prod.Lex.le_iff]
+--     by_cases fst_eq: a.fst = (sSup (Prod.fst '' s))
+--     .
+--       right
+--       refine ⟨?_, ?_⟩
+--       . exact fst_eq
+--       .
+--         conv =>
+--           lhs
+--           equals a.snd => rfl
+--         conv =>
+--           rhs
+--           equals (sSup (Prod.snd '' s)) => rfl
+
+--         apply le_csSup
+--         . sorry
+--         .
+--           simp
+--           use a.1
+--           exact ha
+
+--     --rw [Prod.Lex.le_iff] at h_upper
+--     cases h_upper
+--     . rename_i fst_lt
+--       rw [Prod.Lex.le_iff]
+--       left
+--       conv =>
+--         equals a.1 < (sSup (Prod.fst '' s)) => rfl
+
+--       conv at fst_lt =>
+--         lhs
+--         equals a.1 => rfl
+
+
+--       rw [lt_csSup_iff]
+--       .
+--     . rename_i fst_eq
+--       sorry
+--   csSup_le := _
+--   csInf_le := _
+--   le_csInf := _
+-- }
+
 open Classical in
 def RepeatComm {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ {g : G}, g ≠ gamma_alpha → g ∈ N) (n: ℕ): Set (G''CommData N gamma_alpha) :=
 match n with
@@ -328,6 +383,110 @@ match n with
 | n + 1 => Set.sUnion (Set.image (fun prev => (
   Set.range (fun (g: G) => G''_comm N_normal gamma_alpha g hN prev)
 )) (RepeatComm N_normal gamma_alpha hN n))
+
+lemma RepeatComm_wf {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ {g : G}, g ≠ gamma_alpha → g ∈ N) (n: ℕ):
+  ((fun a => a.pos) '' (RepeatComm N_normal gamma_alpha hN n)).IsWF := by
+  apply Set.IsWF.of_wellFoundedLT
+
+lemma RepeatComm_nonempty {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ {g : G}, g ≠ gamma_alpha → g ∈ N) (n: ℕ):
+  (RepeatComm N_normal gamma_alpha hN n).Nonempty := by
+  rw [RepeatComm.eq_def]
+  split
+  . apply Set.range_nonempty
+  .
+    rename_i j k
+    simp
+    obtain ⟨a, ha⟩ := RepeatComm_nonempty N_normal gamma_alpha hN k
+    use a
+    refine ⟨ha, ?_⟩
+    apply Set.range_nonempty
+
+
+-- TODO - golf and upstream to mathlib
+theorem Set.IsWF.lt_min_iff {α: Type*} [LinearOrder α] {s: Set α} {a : α} (hs : s.IsWF) (hn : s.Nonempty) : a < hs.min hn ↔ ∀ b, b ∈ s → a < b := by
+  by_cases a_eq: a = hs.min hn
+  .
+    simp [a_eq]
+    use hs.min hn
+    refine ⟨?_, ?_⟩
+    . exact Set.IsWF.min_mem hs hn
+    . simp
+  .
+    rw [lt_iff_le_and_ne]
+    simp [a_eq]
+    refine ⟨?_, ?_⟩
+    .
+      intro ha
+      rw [le_iff_eq_or_lt] at ha
+      simp [a_eq] at ha
+      intro b hb
+      have min_le := Set.IsWF.min_le hs (by exact hn) hb
+      exact Std.lt_of_lt_of_le ha min_le
+    . intro ha
+      have a_le: ∀ b ∈ s, a ≤ b := by
+        exact fun b a_1 ↦ Std.le_of_lt (ha b a_1)
+      rw [le_iff_eq_or_lt]
+      simp [a_eq]
+
+      have min_mem := Set.IsWF.min_mem hs hn
+      specialize ha _ min_mem
+      exact ha
+
+
+noncomputable def RepeatComm_min {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ {g : G}, g ≠ gamma_alpha → g ∈ N) (n: ℕ) :=
+  (RepeatComm_wf N_normal gamma_alpha hN n).min (by
+    simp
+    apply RepeatComm_nonempty
+  )
+
+lemma RepeatComm_min_strict_mono {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (hN: ∀ {g : G}, g ≠ gamma_alpha → g ∈ N) (n: ℕ):
+  (RepeatComm_min N_normal gamma_alpha hN n) < RepeatComm_min N_normal gamma_alpha hN (n + 1)  := by
+  simp [RepeatComm_min]
+  rw [Set.IsWF.lt_min_iff]
+  intro a ha
+  simp at ha
+  obtain ⟨data, data_in, ha_eq⟩ := ha
+  simp [RepeatComm] at data_in
+  obtain ⟨prev, prev_in, h_prev⟩ := data_in
+  obtain ⟨g, hg⟩ := h_prev
+  rw [← ha_eq]
+  rw [← hg]
+  by_cases min_eq_prev: prev.pos = (RepeatComm_min N_normal gamma_alpha hN n)
+  .
+    have min_mem := Set.IsWF.min_mem (RepeatComm_wf N_normal gamma_alpha hN n) (by
+      simp
+      apply RepeatComm_nonempty
+    )
+    simp at min_mem
+    obtain ⟨x, x_mem, x_pos_eq⟩ := min_mem
+    rw [← x_pos_eq]
+    simp [RepeatComm_min] at min_eq_prev
+    rw [← min_eq_prev] at x_pos_eq
+    rw [x_pos_eq]
+    apply G''_comm_strict_mono
+  .
+    simp [RepeatComm_min] at min_eq_prev
+    have prev_not_lt := Set.IsWF.not_lt_min (RepeatComm_wf N_normal gamma_alpha hN n) (by
+      simp
+      apply RepeatComm_nonempty
+    ) (a := prev.pos) (by
+      simp
+      use prev
+    )
+    rw [lt_iff_le_and_ne] at prev_not_lt
+    simp [min_eq_prev] at prev_not_lt
+
+
+    have prev_mono := G''_comm_strict_mono N_normal gamma_alpha g hN prev
+    exact gt_trans prev_mono prev_not_lt
+
+
+
+
+
+
+
+
 -- | 0 => {
 --   cur := cur
 --   pos := (0, 0)
