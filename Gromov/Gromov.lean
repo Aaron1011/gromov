@@ -10308,39 +10308,134 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
         use f⁻¹ (b ^ N.index)
         refine ⟨?_, by simp⟩
         simp
-    let G'' := Subgroup.closure (((Additive.toMul ∘ data.φ.ker.subtype) '' N'.carrier) ∪ {γ.toMul})
-
-
-    let new_N'_as_G'' := (AddSubgroup.map (AddSubgroup.subtype _) (Subgroup.toAddSubgroup' N')).toSubgroup'
-
-    let N'_as_G'' := (Subgroup.map data.φ.ker.subtype.toMultiplicative N').toAddSubgroup'.toSubgroup'.subgroupOf G''
-
-
-    --let N'_as_G' := (Subgroup.map data.φ.ker.subtype.toMultiplicative N').toAddSubgroup'.toSubgroup'
 
     have N'_normal: N'.Normal := by
       infer_instance
 
-    have new_N'_as_G''_normal: new_N'_as_G''.Normal := by
-      simp [new_N'_as_G'']
-      simp [AddSubgroup.toSubgroup']
-      exact {
-        conj_mem n := by
-          intro hn g
-          
-      }
+    let G'' := Subgroup.closure (((Additive.toMul ∘ data.φ.ker.subtype) '' N'.carrier) ∪ {γ.toMul})
+
+    let N'_as_G'' := (AddSubgroup.map (AddSubgroup.subtype _) (Subgroup.toAddSubgroup' N')).toSubgroup'.subgroupOf G''
 
     have N'_as_G''_normal: N'_as_G''.Normal := by
-      unfold N'_as_G''
-      --simp [AddSubgroup.toSubgroup']
-      apply Subgroup.Normal.subgroupOf
+      simp [N'_as_G'']
       exact {
         conj_mem n := by
           intro hn g
-          unfold AddSubgroup.toSubgroup'
-          unfold toAddSubgroup'
-          sorry
+          unfold G'' at g
+          rw [Subgroup.mem_subgroupOf]
+          -- TODO - figure out how to make 'induction' tactic work here
+          simp
+          apply Subgroup.closure_induction (k :=  (((Additive.toMul ∘ data.φ.ker.subtype) '' N'.carrier) ∪ {γ.toMul})) (p := fun g hg => g * n * g⁻¹ ∈ (AddSubgroup.toSubgroup' (AddSubgroup.map data.φ.ker.subtype (toAddSubgroup' N'))))
+          . intro x hx
+            rw [Set.mem_union] at hx
+            cases hx
+            .
+              rename_i x_mem
+              apply Subgroup.mul_mem
+              . apply Subgroup.mul_mem
+                . exact x_mem
+                . exact hn
+              . simp
+                exact x_mem
+            . rename_i x_eq
+              simp at x_eq
+              rw [Subgroup.mem_subgroupOf] at hn
+
+              have mul_mem_ker: x * n.val * x⁻¹ ∈ data.φ.ker := by
+                simp [x_eq]
+                conv =>
+                  arg 1
+                  arg 2
+                  equals γ + (Additive.ofMul n.val) + -γ =>
+                    rfl
+                simp
+                conv =>
+                  arg 1
+                  equals (data.φ γ) + (data.φ (Additive.ofMul n.val)) + (data.φ (-γ)) =>
+                    rfl
+
+                simp [hγ]
+                have n_mem_ker: n.val ∈ data.φ.ker := by
+                  have add_n_mem: Additive.ofMul n.val ∈ (AddSubgroup.map data.φ.ker.subtype (toAddSubgroup' N')) := by
+                    exact hn
+
+                  simp at add_n_mem
+                  obtain ⟨x, hx⟩ := add_n_mem
+                  exact x
+                simp at n_mem_ker
+                exact n_mem_ker
+
+
+              have n_conj := N'_normal.conj_mem ⟨n.val, by sorry⟩ sorry
+              sorry
+          . simp
+            exact hn
+          . intro x y hx hy x_conj y_conj
+            rw [mul_inv_rev]
+            conv =>
+              arg 2
+              equals x * (y * n * y⁻¹) * x⁻¹ => group
+
+
+            have new_conj := N'_normal.conj_mem
+            apply Subgroup.mul_mem
+            . apply Subgroup.mul_mem
+              . sorry
+              . exact y_conj
+            .
+              have x_prop := x.property
+              sorry
+          . intro x hx conj_mem
+            simp
+            sorry
+          . exact g.property
       }
+
+
+    -- let N'_as_G'' := (Subgroup.map data.φ.ker.subtype.toMultiplicative N').toAddSubgroup'.toSubgroup'.subgroupOf G''
+
+
+    -- --let N'_as_G' := (Subgroup.map data.φ.ker.subtype.toMultiplicative N').toAddSubgroup'.toSubgroup'
+
+
+
+    -- have add_normal: (AddSubgroup.map data.φ.ker.subtype (toAddSubgroup' N')).Characteristic := by
+    --   sorry
+
+    -- have new_N'_as_G''_normal: new_N'_as_G''.Normal := by
+    --   simp [new_N'_as_G'']
+    --   exact {
+    --     conj_mem n := by
+    --       intro hn g
+    --       have toAdd_mem: Additive.ofMul (g * n * g⁻¹) ∈ (AddSubgroup.map data.φ.ker.subtype (toAddSubgroup' N')) := by
+    --         simp
+    --         have n_mem_ker: n ∈ data.φ.ker := by
+    --           simp [AddSubgroup.toSubgroup'] at hn
+    --           simp [toAddSubgroup] at hn
+    --           sorry
+
+    --         have n_mem_N': ⟨n, n_mem_ker⟩ ∈ N' := by
+    --           sorry
+    --         use ?_
+    --         .
+    --           have N'_conj := N'_normal.conj_mem
+
+
+    --       exact toAdd_mem
+
+    --   }
+
+    -- have N'_as_G''_normal: N'_as_G''.Normal := by
+    --   unfold N'_as_G''
+    --   --simp [AddSubgroup.toSubgroup']
+    --   apply Subgroup.Normal.subgroupOf
+    --   exact {
+    --     conj_mem n := by
+    --       intro hn g
+    --       unfold AddSubgroup.toSubgroup'
+    --       unfold toAddSubgroup'
+    --       sorry
+    --   }
 
 
 
