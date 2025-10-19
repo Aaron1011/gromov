@@ -122,8 +122,9 @@ lemma prod_lex_has_unbounded {f: ℕ → Lex (ℕ × ℕ)} (hf: StrictMono f):
 
 
 
+-- TODO - h_cur is wrong, we can have things like 'gamma_alpha * a'
 open Classical in
-noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Normal) (gamma_alpha cur: T) (h_cur: ∀ {g: T}, g ≠ gamma_alpha → g ∈ N) (prev: G''CommData N gamma_alpha): G''CommData N gamma_alpha := {
+noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Normal) (gamma_alpha cur: T) (h_cur: cur ≠ gamma_alpha → cur ∈ N) (prev: G''CommData N gamma_alpha): G''CommData N gamma_alpha := {
   cur := ⁅prev.cur, cur⁆
   pos := (if (cur = gamma_alpha) then (prev.pos.1, prev.pos.2 + 1)
         else (prev.pos.1 + 1, 0))
@@ -280,7 +281,7 @@ noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
 }
 
 -- TODO ' add simp lemma to avoid the need for all of the 'conv' steps, and upstream to mathlib
-lemma G''_comm_strict_mono {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Normal) (gamma_alpha cur: T) (h_cur: ∀ {g: T}, g ≠ gamma_alpha → g ∈ N) (prev: G''CommData N gamma_alpha):
+lemma G''_comm_strict_mono {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Normal) (gamma_alpha cur: T) (h_cur: cur ≠ gamma_alpha → cur ∈ N) (prev: G''CommData N gamma_alpha):
   prev.pos < (G''_comm N_normal gamma_alpha cur h_cur prev).pos := by
 
   simp [G''_comm]

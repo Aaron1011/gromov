@@ -10450,7 +10450,14 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
 
     have G''_nilpotent: Group.IsNilpotent G'' := by
-      have eventually_le := RepeatComm_eventually_le N'
+      have eventually_le := RepeatComm_eventually_le N'_as_G''_normal ⟨(γ.toMul)^α, (by
+        unfold G''
+        apply Subgroup.pow_mem
+        apply Subgroup.mem_closure_of_mem
+        simp
+      )⟩ ?_
+      . sorry
+      . sorry
       -- Idea: Each time we take a cummutator ⁅g'', a], we either have:
       -- g'' = γ^α, in which case we stay in the same subgroup
       -- g'' ∈ N', in which case we move upward in the central series of N'
@@ -10458,7 +10465,6 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       -- Our position is (n'_level, gamma_count) under a lexical ordering
       -- We want to show that at each step of the lower central series for G'', this position strictly increases
       -- So, it must either reach (_, m) or (nilpotency_class_N', _), at which point we are done
-      sorry
 
     have G''_finite_index: G''.FiniteIndex := by
       unfold G''
