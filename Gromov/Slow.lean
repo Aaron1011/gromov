@@ -169,7 +169,7 @@ noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
         rw [Function.iterate_succ']
         simp
     . rename_i cur_neq
-      sorry
+      simp
 }
 
 -- | 0 => {
