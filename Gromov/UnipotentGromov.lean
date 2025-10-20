@@ -2,6 +2,66 @@ import Mathlib
 
 def iteratedCommutator {T: Type*} [Group T] (base right: T) (n: ℕ) := Nat.iterate (fun x => ⁅x, right⁆) n base
 
+
+def iterate_comm_set {G: Type*} [Group G] (S: Set G) (n: ℕ): Set G :=
+  match n with
+  | 0 => S
+  | n + 1 => Set.iUnion (fun (s: S) => Set.image (fun g => ⁅g, s⁆) (iterate_comm_set S n))
+
+-- Lemma 13.44 in https://www.math.ucdavis.edu/~kapovich/EPR/ggt.pdfw
+
+lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup.closure S = ⊤) (n: ℕ):
+  lowerCentralSeries G n = Subgroup.closure ((iterate_comm_set S n) ∪ (Subgroup.map (Subgroup.subtype _) (lowerCentralSeries (Subgroup.closure S) (n + 1)))) := by
+    induction n with
+    | zero =>
+      simp [iterate_comm_set]
+      rw [Subgroup.closure_union]
+      simp [hS]
+    | succ n ih =>
+      ext a
+      refine ⟨?_, ?_⟩
+      . sorry
+      .
+        intro ha
+        apply (Subgroup.closure_le _).mp ?_ ha
+        simp
+        refine ⟨?_, ?_⟩
+        .
+          intro b hb
+          simp [iterate_comm_set] at hb
+          obtain ⟨s, s_mem, ⟨c, c_mem, c_comm⟩⟩ := hb
+
+          have c_mem_lower: c ∈ (lowerCentralSeries G n) := by
+            rw [ih]
+            apply Subgroup.mem_closure_of_mem
+            apply Set.mem_union_left
+            exact c_mem
+
+
+          apply Subgroup.mem_closure_of_mem
+          simp
+          use c
+          refine ⟨c_mem_lower, ?_⟩
+          use s
+        .
+          intro b hb
+          simp at hb
+          simp
+          have succ_le: lowerCentralSeries G (n + 1 + 1) ≤ lowerCentralSeries G (n + 1) := by
+            simp [lowerCentralSeries]
+            apply Subgroup.commutator_le_left
+
+
+          apply succ_le
+
+          have central_le := lowerCentralSeries_map_subtype_le (Subgroup.closure S) (n + 1 + 1)
+          apply (Subgroup.mem_map_of_mem (f := Subgroup.subtype _)) at hb
+          specialize central_le hb
+
+          simp at central_le
+          exact central_le
+
+
 structure G''CommData {T: Type*} [Group T] (N: Subgroup T) (gamma_alpha: T) where
   -- The result of repeatedly applying commutators
   cur: T
@@ -537,6 +597,131 @@ lemma RepeatComm_min_strict_mono {G: Type*} [Group G] {N: Subgroup G} (N_normal:
   . exact ab
 
 
+
+-- lemma iterated_comm_nilpotent {G: Type*} [Group G] (S: Set G) (n: ℕ) (hS: Subgroup.closure (iterate_comm_set S n) = ⊥):
+--   lowerCentralSeries (Subgroup.closure S) (n) = ⊥ := by
+--   induction n with
+--   | zero =>
+--     simp [iterate_comm_set] at hS
+--     simp
+
+--     by_cases s_empty: S = ∅
+--     .
+--       have closure_eq: Subgroup.closure S = ⊥ := by
+--         simp [s_empty]
+
+--       ext a
+--       simp
+--       have a_mem := a.property
+--       simp [closure_eq] at a_mem
+--       exact a_mem
+--     .
+--       ext a
+--       simp
+--       have S_eq: S = {1} := by
+--         ext a
+--         simp
+--         grind
+
+--       have a_prop := a.property
+--       simp [S_eq] at a_prop
+--       rw [Subgroup.closure_singleton_one] at a_prop
+--       simp at a_prop
+--       exact a_prop
+--   | succ n ih =>
+--     simp [lowerCentralSeries]
+--     simp [iterate_comm_set] at hS
+--     ext a
+--     simp
+--     refine ⟨?_, ?_⟩
+--     .
+--       intro ha
+--       simp at ha
+--       rw [Subgroup.commutator_def] at ha
+
+--     . intro ha
+--       simp [ha]
+
+-- lemma iterated_comm_generates_lower {G: Type*} [Group G] (S: Set G) (n: ℕ):
+--   Subgroup.map (Subgroup.subtype _) (lowerCentralSeries (Subgroup.closure S) n) =  (Subgroup.closure (iterate_comm_set S n)) := by
+--   induction n with
+--   | zero =>
+--     simp [iterate_comm_set]
+--     ext a
+--     simp
+--   | succ n ih =>
+--     simp only [lowerCentralSeries]
+--     apply_fun (Subgroup.comap (Subgroup.closure S).subtype) at ih
+--     rw [Subgroup.comap_map_eq_self_of_injective] at ih
+--     .
+--       rw [ih]
+--       ext a
+--       simp
+--       refine ⟨?_, ?_⟩
+--       . intro ha
+--         obtain ⟨a_mem, other⟩ := ha
+--         dsimp [Subgroup.commutator] at other
+--         have foo := Subgroup.mem_map_of_mem (Subgroup.subtype _) other
+--         rw [Subgroup.subtype_apply] at foo
+--         simp only [] at foo
+--         rw [MonoidHom.map_closure] at foo
+--         induction foo using Subgroup.closure_induction with
+--         | mem p hp =>
+--           simp at hp
+--           obtain ⟨p_mem_closure, b, ⟨b_mem, ⟨b_mem_closure, ⟨c, c_mem, comm_eq⟩⟩⟩⟩ := hp
+
+--           simp
+--         | one => sorry
+--         | mul x y hx hy _ _ => sorry
+--         | inv x hx _ => sorry
+--     . exact Subgroup.subtype_injective (Subgroup.closure S)
+--     simp [lowerCentralSeries, iterate_comm_set]
+--     ext a
+--     simp
+--     refine ⟨?_, ?_⟩
+--     .
+--       intro hx
+--       -- rw [Subgroup.closure_iUnion]
+--       obtain ⟨a_mem_closure, a_mem_lower⟩ := hx
+--       dsimp [Bracket.bracket] at a_mem_lower
+--       have foo := Subgroup.mem_map_of_mem (Subgroup.subtype _) a_mem_lower
+--       rw [Subgroup.subtype_apply] at foo
+--       simp only [] at foo
+--       rw [MonoidHom.map_closure] at foo
+--       apply Subgroup.closure_induction (p := fun g hg => g ∈ Subgroup.closure (⋃ i ∈ S, (fun a ↦ ⁅a, i⁆) '' iterate_comm_set S n)) (hx := foo)
+--       .
+--         intro g hg
+--         simp at hg
+--         obtain ⟨g_mem_closure, a, ⟨a_mem_closure, a_mem_lower, ⟨b, b_mem_closure, g_eq_comm⟩⟩⟩ := hg
+--         apply Subgroup.mem_closure_of_mem
+--         simp
+
+--     . sorry
+
+
+lemma nilpotent_of_comm_trivial {G: Type*} [Group G] (S: Set G) (n: ℕ) (hS: iterate_comm_set S n = {1}):
+  ∃ k: ℕ, lowerCentralSeries (Subgroup.closure S) k = ⊥ := by
+  induction n with
+  | zero =>
+    use 0
+    simp
+    simp [iterate_comm_set] at hS
+    ext a
+    simp
+    have closure_eq: Subgroup.closure S = Subgroup.closure {1} := by
+      rw [hS]
+
+    simp at closure_eq
+    rw [Subgroup.closure_singleton_one] at closure_eq
+    have a_mem := a.property
+    simp_rw [closure_eq] at a_mem
+    simp at a_mem
+    exact a_mem
+  | succ n ih =>
+    simp [iterate_comm_set] at hS
+
+    sorry
+
 lemma RepeatComm_eventually_le {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (a b: ℕ):
   ∃ n: ℕ, a ≤ (RepeatComm_min N_normal gamma_alpha n).fst ∨ b ≤ (RepeatComm_min N_normal gamma_alpha n).snd := by
 
@@ -567,67 +752,84 @@ lemma RepeatComm_eventually_le {G: Type*} [Group G] {N: Subgroup G} (N_normal: N
     exact Nat.le_of_succ_le b_lt_n
 
 
+-- This probably needs the semidirect productff
+lemma closure_mem_repeatComm {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (n: ℕ):
+  ∀ g ∈ { x | ∃ p ∈ lowerCentralSeries (Subgroup.closure ↑(N.carrier ∪ {gamma_alpha})) (n), ∃ q, x = ⁅p.val, q⁆ }, ∃ data ∈ RepeatComm N_normal gamma_alpha (n + 1), g = data.cur := by
 
--- lemma closure_mem_repeatComm {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (n: ℕ):
---   ∀ g ∈ lowerCentralSeries (Subgroup.closure ↑(N.carrier ∪ {gamma_alpha})) (n + 1), ∃ data ∈ RepeatComm N_normal gamma_alpha (n + 1), g = data.cur := by
+    intro g g_mem
+    induction n with
+    | zero =>
+      simp at g_mem
+      obtain ⟨p, p_in, q, g_eq⟩ := g_mem
+      simp [RepeatComm]
 
---     intro g g_mem
---     induction n with
---     | zero =>
---       let f := g.val
---       have g_prop := g.property
---       apply Subgroup.closure_induction (p := fun g hg => ∃ data ∈ RepeatComm N_normal gamma_alpha (0 + 1), g = data.cur) (k := N.carrier ∪ {gamma_alpha}) g_mem
---       .
---         rw [RepeatComm]
---         use {
---           cur := 1
---           pos := (1, 0)
---           pos_first := by
---             simp [lowerCentralSeries]
---           pos_second := by
---             simp
---         }
---         rw [Set.mem_sUnion]
---         refine ⟨?_, by simp⟩
---         simp
---         use {
---           cur := 1
---           pos := (0, 0)
---           pos_first := by
---             simp [lowerCentralSeries]
---           pos_second := by
---             simp
---         }
---         simp [RepeatComm]
---         use 1
---         use (by simp)
---         simp [G''_comm]
---         -- TODO - take this as a hypothesis
---         have gamma_alpha_ne_one: 1 ≠ gamma_alpha := by
---           sorry
---         simp [gamma_alpha_ne_one]
---       .
---         intro x y hx hy x_cur y_cur
---         rw [RepeatComm] at x_cur
---         rw [RepeatComm] at y_cur
---         obtain ⟨x_data, x_data_in, x_eq⟩ := x_cur
---         obtain ⟨y_data, y_data_in, y_eq⟩ := y_cur
+      use {
+        cur := p
+        pos := (0, 0)
+        pos_first := by
+          simp [lowerCentralSeries]
+        pos_second := by
+          simp
+      }
+      have g_prop := g.property
+      apply Subgroup.closure_induction (p := fun g hg => ∃ data ∈ RepeatComm N_normal gamma_alpha (0 + 1), g = data.cur) (k := N.carrier ∪ {gamma_alpha}) g_mem
+      .
+        rw [RepeatComm]
+        use {
+          cur := 1
+          pos := (1, 0)
+          pos_first := by
+            simp [lowerCentralSeries]
+          pos_second := by
+            simp
+        }
+        rw [Set.mem_sUnion]
+        refine ⟨?_, by simp⟩
+        simp
+        use {
+          cur := 1
+          pos := (0, 0)
+          pos_first := by
+            simp [lowerCentralSeries]
+          pos_second := by
+            simp
+        }
+        simp [RepeatComm]
+        use 1
+        use (by simp)
+        simp [G''_comm]
+        -- TODO - take this as a hypothesis
+        have gamma_alpha_ne_one: 1 ≠ gamma_alpha := by
+          sorry
+        simp [gamma_alpha_ne_one]
+      .
+        intro x y hx hy x_cur y_cur
+        rw [RepeatComm] at x_cur
+        rw [RepeatComm] at y_cur
+        obtain ⟨x_data, x_data_in, x_eq⟩ := x_cur
+        obtain ⟨y_data, y_data_in, y_eq⟩ := y_cur
 
-
---       simp at g_mem
---       simp [RepeatComm]
---       use {
---         cur := g
---         pos := (0, 0)
---         pos_first := by
---           simp [lowerCentralSeries]
---         pos_second := by
---           simp
---       }
+        simp [RepeatComm]
 
 
---     | succ k ih =>
---       sorry
+      simp at g_mem
+      simp [RepeatComm]
+      use {
+        cur := g
+        pos := (0, 0)
+        pos_first := by
+          simp [lowerCentralSeries]
+        pos_second := by
+          simp
+      }
+
+
+    | succ k ih =>
+      sorry
+
+
+
+-- OLD
 
 -- | 0 => {
 --   cur := cur
