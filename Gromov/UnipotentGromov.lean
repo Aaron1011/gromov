@@ -264,13 +264,14 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
                 simp [Bracket.bracket]
 
 
-            have triple_comm_mem:  ⁅l'⁻¹, ⁅g'.val, l'⁆⁆ * ⁅g'.val, l'⁆ ∈  Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n + 1) ∪ ↑(lowerCentralSeries G (n + 1 + 1))) := by
-              have l'_mem: l' ∈ l.unattach := by
-                simp [h_l']
+            have triple_comm_mem {l': G} (l'_mem_comm: l' ∈ iterate_comm_set (S ∪ S⁻¹) n ∨ l'⁻¹ ∈ iterate_comm_set (S ∪ S⁻¹) n):  ⁅l'⁻¹, ⁅g'.val, l'⁆⁆ * ⁅g'.val, l'⁆ ∈  Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n + 1) ∪ ↑(lowerCentralSeries G (n + 1 + 1))) := by
+              -- have l'_mem: l' ∈ l.unattach := by
+              --   simp [h_l']
 
-              rw [List.mem_unattach] at l'_mem
-              obtain ⟨l'_mem_comm, l'_subtype_mem⟩ := l'_mem
-              simp at l'_mem_comm
+              -- rw [List.mem_unattach] at l'_mem
+              -- obtain ⟨l'_mem_comm, l'_subtype_mem⟩ := l'_mem
+              --simp at l'_mem_comm
+
               have g'_prop := g'.prop
               rw [Set.mem_union] at g'_prop
 
@@ -376,49 +377,21 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
             -- simp at comm_inv
 
             -- rw [← comm_inv]
-            . apply Subgroup.mul_mem
-              .
+            .
 
+              have l'_mem: l' ∈ l.unattach := by
+                simp [h_l']
 
-                sorry
-              .
+              rw [List.mem_unattach] at l'_mem
+              obtain ⟨l'_mem_comm, l'_subtype_mem⟩ := l'_mem
+              simp at l'_mem_comm
 
-                have l'_mem: l' ∈ l.unattach := by
-                  simp [h_l']
-
-                rw [List.mem_unattach] at l'_mem
-                obtain ⟨l'_mem_comm, l'_subtype_mem⟩ := l'_mem
-                simp at l'_mem_comm
-                rw [← Subgroup.inv_mem_iff]
+              have foo := triple_comm_mem (l' := l'⁻¹) (by
                 simp
-                have g'_prop := g'.prop
-                rw [Set.mem_union] at g'_prop
-
-                cases l'_mem_comm
-                .
-                  rename_i l'_mem
-                  rw [comm_first_inv]
-                  . apply Subgroup.mul_mem
-                    .
-                      apply double_comm_mem l'_mem
-                    .
-                      rw [← Subgroup.inv_mem_iff]
-                      simp
-                      apply Subgroup.mem_closure_of_mem
-                      apply Set.mem_union_left
-                      simp [iterate_comm_set]
-                      use g'
-                      simp
-                      refine ⟨g'_prop, ?_⟩
-                      use l'
-                .
-                  rename_i l'_inv_mem
-                  apply Subgroup.mem_closure_of_mem
-                  apply Set.mem_union_left
-                  simp [iterate_comm_set]
-                  use g'
-                  refine ⟨g'_prop, ?_⟩
-                  use l'⁻¹
+                grind
+              )
+              simp at foo
+              exact foo
 
 
           induction h_len: l.unattach.length generalizing l with
