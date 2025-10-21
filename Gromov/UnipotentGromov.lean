@@ -8,9 +8,13 @@ def iterate_comm_set {G: Type*} [Group G] (S: Set G) (n: ℕ): Set G :=
   | 0 => S
   | n + 1 => Set.iUnion (fun (s: S) => Set.image (fun g => ⁅g, s⁆) (iterate_comm_set S n))
 
--- Lemma 13.44 (4) in https://www.math.ucdavis.edu/~kapovich/EPR/ggt.pdfw
+-- Lemma 13.30 (4) in https://www.math.ucdavis.edu/~kapovich/EPR/ggt.pdfw
 
 lemma comm_prod {G: Type*} [Group G] (x y z: G): ⁅x * y, z⁆ = ⁅x, ⁅y, z⁆⁆ * ⁅y, z⁆ * ⁅x, z⁆ := by
+  simp [Bracket.bracket]
+  group
+
+lemma comm_first_inv {G: Type*} [Group G] (x y: G): ⁅x⁻¹, y⁆ = ⁅x⁻¹, ⁅y, x⁆⁆ * ⁅y, x⁆ := by
   simp [Bracket.bracket]
   group
 
@@ -25,6 +29,7 @@ lemma new_mem_S_prod_list {G: Type*} [Group G] {S: Set G} {x: G} (hx: x ∈ Subg
   use (l.attach).map (fun x => ⟨x.val, mem_s (x.val) x.property⟩)
   unfold List.unattach
   simp [prod_eq]
+
 
 lemma closure_set_union_normal {G: Type*} [Group G] (S: Set G) (N: Subgroup G) (hN: N.Normal) {x: G} (hx: x ∈ Subgroup.closure (S ∪ N)):
   ∃ a: N, ∃ l: List ↑(S ∪ S⁻¹), x = l.unattach.prod * a := by
@@ -84,11 +89,16 @@ lemma closure_set_union_normal {G: Type*} [Group G] (S: Set G) (N: Subgroup G) (
 
 #print axioms closure_set_union_normal
 
+-- Lemma 13.44. in https://www.math.ucdavis.edu/~kapovich/EPR/ggt.pdf
+-- Note - the book seems to implicitly assume that the generating set is symmetric
+
+set_option maxHeartbeats 400000 in
 lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup.closure S = ⊤) (n: ℕ):
-  lowerCentralSeries G n = Subgroup.closure ((iterate_comm_set S n) ∪ ↑(lowerCentralSeries G (n + 1))) := by
+  lowerCentralSeries G n = Subgroup.closure ((iterate_comm_set (S ∪ S⁻¹) n) ∪ ↑(lowerCentralSeries G (n + 1))) := by
     induction n with
     | zero =>
       simp [iterate_comm_set]
+      rw [Subgroup.closure_union]
       rw [Subgroup.closure_union]
       simp [hS]
     | succ n ih =>
@@ -106,7 +116,7 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
         rw [← commutatorElement_def]
         rw [ih] at c_mem
 
-        have h_c_prod := closure_set_union_normal (S := iterate_comm_set S n) (N := lowerCentralSeries G (n + 1)) (by
+        have h_c_prod := closure_set_union_normal (S := iterate_comm_set (S ∪ S⁻¹) n) (N := lowerCentralSeries G (n + 1)) (by
           infer_instance
         ) c_mem
         obtain ⟨x, l, c_prod⟩ := h_c_prod
@@ -152,7 +162,125 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
             apply Set.mem_union_right
             simp only [SetLike.mem_coe]
             apply x_comm_mem
-        . sorry
+        .
+          obtain ⟨g_list, g_prod⟩ := new_mem_S_prod_list (S := S) (x := g) (by simp [hS])
+          --clear ha a p_eq_comm p c_prod c_mem c x_comm_mem
+          rw [← g_prod]
+          --clear g_prod g
+
+          by_cases l_len_ne_zero: l.unattach.length = 0
+          . have l_empty: l.unattach = [] := by
+              exact List.eq_nil_iff_length_eq_zero.mpr l_len_ne_zero
+            simp [l_empty]
+
+          by_cases g_len_ne_zero: g_list.unattach.length = 0
+          . have g_empty: g_list.unattach = [] := by
+              exact List.eq_nil_iff_length_eq_zero.mpr g_len_ne_zero
+            simp [g_empty]
+
+
+          by_cases both_eq_one: g_list.length = 1 ∧ l.unattach.length = 1
+          .
+            obtain ⟨g_len_one, l_len_one⟩ := both_eq_one
+            obtain ⟨g', h_g'⟩ := List.length_eq_one_iff.mp g_len_one
+            obtain ⟨l', h_l'⟩ := List.length_eq_one_iff.mp l_len_one
+
+            simp [h_g', h_l']
+            conv =>
+              arg 2
+              arg 1
+              equals l'⁻¹⁻¹ => simp
+
+            rw [comm_first_inv]
+            simp
+            . apply Subgroup.mul_mem
+              . sorry
+              .
+                rw [← Subgroup.inv_mem_iff]
+                simp
+                have l'_mem: l' ∈ l.unattach := by
+                  simp [h_l']
+
+                have g'_prop := g'.prop
+                rw [Set.mem_union] at g'_prop
+                rw [List.mem_unattach] at l'_mem
+                obtain ⟨l'_mem_comm, l'_subtype_mem⟩ := l'_mem
+                cases g'_prop
+                .
+                  rename_i g'_in_S
+                  apply Subgroup.mem_closure_of_mem
+                  apply Set.mem_union_left
+                  simp [iterate_comm_set]
+                  use g'
+                  refine ⟨g'_in_S, ?_⟩
+                  use l'⁻¹
+                  refine ⟨by sorry, rfl⟩
+                .
+                  rename_i g'_in_Sinv
+                  rw [← Subgroup.closure_inv]
+                  apply Subgroup.mem_closure_of_mem
+                  rw [Set.union_inv]
+                  apply Set.mem_union_left
+                  simp only [iterate_comm_set]
+                  rw [Set.iUnion_inv]
+                  simp [-Set.mem_inv]
+                  use g'
+
+
+
+
+
+
+
+          induction h_len: l.unattach.length generalizing l with
+          | zero =>
+            simp
+            conv =>
+              arg 2
+              arg 1
+              equals l.unattach.prod⁻¹⁻¹ => simp
+
+
+            rw [comm_first_inv]
+            simp
+
+            apply Subgroup.mul_mem
+            . sorry
+            .
+              rw [← Subgroup.inv_mem_iff]
+              simp
+              apply Subgroup.mem_closure_of_mem
+              apply Set.mem_union_left
+              simp [iterate_comm_set]
+              sorry
+
+          | succ n _ => sorry
+
+
+          -- | nil =>
+          --   simp
+          -- | cons l_head l_tail l_ih =>
+          --   induction g_list.unattach with
+          --   | nil =>
+          --     simp
+          --   | cons g_head g_tail g_ih =>
+          --     rw [← List.take_append_getLast (l := l_head :: l_tail) (by simp)]
+          --     simp
+          --     -- conv =>
+          --     --   pattern (l_head :: l_tail).prod
+          --     --   equals (l_head :: l_tail.tak)
+          --     -- rw [List.prod_append]
+          --     -- simp
+          --     rw [comm_prod]
+          --     apply Subgroup.mul_mem
+          --     . apply Subgroup.mul_mem
+          --       . sorry
+          --       .
+          --         sorry
+          --     . sorry
+
+
+
       .
         intro ha
         apply (Subgroup.closure_le _).mp ?_ ha
