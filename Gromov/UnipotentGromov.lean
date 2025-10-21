@@ -8,6 +8,31 @@ def iterate_comm_set {G: Type*} [Group G] (S: Set G) (n: ℕ): Set G :=
   | 0 => S
   | n + 1 => Set.iUnion (fun (s: S) => Set.image (fun g => ⁅g, s⁆) (iterate_comm_set S n))
 
+-- lemma iterate_comm_mem_inv {G: Type*} [Group G] (S: Set G) (n: ℕ): iterate_comm_set (S ∪ S⁻¹) n = (iterate_comm_set (S ∪ S⁻¹) n)⁻¹ := by
+--   induction n with
+--   | zero =>
+--     simp [iterate_comm_set]
+--     grind
+--   | succ n ih =>
+--     simp [iterate_comm_set]
+--     ext a
+--     simp
+--     refine ⟨?_, ?_⟩
+--     . intro ha
+--       obtain ⟨b, b_mem, ⟨c, c_mem, a_eq⟩⟩ := ha
+--       use b⁻¹
+--       refine ⟨?_, ?_⟩
+--       . simp
+--         grind
+--       .
+--         use c⁻¹
+--         refine ⟨?_, ?_⟩
+--         . sorry
+--         .
+--           rw [← inv_eq_iff_eq_inv]
+--           simp
+
+--     . sorry
 -- Lemma 13.30 (4) in https://www.math.ucdavis.edu/~kapovich/EPR/ggt.pdfw
 
 lemma comm_prod {G: Type*} [Group G] (x y z: G): ⁅x * y, z⁆ = ⁅x, ⁅y, z⁆⁆ * ⁅y, z⁆ * ⁅x, z⁆ := by
@@ -29,6 +54,8 @@ lemma new_mem_S_prod_list {G: Type*} [Group G] {S: Set G} {x: G} (hx: x ∈ Subg
   use (l.attach).map (fun x => ⟨x.val, mem_s (x.val) x.property⟩)
   unfold List.unattach
   simp [prod_eq]
+
+
 
 
 lemma closure_set_union_normal {G: Type*} [Group G] (S: Set G) (N: Subgroup G) (hN: N.Normal) {x: G} (hx: x ∈ Subgroup.closure (S ∪ N)):
@@ -186,6 +213,7 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
             obtain ⟨l', h_l'⟩ := List.length_eq_one_iff.mp l_len_one
 
             simp [h_g', h_l']
+
             conv =>
               arg 2
               arg 1
@@ -193,40 +221,55 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
 
             rw [comm_first_inv]
             simp
+
+
+            -- have comm_inv := comm_first_inv l' g'
+            -- rw [← inv_mul_eq_iff_eq_mul] at comm_inv
+            -- rw [← inv_inj] at comm_inv
+            -- simp at comm_inv
+
+            -- rw [← comm_inv]
             . apply Subgroup.mul_mem
-              . sorry
               .
-                rw [← Subgroup.inv_mem_iff]
-                simp
+
+                sorry
+              .
+
                 have l'_mem: l' ∈ l.unattach := by
                   simp [h_l']
 
-                have g'_prop := g'.prop
-                rw [Set.mem_union] at g'_prop
                 rw [List.mem_unattach] at l'_mem
                 obtain ⟨l'_mem_comm, l'_subtype_mem⟩ := l'_mem
-                cases g'_prop
+                simp at l'_mem_comm
+                rw [← Subgroup.inv_mem_iff]
+                simp
+                have g'_prop := g'.prop
+                rw [Set.mem_union] at g'_prop
+
+                cases l'_mem_comm
                 .
-                  rename_i g'_in_S
+                  rename_i l'_mem
+                  rw [comm_first_inv]
+                  . apply Subgroup.mul_mem
+                    . sorry
+                    .
+                      rw [← Subgroup.inv_mem_iff]
+                      simp
+                      apply Subgroup.mem_closure_of_mem
+                      apply Set.mem_union_left
+                      simp [iterate_comm_set]
+                      use g'
+                      simp
+                      refine ⟨g'_prop, ?_⟩
+                      use l'
+                .
+                  rename_i l'_inv_mem
                   apply Subgroup.mem_closure_of_mem
                   apply Set.mem_union_left
                   simp [iterate_comm_set]
                   use g'
-                  refine ⟨g'_in_S, ?_⟩
+                  refine ⟨g'_prop, ?_⟩
                   use l'⁻¹
-                  refine ⟨by sorry, rfl⟩
-                .
-                  rename_i g'_in_Sinv
-                  rw [← Subgroup.closure_inv]
-                  apply Subgroup.mem_closure_of_mem
-                  rw [Set.union_inv]
-                  apply Set.mem_union_left
-                  simp only [iterate_comm_set]
-                  rw [Set.iUnion_inv]
-                  simp [-Set.mem_inv]
-                  use g'
-
-
 
 
 
