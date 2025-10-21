@@ -347,36 +347,6 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
                       simp [g'_prop]
                       use l'⁻¹
 
-
-
-                -- apply Subgroup.mul_mem
-                -- .
-                --   apply Subgroup.mem_closure_of_mem
-                --   apply Set.mem_union_left
-                --   simp [iterate_comm_set]
-                --   use g'
-                --   refine ⟨g'_prop, ?_⟩
-                --   use l'
-                --   refine ⟨?_, ?_⟩
-                --   . exact l'_inv_mem
-                --   . simp
-                -- .
-                --   rw [← Subgroup.inv_mem_iff]
-                --   simp
-
-                --   apply double_comm_mem
-
-                --   sorry
-
-
-
-
-            -- have comm_inv := comm_first_inv l' g'
-            -- rw [← inv_mul_eq_iff_eq_mul] at comm_inv
-            -- rw [← inv_inj] at comm_inv
-            -- simp at comm_inv
-
-            -- rw [← comm_inv]
             .
 
               have l'_mem: l' ∈ l.unattach := by
