@@ -8,7 +8,7 @@ def iterate_comm_set {G: Type*} [Group G] (S: Set G) (n: ℕ): Set G :=
   | 0 => S
   | n + 1 => Set.iUnion (fun (s: S) => Set.image (fun g => ⁅g, s⁆) (iterate_comm_set S n))
 
--- Lemma 13.44 in https://www.math.ucdavis.edu/~kapovich/EPR/ggt.pdfw
+-- Lemma 13.44 (4) in https://www.math.ucdavis.edu/~kapovich/EPR/ggt.pdfw
 
 lemma comm_prod {G: Type*} [Group G] (x y z: G): ⁅x * y, z⁆ = ⁅x, ⁅y, z⁆⁆ * ⁅y, z⁆ * ⁅x, z⁆ := by
   simp [Bracket.bracket]
@@ -85,7 +85,7 @@ lemma closure_set_union_normal {G: Type*} [Group G] (S: Set G) (N: Subgroup G) (
 #print axioms closure_set_union_normal
 
 lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup.closure S = ⊤) (n: ℕ):
-  lowerCentralSeries G n = Subgroup.closure ((iterate_comm_set S n) ∪ (Subgroup.map (Subgroup.subtype _) (lowerCentralSeries (Subgroup.closure S) (n + 1)))) := by
+  lowerCentralSeries G n = Subgroup.closure ((iterate_comm_set S n) ∪ ↑(lowerCentralSeries G (n + 1))) := by
     induction n with
     | zero =>
       simp [iterate_comm_set]
@@ -105,10 +105,54 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
         rw [← p_eq_comm]
         rw [← commutatorElement_def]
         rw [ih] at c_mem
-        obtain ⟨c_k, c_prod⟩ := new_mem_S_prod_list c_mem
+
+        have h_c_prod := closure_set_union_normal (S := iterate_comm_set S n) (N := lowerCentralSeries G (n + 1)) (by
+          infer_instance
+        ) c_mem
+        obtain ⟨x, l, c_prod⟩ := h_c_prod
+        rw [c_prod]
+        rw [comm_prod]
+
+        have x_comm_mem: ⁅x.val, g⁆ ∈ lowerCentralSeries G (n + 1 + 1) := by
+          rw [mem_lowerCentralSeries_succ_iff]
+          apply Subgroup.mem_closure_of_mem
+          simp
+          use x
+          simp
+          use g
+          simp [Bracket.bracket]
 
 
-        sorry
+        apply Subgroup.mul_mem
+        . apply Subgroup.mul_mem
+          .
+
+            conv =>
+              arg 2
+              equals l.unattach.prod * ⁅x.val, g⁆ * l.unattach.prod⁻¹ * ⁅x.val, g⁆⁻¹ =>
+                simp [Bracket.bracket]
+
+
+            apply Subgroup.mul_mem
+            .
+              apply Subgroup.mem_closure_of_mem
+              apply Set.mem_union_right
+              simp
+              apply Subgroup.Normal.conj_mem
+              . infer_instance
+              . exact x_comm_mem
+            .
+              apply Subgroup.mem_closure_of_mem
+              apply Set.mem_union_right
+              simp only [SetLike.mem_coe]
+              rw [Subgroup.inv_mem_iff]
+              apply x_comm_mem
+          .
+            apply Subgroup.mem_closure_of_mem
+            apply Set.mem_union_right
+            simp only [SetLike.mem_coe]
+            apply x_comm_mem
+        . sorry
       .
         intro ha
         apply (Subgroup.closure_le _).mp ?_ ha
@@ -133,21 +177,13 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
           use s
         .
           intro b hb
-          simp at hb
-          simp
           have succ_le: lowerCentralSeries G (n + 1 + 1) ≤ lowerCentralSeries G (n + 1) := by
             simp [lowerCentralSeries]
             apply Subgroup.commutator_le_left
 
 
           apply succ_le
-
-          have central_le := lowerCentralSeries_map_subtype_le (Subgroup.closure S) (n + 1 + 1)
-          apply (Subgroup.mem_map_of_mem (f := Subgroup.subtype _)) at hb
-          specialize central_le hb
-
-          simp at central_le
-          exact central_le
+          exact hb
 
 
 structure G''CommData {T: Type*} [Group T] (N: Subgroup T) (gamma_alpha: T) where
