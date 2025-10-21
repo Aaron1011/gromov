@@ -10,6 +10,80 @@ def iterate_comm_set {G: Type*} [Group G] (S: Set G) (n: ℕ): Set G :=
 
 -- Lemma 13.44 in https://www.math.ucdavis.edu/~kapovich/EPR/ggt.pdfw
 
+lemma comm_prod {G: Type*} [Group G] (x y z: G): ⁅x * y, z⁆ = ⁅x, ⁅y, z⁆⁆ * ⁅y, z⁆ * ⁅x, z⁆ := by
+  simp [Bracket.bracket]
+  group
+
+-- Each element of G can be written as a product of elements of S in at least one way
+lemma new_mem_S_prod_list {G: Type*} [Group G] {S: Set G} {x: G} (hx: x ∈ Subgroup.closure S): ∃ l: List ↑(S ∪ S⁻¹), l.unattach.prod = x:= by
+  -- https://leanprover.zulipchat.com/#narrow/channel/287929-mathlib4/topic/Group.20.28.2FMonoid.2Fetc.29.20closures.20are.20a.20finite.20product.2Fsum/near/477951441
+  have foo := Submonoid.exists_list_of_mem_closure (s := S ∪ S⁻¹) (x := x)
+  rw [← Subgroup.closure_toSubmonoid _] at foo
+  simp at foo
+  specialize foo hx
+  obtain ⟨l, ⟨mem_s, prod_eq⟩⟩ := foo
+  use (l.attach).map (fun x => ⟨x.val, mem_s (x.val) x.property⟩)
+  unfold List.unattach
+  simp [prod_eq]
+
+lemma closure_set_union_normal {G: Type*} [Group G] (S: Set G) (N: Subgroup G) (hN: N.Normal) {x: G} (hx: x ∈ Subgroup.closure (S ∪ N)):
+  ∃ a: N, ∃ l: List ↑(S ∪ S⁻¹), x = l.unattach.prod * a := by
+
+  induction hx using Subgroup.closure_induction with
+  | one =>
+    use 1
+    use []
+    simp
+  | mem y hy =>
+    simp at hy
+    cases hy
+    .
+      rename_i y_mem_S
+      use 1
+      use [⟨y, by simp [y_mem_S]⟩]
+      simp
+    . rename_i y_mem_N
+      use ⟨y, y_mem_N⟩
+      use []
+      simp
+  | mul y z hy hz y_eq z_eq =>
+    obtain ⟨a, l, y_eq⟩ := y_eq
+    obtain ⟨b, m, z_eq⟩ := z_eq
+    simp [y_eq, z_eq]
+    group
+    use ((m.unattach.prod⁻¹) * a * (m.unattach.prod)⁻¹⁻¹ * b)
+    refine ⟨(by
+      apply Subgroup.mul_mem
+      . apply hN.conj_mem a (by simp)
+      . simp
+    ), ?_⟩
+    use (l ++ m)
+    simp
+    group
+  | inv y hy a_eq =>
+    obtain ⟨a, l, y_eq⟩ := a_eq
+    use ⟨_, hN.conj_mem a⁻¹ (by simp) l.unattach.prod⟩
+    simp
+    use (l.map (fun x => ⟨x⁻¹, (by
+      simp
+      have x_prop := x.prop
+      simp [-Subtype.coe_prop] at x_prop
+      grind
+    )⟩)).reverse
+    nth_rw 1 [y_eq]
+    simp
+    conv =>
+      arg 2
+      arg 1
+      equals l.unattach.prod⁻¹ =>
+        rw [List.prod_inv_reverse]
+        congr
+        ext i g
+        simp
+    group
+
+#print axioms closure_set_union_normal
+
 lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup.closure S = ⊤) (n: ℕ):
   lowerCentralSeries G n = Subgroup.closure ((iterate_comm_set S n) ∪ (Subgroup.map (Subgroup.subtype _) (lowerCentralSeries (Subgroup.closure S) (n + 1)))) := by
     induction n with
@@ -20,7 +94,21 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
     | succ n ih =>
       ext a
       refine ⟨?_, ?_⟩
-      . sorry
+      .
+        intro ha
+        rw [mem_lowerCentralSeries_succ_iff] at ha
+        apply (Subgroup.closure_le _).mp ?_ ha
+        simp
+        intro p hp
+        simp at hp
+        obtain ⟨c, c_mem, ⟨g, p_eq_comm⟩⟩ := hp
+        rw [← p_eq_comm]
+        rw [← commutatorElement_def]
+        rw [ih] at c_mem
+        obtain ⟨c_k, c_prod⟩ := new_mem_S_prod_list c_mem
+
+
+        sorry
       .
         intro ha
         apply (Subgroup.closure_le _).mp ?_ ha
