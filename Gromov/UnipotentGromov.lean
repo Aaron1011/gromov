@@ -383,7 +383,7 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
             --   omega
 
 
-            clear p_eq_comm x_comm_mem g_prod g g_len_ne
+            clear p_eq_comm x_comm_mem g_prod g
 
             -- TODO - figure out how to get Nat.le_induction working
             induction h_len: g_list.unattach.length + l.unattach.length using Nat.case_strong_induction_on generalizing g_list with
@@ -395,26 +395,62 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
               contradiction
             | hi k hk =>
               simp at g_len_ne_zero
-              rw [← List.take_append_getLast (l := g_list) g_len_ne_zero]
-              rw [List.unattach_append]
-              simp
-              rw [comm_prod_right]
-              . apply Subgroup.mul_mem
+              by_cases l_len_eq: l.unattach.length = k
+              .
+                have prev := hk (l.unattach.length) (by
+                  simp
+                  simp at l_len_eq
+                  omega
+                )
+                simp [l_len_eq] at h_len
+
+                sorry
+              .
+                rw [← List.take_append_getLast (l := g_list) g_len_ne_zero]
+                rw [List.unattach_append]
+                simp
+                rw [comm_prod_right]
                 . apply Subgroup.mul_mem
-                  . sorry
+                  . apply Subgroup.mul_mem
+                    . sorry
+                    .
+                      sorry
                   .
-                    sorry
-                .
-                  have prev := hk (l.unattach.length + 1) (by
 
-                    have g_list_len_le: 0 < g_list.unattach.length := by
+                    -- apply Subgroup.mem_closure_of_mem
+                    -- apply Set.mem_union_right
+                    -- simp
+                    -- rw [mem_lowerCentralSeries_succ_iff]
+                    -- apply Subgroup.mem_closure_of_mem
+                    -- simp
+                    -- use l.unattach.prod
+                    -- refine ⟨?_, ?_⟩
+                    -- .
+                    --   apply Subgroup.mem_closure_of_mem
+                    --   simp
+                    --   rw [ih]
+
+                    --   sorry
+                    -- .
+                    --  use (g_list.getLast g_len_ne_zero)
+                    --  simp [Bracket.bracket]
+
+
+                    have prev := hk (l.unattach.length + 1) (by
+
+
+                      rw [Nat.add_one_le_iff]
+                      have g_len_ne: g_list.length ≠ 0 := by
+                        simp
+                        exact g_len_ne_zero
+                      have g_len_le: 2 ≤ g_list.length := by
+                        omega
+
+                      simp at h_len
                       simp
-                      rw [List.length_pos]
-                      simp [g_len_ne_zero]
-
-                    sorry
-                  ) [g_list.getLast g_len_ne_zero] (by simp) (by simp; linarith)
-                  simpa using prev
+                      linarith
+                    ) [g_list.getLast g_len_ne_zero] (by simp) (by sorry) (by simp; linarith)
+                    simpa using prev
           .
             sorry
       . sorry
@@ -469,37 +505,37 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
 
 
 
-      .
-        intro ha
-        apply (Subgroup.closure_le _).mp ?_ ha
-        simp
-        refine ⟨?_, ?_⟩
-        .
-          intro b hb
-          simp [iterate_comm_set] at hb
-          obtain ⟨s, s_mem, ⟨c, c_mem, c_comm⟩⟩ := hb
+      -- .
+      --   intro ha
+      --   apply (Subgroup.closure_le _).mp ?_ ha
+      --   simp
+      --   refine ⟨?_, ?_⟩
+      --   .
+      --     intro b hb
+      --     simp [iterate_comm_set] at hb
+      --     obtain ⟨s, s_mem, ⟨c, c_mem, c_comm⟩⟩ := hb
 
-          have c_mem_lower: c ∈ (lowerCentralSeries G n) := by
-            rw [ih]
-            apply Subgroup.mem_closure_of_mem
-            apply Set.mem_union_left
-            exact c_mem
-
-
-          apply Subgroup.mem_closure_of_mem
-          simp
-          use c
-          refine ⟨c_mem_lower, ?_⟩
-          use s
-        .
-          intro b hb
-          have succ_le: lowerCentralSeries G (n + 1 + 1) ≤ lowerCentralSeries G (n + 1) := by
-            simp [lowerCentralSeries]
-            apply Subgroup.commutator_le_left
+      --     have c_mem_lower: c ∈ (lowerCentralSeries G n) := by
+      --       rw [ih]
+      --       apply Subgroup.mem_closure_of_mem
+      --       apply Set.mem_union_left
+      --       exact c_mem
 
 
-          apply succ_le
-          exact hb
+      --     apply Subgroup.mem_closure_of_mem
+      --     simp
+      --     use c
+      --     refine ⟨c_mem_lower, ?_⟩
+      --     use s
+      --   .
+      --     intro b hb
+      --     have succ_le: lowerCentralSeries G (n + 1 + 1) ≤ lowerCentralSeries G (n + 1) := by
+      --       simp [lowerCentralSeries]
+      --       apply Subgroup.commutator_le_left
+
+
+      --     apply succ_le
+      --     exact hb
 
 
 structure G''CommData {T: Type*} [Group T] (N: Subgroup T) (gamma_alpha: T) where
