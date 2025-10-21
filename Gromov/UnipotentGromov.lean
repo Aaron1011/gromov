@@ -39,6 +39,13 @@ lemma comm_prod {G: Type*} [Group G] (x y z: G): ⁅x * y, z⁆ = ⁅x, ⁅y, z�
   simp [Bracket.bracket]
   group
 
+
+-- Lemma 13.30 (3)
+lemma comm_prod_right {G: Type*} [Group G] (x y z: G): ⁅x, y * z⁆ = ⁅x, y⁆ * ⁅y, ⁅x, z⁆⁆ * ⁅x, z⁆ := by
+  simp [Bracket.bracket]
+  group
+
+
 lemma comm_first_inv {G: Type*} [Group G] (x y: G): ⁅x⁻¹, y⁆ = ⁅x⁻¹, ⁅y, x⁆⁆ * ⁅y, x⁆ := by
   simp [Bracket.bracket]
   group
@@ -364,29 +371,78 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
               exact foo
 
 
-          induction h_len: l.unattach.length generalizing l with
-          | zero =>
-            simp
-            conv =>
-              arg 2
-              arg 1
-              equals l.unattach.prod⁻¹⁻¹ => simp
+          rw [not_and_or] at both_eq_one
+
+          cases both_eq_one
+          .
+            rename_i g_len_ne
+            rw [List.length_unattach] at g_len_ne_zero
+
+            -- have le_g_len: 2 ≤ g_list.unattach.length := by
+            --   simp
+            --   omega
 
 
-            rw [comm_first_inv]
-            simp
+            clear p_eq_comm x_comm_mem g_prod g g_len_ne
 
-            apply Subgroup.mul_mem
-            . sorry
-            .
-              rw [← Subgroup.inv_mem_iff]
+            -- TODO - figure out how to get Nat.le_induction working
+            induction h_len: g_list.unattach.length + l.unattach.length using Nat.case_strong_induction_on generalizing g_list with
+            | hz =>
+              simp at h_len
+              simp at g_len_ne_zero
+              obtain ⟨_, h_empty⟩ := h_len
+              simp at l_len_ne_zero
+              contradiction
+            | hi k hk =>
+              simp at g_len_ne_zero
+              rw [← List.take_append_getLast (l := g_list) g_len_ne_zero]
+              rw [List.unattach_append]
               simp
-              apply Subgroup.mem_closure_of_mem
-              apply Set.mem_union_left
-              simp [iterate_comm_set]
-              sorry
+              rw [comm_prod_right]
+              . apply Subgroup.mul_mem
+                . apply Subgroup.mul_mem
+                  . sorry
+                  .
+                    sorry
+                .
+                  have prev := hk (l.unattach.length + 1) (by
 
-          | succ n _ => sorry
+                    have g_list_len_le: 0 < g_list.unattach.length := by
+                      simp
+                      rw [List.length_pos]
+                      simp [g_len_ne_zero]
+
+                    sorry
+                  ) [g_list.getLast g_len_ne_zero] (by simp) (by simp; linarith)
+                  simpa using prev
+          .
+            sorry
+      . sorry
+
+
+          -- induction h_len: l.unattach.length generalizing l with
+          -- | zero =>
+          --   simp
+          --   conv =>
+          --     arg 2
+          --     arg 1
+          --     equals l.unattach.prod⁻¹⁻¹ => simp
+
+
+          --   rw [comm_first_inv]
+          --   simp
+
+          --   apply Subgroup.mul_mem
+          --   . sorry
+          --   .
+          --     rw [← Subgroup.inv_mem_iff]
+          --     simp
+          --     apply Subgroup.mem_closure_of_mem
+          --     apply Set.mem_union_left
+          --     simp [iterate_comm_set]
+          --     sorry
+
+          -- | succ n _ => sorry
 
 
           -- | nil =>
