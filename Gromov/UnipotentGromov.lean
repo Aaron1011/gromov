@@ -222,6 +222,9 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
             rw [comm_first_inv]
             simp
 
+            have double_comm_mem: ⁅l'⁻¹, ⁅g'.val, l'⁆⁆ ∈ Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n + 1) ∪ ↑(lowerCentralSeries G (n + 1 + 1))) := by
+              sorry
+
 
             -- have comm_inv := comm_first_inv l' g'
             -- rw [← inv_mul_eq_iff_eq_mul] at comm_inv
@@ -251,7 +254,36 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
                   rename_i l'_mem
                   rw [comm_first_inv]
                   . apply Subgroup.mul_mem
-                    . sorry
+                    .
+
+                      rw [← Subgroup.inv_mem_iff]
+                      simp
+                      apply Subgroup.mem_closure_of_mem
+                      apply Set.mem_union_right
+                      simp [mem_lowerCentralSeries_succ_iff]
+                      apply Subgroup.mem_closure_of_mem
+                      simp
+                      use ⁅g'.val, l'⁆
+                      refine ⟨?_, ?_⟩
+                      .
+
+                        simp
+                        rw [← Subgroup.inv_mem_iff]
+                        simp
+                        apply Subgroup.mem_closure_of_mem
+                        simp
+                        use l'
+                        refine ⟨?_, ?_⟩
+                        . rw [ih]
+                          apply Subgroup.mem_closure_of_mem
+                          apply Set.mem_union_left
+                          exact l'_mem
+                        .
+                          use g'
+                          simp [Bracket.bracket]
+                      .
+                        use l'⁻¹
+                        simp [Bracket.bracket]
                     .
                       rw [← Subgroup.inv_mem_iff]
                       simp
