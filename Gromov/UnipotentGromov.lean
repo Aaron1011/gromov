@@ -332,11 +332,11 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
           obtain ⟨g_list, g_prod⟩ := new_mem_S_prod_list (S := S) (x := g) (by simp [hS])
           --clear ha a p_eq_comm p c_prod c_mem c x_comm_mem
           rw [← g_prod]
-          clear g_prod
+          clear g_prod c_prod
 
 
           -- TODO - figure out how to get Nat.le_induction working
-          induction h_len: g_list.unattach.length + l.unattach.length using Nat.case_strong_induction_on generalizing g_list with
+          induction h_len: g_list.unattach.length + l.unattach.length using Nat.case_strong_induction_on generalizing g_list l with
           | hz =>
             simp at h_len
             obtain ⟨g_list_eq, l_eq⟩ := h_len
@@ -411,7 +411,7 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
                   . apply Subgroup.mul_mem
                     .
 
-                      have prev := hk k (by simp) (List.take (g_list.length - 1) g_list) (by
+                      have prev := hk k (by simp) l (List.take (g_list.length - 1) g_list) (by
                         simp
                         omega
                       )
@@ -460,14 +460,35 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
                         simp [Bracket.bracket]
                   .
 
-                    have prev := hk (l.length + 1) (by omega)  [(g_list.getLast g_list_zero)] (by
+                    have prev := hk (l.length + 1) (by omega) l [(g_list.getLast g_list_zero)] (by
                       simp
                       omega
                     )
                     simp at prev
                     exact prev
 
-              . sorry
+              .
+                rename_i l_len_ne_one
+                simp at l_len_ne_one
+                have l_ne_zero: l.length ≠ 0 := by
+                  rw [List.length_unattach] at l_len_ne_zero
+                  exact l_len_ne_zero
+
+                simp [-List.length_eq_zero_iff] at l_ne_zero
+                have two_le_l_len: 2 ≤ l.length := by
+                  omega
+
+                rw [← List.take_append_getLast (l := l) (by simpa using l_ne_zero)]
+                rw [List.unattach_append]
+                simp
+                rw [comm_prod]
+                apply Subgroup.mul_mem
+                . apply Subgroup.mul_mem
+                  .
+                    sorry
+                  .
+                    sorry
+                . sorry
 
 
                   -- apply Subgroup.mem_closure_of_mem
