@@ -486,7 +486,41 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
                 apply Subgroup.mul_mem
                 . apply Subgroup.mul_mem
                   .
-                    sorry
+                    rw [← Subgroup.inv_mem_iff]
+                    simp
+                    apply Subgroup.mem_closure_of_mem
+                    apply Set.mem_union_right
+                    simp
+                    rw [mem_lowerCentralSeries_succ_iff]
+                    apply Subgroup.mem_closure_of_mem
+                    simp
+                    use ⁅(l.getLast (by simpa using l_ne_zero)).val, g_list.unattach.prod⁆
+                    refine ⟨?_, ?_⟩
+                    .
+                      rw [mem_lowerCentralSeries_succ_iff]
+                      apply Subgroup.mem_closure_of_mem
+                      simp
+                      use (l.getLast (by simpa using l_ne_zero)).val
+                      refine ⟨?_, ?_⟩
+                      .
+                        rw [ih]
+                        have l_prop := (l.getLast (by simpa using l_ne_zero)).prop
+                        rw [Set.mem_union] at l_prop
+                        cases l_prop
+                        . rename_i l_prop_forward
+                          apply Subgroup.mem_closure_of_mem
+                          grind
+                        . rename_i l_prop_inv
+                          rw [← Subgroup.closure_inv]
+                          simp
+                          apply Subgroup.mem_closure_of_mem
+                          grind
+                      .
+                        use g_list.unattach.prod
+                        simp [Bracket.bracket]
+                    .
+                      use (List.take (l.length - 1) l).unattach.prod
+                      simp [Bracket.bracket]
                   .
 
                     have foo := hk (g_list.length + 1) (by omega) [l.getLast (by simpa using l_ne_zero)] g_list (by simp)
