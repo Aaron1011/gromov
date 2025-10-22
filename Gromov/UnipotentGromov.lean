@@ -123,6 +123,47 @@ lemma closure_set_union_normal {G: Type*} [Group G] (S: Set G) (N: Subgroup G) (
 
 #print axioms closure_set_union_normal
 
+
+lemma double_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: lowerCentralSeries G n = Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) n ∪ ↑(lowerCentralSeries G (n + 1)))) (g': ↑(S ∪ S⁻¹))  (l'_mem: l' ∈ ↑(iterate_comm_set (S ∪ S⁻¹) n ∪ (iterate_comm_set (S ∪ S⁻¹) n)⁻¹)): ⁅l'⁻¹, ⁅g'.val, l'⁆⁆ ∈ Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n + 1) ∪ ↑(lowerCentralSeries G (n + 1 + 1))) := by
+  rw [← Subgroup.inv_mem_iff]
+  simp
+  apply Subgroup.mem_closure_of_mem
+  apply Set.mem_union_right
+  simp [mem_lowerCentralSeries_succ_iff]
+  apply Subgroup.mem_closure_of_mem
+  simp
+  use ⁅g'.val, l'⁆
+  refine ⟨?_, ?_⟩
+  .
+
+    simp
+    rw [← Subgroup.inv_mem_iff]
+    simp
+    apply Subgroup.mem_closure_of_mem
+    simp
+    use l'
+    refine ⟨?_, ?_⟩
+    . rw [ih]
+      cases l'_mem
+      .
+        rename_i l'_mem_forward
+        apply Subgroup.mem_closure_of_mem
+        apply Set.mem_union_left
+        exact l'_mem_forward
+      . rename_i l'_mem_inv
+        rw [← Subgroup.closure_inv]
+        apply Subgroup.mem_closure_of_mem
+        simp
+        left
+        exact l'_mem_inv
+    .
+      use g'
+      simp [Bracket.bracket]
+  .
+    use l'⁻¹
+    simp [Bracket.bracket]
+
+
 -- Lemma 13.44. in https://www.math.ucdavis.edu/~kapovich/EPR/ggt.pdf
 -- Note - the book seems to implicitly assume that the generating set is symmetric
 
@@ -202,332 +243,147 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
           rw [← g_prod]
           --clear g_prod g
 
-          by_cases l_len_ne_zero: l.unattach.length = 0
-          . have l_empty: l.unattach = [] := by
-              exact List.eq_nil_iff_length_eq_zero.mpr l_len_ne_zero
-            simp [l_empty]
 
-          by_cases g_len_ne_zero: g_list.unattach.length = 0
-          . have g_empty: g_list.unattach = [] := by
-              exact List.eq_nil_iff_length_eq_zero.mpr g_len_ne_zero
-            simp [g_empty]
-
-
-          by_cases both_eq_one: g_list.length = 1 ∧ l.unattach.length = 1
-          .
-            obtain ⟨g_len_one, l_len_one⟩ := both_eq_one
-            obtain ⟨g', h_g'⟩ := List.length_eq_one_iff.mp g_len_one
-            obtain ⟨l', h_l'⟩ := List.length_eq_one_iff.mp l_len_one
-
-            simp [h_g', h_l']
-
-            conv =>
-              arg 2
-              arg 1
-              equals l'⁻¹⁻¹ => simp
-
-            rw [comm_first_inv]
-            simp
+          -- TODO - figure out how to get Nat.le_induction working
+          induction h_len: g_list.unattach.length + l.unattach.length using Nat.case_strong_induction_on generalizing g_list with
+          | hz =>
+            simp at h_len
+            obtain ⟨g_list_eq, l_eq⟩ := h_len
+            simp [g_list_eq, l_eq]
+          | hi k hk =>
 
 
-
-            have double_comm_mem {l': G} (l'_mem: l' ∈ ↑(iterate_comm_set (S ∪ S⁻¹) n ∪ (iterate_comm_set (S ∪ S⁻¹) n)⁻¹)): ⁅l'⁻¹, ⁅g'.val, l'⁆⁆ ∈ Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n + 1) ∪ ↑(lowerCentralSeries G (n + 1 + 1))) := by
-              rw [← Subgroup.inv_mem_iff]
-              simp
-              apply Subgroup.mem_closure_of_mem
-              apply Set.mem_union_right
-              simp [mem_lowerCentralSeries_succ_iff]
-              apply Subgroup.mem_closure_of_mem
-              simp
-              use ⁅g'.val, l'⁆
-              refine ⟨?_, ?_⟩
-              .
-
-                simp
-                rw [← Subgroup.inv_mem_iff]
-                simp
-                apply Subgroup.mem_closure_of_mem
-                simp
-                use l'
-                refine ⟨?_, ?_⟩
-                . rw [ih]
-                  cases l'_mem
-                  .
-                    rename_i l'_mem_forward
-                    apply Subgroup.mem_closure_of_mem
-                    apply Set.mem_union_left
-                    exact l'_mem_forward
-                  . rename_i l'_mem_inv
-                    rw [← Subgroup.closure_inv]
-                    apply Subgroup.mem_closure_of_mem
-                    simp
-                    left
-                    exact l'_mem_inv
-                .
-                  use g'
-                  simp [Bracket.bracket]
-              .
-                use l'⁻¹
-                simp [Bracket.bracket]
-
-
-            have triple_comm_mem {l': G} (l'_mem_comm: l' ∈ iterate_comm_set (S ∪ S⁻¹) n ∨ l'⁻¹ ∈ iterate_comm_set (S ∪ S⁻¹) n):  ⁅l'⁻¹, ⁅g'.val, l'⁆⁆ * ⁅g'.val, l'⁆ ∈  Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n + 1) ∪ ↑(lowerCentralSeries G (n + 1 + 1))) := by
-              -- have l'_mem: l' ∈ l.unattach := by
-              --   simp [h_l']
-
-              -- rw [List.mem_unattach] at l'_mem
-              -- obtain ⟨l'_mem_comm, l'_subtype_mem⟩ := l'_mem
-              --simp at l'_mem_comm
-
-              have g'_prop := g'.prop
-              rw [Set.mem_union] at g'_prop
-
-
-
-
-
-              cases l'_mem_comm
-              .
-                rw [← Subgroup.inv_mem_iff]
-                simp
-                rename_i l'_mem
-                . apply Subgroup.mul_mem
-                  .
-                    apply Subgroup.mem_closure_of_mem
-                    apply Set.mem_union_left
-                    simp [iterate_comm_set]
-                    use g'
-                    simp
-                    refine ⟨g'_prop, ?_⟩
-                    use l'
-                  .
-                    rw [← Subgroup.inv_mem_iff]
-                    simp
-                    apply double_comm_mem (by simp [l'_mem])
-              .
-
-                rename_i l'_inv_mem
-                . apply Subgroup.mul_mem
-                  .
-                    apply double_comm_mem
-                    simp [l'_inv_mem]
-
-                    -- rw [← Set.mem_inv] at l'_inv_mem
-                    -- rw [← Subgroup.closure_inv]
-                    -- apply Subgroup.mem_closure_of_mem
-                    -- rw [Set.union_inv]
-                    -- apply Set.mem_union_left
-                    -- simp [-Set.mem_inv, iterate_comm_set]
-                    -- use g'
-                    -- simp [-Set.mem_inv]
-                    -- refine ⟨g'_prop, ?_⟩
-                    -- use l'
-                    -- simp
-
-                  .
-                    rw [← Subgroup.inv_mem_iff]
-                    simp
-                    conv =>
-                      arg 2
-                      arg 1
-                      equals l'⁻¹⁻¹ => simp
-
-                    rw [comm_first_inv]
-                    simp
-                    apply Subgroup.mul_mem
-                    .
-                      have foo := double_comm_mem (l' := l'⁻¹ ) (by
-                        simp
-                        left
-                        exact l'_inv_mem
-                      )
-                      simp at foo
-                      exact foo
-                    .
-                      rw [← Subgroup.inv_mem_iff]
-                      simp
-                      apply Subgroup.mem_closure_of_mem
-                      apply Set.mem_union_left
-                      simp [iterate_comm_set]
-                      use g'
-                      simp at g'_prop
-                      simp [g'_prop]
-                      use l'⁻¹
-
+            by_cases g_list_zero: g_list.length = 0
+            . simp at g_list_zero
+              simp [g_list_zero]
             .
-
-              have l'_mem: l' ∈ l.unattach := by
-                simp [h_l']
-
-              rw [List.mem_unattach] at l'_mem
-              obtain ⟨l'_mem_comm, l'_subtype_mem⟩ := l'_mem
-              simp at l'_mem_comm
-
-              have foo := triple_comm_mem (l' := l'⁻¹) (by
-                simp
-                grind
-              )
-              simp at foo
-              exact foo
+              simp at g_list_zero
 
 
-          rw [not_and_or] at both_eq_one
+            -- by_cases l_len_eq: k + 1 ≤ l.unattach.length
+            -- .
+            --   have prev := hk (l.unattach.length) (by
+            --     simp
+            --     simp at l_len_eq
+            --     omega
+            --   )
+            --   simp [l_len_eq] at h_len
 
-          cases both_eq_one
-          .
-            rename_i g_len_ne
-            rw [List.length_unattach] at g_len_ne_zero
-
-            -- have le_g_len: 2 ≤ g_list.unattach.length := by
-            --   simp
-            --   omega
-
-
-            clear p_eq_comm x_comm_mem g_prod g g_len_ne g_len_ne_zero
-
-            -- TODO - figure out how to get Nat.le_induction working
-            induction h_len: g_list.unattach.length + l.unattach.length using Nat.case_strong_induction_on generalizing g_list with
-            | hz =>
+            --   sorry
+            -- .
               simp at h_len
-              obtain ⟨g_list_eq, l_eq⟩ := h_len
-              simp [g_list_eq, l_eq]
-            | hi k hk =>
+              have g_len_pos: 0 < g_list.length := by
+                by_contra!
+                simp at this
+                contradiction
 
-
-              by_cases g_list_zero: g_list.length = 0
-              . simp at g_list_zero
-                simp [g_list_zero]
-              .
-                simp at g_list_zero
-
-
-              -- by_cases l_len_eq: k + 1 ≤ l.unattach.length
-              -- .
-              --   have prev := hk (l.unattach.length) (by
-              --     simp
-              --     simp at l_len_eq
-              --     omega
-              --   )
-              --   simp [l_len_eq] at h_len
-
-              --   sorry
-              -- .
-                simp at h_len
-                have g_len_pos: 0 < g_list.length := by
-                  by_contra!
-                  simp at this
-                  contradiction
-
-                rw [← List.take_append_getLast (l := g_list) g_list_zero]
-                rw [List.unattach_append]
-                simp
-                rw [comm_prod_right]
+              rw [← List.take_append_getLast (l := g_list) g_list_zero]
+              rw [List.unattach_append]
+              simp
+              rw [comm_prod_right]
+              . apply Subgroup.mul_mem
                 . apply Subgroup.mul_mem
-                  . apply Subgroup.mul_mem
-                    .
-
-
-                      sorry
-                    .
-
-
-                      rw [← Subgroup.inv_mem_iff]
-                      simp
-                      apply Subgroup.mem_closure_of_mem
-                      apply Set.mem_union_right
-                      simp
-                      rw [mem_lowerCentralSeries_succ_iff]
-                      apply Subgroup.mem_closure_of_mem
-                      simp
-                      use ⁅l.unattach.prod, (g_list.getLast g_list_zero).val⁆
-                      refine ⟨?_, ?_⟩
-                      .
-
-                        simp [mem_lowerCentralSeries_succ_iff]
-                        apply Subgroup.mem_closure_of_mem
-                        simp
-                        use l.unattach.prod
-                        refine ⟨?_, ?_⟩
-                        .
-                          rw [ih]
-                          apply Subgroup.list_prod_mem
-                          intro x hx
-                          simp at hx
-                          obtain ⟨x_mem, x_subtype_mem⟩ := hx
-                          cases x_mem
-                          . rename_i x_mem_forward
-                            apply Subgroup.mem_closure_of_mem
-                            grind
-                          . rename_i x_mem_inv
-                            rw [← Subgroup.closure_inv]
-                            apply Subgroup.mem_closure_of_mem
-                            simp
-                            left
-                            exact x_mem_inv
-                        .
-                          use (g_list.getLast g_list_zero)
-                          simp [Bracket.bracket]
-                      .
-                        use (List.take (g_list.length - 1) g_list).unattach.prod
-                        simp [Bracket.bracket]
                   .
+
 
                     sorry
-
-                    -- apply Subgroup.mem_closure_of_mem
-                    -- apply Set.mem_union_right
-                    -- simp
-                    -- rw [mem_lowerCentralSeries_succ_iff]
-                    -- apply Subgroup.mem_closure_of_mem
-                    -- simp
-                    -- use l.unattach.prod
-                    -- refine ⟨?_, ?_⟩
-                    -- .
-                    --   apply Subgroup.mem_closure_of_mem
-                    --   simp
-                    --   rw [ih]
-
-                    --   sorry
-                    -- .
-                    --  use (g_list.getLast g_len_ne_zero)
-                    --  simp [Bracket.bracket]
+                  .
 
 
+                    rw [← Subgroup.inv_mem_iff]
+                    simp
+                    apply Subgroup.mem_closure_of_mem
+                    apply Set.mem_union_right
+                    simp
+                    rw [mem_lowerCentralSeries_succ_iff]
+                    apply Subgroup.mem_closure_of_mem
+                    simp
+                    use ⁅l.unattach.prod, (g_list.getLast g_list_zero).val⁆
+                    refine ⟨?_, ?_⟩
+                    .
+
+                      simp [mem_lowerCentralSeries_succ_iff]
+                      apply Subgroup.mem_closure_of_mem
+                      simp
+                      use l.unattach.prod
+                      refine ⟨?_, ?_⟩
+                      .
+                        rw [ih]
+                        apply Subgroup.list_prod_mem
+                        intro x hx
+                        simp at hx
+                        obtain ⟨x_mem, x_subtype_mem⟩ := hx
+                        cases x_mem
+                        . rename_i x_mem_forward
+                          apply Subgroup.mem_closure_of_mem
+                          grind
+                        . rename_i x_mem_inv
+                          rw [← Subgroup.closure_inv]
+                          apply Subgroup.mem_closure_of_mem
+                          simp
+                          left
+                          exact x_mem_inv
+                      .
+                        use (g_list.getLast g_list_zero)
+                        simp [Bracket.bracket]
+                    .
+                      use (List.take (g_list.length - 1) g_list).unattach.prod
+                      simp [Bracket.bracket]
+                .
+
+                  sorry
+
+                  -- apply Subgroup.mem_closure_of_mem
+                  -- apply Set.mem_union_right
+                  -- simp
+                  -- rw [mem_lowerCentralSeries_succ_iff]
+                  -- apply Subgroup.mem_closure_of_mem
+                  -- simp
+                  -- use l.unattach.prod
+                  -- refine ⟨?_, ?_⟩
+                  -- .
+                  --   apply Subgroup.mem_closure_of_mem
+                  --   simp
+                  --   rw [ih]
+
+                  --   sorry
+                  -- .
+                  --  use (g_list.getLast g_len_ne_zero)
+                  --  simp [Bracket.bracket]
 
 
-                    -- apply Subgroup.mem_closure_of_mem
-                    -- apply Set.mem_union_right
-                    -- simp
-                    -- simp [mem_lowerCentralSeries_succ_iff]
-                    -- apply Subgroup.mem_closure_of_mem
-                    -- simp
-                    -- use l.unattach.prod
-                    -- refine ⟨?_, ?_⟩
-                    -- .
-                    --   apply Subgroup.list_prod_mem
-                    --   intro x hx
-                    --   simp at hx
-                    --   apply Subgroup.mem_closure_of_mem
-                    --   simp
-                    --   rw [ih]
-
-                    -- have prev := hk (l.unattach.length + 1) (by
 
 
-                    --   rw [Nat.add_one_le_iff]
-                    --   have g_len_ne: g_list.length ≠ 0 := by
-                    --     simp
-                    --     exact g_list_zero
+                  -- apply Subgroup.mem_closure_of_mem
+                  -- apply Set.mem_union_right
+                  -- simp
+                  -- simp [mem_lowerCentralSeries_succ_iff]
+                  -- apply Subgroup.mem_closure_of_mem
+                  -- simp
+                  -- use l.unattach.prod
+                  -- refine ⟨?_, ?_⟩
+                  -- .
+                  --   apply Subgroup.list_prod_mem
+                  --   intro x hx
+                  --   simp at hx
+                  --   apply Subgroup.mem_closure_of_mem
+                  --   simp
+                  --   rw [ih]
 
-                    --   omega
+                  -- have prev := hk (l.unattach.length + 1) (by
 
 
-                    --   linarith
-                    -- ) [g_list.getLast g_list_zero] (by simp; linarith)
-                    -- simpa using prev
-          .
-            rename_i l_len
-            sorry
+                  --   rw [Nat.add_one_le_iff]
+                  --   have g_len_ne: g_list.length ≠ 0 := by
+                  --     simp
+                  --     exact g_list_zero
+
+                  --   omega
+
+
+                  --   linarith
+                  -- ) [g_list.getLast g_list_zero] (by simp; linarith)
+                  -- simpa using prev
 
       intro ha
       rw [mem_lowerCentralSeries_succ_iff]
