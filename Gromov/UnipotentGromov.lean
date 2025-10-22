@@ -482,13 +482,22 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
                 rw [List.unattach_append]
                 simp
                 rw [comm_prod]
+                simp at h_len
                 apply Subgroup.mul_mem
                 . apply Subgroup.mul_mem
                   .
                     sorry
                   .
-                    sorry
-                . sorry
+
+                    have foo := hk (g_list.length + 1) (by omega) [l.getLast (by simpa using l_ne_zero)] g_list (by simp)
+                    simp at foo
+                    exact foo
+                .
+                  have foo := hk k (by simp) (List.take (l.length - 1) l) g_list (by
+                    simp
+                    omega
+                  )
+                  exact foo
 
 
                   -- apply Subgroup.mem_closure_of_mem
