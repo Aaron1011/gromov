@@ -351,6 +351,41 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
               simp at g_list_zero
 
 
+              by_cases l_len_ne_zero: l.unattach.length = 0
+              . have l_empty: l.unattach = [] := by
+                  exact List.eq_nil_iff_length_eq_zero.mpr l_len_ne_zero
+                simp [l_empty]
+
+
+              by_cases both_eq_one: g_list.length = 1 ∧ l.unattach.length = 1
+              .
+                obtain ⟨g_len_one, l_len_one⟩ := both_eq_one
+                obtain ⟨g', h_g'⟩ := List.length_eq_one_iff.mp g_len_one
+                obtain ⟨l', h_l'⟩ := List.length_eq_one_iff.mp l_len_one
+
+                simp [h_g', h_l']
+
+                conv =>
+                  arg 2
+                  arg 1
+                  equals l'⁻¹⁻¹ => simp
+
+
+                have l'_mem: l' ∈ l.unattach := by
+                  simp [h_l']
+
+                rw [List.mem_unattach] at l'_mem
+                obtain ⟨l'_mem_comm, l'_subtype_mem⟩ := l'_mem
+                simp at l'_mem_comm
+
+                rw [comm_first_inv]
+                simp
+                have foo := triple_comm_mem (l' := l'⁻¹) _ _ ih g'  (by
+                  simp
+                  grind
+                )
+                simp at foo
+                exact foo
             -- by_cases l_len_eq: k + 1 ≤ l.unattach.length
             -- .
             --   have prev := hk (l.unattach.length) (by
