@@ -460,7 +460,12 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
                         simp [Bracket.bracket]
                   .
 
-                    sorry
+                    have prev := hk (l.length + 1) (by omega)  [(g_list.getLast g_list_zero)] (by
+                      simp
+                      omega
+                    )
+                    simp at prev
+                    exact prev
 
               . sorry
 
