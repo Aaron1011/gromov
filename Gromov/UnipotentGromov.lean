@@ -164,6 +164,97 @@ lemma double_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: lowe
     simp [Bracket.bracket]
 
 
+
+set_option maxHeartbeats 400000 in
+lemma triple_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: lowerCentralSeries G n = Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) n ∪ ↑(lowerCentralSeries G (n + 1)))) (g': ↑(S ∪ S⁻¹))   (l'_mem_comm: l' ∈ iterate_comm_set (S ∪ S⁻¹) n ∨ l'⁻¹ ∈ iterate_comm_set (S ∪ S⁻¹) n):  ⁅l'⁻¹, ⁅g'.val, l'⁆⁆ * ⁅g'.val, l'⁆ ∈  Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n + 1) ∪ ↑(lowerCentralSeries G (n + 1 + 1))) := by
+  -- have l'_mem: l' ∈ l.unattach := by
+  --   simp [h_l']
+
+  -- rw [List.mem_unattach] at l'_mem
+  -- obtain ⟨l'_mem_comm, l'_subtype_mem⟩ := l'_mem
+  --simp at l'_mem_comm
+
+  have g'_prop := g'.prop
+  rw [Set.mem_union] at g'_prop
+
+
+
+
+
+  cases l'_mem_comm
+  .
+    rw [← Subgroup.inv_mem_iff]
+    simp
+    rename_i l'_mem
+    . apply Subgroup.mul_mem
+      .
+        apply Subgroup.mem_closure_of_mem
+        apply Set.mem_union_left
+        simp [iterate_comm_set]
+        use g'
+        simp
+        refine ⟨g'_prop, ?_⟩
+        use l'
+      .
+        rw [← Subgroup.inv_mem_iff]
+        simp
+        apply double_comm_mem
+        . exact ih
+        . simp [l'_mem]
+
+  .
+
+    rename_i l'_inv_mem
+    . apply Subgroup.mul_mem
+      .
+        apply double_comm_mem
+        exact ih
+        simp [l'_inv_mem]
+
+        -- rw [← Set.mem_inv] at l'_inv_mem
+        -- rw [← Subgroup.closure_inv]
+        -- apply Subgroup.mem_closure_of_mem
+        -- rw [Set.union_inv]
+        -- apply Set.mem_union_left
+        -- simp [-Set.mem_inv, iterate_comm_set]
+        -- use g'
+        -- simp [-Set.mem_inv]
+        -- refine ⟨g'_prop, ?_⟩
+        -- use l'
+        -- simp
+
+      .
+        rw [← Subgroup.inv_mem_iff]
+        simp
+        conv =>
+          arg 2
+          arg 1
+          equals l'⁻¹⁻¹ => simp
+
+        rw [comm_first_inv]
+        simp
+        apply Subgroup.mul_mem
+        .
+          have foo := double_comm_mem (l' := l'⁻¹ ) _ _ ih g' (by
+            simp
+            left
+            exact l'_inv_mem
+          )
+          simp at foo
+          exact foo
+        .
+          rw [← Subgroup.inv_mem_iff]
+          simp
+          apply Subgroup.mem_closure_of_mem
+          apply Set.mem_union_left
+          simp [iterate_comm_set]
+          use g'
+          simp at g'_prop
+          simp [g'_prop]
+          use l'⁻¹
+
+
+#print axioms triple_comm_mem
 -- Lemma 13.44. in https://www.math.ucdavis.edu/~kapovich/EPR/ggt.pdf
 -- Note - the book seems to implicitly assume that the generating set is symmetric
 
