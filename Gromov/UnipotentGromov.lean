@@ -535,94 +535,43 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
 
       intro ha
       rw [mem_lowerCentralSeries_succ_iff]
-      sorry
-      --apply Subgroup.mem_closure_of_mem
-      --simp
-
-      --sorry
 
 
-          -- induction h_len: l.unattach.length generalizing l with
-          -- | zero =>
-          --   simp
-          --   conv =>
-          --     arg 2
-          --     arg 1
-          --     equals l.unattach.prod⁻¹⁻¹ => simp
+      have closure_le: (Subgroup.closure ((iterate_comm_set (S ∪ S⁻¹) (n + 1)) ∪ ↑(lowerCentralSeries G (n + 1 + 1)))) ≤ (Subgroup.closure {x | ∃ p ∈ lowerCentralSeries G n, ∃ q ∈ (⊤ : Subgroup G), p * q * p⁻¹ * q⁻¹ = x}) := by
+        rw [Subgroup.closure_le]
+        intro x hx
+        simp at hx
+        cases hx
+        .
+          rename_i x_mem_comm
+          apply Subgroup.mem_closure_of_mem
+          simp
+          rw [ih]
+          simp [iterate_comm_set] at x_mem_comm
+          obtain ⟨s, s_mem, ⟨c, c_mem, c_comm⟩⟩ := x_mem_comm
+          use c
+          refine ⟨?_, ?_⟩
+          . apply Subgroup.mem_closure_of_mem
+            grind
+          . use s
+            rw [← c_comm]
+            simp [Bracket.bracket]
+        .
+          rename_i x_mem_lower_two
+          have x_mem_lower_succ: x ∈ lowerCentralSeries G (n + 1) := by
+            rw [lowerCentralSeries] at x_mem_lower_two
+            have foo := Subgroup.commutator_le_left (G := G) (lowerCentralSeries G (n + 1)) ⊤
+            apply foo x_mem_lower_two
 
 
-          --   rw [comm_first_inv]
-          --   simp
-
-          --   apply Subgroup.mul_mem
-          --   . sorry
-          --   .
-          --     rw [← Subgroup.inv_mem_iff]
-          --     simp
-          --     apply Subgroup.mem_closure_of_mem
-          --     apply Set.mem_union_left
-          --     simp [iterate_comm_set]
-          --     sorry
-
-          -- | succ n _ => sorry
-
-
-          -- | nil =>
-          --   simp
-          -- | cons l_head l_tail l_ih =>
-          --   induction g_list.unattach with
-          --   | nil =>
-          --     simp
-          --   | cons g_head g_tail g_ih =>
-          --     rw [← List.take_append_getLast (l := l_head :: l_tail) (by simp)]
-          --     simp
-          --     -- conv =>
-          --     --   pattern (l_head :: l_tail).prod
-          --     --   equals (l_head :: l_tail.tak)
-          --     -- rw [List.prod_append]
-          --     -- simp
-          --     rw [comm_prod]
-          --     apply Subgroup.mul_mem
-          --     . apply Subgroup.mul_mem
-          --       . sorry
-          --       .
-          --         sorry
-          --     . sorry
+          rw [mem_lowerCentralSeries_succ_iff] at x_mem_lower_succ
+          simpa using x_mem_lower_succ
 
 
 
-      -- .
-      --   intro ha
-      --   apply (Subgroup.closure_le _).mp ?_ ha
-      --   simp
-      --   refine ⟨?_, ?_⟩
-      --   .
-      --     intro b hb
-      --     simp [iterate_comm_set] at hb
-      --     obtain ⟨s, s_mem, ⟨c, c_mem, c_comm⟩⟩ := hb
+      apply closure_le ha
 
-      --     have c_mem_lower: c ∈ (lowerCentralSeries G n) := by
-      --       rw [ih]
-      --       apply Subgroup.mem_closure_of_mem
-      --       apply Set.mem_union_left
-      --       exact c_mem
-
-
-      --     apply Subgroup.mem_closure_of_mem
-      --     simp
-      --     use c
-      --     refine ⟨c_mem_lower, ?_⟩
-      --     use s
-      --   .
-      --     intro b hb
-      --     have succ_le: lowerCentralSeries G (n + 1 + 1) ≤ lowerCentralSeries G (n + 1) := by
-      --       simp [lowerCentralSeries]
-      --       apply Subgroup.commutator_le_left
-
-
-      --     apply succ_le
-      --     exact hb
-
+#print axioms lower_central_generates_succ
 
 structure G''CommData {T: Type*} [Group T] (N: Subgroup T) (gamma_alpha: T) where
   -- The result of repeatedly applying commutators
