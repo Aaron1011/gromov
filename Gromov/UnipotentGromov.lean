@@ -533,59 +533,6 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
                   )
                   exact foo
 
-
-                  -- apply Subgroup.mem_closure_of_mem
-                  -- apply Set.mem_union_right
-                  -- simp
-                  -- rw [mem_lowerCentralSeries_succ_iff]
-                  -- apply Subgroup.mem_closure_of_mem
-                  -- simp
-                  -- use l.unattach.prod
-                  -- refine ⟨?_, ?_⟩
-                  -- .
-                  --   apply Subgroup.mem_closure_of_mem
-                  --   simp
-                  --   rw [ih]
-
-                  --   sorry
-                  -- .
-                  --  use (g_list.getLast g_len_ne_zero)
-                  --  simp [Bracket.bracket]
-
-
-
-
-                  -- apply Subgroup.mem_closure_of_mem
-                  -- apply Set.mem_union_right
-                  -- simp
-                  -- simp [mem_lowerCentralSeries_succ_iff]
-                  -- apply Subgroup.mem_closure_of_mem
-                  -- simp
-                  -- use l.unattach.prod
-                  -- refine ⟨?_, ?_⟩
-                  -- .
-                  --   apply Subgroup.list_prod_mem
-                  --   intro x hx
-                  --   simp at hx
-                  --   apply Subgroup.mem_closure_of_mem
-                  --   simp
-                  --   rw [ih]
-
-                  -- have prev := hk (l.unattach.length + 1) (by
-
-
-                  --   rw [Nat.add_one_le_iff]
-                  --   have g_len_ne: g_list.length ≠ 0 := by
-                  --     simp
-                  --     exact g_list_zero
-
-                  --   omega
-
-
-                  --   linarith
-                  -- ) [g_list.getLast g_list_zero] (by simp; linarith)
-                  -- simpa using prev
-
       intro ha
       rw [mem_lowerCentralSeries_succ_iff]
       sorry
