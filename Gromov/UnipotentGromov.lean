@@ -332,7 +332,7 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
           obtain ⟨g_list, g_prod⟩ := new_mem_S_prod_list (S := S) (x := g) (by simp [hS])
           --clear ha a p_eq_comm p c_prod c_mem c x_comm_mem
           rw [← g_prod]
-          --clear g_prod g
+          clear g_prod
 
 
           -- TODO - figure out how to get Nat.le_induction working
@@ -386,78 +386,84 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
                 )
                 simp at foo
                 exact foo
-            -- by_cases l_len_eq: k + 1 ≤ l.unattach.length
-            -- .
-            --   have prev := hk (l.unattach.length) (by
-            --     simp
-            --     simp at l_len_eq
-            --     omega
-            --   )
-            --   simp [l_len_eq] at h_len
 
-            --   sorry
-            -- .
-              simp at h_len
-              have g_len_pos: 0 < g_list.length := by
-                by_contra!
-                simp at this
-                contradiction
 
-              rw [← List.take_append_getLast (l := g_list) g_list_zero]
-              rw [List.unattach_append]
-              simp
-              rw [comm_prod_right]
-              . apply Subgroup.mul_mem
+              rw [not_and_or] at both_eq_one
+              cases both_eq_one
+              . rename_i g_len_ne_one
+
+                have g_len_ne_zero: g_list.length ≠ 0 := by
+                  simp
+                  exact g_list_zero
+                have two_le_g_len: 2 ≤ g_list.length := by
+                  omega
+
+                clear g_len_ne_one g_len_ne_zero
+                simp at h_len
+
+
+
+                rw [← List.take_append_getLast (l := g_list) (g_list_zero)]
+                rw [List.unattach_append]
+                simp
+                rw [comm_prod_right]
                 . apply Subgroup.mul_mem
-                  .
-
-
-                    sorry
-                  .
-
-
-                    rw [← Subgroup.inv_mem_iff]
-                    simp
-                    apply Subgroup.mem_closure_of_mem
-                    apply Set.mem_union_right
-                    simp
-                    rw [mem_lowerCentralSeries_succ_iff]
-                    apply Subgroup.mem_closure_of_mem
-                    simp
-                    use ⁅l.unattach.prod, (g_list.getLast g_list_zero).val⁆
-                    refine ⟨?_, ?_⟩
+                  . apply Subgroup.mul_mem
                     .
 
-                      simp [mem_lowerCentralSeries_succ_iff]
+                      have prev := hk k (by simp) (List.take (g_list.length - 1) g_list) (by
+                        simp
+                        omega
+                      )
+                      exact prev
+                    .
+
+
+                      rw [← Subgroup.inv_mem_iff]
+                      simp
+                      apply Subgroup.mem_closure_of_mem
+                      apply Set.mem_union_right
+                      simp
+                      rw [mem_lowerCentralSeries_succ_iff]
                       apply Subgroup.mem_closure_of_mem
                       simp
-                      use l.unattach.prod
+                      use ⁅l.unattach.prod, (g_list.getLast g_list_zero).val⁆
                       refine ⟨?_, ?_⟩
                       .
-                        rw [ih]
-                        apply Subgroup.list_prod_mem
-                        intro x hx
-                        simp at hx
-                        obtain ⟨x_mem, x_subtype_mem⟩ := hx
-                        cases x_mem
-                        . rename_i x_mem_forward
-                          apply Subgroup.mem_closure_of_mem
-                          grind
-                        . rename_i x_mem_inv
-                          rw [← Subgroup.closure_inv]
-                          apply Subgroup.mem_closure_of_mem
-                          simp
-                          left
-                          exact x_mem_inv
-                      .
-                        use (g_list.getLast g_list_zero)
-                        simp [Bracket.bracket]
-                    .
-                      use (List.take (g_list.length - 1) g_list).unattach.prod
-                      simp [Bracket.bracket]
-                .
 
-                  sorry
+                        simp [mem_lowerCentralSeries_succ_iff]
+                        apply Subgroup.mem_closure_of_mem
+                        simp
+                        use l.unattach.prod
+                        refine ⟨?_, ?_⟩
+                        .
+                          rw [ih]
+                          apply Subgroup.list_prod_mem
+                          intro x hx
+                          simp at hx
+                          obtain ⟨x_mem, x_subtype_mem⟩ := hx
+                          cases x_mem
+                          . rename_i x_mem_forward
+                            apply Subgroup.mem_closure_of_mem
+                            grind
+                          . rename_i x_mem_inv
+                            rw [← Subgroup.closure_inv]
+                            apply Subgroup.mem_closure_of_mem
+                            simp
+                            left
+                            exact x_mem_inv
+                        .
+                          use (g_list.getLast g_list_zero)
+                          simp [Bracket.bracket]
+                      .
+                        use (List.take (g_list.length - 1) g_list).unattach.prod
+                        simp [Bracket.bracket]
+                  .
+
+                    sorry
+
+              . sorry
+
 
                   -- apply Subgroup.mem_closure_of_mem
                   -- apply Set.mem_union_right
