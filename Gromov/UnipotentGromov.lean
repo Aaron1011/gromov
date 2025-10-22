@@ -383,39 +383,102 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
             --   omega
 
 
-            clear p_eq_comm x_comm_mem g_prod g
+            clear p_eq_comm x_comm_mem g_prod g g_len_ne g_len_ne_zero
 
             -- TODO - figure out how to get Nat.le_induction working
             induction h_len: g_list.unattach.length + l.unattach.length using Nat.case_strong_induction_on generalizing g_list with
             | hz =>
               simp at h_len
-              simp at g_len_ne_zero
-              obtain ⟨_, h_empty⟩ := h_len
-              simp at l_len_ne_zero
-              contradiction
+              obtain ⟨g_list_eq, l_eq⟩ := h_len
+              simp [g_list_eq, l_eq]
             | hi k hk =>
-              simp at g_len_ne_zero
-              by_cases l_len_eq: l.unattach.length = k
-              .
-                have prev := hk (l.unattach.length) (by
-                  simp
-                  simp at l_len_eq
-                  omega
-                )
-                simp [l_len_eq] at h_len
 
-                sorry
+
+              by_cases g_list_zero: g_list.length = 0
+              . simp at g_list_zero
+                simp [g_list_zero]
               .
-                rw [← List.take_append_getLast (l := g_list) g_len_ne_zero]
+                simp at g_list_zero
+
+
+              -- by_cases l_len_eq: k + 1 ≤ l.unattach.length
+              -- .
+              --   have prev := hk (l.unattach.length) (by
+              --     simp
+              --     simp at l_len_eq
+              --     omega
+              --   )
+              --   simp [l_len_eq] at h_len
+
+              --   sorry
+              -- .
+                simp at h_len
+                have g_len_pos: 0 < g_list.length := by
+                  by_contra!
+                  simp at this
+                  contradiction
+
+                rw [← List.take_append_getLast (l := g_list) g_list_zero]
                 rw [List.unattach_append]
                 simp
                 rw [comm_prod_right]
                 . apply Subgroup.mul_mem
                   . apply Subgroup.mul_mem
-                    . sorry
                     .
+
+
                       sorry
+                    .
+
+
+                      rw [← Subgroup.inv_mem_iff]
+                      simp
+                      apply Subgroup.mem_closure_of_mem
+                      apply Set.mem_union_right
+                      simp
+                      rw [mem_lowerCentralSeries_succ_iff]
+                      apply Subgroup.mem_closure_of_mem
+                      simp
+                      use ⁅l.unattach.prod, (g_list.getLast g_list_zero).val⁆
+                      refine ⟨?_, ?_⟩
+                      .
+
+                        simp [mem_lowerCentralSeries_succ_iff]
+                        apply Subgroup.mem_closure_of_mem
+                        simp
+                        use l.unattach.prod
+                        refine ⟨?_, ?_⟩
+                        .
+                          rw [ih]
+                          apply Subgroup.list_prod_mem
+                          intro x hx
+                          simp at hx
+                          obtain ⟨x_mem, x_subtype_mem⟩ := hx
+                          cases x_mem
+                          . rename_i x_mem_forward
+                            apply Subgroup.mem_closure_of_mem
+                            grind
+                          . rename_i x_mem_inv
+                            rw [← Subgroup.closure_inv]
+                            apply Subgroup.mem_closure_of_mem
+                            simp
+                            left
+                            exact x_mem_inv
+                        .
+                          use (g_list.getLast g_list_zero)
+                          simp [Bracket.bracket]
+                      .
+                        use (List.take (g_list.length - 1) g_list).unattach.prod
+                        simp [Bracket.bracket]
+
+
+
+
+                      -- apply Set.mem_union_left
+                      -- simp [iterate_comm_set]
+                      -- use ⁅l.unattach.prod, ↑(g_list.getLast g_list_zero)⁆
                   .
+                    sorry
 
                     -- apply Subgroup.mem_closure_of_mem
                     -- apply Set.mem_union_right
@@ -436,21 +499,38 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
                     --  simp [Bracket.bracket]
 
 
-                    have prev := hk (l.unattach.length + 1) (by
 
 
-                      rw [Nat.add_one_le_iff]
-                      have g_len_ne: g_list.length ≠ 0 := by
-                        simp
-                        exact g_len_ne_zero
-                      have g_len_le: 2 ≤ g_list.length := by
-                        omega
+                    -- apply Subgroup.mem_closure_of_mem
+                    -- apply Set.mem_union_right
+                    -- simp
+                    -- simp [mem_lowerCentralSeries_succ_iff]
+                    -- apply Subgroup.mem_closure_of_mem
+                    -- simp
+                    -- use l.unattach.prod
+                    -- refine ⟨?_, ?_⟩
+                    -- .
+                    --   apply Subgroup.list_prod_mem
+                    --   intro x hx
+                    --   simp at hx
+                    --   apply Subgroup.mem_closure_of_mem
+                    --   simp
+                    --   rw [ih]
 
-                      simp at h_len
-                      simp
-                      linarith
-                    ) [g_list.getLast g_len_ne_zero] (by simp) (by sorry) (by simp; linarith)
-                    simpa using prev
+                    -- have prev := hk (l.unattach.length + 1) (by
+
+
+                    --   rw [Nat.add_one_le_iff]
+                    --   have g_len_ne: g_list.length ≠ 0 := by
+                    --     simp
+                    --     exact g_list_zero
+
+                    --   omega
+
+
+                    --   linarith
+                    -- ) [g_list.getLast g_list_zero] (by simp; linarith)
+                    -- simpa using prev
           .
             sorry
       . sorry
