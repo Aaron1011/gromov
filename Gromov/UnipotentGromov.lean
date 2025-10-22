@@ -470,14 +470,8 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
                       .
                         use (List.take (g_list.length - 1) g_list).unattach.prod
                         simp [Bracket.bracket]
-
-
-
-
-                      -- apply Set.mem_union_left
-                      -- simp [iterate_comm_set]
-                      -- use ⁅l.unattach.prod, ↑(g_list.getLast g_list_zero)⁆
                   .
+
                     sorry
 
                     -- apply Subgroup.mem_closure_of_mem
@@ -532,8 +526,16 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
                     -- ) [g_list.getLast g_list_zero] (by simp; linarith)
                     -- simpa using prev
           .
+            rename_i l_len
             sorry
-      . sorry
+
+      intro ha
+      rw [mem_lowerCentralSeries_succ_iff]
+      sorry
+      --apply Subgroup.mem_closure_of_mem
+      --simp
+
+      --sorry
 
 
           -- induction h_len: l.unattach.length generalizing l with
