@@ -573,6 +573,81 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
 
 #print axioms lower_central_generates_succ
 
+lemma nilpotent_comm_generates {G: Type*} [Group G] [Group.IsNilpotent G] (S: Set G) (hS: Subgroup.closure S = ⊤) (n k: ℕ) (hn: n ≤ k):
+  lowerCentralSeries G k = Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) k) := by
+
+  by_cases class_zero: Group.nilpotencyClass G = 0
+  .
+    simp at class_zero
+    rw [nilpotencyClass_zero_iff_subsingleton] at class_zero
+
+    have unique_subgroup: Unique (Subgroup G) := by infer_instance
+
+    -- TODO - what's the right way to apply Unique?
+    rw [unique_subgroup.eq_default (lowerCentralSeries G k)]
+    rw [unique_subgroup.eq_default (Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) k))]
+  .
+
+
+
+
+    by_cases class_sub_le: (Group.nilpotencyClass G) - 1 ≤ k
+    .
+      induction k, class_sub_le using Nat.le_induction generalizing n with
+      | base =>
+        have succ_add_eq: Group.nilpotencyClass G = (Group.nilpotencyClass G) - 1 + 1 := by
+          omega
+
+        rw [lower_central_generates_succ S hS]
+        rw [← succ_add_eq]
+        simp
+      | succ m hmn ih =>
+        apply Nat.le_add_of_sub_le at hmn
+        rw [← lowerCentralSeries_eq_bot_iff_nilpotencyClass_le] at hmn
+        rw [hmn]
+
+        have foo := lower_central_generates_succ S hS (m + 1)
+        rw [hmn] at foo
+
+        rw [eq_comm]
+        rw [← le_bot_iff]
+        rw [foo]
+        simp
+        intro a ha
+        apply Subgroup.mem_closure_of_mem
+        grind
+    . sorry
+
+
+  --   by_cases k_succ_eq_class: k + 1 = Group.nilpotencyClass G
+  --   .
+  --     rw [lower_central_generates_succ S hS]
+  --     rw [k_succ_eq_class]
+  --     simp
+  --   .
+  --     by_cases k_ge: Group.nilpotencyClass G < k + 1
+
+
+  -- match k with
+  -- | 0 =>
+  --   simp [iterate_comm_set]
+  --   rw [Subgroup.closure_union]
+  --   simp [hS]
+  -- | m + 1 =>
+  --   by_cases m_eq: m = Group.nilpotencyClass G
+  --   .
+  --     simp [lowerCentralSeries]
+  --     rw [m_eq]
+  --     simp
+
+  --   by_cases class_le_k: Group.nilpotencyClass G ≤ (m + 1)
+  --   .
+
+  --     simp [lowerCentralSeries]
+  --     rw [← lowerCentralSeries_eq_bot_iff_nilpotencyClass_le] at class_le_k
+  --     rw [lower_central_generates_succ S hS] at class_le_k
+  --     simp [class_le_k]
+
 structure G''CommData {T: Type*} [Group T] (N: Subgroup T) (gamma_alpha: T) where
   -- The result of repeatedly applying commutators
   cur: T
