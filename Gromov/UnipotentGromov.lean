@@ -864,7 +864,17 @@ lemma comm_trivial_implies_nilpotent {G: Type*} [Group G] (S: Set G) (hS: Subgro
   }
 
 
-  sorry
+
+  have upper_central_series_top: upperCentralSeries G n = ⊤ := by
+    sorry
+  have nilpotent_g: Group.IsNilpotent G := by
+    rw [Group.isNilpotent_iff]
+    use n
+
+
+  rw [lowerCentralSeries_eq_bot_iff_nilpotencyClass_le]
+  rw [← upperCentralSeries_eq_top_iff_nilpotencyClass_le]
+  exact upper_central_series_top
 
 
 structure G''CommData {T: Type*} [Group T] (N: Subgroup T) (gamma_alpha: T) where
