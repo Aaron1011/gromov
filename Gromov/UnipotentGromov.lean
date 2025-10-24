@@ -573,6 +573,8 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
 
 #print axioms lower_central_generates_succ
 
+-- Corollary 13.45
+-- TODO - we might not actually need this from Gromov. Also, it's unclear whether 'k' is fixed, or if we need to take a union over all k ≥ n
 lemma nilpotent_comm_generates {G: Type*} [Group G] [Group.IsNilpotent G] (S: Set G) (hS: Subgroup.closure S = ⊤) (n k: ℕ) (hn: n ≤ k):
   lowerCentralSeries G k = Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) k) := by
 
@@ -616,7 +618,41 @@ lemma nilpotent_comm_generates {G: Type*} [Group G] [Group.IsNilpotent G] (S: Se
         intro a ha
         apply Subgroup.mem_closure_of_mem
         grind
-    . sorry
+    .
+      simp at class_sub_le
+      rw [Nat.add_lt_iff_lt_sub_right] at class_sub_le
+      apply Nat.le_of_lt at class_sub_le
+      induction class_sub_le using Nat.decreasingInduction generalizing n with
+      | of_succ k h ih =>
+        rw [lower_central_generates_succ S hS]
+        rw [ih (k + 1) (by simp)]
+        rw [Subgroup.closure_union]
+        rw [Subgroup.closure_eq]
+        simp
+        intro a ha
+        simp [iterate_comm_set] at ha
+        obtain ⟨s, s_mem, ⟨c, c_mem, c_comm⟩⟩ := ha
+        sorry
+
+
+      --   rw [← ih (k + 1) (by simp)]
+
+      --   have le_nilotency: k + 1 ≤ Group.nilpotencyClass G := by
+      --     omega
+
+      --   rw [← lowerCentralSeries_eq_bot_iff_nilpotencyClass_le] at le_nilotency
+
+
+
+      --   sorry
+      | self =>
+        -- TODO - deduplicate this
+        have succ_add_eq: Group.nilpotencyClass G = (Group.nilpotencyClass G) - 1 + 1 := by
+          omega
+
+        rw [lower_central_generates_succ S hS]
+        rw [← succ_add_eq]
+        simp
 
 
   --   by_cases k_succ_eq_class: k + 1 = Group.nilpotencyClass G
@@ -647,6 +683,189 @@ lemma nilpotent_comm_generates {G: Type*} [Group G] [Group.IsNilpotent G] (S: Se
   --     rw [← lowerCentralSeries_eq_bot_iff_nilpotencyClass_le] at class_le_k
   --     rw [lower_central_generates_succ S hS] at class_le_k
   --     simp [class_le_k]
+
+variable {G: Type*} [Group G] (S: Set G)
+
+
+
+-- lemma iterate_comm_normal (hS: Subgroup.closure S = ⊤) (n: ℕ): (Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) n)).Normal := by
+--   induction n with
+--   | zero =>
+--     simp [iterate_comm_set]
+--     rw [Subgroup.closure_union]
+--     simp [hS]
+--     infer_instance
+--   | succ n ih =>
+--     exact {
+--       conj_mem := by
+--         intro g hg x
+--         induction hg using Subgroup.closure_induction with
+--         | mem a ha =>
+--           simp [iterate_comm_set] at ha
+--           obtain ⟨s, s_mem, ⟨c, c_mem, c_comm⟩⟩ := ha
+--           rw [← c_comm]
+--           have a_conj := ih.conj_mem c⁻¹ (by
+--             simp
+--             apply Subgroup.mem_closure_of_mem
+--             exact c_mem
+--           ) s
+
+--           have c_s_mem: ⁅c, s⁆ ∈ Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n)) := by
+--             simp [Bracket.bracket]
+--             conv =>
+--               arg 2
+--               equals c * (s * c⁻¹ * s⁻¹) =>
+--                 group
+--             apply Subgroup.mul_mem
+--             . apply Subgroup.mem_closure_of_mem
+--               exact c_mem
+--             . exact a_conj
+
+
+
+--           have bracket_mem: ⁅⁅c, s⁆, x⁆ ∈ Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n + 1)) := by
+--             apply Subgroup.mem_closure_of_mem
+--             simp [iterate_comm_set]
+--             use x
+--             refine ⟨?_, ?_⟩
+
+
+
+--           have c_s_conj := ih.conj_mem (⁅c, s⁆) (by
+--             simp
+--             exact c_s_mem
+--           ) x
+
+--           simp [iterate_comm_set]
+
+
+
+--         | one => simp
+--         | mul x y hx hy _ _ => sorry
+--         | inv a ha ih =>
+--           apply Subgroup.mem_closure_of_mem
+--           sorry
+--     }
+
+
+-- Lemma 13.55 from https://www.math.ucdavis.edu/~kapovich/EPR/ggt.pdf
+lemma comm_trivial_implies_nilpotent {G: Type*} [Group G] (S: Set G) (hS: Subgroup.closure S = ⊤) (n: ℕ) (h_comm: iterate_comm_set (S ∪ S⁻¹) (n + 1) = {1}):
+    lowerCentralSeries G n = ⊥ := by
+
+
+  let G_n := Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) n)
+  let G_n_succ := Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n + 1))
+
+  have comm_mem: ∀ y ∈ (iterate_comm_set (S ∪ S⁻¹) n), ∀ x ∈ S, ⁅y, x⁆ ∈ G_n_succ := by
+    intro y hy x hx
+    simp [G_n_succ]
+    apply Subgroup.mem_closure_of_mem
+    simp [iterate_comm_set]
+    use x
+    refine ⟨by grind, ?_⟩
+    use y
+
+  have succ_le: G_n_succ ≤ G_n := by
+    simp [G_n_succ, G_n]
+    intro x hx
+    rw [h_comm] at hx
+    simp at hx
+    simp [hx]
+
+
+  -- TODO - it seems like there should be a much simpler proof of this fact
+  have G_n_normal: G_n.Normal := {
+    conj_mem := by
+      conv =>
+        equals ∀ g: G, ∀ n ∈ G_n, g * n * g⁻¹ ∈ G_n =>
+          grind
+
+      intro g
+
+      intro x x_mem
+      induction x_mem using Subgroup.closure_induction with
+      | mem y hy =>
+
+
+        have bracket_mem: ∀ a: G, ⁅y, a⁆ ∈ iterate_comm_set (S ∪ S⁻¹) (n + 1) := by
+          intro a
+          have a_mem_closure: a ∈ Subgroup.closure (S ∪ S⁻¹) := by
+            rw [Subgroup.closure_union]
+            rw [hS]
+            simp
+
+
+          induction a_mem_closure using Subgroup.closure_induction with
+          | mem z hz =>
+            simp [iterate_comm_set]
+            use z
+            refine ⟨by simpa using hz, ?_⟩
+            use y
+          | one =>
+            simp [h_comm]
+          | mul p q hp hq p_comm q_comm =>
+            simp [Bracket.bracket]
+            simp [Bracket.bracket, h_comm] at p_comm q_comm
+            conv =>
+              arg 2
+              equals (y * p * y⁻¹) * (y * q * y⁻¹) * (q⁻¹ * p⁻¹) =>
+                group
+
+            rw [mul_inv_eq_iff_eq_mul] at p_comm
+            rw [mul_inv_eq_iff_eq_mul] at q_comm
+            simp [p_comm]
+            simp [q_comm]
+            group
+            rw [add_comm]
+            simp [h_comm]
+          | inv z hz z_mem =>
+            rw [h_comm] at z_mem
+            rw [h_comm]
+            simp [Bracket.bracket]
+            simp [Bracket.bracket] at z_mem
+            rw [mul_inv_eq_iff_eq_mul] at z_mem
+            simp at z_mem
+            nth_rw 2 [← z_mem]
+            group
+
+
+        have g_mem := bracket_mem g
+        simp [Bracket.bracket] at g_mem
+        simp [h_comm] at g_mem
+        conv at g_mem =>
+          lhs
+          equals y * (g * y⁻¹ * g⁻¹) => group
+
+        rw [← Subgroup.inv_mem_iff]
+        simp
+        rw [← inv_eq_iff_mul_eq_one] at g_mem
+        group
+        group at g_mem
+        rw [← g_mem]
+        simp [G_n]
+        apply Subgroup.mem_closure_of_mem
+        exact hy
+      | one =>
+        simp
+      | mul y z hy hz y_conj z_conj =>
+        conv =>
+          arg 2
+          equals (g * y * g⁻¹) * (g * z * g⁻¹) => group
+
+        apply Subgroup.mul_mem
+        . exact y_conj
+        . exact z_conj
+      | inv y hy y_conj =>
+        rw [← Subgroup.inv_mem_iff]
+        group at y_conj
+        simp
+        group
+        exact y_conj
+  }
+
+
+  sorry
+
 
 structure G''CommData {T: Type*} [Group T] (N: Subgroup T) (gamma_alpha: T) where
   -- The result of repeatedly applying commutators
