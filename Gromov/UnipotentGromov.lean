@@ -867,6 +867,7 @@ lemma comm_trivial_implies_nilpotent {G: Type*} [Group G] (S: Set G) (hS: Subgro
 
   have upper_central_series_top: upperCentralSeries G n = ⊤ := by
     sorry
+
   have nilpotent_g: Group.IsNilpotent G := by
     rw [Group.isNilpotent_iff]
     use n
