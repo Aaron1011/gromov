@@ -768,33 +768,68 @@ lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (
         rw [← QuotientGroup.mk_mul]
         rw [QuotientGroup.eq]
         simp
-        simp [Subgroup.normalClosure]
-        apply Subgroup.mem_closure_of_mem
-        simp [Group.conjugatesOfSet]
-        simp [conjugatesOf]
-        use ⁅a⁻¹, Quotient.out b⁆
-        refine ⟨?_, ?_⟩
-        .
-          simp [Bracket.bracket]
-          simp [iterate_comm_set]
 
-        apply Subgroup.mem_closure_of_mem
-        simp
-        use a⁻¹
-        simp_rw [← ih]
-        simp [Subgroup.normalClosure]
-        refine ⟨?_, ?_⟩
-        .
-          apply Subgroup.mem_closure_of_mem
-          simp [Group.conjugatesOfSet]
-          use a
-          refine ⟨a_mem, ?_⟩
-          simp [conjugatesOf]
-          use 1
+
+        have b_mem_top: Quotient.out b ∈ (⊤ : (Subgroup G)) := by
           simp
+
+        rw [← hS] at b_mem_top
+
+        -- TODO - figure out how to get the 'induction' tactic working here
+        apply Subgroup.closure_induction (p := fun y hy => a⁻¹ * y⁻¹ * (a * y) ∈ Subgroup.normalClosure (iterate_comm_set (S ∪ S⁻¹) (n + 1))) (hx := b_mem_top)
         .
-          use (Quotient.out b)⁻¹
+          intro s hs
+          have comm := image_commute s hs a a_mem
+          simp at comm
+          simp
+          rw [← QuotientGroup.mk_mul] at comm
+          rw [← QuotientGroup.mk_mul] at comm
+          rw [QuotientGroup.eq] at comm
+          simp at comm
+          exact comm
+        . simp
+        . intro y hy z hz y_mem z_mem
+          simp
+
+
+        .
+          intro y hy y_mem
+          rw [← Subgroup.inv_mem_iff]
+          simp
+          have foo := (Subgroup.normalClosure_normal).conj_mem _ y_mem y
+          group at foo
           group
+          exact foo
+
+
+
+        -- simp [Subgroup.normalClosure]
+        -- apply Subgroup.mem_closure_of_mem
+        -- simp [Group.conjugatesOfSet]
+        -- simp [conjugatesOf]
+        -- use ⁅a⁻¹, Quotient.out b⁆
+        -- refine ⟨?_, ?_⟩
+        -- .
+        --   simp [Bracket.bracket]
+        --   simp [iterate_comm_set]
+
+        -- apply Subgroup.mem_closure_of_mem
+        -- simp
+        -- use a⁻¹
+        -- simp_rw [← ih]
+        -- simp [Subgroup.normalClosure]
+        -- refine ⟨?_, ?_⟩
+        -- .
+        --   apply Subgroup.mem_closure_of_mem
+        --   simp [Group.conjugatesOfSet]
+        --   use a
+        --   refine ⟨a_mem, ?_⟩
+        --   simp [conjugatesOf]
+        --   use 1
+        --   simp
+        -- .
+        --   use (Quotient.out b)⁻¹
+        --   group
 
 
 
