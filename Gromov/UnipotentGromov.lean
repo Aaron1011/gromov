@@ -1494,26 +1494,26 @@ lemma RepeatComm_min_strict_mono {G: Type*} [Group G] {N: Subgroup G} (N_normal:
 --     . sorry
 
 
-lemma nilpotent_of_comm_trivial {G: Type*} [Group G] (S: Set G) (n: ℕ) (hS: iterate_comm_set S n = {1}):
-  ∃ k: ℕ, lowerCentralSeries (Subgroup.closure S) k = ⊥ := by
-  induction n with
-  | zero =>
-    use 0
-    simp
-    simp [iterate_comm_set] at hS
-    ext a
-    simp
-    have closure_eq: Subgroup.closure S = Subgroup.closure {1} := by
-      rw [hS]
+-- lemma nilpotent_of_comm_trivial {G: Type*} [Group G] (S: Set G) (n: ℕ) (hS: iterate_comm_set S n = {1}):
+--   ∃ k: ℕ, lowerCentralSeries (Subgroup.closure S) k = ⊥ := by
+--   induction n with
+--   | zero =>
+--     use 0
+--     simp
+--     simp [iterate_comm_set] at hS
+--     ext a
+--     simp
+--     have closure_eq: Subgroup.closure S = Subgroup.closure {1} := by
+--       rw [hS]
 
-    simp at closure_eq
-    rw [Subgroup.closure_singleton_one] at closure_eq
-    have a_mem := a.property
-    simp_rw [closure_eq] at a_mem
-    simp at a_mem
-    exact a_mem
-  | succ n ih =>
-    sorry
+--     simp at closure_eq
+--     rw [Subgroup.closure_singleton_one] at closure_eq
+--     have a_mem := a.property
+--     simp_rw [closure_eq] at a_mem
+--     simp at a_mem
+--     exact a_mem
+--   | succ n ih =>
+--     sorry
 
 -- lemma RepeatComm_eventually_le {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (a b: ℕ):
 --   ∃ n: ℕ, a ≤ (RepeatComm_min N_normal gamma_alpha n).fst ∨ b ≤ (RepeatComm_min N_normal gamma_alpha n).snd := by
