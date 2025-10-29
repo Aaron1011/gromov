@@ -731,7 +731,7 @@ lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (
         . simp
     .
 
-      have comm_subset_center: (QuotientGroup.mk' _) '' (iterate_comm_set (S ∪ S⁻¹) n) ⊆ ((Subgroup.center (G ⧸ (lowerCentralSeries G (n + 1)))).carrier) := by
+      have comm_subset_center: (QuotientGroup.mk' _) '' (iterate_comm_set (S ∪ S⁻¹) n) ⊆ ((Subgroup.center (G ⧸ ((Subgroup.normalClosure (iterate_comm_set (S ∪ S⁻¹) (n + 1)))))).carrier) := by
         intro x hx
         simp at hx
         obtain ⟨a, a_mem, hx⟩ := hx
@@ -743,9 +743,16 @@ lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (
         rw [← QuotientGroup.mk_mul]
         rw [← QuotientGroup.mk_mul]
         rw [QuotientGroup.eq]
-        simp
-        simp [lowerCentralSeries]
-        simp [Bracket.bracket]
+        simp [Subgroup.normalClosure]
+        apply Subgroup.mem_closure_of_mem
+        simp [Group.conjugatesOfSet]
+        simp [conjugatesOf]
+        use ⁅a⁻¹, Quotient.out b⁆
+        refine ⟨?_, ?_⟩
+        .
+          simp [Bracket.bracket]
+          simp [iterate_comm_set]
+
         apply Subgroup.mem_closure_of_mem
         simp
         use a⁻¹
@@ -785,87 +792,89 @@ lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (
         rw [← QuotientGroup.mk_mul] at a_mem_center
         rw [QuotientGroup.eq] at a_mem_center
         simp at a_mem_center
+        rw [← g_eq]
+        group at a_mem_center
+        group
+        exact a_mem_center
+      . simp
+        use a
 
-        simp [Subgroup.normalClosure]
 
 
-        sorry
-      . sorry
+      simp
+      exact QuotientGroup.mk_surjective
+      -- simp [Bracket.bracket]
+      -- --simp_rw [← ih]
+
+      -- -- have subset_closure: (((Subgroup.closure (⋃ g, (fun a ↦ g * a * g⁻¹) '' iterate_comm_set (S ∪ S⁻¹) n)) : Set G) ⊆ ↑(Subgroup.closure (⋃ g, (fun a ↦ g * a * g⁻¹) '' iterate_comm_set (S ∪ S⁻¹) (n + 1))) := by
+      -- --   simp
+      -- --   sorry
+
+      -- intro g hg
+      -- simp at hg
+      -- obtain ⟨a, a_mem, hg⟩ := hg
+      -- obtain ⟨y, hy⟩ := hg
+      -- simp [Subgroup.normalClosure]
+      -- rw [← hy]
 
 
 
-      simp [Bracket.bracket]
-      --simp_rw [← ih]
 
-      -- have subset_closure: (((Subgroup.closure (⋃ g, (fun a ↦ g * a * g⁻¹) '' iterate_comm_set (S ∪ S⁻¹) n)) : Set G) ⊆ ↑(Subgroup.closure (⋃ g, (fun a ↦ g * a * g⁻¹) '' iterate_comm_set (S ∪ S⁻¹) (n + 1))) := by
+
+      -- simp [iterate_comm_set]
+      -- apply Subgroup.mem_closure_of_mem
+      -- simp
+
+      -- induction a_mem using Subgroup.closure_induction with
+      -- | mem x hx =>
+      --   simp at hx
+      --   obtain ⟨s, z, z_mem, z_eq⟩ := hx
+      --   use 1
+      --   simp_rw [← hy]
       --   simp
+      --   use y
+      --   refine ⟨sorry, ?_⟩
+      --   use z
+      --   refine ⟨z_mem, ?_⟩
+      --   simp
+
+      --   use y
+      --   refine ⟨?_, ?_⟩
+      --   . sorry
+      --   . use y
+
+
+      -- | one =>
+      --   use 1
+      --   simp
+      --   simp_rw [← hy]
+      --   simp
+      --   use 1
+      --   refine ⟨by simp [one_mem], ?_⟩
+      --   simp [Bracket.bracket]
       --   sorry
+      -- | mul y z hy hz y_mem z_mem =>
 
-      intro g hg
-      simp at hg
-      obtain ⟨a, a_mem, hg⟩ := hg
-      obtain ⟨y, hy⟩ := hg
-      simp [Subgroup.normalClosure]
-      rw [← hy]
+      --   sorry
+      -- | inv x hx _ => sorry
 
 
 
 
-
-      simp [iterate_comm_set]
-      apply Subgroup.mem_closure_of_mem
-      simp
-
-      induction a_mem using Subgroup.closure_induction with
-      | mem x hx =>
-        simp at hx
-        obtain ⟨s, z, z_mem, z_eq⟩ := hx
-        use 1
-        simp_rw [← hy]
-        simp
-        use y
-        refine ⟨sorry, ?_⟩
-        use z
-        refine ⟨z_mem, ?_⟩
-        simp
-
-        use y
-        refine ⟨?_, ?_⟩
-        . sorry
-        . use y
-
-
-      | one =>
-        use 1
-        simp
-        simp_rw [← hy]
-        simp
-        use 1
-        refine ⟨by simp [one_mem], ?_⟩
-        simp [Bracket.bracket]
-        sorry
-      | mul y z hy hz y_mem z_mem =>
-
-        sorry
-      | inv x hx _ => sorry
+      -- specialize subset_closure
+      -- obtain ⟨s, s_mem, ⟨c, c_mem, c_comm⟩⟩ := hg
+      -- simp
+      -- apply Subgroup.mem_closure_of_mem
+      -- simp
+      -- use 1
+      -- use s * c * s⁻¹ * c⁻¹
+      -- refine ⟨?_, by simp⟩
+      -- simp [iterate_comm_set]
+      -- use c
 
 
 
-
-      specialize subset_closure
-      obtain ⟨s, s_mem, ⟨c, c_mem, c_comm⟩⟩ := hg
-      simp
-      apply Subgroup.mem_closure_of_mem
-      simp
-      use 1
-      use s * c * s⁻¹ * c⁻¹
-      refine ⟨?_, by simp⟩
-      simp [iterate_comm_set]
-      use c
-
-
-
-      refine ⟨?_, by simp⟩
+      -- refine ⟨?_, by simp⟩
 
 
 -- Lemma 13.55 from https://www.math.ucdavis.edu/~kapovich/EPR/ggt.pdf
