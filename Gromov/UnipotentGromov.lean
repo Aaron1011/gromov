@@ -790,8 +790,20 @@ lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (
         . simp
         . intro y hy z hz y_mem z_mem
           simp
-
-
+          conv =>
+            arg 2
+            equals (a⁻¹ * hy⁻¹ * a * hy) * (hy⁻¹ * a⁻¹ * y⁻¹ * a * y * hy) =>
+              group
+          apply Subgroup.mul_mem
+          . group
+            group at z_mem
+            exact z_mem
+          .
+            have foo := (Subgroup.normalClosure_normal).conj_mem _ y_mem hy⁻¹
+            simp at foo
+            group at foo
+            group
+            exact foo
         .
           intro y hy y_mem
           rw [← Subgroup.inv_mem_iff]
@@ -936,6 +948,7 @@ lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (
 
       -- refine ⟨?_, by simp⟩
 
+#print axioms iterate_comm_generates
 
 -- Lemma 13.55 from https://www.math.ucdavis.edu/~kapovich/EPR/ggt.pdf
 lemma comm_trivial_implies_nilpotent {G: Type*} [Group G] (S: Set G) (hS: Subgroup.closure S = ⊤) (n: ℕ) (h_comm: iterate_comm_set (S ∪ S⁻¹) (n + 1) = {1}):
