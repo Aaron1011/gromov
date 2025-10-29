@@ -688,7 +688,7 @@ variable {G: Type*} [Group G] (S: Set G)
 
 
 -- https://math.stackexchange.com/questions/4995327/group-in-the-lower-central-series-is-generated-by-conjugates-of-comutators-of-ge
-lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (n: ℕ):
+lemma iterate_comm_generates (hS: Subgroup.closure S = ⊤) (n: ℕ):
   (Subgroup.normalClosure (iterate_comm_set (S ∪ S⁻¹) n)) = lowerCentralSeries G n := by
   induction n with
   | zero =>
@@ -814,39 +814,6 @@ lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (
           exact foo
 
 
-
-        -- simp [Subgroup.normalClosure]
-        -- apply Subgroup.mem_closure_of_mem
-        -- simp [Group.conjugatesOfSet]
-        -- simp [conjugatesOf]
-        -- use ⁅a⁻¹, Quotient.out b⁆
-        -- refine ⟨?_, ?_⟩
-        -- .
-        --   simp [Bracket.bracket]
-        --   simp [iterate_comm_set]
-
-        -- apply Subgroup.mem_closure_of_mem
-        -- simp
-        -- use a⁻¹
-        -- simp_rw [← ih]
-        -- simp [Subgroup.normalClosure]
-        -- refine ⟨?_, ?_⟩
-        -- .
-        --   apply Subgroup.mem_closure_of_mem
-        --   simp [Group.conjugatesOfSet]
-        --   use a
-        --   refine ⟨a_mem, ?_⟩
-        --   simp [conjugatesOf]
-        --   use 1
-        --   simp
-        -- .
-        --   use (Quotient.out b)⁻¹
-        --   group
-
-
-
-
-
       simp [Bracket.bracket]
       intro g hg
       simp at hg
@@ -875,78 +842,6 @@ lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (
 
       simp
       exact QuotientGroup.mk_surjective
-      -- simp [Bracket.bracket]
-      -- --simp_rw [← ih]
-
-      -- -- have subset_closure: (((Subgroup.closure (⋃ g, (fun a ↦ g * a * g⁻¹) '' iterate_comm_set (S ∪ S⁻¹) n)) : Set G) ⊆ ↑(Subgroup.closure (⋃ g, (fun a ↦ g * a * g⁻¹) '' iterate_comm_set (S ∪ S⁻¹) (n + 1))) := by
-      -- --   simp
-      -- --   sorry
-
-      -- intro g hg
-      -- simp at hg
-      -- obtain ⟨a, a_mem, hg⟩ := hg
-      -- obtain ⟨y, hy⟩ := hg
-      -- simp [Subgroup.normalClosure]
-      -- rw [← hy]
-
-
-
-
-
-      -- simp [iterate_comm_set]
-      -- apply Subgroup.mem_closure_of_mem
-      -- simp
-
-      -- induction a_mem using Subgroup.closure_induction with
-      -- | mem x hx =>
-      --   simp at hx
-      --   obtain ⟨s, z, z_mem, z_eq⟩ := hx
-      --   use 1
-      --   simp_rw [← hy]
-      --   simp
-      --   use y
-      --   refine ⟨sorry, ?_⟩
-      --   use z
-      --   refine ⟨z_mem, ?_⟩
-      --   simp
-
-      --   use y
-      --   refine ⟨?_, ?_⟩
-      --   . sorry
-      --   . use y
-
-
-      -- | one =>
-      --   use 1
-      --   simp
-      --   simp_rw [← hy]
-      --   simp
-      --   use 1
-      --   refine ⟨by simp [one_mem], ?_⟩
-      --   simp [Bracket.bracket]
-      --   sorry
-      -- | mul y z hy hz y_mem z_mem =>
-
-      --   sorry
-      -- | inv x hx _ => sorry
-
-
-
-
-      -- specialize subset_closure
-      -- obtain ⟨s, s_mem, ⟨c, c_mem, c_comm⟩⟩ := hg
-      -- simp
-      -- apply Subgroup.mem_closure_of_mem
-      -- simp
-      -- use 1
-      -- use s * c * s⁻¹ * c⁻¹
-      -- refine ⟨?_, by simp⟩
-      -- simp [iterate_comm_set]
-      -- use c
-
-
-
-      -- refine ⟨?_, by simp⟩
 
 #print axioms iterate_comm_generates
 
