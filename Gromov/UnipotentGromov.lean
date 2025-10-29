@@ -766,7 +766,33 @@ lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (
 
 
 
+
+
+      simp [Bracket.bracket]
+      intro g hg
+      simp at hg
+      obtain ⟨a, a_mem, b, g_eq⟩ := hg
       have normal_le_center := Subgroup.normalClosure_le_normal comm_subset_center
+      rw [← Subgroup.map_normalClosure] at normal_le_center
+      rw [ih] at normal_le_center
+      simp
+      have a_mem_center := @normal_le_center a⁻¹ ?_
+      .
+        rw [Subgroup.mem_center_iff] at a_mem_center
+        specialize a_mem_center (QuotientGroup.mk b⁻¹)
+        rw [← QuotientGroup.mk_inv] at a_mem_center
+        rw [← QuotientGroup.mk_mul] at a_mem_center
+        rw [← QuotientGroup.mk_mul] at a_mem_center
+        rw [QuotientGroup.eq] at a_mem_center
+        simp at a_mem_center
+
+        simp [Subgroup.normalClosure]
+
+
+        sorry
+      . sorry
+
+
 
       simp [Bracket.bracket]
       --simp_rw [← ih]
