@@ -1544,8 +1544,135 @@ lemma RepeatComm_min_strict_mono {G: Type*} [Group G] {N: Subgroup G} (N_normal:
 --     rw [c_eq]
 --     exact Nat.le_of_succ_le b_lt_n
 
+lemma iterated_mem_iterated_set {G: Type*} [Group G] (base right: G) (S: Set G) (base_mem: base ∈ S) (right_mem: right ∈ S) (n: ℕ): iteratedCommutator base right n ∈ iterate_comm_set S n := by
+  induction n with
+  | zero =>
+    simp [iterate_comm_set, iteratedCommutator]
+    exact base_mem
+  | succ n ih =>
+    conv =>
+      arg 2
+      equals ⁅iteratedCommutator base right n, right⁆ =>
+        unfold iteratedCommutator
+        rw [Function.iterate_succ']
+        simp
 
-lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_normal: N'.Normal) (N'_nilpotent: Group.IsNilpotent N') (gamma_alpha: G) (m: ℕ) (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g gamma_alpha = 1):
+    simp [iterate_comm_set]
+    use right
+    refine ⟨right_mem, ?_⟩
+    use iteratedCommutator base right n
+
+lemma one_mem_iterated_comm {G: Type*} [Group G] (S: Set G) (n m: ℕ) (hn: n ≤ m) (hS: 1 ∈ iterate_comm_set S n):
+    1 ∈ iterate_comm_set S m := by
+
+  classical
+  induction m, hn using Nat.le_induction with
+  | base => exact hS
+  | succ n hmn ih =>
+    simp [iterate_comm_set]
+    by_cases S_empty: S = ∅
+    .
+      simp [S_empty] at ih
+      unfold iterate_comm_set at ih
+      simp at ih
+      split at ih
+      . simp at ih
+      . simp at ih
+    simp at S_empty
+    have S_nonempty: S.Nonempty := by
+      exact Set.nonempty_iff_ne_empty.mpr S_empty
+    rw [Set.nonempty_def] at S_nonempty
+    obtain ⟨s, s_mem⟩ := S_nonempty
+    use s
+    refine ⟨s_mem, ?_⟩
+    use 1
+    refine ⟨ih, ?_⟩
+    simp
+
+lemma comm_subgroup_mem {G: Type*} [Group G] {H: Subgroup G} (S: Set H) (n: ℕ):
+  (iterate_comm_set (H.subtype '' S) n) ⊆ H := by
+    induction n with
+    | zero =>
+      simp [iterate_comm_set]
+      intro h h_mem
+      simp
+    | succ n ih =>
+      simp [iterate_comm_set]
+      intro h h_mem h_mem_s
+      intro a ha
+      simp
+      have a_mem := ih ha
+      simp [Bracket.bracket]
+      apply Subgroup.mul_mem
+      . apply Subgroup.mul_mem
+        . apply Subgroup.mul_mem
+          . exact a_mem
+          . exact h_mem
+        . simp
+          exact a_mem
+      . simp
+        exact h_mem
+
+
+lemma iterate_comm_subgroup {G: Type*} [Group G] {H: Subgroup G} (S: Set H) (h: H) (n: ℕ):
+  h ∈ (iterate_comm_set S n) ↔ h.val ∈ iterate_comm_set (H.subtype '' S) n := by
+    induction n generalizing h with
+    | zero =>
+      simp [iterate_comm_set]
+    | succ n ih =>
+      dsimp [iterate_comm_set]
+      simp
+      refine ⟨?_, ?_⟩
+      .
+        intro h_mem
+        obtain ⟨b, b_mem, ⟨b_mem_S, a, h_eq⟩⟩ := h_mem
+        obtain ⟨a_mem_h, a_mem_comm, h_eq_comm⟩ := h_eq
+        use b
+        use ?_
+        . use a
+          refine ⟨?_, ?_⟩
+          .
+            rw [ih] at a_mem_comm
+            simp at a_mem_comm
+            exact a_mem_comm
+          . rw [← h_eq_comm]
+            simp [Bracket.bracket]
+        . use b_mem
+      . intro data_mem
+        obtain ⟨b, ⟨b_mem_H, b_mem_S⟩, ⟨a, a_mem_comm, h_eq⟩⟩ := data_mem
+        use b
+        use b_mem_H
+        refine ⟨?_, ?_⟩
+        . exact b_mem_S
+        . use a
+          use ?_
+          . refine ⟨?_, ?_⟩
+            .
+              rw [ih]
+              simp
+              exact a_mem_comm
+            .
+              ext
+              rw [← h_eq]
+              simp [Bracket.bracket]
+          .
+            simp [Bracket.bracket] at h_eq
+            have iterate_subset := comm_subgroup_mem S n a_mem_comm
+            simpa using iterate_subset
+
+
+-- TODO - why can't linarith or omega find this?
+lemma nat_le_mul (a n: ℕ) (hn: n ≠ 0): a ≤ n * a := by
+  conv =>
+    arg 1
+    equals 1 * a =>
+      simp
+
+  apply Nat.mul_le_mul
+  . omega
+  . simp
+
+lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_normal: N'.Normal) (N'_nilpotent: Group.IsNilpotent N') (N'_nilpotency_ne_zero: Group.nilpotencyClass N' ≠ 0) (gamma_alpha: G) (m: ℕ) (m_ne_zero: m ≠ 0) (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g gamma_alpha m = 1):
   Group.IsNilpotent (Subgroup.closure (N'.carrier ∪ {gamma_alpha})) := by
 
   rw [nilpotent_iff_lowerCentralSeries]
@@ -1580,7 +1707,86 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
             exact hg
 
     exact foo
-  . sorry
+  .
+    ext a
+    refine ⟨?_, ?_⟩
+    .
+      intro a_mem
+      sorry
+    .
+      intro a_eq
+      simp at a_eq
+      have iterate_mem := iterated_mem_iterated_set 1 gamma_alpha ((N'.carrier ∪ {gamma_alpha}) ∪ ((N'.carrier ∪ {gamma_alpha}))⁻¹) (by simp) (by simp) m
+      rw [h_gamma_alpha 1] at iterate_mem
+
+      have one_mem_mul := one_mem_iterated_comm ((N'.carrier ∪ {gamma_alpha}) ∪ ((N'.carrier ∪ {gamma_alpha}))⁻¹) m (m := (Group.nilpotencyClass N') * m + 1) (by
+        nth_grw 1 [Nat.lt_add_one (n := m)]
+        apply add_le_add
+        . apply nat_le_mul
+          exact N'_nilpotency_ne_zero
+        . simp
+      ) iterate_mem
+      rw [a_eq]
+      rw [iterate_comm_subgroup]
+      simp
+
+      -- TODO - make this less of a mess
+      conv =>
+        arg 1
+        arg 1
+        equals ((N'.carrier ∪ {gamma_alpha}) ∪ ((N'.carrier ∪ {gamma_alpha}))⁻¹) =>
+          ext a
+          simp
+          refine ⟨?_, ?_⟩
+          .
+            intro ha
+            obtain ⟨a_mem_N, a_eq_gamma⟩ := ha
+            cases a_eq_gamma
+            . rename_i left
+              grind
+            . rename_i right
+              obtain ⟨b, ⟨b_eq, other⟩⟩ := right
+              rw [Subtype.ext_iff] at other
+              simp at other
+              rw [other] at b_eq
+              cases b_eq
+              . rename_i left
+                left
+                rw [← left]
+                simp
+              . rename_i right
+                right
+                right
+                simp at right
+                exact right
+          . intro a_eq
+            use ?_
+            .
+              cases a_eq
+              . rename_i left_case
+                right
+                use a⁻¹
+                use ?_
+                . rw [Subtype.ext_iff]
+                  simp
+                . left
+                  simp [left_case]
+              . rename_i right_case
+                grind
+            .
+              cases a_eq
+              . rename_i left_case
+                rw [← Subgroup.inv_mem_iff]
+                apply Subgroup.mem_closure_of_mem
+                simp
+                left
+                simp [left_case]
+              . rename_i right_case
+                apply Subgroup.mem_closure_of_mem
+                simp
+                exact right_case
+      exact one_mem_mul
+      simp
 
 -- This probably needs the semidirect product
 lemma closure_mem_repeatComm {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (n: ℕ):
