@@ -730,9 +730,47 @@ lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (
           simp
         . simp
     .
+
+      have comm_subset_center: (QuotientGroup.mk' _) '' (iterate_comm_set (S ∪ S⁻¹) n) ⊆ ((Subgroup.center (G ⧸ (lowerCentralSeries G (n)))).carrier) := by
+        intro x hx
+        simp at hx
+        obtain ⟨a, a_mem, hx⟩ := hx
+        rw [Subgroup.mem_carrier]
+        rw [Subgroup.mem_center_iff]
+        intro b
+        rw [← QuotientGroup.out_eq' (a := b)]
+        rw [← hx]
+        rw [← QuotientGroup.mk_mul]
+        rw [← QuotientGroup.mk_mul]
+        rw [QuotientGroup.eq]
+        simp
+        simp_rw [← ih]
+        simp [Subgroup.normalClosure]
+        rw [mul_assoc]
+        apply Subgroup.mul_mem
+        .
+          simp
+          apply Subgroup.mem_closure_of_mem
+          simp [Group.conjugatesOfSet]
+          use a
+          refine ⟨a_mem, ?_⟩
+          simp [conjugatesOf]
+          use 1
+          simp
+        . apply Subgroup.mem_closure_of_mem
+          simp [Group.conjugatesOfSet]
+          use a
+          refine ⟨a_mem, ?_⟩
+          simp [conjugatesOf]
+          use (Quotient.out b)⁻¹
+          group
+
+
+
+      have normal_le_center := Subgroup.normalClosure_le_normal comm_subset_center
+
       simp [Bracket.bracket]
-      simp_rw [← ih]
-      simp
+      --simp_rw [← ih]
 
       -- have subset_closure: (((Subgroup.closure (⋃ g, (fun a ↦ g * a * g⁻¹) '' iterate_comm_set (S ∪ S⁻¹) n)) : Set G) ⊆ ↑(Subgroup.closure (⋃ g, (fun a ↦ g * a * g⁻¹) '' iterate_comm_set (S ∪ S⁻¹) (n + 1))) := by
       --   simp
@@ -742,6 +780,9 @@ lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (
       simp at hg
       obtain ⟨a, a_mem, hg⟩ := hg
       obtain ⟨y, hy⟩ := hg
+      simp [Subgroup.normalClosure]
+      rw [← hy]
+
 
 
 
