@@ -731,7 +731,7 @@ lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (
         . simp
     .
 
-      have comm_subset_center: (QuotientGroup.mk' _) '' (iterate_comm_set (S ∪ S⁻¹) n) ⊆ ((Subgroup.center (G ⧸ (lowerCentralSeries G (n)))).carrier) := by
+      have comm_subset_center: (QuotientGroup.mk' _) '' (iterate_comm_set (S ∪ S⁻¹) n) ⊆ ((Subgroup.center (G ⧸ (lowerCentralSeries G (n + 1)))).carrier) := by
         intro x hx
         simp at hx
         obtain ⟨a, a_mem, hx⟩ := hx
@@ -744,12 +744,15 @@ lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (
         rw [← QuotientGroup.mk_mul]
         rw [QuotientGroup.eq]
         simp
+        simp [lowerCentralSeries]
+        simp [Bracket.bracket]
+        apply Subgroup.mem_closure_of_mem
+        simp
+        use a⁻¹
         simp_rw [← ih]
         simp [Subgroup.normalClosure]
-        rw [mul_assoc]
-        apply Subgroup.mul_mem
+        refine ⟨?_, ?_⟩
         .
-          simp
           apply Subgroup.mem_closure_of_mem
           simp [Group.conjugatesOfSet]
           use a
@@ -757,11 +760,7 @@ lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (
           simp [conjugatesOf]
           use 1
           simp
-        . apply Subgroup.mem_closure_of_mem
-          simp [Group.conjugatesOfSet]
-          use a
-          refine ⟨a_mem, ?_⟩
-          simp [conjugatesOf]
+        .
           use (Quotient.out b)⁻¹
           group
 
