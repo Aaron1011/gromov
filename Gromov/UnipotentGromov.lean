@@ -731,6 +731,30 @@ lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (
         . simp
     .
 
+      have image_commute: ∀ s ∈ S, ∀ g ∈ (iterate_comm_set (S ∪ S⁻¹) n), QuotientGroup.mk' (((Subgroup.normalClosure (iterate_comm_set (S ∪ S⁻¹) (n + 1))))) (s * g) = QuotientGroup.mk' (((Subgroup.normalClosure (iterate_comm_set (S ∪ S⁻¹) (n + 1))))) (g * s) := by
+        intro s hs g hg
+        simp
+        rw [← QuotientGroup.mk_mul]
+        rw [← QuotientGroup.mk_mul]
+        rw [QuotientGroup.eq]
+        simp [Subgroup.normalClosure]
+        rw [← Subgroup.closure_inv]
+        apply Subgroup.mem_closure_of_mem
+        simp [-Set.mem_inv, Group.conjugatesOfSet]
+        simp only [conjugatesOf]
+        use g * s⁻¹ * g⁻¹ * s
+        refine ⟨?_, ?_⟩
+        . simp [iterate_comm_set]
+          use s⁻¹
+          refine ⟨by simp [hs], ?_⟩
+          use g
+          refine ⟨hg, ?_⟩
+          simp [Bracket.bracket]
+        .
+          simp
+          use g⁻¹
+          group
+
       have comm_subset_center: (QuotientGroup.mk' _) '' (iterate_comm_set (S ∪ S⁻¹) n) ⊆ ((Subgroup.center (G ⧸ ((Subgroup.normalClosure (iterate_comm_set (S ∪ S⁻¹) (n + 1)))))).carrier) := by
         intro x hx
         simp at hx
@@ -743,6 +767,7 @@ lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (
         rw [← QuotientGroup.mk_mul]
         rw [← QuotientGroup.mk_mul]
         rw [QuotientGroup.eq]
+        simp
         simp [Subgroup.normalClosure]
         apply Subgroup.mem_closure_of_mem
         simp [Group.conjugatesOfSet]
