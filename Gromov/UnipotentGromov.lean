@@ -1709,15 +1709,76 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
     exact foo
   .
     ext a
+    rw [iterate_comm_subgroup]
+    simp
+
+    -- TODO - make this less of a mess
+    conv =>
+      arg 1
+      arg 1
+      arg 1
+      equals ((N'.carrier ∪ {gamma_alpha}) ∪ ((N'.carrier ∪ {gamma_alpha}))⁻¹) =>
+        ext a
+        simp
+        refine ⟨?_, ?_⟩
+        .
+          intro ha
+          obtain ⟨a_mem_N, a_eq_gamma⟩ := ha
+          cases a_eq_gamma
+          . rename_i left
+            grind
+          . rename_i right
+            obtain ⟨b, ⟨b_eq, other⟩⟩ := right
+            rw [Subtype.ext_iff] at other
+            simp at other
+            rw [other] at b_eq
+            cases b_eq
+            . rename_i left
+              left
+              rw [← left]
+              simp
+            . rename_i right
+              right
+              right
+              simp at right
+              exact right
+        . intro a_eq
+          use ?_
+          .
+            cases a_eq
+            . rename_i left_case
+              right
+              use a⁻¹
+              use ?_
+              . rw [Subtype.ext_iff]
+                simp
+              . left
+                simp [left_case]
+            . rename_i right_case
+              grind
+          .
+            cases a_eq
+            . rename_i left_case
+              rw [← Subgroup.inv_mem_iff]
+              apply Subgroup.mem_closure_of_mem
+              simp
+              left
+              simp [left_case]
+            . rename_i right_case
+              apply Subgroup.mem_closure_of_mem
+              simp
+              exact right_case
+
     refine ⟨?_, ?_⟩
     .
       intro a_mem
+      
       sorry
     .
       intro a_eq
       simp at a_eq
       have iterate_mem := iterated_mem_iterated_set 1 gamma_alpha ((N'.carrier ∪ {gamma_alpha}) ∪ ((N'.carrier ∪ {gamma_alpha}))⁻¹) (by simp) (by simp) m
-      rw [h_gamma_alpha 1] at iterate_mem
+      rw [h_gamma_alpha 1 (by simp)] at iterate_mem
 
       have one_mem_mul := one_mem_iterated_comm ((N'.carrier ∪ {gamma_alpha}) ∪ ((N'.carrier ∪ {gamma_alpha}))⁻¹) m (m := (Group.nilpotencyClass N') * m + 1) (by
         nth_grw 1 [Nat.lt_add_one (n := m)]
@@ -1727,66 +1788,7 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
         . simp
       ) iterate_mem
       rw [a_eq]
-      rw [iterate_comm_subgroup]
-      simp
-
-      -- TODO - make this less of a mess
-      conv =>
-        arg 1
-        arg 1
-        equals ((N'.carrier ∪ {gamma_alpha}) ∪ ((N'.carrier ∪ {gamma_alpha}))⁻¹) =>
-          ext a
-          simp
-          refine ⟨?_, ?_⟩
-          .
-            intro ha
-            obtain ⟨a_mem_N, a_eq_gamma⟩ := ha
-            cases a_eq_gamma
-            . rename_i left
-              grind
-            . rename_i right
-              obtain ⟨b, ⟨b_eq, other⟩⟩ := right
-              rw [Subtype.ext_iff] at other
-              simp at other
-              rw [other] at b_eq
-              cases b_eq
-              . rename_i left
-                left
-                rw [← left]
-                simp
-              . rename_i right
-                right
-                right
-                simp at right
-                exact right
-          . intro a_eq
-            use ?_
-            .
-              cases a_eq
-              . rename_i left_case
-                right
-                use a⁻¹
-                use ?_
-                . rw [Subtype.ext_iff]
-                  simp
-                . left
-                  simp [left_case]
-              . rename_i right_case
-                grind
-            .
-              cases a_eq
-              . rename_i left_case
-                rw [← Subgroup.inv_mem_iff]
-                apply Subgroup.mem_closure_of_mem
-                simp
-                left
-                simp [left_case]
-              . rename_i right_case
-                apply Subgroup.mem_closure_of_mem
-                simp
-                exact right_case
-      exact one_mem_mul
-      simp
+      simpa using one_mem_mul
 
 -- This probably needs the semidirect product
 lemma closure_mem_repeatComm {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (n: ℕ):
