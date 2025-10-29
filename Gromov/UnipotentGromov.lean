@@ -1545,6 +1545,43 @@ lemma RepeatComm_min_strict_mono {G: Type*} [Group G] {N: Subgroup G} (N_normal:
 --     exact Nat.le_of_succ_le b_lt_n
 
 
+lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_normal: N'.Normal) (N'_nilpotent: Group.IsNilpotent N') (gamma_alpha: G) (m: ℕ) (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g gamma_alpha = 1):
+  Group.IsNilpotent (Subgroup.closure (N'.carrier ∪ {gamma_alpha})) := by
+
+  rw [nilpotent_iff_lowerCentralSeries]
+  use ((Group.nilpotencyClass N') * m) + 1
+
+  apply comm_trivial_implies_nilpotent (G := Subgroup.closure (N'.carrier ∪ {gamma_alpha})) (S := Set.range (fun (a: ↑(N'.carrier ∪ {gamma_alpha})) => ⟨a.val, by apply Subgroup.mem_closure_of_mem; grind⟩))
+  .
+
+    -- TODO - there must be a simpler way to do this
+    ext a
+    simp
+    have foo := a.property
+    rw [← Subgroup.mem_map_iff_mem (f := Subgroup.subtype _) (hf := by apply Subgroup.subtype_injective)]
+    simp [-Subgroup.mem_map]
+
+    conv =>
+      arg 1
+      equals Subgroup.closure (N'.carrier ∪ {gamma_alpha}) =>
+        rw [le_antisymm_iff]
+        refine ⟨?_, ?_⟩
+        . intro g hg
+          simp at hg
+          obtain ⟨g_mem_N_union, _⟩ := hg
+          simpa using g_mem_N_union
+        . simp
+          intro g hg
+          simp
+          use ?_
+          . apply Subgroup.mem_closure_of_mem
+            simpa using hg
+          . apply Subgroup.mem_closure_of_mem
+            exact hg
+
+    exact foo
+  . sorry
+
 -- This probably needs the semidirect product
 lemma closure_mem_repeatComm {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (n: ℕ):
   ∀ g ∈ { x | ∃ p ∈ lowerCentralSeries (Subgroup.closure ↑(N.carrier ∪ {gamma_alpha})) (n), ∃ q, x = ⁅p.val, q⁆ }, ∃ data ∈ RepeatComm N_normal gamma_alpha (n + 1), g = data.cur := by
