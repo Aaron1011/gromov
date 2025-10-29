@@ -689,39 +689,45 @@ variable {G: Type*} [Group G] (S: Set G)
 
 -- https://math.stackexchange.com/questions/4995327/group-in-the-lower-central-series-is-generated-by-conjugates-of-comutators-of-ge
 lemma iterate_comm_generates (one_mem: 1 ∈ S) (hS: Subgroup.closure S = ⊤) (n: ℕ):
-  (Subgroup.closure (⋃ (g: G), (MulAut.conj g).toMonoidHom '' iterate_comm_set (S ∪ S⁻¹) n)) = lowerCentralSeries G n := by
+  (Subgroup.normalClosure (iterate_comm_set (S ∪ S⁻¹) n)) = lowerCentralSeries G n := by
   induction n with
   | zero =>
-    rw [Subgroup.closure_iUnion]
-    simp_rw [← MonoidHom.map_closure]
     simp [iterate_comm_set]
-    rw [Subgroup.closure_union]
-    simp [hS]
+
+    have closure_le: ⊤ ≤ Subgroup.closure (S ∪ S⁻¹) := by
+      rw [Subgroup.closure_union]
+      simp [hS]
+
+
+    rw [eq_top_iff]
+    grw [closure_le]
+    apply Subgroup.closure_le_normalClosure
   | succ n ih =>
     simp [lowerCentralSeries]
     rw [le_antisymm_iff]
     refine ⟨?_, ?_⟩
     .
-      simp
-      intro x y hy
-      simp
-
-      simp [iterate_comm_set] at hy
+      simp [Subgroup.normalClosure]
+      intro y hy
+      simp [Group.conjugatesOfSet, iterate_comm_set] at hy
       obtain ⟨s, s_mem, ⟨c, c_mem, c_comm⟩⟩ := hy
+      simp [conjugatesOf] at c_comm
+      obtain ⟨x, x_mem⟩ := c_comm
+      rw [← x_mem]
       apply Subgroup.Normal.conj_mem
       . infer_instance
       .
-        rw [← c_comm]
         apply Subgroup.commutator_mem_commutator
         .
           rw [← ih]
           apply Subgroup.mem_closure_of_mem
           simp
-          use 1
+          simp [Group.conjugatesOfSet]
           use c
-          refine ⟨?_, ?_⟩
-          . exact c_mem
-          . simp
+          refine ⟨c_mem, ?_⟩
+          simp [conjugatesOf]
+          use 1
+          simp
         . simp
     .
       simp [Bracket.bracket]
