@@ -1513,41 +1513,39 @@ lemma nilpotent_of_comm_trivial {G: Type*} [Group G] (S: Set G) (n: ℕ) (hS: it
     simp at a_mem
     exact a_mem
   | succ n ih =>
-    simp [iterate_comm_set] at hS
-
     sorry
 
-lemma RepeatComm_eventually_le {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (a b: ℕ):
-  ∃ n: ℕ, a ≤ (RepeatComm_min N_normal gamma_alpha n).fst ∨ b ≤ (RepeatComm_min N_normal gamma_alpha n).snd := by
+-- lemma RepeatComm_eventually_le {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (a b: ℕ):
+--   ∃ n: ℕ, a ≤ (RepeatComm_min N_normal gamma_alpha n).fst ∨ b ≤ (RepeatComm_min N_normal gamma_alpha n).snd := by
 
-  have unbounded := prod_lex_has_unbounded (RepeatComm_min_strict_mono N_normal gamma_alpha)
-  -- TODO - deduplicate most of these cases
-  cases unbounded
-  .
-    rename_i fst_unbounded
-    rw [not_bddAbove_iff] at fst_unbounded
-    specialize fst_unbounded a
-    obtain ⟨n, hn⟩ := fst_unbounded
-    simp at hn
-    obtain ⟨⟨c, c_eq⟩, a_lt_n⟩ := hn
-    use c
-    left
-    rw [c_eq]
-    exact Nat.le_of_succ_le a_lt_n
-  .
-    rename_i snd_unbounded
-    rw [not_bddAbove_iff] at snd_unbounded
-    specialize snd_unbounded b
-    obtain ⟨n, hn⟩ := snd_unbounded
-    simp at hn
-    obtain ⟨⟨c, c_eq⟩, b_lt_n⟩ := hn
-    use c
-    right
-    rw [c_eq]
-    exact Nat.le_of_succ_le b_lt_n
+--   have unbounded := prod_lex_has_unbounded (RepeatComm_min_strict_mono N_normal gamma_alpha)
+--   -- TODO - deduplicate most of these cases
+--   cases unbounded
+--   .
+--     rename_i fst_unbounded
+--     rw [not_bddAbove_iff] at fst_unbounded
+--     specialize fst_unbounded a
+--     obtain ⟨n, hn⟩ := fst_unbounded
+--     simp at hn
+--     obtain ⟨⟨c, c_eq⟩, a_lt_n⟩ := hn
+--     use c
+--     left
+--     rw [c_eq]
+--     exact Nat.le_of_succ_le a_lt_n
+--   .
+--     rename_i snd_unbounded
+--     rw [not_bddAbove_iff] at snd_unbounded
+--     specialize snd_unbounded b
+--     obtain ⟨n, hn⟩ := snd_unbounded
+--     simp at hn
+--     obtain ⟨⟨c, c_eq⟩, b_lt_n⟩ := hn
+--     use c
+--     right
+--     rw [c_eq]
+--     exact Nat.le_of_succ_le b_lt_n
 
 
--- This probably needs the semidirect productff
+-- This probably needs the semidirect product
 lemma closure_mem_repeatComm {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (n: ℕ):
   ∀ g ∈ { x | ∃ p ∈ lowerCentralSeries (Subgroup.closure ↑(N.carrier ∪ {gamma_alpha})) (n), ∃ q, x = ⁅p.val, q⁆ }, ∃ data ∈ RepeatComm N_normal gamma_alpha (n + 1), g = data.cur := by
 
