@@ -689,13 +689,12 @@ variable {G: Type*} [Group G] (S: Set G)
 
 -- https://math.stackexchange.com/questions/4995327/group-in-the-lower-central-series-is-generated-by-conjugates-of-comutators-of-ge
 lemma iterate_comm_generates (hS: Subgroup.closure S = ⊤) (n: ℕ):
-  (Subgroup.normalClosure (iterate_comm_set (S ∪ S⁻¹) n)) = lowerCentralSeries G n := by
+  (Subgroup.normalClosure (iterate_comm_set (S) n)) = lowerCentralSeries G n := by
   induction n with
   | zero =>
     simp [iterate_comm_set]
 
-    have closure_le: ⊤ ≤ Subgroup.closure (S ∪ S⁻¹) := by
-      rw [Subgroup.closure_union]
+    have closure_le: ⊤ ≤ Subgroup.closure (S) := by
       simp [hS]
 
 
@@ -721,7 +720,6 @@ lemma iterate_comm_generates (hS: Subgroup.closure S = ⊤) (n: ℕ):
         .
           rw [← ih]
           apply Subgroup.mem_closure_of_mem
-          simp
           simp [Group.conjugatesOfSet]
           use c
           refine ⟨c_mem, ?_⟩
@@ -731,31 +729,33 @@ lemma iterate_comm_generates (hS: Subgroup.closure S = ⊤) (n: ℕ):
         . simp
     .
 
-      have image_commute: ∀ s ∈ S, ∀ g ∈ (iterate_comm_set (S ∪ S⁻¹) n), QuotientGroup.mk' (((Subgroup.normalClosure (iterate_comm_set (S ∪ S⁻¹) (n + 1))))) (s * g) = QuotientGroup.mk' (((Subgroup.normalClosure (iterate_comm_set (S ∪ S⁻¹) (n + 1))))) (g * s) := by
+      have image_commute: ∀ s ∈ S, ∀ g ∈ (iterate_comm_set (S) n), QuotientGroup.mk' (((Subgroup.normalClosure (iterate_comm_set (S) (n + 1))))) (s * g) = QuotientGroup.mk' (((Subgroup.normalClosure (iterate_comm_set (S) (n + 1))))) (g * s) := by
         intro s hs g hg
         simp
         rw [← QuotientGroup.mk_mul]
         rw [← QuotientGroup.mk_mul]
         rw [QuotientGroup.eq]
         simp [Subgroup.normalClosure]
+        rw [← Subgroup.inv_mem_iff]
+        simp
         rw [← Subgroup.closure_inv]
         apply Subgroup.mem_closure_of_mem
         simp [-Set.mem_inv, Group.conjugatesOfSet]
         simp only [conjugatesOf]
-        use g * s⁻¹ * g⁻¹ * s
+        use g * s * g⁻¹ * s⁻¹
         refine ⟨?_, ?_⟩
         . simp [iterate_comm_set]
-          use s⁻¹
+          use s
           refine ⟨by simp [hs], ?_⟩
           use g
           refine ⟨hg, ?_⟩
           simp [Bracket.bracket]
         .
           simp
-          use g⁻¹
+          use s⁻¹ * g⁻¹
           group
 
-      have comm_subset_center: (QuotientGroup.mk' _) '' (iterate_comm_set (S ∪ S⁻¹) n) ⊆ ((Subgroup.center (G ⧸ ((Subgroup.normalClosure (iterate_comm_set (S ∪ S⁻¹) (n + 1)))))).carrier) := by
+      have comm_subset_center: (QuotientGroup.mk' _) '' (iterate_comm_set (S) n) ⊆ ((Subgroup.center (G ⧸ ((Subgroup.normalClosure (iterate_comm_set (S) (n + 1)))))).carrier) := by
         intro x hx
         simp at hx
         obtain ⟨a, a_mem, hx⟩ := hx
@@ -776,12 +776,11 @@ lemma iterate_comm_generates (hS: Subgroup.closure S = ⊤) (n: ℕ):
         rw [← hS] at b_mem_top
 
         -- TODO - figure out how to get the 'induction' tactic working here
-        apply Subgroup.closure_induction (p := fun y hy => a⁻¹ * y⁻¹ * (a * y) ∈ Subgroup.normalClosure (iterate_comm_set (S ∪ S⁻¹) (n + 1))) (hx := b_mem_top)
+        apply Subgroup.closure_induction (p := fun y hy => a⁻¹ * y⁻¹ * (a * y) ∈ Subgroup.normalClosure (iterate_comm_set (S) (n + 1))) (hx := b_mem_top)
         .
           intro s hs
           have comm := image_commute s hs a a_mem
           simp at comm
-          simp
           rw [← QuotientGroup.mk_mul] at comm
           rw [← QuotientGroup.mk_mul] at comm
           rw [QuotientGroup.eq] at comm
@@ -1772,7 +1771,7 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
     refine ⟨?_, ?_⟩
     .
       intro a_mem
-      
+
       sorry
     .
       intro a_eq
