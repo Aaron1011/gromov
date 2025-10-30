@@ -845,7 +845,7 @@ lemma iterate_comm_generates (hS: Subgroup.closure S = ⊤) (n: ℕ):
 #print axioms iterate_comm_generates
 
 -- Lemma 13.55 from https://www.math.ucdavis.edu/~kapovich/EPR/ggt.pdf
-lemma comm_trivial_implies_nilpotent {G: Type*} [Group G] (S: Set G) (hS: Subgroup.closure S = ⊤) (n: ℕ) (h_comm: iterate_comm_set (S ∪ S⁻¹) (n) = {1}):
+lemma comm_trivial_implies_nilpotent {G: Type*} [Group G] (S: Set G) (hS: Subgroup.closure S = ⊤) (n: ℕ) (h_comm: iterate_comm_set (S) (n) = {1}):
     lowerCentralSeries G n = ⊥ := by
 
   rw [← iterate_comm_generates S hS n]
@@ -1716,57 +1716,30 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
       arg 1
       arg 1
       arg 1
-      equals ((N'.carrier ∪ {gamma_alpha}) ∪ ((N'.carrier ∪ {gamma_alpha}))⁻¹) =>
+      equals ((N'.carrier ∪ {gamma_alpha})) =>
         ext a
         simp
         refine ⟨?_, ?_⟩
         .
           intro ha
-          obtain ⟨a_mem_N, a_eq_gamma⟩ := ha
-          cases a_eq_gamma
-          . rename_i left
-            grind
-          . rename_i right
-            obtain ⟨b, ⟨b_eq, other⟩⟩ := right
-            rw [Subtype.ext_iff] at other
-            simp at other
-            rw [other] at b_eq
-            cases b_eq
-            . rename_i left
-              left
-              rw [← left]
-              simp
-            . rename_i right
-              right
-              right
-              simp at right
-              exact right
+          grind
         . intro a_eq
-          use ?_
-          .
-            cases a_eq
-            . rename_i left_case
+          cases a_eq
+          . rename_i left
+            left
+            refine ⟨?_, ?_⟩
+            .
+              apply Subgroup.mem_closure_of_mem
+              simp
+            . exact id (Eq.symm left)
+          . rename_i h_right
+            right
+            refine ⟨?_, ?_⟩
+            . exact h_right
+            . apply Subgroup.mem_closure_of_mem
+              simp
               right
-              use a⁻¹
-              use ?_
-              . rw [Subtype.ext_iff]
-                simp
-              . left
-                simp [left_case]
-            . rename_i right_case
-              grind
-          .
-            cases a_eq
-            . rename_i left_case
-              rw [← Subgroup.inv_mem_iff]
-              apply Subgroup.mem_closure_of_mem
-              simp
-              left
-              simp [left_case]
-            . rename_i right_case
-              apply Subgroup.mem_closure_of_mem
-              simp
-              exact right_case
+              exact h_right
 
     refine ⟨?_, ?_⟩
     .
@@ -1776,10 +1749,10 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
     .
       intro a_eq
       simp at a_eq
-      have iterate_mem := iterated_mem_iterated_set 1 gamma_alpha ((N'.carrier ∪ {gamma_alpha}) ∪ ((N'.carrier ∪ {gamma_alpha}))⁻¹) (by simp) (by simp) m
+      have iterate_mem := iterated_mem_iterated_set 1 gamma_alpha ((N'.carrier ∪ {gamma_alpha})) (by simp) (by simp) m
       rw [h_gamma_alpha 1 (by simp)] at iterate_mem
 
-      have one_mem_mul := one_mem_iterated_comm ((N'.carrier ∪ {gamma_alpha}) ∪ ((N'.carrier ∪ {gamma_alpha}))⁻¹) m (m := (Group.nilpotencyClass N') * m + 1) (by
+      have one_mem_mul := one_mem_iterated_comm ((N'.carrier ∪ {gamma_alpha})) m (m := (Group.nilpotencyClass N') * m + 1) (by
         nth_grw 1 [Nat.lt_add_one (n := m)]
         apply add_le_add
         . apply nat_le_mul
