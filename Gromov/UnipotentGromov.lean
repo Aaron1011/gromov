@@ -1892,6 +1892,16 @@ lemma list_foldr_replicate (A: Type*) (a b: A) (n: ℕ) (f: A → A → A) :
     rw [Function.iterate_succ']
     rfl
 
+lemma list_fold_comm_one {G: Type*} [Group G] (l: List G) :
+    List.foldr (fun x y => ⁅y, x⁆) (1 : G) l = 1 := by
+  induction l with
+  | nil =>
+    simp
+  | cons head tail ih =>
+    simp only [List.foldr_cons]
+    rw [ih]
+    simp
+
 -- TODO - why can't linarith or omega find this?
 lemma nat_le_mul (a n: ℕ) (hn: n ≠ 0): a ≤ n * a := by
   conv =>
@@ -1983,6 +1993,25 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
       simp only [Set.mem_setOf_eq] at a_mem
       obtain ⟨s, l, l_length, a_eq⟩ := a_mem
 
+      -- TODO - extract this to its own lemma
+      have subsequent_comm_one: ∀ g ∈ N', ∀ k: ℕ, m ≤ k → iteratedCommutator g gamma_alpha k = 1 := by
+        intro g g_mem k hk
+        simp [iteratedCommutator]
+
+        apply Nat.le.dest at hk
+        obtain ⟨t, ht⟩ := hk
+        rw [← ht]
+        rw [Function.iterate_add_apply]
+        simp [iteratedCommutator] at h_gamma_alpha
+
+        -- Use the fact that N' is invariant to conjugation by gamma
+        have comm_in_N': (fun x ↦ ⁅x, gamma_alpha⁆)^[t] g ∈ N' := by
+          sorry
+
+        specialize h_gamma_alpha _ comm_in_N'
+        rw [h_gamma_alpha]
+
+
       have adjacent_or_count := list_adjacent_elements l (fun x => decide (x = gamma_alpha)) m
       rw [l_length] at adjacent_or_count
       cases adjacent_or_count
@@ -1990,12 +2019,20 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
         rename_i adjancent_gamma
         obtain ⟨gamma_list, h_gamma_list, gamma_list_len, eq_gamma_alpha⟩ := adjancent_gamma
 
+        have eq_gamma_alpha_unattach: ∀ b ∈ gamma_list.unattach, b = gamma_alpha := by
+          intro b hb
+          simp at hb
+          obtain ⟨b_mem, other⟩ := hb
+          specialize eq_gamma_alpha _ other
+          simp at eq_gamma_alpha
+          exact eq_gamma_alpha
+
 
         -- TODO - why isn't there List.ext for a ∈ l ?
-        have gamma_list_eq: gamma_list = List.replicate gamma_list.length ⟨gamma_alpha, by simp⟩ := by
+        have gamma_list_eq: gamma_list.unattach = List.replicate gamma_list.unattach.length gamma_alpha := by
           apply List.eq_replicate_of_mem
           intro b hb
-          specialize eq_gamma_alpha b hb
+          specialize eq_gamma_alpha_unattach b hb
           simp at eq_gamma_alpha
           grind
 
@@ -2006,14 +2043,21 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
         rw [← a_eq]
         rw [← h_list_eq]
         simp
-
         rw [gamma_list_eq]
         rw [list_foldr_replicate]
-
-
-
-        sorry
-      . sorry
+        unfold iteratedCommutator at h_gamma_alpha
+        simp [iteratedCommutator] at subsequent_comm_one
+        rw [subsequent_comm_one]
+        . rw [list_fold_comm_one]
+        . sorry
+        . simp
+          omega
+      .
+        rename_i count_not_gamma
+        simp at count_not_gamma
+        rw [Nat.mul_div_cancel] at count_not_gamma
+        . sorry
+        . omega
     .
       intro a_eq
       simp at a_eq
