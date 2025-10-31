@@ -2017,7 +2017,18 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
 
         -- Use the fact that N' is invariant to conjugation by gamma
         have comm_in_N': (fun x ↦ ⁅x, gamma_alpha⁆)^[t] g ∈ N' := by
-          sorry
+          clear ht
+          induction t with
+          | zero =>
+            simp
+            exact g_mem
+          | succ t ih =>
+            rw [Function.iterate_succ']
+            simp
+            apply normal_comm_mem N'_normal
+            exact ih
+
+
 
         specialize h_gamma_alpha _ comm_in_N'
         rw [h_gamma_alpha]
@@ -2087,7 +2098,6 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
           rw [subsequent_comm_one]
           . rw [list_fold_comm_one]
           .
-
             sorry
           . simp
             omega
