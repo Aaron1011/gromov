@@ -1660,9 +1660,10 @@ lemma iterate_comm_subgroup {G: Type*} [Group G] {H: Subgroup G} (S: Set H) (h: 
             simpa using iterate_subset
 
 -- TODO - should this use List.splitBy or List.splitOnP in some way?
-lemma list_adjacent_elemens (A: Type*) (l: List A) (p: A → Bool) (n : ℕ) (hn: 0 < n):
-    (¬ ∃ l' ∈ l.sublists, n ≤ l'.length ∧ ∀ a ∈ l', p a) → ((l.length - 1) / n) ≤ (l.countP (fun a => !(p a))):= by
+lemma list_adjacent_elements {A: Type*} (l: List A) (p: A → Bool) (n : ℕ) (hn: 0 < n):
+    (∃ l' ∈ l.sublists, n ≤ l'.length ∧ ∀ a ∈ l', p a) ∨ ((l.length - 1) / n) ≤ (l.countP (fun a => !(p a))):= by
 
+  rw [or_iff_not_imp_left]
   intro no_adjacent_seq
 
 
@@ -1799,7 +1800,7 @@ lemma list_adjacent_elemens (A: Type*) (l: List A) (p: A → Bool) (n : ℕ) (hn
         rw [Nat.one_le_div_iff hn]
         omega
 
-#print axioms list_adjacent_elemens
+#print axioms list_adjacent_elements
 
 
 -- TODO - why can't linarith or omega find this?
