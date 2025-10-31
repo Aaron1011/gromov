@@ -9,7 +9,7 @@ def iterate_comm_set {G: Type*} [Group G] (S: Set G) (n: ℕ): Set G :=
   | n + 1 => Set.iUnion (fun (s: S) => Set.image (fun g => ⁅g, s⁆) (iterate_comm_set S n))
 
 lemma iterate_comm_set_eq_fold {G: Type*} [Group G] (S: Set G) (n: ℕ):
-    iterate_comm_set S n = { g | ∃ s: S, ∃ l: List S, l.length = n ∧ (l.foldr (fun acc s => ⁅s, acc.val⁆) s.val) = g } := by
+    iterate_comm_set S n = { g | ∃ s: S, ∃ l: List S, l.length = n ∧ (l.unattach.foldr (fun acc s => ⁅s, acc⁆) s.val) = g } := by
 
   induction n with
   | zero =>
@@ -66,6 +66,7 @@ lemma iterate_comm_set_eq_fold {G: Type*} [Group G] (S: Set G) (n: ℕ):
         use tail
       . exact l_fold_eq
 
+#print axioms iterate_comm_set_eq_fold
 
 -- lemma iterate_comm_mem_inv {G: Type*} [Group G] (S: Set G) (n: ℕ): iterate_comm_set (S ∪ S⁻¹) n = (iterate_comm_set (S ∪ S⁻¹) n)⁻¹ := by
 --   induction n with
@@ -1878,6 +1879,18 @@ lemma list_adjacent_elements {A: Type*} (l: List A) (p: A → Bool) (n : ℕ):
 
 #print axioms list_adjacent_elements
 
+-- TODO - upstream to mathlib
+lemma list_foldr_replicate (A: Type*) (a b: A) (n: ℕ) (f: A → A → A) :
+    List.foldr f a (List.replicate n b) = Nat.iterate (f b) n a := by
+  induction n with
+  | zero =>
+    simp
+  | succ n ih =>
+    rw [List.replicate_succ]
+    rw [List.foldr_cons]
+    rw [ih]
+    rw [Function.iterate_succ']
+    rfl
 
 -- TODO - why can't linarith or omega find this?
 lemma nat_le_mul (a n: ℕ) (hn: n ≠ 0): a ≤ n * a := by
@@ -1985,6 +1998,17 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
           specialize eq_gamma_alpha b hb
           simp at eq_gamma_alpha
           grind
+
+
+        rw [List.IsInfix] at h_gamma_list
+        obtain ⟨l_prefix, l_suffix, h_list_eq⟩ := h_gamma_list
+        ext
+        rw [← a_eq]
+        rw [← h_list_eq]
+        simp
+
+        rw [gamma_list_eq]
+        rw [list_foldr_replicate]
 
 
 
