@@ -1755,16 +1755,18 @@ lemma list_adjacent_elemens (A: Type*) (l: List A) (p: A → Bool) (n : ℕ) (hn
       .
 
 
-        have drop_length: l.length - n ≤ (l.dropWhile p).length := by
+        have drop_length: l.length - n < (l.dropWhile p).length := by
           omega
 
         have drop_tail_length: l.length - n  ≤ (l.dropWhile p).tail.length := by
-          sorry
+          simp
+          omega
           --grw [drop_length]
           --simp
 
         have ih_drop := ih (l.dropWhile p).tail (by
-          sorry
+          simp
+          omega
         ) (by
             intro x hx x_len
             have foo := no_adjacent_seq x ?_ x_len
@@ -1797,6 +1799,7 @@ lemma list_adjacent_elemens (A: Type*) (l: List A) (p: A → Bool) (n : ℕ) (hn
         rw [Nat.one_le_div_iff hn]
         omega
 
+#print axioms list_adjacent_elemens
 
   -- induction l with
   -- | nil => simp
