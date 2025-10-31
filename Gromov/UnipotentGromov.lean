@@ -1659,6 +1659,193 @@ lemma iterate_comm_subgroup {G: Type*} [Group G] {H: Subgroup G} (S: Set H) (h: 
             have iterate_subset := comm_subgroup_mem S n a_mem_comm
             simpa using iterate_subset
 
+-- TODO - should this use List.splitBy or List.splitOnP in some way?
+lemma list_adjacent_elemens (A: Type*) (l: List A) (p: A → Bool) (n : ℕ) (hn: 0 < n):
+    (¬ ∃ l' ∈ l.sublists, n ≤ l'.length ∧ ∀ a ∈ l', p a) → (l.length / n) ≤ (l.countP (fun a => !(p a))):= by
+
+  intro no_adjacent_seq
+
+
+  simp at no_adjacent_seq
+
+  induction l using Nat.strongRecMeasure (f := List.length)
+  case ind l ih =>
+    by_cases non_matching: ∀ a ∈ l, p a
+    .
+
+      have len_lt: l.length < n := by
+        by_contra!
+        specialize no_adjacent_seq l (by
+          simp
+        ) this
+        obtain ⟨a, a_mem, not_p_a⟩ := no_adjacent_seq
+        specialize non_matching a a_mem
+        grind
+
+      apply Nat.div_eq_of_lt at len_lt
+      rw [len_lt]
+      simp
+    .
+      simp [-List.mem_cons] at non_matching
+      obtain ⟨a, a_mem, not_p_a⟩ := non_matching
+      have list_eq: l = (l.takeWhile p) ++ (l.dropWhile p) := by
+        simp
+
+      have count_p: l.countP (fun a => !(p a)) = (l.dropWhile p).countP (fun a => !(p a)) := by
+        nth_rw 1 [list_eq]
+        rw [List.countP_append]
+        simp
+        intro a ha
+        apply List.mem_takeWhile_imp at ha
+        exact ha
+
+      rw [count_p]
+
+      have l_length_eq : l.length = (l.takeWhile p).length + (l.dropWhile p).length := by
+        nth_rw 1 [list_eq]
+        rw [List.length_append]
+
+      have takeWhile_lt_n: (l.takeWhile p).length < n := by
+        by_contra!
+        specialize no_adjacent_seq (l.takeWhile p) (by
+          exact List.takeWhile_sublist p
+        ) (this)
+
+        obtain ⟨x, hx_mem, not_p_x⟩ := no_adjacent_seq
+        apply List.mem_takeWhile_imp at hx_mem
+        grind
+
+
+      have drop_length: l.length - n ≤ (l.dropWhile p).length := by
+        omega
+
+      have ih_drop := ih (l.dropWhile p) (by
+        sorry
+      ) (by
+        intro x hx x_len
+
+        have foo := no_adjacent_seq x ?_ x_len
+        .
+          obtain ⟨b, hb, not_p_b⟩ := foo
+          use b
+        . grind
+      )
+
+      rw [← ge_iff_le]
+      grw [ih_drop.ge]
+      grw [drop_length.ge]
+      conv =>
+        arg 1
+        equals (l.length / n) - 1 =>
+          rw [← Nat.sub_mul_div]
+          simp
+
+
+      sorry
+
+
+  -- induction l with
+  -- | nil => simp
+  -- | cons head tail ih =>
+
+  --   let l := head :: tail
+
+  --   by_cases non_matching: ∀ a ∈ l, p a
+  --   .
+
+  --     have len_lt: (head :: tail).length < n := by
+  --       by_contra!
+  --       specialize no_adjacent_seq (head :: tail) (by
+  --         simp
+  --       ) this
+  --       obtain ⟨a, a_mem, not_p_a⟩ := no_adjacent_seq
+  --       specialize non_matching a a_mem
+  --       grind
+
+  --     apply Nat.div_eq_of_lt at len_lt
+  --     rw [len_lt]
+  --     simp
+  --   .
+  --     simp [-List.mem_cons] at non_matching
+  --     obtain ⟨a, a_mem, not_p_a⟩ := non_matching
+  --     have list_eq: l = (l.takeWhile p) ++ (l.dropWhile p) := by
+  --       simp
+
+  --     have count_p: l.countP (fun a => !(p a)) = (l.dropWhile p).countP (fun a => !(p a)) := by
+  --       nth_rw 1 [list_eq]
+  --       rw [List.countP_append]
+  --       simp
+  --       intro a ha
+  --       apply List.mem_takeWhile_imp at ha
+  --       exact ha
+
+  --     unfold l at count_p
+  --     rw [count_p]
+
+
+  --     have ih_drop := ih
+
+
+
+
+
+
+
+
+
+  --   have takewhile_lt: (l.takeWhile p).length < n := by
+  --     by_contra!
+  --     specialize no_adjacent_seq (l.takeWhile p) (by
+  --       exact List.takeWhile_sublist p
+  --     ) (this)
+
+
+  -- | zero =>
+  --   simp
+  -- | succ m ih =>
+
+  --   have takewhile_lt: (l.takeWhile p).length < n := by
+  --     by_contra!
+  --     specialize no_adjacent_seq (l.takeWhile p) (by
+  --       exact List.takeWhile_sublist p
+  --     ) (this)
+
+
+
+  --   sorry
+
+  -- let pre := (l.takeWhile p).take n
+  -- by_cases pre_len_eq: pre.length = n
+  -- .
+  --   have pre_all: ∀ a ∈ pre, p a := by
+  --     simp [pre]
+  --     intro a ha
+  --     apply List.mem_of_mem_take at ha
+  --     apply List.mem_takeWhile_imp at ha
+  --     exact ha
+
+  --   have not_pre_all := no_adjacent_seq pre (by
+  --     simp [pre]
+  --     apply List.Sublist.trans (l₂ := List.takeWhile p l)
+  --     . grind
+  --     . grind
+  --   ) pre_len_eq
+  --   obtain ⟨x, x_mem, not_p_x⟩ := not_pre_all
+  --   have p_x := pre_all x x_mem
+  --   rw [p_x] at not_p_x
+  --   simp at not_p_x
+  -- .
+
+
+  --   simp [pre] at pre_len_eq
+
+
+
+
+
+
+  sorry
+
 
 -- TODO - why can't linarith or omega find this?
 lemma nat_le_mul (a n: ℕ) (hn: n ≠ 0): a ≤ n * a := by
@@ -1744,6 +1931,7 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
     refine ⟨?_, ?_⟩
     .
       intro a_mem
+
 
       sorry
     .
