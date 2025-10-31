@@ -1939,6 +1939,35 @@ lemma nat_le_mul (a n: ℕ) (hn: n ≠ 0): a ≤ n * a := by
   . omega
   . simp
 
+-- List.countP (fun a ↦ !decide (↑a = gamma_alpha)) l
+lemma count_mem_group_implies_lowercentral {G: Type*} [Group G] {G: Type*} [Group G] {N': Subgroup G} [∀ a: G, Decidable (a ∈ N')] (N'_normal: N'.Normal) (N'_nilpotent: Group.IsNilpotent N') (N'_nilpotency_ne_zero: Group.nilpotencyClass N' ≠ 0) (l: List G) (g: G)
+    (count_ne_zero: (l.countP (fun a => decide (a ∈ N'))) ≠ 0):
+    l.foldr (fun acc s ↦ ⁅s, acc⁆) g ∈ Subgroup.map N'.subtype (lowerCentralSeries N' (l.countP (fun a => decide (a ∈ N')))) := by
+
+  induction l with
+  | nil =>
+    simp at count_ne_zero
+  | cons head tail ih =>
+    by_cases head_in_N': head ∈ N'
+    . sorry
+    . rw [List.countP_cons]
+      simp only [head_in_N', decide_false, Bool.false_eq_true, ↓reduceIte]
+
+      rw [List.countP_cons] at count_ne_zero
+      simp only [head_in_N', decide_false, Bool.false_eq_true, ↓reduceIte] at count_ne_zero
+      rw [add_zero] at count_ne_zero
+      specialize ih count_ne_zero
+      rw [List.foldr_cons]
+      apply normal_comm_mem
+      . exact ConjAct.normal_of_characteristic_of_normal
+      . exact ih
+
+
+  -- induction l using Nat.strongRecMeasure (f := (l.countP (fun a => decide (a ∈ N'))))
+  -- case ind p ih =>
+
+  --   sorry
+
 lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_normal: N'.Normal) (N'_nilpotent: Group.IsNilpotent N') (N'_nilpotency_ne_zero: Group.nilpotencyClass N' ≠ 0) (gamma_alpha: G) (m: ℕ) (m_ne_zero: m ≠ 0) (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g gamma_alpha m = 1):
   Group.IsNilpotent (Subgroup.closure (N'.carrier ∪ {gamma_alpha})) := by
 
