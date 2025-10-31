@@ -1902,6 +1902,17 @@ lemma list_fold_comm_one {G: Type*} [Group G] (l: List G) :
     rw [ih]
     simp
 
+lemma nat_iterate_comm_one (G: Type*) [Group G] (g: G) (n: ℕ):
+    (Nat.iterate (fun x => ⁅x, g⁆) n 1) = 1 := by
+  induction n with
+  | zero =>
+    simp
+  | succ n ih =>
+    rw [Function.iterate_succ']
+    simp
+    rw [ih]
+    simp
+
 -- TODO - why can't linarith or omega find this?
 lemma nat_le_mul (a n: ℕ) (hn: n ≠ 0): a ≤ n * a := by
   conv =>
@@ -2037,26 +2048,56 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
           grind
 
 
-        rw [List.IsInfix] at h_gamma_list
-        obtain ⟨l_prefix, l_suffix, h_list_eq⟩ := h_gamma_list
+
         ext
         rw [← a_eq]
+        rw [List.IsInfix] at h_gamma_list
+        obtain ⟨l_prefix, l_suffix, h_list_eq⟩ := h_gamma_list
         rw [← h_list_eq]
         simp
         rw [gamma_list_eq]
         rw [list_foldr_replicate]
         unfold iteratedCommutator at h_gamma_alpha
         simp [iteratedCommutator] at subsequent_comm_one
-        rw [subsequent_comm_one]
-        . rw [list_fold_comm_one]
-        . sorry
-        . simp
-          omega
+        by_cases l_suffix_nil: l_suffix = []
+        .
+          simp [l_suffix_nil]
+
+          have s_mem := s.property
+          rw [Set.mem_union] at s_mem
+          cases s_mem
+          . rename_i s_mem_N'
+            rw [subsequent_comm_one]
+            . rw [list_fold_comm_one]
+            . simpa using s_mem_N'
+            . omega
+          .
+            rename_i s_eq_gamma
+            simp at s_eq_gamma
+            rw [s_eq_gamma]
+
+            have gamma_len_eq: gamma_list.length = gamma_list.length - 1 + 1 := by
+              omega
+
+            rw [gamma_len_eq]
+            simp
+            rw [nat_iterate_comm_one]
+            rw [list_fold_comm_one]
+        .
+          rw [subsequent_comm_one]
+          . rw [list_fold_comm_one]
+          .
+
+            sorry
+          . simp
+            omega
       .
         rename_i count_not_gamma
         simp at count_not_gamma
         rw [Nat.mul_div_cancel] at count_not_gamma
-        . sorry
+        .
+
+          sorry
         . omega
     .
       intro a_eq
