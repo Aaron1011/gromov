@@ -1721,7 +1721,7 @@ lemma iterate_comm_subgroup {G: Type*} [Group G] {H: Subgroup G} (S: Set H) (h: 
 -- TODO - should this use List.splitBy or List.splitOnP in some way?
 -- TODO - cleanup the proof and upstream to mathlib
 lemma list_adjacent_elements {A: Type*} (l: List A) (p: A → Bool) (n : ℕ):
-    (∃ l' ∈ l.sublists, n ≤ l'.length ∧ ∀ a ∈ l', p a) ∨ ((l.length - 1) / n) ≤ (l.countP (fun a => !(p a))):= by
+    (∃ l', l' <:+: l ∧ n ≤ l'.length ∧ ∀ a ∈ l', p a) ∨ ((l.length - 1) / n) ≤ (l.countP (fun a => !(p a))):= by
 
 
 
@@ -1772,7 +1772,8 @@ lemma list_adjacent_elements {A: Type*} (l: List A) (p: A → Bool) (n : ℕ):
       have takeWhile_lt_n: (l.takeWhile p).length < n := by
         by_contra!
         specialize no_adjacent_seq (l.takeWhile p) (by
-          exact List.takeWhile_sublist p
+          apply List.IsPrefix.isInfix
+          apply List.takeWhile_prefix
         ) (this)
 
         obtain ⟨x, hx_mem, not_p_x⟩ := no_adjacent_seq
@@ -1850,12 +1851,14 @@ lemma list_adjacent_elements {A: Type*} (l: List A) (p: A → Bool) (n : ℕ):
             .
               -- TODO - why can't grind figure this the main goal without help?
 
-              have tail_sub: (l.dropWhile p).tail.Sublist (l.dropWhile p) := by
-                grind
+              have tail_sub: (l.dropWhile p).tail <:+: (l.dropWhile p) := by
+                apply List.IsSuffix.isInfix
+                apply List.tail_suffix
 
-              apply List.Sublist.trans hx
-              apply List.Sublist.trans tail_sub
-              grind
+              grw [hx]
+              grw [tail_sub]
+              apply List.IsSuffix.isInfix
+              apply List.dropWhile_suffix
         )
 
         rw [← ge_iff_le]
@@ -1890,11 +1893,13 @@ lemma nat_le_mul (a n: ℕ) (hn: n ≠ 0): a ≤ n * a := by
 lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_normal: N'.Normal) (N'_nilpotent: Group.IsNilpotent N') (N'_nilpotency_ne_zero: Group.nilpotencyClass N' ≠ 0) (gamma_alpha: G) (m: ℕ) (m_ne_zero: m ≠ 0) (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g gamma_alpha m = 1):
   Group.IsNilpotent (Subgroup.closure (N'.carrier ∪ {gamma_alpha})) := by
 
+  classical
   rw [nilpotent_iff_lowerCentralSeries]
   use ((Group.nilpotencyClass N') * m) + 1
 
   apply comm_trivial_implies_nilpotent (G := Subgroup.closure (N'.carrier ∪ {gamma_alpha})) (S := Set.range (fun (a: ↑(N'.carrier ∪ {gamma_alpha})) => ⟨a.val, by apply Subgroup.mem_closure_of_mem; grind⟩))
   .
+
 
     -- TODO - there must be a simpler way to do this
     ext a
@@ -1961,8 +1966,30 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
     .
       intro a_mem
 
+      rw [iterate_comm_set_eq_fold] at a_mem
+      simp only [Set.mem_setOf_eq] at a_mem
+      obtain ⟨s, l, l_length, a_eq⟩ := a_mem
 
-      sorry
+      have adjacent_or_count := list_adjacent_elements l (fun x => decide (x = gamma_alpha)) m
+      rw [l_length] at adjacent_or_count
+      cases adjacent_or_count
+      .
+        rename_i adjancent_gamma
+        obtain ⟨gamma_list, h_gamma_list, gamma_list_len, eq_gamma_alpha⟩ := adjancent_gamma
+
+
+        -- TODO - why isn't there List.ext for a ∈ l ?
+        have gamma_list_eq: gamma_list = List.replicate gamma_list.length ⟨gamma_alpha, by simp⟩ := by
+          apply List.eq_replicate_of_mem
+          intro b hb
+          specialize eq_gamma_alpha b hb
+          simp at eq_gamma_alpha
+          grind
+
+
+
+        sorry
+      . sorry
     .
       intro a_eq
       simp at a_eq
