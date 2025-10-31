@@ -2049,7 +2049,7 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
         rw [h_gamma_alpha]
 
 
-      have adjacent_or_count := list_adjacent_elements l (fun x => decide (x = gamma_alpha)) m
+      have adjacent_or_count := list_adjacent_elements l (fun x => decide (x = gamma_alpha)) (m + 1)
       rw [l_length] at adjacent_or_count
       cases adjacent_or_count
       .
@@ -2156,23 +2156,25 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
                   apply normal_comm_mem N'_normal
                   exact right
 
-          induction l_suffix with
-          | nil =>
+          rw [Set.mem_union] at fold_mem
+          cases fold_mem
+          . rename_i fold_in_N
+            simp at fold_in_N
+            rw [subsequent_comm_one]
+            . rw [list_fold_comm_one]
+            . exact fold_in_N
+            . omega
+          . rename_i fold_eq_gamma
+            simp at fold_eq_gamma
+            rw [fold_eq_gamma]
+
+
+            have gamma_sub_sub: gamma_list.length - 1 = gamma_list.length - 1 - 1 + 1 := by omega
+            rw [gamma_sub_sub]
+            rw [Function.iterate_succ]
             simp
             rw [nat_iterate_comm_one]
             rw [list_fold_comm_one]
-          | cons head tail ih =>
-            simp
-            by_cases head_eq_gamma: head = gamma_alpha
-            .
-              rw [head_eq_gamma]
-
-              simp [Bracket.bracket]
-              simp [head_eq_gamma]
-
-
-
-
 
       .
         rename_i count_not_gamma
