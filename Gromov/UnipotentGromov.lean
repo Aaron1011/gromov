@@ -1660,8 +1660,11 @@ lemma iterate_comm_subgroup {G: Type*} [Group G] {H: Subgroup G} (S: Set H) (h: 
             simpa using iterate_subset
 
 -- TODO - should this use List.splitBy or List.splitOnP in some way?
-lemma list_adjacent_elements {A: Type*} (l: List A) (p: A → Bool) (n : ℕ) (hn: 0 < n):
+-- TODO - cleanup the proof and upstream to mathlib
+lemma list_adjacent_elements {A: Type*} (l: List A) (p: A → Bool) (n : ℕ):
     (∃ l' ∈ l.sublists, n ≤ l'.length ∧ ∀ a ∈ l', p a) ∨ ((l.length - 1) / n) ≤ (l.countP (fun a => !(p a))):= by
+
+
 
   rw [or_iff_not_imp_left]
   intro no_adjacent_seq
@@ -1669,6 +1672,7 @@ lemma list_adjacent_elements {A: Type*} (l: List A) (p: A → Bool) (n : ℕ) (h
 
   simp at no_adjacent_seq
 
+  -- Strong induction on list lengths
   induction l using Nat.strongRecMeasure (f := List.length)
   case ind l ih =>
     by_cases non_matching: ∀ a ∈ l, p a
@@ -1693,6 +1697,16 @@ lemma list_adjacent_elements {A: Type*} (l: List A) (p: A → Bool) (n : ℕ) (h
 
       simp [-List.mem_cons] at non_matching
       obtain ⟨a, a_mem, not_p_a⟩ := non_matching
+
+      have hn: 0 < n := by
+        by_contra!
+        specialize no_adjacent_seq [] (by
+          simp
+        ) (by
+          simpa using this
+        )
+        simp at no_adjacent_seq
+
       have list_eq: l = (l.takeWhile p) ++ (l.dropWhile p) := by
         simp
 
