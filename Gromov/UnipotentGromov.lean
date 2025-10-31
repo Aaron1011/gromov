@@ -1297,6 +1297,21 @@ lemma normal_comm_mem {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) 
   . exact ha
   . exact conj_mem
 
+
+
+lemma normal_comm_mem_right {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (a b: G) (hb: b ∈ N) :
+  ⁅a, b⁆ ∈ N := by
+
+  dsimp [Bracket.bracket]
+  have conj_mem := N_normal.conj_mem b (by simp [hb]) a
+  conv =>
+    arg 2
+    equals (a * b * a⁻¹) * b⁻¹ => group
+
+  apply Subgroup.mul_mem
+  . exact conj_mem
+  . simpa using hb
+
 open Classical in
 def RepeatComm {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (n: ℕ): Set (G''CommData N gamma_alpha) :=
 match n with
@@ -2070,37 +2085,95 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
         rw [list_foldr_replicate]
         unfold iteratedCommutator at h_gamma_alpha
         simp [iteratedCommutator] at subsequent_comm_one
-        by_cases l_suffix_nil: l_suffix = []
-        .
-          simp [l_suffix_nil]
 
-          have s_mem := s.property
-          rw [Set.mem_union] at s_mem
-          cases s_mem
-          . rename_i s_mem_N'
-            rw [subsequent_comm_one]
-            . rw [list_fold_comm_one]
-            . simpa using s_mem_N'
-            . omega
-          .
-            rename_i s_eq_gamma
-            simp at s_eq_gamma
-            rw [s_eq_gamma]
+          --simp [l_suffix_nil]
 
-            have gamma_len_eq: gamma_list.length = gamma_list.length - 1 + 1 := by
-              omega
-
-            rw [gamma_len_eq]
-            simp
-            rw [nat_iterate_comm_one]
-            rw [list_fold_comm_one]
-        .
+        have s_mem := s.property
+        rw [Set.mem_union] at s_mem
+        cases s_mem
+        . rename_i s_mem_N'
           rw [subsequent_comm_one]
           . rw [list_fold_comm_one]
           .
-            sorry
+            clear h_list_eq
+            induction l_suffix with
+            | nil =>
+              simpa using s_mem_N'
+            | cons head tail ih =>
+              simp
+              apply normal_comm_mem N'_normal
+              exact ih
           . simp
             omega
+        .
+          rename_i s_eq_gamma
+          simp at s_eq_gamma
+          rw [s_eq_gamma]
+
+          have gamma_len_eq: gamma_list.length = gamma_list.length - 1 + 1 := by
+            omega
+
+          simp
+          rw [gamma_len_eq]
+          simp
+
+          clear h_list_eq
+
+          -- TODO - this can be simplified a lot
+          have fold_mem: ⁅List.foldr (fun acc s ↦ ⁅s, acc⁆) gamma_alpha l_suffix.unattach, gamma_alpha⁆ ∈ ((N' ∪ {gamma_alpha}) : Set G) := by
+            induction l_suffix with
+            | nil =>
+              simp
+            | cons head tail ih =>
+              simp
+              simp at ih
+              have head_prop := head.prop
+              rw [Set.mem_union] at head_prop
+              cases head_prop
+              .
+                rename_i head_in_N
+                cases ih
+                . rename_i left
+                  right
+                  apply normal_comm_mem N'_normal
+                  apply normal_comm_mem_right N'_normal
+                  exact head_in_N
+                . rename_i right
+                  right
+                  apply normal_comm_mem N'_normal
+                  apply normal_comm_mem_right N'_normal
+                  exact head_in_N
+              . rename_i head_gamma
+                simp at head_gamma
+                rw [head_gamma]
+                cases ih
+                . rename_i left
+                  rw [left]
+                  simp
+                .
+                  rename_i right
+                  right
+                  apply normal_comm_mem N'_normal
+                  exact right
+
+          induction l_suffix with
+          | nil =>
+            simp
+            rw [nat_iterate_comm_one]
+            rw [list_fold_comm_one]
+          | cons head tail ih =>
+            simp
+            by_cases head_eq_gamma: head = gamma_alpha
+            .
+              rw [head_eq_gamma]
+
+              simp [Bracket.bracket]
+              simp [head_eq_gamma]
+
+
+
+
+
       .
         rename_i count_not_gamma
         simp at count_not_gamma
