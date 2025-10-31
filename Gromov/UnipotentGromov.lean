@@ -1661,7 +1661,7 @@ lemma iterate_comm_subgroup {G: Type*} [Group G] {H: Subgroup G} (S: Set H) (h: 
 
 -- TODO - should this use List.splitBy or List.splitOnP in some way?
 lemma list_adjacent_elemens (A: Type*) (l: List A) (p: A → Bool) (n : ℕ) (hn: 0 < n):
-    (¬ ∃ l' ∈ l.sublists, n ≤ l'.length ∧ ∀ a ∈ l', p a) → (l.length / n) ≤ (l.countP (fun a => !(p a))):= by
+    (¬ ∃ l' ∈ l.sublists, n ≤ l'.length ∧ ∀ a ∈ l', p a) → ((l.length - 1) / n) ≤ (l.countP (fun a => !(p a))):= by
 
   intro no_adjacent_seq
 
@@ -1682,28 +1682,18 @@ lemma list_adjacent_elemens (A: Type*) (l: List A) (p: A → Bool) (n : ℕ) (hn
         specialize non_matching a a_mem
         grind
 
-      apply Nat.div_eq_of_lt at len_lt
-      rw [len_lt]
+      have len_sub_lt: l.length - 1 < n := by
+        omega
+
+      apply Nat.div_eq_of_lt at len_sub_lt
+      rw [len_sub_lt]
       simp
     .
+
       simp [-List.mem_cons] at non_matching
       obtain ⟨a, a_mem, not_p_a⟩ := non_matching
       have list_eq: l = (l.takeWhile p) ++ (l.dropWhile p) := by
         simp
-
-      have count_p: l.countP (fun a => !(p a)) = (l.dropWhile p).countP (fun a => !(p a)) := by
-        nth_rw 1 [list_eq]
-        rw [List.countP_append]
-        simp
-        intro a ha
-        apply List.mem_takeWhile_imp at ha
-        exact ha
-
-      rw [count_p]
-
-      have l_length_eq : l.length = (l.takeWhile p).length + (l.dropWhile p).length := by
-        nth_rw 1 [list_eq]
-        rw [List.length_append]
 
       have takeWhile_lt_n: (l.takeWhile p).length < n := by
         by_contra!
@@ -1715,33 +1705,97 @@ lemma list_adjacent_elemens (A: Type*) (l: List A) (p: A → Bool) (n : ℕ) (hn
         apply List.mem_takeWhile_imp at hx_mem
         grind
 
+      have count_p: l.countP (fun a => !(p a)) = (l.dropWhile p).countP (fun a => !(p a)) := by
+        nth_rw 1 [list_eq]
+        rw [List.countP_append]
+        simp
+        intro a ha
+        apply List.mem_takeWhile_imp at ha
+        exact ha
 
-      have drop_length: l.length - n ≤ (l.dropWhile p).length := by
+
+      have count_tail_eq: (l.dropWhile p).countP (fun a => !(p a)) = 1 + (l.dropWhile p).tail.countP (fun a => !(p a)) := by
+
+
+        have dropWhile_not_nil: (l.dropWhile p) ≠ [] := by
+          by_contra!
+          rw [this] at list_eq
+          simp at list_eq
+          rw [list_eq] at a_mem
+          apply List.mem_takeWhile_imp at a_mem
+          grind
+
+        apply List.exists_cons_of_ne_nil at dropWhile_not_nil
+        obtain ⟨head, tail, h_eq⟩ := dropWhile_not_nil
+        rw [h_eq]
+        simp
+        rw [List.countP_cons]
+        simp
+
+        have not_head := List.head?_dropWhile_not p l
+        simp [h_eq] at not_head
+        simp [not_head]
+        rw [add_comm]
+
+
+      rw [count_p]
+      rw [count_tail_eq]
+
+      have l_length_eq : l.length = (l.takeWhile p).length + (l.dropWhile p).length := by
+        nth_rw 1 [list_eq]
+        rw [List.length_append]
+
+      by_cases l_len_le: l.length ≤ n
+      . have l_len_sub: l.length - 1 < n := by
+          omega
+
+        apply Nat.div_eq_of_lt at l_len_sub
+        rw [l_len_sub]
+        simp
+      .
+
+
+        have drop_length: l.length - n ≤ (l.dropWhile p).length := by
+          omega
+
+        have drop_tail_length: l.length - n  ≤ (l.dropWhile p).tail.length := by
+          sorry
+          --grw [drop_length]
+          --simp
+
+        have ih_drop := ih (l.dropWhile p).tail (by
+          sorry
+        ) (by
+            intro x hx x_len
+            have foo := no_adjacent_seq x ?_ x_len
+            .
+              obtain ⟨b, hb, not_p_b⟩ := foo
+              use b
+            .
+              -- TODO - why can't grind figure this the main goal without help?
+
+              have tail_sub: (l.dropWhile p).tail.Sublist (l.dropWhile p) := by
+                grind
+
+              apply List.Sublist.trans hx
+              apply List.Sublist.trans tail_sub
+              grind
+        )
+
+        rw [← ge_iff_le]
+        grw [ih_drop.ge]
+        grw [drop_tail_length.ge]
+        conv =>
+          arg 1
+          equals 1 + (((l.length - 1) / n) - 1) =>
+            rw [← Nat.sub_mul_div]
+            simp
+            rw [Nat.sub_right_comm]
+
+        rw [Nat.add_sub_of_le]
+
+        rw [Nat.one_le_div_iff hn]
         omega
-
-      have ih_drop := ih (l.dropWhile p) (by
-        sorry
-      ) (by
-        intro x hx x_len
-
-        have foo := no_adjacent_seq x ?_ x_len
-        .
-          obtain ⟨b, hb, not_p_b⟩ := foo
-          use b
-        . grind
-      )
-
-      rw [← ge_iff_le]
-      grw [ih_drop.ge]
-      grw [drop_length.ge]
-      conv =>
-        arg 1
-        equals (l.length / n) - 1 =>
-          rw [← Nat.sub_mul_div]
-          simp
-
-
-      sorry
 
 
   -- induction l with
@@ -1839,12 +1893,6 @@ lemma list_adjacent_elemens (A: Type*) (l: List A) (p: A → Bool) (n : ℕ) (hn
 
   --   simp [pre] at pre_len_eq
 
-
-
-
-
-
-  sorry
 
 
 -- TODO - why can't linarith or omega find this?
