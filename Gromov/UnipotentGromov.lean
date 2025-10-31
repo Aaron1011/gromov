@@ -8,6 +8,65 @@ def iterate_comm_set {G: Type*} [Group G] (S: Set G) (n: ℕ): Set G :=
   | 0 => S
   | n + 1 => Set.iUnion (fun (s: S) => Set.image (fun g => ⁅g, s⁆) (iterate_comm_set S n))
 
+lemma iterate_comm_set_eq_fold {G: Type*} [Group G] (S: Set G) (n: ℕ):
+    iterate_comm_set S n = { g | ∃ s: S, ∃ l: List S, l.length = n ∧ (l.foldr (fun acc s => ⁅s, acc.val⁆) s.val) = g } := by
+
+  induction n with
+  | zero =>
+    simp [iterate_comm_set]
+  | succ n ih =>
+    simp [iterate_comm_set]
+    ext g
+    simp
+    refine ⟨?_, ?_⟩
+    .
+      intro h
+      obtain ⟨s, s_mem, ⟨x, x_mem, comm_eq⟩⟩ := h
+      rw [ih] at x_mem
+      simp at x_mem
+      obtain ⟨t, t_mem, l, l_len, l_fold_eq⟩ := x_mem
+      use t
+      refine ⟨t_mem, ?_⟩
+      use (⟨s, s_mem⟩ :: l)
+      refine ⟨?_, ?_⟩
+      . grind
+      .
+        simp
+        rw [← comm_eq]
+        rw [← l_fold_eq]
+    .
+      intro h
+      obtain ⟨t, t_mem, l, l_len, l_fold_eq⟩ := h
+      have l_len_eq := l_len
+      apply List.exists_cons_of_length_eq_add_one at l_len
+
+      obtain ⟨head, tail, l_eq⟩ := l_len
+      rw [l_eq] at l_fold_eq
+      simp at l_fold_eq
+
+      use head
+      refine ⟨by simp, ?_⟩
+      simp at ih
+
+
+
+      have tail_len_eq: tail.length = n := by
+        rw [l_eq] at l_len_eq
+        simp at l_len_eq
+        exact l_len_eq
+
+
+      use List.foldr (fun x b ↦ ⁅b, x⁆) t tail.unattach
+      refine ⟨?_, ?_⟩
+      .
+        rw [ih]
+        simp
+        use t
+        refine ⟨t_mem, ?_⟩
+        use tail
+      . exact l_fold_eq
+
+
 -- lemma iterate_comm_mem_inv {G: Type*} [Group G] (S: Set G) (n: ℕ): iterate_comm_set (S ∪ S⁻¹) n = (iterate_comm_set (S ∪ S⁻¹) n)⁻¹ := by
 --   induction n with
 --   | zero =>
