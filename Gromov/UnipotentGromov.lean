@@ -1941,28 +1941,95 @@ lemma nat_le_mul (a n: ℕ) (hn: n ≠ 0): a ≤ n * a := by
 
 -- List.countP (fun a ↦ !decide (↑a = gamma_alpha)) l
 lemma count_mem_group_implies_lowercentral {G: Type*} [Group G] {G: Type*} [Group G] {N': Subgroup G} [∀ a: G, Decidable (a ∈ N')] (N'_normal: N'.Normal) (N'_nilpotent: Group.IsNilpotent N') (N'_nilpotency_ne_zero: Group.nilpotencyClass N' ≠ 0) (l: List G) (g: G)
-    (count_ne_zero: (l.countP (fun a => decide (a ∈ N'))) ≠ 0):
-    l.foldr (fun acc s ↦ ⁅s, acc⁆) g ∈ Subgroup.map N'.subtype (lowerCentralSeries N' (l.countP (fun a => decide (a ∈ N')))) := by
+    (l_nonempty: l ≠ []) (count_ne_zero: (l.countP (fun a => decide (a ∈ N'))) ≠ 0):
+    l.foldr (fun acc s ↦ ⁅s, acc⁆) g ∈ Subgroup.map N'.subtype (lowerCentralSeries N' ((l.countP (fun a => decide (a ∈ N'))) - 1)) := by
 
   induction l with
   | nil =>
-    simp at count_ne_zero
+    simp at l_nonempty
   | cons head tail ih =>
     by_cases head_in_N': head ∈ N'
-    . sorry
+    .
+      conv =>
+        arg 1
+        arg 2
+        arg 2
+        simp [head_in_N']
+
+
+
+
+      rw [Subgroup.mem_map]
+      by_cases tail_empty: tail = []
+      .
+        simp [tail_empty]
+        apply normal_comm_mem_right N'_normal
+        exact head_in_N'
+      .
+
+        by_cases count_eq_zero: (tail.countP (fun a => decide (a ∈ N'))) = 0
+        .
+          simp [count_eq_zero]
+          apply normal_comm_mem_right N'_normal
+          exact head_in_N'
+        .
+          have count_sub_eq: (tail.countP (fun a => decide (a ∈ N'))) = (tail.countP (fun a => decide (a ∈ N'))) - 1 + 1 := by
+            omega
+
+          rw [count_sub_eq]
+          specialize ih (by simpa using tail_empty) count_eq_zero
+
+          use ⟨⁅List.foldr (fun acc s ↦ ⁅s, acc⁆) g tail, head⁆, ?_⟩
+          . simp
+
+
+
+            rw [mem_lowerCentralSeries_succ_iff]
+            apply Subgroup.mem_closure_of_mem
+            simp
+            use List.foldr (fun acc s ↦ ⁅s, acc⁆) g tail
+            use ?_
+            . refine ⟨?_, ?_⟩
+              .
+                rw [Subgroup.mem_map] at ih
+                obtain ⟨x, hx, other⟩ := ih
+                simp_rw [← other]
+                simp
+                exact hx
+              .
+                use head
+                use head_in_N'
+                rfl
+            .
+              rw [Subgroup.mem_map] at ih
+              obtain ⟨x, hx, other⟩ := ih
+              rw [← other]
+              simp
+
+      -- simp_rw [mem_lowerCentralSeries_succ_iff]
+      -- simp_rw [List.foldr_cons]
+
+      -- sorry
     . rw [List.countP_cons]
       simp only [head_in_N', decide_false, Bool.false_eq_true, ↓reduceIte]
+
+
+      have tail_nonempty: tail ≠ [] := by
+        by_contra!
+        simp [this] at count_ne_zero
+        contradiction
 
       rw [List.countP_cons] at count_ne_zero
       simp only [head_in_N', decide_false, Bool.false_eq_true, ↓reduceIte] at count_ne_zero
       rw [add_zero] at count_ne_zero
-      specialize ih count_ne_zero
+      specialize ih tail_nonempty count_ne_zero
       rw [List.foldr_cons]
       apply normal_comm_mem
       . exact ConjAct.normal_of_characteristic_of_normal
       . exact ih
 
 
+#print axioms count_mem_group_implies_lowercentral
   -- induction l using Nat.strongRecMeasure (f := (l.countP (fun a => decide (a ∈ N'))))
   -- case ind p ih =>
 
@@ -2212,6 +2279,10 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
         rw [Nat.mul_add_div] at count_not_gamma
         rw [Nat.div_eq_of_lt] at count_not_gamma
         . simp at count_not_gamma
+
+          ext
+          rw [← a_eq]
+
 
           sorry
         . omega
