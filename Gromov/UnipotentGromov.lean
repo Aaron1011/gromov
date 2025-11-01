@@ -1,5 +1,9 @@
 import Mathlib
 
+set_option linter.style.longLine false
+set_option linter.style.commandStart false
+set_option linter.style.cdot false
+
 def iteratedCommutator {T: Type*} [Group T] (base right: T) (n: ℕ) := Nat.iterate (fun x => ⁅x, right⁆) n base
 
 
@@ -2379,6 +2383,89 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
       simpa using one_mem_mul
 
 #print axioms unipotent_commutator_trivial
+
+
+def iteratedCommutatorNormal {T: Type*} [Group T] {N: Subgroup T} {M: Subgroup N} [hN: N.Normal] (base: M) (right: T) (n: ℕ) := Nat.iterate (fun x => ⟨⁅x.val, right⁆, (by
+  apply normal_comm_mem hN
+  simp
+)⟩) n base.val
+
+lemma gamma_pow_unipotent {G: Type*} [Group G] {N': Subgroup G} (N'_normal: N'.Normal) (N'_nilpotent: Group.IsNilpotent N') (gamma: G) (gamma_not_n: ¬(gamma ∈ N')):
+    ∃ a : ℕ, ∃ m: ℕ, ∀ M: Subgroup N', [M.Normal] → ∀ g : M, iteratedCommutatorNormal g (gamma^a) m = 1 := by
+
+  induction N' using Nat.strongRecMeasure (f := Group.nilpotencyClass N')
+  case ind G_group N ih =>
+    by_cases class_zero: Group.nilpotencyClass N = 0
+    .
+      rw [nilpotencyClass_zero_iff_subsingleton] at class_zero
+
+      use 1
+      use 1
+      intro M _ g
+
+      have g_eq_one: g = 1 := by
+        sorry
+
+      simp [iteratedCommutatorNormal, g_eq_one]
+    .
+      let a := QuotientGroup.mk' (Subgroup.center N)
+      let N_mod_Z := Subgroup.map (N.subtype) (Subgroup.comap (QuotientGroup.mk' (Subgroup.center N)) ⊤)
+      let prev_nilpotent := ih N_mod_Z ?_ ?_ ?_ ?_
+      .
+        obtain ⟨a, m, prev_comm⟩ := prev_nilpotent
+
+        have gamma_unipotent_center: ∃ z, ∀ g ∈ (Subgroup.center N), iteratedCommutator g.val (gamma^a) z ∈ Subgroup.map (N.subtype) (Subgroup.center N) := by
+          sorry
+
+        obtain ⟨z, hz⟩ := gamma_unipotent_center
+
+
+        use a
+        use (m + 1)
+        intro M _ g
+
+        let M_in := Subgroup.map (QuotientGroup.mk' (Subgroup.center N)) M
+
+        have comm_in_center := prev_comm --⊤ ⟨g, by simp [N_mod_Z]⟩
+
+        have one_mem: (1: N_mod_Z).val ∈ N_mod_Z := by
+          simp [N_mod_Z]
+
+
+        dsimp [N_mod_Z] at one_mem
+        rw [Subgroup.mem_map] at one_mem
+        obtain ⟨x, x_mem, x_eq⟩ := one_mem
+
+
+
+
+        rw [Subtype.ext_iff] at comm_in_center
+
+
+        unfold N_mod_Z at comm_in_center
+        apply_fun (fun a => (by
+
+          have a_prop := a.prop
+          rw [Subgroup.mem_map] at a_prop
+
+
+        )) at comm_in_center
+
+
+        rw [Subtype.ext_iff] at comm_in_center
+        rw [Subtype.ext_iff] at comm_in_center
+
+
+
+        apply_fun Quotient.out at comm_in_center
+        conv at comm_in_center =>
+          equals ↑(Quotient.out _) =>
+            sorry
+        nth_rw 1 [QuotientGroup.out_eq']
+        simp at comm_in_center
+
+
+
 
 -- -- This probably needs the semidirect product
 -- lemma closure_mem_repeatComm {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (n: ℕ):
