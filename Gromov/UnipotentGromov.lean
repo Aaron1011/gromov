@@ -2406,14 +2406,33 @@ lemma iterated_comm_normal_eq_iterated {T: Type*} [Group T] {N: Subgroup T} [hN:
 
 
 lemma lowerCentralSeries_bracket_pow {T: Type*} [Group T] {N: Subgroup T} [hN: N.Normal]
-  (base: N) (right: T) (a n m k: ℕ) (hm: n ≤ m) (h_lower: iteratedCommutatorNormal base (right^n) a ∈ lowerCentralSeries N k):
-    (iteratedCommutatorNormal base (right^(n*m)) a) ∈ lowerCentralSeries N k := by
+  (base: N) (right: T) (k n m: ℕ) (hm: n ≤ m) (h_lower: iteratedCommutatorNormal base (right^n) k ∈ lowerCentralSeries N k):
+    (iteratedCommutatorNormal base (right^(n*m)) k) ∈ lowerCentralSeries N k := by
 
   induction k with
   | zero =>
     simp
   | succ k ih =>
-    clear ih
+    rw [iteratedCommutatorNormal]
+    rw [Function.iterate_succ']
+    simp
+    rw [← Subgroup.mem_map_iff_mem (f := N.subtype) (by exact Subgroup.subtype_injective N)]
+    conv =>
+      arg 2
+      simp
+
+    nth_rw 1 [Bracket.bracket]
+    nth_rw 1 [commutatorElement]
+    simp only []
+    nth_rw 1 [mul_assoc]
+    nth_rw 1 [mul_assoc]
+    apply Subgroup.mul_mem
+    . simp
+      rw [mem_lowerCentralSeries_succ_iff]
+
+      sorry
+    . sorry
+
     induction a with
     | zero =>
       simp [iteratedCommutatorNormal] at h_lower
