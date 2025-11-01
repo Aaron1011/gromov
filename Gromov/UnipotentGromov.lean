@@ -2035,12 +2035,12 @@ lemma count_mem_group_implies_lowercentral {G: Type*} [Group G] {N': Subgroup G}
 
   --   sorry
 
-lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_normal: N'.Normal) (N'_nilpotent: Group.IsNilpotent N') (N'_nilpotency_ne_zero: Group.nilpotencyClass N' ≠ 0) (gamma_alpha: G) (m: ℕ) (m_ne_zero: m ≠ 0) (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g gamma_alpha m = 1):
+lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_normal: N'.Normal) (N'_nilpotent: Group.IsNilpotent N') (N'_nilpotency_ne_zero: Group.nilpotencyClass N' ≠ 0) (gamma_alpha: G) (gamma_not_n: ¬(gamma_alpha ∈ N')) (m: ℕ) (m_ne_zero: m ≠ 0) (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g gamma_alpha m = 1):
   Group.IsNilpotent (Subgroup.closure (N'.carrier ∪ {gamma_alpha})) := by
 
   classical
   rw [nilpotent_iff_lowerCentralSeries]
-  use ((Group.nilpotencyClass N') * (m + 1)) + 2
+  use ((1 + Group.nilpotencyClass N') * (m + 1)) + 2
 
   apply comm_trivial_implies_nilpotent (G := Subgroup.closure (N'.carrier ∪ {gamma_alpha})) (S := Set.range (fun (a: ↑(N'.carrier ∪ {gamma_alpha})) => ⟨a.val, by apply Subgroup.mem_closure_of_mem; grind⟩))
   .
@@ -2283,20 +2283,76 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
           ext
           rw [← a_eq]
 
+          conv at count_not_gamma =>
+            arg 2
+            arg 1
+            equals (fun (a: ↑(N'.carrier ∪ {gamma_alpha})) => decide (a.val ∈ N')) =>
+              ext x
+              simp
+              rw [← decide_not]
+              congr
+              simp
+              refine ⟨?_, ?_⟩
+              . intro hx
+                rw [← hx] at gamma_not_n
+                exact gamma_not_n
+              . intro hx
+                have x_prop := x.prop
+                rw [Set.mem_union] at x_prop
+                simp [hx] at x_prop
+                exact x_prop
+
+
+          rw [add_comm] at count_not_gamma
+
+          conv at count_not_gamma =>
+            arg 2
+            equals l.unattach.countP (fun a => decide (a ∈ N')) =>
+              clear count_not_gamma l_length a_eq
+              induction l with
+              | nil =>
+                simp
+              | cons head tail ih =>
+                rw [List.countP_cons]
+                rw [List.unattach_cons]
+                rw [List.countP_cons]
+                simp
+                exact ih
+
           have foo := count_mem_group_implies_lowercentral N'_normal N'_nilpotent N'_nilpotency_ne_zero l.unattach s ?_ ?_
           .
             rw [Subgroup.mem_map] at foo
             obtain ⟨x, x_mem, other⟩ := foo
 
+            rw [← other]
+            simp
 
+            conv at x_mem =>
+              arg 1
+              equals ⊥ =>
+                rw [lowerCentralSeries_eq_bot_iff_nilpotencyClass_le]
+                omega
+
+
+
+
+
+            simp at x_mem
+            exact x_mem
           .
+            -- TODO - this is ridiculously overcomplicated
             have l_nonempty: l ≠ [] := by
               grind
 
+            have l_len_ne: l.length ≠ 0 := by
+              omega
 
-            sorry
-          .
-            sorry
+            have l_unattach_len_ne: l.unattach.length ≠ 0 := by
+              rw [List.length_unattach]
+              exact l_len_ne
+
+            grind
+          . omega
         . omega
         . omega
     .
@@ -2305,7 +2361,7 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
       have iterate_mem := iterated_mem_iterated_set 1 gamma_alpha ((N'.carrier ∪ {gamma_alpha})) (by simp) (by simp) m
       rw [h_gamma_alpha 1 (by simp)] at iterate_mem
 
-      have one_mem_mul := one_mem_iterated_comm ((N'.carrier ∪ {gamma_alpha})) m (m := (Group.nilpotencyClass N') * (m + 1) + 2) (by
+      have one_mem_mul := one_mem_iterated_comm ((N'.carrier ∪ {gamma_alpha})) m (m := (1 + Group.nilpotencyClass N') * (m + 1) + 2) (by
         nth_grw 1 [Nat.lt_add_one (n := m)]
         apply add_le_add
         .
@@ -2320,6 +2376,8 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
       ) iterate_mem
       rw [a_eq]
       simpa using one_mem_mul
+
+#print axioms unipotent_commutator_trivial
 
 -- This probably needs the semidirect product
 lemma closure_mem_repeatComm {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (gamma_alpha: G) (n: ℕ):
