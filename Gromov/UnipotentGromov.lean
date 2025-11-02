@@ -1301,7 +1301,48 @@ lemma normal_comm_mem {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) 
   . exact ha
   . exact conj_mem
 
+lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N] [N.Normal] (hN: Subgroup.FG N) (gamma: G):
+    ∃ a n, ∀ g ∈ Subgroup.center N, iteratedCommutator g.val (gamma^a) n = 1 := by
 
+  have center_fg: Group.FG (Subgroup.center N) := by
+    sorry
+
+  have center_iso := CommGroup.equiv_free_prod_directSum_zmod (Subgroup.center N)
+  obtain ⟨I, J, fin_I, fin_J, I_pow, I_pow_prime, K_map, ⟨center_iso⟩⟩ := center_iso
+  --have center_normal_in_G := ConjAct.normal_of_characteristic_of_normal (K := Subgroup.center N)
+
+  let new_conj := MulAut.conjNormal (H := (Subgroup.map N.subtype (Subgroup.center ↥N))) gamma
+
+  have subtype_center_iso := Subgroup.equivMapOfInjective (Subgroup.center N) N.subtype (by apply Subgroup.subtype_injective)
+  have aut_congr := MulAut.congr subtype_center_iso
+  let gamma_conj := aut_congr.symm new_conj
+  let mulaut_fg_abelian := MulAut.congr center_iso
+
+
+  let ord_fin := Nat.card ((J → Multiplicative ℤ) × ((i : I) → Multiplicative (ZMod (I_pow i ^ K_map i))))
+  have map_pow : ∃ F: ((i : I) → Multiplicative (ZMod (I_pow i ^ K_map i))), (MulAut.congr center_iso) (aut_congr.symm (new_conj)^(ord_fin)) = MonoidHom.toMulEquiv
+    ((MonoidHom.coprod sorry (MonoidHom.prod sorry 1)))
+    ((MonoidHom.coprod sorry (MonoidHom.prod sorry 1))) sorry sorry := by
+
+    sorry
+
+
+
+  let target_aut := mulaut_fg_abelian gamma_conj
+  let target_hom := MonoidHom.comp (MonoidHom.fst _ _) target_aut.toMonoidHom
+
+  have foo := MonoidHom.coprod_unique target_hom
+
+  simp at ord_fin
+  rw [Nat.card_prod] at ord_fin
+
+
+
+
+  --have conj_gamma := ((MulAut.conj gamma).toMonoidHom.restrict N).restrict (Subgroup.center N)
+  --let comp_hom := MonoidHom.comp conj_gamma center_iso.symm.toMonoidHom
+
+  sorry
 
 lemma normal_comm_mem_right {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (a b: G) (hb: b ∈ N) :
   ⁅a, b⁆ ∈ N := by
@@ -2405,14 +2446,18 @@ lemma iterated_comm_normal_eq_iterated {T: Type*} [Group T] {N: Subgroup T} [hN:
     rw [ih]
 
 
-lemma lowerCentralSeries_bracket_pow {T: Type*} [Group T] {N: Subgroup T} [hN: N.Normal]
-  (base: N) (right: T) (k n m: ℕ) (hm: n ≤ m) (h_lower: iteratedCommutatorNormal base (right^n) k ∈ lowerCentralSeries N k):
-    (iteratedCommutatorNormal base (right^(n*m)) k) ∈ lowerCentralSeries N k := by
+-- TODO - this theorem statement is wrong
+lemma lowerCentralSeries_bracket_pow {G: Type*} [Group G] {N: Subgroup G} [hN: N.Normal]
+  (base: N) (right: G) (k n: ℕ) :
+    (iteratedCommutatorNormal base (right^n) k) ∈ lowerCentralSeries N k := by
 
   induction k with
   | zero =>
     simp
   | succ k ih =>
+
+
+
     rw [iteratedCommutatorNormal]
     rw [Function.iterate_succ']
     simp
@@ -2421,14 +2466,42 @@ lemma lowerCentralSeries_bracket_pow {T: Type*} [Group T] {N: Subgroup T} [hN: N
       arg 2
       simp
 
-    nth_rw 1 [Bracket.bracket]
-    nth_rw 1 [commutatorElement]
-    simp only []
-    nth_rw 1 [mul_assoc]
-    nth_rw 1 [mul_assoc]
-    apply Subgroup.mul_mem
-    . simp
-      rw [mem_lowerCentralSeries_succ_iff]
+    -- nth_rw 1 [Bracket.bracket]
+    -- nth_rw 1 [commutatorElement]
+    -- simp only []
+    -- nth_rw 1 [mul_assoc]
+    -- nth_rw 1 [mul_assoc]
+    simp
+    -- rw [← iterate_comm_generates (S := Set.univ) (hS := by simp)]
+    -- rw [iterate_comm_set_eq_fold]
+    -- rw [Subgroup.normalClosure]
+    -- simp
+    use ?_
+    .
+      rw [← iterate_comm_generates (S := Set.univ) (hS := by simp)]
+
+      apply Subgroup.mem_closure_of_mem
+      simp
+      use iteratedCommutatorNormal base (right ^ n) k
+      use ?_
+      .
+        refine ⟨?_, ?_⟩
+        . simpa using ih
+        .
+      . simp
+    .
+      apply normal_comm_mem hN
+      simp
+    rw [Subgroup.mem_map]
+
+    apply Subgroup.mem_closure_of_mem
+    rw [Group.conjugatesOfSet]
+    rw [Set.mem_iUnion]
+    use (iteratedCommutatorNormal base (right^n) k)
+    simp
+
+
+    rw [mem_lowerCentralSeries_succ_iff]
 
       sorry
     . sorry
