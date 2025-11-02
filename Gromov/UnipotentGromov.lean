@@ -1301,6 +1301,24 @@ lemma normal_comm_mem {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) 
   . exact ha
   . exact conj_mem
 
+lemma mulequiv_pow {G: Type*} [CommGroup G] (f: G ≃* G) (a: G) (n: ℕ) (hn: 0 ≠ n): (f^n).toMonoidHom a = (f.toMonoidHom a)^n := by
+  induction n with
+  | zero =>
+    simp at hn
+  | succ n ih =>
+    simp
+    rw [pow_succ']
+    simp
+    rw [pow_succ']
+    rw [pow_succ]
+
+    conv =>
+      lhs
+      lhs
+      equals (f.toMonoidHom) ^n =>
+        rfl
+
+
 lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N] [N.Normal] (hN: Subgroup.FG N) (gamma: G):
     ∃ a n, ∀ g ∈ Subgroup.center N, iteratedCommutator g.val (gamma^a) n = 1 := by
 
@@ -1315,14 +1333,67 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
 
   have subtype_center_iso := Subgroup.equivMapOfInjective (Subgroup.center N) N.subtype (by apply Subgroup.subtype_injective)
   have aut_congr := MulAut.congr subtype_center_iso
-  let gamma_conj := aut_congr.symm new_conj
+  let gamma_conj := aut_congr.symm.toMonoidHom new_conj
   let mulaut_fg_abelian := MulAut.congr center_iso
 
 
   let ord_fin := Nat.card ((J → Multiplicative ℤ) × ((i : I) → Multiplicative (ZMod (I_pow i ^ K_map i))))
-  have map_pow : ∃ F: ((i : I) → Multiplicative (ZMod (I_pow i ^ K_map i))), (MulAut.congr center_iso) (aut_congr.symm (new_conj)^(ord_fin)) = MonoidHom.toMulEquiv
-    ((MonoidHom.coprod sorry (MonoidHom.prod sorry 1)))
-    ((MonoidHom.coprod sorry (MonoidHom.prod sorry 1))) sorry sorry := by
+
+  have map_pow_hom: ∀ p, (((MulAut.congr center_iso).toMonoidHom (aut_congr.symm.toMonoidHom ((new_conj)^(ord_fin)))).toMonoidHom p).fst = p.fst := by
+    intro p
+    rw [MonoidHom.map_pow]
+    rw [MonoidHom.map_pow]
+    have my_prod := MonoidHom.prod_unique (f := (MulEquiv.toMonoidHom ((MulAut.congr center_iso).toMonoidHom (aut_congr.symm.toMonoidHom new_conj) ^ ord_fin)))
+    --have my_coprod := MonoidHom.coprod_unique (f := (MulEquiv.toMonoidHom ((MulAut.congr center_iso).toMonoidHom (aut_congr.symm.toMonoidHom new_conj) ^ ord_fin)))
+    --rw [← my_coprod]
+    -- rw [MonoidHom.coprod_apply]
+    -- rw [MonoidHom.comp_apply]
+    -- rw [MonoidHom.comp_apply]
+    -- simp only [MonoidHom.inr_apply, MonoidHom.inl_apply]
+    rw [← my_prod]
+    rw [MonoidHom.prod_apply]
+    rw [MonoidHom.comp_apply]
+    rw [MonoidHom.comp_apply]
+    simp
+    unfold MulAut
+
+    rw [MulEquiv.toMonoidHom_eq_coe]
+    rw [MonoidHom.coe_coe]
+
+    rw [MonoidHom.pow_map]
+
+    simp
+    dsimp only [ord_fin]
+
+
+
+    sorry
+
+
+  have map_pow : ∃ F: ((i : I) → Multiplicative (ZMod (I_pow i ^ K_map i))), (MulAut.congr center_iso).toMonoidHom (aut_congr.symm.toMonoidHom ((new_conj)^(ord_fin))) = MonoidHom.toMulEquiv
+    ((MonoidHom.coprod (MonoidHom.prod sorry sorry) (MonoidHom.prod sorry (MonoidHom.id _))))
+    ((MonoidHom.coprod (MonoidHom.prod sorry sorry) (MonoidHom.prod sorry (MonoidHom.id _)))) sorry sorry := by
+
+    use sorry
+    simp
+
+    -- conv =>
+    --   arg 1
+    --   arg 2
+    --   equals (center_iso.toMonoidHom ((aut_congr.symm new_conj ^ ord_fin).toMonoidHom (center_iso.symm a))).1 b =>
+    --     simp
+
+
+    --simp
+    rw [MonoidHom.pow_apply]
+    rw [MonoidHom.map_pow]
+    rw [MonoidHom.map_pow]
+    ext x y
+    simp
+    have f_eq := MonoidHom.coprod_unique (f := (MulAut.congr center_iso).toMonoidHom (aut_congr.symm.toMonoidHom new_conj))
+
+
+
 
     sorry
 
