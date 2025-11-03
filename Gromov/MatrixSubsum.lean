@@ -108,18 +108,30 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
           .
             simp [n_q_diff] at h_sum
 
+            have q_diff_eq: q \ p = (q \ p) \ {n} := by
+              grind
+
+            rw [q_diff_eq] at h_sum
             rw [add_comm] at h_sum
             apply eq_add_neg_of_add_eq at h_sum
             apply_fun norm at h_sum
 
 
 
-            have first_subset: q \ p ⊆ Finset.Ico N₀ (n + 1) := by
+            have first_subset: (q \ p) \ {n} ⊆ Finset.Ico N₀ (n) := by
               intro a ha
+              simp
+              simp at ha
+              have a_mem := hq ha.1.1
+              simp at a_mem
               grind
 
-            have second_subset: (p \ {n}) \ q ⊆ Finset.Ico N₀ (n + 1) := by
+            have second_subset: (p \ {n}) \ q ⊆ Finset.Ico N₀ n := by
               intro a ha
+              simp
+              simp at ha
+              have a_mem := hp ha.1.1
+              simp at a_mem
               grind
 
             have a_pow_le: ‖(A ^ n).mulVec v‖ < ‖(A ^ n).mulVec v‖ := by
