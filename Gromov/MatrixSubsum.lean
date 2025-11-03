@@ -19,6 +19,140 @@ def poly_cancel {n: ℕ} (A: Matrix (Fin n) (Fin n) ℤ) (v: (Fin n) → ℤ) (p
     grind
 } : DerivedSets A v p q)
 
+lemma interval_sum_le {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → ℤ) (hv: ‖v‖ ≠ 0) (k: ℤ) (hk: 3 ≤ (k : ℝ)) (hva: A.mulVec v = k • v) (a b: ℕ):
+    ∑ i ∈ Finset.Ico a b, ‖(A ^ i).mulVec v‖ < ‖(A ^ b).mulVec v‖ := by
+
+
+  have mul_pow_exact: ∀ n: ℕ, ‖(A ^ n).mulVec v‖ = |k| ^ n * ‖v‖ := by
+    intro n
+    induction n with
+    | zero =>
+      simp
+    | succ j ih =>
+      rw [pow_succ]
+      rw [← Matrix.mulVec_mulVec]
+      rw [hva]
+      rw [Matrix.mulVec_smul]
+      rw [norm_smul]
+      rw [ih]
+      rw [Int.norm_eq_abs]
+      norm_num
+      ring
+
+  have mul_pow: ∀ n: ℕ, 3 ^ n * ‖v‖ ≤ ‖(A ^ n).mulVec v‖ := by
+    intro n
+    induction n with
+    | zero =>
+      simp
+    | succ j ih =>
+      nth_rw 2 [pow_succ]
+      rw [← Matrix.mulVec_mulVec]
+      rw [hva]
+      rw [Matrix.mulVec_smul]
+      rw [norm_smul]
+      rw [pow_succ']
+      rw [mul_assoc]
+      grw [ih]
+
+
+      have three_le: 3 ≤ ‖k‖ := by
+        grw [hk]
+        norm_num
+        rw [Int.norm_eq_abs]
+        apply le_abs_self
+
+      grw [three_le]
+
+  by_cases b_le: b ≤ a
+  .
+    have ico_empty: Finset.Ico a b = ∅ := by
+      simpa using b_le
+
+
+    simp [ico_empty]
+    by_contra!
+    have norm_le := mul_pow b
+    rw [this] at norm_le
+    simp at norm_le
+    rw [mul_nonpos_iff] at norm_le
+    simp at norm_le
+    cases norm_le
+    . rename_i v_zero
+      simp [v_zero] at hv
+    . rename_i le_zero
+      simp at le_zero
+      rw [← Real.rpow_natCast] at le_zero
+      have pow_pos := Real.rpow_pos_of_pos (x := 3) (by norm_num) b
+      linarith
+  .
+    simp at b_le
+    induction b, b_le using Nat.le_induction with
+    | base =>
+      simp
+      rw [mul_pow_exact]
+      rw [mul_pow_exact]
+      simp
+      rw [pow_succ]
+      nth_rw 3 [mul_comm]
+      rw [mul_assoc]
+      nth_rw 2 [mul_comm]
+      rw [lt_mul_iff_one_lt_right]
+      .
+        rw [lt_abs]
+        grind
+      . positivity
+    | succ n hmn ih =>
+      rw [Finset.sum_Ico_succ_top]
+      rw [pow_succ]
+      rw [← Matrix.mulVec_mulVec]
+      rw [hva]
+      rw [Matrix.mulVec_smul]
+      rw [norm_smul]
+      rw [mul_pow_exact]
+      rw [Int.norm_eq_abs]
+      ring
+      nth_rw 2 [mul_comm]
+      rw [← mul_assoc]
+      norm_cast
+      simp
+      rw [← pow_succ']
+      rw [mul_pow_exact] at ih
+      apply_fun (fun x => x + |k| ^ n * ‖v‖) at ih
+      .
+        simp only [] at ih
+
+        norm_cast at ih
+        simp at ih
+        grw [ih]
+        rw [← two_mul]
+
+
+        have two_lt_k: (2: ℝ) < |(k : ℝ)| := by
+          norm_cast
+          rw [lt_abs]
+          norm_cast at hk
+          left
+          linarith
+
+
+
+        have two_mul_le:  2 * (|↑k| ^ n * ‖v‖) < |↑k| * (|↑k| ^ n * ‖v‖) := by
+          apply mul_lt_mul
+          . exact two_lt_k
+          . simp
+          . positivity
+          . positivity
+
+        nth_rw 2 [← mul_assoc] at two_mul_le
+        rw [← pow_succ'] at two_mul_le
+        exact two_mul_le
+      . simp
+        intro a b hab
+        simp
+        exact hab
+      . linarith
+
+#print axioms interval_sum_le
 
 lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → ℤ) (N₀ N: ℕ) (hn: N₀ ≤ N) (p q: Finset ℕ)
   (hp: p ⊆ Finset.Ico N₀ N) (hq: q ⊆ Finset.Ico N₀ N) (hpq: p.sum (fun k => A^k • v) = q.sum (fun k => A^k • v)):
