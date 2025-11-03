@@ -21,96 +21,98 @@ lemma poly_cancel {n: ℕ} (A: Matrix (Fin n) (Fin n) ℤ) (v: (Fin n) → ℤ) 
     simp at hp
   | insert a s ha ih =>
 
-    by_cases a_mem_q: a ∈ q
+    by_cases s_subset: s ⊆ q
     .
-      rw [Finset.sum_insert] at hpq
-      have orig_hpq := hpq
-      conv at hpq =>
-        rhs
-        arg 1
-        equals insert a (q \ {a}) =>
-          grind
-      simp [Finset.sum_insert] at hpq
-      obtain ⟨b, b_mem, b_not_mem⟩ := hp
-      obtain ⟨prev⟩ := ih (q \ {a}) (by exact hpq) (by sorry)
+      rw [Finset.sum_insert ha] at hpq
+
       apply Exists.nonempty
-
-      have s_not_mem_prev: a ∉ prev.p' := by
-        have prev_p_subset := prev.p'_derived
-        grind
-
-      by_cases a_mem_prev_q': a ∈ prev.q'
-      .
-        have prev_prime := prev.h_prime
-
-
-        use {
-          p' := prev.p'
-          q' := prev.q'
-          nontrivial := prev.nontrivial
-          h_prime := prev.h_prime
-          supp_disj := prev.supp_disj
-          p'_derived := by
-            have prev_derived := prev.p'_derived
-            grind
-          q'_derived := by
-            have prev_derived := prev.q'_derived
-            grind
-        }
-      .
-        have prev_prime := prev.h_prime
-        use {
-          p' := prev.p'
-          q' := prev.q'
-          nontrivial := by
-            exact prev.nontrivial
-          supp_disj := by
-            have prev_disj := prev.supp_disj
-            exact prev_disj
-          h_prime := by
-            exact prev.h_prime
-            -- have prev_h_prime := prev.h_prime
-            -- rw [Finset.sum_insert]
-            -- rw [prev_h_prime]
-
-
-            --rw [orig_hpq]
-          p'_derived := by
-            have prev_derived := prev.p'_derived
-            grind
-          q'_derived := by
-            have prev_derived := prev.q'_derived
-            grind
-        }
+      use {
+        p' := {a}
+        q' := q \ s
+        nontrivial := by simp
+        h_prime := by
+          simp
+          rw [← Finset.sum_sdiff s_subset] at hpq
+          simp at hpq
+          exact hpq
+        supp_disj := by
+          rw [Finset.disjoint_iff_ne]
+          intro b hb
+          simp at hb
+          intro c hc
+          grind
+        p'_derived := by
+          simp
+        q'_derived := by
+          simp
+      }
     .
-      --rw [Finset.sum_insert] at hpq
-      by_cases s_subset: s ⊆ q
+      rw [Finset.not_subset] at s_subset
+      by_cases a_mem_q: a ∈ q
       .
         rw [Finset.sum_insert] at hpq
-
-        apply Exists.nonempty
-        use {
-          p' := {a}
-          q' := q \ s
-          nontrivial := by simp
-          h_prime := by
-            simp
-            rw [← Finset.sum_sdiff s_subset] at hpq
-            simp at hpq
-            exact hpq
-          supp_disj := by
-            rw [Finset.disjoint_iff_ne]
-            intro b hb
-            simp at hb
-            intro c hc
+        have orig_hpq := hpq
+        conv at hpq =>
+          rhs
+          arg 1
+          equals insert a (q \ {a}) =>
             grind
-          p'_derived := by
-            simp
-          q'_derived := by
-            simp
-        }
+        simp [Finset.sum_insert] at hpq
+        obtain ⟨b, b_mem, b_not_mem⟩ := hp
+        obtain ⟨prev⟩ := ih (q \ {a}) (by exact hpq) (by grind)
+
+        have s_not_mem_prev: a ∉ prev.p' := by
+          have prev_p_subset := prev.p'_derived
+          grind
+
+        by_cases a_mem_prev_q': a ∈ prev.q'
+        .
+          have prev_prime := prev.h_prime
+
+          apply Exists.nonempty
+          use {
+            p' := prev.p'
+            q' := prev.q'
+            nontrivial := prev.nontrivial
+            h_prime := prev.h_prime
+            supp_disj := prev.supp_disj
+            p'_derived := by
+              have prev_derived := prev.p'_derived
+              grind
+            q'_derived := by
+              have prev_derived := prev.q'_derived
+              grind
+          }
+        .
+          have prev_prime := prev.h_prime
+          apply Exists.nonempty
+          use {
+            p' := prev.p'
+            q' := prev.q'
+            nontrivial := by
+              exact prev.nontrivial
+            supp_disj := by
+              have prev_disj := prev.supp_disj
+              exact prev_disj
+            h_prime := by
+              exact prev.h_prime
+              -- have prev_h_prime := prev.h_prime
+              -- rw [Finset.sum_insert]
+              -- rw [prev_h_prime]
+
+
+              --rw [orig_hpq]
+            p'_derived := by
+              have prev_derived := prev.p'_derived
+              grind
+            q'_derived := by
+              have prev_derived := prev.q'_derived
+              grw [prev_derived]
+              simp
+          }
+        . exact ha
       .
-        rw [Finset.not_subset] at s_subset
+        --rw [Finset.sum_insert] at hpq
         obtain ⟨b, hb, b_not_mem⟩ := hp
         simp at hb
 
