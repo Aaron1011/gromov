@@ -94,4 +94,17 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
           have n_mem_or: n ∈ p ∨ n ∈ q := by
             grind
 
-          sorry
+          clear n_mem_or n_neither
+          simp [n_mem_p] at n_both
+
+          have q_n_diff : q \ {n} = q := by grind
+          have n_q_diff: {n} \ q = {n} := by grind
+          have data := poly_cancel A v p q hpq
+          have h_sum := data.h_prime
+          have p_eq: p = (p \ {n}) ∪ {n} := by grind
+          nth_rw 1 [p_eq] at h_sum
+          rw [Finset.union_sdiff_distrib] at h_sum
+          rw [Finset.sum_union] at h_sum
+          simp [n_q_diff] at h_sum
+
+          rw [add_comm] at h_sum
