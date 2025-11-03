@@ -16,6 +16,35 @@ structure DerivedSets {n: ℕ} (A: Matrix (Fin n) (Fin n) ℤ) (v : (Fin n) → 
 --
 
 lemma poly_cancel {n: ℕ} (A: Matrix (Fin n) (Fin n) ℤ) (v: (Fin n) → ℤ) (p q : Finset ℕ) (hpq: p.sum (fun k => A^k • v) = q.sum (fun k => A^k • v)) (hp : ∃ a: ℕ, a ∈ p ∧ a ∉ q) : Nonempty (DerivedSets A v p q) := by
+
+  rw [← Finset.sdiff_union_inter (s := p) (t := q)] at hpq
+  rw [Finset.sum_union] at hpq
+  .
+    have p_inter_subset : p ∩ q ⊆ q := by
+      simp
+    rw [←  Finset.sum_sdiff p_inter_subset] at hpq
+    simp at hpq
+    apply Exists.nonempty
+    use {
+      p' := p \ q
+      q' := q \ p
+      nontrivial := by
+        simp
+        grind
+      h_prime := by
+        exact hpq
+      p'_derived := by
+        simp
+      q'_derived := by
+        simp
+      supp_disj := by
+        rw [Finset.disjoint_iff_ne]
+        intro a ha b hb
+        grind
+    }
+  . apply Finset.disjoint_sdiff_inter
+
+
   induction p using Finset.induction_on generalizing q with
   | empty =>
     simp at hp
@@ -112,38 +141,77 @@ lemma poly_cancel {n: ℕ} (A: Matrix (Fin n) (Fin n) ℤ) (v: (Fin n) → ℤ) 
           }
         . exact ha
       .
-        --rw [Finset.sum_insert] at hpq
-        obtain ⟨b, hb, b_not_mem⟩ := hp
-        simp at hb
+        rw [Finset.sum_insert ha] at hpq
 
-        obtain ⟨prev⟩ := ih (q) (by sorry) (s_subset)
+
         apply Exists.nonempty
         use {
-          p' := prev.p',
-          q' := prev.q',
-          nontrivial := by
-            exact prev.nontrivial
-            --simp
+          p' := {a} ∪ (s \ q)
+          q' := q \ s
+          nontrivial := by simp
           supp_disj := by
-            exact prev.supp_disj
-            -- simp
-            -- have prev_disj := prev.supp_disj
-            -- have prev_q_derived := prev.q'_derived
-            -- grind
+            rw [Finset.disjoint_iff_ne]
+            intro b hb
+            simp at hb
+            intro c hc
+            simp at hc
+            obtain ⟨c_mem, c_not_mem_s⟩ := hc
+            by_contra!
+            cases hb
+            . rename_i b_eq_a
+              rw [← b_eq_a] at a_mem_q
+              rw [this] at a_mem_q
+              contradiction
+            . rename_i b_mem_or
+              cases b_mem_or
+              . rename_i b_not_q
+                rw [← this] at c_mem
+                contradiction
           h_prime := by
-            exact prev.h_prime
-            -- have prev_h_prime := prev.h_prime
-            -- rw [Finset.sum_insert]
-            -- rw [prev_h_prime]
+            simp
+            rw [Finset.sum_insert]
+
+            rw [Finset.sum_sdiff]
+
+            sorry
           p'_derived := by
-            have prev_derived := prev.p'_derived
-            rw [Finset.insert_eq]
-            grw [prev_derived]
             simp
           q'_derived := by
-            have prev_derived := prev.q'_derived
-            grind
+            simp
         }
+        --rw [Finset.insert_eq] at hpq
+       --rw [Finset.sum_insert a_mem_q] at hpq
+        --rw [Finset.sum_insert] at hpq
+        -- obtain ⟨b, hb, b_not_mem⟩ := hp
+        -- simp at hb
+
+        -- obtain ⟨prev⟩ := ih (q) (by sorry) (s_subset)
+        -- apply Exists.nonempty
+        -- use {
+        --   p' := prev.p',
+        --   q' := prev.q',
+        --   nontrivial := by
+        --     exact prev.nontrivial
+        --     --simp
+        --   supp_disj := by
+        --     exact prev.supp_disj
+        --     -- simp
+        --     -- have prev_disj := prev.supp_disj
+        --     -- have prev_q_derived := prev.q'_derived
+        --     -- grind
+        --   h_prime := by
+        --     exact prev.h_prime
+        --     -- have prev_h_prime := prev.h_prime
+        --     -- rw [Finset.sum_insert]
+        --     -- rw [prev_h_prime]
+        --   p'_derived := by
+        --     have prev_derived := prev.p'_derived
+        --     grw [prev_derived]
+        --     simp
+        --   q'_derived := by
+        --     have prev_derived := prev.q'_derived
+        --     exact prev_derived
+        -- }
 
 
     -- by_cases s_empty: s = {}
