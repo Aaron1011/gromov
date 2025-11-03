@@ -154,7 +154,8 @@ lemma interval_sum_le {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
 
 #print axioms interval_sum_le
 
-lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → ℤ) (N₀ N: ℕ) (hn: N₀ ≤ N) (p q: Finset ℕ)
+set_option maxHeartbeats 3000000 in
+lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → ℤ) (N₀ N: ℕ) (hv: ‖v‖ ≠ 0) (k: ℤ) (hk: 3 ≤ (k : ℝ))  (hva: A.mulVec v = k • v) (hn: N₀ ≤ N) (p q: Finset ℕ)
   (hp: p ⊆ Finset.Ico N₀ N) (hq: q ⊆ Finset.Ico N₀ N) (hpq: p.sum (fun k => A^k • v) = q.sum (fun k => A^k • v)):
     p = q := by
 
@@ -219,7 +220,7 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
       .
         wlog n_mem_p: n ∈ p
         .
-          have swapped := this A v N₀ N n hmn ih q p hq hp hpq.symm (by grind) (by grind) (by grind)
+          have swapped := this A v N₀ N hv k hk hva n hmn ih q p hq hp hpq.symm (by grind) (by grind) (by grind)
           exact swapped.symm
         .
           rw [not_and_or] at n_neither
@@ -277,7 +278,10 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
               grw [norm_sum_le]
               grw [Finset.sum_le_sum (g := (fun x ↦ ‖(A ^ x).mulVec v‖))]
               .
-                sorry
+                apply interval_sum_le (k := k)
+                . exact hv
+                . exact hk
+                . exact hva
 
               . intro a ha
                 simp [Set.indicator]
@@ -333,3 +337,5 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
             rw [Finset.disjoint_iff_ne]
             intro a ha b hb
             grind
+
+#print axioms subsums_unique
