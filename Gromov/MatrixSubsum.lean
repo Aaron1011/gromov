@@ -25,9 +25,74 @@ lemma poly_cancel {n: ℕ} (A: Matrix (Fin n) (Fin n) ℤ) (v: (Fin n) → ℤ) 
     by_cases a_mem_q: a ∈ q
     .
       rw [Finset.sum_insert] at hpq
+      have orig_hpq := hpq
       conv at hpq =>
         rhs
-      have prev := ih (q \ {a}) (by sorry)
+        arg 1
+        equals insert a (q \ {a}) =>
+          grind
+      simp [Finset.sum_insert] at hpq
+      obtain ⟨b, b_mem, b_not_mem⟩ := hp
+      obtain ⟨prev⟩ := ih (q \ {a}) (by exact hpq) (by grind)
+      apply Exists.nonempty
+
+      have s_not_mem_prev: a ∉ prev.p' := by
+        have prev_p_subset := prev.p'_derived
+        grind
+
+      by_cases a_mem_prev_q': a ∈ prev.q'
+      .
+        have prev_prime := prev.h_prime
+
+
+        use {
+          p' := prev.p'
+          q' := prev.q'
+          nontrivial := prev.nontrivial
+          h_prime := prev.h_prime
+          supp_disj := prev.supp_disj
+          p'_derived := by
+            have prev_derived := prev.p'_derived
+            grind
+          q'_derived := by
+            have prev_derived := prev.q'_derived
+            grind
+        }
+      .
+        have prev_prime := prev.h_prime
+        use {
+          p' := prev.p'
+          q' := prev.q'
+          nontrivial := by
+            exact prev.nontrivial
+          supp_disj := by
+            have prev_disj := prev.supp_disj
+            exact prev_disj
+          h_prime := by
+            exact prev.h_prime
+            -- have prev_h_prime := prev.h_prime
+            -- rw [Finset.sum_insert]
+            -- rw [prev_h_prime]
+
+
+            --rw [orig_hpq]
+          p'_derived := by
+            have prev_derived := prev.p'_derived
+            grind
+          q'_derived := by
+            have prev_derived := prev.q'_derived
+            grind
+        }
+    .
+      rw [Finset.sum_insert] at hpq
+      apply Exists.nonempty
+
+      obtain ⟨prev⟩ := ih (q) (by exact hpq) (by grind)
+      use {
+        p' := insert a prev.p',
+
+      }
+
 
     by_cases s_empty: s = {}
     .
