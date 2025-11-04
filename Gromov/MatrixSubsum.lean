@@ -210,7 +210,7 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fi
 
 
   obtain ⟨k, hk, hk_not_one⟩ := not_all_one
-  wlog norm_k_gt: 1 < |k|
+  wlog norm_k_gt: |k| < 1
   .
 
     have foo := this A⁻¹ v k sorry
@@ -264,8 +264,21 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fi
           apply Polynomial.Monic.ne_zero at char_monic
           contradiction
       . intro i hi
+        simp at hi
         sorry
-      . sorry
+      .
+        have k_root := Module.End.isRoot_of_hasEigenvalue hk
+        have min_poly_div := Matrix.minpoly_dvd_charpoly A_C
+        use (k, 0)
+        simp
+        refine ⟨?_, ?_⟩
+        .
+          refine ⟨?_, ?_⟩
+          . sorry
+          .
+            sorry
+            --have root_char := Polynomial.IsRoot.dvd k_root min_poly_div
+        . norm_cast
 
 
     simp [A_C] at roots_prod_le
