@@ -169,6 +169,36 @@ theorem hasEigenvalue_of_isRoot_min  {R : Type*} {M : Type*} [CommRing R] [AddCo
   refine Module.End.hasEigenvalue_of_hasEigenvector (Module.End.hasEigenvector_iff.mpr ⟨?_, hv⟩)
   simpa [sub_eq_zero, hq] using congr($(minpoly.aeval R f) v)
 
+-- theorem hasEigenvalue_of_isRoot_charpoly  {R : Type*} {M : Type*} [CommRing R] [AddCommGroup M] [Module R M] {f : Module.End R M} {μ : R} [IsDomain R] [Module.Finite R M] [Module.Free R M] (h : (f.charpoly).IsRoot μ) : f.HasEigenvalue μ := by
+--   obtain ⟨q, hq⟩ := Polynomial.dvd_iff_isRoot.mpr h
+--   obtain ⟨v, hv⟩ : ∃ v : M, q.aeval f v ≠ 0 := by
+--     by_contra! h_contra
+--     have := LinearMap.charpoly_natDegree f
+
+--     have finrank_ne_zero: 0 < Module.finrank R M := by
+--       sorry
+
+--     rw [hq, Polynomial.natDegree_mul, Polynomial.natDegree_X_sub_C] at this
+
+--     simp at h_contra
+
+--     · norm_cast at this; grind
+--     · rintro rfl
+--       exact minpoly.ne_zero (Algebra.IsIntegral.isIntegral f) (mul_zero (Polynomial.X - Polynomial.C μ) ▸ hq)
+--   refine Module.End.hasEigenvalue_of_hasEigenvector (Module.End.hasEigenvector_iff.mpr ⟨?_, hv⟩)
+--   simp [sub_eq_zero, hq]
+--   rw [← sub_eq_zero]
+--   simpa [sub_eq_zero, hq] using congr($((f.charpoly).aeval) v)
+
+-- TODO - upstream to mathlib
+def complexOfIntHom: ℤ →+* ℂ := {
+  toFun := fun z => (z: ℂ),
+  map_zero' := by simp,
+  map_one' := by simp,
+  map_add' := by intros; simp,
+  map_mul' := by intros; simp
+}
+
 lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fin d) → ℤ):
     (∀ k, Module.End.HasEigenvalue (A.val.toLin') k → |k| = 1) ∨ (∃ k, (Module.End.HasEigenvalue (A.val.toLin') k) ∧ 1 < |k|) := by
 
@@ -179,14 +209,60 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fi
 
   by_contra!
 
-  have a_det_unit := Matrix.isUnits_det_units A
-  rw [Int.isUnit_iff] at a_det_unit
-  let A_C := A.val.map (fun a => (a: ℂ))
-  have det_eq := Matrix.det_eq_prod_roots_charpoly A_C
+  obtain ⟨k, hk, hk_not_one⟩ := not_all_one
+  wlog norm_k_gt: 1 < |k|
+  . sorry
+  .
+    have a_det_unit := Matrix.isUnits_det_units A
+    rw [Int.isUnit_iff] at a_det_unit
+    let A_C := A.val.map complexOfIntHom
+    have det_eq := Matrix.det_eq_prod_roots_charpoly A_C
+    have foo := Matrix.charpoly_map A.val complexOfIntHom
 
-  rw [← Matrix.charpoly_toLin'] at det_eq
+    have roots_prod_le: ‖A_C.charpoly.roots.prod‖ < 1 := by
+      rw [Multiset.prod_eq_prod_toEnumFinset]
+      rw [Complex.norm_prod]
+      conv =>
+        rhs
+        equals ∏ i ∈ A_C.charpoly.roots.toEnumFinset, 1 =>
+          simp
 
-  sorry
+      apply Finset.prod_lt_prod
+      . sorry
+      . intro i hi
+        sorry
+      . sorry
+
+
+    simp [A_C] at roots_prod_le
+
+    have cast_det := Int.cast_det A.val (R := ℂ)
+    -- TODO - this can be way simpler
+    cases a_det_unit
+    . rename_i det_eq_one
+      apply_fun (fun a => (a: ℂ)) at det_eq_one
+      rw [cast_det] at det_eq_one
+      simp [A_C, complexOfIntHom] at det_eq
+      rw [det_eq_one] at det_eq
+      simp [complexOfIntHom] at roots_prod_le
+      rw [← det_eq] at roots_prod_le
+      norm_num at roots_prod_le
+    . rename_i det_eq_neg_one
+      apply_fun (fun a => (a: ℂ)) at det_eq_neg_one
+      rw [cast_det] at det_eq_neg_one
+      simp [A_C, complexOfIntHom] at det_eq
+      rw [det_eq_neg_one] at det_eq
+      simp [complexOfIntHom] at roots_prod_le
+      rw [← det_eq] at roots_prod_le
+      norm_num at roots_prod_le
+
+
+
+    -- Matrix.eval_charpoly
+
+    --rw [← Matrix.charpoly_toLin'] at det_eq
+
+    --sorry
 
 set_option maxHeartbeats 3000000 in
 lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → ℤ) (N₀ N: ℕ) (hv: ‖v‖ ≠ 0) (k: ℤ) (hk: 3 ≤ (k : ℝ))  (hva: A.mulVec v = k • v) (hn: N₀ ≤ N) (p q: Finset ℕ)
