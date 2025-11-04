@@ -154,6 +154,40 @@ lemma interval_sum_le {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
 
 #print axioms interval_sum_le
 
+
+theorem hasEigenvalue_of_isRoot_min  {R : Type*} {M : Type*} [CommRing R] [AddCommGroup M] [Module R M] {f : Module.End R M} {μ : R} [IsDomain R] [Module.Finite R M] (h : (minpoly R f).IsRoot μ) : f.HasEigenvalue μ := by
+  obtain ⟨q, hq⟩ := Polynomial.dvd_iff_isRoot.mpr h
+  obtain ⟨v, hv⟩ : ∃ v : M, q.aeval f v ≠ 0 := by
+    by_contra! h_contra
+    have := minpoly.min R f
+      ((Polynomial.monic_X_sub_C μ).of_mul_monic_left (hq ▸ minpoly.monic (Algebra.IsIntegral.isIntegral f)))
+      (LinearMap.ext h_contra)
+    rw [hq, Polynomial.degree_mul, Polynomial.degree_X_sub_C, Polynomial.degree_eq_natDegree] at this
+    · norm_cast at this; grind
+    · rintro rfl
+      exact minpoly.ne_zero (Algebra.IsIntegral.isIntegral f) (mul_zero (Polynomial.X - Polynomial.C μ) ▸ hq)
+  refine Module.End.hasEigenvalue_of_hasEigenvector (Module.End.hasEigenvector_iff.mpr ⟨?_, hv⟩)
+  simpa [sub_eq_zero, hq] using congr($(minpoly.aeval R f) v)
+
+lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fin d) → ℤ):
+    (∀ k, Module.End.HasEigenvalue (A.val.toLin') k → |k| = 1) ∨ (∃ k, (Module.End.HasEigenvalue (A.val.toLin') k) ∧ 1 < |k|) := by
+
+  rw [Classical.or_iff_not_imp_left]
+  intro not_all_one
+  simp at not_all_one
+
+
+  by_contra!
+
+  have a_det_unit := Matrix.isUnits_det_units A
+  rw [Int.isUnit_iff] at a_det_unit
+  let A_C := A.val.map (fun a => (a: ℂ))
+  have det_eq := Matrix.det_eq_prod_roots_charpoly A_C
+
+  rw [← Matrix.charpoly_toLin'] at det_eq
+
+  sorry
+
 set_option maxHeartbeats 3000000 in
 lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → ℤ) (N₀ N: ℕ) (hv: ‖v‖ ≠ 0) (k: ℤ) (hk: 3 ≤ (k : ℝ))  (hva: A.mulVec v = k • v) (hn: N₀ ≤ N) (p q: Finset ℕ)
   (hp: p ⊆ Finset.Ico N₀ N) (hq: q ⊆ Finset.Ico N₀ N) (hpq: p.sum (fun k => A^k • v) = q.sum (fun k => A^k • v)):
