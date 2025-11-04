@@ -281,10 +281,13 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fi
         refine ⟨?_, ?_⟩
         .
           refine ⟨?_, ?_⟩
-          . sorry
           .
-            sorry
-            --have root_char := Polynomial.IsRoot.dvd k_root min_poly_div
+            exact char_nonzero
+          .
+            simp at k_root
+            have root_char := Polynomial.IsRoot.dvd k_root min_poly_div
+            simp at root_char
+            exact root_char
         . norm_cast
 
 
