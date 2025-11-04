@@ -167,28 +167,25 @@ theorem hasEigenvalue_of_isRoot_min  {R : Type*} {M : Type*} [CommRing R] [AddCo
     · rintro rfl
       exact minpoly.ne_zero (Algebra.IsIntegral.isIntegral f) (mul_zero (Polynomial.X - Polynomial.C μ) ▸ hq)
   refine Module.End.hasEigenvalue_of_hasEigenvector (Module.End.hasEigenvector_iff.mpr ⟨?_, hv⟩)
+  apply_fun (fun a => (Polynomial.aeval f) a) at hq
+  simp
   simpa [sub_eq_zero, hq] using congr($(minpoly.aeval R f) v)
 
--- theorem hasEigenvalue_of_isRoot_charpoly  {R : Type*} {M : Type*} [CommRing R] [AddCommGroup M] [Module R M] {f : Module.End R M} {μ : R} [IsDomain R] [Module.Finite R M] [Module.Free R M] (h : (f.charpoly).IsRoot μ) : f.HasEigenvalue μ := by
---   obtain ⟨q, hq⟩ := Polynomial.dvd_iff_isRoot.mpr h
---   obtain ⟨v, hv⟩ : ∃ v : M, q.aeval f v ≠ 0 := by
---     by_contra! h_contra
---     have := LinearMap.charpoly_natDegree f
-
---     have finrank_ne_zero: 0 < Module.finrank R M := by
---       sorry
-
---     rw [hq, Polynomial.natDegree_mul, Polynomial.natDegree_X_sub_C] at this
-
---     simp at h_contra
-
---     · norm_cast at this; grind
---     · rintro rfl
---       exact minpoly.ne_zero (Algebra.IsIntegral.isIntegral f) (mul_zero (Polynomial.X - Polynomial.C μ) ▸ hq)
---   refine Module.End.hasEigenvalue_of_hasEigenvector (Module.End.hasEigenvector_iff.mpr ⟨?_, hv⟩)
---   simp [sub_eq_zero, hq]
---   rw [← sub_eq_zero]
---   simpa [sub_eq_zero, hq] using congr($((f.charpoly).aeval) v)
+-- TODO - upstream to mathlib
+theorem hasEigenvalue_of_isRoot_charpoly  {R : Type*} {M : Type*} [CommRing R] [AddCommGroup M] [Module R M] {f : Module.End R M} {μ : R} [IsDomain R] [Module.Finite R M] [Module.Free R M] (h : (f.charpoly).IsRoot μ) : f.HasEigenvalue μ := by
+  simp at h
+  rw [LinearMap.eval_charpoly] at h
+  have nontrivial_ker := LinearMap.bot_lt_ker_of_det_eq_zero h
+  rw [LinearMap.det_eq_zero_iff_ker_ne_bot] at h
+  apply Submodule.exists_mem_ne_zero_of_ne_bot at h
+  obtain ⟨v, v_mem, v_nonzero⟩ := h
+  apply Module.End.hasEigenvalue_of_hasEigenvector (x := v)
+  rw [Module.End.hasEigenvector_iff]
+  simp
+  simp at v_mem
+  rw [sub_eq_zero] at v_mem
+  rw [eq_comm] at v_mem
+  refine ⟨v_mem, v_nonzero⟩
 
 -- TODO - upstream to mathlib
 def complexOfIntHom: ℤ →+* ℂ := {
@@ -201,7 +198,7 @@ def complexOfIntHom: ℤ →+* ℂ := {
 
 -- TODO - an integer matrix might not have integer eigenvalues, so this statement is probably wrong
 lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fin d) → ℤ):
-    (∀ k, Module.End.HasEigenvalue (A.val.toLin') k → |k| = 1) ∨ (∃ k, (Module.End.HasEigenvalue (A.val.toLin') k) ∧ 1 < |k|) := by
+    (∀ (k : ℂ), Module.End.HasEigenvalue ((A.val.map complexOfIntHom).toLin') k → ‖k‖ = 1) ∨ (∃ (k: ℂ), (Module.End.HasEigenvalue ((A.val.map complexOfIntHom).toLin') k) ∧ 1 < ‖k‖) := by
 
   rw [Classical.or_iff_not_imp_left]
   intro not_all_one
@@ -210,7 +207,7 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fi
 
 
   obtain ⟨k, hk, hk_not_one⟩ := not_all_one
-  wlog norm_k_gt: |k| < 1
+  wlog norm_k_gt: ‖k‖ < 1
   .
 
     have foo := this A⁻¹ v k sorry
@@ -223,6 +220,14 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fi
     let A_C := A.val.map complexOfIntHom
     have det_eq := Matrix.det_eq_prod_roots_charpoly A_C
     have foo := Matrix.charpoly_map A.val complexOfIntHom
+
+    have char_nonzero: A_C.charpoly ≠ 0 := by
+      by_contra!
+      simp [A_C, complexOfIntHom] at this
+      have char_monic := Matrix.charpoly_monic A_C
+      simp [A_C, complexOfIntHom] at char_monic
+      apply Polynomial.Monic.ne_zero at char_monic
+      contradiction
 
     by_contra! eigenvalues_le_one
 
@@ -257,15 +262,17 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fi
             rw [← Matrix.map_mul]
             simp
         .
-          by_contra!
-          simp [A_C, complexOfIntHom] at this
-          have char_monic := Matrix.charpoly_monic A_C
-          simp [A_C, complexOfIntHom] at char_monic
-          apply Polynomial.Monic.ne_zero at char_monic
-          contradiction
+          apply char_nonzero
       . intro i hi
         simp at hi
-        sorry
+        have is_root := (Polynomial.rootMultiplicity_pos (p := A_C.charpoly) ?_ (x := i.1)).mp (by omega)
+        .
+          rw [← Matrix.charpoly_toLin'] at is_root
+          have i_eigen := hasEigenvalue_of_isRoot_charpoly is_root
+          exact eigenvalues_le_one i.1 i_eigen
+
+        . apply char_nonzero
+        -- hasEigenvalue_of_isRoot_charpoly
       .
         have k_root := Module.End.isRoot_of_hasEigenvalue hk
         have min_poly_div := Matrix.minpoly_dvd_charpoly A_C
