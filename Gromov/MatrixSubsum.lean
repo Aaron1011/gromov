@@ -199,6 +199,7 @@ def complexOfIntHom: ℤ →+* ℂ := {
   map_mul' := by intros; simp
 }
 
+-- TODO - an integer matrix might not have integer eigenvalues, so this statement is probably wrong
 lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fin d) → ℤ):
     (∀ k, Module.End.HasEigenvalue (A.val.toLin') k → |k| = 1) ∨ (∃ k, (Module.End.HasEigenvalue (A.val.toLin') k) ∧ 1 < |k|) := by
 
@@ -207,17 +208,23 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fi
   simp at not_all_one
 
 
-  by_contra!
 
   obtain ⟨k, hk, hk_not_one⟩ := not_all_one
   wlog norm_k_gt: 1 < |k|
-  . sorry
   .
+
+    have foo := this A⁻¹ v k sorry
+    sorry
+  .
+
+    --
     have a_det_unit := Matrix.isUnits_det_units A
     rw [Int.isUnit_iff] at a_det_unit
     let A_C := A.val.map complexOfIntHom
     have det_eq := Matrix.det_eq_prod_roots_charpoly A_C
     have foo := Matrix.charpoly_map A.val complexOfIntHom
+
+    by_contra! eigenvalues_le_one
 
     have roots_prod_le: ‖A_C.charpoly.roots.prod‖ < 1 := by
       rw [Multiset.prod_eq_prod_toEnumFinset]
@@ -228,7 +235,34 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fi
           simp
 
       apply Finset.prod_lt_prod
-      . sorry
+      .
+        intro i hi
+        simp at hi
+        have is_root := (Polynomial.rootMultiplicity_pos (p := A_C.charpoly) ?_ (x := i.1)).mp (by omega)
+        .
+          by_contra!
+          simp at this
+
+          have eval_char := Matrix.eval_charpoly A_C i.1
+          rw [Polynomial.IsRoot.def] at is_root
+          rw [is_root] at eval_char
+          simp [this] at eval_char
+          rw [Matrix.det_neg] at eval_char
+          simp at eval_char
+
+          have det_nonzero :=  Matrix.det_ne_zero_of_left_inverse (A := A_C) (B := (A.inv).map complexOfIntHom) ?_
+          . contradiction
+          .
+            simp [-Matrix.coe_units_inv, A_C]
+            rw [← Matrix.map_mul]
+            simp
+        .
+          by_contra!
+          simp [A_C, complexOfIntHom] at this
+          have char_monic := Matrix.charpoly_monic A_C
+          simp [A_C, complexOfIntHom] at char_monic
+          apply Polynomial.Monic.ne_zero at char_monic
+          contradiction
       . intro i hi
         sorry
       . sorry
