@@ -207,11 +207,33 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fi
 
 
   obtain ⟨k, hk, hk_not_one⟩ := not_all_one
-  wlog norm_k_gt: ‖k‖ < 1
-  .
+  -- wlog norm_k_gt: ‖k‖ < 1
+  -- .
 
-    have foo := this A⁻¹ v k sorry
-    sorry
+  --   have foo := this A⁻¹ v k⁻¹ ?_ (by simpa using hk_not_one) ?_
+  --   .
+  --     obtain ⟨j, hj, j_norm⟩ := foo
+  --     use j⁻¹
+  --     refine ⟨?_, ?_⟩
+  --     . sorry
+  --     . simp
+
+  --     exact foo
+  --   .
+
+  --     apply Module.End.HasEigenvalue.exists_hasEigenvector at hk
+  --     obtain ⟨v, hv, v_nonzero⟩ := hk
+  --     simp at hv
+  --     apply Module.End.hasEigenvalue_of_hasEigenvector (x := v)
+  --     rw [Module.End.hasEigenvector_iff]
+  --     simp
+
+  --     sorry
+    -- .
+    --   simp
+    --   rw [inv_lt_one₀]
+    --   . grind
+    --   . grind
   .
 
     --
