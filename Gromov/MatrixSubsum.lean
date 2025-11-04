@@ -251,6 +251,15 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fi
       apply Polynomial.Monic.ne_zero at char_monic
       contradiction
 
+
+    by_cases k_gt: 1 < ‖k‖
+    . use k
+
+    simp at k_gt
+    have k_lt: ‖k‖ < 1 := by
+      grind
+
+
     by_contra! eigenvalues_le_one
 
     have roots_prod_le: ‖A_C.charpoly.roots.prod‖ < 1 := by
@@ -336,7 +345,7 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fi
       norm_num at roots_prod_le
 
 
-
+#print axioms int_matrix_eigenvalue
     -- Matrix.eval_charpoly
 
     --rw [← Matrix.charpoly_toLin'] at det_eq
