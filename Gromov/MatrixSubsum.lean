@@ -1,5 +1,8 @@
 import Mathlib
 
+open scoped Finset
+open scoped Pointwise
+
 structure DerivedSets {n: ℕ} (A: Matrix (Fin n) (Fin n) ℤ) (v : (Fin n) → ℤ) (p q : Finset ℕ) where
   h_prime: (p \ q).sum (fun k => A^k • v) = (q \ p).sum (fun k => A^k • v)
   supp_disj: Disjoint (p \ q) (q \ p)
@@ -19,25 +22,25 @@ def poly_cancel {n: ℕ} (A: Matrix (Fin n) (Fin n) ℤ) (v: (Fin n) → ℤ) (p
     grind
 } : DerivedSets A v p q)
 
+lemma mul_pow_exact {R: Type*} [NormedCommRing R] {d: ℕ} [NormSMulClass R (Fin d → R)] (A: Matrix (Fin d) (Fin d) R) (v: (Fin d) → R) (k: R)  (hva: A.mulVec v = k • v): ∀ n: ℕ, ‖(A ^ n).mulVec v‖ = ‖k‖ ^ n * ‖v‖ := by
+  intro n
+  induction n with
+  | zero =>
+    simp
+  | succ j ih =>
+    rw [pow_succ]
+    rw [← Matrix.mulVec_mulVec]
+    rw [hva]
+    rw [Matrix.mulVec_smul]
+    rw [norm_smul]
+    rw [ih]
+    ring
+
 lemma interval_sum_le {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → ℤ) (hv: ‖v‖ ≠ 0) (k: ℤ) (hk: 3 ≤ (k : ℝ)) (hva: A.mulVec v = k • v) (a b: ℕ):
     ∑ i ∈ Finset.Ico a b, ‖(A ^ i).mulVec v‖ < ‖(A ^ b).mulVec v‖ := by
 
 
-  have mul_pow_exact: ∀ n: ℕ, ‖(A ^ n).mulVec v‖ = |k| ^ n * ‖v‖ := by
-    intro n
-    induction n with
-    | zero =>
-      simp
-    | succ j ih =>
-      rw [pow_succ]
-      rw [← Matrix.mulVec_mulVec]
-      rw [hva]
-      rw [Matrix.mulVec_smul]
-      rw [norm_smul]
-      rw [ih]
-      rw [Int.norm_eq_abs]
-      norm_num
-      ring
+
 
   have mul_pow: ∀ n: ℕ, 3 ^ n * ‖v‖ ≤ ‖(A ^ n).mulVec v‖ := by
     intro n
@@ -89,13 +92,13 @@ lemma interval_sum_le {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
     induction b, b_le using Nat.le_induction with
     | base =>
       simp
-      rw [mul_pow_exact]
-      rw [mul_pow_exact]
-      simp
+      rw [mul_pow_exact A v k hva]
+      rw [mul_pow_exact A v k hva]
       rw [pow_succ]
       nth_rw 3 [mul_comm]
       rw [mul_assoc]
       nth_rw 2 [mul_comm]
+      rw [Int.norm_eq_abs]
       rw [lt_mul_iff_one_lt_right]
       .
         rw [lt_abs]
@@ -108,15 +111,16 @@ lemma interval_sum_le {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
       rw [hva]
       rw [Matrix.mulVec_smul]
       rw [norm_smul]
-      rw [mul_pow_exact]
+      rw [mul_pow_exact A v k hva]
       rw [Int.norm_eq_abs]
       ring
       nth_rw 2 [mul_comm]
       rw [← mul_assoc]
       norm_cast
       simp
+      rw [mul_assoc]
       rw [← pow_succ']
-      rw [mul_pow_exact] at ih
+      rw [mul_pow_exact A v k hva] at ih
       apply_fun (fun x => x + |k| ^ n * ‖v‖) at ih
       .
         simp only [] at ih
@@ -124,6 +128,7 @@ lemma interval_sum_le {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
         norm_cast at ih
         simp at ih
         grw [ih]
+        rw [Int.norm_eq_abs]
         rw [← two_mul]
 
 
@@ -145,6 +150,7 @@ lemma interval_sum_le {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
 
         nth_rw 2 [← mul_assoc] at two_mul_le
         rw [← pow_succ'] at two_mul_le
+        nth_rw 3 [mul_comm]
         exact two_mul_le
       . simp
         intro a b hab
@@ -196,7 +202,8 @@ def complexOfIntHom: ℤ →+* ℂ := {
   map_mul' := by intros; simp
 }
 
--- TODO - an integer matrix might not have integer eigenvalues, so this statement is probably wrong
+-- TODO - this can probably be generalized to any matrix with a determinant of +/- 1,
+-- and then upstreamed to mathlib
 lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fin d) → ℤ):
     (∀ (k : ℂ), Module.End.HasEigenvalue ((A.val.map complexOfIntHom).toLin') k → ‖k‖ = 1) ∨ (∃ (k: ℂ), (Module.End.HasEigenvalue ((A.val.map complexOfIntHom).toLin') k) ∧ 1 < ‖k‖) := by
 
@@ -346,11 +353,6 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fi
 
 
 #print axioms int_matrix_eigenvalue
-    -- Matrix.eval_charpoly
-
-    --rw [← Matrix.charpoly_toLin'] at det_eq
-
-    --sorry
 
 set_option maxHeartbeats 3000000 in
 lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → ℤ) (N₀ N: ℕ) (hv: ‖v‖ ≠ 0) (k: ℤ) (hk: 3 ≤ (k : ℝ))  (hva: A.mulVec v = k • v) (hn: N₀ ≤ N) (p q: Finset ℕ)
@@ -537,3 +539,17 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
             grind
 
 #print axioms subsums_unique
+
+lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fin d) → ℤ) (k: ℂ) (hk: Module.End.HasEigenvalue ((A.val.map complexOfIntHom).toLin') k) (k_gt: 1 < ‖k‖):
+    ∃ N₀, ∀ N, 2^(N - N₀) ≤ #(Finset.image (fun (n : Fin N) => (A.val^(n.val)).mulVec v) Finset.univ) := by
+
+  obtain ⟨v, hv⟩ := hk.exists_hasEigenvector
+  rw [Module.End.hasEigenvector_iff] at hv
+  simp at hv
+
+  obtain ⟨v_mul, v_ne_zero⟩ := hv
+
+  have mul_v := mul_pow_exact A.val v k v_mul
+
+
+  sorry
