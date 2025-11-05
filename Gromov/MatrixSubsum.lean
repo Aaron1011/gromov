@@ -3,12 +3,12 @@ import Mathlib
 open scoped Finset
 open scoped Pointwise
 
-structure DerivedSets {n: ℕ} (A: Matrix (Fin n) (Fin n) ℤ) (v : (Fin n) → ℤ) (p q : Finset ℕ) where
+structure DerivedSets {R: Type*} [NormedCommRing R] {n: ℕ} (A: Matrix (Fin n) (Fin n) R) (v : (Fin n) → R) (p q : Finset ℕ) where
   h_prime: (p \ q).sum (fun k => A^k • v) = (q \ p).sum (fun k => A^k • v)
   supp_disj: Disjoint (p \ q) (q \ p)
 
 
-def poly_cancel {n: ℕ} (A: Matrix (Fin n) (Fin n) ℤ) (v: (Fin n) → ℤ) (p q : Finset ℕ) (hpq: p.sum (fun k => A^k • v) = q.sum (fun k => A^k • v)) : DerivedSets A v p q := ({
+def poly_cancel  {R: Type*} [NormedCommRing R] {n: ℕ} (A: Matrix (Fin n) (Fin n) R) (v: (Fin n) → R) (p q : Finset ℕ) (hpq: p.sum (fun k => A^k • v) = q.sum (fun k => A^k • v)) : DerivedSets A v p q := ({
   h_prime := by
     have p_inter_subset : p ∩ q ⊆ q := by
       simp
@@ -36,7 +36,7 @@ lemma mul_pow_exact {R: Type*} [NormedCommRing R] {d: ℕ} [NormSMulClass R (Fin
     rw [ih]
     ring
 
-lemma interval_sum_le {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → ℤ) (hv: ‖v‖ ≠ 0) (k: ℤ) (hk: 3 ≤ (k : ℝ)) (hva: A.mulVec v = k • v) (a b: ℕ):
+lemma interval_sum_le {R: Type*} [NormedCommRing R] {d: ℕ} [ NormSMulClass R (Fin d → R)] (A: Matrix (Fin d) (Fin d) R) (v: (Fin d) → R) (hv: ‖v‖ ≠ 0) (k: R) (hk: 3 ≤ ‖k‖) (hva: A.mulVec v = k • v) (a b: ℕ):
     ∑ i ∈ Finset.Ico a b, ‖(A ^ i).mulVec v‖ < ‖(A ^ b).mulVec v‖ := by
 
 
@@ -56,15 +56,7 @@ lemma interval_sum_le {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
       rw [pow_succ']
       rw [mul_assoc]
       grw [ih]
-
-
-      have three_le: 3 ≤ ‖k‖ := by
-        grw [hk]
-        norm_num
-        rw [Int.norm_eq_abs]
-        apply le_abs_self
-
-      grw [three_le]
+      grw [hk]
 
   by_cases b_le: b ≤ a
   .
@@ -98,11 +90,9 @@ lemma interval_sum_le {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
       nth_rw 3 [mul_comm]
       rw [mul_assoc]
       nth_rw 2 [mul_comm]
-      rw [Int.norm_eq_abs]
       rw [lt_mul_iff_one_lt_right]
       .
-        rw [lt_abs]
-        grind
+        linarith
       . positivity
     | succ n hmn ih =>
       rw [Finset.sum_Ico_succ_top]
@@ -112,7 +102,6 @@ lemma interval_sum_le {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
       rw [Matrix.mulVec_smul]
       rw [norm_smul]
       rw [mul_pow_exact A v k hva]
-      rw [Int.norm_eq_abs]
       ring
       nth_rw 2 [mul_comm]
       rw [← mul_assoc]
@@ -121,27 +110,22 @@ lemma interval_sum_le {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
       rw [mul_assoc]
       rw [← pow_succ']
       rw [mul_pow_exact A v k hva] at ih
-      apply_fun (fun x => x + |k| ^ n * ‖v‖) at ih
+      apply_fun (fun x => x + ‖k‖ ^ n * ‖v‖) at ih
       .
         simp only [] at ih
 
         norm_cast at ih
         simp at ih
         grw [ih]
-        rw [Int.norm_eq_abs]
         rw [← two_mul]
 
 
-        have two_lt_k: (2: ℝ) < |(k : ℝ)| := by
-          norm_cast
-          rw [lt_abs]
-          norm_cast at hk
-          left
+        have two_lt_k: (2: ℝ) < ‖k‖:= by
           linarith
 
 
 
-        have two_mul_le:  2 * (|↑k| ^ n * ‖v‖) < |↑k| * (|↑k| ^ n * ‖v‖) := by
+        have two_mul_le:  2 * (‖k‖ ^ n * ‖v‖) < ‖k‖  * (‖k‖  ^ n * ‖v‖) := by
           apply mul_lt_mul
           . exact two_lt_k
           . simp
@@ -152,7 +136,7 @@ lemma interval_sum_le {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
         rw [← pow_succ'] at two_mul_le
         nth_rw 3 [mul_comm]
         exact two_mul_le
-      . simp
+      .
         intro a b hab
         simp
         exact hab
@@ -354,8 +338,8 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ):
 
 #print axioms int_matrix_eigenvalue
 
-set_option maxHeartbeats 3000000 in
-lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → ℤ) (N₀ N: ℕ) (hv: ‖v‖ ≠ 0) (k: ℤ) (hk: 3 ≤ (k : ℝ))  (hva: A.mulVec v = k • v) (hn: N₀ ≤ N) (p q: Finset ℕ)
+set_option maxHeartbeats 1200000 in
+lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℂ) (v: (Fin d) → ℂ) (N₀ N: ℕ) (hv: ‖v‖ ≠ 0) (k: ℂ) (hk: 3 ≤ ‖k‖)  (hva: A.mulVec v = k • v) (hn: N₀ ≤ N) (p q: Finset ℕ)
   (hp: p ⊆ Finset.Ico N₀ N) (hq: q ⊆ Finset.Ico N₀ N) (hpq: p.sum (fun k => A^k • v) = q.sum (fun k => A^k • v)):
     p = q := by
 
@@ -478,6 +462,7 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
               grw [norm_sum_le]
               grw [Finset.sum_le_sum (g := (fun x ↦ ‖(A ^ x).mulVec v‖))]
               .
+
                 apply interval_sum_le (k := k)
                 . exact hv
                 . exact hk
