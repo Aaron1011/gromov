@@ -204,7 +204,7 @@ def complexOfIntHom: ℤ →+* ℂ := {
 
 -- TODO - this can probably be generalized to any matrix with a determinant of +/- 1,
 -- and then upstreamed to mathlib
-lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fin d) → ℤ):
+lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ):
     (∀ (k : ℂ), Module.End.HasEigenvalue ((A.val.map complexOfIntHom).toLin') k → ‖k‖ = 1) ∨ (∃ (k: ℂ), (Module.End.HasEigenvalue ((A.val.map complexOfIntHom).toLin') k) ∧ 1 < ‖k‖) := by
 
   rw [Classical.or_iff_not_imp_left]
@@ -540,16 +540,16 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℤ) (v: (Fin d) → �
 
 #print axioms subsums_unique
 
-lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (v: (Fin d) → ℤ) (k: ℂ) (hk: Module.End.HasEigenvalue ((A.val.map complexOfIntHom).toLin') k) (k_gt: 1 < ‖k‖):
-    ∃ N₀, ∀ N, 2^(N - N₀) ≤ #(Finset.image (fun (n : Fin N) => (A.val^(n.val)).mulVec v) Finset.univ) := by
+-- lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) )ˣ) (v: (Fin d) → ℤ) (k: ℂ) (hk: Module.End.HasEigenvalue ((A.val.map complexOfIntHom).toLin') k) (k_gt: 1 < ‖k‖):
+--     ∃ N₀, ∀ N, 2^(N - N₀) ≤ #(Finset.image (fun (n : Fin N) => (A.val^(n.val)).mulVec v) Finset.univ) := by
 
-  obtain ⟨v, hv⟩ := hk.exists_hasEigenvector
-  rw [Module.End.hasEigenvector_iff] at hv
-  simp at hv
+--   obtain ⟨v, hv⟩ := hk.exists_hasEigenvector
+--   rw [Module.End.hasEigenvector_iff] at hv
+--   simp at hv
 
-  obtain ⟨v_mul, v_ne_zero⟩ := hv
+--   obtain ⟨v_mul, v_ne_zero⟩ := hv
 
-  have mul_v := mul_pow_exact A.val v k v_mul
+--   have mul_v := mul_pow_exact A.val v k v_mul
 
 
-  sorry
+--   sorry
