@@ -1359,6 +1359,9 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
 
       rw [iSup_unique] at eigenspace_span
       rw [Module.End.maxGenEigenspace] at eigenspace_span
+      rw [Submodule.ext_iff] at eigenspace_span
+      simp_rw [Module.End.mem_genEigenspace_top] at eigenspace_span
+
       -- We need to somehow use the fact that the matrix is unitary, and conclude
       -- than 'genEigenspace ⊤ = genEeingespace 1', so a single eigenspace spans the whole space.
       -- THis implies that g is diagonal, contradicting 'g_not_multiple_I'
@@ -1524,9 +1527,16 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
 
   have g_reconstruct := LinearMap.ofIsCompl second_is_compl g_restrict_first_dom g_restrict_compl
 
-  let first_map: G → Matrix.unitaryGroup (Fin (Module.finrank ℂ ↥first_subspace)) ℂ := fun g => ⟨(first_subspace_to_matrix ((Matrix.toLin' g.val.val).restrict (p := first_subspace) (q := first_subspace) (by
-    -- Module.End.mapsTo_genEigenspace_of_comm (f := g_end) (g := g_end) (by simp) (list_eigenvalues.get ⟨0, by linarith⟩) n
-    sorry
+  let first_map: (Subgroup.centralizer {g}) → Matrix.unitaryGroup (Fin (Module.finrank ℂ ↥first_subspace)) ℂ := fun h => ⟨(first_subspace_to_matrix ((Matrix.toLin' h.val.val).restrict (p := first_subspace) (q := first_subspace) (by
+    apply Module.End.mapsTo_genEigenspace_of_comm (f := Matrix.toLin' g.val.val) (g := Matrix.toLin' h.val.val) (by
+
+      have h_prop := h.property
+      rw [Subgroup.mem_centralizer_iff] at h_prop
+      simp at h_prop
+      rw [commute_iff_eq]
+      apply_fun (fun a => a.val.val.toLin') at h_prop
+      simpa using h_prop
+    ) (list_eigenvalues.get ⟨0, by linarith⟩) n
   ))).toMatrix', by (
     rw [Matrix.mem_unitaryGroup_iff]
 
