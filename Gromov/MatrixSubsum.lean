@@ -525,16 +525,33 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℂ) (v: (Fin d) → �
 
 #print axioms subsums_unique
 
--- lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) )ˣ) (v: (Fin d) → ℤ) (k: ℂ) (hk: Module.End.HasEigenvalue ((A.val.map complexOfIntHom).toLin') k) (k_gt: 1 < ‖k‖):
---     ∃ N₀, ∀ N, 2^(N - N₀) ≤ #(Finset.image (fun (n : Fin N) => (A.val^(n.val)).mulVec v) Finset.univ) := by
+lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)ˣ) (v: (Fin d) → ℂ) (k: ℂ) (hk: Module.End.HasEigenvalue ((A.val).toLin') k) (k_gt: 1 < ‖k‖):
+    ∃ N₀, ∀ N, 2^(N - N₀) ≤ #(Finset.image (fun (n : Fin N) => (A.val^(n.val)).mulVec v) Finset.univ) := by
 
---   obtain ⟨v, hv⟩ := hk.exists_hasEigenvector
---   rw [Module.End.hasEigenvector_iff] at hv
---   simp at hv
+  obtain ⟨v, hv⟩ := hk.exists_hasEigenvector
+  rw [Module.End.hasEigenvector_iff] at hv
+  simp at hv
 
---   obtain ⟨v_mul, v_ne_zero⟩ := hv
+  obtain ⟨v_mul, v_ne_zero⟩ := hv
 
---   have mul_v := mul_pow_exact A.val v k v_mul
+  have mul_v := mul_pow_exact A.val v k v_mul
+
+  have pow_le: 3 ≤ ‖k‖^(Nat.ceil (Real.logb ‖k‖ 3)) := by
+    rw [Real.le_pow_iff_log_le]
+    rw [← div_le_iff₀]
+    .
+      rw [← Real.log_div_log]
+      exact Nat.le_ceil (Real.log 3 / Real.log ‖k‖)
+    . apply Real.log_pos k_gt
+    . simp
+    . linarith
+
+  use (Nat.ceil (Real.logb ‖k‖ 3))
+  intro n
+  
 
 
---   sorry
+
+
+
+  sorry
