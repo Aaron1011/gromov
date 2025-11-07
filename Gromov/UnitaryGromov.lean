@@ -1232,7 +1232,7 @@ structure InductiveLemmaData (n : ℕ) (G : Subgroup (Matrix.unitaryGroup (Fin n
   iso : Subgroup.centralizer {g} ≃* first_group × second_group
 
 -- Lemma 3.30
-set_option maxHeartbeats 300000 in
+set_option maxHeartbeats 400000 in
 lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g : G) (g_not_multiple_I : ∀ z : ℂ, g.val.val ≠ z • 1):
   Nonempty (InductiveLemmaData n G g) := by
 
@@ -1538,6 +1538,7 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
       simpa using h_prop
     ) (list_eigenvalues.get ⟨0, by linarith⟩) n
   ))).toMatrix', by (
+
     rw [Matrix.mem_unitaryGroup_iff]
 
     apply Matrix.ext_of_mulVec_single
@@ -1547,10 +1548,10 @@ lemma inductive_lemma (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGrou
 
   )⟩
 
-  let first_map_hom: G →*  Matrix.unitaryGroup (Fin (Module.finrank ℂ ↥first_subspace)) ℂ := {
+  let first_map_hom: (Subgroup.centralizer {g}) →*  Matrix.unitaryGroup (Fin (Module.finrank ℂ ↥first_subspace)) ℂ := {
     toFun := first_map,
     map_one' := by
-      simp [first_map, first_subspace_to_matrix, my_equiv]
+      simp [first_map, first_subspace_to_matrix]
       ext i j
       simp
       sorry
