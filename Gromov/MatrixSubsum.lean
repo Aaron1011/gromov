@@ -541,7 +541,7 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℂ) (v: (Fin d) → �
 #print axioms subsums_unique
 
 lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)ˣ) (v: (Fin d) → ℂ) (v_ne_zero: ‖v‖ ≠ 0) (k: ℂ) (hv: A.val.mulVec v = k • v) (k_gt: 1 < ‖k‖):
-    ∃ N₀, ∀ N, 2^(N - N₀) ≤ #((Finset.image (fun a => a.sum (fun b => (((A^(⌈Real.logb ‖k‖ 3⌉₊))).val^b.val).mulVec v)) ((Finset.Ico N₀ N)).attach.powerset)) := by
+    ∃ N₀, ∀ N, 2^(N - N₀) ≤ #((Finset.image (fun a => a.sum (fun b => (((A^(N₀))).val^b.val).mulVec v)) ((Finset.Ico N₀ N)).attach.powerset)) := by
   have mul_v := mul_pow_exact A.val v k hv
 
   have pow_le: 3 ≤ ‖k‖^(Nat.ceil (Real.logb ‖k‖ 3)) := by
