@@ -541,7 +541,7 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℂ) (v: (Fin d) → �
 #print axioms subsums_unique
 
 lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)ˣ) (v: (Fin d) → ℂ) (v_ne_zero: ‖v‖ ≠ 0) (k: ℂ) (hv: A.val.mulVec v = k • v) (k_gt: 1 < ‖k‖):
-    ∃ N₀, ∀ N, 2^(N - N₀) ≤ #((Finset.image (fun a => a.sum id) ((Finset.range N)).powerset)) := by
+    ∃ N₀, ∀ N, 2^(N - N₀) ≤ #((Finset.image (fun a => a.sum (fun b => (((A^(⌈Real.logb ‖k‖ 3⌉₊))).val^b.val).mulVec v)) ((Finset.Ico N₀ N)).attach.powerset)) := by
   have mul_v := mul_pow_exact A.val v k hv
 
   have pow_le: 3 ≤ ‖k‖^(Nat.ceil (Real.logb ‖k‖ 3)) := by
@@ -564,32 +564,59 @@ lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)ˣ)
   simp at N_le
   rw [Finset.card_image_of_injective]
   .
-    sorry
-  .
     simp
+  .
     intro a b hab
 
     have mul_one := mul_v 1
     simp at mul_one
 
-    have sums_eq := subsums_unique (A.val^((Nat.ceil (Real.logb ‖k‖ 3)))) v (Nat.ceil (Real.logb ‖k‖ 3)) N v_ne_zero (‖k‖^(Nat.ceil (Real.logb ‖k‖ 3))) (by simp [pow_le]) (by
-
+    have sums_eq := subsums_unique (A^(⌈Real.logb ‖k‖ 3⌉₊)) (v) (Nat.ceil (Real.logb ‖k‖ 3)) N (by
+      simpa using v_ne_zero
+      -- refine ⟨?_, by simpa using v_ne_zero⟩
+      -- intro k_zero
+      -- simp [k_zero] at k_gt
+      -- norm_num at k_gt
+    ) (k^(Nat.ceil (Real.logb ‖k‖ 3))) (by simp [pow_le]) (by
+      simp
       rw [mul_v]
-    )
-
-    sorry
-
-  rw [← ge_iff_le]
-  grw [(Finset.card_le_card (s := Finset.image (fun (n : Set.Ico ((Nat.ceil (Real.logb ‖k‖ 3))) N) => (A.val^(n.val)).mulVec v) Finset.univ) ?_).ge]
-  .
-    simp
-    rw [Finset.card_image_of_injective]
+    ) (by omega) (a.image Subtype.val) (b.image Subtype.val) ?_ ?_ ?_
+    . simp at sums_eq
+      rw [Finset.image_inj] at sums_eq
+      . exact sums_eq
+      . simp
+    .
+      intro x hx
+      simp at hx
+      rw [Finset.mem_Ico]
+      obtain ⟨⟨le_x, other⟩, hy⟩ := hx
+      refine ⟨?_, by omega⟩
+      simp
+      exact le_x
+    .
+      intro x hx
+      simp at hx
+      rw [Finset.mem_Ico]
+      obtain ⟨⟨le_x, other⟩, hy⟩ := hx
+      refine ⟨?_, by omega⟩
+      simp
+      exact le_x
     . simp
-    have card_le := Finset.card_le_card_of_injective (f := (fun (n : Set.Ico ((Nat.ceil (Real.logb ‖k‖ 3))) N) => (A.val^(n.val)).mulVec v))
-    sorry
-  .
-    intro a ha
-    simp at ha
-    simp
-    obtain ⟨n, hn, other⟩ := ha
-    use ⟨n, by omega⟩
+      simp at hab
+      exact hab
+
+#print axioms int_matrix_exponential_growth
+  -- rw [← ge_iff_le]
+  -- grw [(Finset.card_le_card (s := Finset.image (fun (n : Set.Ico ((Nat.ceil (Real.logb ‖k‖ 3))) N) => (A.val^(n.val)).mulVec v) Finset.univ) ?_).ge]
+  -- .
+  --   simp
+  --   rw [Finset.card_image_of_injective]
+  --   . simp
+  --   have card_le := Finset.card_le_card_of_injective (f := (fun (n : Set.Ico ((Nat.ceil (Real.logb ‖k‖ 3))) N) => (A.val^(n.val)).mulVec v))
+  --   sorry
+  -- .
+  --   intro a ha
+  --   simp at ha
+  --   simp
+  --   obtain ⟨n, hn, other⟩ := ha
+  --   use ⟨n, by omega⟩
