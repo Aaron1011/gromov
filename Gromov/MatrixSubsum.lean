@@ -22,7 +22,7 @@ def poly_cancel  {R: Type*} [NormedCommRing R] {n: ℕ} (A: Matrix (Fin n) (Fin 
     grind
 } : DerivedSets A v p q)
 
-lemma mul_pow_exact {R: Type*} [NormedCommRing R] {d: ℕ} [NormSMulClass R (Fin d → R)] (A: Matrix (Fin d) (Fin d) R) (v: (Fin d) → R) (k: R)  (hva: A.mulVec v = k • v): ∀ n: ℕ, ‖(A ^ n).mulVec v‖ = ‖k‖ ^ n * ‖v‖ := by
+lemma mul_pow_exact {d: ℕ} {R: Type*} [RCLike R] [SMul R ℝ] [IsScalarTower R ℝ (Fin d → R)] [NormSMulClass R ((Fin d) → R)]   (A: Matrix (Fin d) (Fin d) R) (v: (Fin d) → R) (k: R)  (hva: A.mulVec v = k • v): ∀ n: ℕ, (A ^ n).mulVec v = (k ^ n) • v := by
   intro n
   induction n with
   | zero =>
@@ -32,11 +32,13 @@ lemma mul_pow_exact {R: Type*} [NormedCommRing R] {d: ℕ} [NormSMulClass R (Fin
     rw [← Matrix.mulVec_mulVec]
     rw [hva]
     rw [Matrix.mulVec_smul]
-    rw [norm_smul]
     rw [ih]
-    ring
+    rw [pow_succ']
+    ring_nf
+    rw [mul_smul]
 
-lemma interval_sum_le {R: Type*} [NormedCommRing R] {d: ℕ} [ NormSMulClass R (Fin d → R)] (A: Matrix (Fin d) (Fin d) R) (v: (Fin d) → R) (hv: ‖v‖ ≠ 0) (k: R) (hk: 3 ≤ ‖k‖) (hva: A.mulVec v = k • v) (a b: ℕ):
+
+lemma interval_sum_le {R: Type*} {d: ℕ} [RCLike R] [ NormSMulClass R (Fin d → R)] [SMul R ℝ] [IsScalarTower R ℝ (Fin d → R)] (A: Matrix (Fin d) (Fin d) R) (v: (Fin d) → R) (hv: ‖v‖ ≠ 0) (k: R) (hk: 3 ≤ ‖k‖) (hva: A.mulVec v = k • v) (a b: ℕ):
     ∑ i ∈ Finset.Ico a b, ‖(A ^ i).mulVec v‖ < ‖(A ^ b).mulVec v‖ := by
 
 
@@ -46,7 +48,7 @@ lemma interval_sum_le {R: Type*} [NormedCommRing R] {d: ℕ} [ NormSMulClass R (
     intro n
     induction n with
     | zero =>
-      simp
+      simp only [pow_zero, one_mul, Matrix.one_mulVec, le_refl]
     | succ j ih =>
       nth_rw 2 [pow_succ]
       rw [← Matrix.mulVec_mulVec]
@@ -87,13 +89,18 @@ lemma interval_sum_le {R: Type*} [NormedCommRing R] {d: ℕ} [ NormSMulClass R (
       rw [mul_pow_exact A v k hva]
       rw [mul_pow_exact A v k hva]
       rw [pow_succ]
-      nth_rw 3 [mul_comm]
-      rw [mul_assoc]
-      nth_rw 2 [mul_comm]
+      rw [mul_smul]
+      rw [norm_smul]
+      rw [norm_smul]
+      rw [norm_smul]
+      rw [← mul_assoc]
+      rw [mul_lt_mul_iff_left₀]
       rw [lt_mul_iff_one_lt_right]
       .
         linarith
-      . positivity
+      . simp
+        positivity
+      . simpa using hv
     | succ n hmn ih =>
       rw [Finset.sum_Ico_succ_top]
       rw [pow_succ]
@@ -102,13 +109,14 @@ lemma interval_sum_le {R: Type*} [NormedCommRing R] {d: ℕ} [ NormSMulClass R (
       rw [Matrix.mulVec_smul]
       rw [norm_smul]
       rw [mul_pow_exact A v k hva]
-      ring
-      nth_rw 2 [mul_comm]
-      rw [← mul_assoc]
+      -- ring
+      -- nth_rw 2 [mul_comm]
+      -- rw [← mul_assoc]
       norm_cast
-      simp
-      rw [mul_assoc]
-      rw [← pow_succ']
+      -- simp
+      -- rw [mul_assoc]
+
+      --rw [← pow_succ']
       rw [mul_pow_exact A v k hva] at ih
       apply_fun (fun x => x + ‖k‖ ^ n * ‖v‖) at ih
       .
@@ -134,8 +142,15 @@ lemma interval_sum_le {R: Type*} [NormedCommRing R] {d: ℕ} [ NormSMulClass R (
 
         nth_rw 2 [← mul_assoc] at two_mul_le
         rw [← pow_succ'] at two_mul_le
-        nth_rw 3 [mul_comm]
-        exact two_mul_le
+        rw [mul_lt_mul_iff_left₀]
+        . omega
+        . rw [norm_pos_iff]
+          simp
+          refine ⟨?_, ?_⟩
+          . intro k_zero
+            simp [k_zero] at hk
+            norm_num at hk
+          . simpa using hv
       .
         intro a b hab
         simp
@@ -525,16 +540,9 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℂ) (v: (Fin d) → �
 
 #print axioms subsums_unique
 
-lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)ˣ) (v: (Fin d) → ℂ) (k: ℂ) (hk: Module.End.HasEigenvalue ((A.val).toLin') k) (k_gt: 1 < ‖k‖):
-    ∃ N₀, ∀ N, 2^(N - N₀) ≤ #(Finset.image (fun (n : Fin N) => (A.val^(n.val)).mulVec v) Finset.univ) := by
-
-  obtain ⟨v, hv⟩ := hk.exists_hasEigenvector
-  rw [Module.End.hasEigenvector_iff] at hv
-  simp at hv
-
-  obtain ⟨v_mul, v_ne_zero⟩ := hv
-
-  have mul_v := mul_pow_exact A.val v k v_mul
+lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)ˣ) (v: (Fin d) → ℂ) (v_ne_zero: ‖v‖ ≠ 0) (k: ℂ) (hv: A.val.mulVec v = k • v) (k_gt: 1 < ‖k‖):
+    ∃ N₀, ∀ N, 2^(N - N₀) ≤ #((Finset.image (fun a => a.sum id) ((Finset.range N)).powerset)) := by
+  have mul_v := mul_pow_exact A.val v k hv
 
   have pow_le: 3 ≤ ‖k‖^(Nat.ceil (Real.logb ‖k‖ 3)) := by
     rw [Real.le_pow_iff_log_le]
@@ -542,16 +550,46 @@ lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)ˣ)
     .
       rw [← Real.log_div_log]
       exact Nat.le_ceil (Real.log 3 / Real.log ‖k‖)
-    . apply Real.log_pos k_gt
+    . apply Real.log_pos
+      grind
     . simp
     . linarith
 
   use (Nat.ceil (Real.logb ‖k‖ 3))
-  intro n
-  
+  intro N
+  by_cases N_le: N ≤ Nat.ceil (Real.logb ‖k‖ 3)
+  .
+    simp [N_le]
+    apply Finset.powerset_nonempty
+  simp at N_le
+  rw [Finset.card_image_of_injective]
+  .
+    sorry
+  .
+    simp
+    intro a b hab
 
+    have mul_one := mul_v 1
+    simp at mul_one
 
+    have sums_eq := subsums_unique (A.val^((Nat.ceil (Real.logb ‖k‖ 3)))) v (Nat.ceil (Real.logb ‖k‖ 3)) N v_ne_zero (‖k‖^(Nat.ceil (Real.logb ‖k‖ 3))) (by simp [pow_le]) (by
 
+      rw [mul_v]
+    )
 
+    sorry
 
-  sorry
+  rw [← ge_iff_le]
+  grw [(Finset.card_le_card (s := Finset.image (fun (n : Set.Ico ((Nat.ceil (Real.logb ‖k‖ 3))) N) => (A.val^(n.val)).mulVec v) Finset.univ) ?_).ge]
+  .
+    simp
+    rw [Finset.card_image_of_injective]
+    . simp
+    have card_le := Finset.card_le_card_of_injective (f := (fun (n : Set.Ico ((Nat.ceil (Real.logb ‖k‖ 3))) N) => (A.val^(n.val)).mulVec v))
+    sorry
+  .
+    intro a ha
+    simp at ha
+    simp
+    obtain ⟨n, hn, other⟩ := ha
+    use ⟨n, by omega⟩
