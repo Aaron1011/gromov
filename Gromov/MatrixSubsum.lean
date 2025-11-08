@@ -22,7 +22,7 @@ def poly_cancel  {R: Type*} [NormedCommRing R] {n: ℕ} (A: Matrix (Fin n) (Fin 
     grind
 } : DerivedSets A v p q)
 
-lemma mul_pow_exact {d: ℕ} {R: Type*} [RCLike R] [SMul R ℝ] [IsScalarTower R ℝ (Fin d → R)] [NormSMulClass R ((Fin d) → R)]   (A: Matrix (Fin d) (Fin d) R) (v: (Fin d) → R) (k: R)  (hva: A.mulVec v = k • v): ∀ n: ℕ, (A ^ n).mulVec v = (k ^ n) • v := by
+lemma mul_pow_exact {d: ℕ} {R: Type*} [RCLike R] [NormSMulClass R ((Fin d) → R)]   (A: Matrix (Fin d) (Fin d) R) (v: (Fin d) → R) (k: R)  (hva: A.mulVec v = k • v): ∀ n: ℕ, (A ^ n).mulVec v = (k ^ n) • v := by
   intro n
   induction n with
   | zero =>
@@ -38,7 +38,7 @@ lemma mul_pow_exact {d: ℕ} {R: Type*} [RCLike R] [SMul R ℝ] [IsScalarTower R
     rw [mul_smul]
 
 
-lemma interval_sum_le {R: Type*} {d: ℕ} [RCLike R] [ NormSMulClass R (Fin d → R)] [SMul R ℝ] [IsScalarTower R ℝ (Fin d → R)] (A: Matrix (Fin d) (Fin d) R) (v: (Fin d) → R) (hv: ‖v‖ ≠ 0) (k: R) (hk: 3 ≤ ‖k‖) (hva: A.mulVec v = k • v) (a b: ℕ):
+lemma interval_sum_le {R: Type*} {d: ℕ} [RCLike R] [ NormSMulClass R (Fin d → R)] (A: Matrix (Fin d) (Fin d) R) (v: (Fin d) → R) (hv: ‖v‖ ≠ 0) (k: R) (hk: 3 ≤ ‖k‖) (hva: A.mulVec v = k • v) (a b: ℕ):
     ∑ i ∈ Finset.Ico a b, ‖(A ^ i).mulVec v‖ < ‖(A ^ b).mulVec v‖ := by
 
 
