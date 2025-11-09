@@ -6111,6 +6111,59 @@ lemma g_sub_norm_gt (n: ℕ) (hn: 0 < n): ∃ s ∈ S, ‖(G_n n hn) - (conv_fin
 #print axioms laplace_range_dense
 
 
+lemma g_sub_norm_single_s: ∃ s ∈ S, { n: ℕ | (hn: n > 0) → ‖(G_n n hn) - (conv_finsupp_lp2 (G_n n hn) (delta s) (by simp [delta]))‖^2 > 1 }.Infinite := by
+  by_contra!
+  simp at this
+
+  let max_vals := (Finset.image (fun (s: S) => (this s s.prop).toFinset.max) Finset.univ).max
+
+  match h_eq: max_vals with
+  | ⊥ =>
+    simp [max_vals] at h_eq
+    apply (Finset.max_eq_bot.mp) at h_eq
+    simp at h_eq
+    have S_nonempty' := S_nonempty
+    grind
+  | some a =>
+    match h_a: a with
+    | ⊥ =>
+      simp [max_vals] at h_eq
+
+      have le_max : ∀ s : G, (hs: s ∈ S) → (this s hs).toFinset.max ≤ ⊥ := by
+        intro s hs
+        have mem_image: (this s hs).toFinset.max ∈ (Finset.image (fun (s: S) => (this s s.prop).toFinset.max) Finset.univ) := by
+
+          sorry
+        apply Finset.le_max at mem_image
+        simp at mem_image
+        simp at h_eq
+        rw [h_eq] at mem_image
+        norm_cast at mem_image
+        rw [WithBot.some_eq_coe] at mem_image
+        norm_cast at mem_image
+
+
+      obtain ⟨s, hs, norm_gt⟩ := g_sub_norm_gt 1 (by simp)
+      specialize le_max s hs
+      norm_cast at le_max
+      simp at le_max
+      rw [Finset.max_eq_bot] at le_max
+      simp at le_max
+
+      have one_mem: 1 ∈ { n: ℕ | (hn: n > 0) → 1 < ‖(G_n n hn) - (conv_finsupp_lp2 (G_n n hn) (delta s) (by simp [delta]))‖ } := by
+        simpa using norm_gt
+
+
+      grind
+    | some s_max =>
+
+      sorry
+
+  --have h_max_succ := g_sub_norm_gt ((max_vals.unbotD 0).unbotD 0)
+
+
+
+
 
 lemma laplace_spectrum_contains_zero: 0 ∈ spectrum ℝ (Laplace_linear ) := by
   rw [spectrum.zero_mem_iff]
