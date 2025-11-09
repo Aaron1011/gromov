@@ -6132,8 +6132,9 @@ lemma g_sub_norm_single_s: ∃ s ∈ S, { n: ℕ | (hn: n > 0) → ‖(G_n n hn)
       have le_max : ∀ s : G, (hs: s ∈ S) → (this s hs).toFinset.max ≤ ⊥ := by
         intro s hs
         have mem_image: (this s hs).toFinset.max ∈ (Finset.image (fun (s: S) => (this s s.prop).toFinset.max) Finset.univ) := by
-
-          sorry
+          rw [Finset.mem_image]
+          use ⟨s, hs⟩
+          simp
         apply Finset.le_max at mem_image
         simp at mem_image
         simp at h_eq
