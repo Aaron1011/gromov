@@ -1243,6 +1243,7 @@ lemma GRep_preserves_norm (g: G) (f: LipschitzH): ‖(GRep g) f‖ = ‖f‖ := 
 
 
 -- Takes in an invertible linear map from W to W, and produces a *continuous* linear map from W to W
+set_option trace.profiler true in
 noncomputable def GRepW: (W →ₗ[ℂ] W)ˣ →* (W →L[ℂ] W)ˣ := {
   toFun := fun f => {
     val := LinearMap.toContinuousLinearMap f.val
@@ -5526,189 +5527,191 @@ lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_
 
 
 
-set_option maxHeartbeats 2000000 in
--- This whole lemma is probably completely wrong - it needs to use the spectral theorem
+
 lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖Laplace g‖ ≤ (1 : ℝ) / n ∧ ⟪Laplace g, g⟫ = 1 := by
-  have ball_open: IsOpen (Metric.ball (0 : Lp ℝ 2 volume (α := G)) (1 / n)) := by
-    exact Metric.isOpen_ball
-
-
-  have punctured_ball_open: IsOpen ((Metric.ball (0 : Lp ℝ 2 volume (α := G)) (1 / n)) \ {0})  := by
-    apply IsOpen.sdiff
-    . exact ball_open
-    .
-      rw [← Metric.closedBall_zero]
-      apply Metric.isClosed_closedBall
-
-  have dense := laplace_range_dense
-  rw [dense_iff_inter_open] at dense
-
-  let lp_point: (Lp ℝ 2 volume (α := G)) := MemLp.toLp (fun (g: G) => if g = 1 then (1 : ℝ) / ((n + 1)^2) else 0) (by
-    simp [MemLp]
-    refine ⟨by apply AEStronglyMeasurable.of_discrete, ?_⟩
-    simp [eLpNorm, eLpNorm']
-    rw [lintegral_g_eq_add]
-    rw [tsum_eq_sum (s := {1})]
-    . simp
-      rw [Real.enorm_eq_ofReal_abs]
-      norm_cast
-      simp
-      apply ENNReal.rpow_lt_top_of_nonneg
-      . simp
-      .
-        apply ENNReal.pow_ne_top
-        apply ENNReal.ofReal_ne_top
-    . intro b hb
-      simp at hb
-      simp [hb]
-  )
-
-  have lp_point_norm: ‖lp_point‖ < (n: ℝ)⁻¹ := by
-    simp [lp_point, eLpNorm, eLpNorm']
-    rw [lintegral_g_eq_add]
-    simp_rw [Real.enorm_eq_ofReal_abs]
-    conv =>
-      lhs
-      arg 1
-      lhs
-      arg 1
-      intro g
-      rw [← ENNReal.ofReal_pow (by simp)]
-    rw [tsum_eq_sum (s := {1})]
-    .
-      simp
-      rw [ENNReal.ofReal_rpow_of_nonneg]
-      rw [ENNReal.toReal_ofReal]
-      .
-        rw [← Real.rpow_neg_one]
-        rw [← Real.rpow_mul]
-        rw [← Real.rpow_natCast]
-        rw [← Real.rpow_mul]
-        rw [← Real.rpow_natCast]
-        rw [← Real.rpow_mul]
-        field_simp
-        simp
-        rw [Real.rpow_neg]
-        rw [mul_inv_lt_iff₀']
-        field_simp
-        norm_cast
-        rw [pow_two]
-        ring
-        norm_cast
-        rw [mul_two]
-        . omega
-        .
-          norm_cast
-          positivity
-        . norm_cast
-          omega
-        . norm_cast
-          linarith
-        . norm_cast
-          positivity
-        . norm_cast
-          positivity
-      . positivity
-      . positivity
-      . simp
-    . intro b hb
-      simp at hb
-      simp [hb]
-
-  use (Real.sqrt ⟪Laplace lp_point, lp_point⟫)⁻¹ • lp_point
-  refine ⟨?_, ?_⟩
-  .
-    rw [laplace_smul]
-    rw [norm_smul]
-    simp only [norm_inv, Real.norm_eq_abs, one_div]
-    grw [laplace_bounded']
-    grw [lp_point_norm]
-    rw [inv_mul_le_iff₀]
-    .
-      rw [← Real.norm_eq_abs]
-      rw [Real.norm_of_nonneg (by apply Real.sqrt_nonneg)]
-      simp_rw [Laplace]
-      simp_rw [inner_sub_left, conv_mu_lp2]
-      simp_rw [f_conv_mu]
-      sorry
-      --grw [real_inner_le_norm]
-    . sorry
-
-
-  -- Show that the punctured open ball is nonempty, so a dense set has a nonempty intersection with it
-  have mem_ball := dense _ punctured_ball_open (by
-    simp
-    use lp_point
-    simp
-    refine ⟨?_, ?_⟩
-    . simp [lp_point, eLpNorm, eLpNorm']
-      rw [lintegral_g_eq_add]
-      simp_rw [Real.enorm_eq_ofReal_abs]
-      conv =>
-        lhs
-        arg 1
-        lhs
-        arg 1
-        intro g
-        rw [← ENNReal.ofReal_pow (by simp)]
-      rw [tsum_eq_sum (s := {1})]
-      .
-        simp
-        rw [ENNReal.ofReal_rpow_of_nonneg]
-        rw [ENNReal.toReal_ofReal]
-        .
-          rw [← Real.rpow_neg_one]
-          rw [← Real.rpow_mul]
-          rw [← Real.rpow_natCast]
-          rw [← Real.rpow_mul]
-          rw [← Real.rpow_natCast]
-          rw [← Real.rpow_mul]
-          field_simp
-          simp
-          rw [Real.rpow_neg]
-          rw [mul_inv_lt_iff₀']
-          norm_num
-          norm_cast
-          rw [pow_two]
-          ring
-          norm_cast
-          rw [mul_two]
-          . omega
-          .
-            norm_cast
-            positivity
-          . norm_cast
-            simp
-          . norm_cast
-            linarith
-          . norm_cast
-            positivity
-          . norm_cast
-            positivity
-        . positivity
-        . positivity
-        . simp
-      . intro b hb
-        simp at hb
-        simp [hb]
-    . by_contra!
-      rw [MeasureTheory.Lp.ext_iff] at this
-      rw [ae_eq_everywhere] at this
-      have eval_one := congrFun this (1 : G)
-      rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)] at eval_one
-      rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)] at eval_one
-      simp at eval_one
-      linarith
-  )
-  simp only [Set.Nonempty] at mem_ball
-  obtain ⟨g, gh⟩ := mem_ball
-  simp at gh
-  have g_norm := gh.1
-  have g_range := gh.2
-  simp only [laplace_range] at g_range
-  simp only [LinearMap.mem_range] at g_range
-  obtain ⟨a, ha⟩ := g_range
   sorry
+  -- This whole proof is completely wrong - it needs to use the spectral theorem
+
+  -- have ball_open: IsOpen (Metric.ball (0 : Lp ℝ 2 volume (α := G)) (1 / n)) := by
+  --   exact Metric.isOpen_ball
+
+
+  -- have punctured_ball_open: IsOpen ((Metric.ball (0 : Lp ℝ 2 volume (α := G)) (1 / n)) \ {0})  := by
+  --   apply IsOpen.sdiff
+  --   . exact ball_open
+  --   .
+  --     rw [← Metric.closedBall_zero]
+  --     apply Metric.isClosed_closedBall
+
+  -- have dense := laplace_range_dense
+  -- rw [dense_iff_inter_open] at dense
+
+  -- let lp_point: (Lp ℝ 2 volume (α := G)) := MemLp.toLp (fun (g: G) => if g = 1 then (1 : ℝ) / ((n + 1)^2) else 0) (by
+  --   simp [MemLp]
+  --   refine ⟨by apply AEStronglyMeasurable.of_discrete, ?_⟩
+  --   simp [eLpNorm, eLpNorm']
+  --   rw [lintegral_g_eq_add]
+  --   rw [tsum_eq_sum (s := {1})]
+  --   . simp
+  --     rw [Real.enorm_eq_ofReal_abs]
+  --     norm_cast
+  --     simp
+  --     apply ENNReal.rpow_lt_top_of_nonneg
+  --     . simp
+  --     .
+  --       apply ENNReal.pow_ne_top
+  --       apply ENNReal.ofReal_ne_top
+  --   . intro b hb
+  --     simp at hb
+  --     simp [hb]
+  -- )
+
+  -- have lp_point_norm: ‖lp_point‖ < (n: ℝ)⁻¹ := by
+  --   simp [lp_point, eLpNorm, eLpNorm']
+  --   rw [lintegral_g_eq_add]
+  --   simp_rw [Real.enorm_eq_ofReal_abs]
+  --   conv =>
+  --     lhs
+  --     arg 1
+  --     lhs
+  --     arg 1
+  --     intro g
+  --     rw [← ENNReal.ofReal_pow (by simp)]
+  --   rw [tsum_eq_sum (s := {1})]
+  --   .
+  --     simp
+  --     rw [ENNReal.ofReal_rpow_of_nonneg]
+  --     rw [ENNReal.toReal_ofReal]
+  --     .
+  --       rw [← Real.rpow_neg_one]
+  --       rw [← Real.rpow_mul]
+  --       rw [← Real.rpow_natCast]
+  --       rw [← Real.rpow_mul]
+  --       rw [← Real.rpow_natCast]
+  --       rw [← Real.rpow_mul]
+  --       field_simp
+  --       simp
+  --       rw [Real.rpow_neg]
+  --       rw [mul_inv_lt_iff₀']
+  --       field_simp
+  --       norm_cast
+  --       rw [pow_two]
+  --       ring
+  --       norm_cast
+  --       rw [mul_two]
+  --       . omega
+  --       .
+  --         norm_cast
+  --         positivity
+  --       . norm_cast
+  --         omega
+  --       . norm_cast
+  --         linarith
+  --       . norm_cast
+  --         positivity
+  --       . norm_cast
+  --         positivity
+  --     . positivity
+  --     . positivity
+  --     . simp
+  --   . intro b hb
+  --     simp at hb
+  --     simp [hb]
+
+  -- use (Real.sqrt ⟪Laplace lp_point, lp_point⟫)⁻¹ • lp_point
+  -- refine ⟨?_, ?_⟩
+  -- .
+  --   rw [laplace_smul]
+  --   rw [norm_smul]
+  --   simp only [norm_inv, Real.norm_eq_abs, one_div]
+  --   grw [laplace_bounded']
+  --   grw [lp_point_norm]
+  --   rw [inv_mul_le_iff₀]
+  --   .
+  --     rw [← Real.norm_eq_abs]
+  --     rw [Real.norm_of_nonneg (by apply Real.sqrt_nonneg)]
+  --     simp_rw [Laplace]
+  --     simp_rw [inner_sub_left, conv_mu_lp2]
+  --     simp_rw [f_conv_mu]
+  --     sorry
+  --     --grw [real_inner_le_norm]
+  --   . sorry
+
+
+  -- -- Show that the punctured open ball is nonempty, so a dense set has a nonempty intersection with it
+  -- have mem_ball := dense _ punctured_ball_open (by
+  --   simp
+  --   use lp_point
+  --   simp
+  --   refine ⟨?_, ?_⟩
+  --   . simp [lp_point, eLpNorm, eLpNorm']
+  --     rw [lintegral_g_eq_add]
+  --     simp_rw [Real.enorm_eq_ofReal_abs]
+  --     conv =>
+  --       lhs
+  --       arg 1
+  --       lhs
+  --       arg 1
+  --       intro g
+  --       rw [← ENNReal.ofReal_pow (by simp)]
+  --     rw [tsum_eq_sum (s := {1})]
+  --     .
+  --       simp
+  --       rw [ENNReal.ofReal_rpow_of_nonneg]
+  --       rw [ENNReal.toReal_ofReal]
+  --       .
+  --         rw [← Real.rpow_neg_one]
+  --         rw [← Real.rpow_mul]
+  --         rw [← Real.rpow_natCast]
+  --         rw [← Real.rpow_mul]
+  --         rw [← Real.rpow_natCast]
+  --         rw [← Real.rpow_mul]
+  --         field_simp
+  --         simp
+  --         rw [Real.rpow_neg]
+  --         rw [mul_inv_lt_iff₀']
+  --         norm_num
+  --         norm_cast
+  --         rw [pow_two]
+  --         ring
+  --         norm_cast
+  --         rw [mul_two]
+  --         . omega
+  --         .
+  --           norm_cast
+  --           positivity
+  --         . norm_cast
+  --           simp
+  --         . norm_cast
+  --           linarith
+  --         . norm_cast
+  --           positivity
+  --         . norm_cast
+  --           positivity
+  --       . positivity
+  --       . positivity
+  --       . simp
+  --     . intro b hb
+  --       simp at hb
+  --       simp [hb]
+  --   . by_contra!
+  --     rw [MeasureTheory.Lp.ext_iff] at this
+  --     rw [ae_eq_everywhere] at this
+  --     have eval_one := congrFun this (1 : G)
+  --     rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)] at eval_one
+  --     rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)] at eval_one
+  --     simp at eval_one
+  --     linarith
+  -- )
+  -- simp only [Set.Nonempty] at mem_ball
+  -- obtain ⟨g, gh⟩ := mem_ball
+  -- simp at gh
+  -- have g_norm := gh.1
+  -- have g_range := gh.2
+  -- simp only [laplace_range] at g_range
+  -- simp only [LinearMap.mem_range] at g_range
+  -- obtain ⟨a, ha⟩ := g_range
+  -- sorry
 
   -- by_cases inner_laplace_nonneg: 0 ≤ ⟪Laplace a, a⟫
   -- .
