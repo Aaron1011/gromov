@@ -606,6 +606,19 @@ lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)ˣ)
       exact hab
 
 #print axioms int_matrix_exponential_growth
+
+def homToComplex  {d: ℕ} (g: ((Fin d) → ℤ) ≃+ ((Fin d) → ℤ)) := (g.toAddMonoidHom.toIntLinearMap).toMatrix'.map complexOfIntHom
+
+open scoped Pointwise Finset
+
+-- TODO - this is probably wrong
+lemma hom_poly_growth {d: ℕ} [DecidableEq ((AddAut ((Fin d) → ℤ)))] (S: Finset (AddAut ((Fin d) → ℤ))) {p: ℕ}
+  (hS: ∃ a, ∀ n ≥ 1, #(S ^ n) ≤ a * n^p): False := by
+
+  let S' := S.image (fun g => homToComplex g)
+  sorry
+
+
   -- rw [← ge_iff_le]
   -- grw [(Finset.card_le_card (s := Finset.image (fun (n : Set.Ico ((Nat.ceil (Real.logb ‖k‖ 3))) N) => (A.val^(n.val)).mulVec v) Finset.univ) ?_).ge]
   -- .
