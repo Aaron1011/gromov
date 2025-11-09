@@ -6068,20 +6068,43 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
 
 noncomputable def G_n (n: ℕ) (hn: 0 < n) := Classical.choose (laplace_g_n n hn )
 
-lemma g_sub_norm_gt (n: ℕ) (hn: 0 < n): ∃ s: S, ‖(G_n n hn) - (conv_finsupp_lp2 (G_n n hn) (delta s.val) (by simp [delta]))‖ > 1 := by
+
+lemma g_sub_norm_gt (n: ℕ) (hn: 0 < n): ∃ s ∈ S, ‖(G_n n hn) - (conv_finsupp_lp2 (G_n n hn) (delta s) (by simp [delta]))‖^2 > 1 := by
   have sum_norm := (proposition_3_18 (G_n n hn) )
   have g_inner_laplace := MeasureTheory.L2.inner_def (Laplace (G_n n hn)) (G_n n hn) (𝕜 := ℝ) (α := G)
+  have g_n_prop := (Classical.choose_spec (laplace_g_n n hn)).2
   rw [integral_eq_eq_sum] at g_inner_laplace
   .
     simp at g_inner_laplace
     simp_rw [← g_inner_laplace] at sum_norm
-    sorry
+    nth_rw 1 [G_n] at sum_norm
+    nth_rw 1 [G_n] at sum_norm
+    rw [g_n_prop] at sum_norm
+    rw [eq_inv_mul_iff_mul_eq₀] at sum_norm
+    simp at sum_norm
+    .
+      by_contra!
+      have card_le := Finset.sum_le_card_nsmul S _ (1 : ℝ) this
+      rw [← sum_norm] at card_le
+      simp at card_le
+      rw [mul_le_iff_le_one_left] at card_le
+      . norm_num at card_le
+      . simp
+        have foo := S_nonempty
+        grind
+    . norm_num
+      have foo := S_nonempty
+      grind
+  .
+    rw [MeasureTheory.L2.inner_def] at g_n_prop
+    apply MeasureTheory.integrable_of_integral_eq_one at g_n_prop
+    exact g_n_prop
 
 
 
 
-  field_simp at sum_norm
-  sorry
+  -- field_simp at sum_norm
+  -- sorry
 
 #print sorries proposition_3_18
 #print axioms proposition_3_18
@@ -6334,6 +6357,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         . simp
       . simp
 
+  -- Lemma 3.16
   have laplace_tendsto: (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (Laplace_b (F_n n)) 2 MeasureTheory.volume (α := G)) Filter.atTop (nhds 0)) := by
     apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := (fun n: ℕ => (#(S) : ENNReal)⁻¹ * (( ∑ s : S, MeasureTheory.eLpNorm (F_n n - (Conv (F_n n) (delta s.val))) 2 MeasureTheory.volume (α := G)))))
     . simp
@@ -6403,6 +6427,9 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         . simp
       . simp
       . simp
+
+
+
 
   -- WRONG - we cannot just use 'F_n' directly
   -- Consider the sequence of functions 'A_n' where A_n(g_n) = 1, and A_n(g) = 0 for all other g
@@ -6515,6 +6542,9 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
       -- TODO - figure out why lean hangs without this
       have my_mul : ContinuousMul ℝ := instIsTopologicalRingReal.toContinuousMul
       have lim_f_mul_sum := Filter.Tendsto.const_mul ((#S) : ℝ)⁻¹ lim_f_sum
+
+      specialize tendsto_F g
+
       simp_rw [Laplace_b] at laplace_tendsto
       sorry
       sorry
