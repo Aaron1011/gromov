@@ -6112,6 +6112,14 @@ lemma g_sub_norm_gt (n: ℕ) (hn: 0 < n): ∃ s ∈ S, ‖(G_n n hn) - (conv_fin
 
 
 lemma g_sub_norm_single_s: ∃ s ∈ S, { n: ℕ | (hn: n > 0) → ‖(G_n n hn) - (conv_finsupp_lp2 (G_n n hn) (delta s) (by simp [delta]))‖^2 > 1 }.Infinite := by
+
+  -- have quantifier_swap := (Filter.eventually_all_finset S (p := fun (s: G) (n: ℕ) => ‖(G_n n sorry) - (conv_finsupp_lp2 (G_n n sorry) (delta s) (by simp [delta]))‖^2 > 1) (l := Filter.atTop)).mp ?_
+  -- . sorry
+  -- . apply Filter.Eventually.of_forall
+  --   intro n s hs
+  --   apply g_sub_norm_gt
+  --   sorry
+
   by_contra!
   simp at this
 
@@ -6158,6 +6166,7 @@ lemma g_sub_norm_single_s: ∃ s ∈ S, { n: ℕ | (hn: n > 0) → ‖(G_n n hn)
       grind
     | some s_max =>
 
+      simp [max_vals] at h_eq
       sorry
 
   --have h_max_succ := g_sub_norm_gt ((max_vals.unbotD 0).unbotD 0)
