@@ -7282,7 +7282,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
   -- elements of the sequence satisfy the 'norm > ε' condition
   obtain ⟨F, F_mem, seq, seq_mono, tendsto_F⟩ := h_n_pointwise_converge
 
-  let F_lipschitzh: LipschitzH := {
+  let old_F_lipschitzh: LipschitzH := {
     toFun := (fun (g: G) => Complex.ofReal (F g)),
     lipschitz := by
       use 2
@@ -7518,8 +7518,8 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
       . intro s hs
         apply tendsto_F
   }
-  let F_lipschitz := nontrivial_harmonic_common 2 (eps_seq ∘ seq) F H_n conv_h_n_lipschitz tendsto_F H_n_norm
-  use F_lipschitz
+  let F_lipschitzh := nontrivial_harmonic_common 2 (eps_seq ∘ seq) F H_n conv_h_n_lipschitz tendsto_F H_n_norm
+  use F_lipschitzh
   --use F_lipschitzh
   intro z
   have not_conv_tendsto_zero: ¬Filter.Tendsto (fun n => ENNReal.ofReal |Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) 1 - Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) (↑s)⁻¹|) Filter.atTop (nhds 0) := by
@@ -7558,6 +7558,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
   rw [← app_one_eq] at app_s_inv_eq
   norm_cast at app_s_inv_eq
   rw [eq_comm] at app_s_inv_eq
+  simp [nontrivial_harmonic_common] at app_s_inv_eq
   contradiction
 
 #print sorries nontrivial_harmonic_case_two
