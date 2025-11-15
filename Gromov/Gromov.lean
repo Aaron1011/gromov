@@ -6072,12 +6072,12 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
 noncomputable def G_n (n: ℕ) (hn: 0 < n) := Classical.choose (laplace_g_n n hn )
 
 
-lemma g_sub_norm_gt (n: ℕ) (hn: 0 < n): ∃ s ∈ S, ‖(G_n n hn) - (conv_finsupp_lp2 (G_n n hn) (delta s) (by simp [delta]))‖^2 > 1 := by
+lemma g_sub_norm_gt (n: ℕ+): ∃ s ∈ S, ‖(G_n n n.prop) - (conv_finsupp_lp2 (G_n n n.prop) (delta s) (by simp [delta]))‖^2 > 1 := by
   by_contra!
   have card_le := Finset.sum_le_card_nsmul S _ (1 : ℝ) this
-  have sum_norm := (proposition_3_18 (G_n n hn) )
-  have g_inner_laplace := MeasureTheory.L2.inner_def (Laplace (G_n n hn)) (G_n n hn) (𝕜 := ℝ) (α := G)
-  have g_n_prop := (Classical.choose_spec (laplace_g_n n hn)).2
+  have sum_norm := (proposition_3_18 (G_n n n.prop) )
+  have g_inner_laplace := MeasureTheory.L2.inner_def (Laplace (G_n n n.prop)) (G_n n n.prop) (𝕜 := ℝ) (α := G)
+  have g_n_prop := (Classical.choose_spec (laplace_g_n n n.prop)).2
   rw [integral_eq_eq_sum] at g_inner_laplace
   .
     simp at g_inner_laplace
@@ -6121,6 +6121,10 @@ lemma g_sub_norm_single_s: ∃ s ∈ S, { n: ℕ | (hn: n > 0) → ‖(G_n n hn)
 
   have frequent := Filter.Frequently.of_forall (f := Filter.atTop) g_sub_norm_gt
   simp at frequent
+  obtain ⟨s, s_mem, s_frequently⟩ := frequent
+  rw [Nat.frequently_atTop_iff_infinite] at s_frequently
+  rw [Filter.frequently_atTop] at s_frequently
+
   -- have quantifier_swap := (Filter.eventually_all_finset S (p := fun (s: G) (n: ℕ) => ‖(G_n n sorry) - (conv_finsupp_lp2 (G_n n sorry) (delta s) (by simp [delta]))‖^2 > 1) (l := Filter.atTop)).mp ?_
   -- . sorry
   -- . apply Filter.Eventually.of_forall
