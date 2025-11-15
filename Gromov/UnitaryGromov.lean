@@ -863,6 +863,14 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
         arg 1
         arg 2
         intro h
+        equals ⟪h.val.val x, h.val.val x⟫ =>
+          simp
+        --rw [← inner_self_eq_norm_sq]
+      conv =>
+        rhs
+        arg 1
+        arg 2
+        intro h
         rw [← inner_self_ofReal_re]
       simp
       rw [integral_complex_ofReal]
@@ -871,7 +879,13 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
       intro y
       simp
       rw [← RCLike.re_to_complex]
-      apply inner_self_nonneg
+      simp
+      rw [Complex.re_nonneg_iff_nonneg]
+      .
+        norm_cast
+        positivity
+      . rw [isSelfAdjoint_iff]
+        simp
     add_left := by
       intro a b c
       simp [integrand]
@@ -907,6 +921,8 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
           equals ⟪(q.val.val x), (q.val.val x)⟫ = 0 =>
             rw [← inner_self_ofReal_re]
             simp
+            norm_cast
+            simp
 
 
         simp at inner_q_zero
@@ -924,14 +940,17 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
           exact injective_f
       · have foo := integrable_on x x
         simp [integrand] at foo
-        simpa using MeasureTheory.Integrable.re foo
+        norm_cast
+        norm_cast at foo
+        apply MeasureTheory.Integrable.re at foo
+        norm_cast at foo
       · rw [Pi.le_def]
         intro y
         simpa using inner_self_nonneg (𝕜 := ℂ) (x := (y.val.val x))
   }
   · exact Ne.symm (NeZero.ne' (MeasureTheory.Measure.haar.inv Set.univ))
 
-  let new_inner := InnerProductSpace.ofCore inner_product_core
+  let new_inner := InnerProductSpace.ofCore inner_product_core.toCore
   let normed_add := InnerProductSpace.Core.toNormedAddCommGroup (𝕜 := ℂ) (F := (FreshInnerProduct V))
 
 
@@ -5088,11 +5107,13 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         simp
       S_inv := by
         intro s hs
-        rw [Finset.coe_image]
-        rw [Finset.coe_image] at hs
-        rw [Set.mem_image] at hs
+        rw [Finset.mem_coe] at hs
+        rw [Finset.mem_coe]
+        --rw [Finset.coe_image]
+        --rw [Finset.coe_image] at hs
+        rw [Finset.mem_image] at hs
         obtain ⟨x, x_mem, s_eq⟩ := hs
-        rw [Set.mem_image]
+        rw [Finset.mem_image]
         use ⟨x⁻¹, ?_⟩
         .
           simp
@@ -5107,8 +5128,8 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
           exact x_prop
       S_dist := by
         intro s hs
-        rw [Finset.coe_image] at hs
-        rw [Set.mem_image] at hs
+        rw [Finset.mem_coe] at hs
+        rw [Finset.mem_image] at hs
         obtain ⟨x, x_mem, s_eq⟩ := hs
         have x_prop := x.property
         rw [Set.Finite.mem_toFinset] at x_prop
