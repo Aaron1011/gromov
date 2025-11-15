@@ -6665,8 +6665,8 @@ lemma conv_laplce_norm (n: ℕ) (H_n: ℕ → G → ℝ): eLpNorm ((Laplace_b ((
   . apply f_n_nonneg
   . exact f_n_fin_supp n
 
-def nontrivial_harmonic_common (k: ℕ) (F: G → ℝ) (H_n: ℕ → G → ℝ) (h_conv_lipschitz: ∀ n, LipschitzWith k (Conv (H_n n) (f_n n)))
-(tendsto_F: Filter.Tendsto ((fun n ↦ Conv (H_n n) (f_n n))) Filter.atTop (nhds F))
+def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (F: G → ℝ) (H_n: ℕ → G → ℝ) (h_conv_lipschitz: ∀ n, LipschitzWith k (Conv (H_n n) (f_n n)))
+(tendsto_F: Filter.Tendsto ((fun n ↦ Conv (H_n (seq n)) (f_n (seq n)))) Filter.atTop (nhds F))
 (H_n_norm: ∀ n: ℕ, MeasureTheory.eLpNorm (H_n n) (p := ⊤) MeasureTheory.volume = 1): LipschitzH := by
 
   let conv_h_n_cont (n: ℕ): C(G, ℝ) := {
@@ -7518,7 +7518,9 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
       . intro s hs
         apply tendsto_F
   }
-  use F_lipschitzh
+  let F_lipschitz := nontrivial_harmonic_common 2 (eps_seq ∘ seq) F H_n conv_h_n_lipschitz tendsto_F H_n_norm
+  use F_lipschitz
+  --use F_lipschitzh
   intro z
   have not_conv_tendsto_zero: ¬Filter.Tendsto (fun n => ENNReal.ofReal |Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) 1 - Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) (↑s)⁻¹|) Filter.atTop (nhds 0) := by
     rw [Filter.not_tendsto_iff_exists_frequently_notMem]
