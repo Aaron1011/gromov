@@ -6665,10 +6665,9 @@ lemma conv_laplce_norm (n: ℕ) (H_n: ℕ → G → ℝ): eLpNorm ((Laplace_b ((
   . apply f_n_nonneg
   . exact f_n_fin_supp n
 
-lemma nontrivial_harmonic_common (k: ℕ) (F: G → ℝ) (H_n: ℕ → G → ℝ) (h_conv_lipschitz: ∀ n, LipschitzWith k (Conv (H_n n) (f_n n)))
+def nontrivial_harmonic_common (k: ℕ) (F: G → ℝ) (H_n: ℕ → G → ℝ) (h_conv_lipschitz: ∀ n, LipschitzWith k (Conv (H_n n) (f_n n)))
 (tendsto_F: Filter.Tendsto ((fun n ↦ Conv (H_n n) (f_n n))) Filter.atTop (nhds F))
-(H_n_norm: ∀ n: ℕ, MeasureTheory.eLpNorm (H_n n) (p := ⊤) MeasureTheory.volume = 1):
-    ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstLipschitzH z := by
+(H_n_norm: ∀ n: ℕ, MeasureTheory.eLpNorm (H_n n) (p := ⊤) MeasureTheory.volume = 1): LipschitzH := by
 
   let conv_h_n_cont (n: ℕ): C(G, ℝ) := {
     toFun := Conv (H_n n) (f_n n),
@@ -6911,45 +6910,7 @@ lemma nontrivial_harmonic_common (k: ℕ) (F: G → ℝ) (H_n: ℕ → G → ℝ
       . intro s hs
         apply tendsto_F
   }
-  use F_lipschitzh
-  intro z
-  have not_conv_tendsto_zero: ¬Filter.Tendsto (fun n => ENNReal.ofReal |Conv (H_n (n)) (f_n (n)) 1 - Conv (H_n (n)) (f_n (n)) (↑s)⁻¹|) Filter.atTop (nhds 0) := by
-    rw [Filter.not_tendsto_iff_exists_frequently_notMem]
-    use eps
-    refine ⟨h_eps, ?_⟩
-    simp_rw [← fn_sub_norm]
-    apply Filter.Frequently.of_forall
-    intro n
-    exact eps_seq_gt_x (seq n)
-
-  have F_non_const: F 1 ≠ F s⁻¹ := by
-    by_contra!
-    rw [← sub_eq_zero] at this
-    rw [tendsto_pi_nhds] at tendsto_F
-    have lim_f_sub := Filter.Tendsto.sub (tendsto_F 1) (tendsto_F s⁻¹)
-    rw [this] at lim_f_sub
-    simp_rw [Function.comp_def] at lim_f_sub
-    rw [tendsto_zero_iff_abs_tendsto_zero] at lim_f_sub
-    rw [Function.comp_def] at lim_f_sub
-    have f_sub_ennreal := ENNReal.tendsto_ofReal lim_f_sub
-    simp only [ENNReal.ofReal_zero] at f_sub_ennreal
-    contradiction
-
-  by_contra!
-  -- TODO - there must be a cleaner way
-  have app_one_eq: F_lipschitzh 1 = ConstLipschitzH z (1: G) := by
-    rw [this]
-  unfold F_lipschitzh ConstLipschitzH at app_one_eq
-  simp [DFunLike.coe] at app_one_eq
-
-  have app_s_inv_eq: F_lipschitzh s⁻¹ = ConstLipschitzH z (s⁻¹: G) := by
-    rw [this]
-  unfold F_lipschitzh ConstLipschitzH at app_s_inv_eq
-  simp [DFunLike.coe] at app_s_inv_eq
-  rw [← app_one_eq] at app_s_inv_eq
-  norm_cast at app_s_inv_eq
-  rw [eq_comm] at app_s_inv_eq
-  contradiction
+  exact F_lipschitzh
 
 -- Case two of Theorem 3.6
 set_option maxHeartbeats 2000000 in
