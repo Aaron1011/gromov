@@ -369,6 +369,7 @@ instance LipschitzH.add [Generates ] : Add (LipschitzH) := {
   }
 }
 
+
 -- TODO - mark this as a simp lemma
 @[simp]
 lemma LipschitzH_apply [Generates ] (f: LipschitzH) (x: G): f x = f.toFun x := rfl
@@ -1787,9 +1788,9 @@ instance Borel_GL_W: BorelSpace (GL_W) := by
 
 #synth FiniteDimensional ℂ (W)
 
-#synth CompleteSpace (W)
+--#synth CompleteSpace (W)
 
-#synth IsBoundedSMul ℂ (LipschitzH)
+--#synth IsBoundedSMul ℂ (LipschitzH)
 
 
 
@@ -4608,6 +4609,14 @@ noncomputable def conv_finsupp_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.vo
 noncomputable def Laplace_b (f: G → ℝ): G → ℝ := f - (Conv f (mu ))
 noncomputable def Laplace (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := f - (conv_mu_lp2 f)
 
+lemma measure_preserving_inv: MeasurePreserving Inv.inv ((MeasureTheory.volume (α := G))) (MeasureTheory.volume (α := G)) := {
+  measurable := by
+    exact measurable_inv
+  map_eq := by
+    simp [volume]
+    simp [my_haar_eq_count]
+}
+
 
 lemma measure_preserving_unop_tomul: MeasurePreserving (fun (x: Additive (G)) ↦ (Additive.toMul x)) myHaarAddOpp volume := by
   apply MeasureTheory.MeasurePreserving.id
@@ -6127,7 +6136,12 @@ lemma g_sub_norm_single_s: ∃ s ∈ S, { n: ℕ | ‖(G_n (n + 1) (by simp)) - 
   refine ⟨s_mem, ?_⟩
   simpa using s_frequently
 
+noncomputable def H_n (n: ℕ) (s: G): (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) :=
+  (1 / (‖(((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))‖)) •
+    MeasureTheory.Lp.compMeasurePreserving (Inv.inv) (measure_preserving_inv) (((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))
 
+lemma H_n_norm (n: ℕ) (s: G): ‖H_n (n + 1) s‖ = 1 := by
+  sorry
 
 lemma laplace_spectrum_contains_zero: 0 ∈ spectrum ℝ (Laplace_linear ) := by
   rw [spectrum.zero_mem_iff]
