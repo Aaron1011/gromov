@@ -6665,7 +6665,8 @@ lemma conv_laplce_norm (n: ℕ) (H_n: ℕ → G → ℝ): eLpNorm ((Laplace_b ((
   . apply f_n_nonneg
   . exact f_n_fin_supp n
 
-def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (F: G → ℝ) (H_n: ℕ → G → ℝ) (h_conv_lipschitz: ∀ n, LipschitzWith k (Conv (H_n n) (f_n n)))
+set_option maxHeartbeats 60000 in
+def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (h_seq: Filter.Tendsto seq Filter.atTop Filter.atTop) (F: G → ℝ) (H_n: ℕ → G → ℝ) (h_conv_lipschitz: ∀ n, LipschitzWith k (Conv (H_n n) (f_n n)))
 (tendsto_F: Filter.Tendsto ((fun n ↦ Conv (H_n (seq n)) (f_n (seq n)))) Filter.atTop (nhds F))
 (H_n_norm: ∀ n: ℕ, MeasureTheory.eLpNorm (H_n n) (p := ⊤) MeasureTheory.volume = 1): LipschitzH := by
 
@@ -6709,8 +6710,8 @@ def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (F: G → ℝ) (H_n: 
         have lim_f_g := tendsto_F g
         have lim_f_g_sub := Filter.Tendsto.sub lim_f_g lim_f_mul_sum
 
-        have laplace_conv_tendsto_zero: Filter.Tendsto (fun n => eLpNorm (Laplace_b (Conv (H_n n) (f_n (n)))) ⊤) Filter.atTop (nhds 0) := by
-          apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := fun (n: ℕ) => ENNReal.ofReal ((2: ℝ) / (n + 1) : ℝ))
+        have laplace_conv_tendsto_zero: Filter.Tendsto (fun n => eLpNorm (Laplace_b (Conv (H_n (seq n)) (f_n (seq n)))) ⊤) Filter.atTop (nhds 0) := by
+          apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := fun (n: ℕ) => ENNReal.ofReal ((2: ℝ) / ((seq n) + 1) : ℝ))
           . simp
           .
             rw [← ENNReal.tendsto_toReal_iff]
@@ -6725,10 +6726,10 @@ def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (F: G → ℝ) (H_n: 
               arg 1
               intro n
               rhs
-              equals (((((n + 1): ℕ)) : ℕ ) : ℝ) => simp
+              equals ((((((seq n) + 1): ℕ)) : ℕ ) : ℝ) => simp
             conv =>
               arg 1
-              equals (fun (n: ℕ) => (2 : ℝ) / (n) ) ∘ (fun n => n + 1) =>
+              equals (fun (n: ℕ) => (2 : ℝ) / (n) ) ∘ (fun n => (seq n) + 1) =>
                 ext n
                 simp
             apply Filter.Tendsto.comp
@@ -6750,7 +6751,7 @@ def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (F: G → ℝ) (H_n: 
                 apply Filter.tendsto_add_atTop_nat
 
               . simp
-                exact fun ⦃U⦄ a ↦ a
+                exact h_seq
             . simp
             . simp
           . rw [Pi.le_def]
@@ -6759,12 +6760,12 @@ def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (F: G → ℝ) (H_n: 
           . rw [Pi.le_def]
             intro n
             simp
-            have bound_by_norm_one := conv_laplce_norm (n)
-            have norm_le_two_div := f_n_sub_conv  (n)
+            have bound_by_norm_one := conv_laplce_norm (seq n)
+            have norm_le_two_div := f_n_sub_conv  (seq n)
             nth_rw 1 [eLpNorm] at bound_by_norm_one
             simp at bound_by_norm_one
             grw [bound_by_norm_one]
-            have h_norm := H_n_norm (n)
+            have h_norm := H_n_norm (seq n)
             simp [eLpNorm, eLpNorm'] at h_norm
             rw [h_norm]
             simp
@@ -6795,11 +6796,11 @@ def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (F: G → ℝ) (H_n: 
             . simp
             .
               -- TODO - deduplicate this
-              have bound_by_norm_one := conv_laplce_norm n H_n
-              have norm_le_two_div := f_n_sub_conv  n
+              have bound_by_norm_one := conv_laplce_norm (seq n) H_n
+              have norm_le_two_div := f_n_sub_conv (seq n)
               nth_rw 1 [eLpNorm] at bound_by_norm_one
               simp at bound_by_norm_one
-              have h_norm := H_n_norm n
+              have h_norm := H_n_norm (seq n)
               simp [eLpNorm, eLpNorm'] at h_norm
               rw [h_norm] at bound_by_norm_one
               simp only [eLpNormEssSup] at bound_by_norm_one
@@ -6860,7 +6861,7 @@ def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (F: G → ℝ) (H_n: 
             rhs
             rhs
             arg 1
-            equals ∑ x ∈ S, (fun g => f_n (n) (x • g)) =>
+            equals ∑ x ∈ S, (fun g => f_n (seq n) (x • g)) =>
               funext g
               simp
 
@@ -7518,7 +7519,11 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
       . intro s hs
         apply tendsto_F
   }
-  let F_lipschitzh := nontrivial_harmonic_common 2 (eps_seq ∘ seq) F H_n conv_h_n_lipschitz tendsto_F H_n_norm
+  let F_lipschitzh := nontrivial_harmonic_common 2 (eps_seq ∘ seq) (by
+    apply Filter.Tendsto.comp (x := Filter.atTop) (y := Filter.atTop)
+    . exact StrictMono.tendsto_atTop mono_eps_seq
+    . exact StrictMono.tendsto_atTop seq_mono
+  ) F H_n conv_h_n_lipschitz tendsto_F H_n_norm
   use F_lipschitzh
   --use F_lipschitzh
   intro z
