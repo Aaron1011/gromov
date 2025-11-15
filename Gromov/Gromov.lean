@@ -6143,22 +6143,22 @@ lemma g_sub_norm_single_s: ∃ s ∈ S, { n: ℕ | ‖(G_n (n + 1) (by simp)) - 
   refine ⟨s_mem, ?_⟩
   simpa using s_frequently
 
-noncomputable def H_n (n: ℕ) (s: G): (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) :=
-  (1 / (‖(((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))‖)) •
-    MeasureTheory.Lp.compMeasurePreserving (Inv.inv) (measure_preserving_inv) (((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))
+-- noncomputable def H_n (n: ℕ) (s: G): (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) :=
+--   (1 / (‖(((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))‖)) •
+--     MeasureTheory.Lp.compMeasurePreserving (Inv.inv) (measure_preserving_inv) (((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))
 
--- TODO - we need to define H_n on a sequence in the infinite set from g_sub_norm_single_s
-lemma H_n_norm (n: ℕ) (s: G): ‖H_n (n + 1) s‖ = 1 := by
-  rw [H_n]
-  rw [norm_smul]
-  rw [MeasureTheory.Lp.norm_compMeasurePreserving]
-  field_simp
-  simp
-  rw [mul_inv_cancel₀]
-  simp
+-- -- TODO - we need to define H_n on a sequence in the infinite set from g_sub_norm_single_s
+-- lemma H_n_norm (n: ℕ) (s: G): ‖H_n (n + 1) s‖ = 1 := by
+--   rw [H_n]
+--   rw [norm_smul]
+--   rw [MeasureTheory.Lp.norm_compMeasurePreserving]
+--   field_simp
+--   simp
+--   rw [mul_inv_cancel₀]
+--   simp
 
 
-  sorry
+--   sorry
 
 lemma laplace_spectrum_contains_zero: 0 ∈ spectrum ℝ (Laplace_linear ) := by
   rw [spectrum.zero_mem_iff]
@@ -6666,7 +6666,8 @@ lemma conv_laplce_norm (n: ℕ) (H_n: ℕ → G → ℝ): eLpNorm ((Laplace_b ((
   . exact f_n_fin_supp n
 
 lemma nontrivial_harmonic_common (k: ℕ) (F: G → ℝ) (H_n: ℕ → G → ℝ) (h_conv_lipschitz: ∀ n, LipschitzWith k (Conv (H_n n) (f_n n)))
-(tendsto_F: Filter.Tendsto ((fun n ↦ Conv (H_n n) (f_n n))) Filter.atTop (nhds F)):
+(tendsto_F: Filter.Tendsto ((fun n ↦ Conv (H_n n) (f_n n))) Filter.atTop (nhds F))
+(H_n_norm: ∀ n: ℕ, MeasureTheory.eLpNorm (H_n n) (p := ⊤) MeasureTheory.volume = 1):
     ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstLipschitzH z := by
 
   let conv_h_n_cont (n: ℕ): C(G, ℝ) := {
@@ -6759,17 +6760,18 @@ lemma nontrivial_harmonic_common (k: ℕ) (F: G → ℝ) (H_n: ℕ → G → ℝ
           . rw [Pi.le_def]
             intro n
             simp
-            have bound_by_norm_one := conv_laplce_norm ((eps_seq (seq n)))
-            have norm_le_two_div := f_n_sub_conv  ((eps_seq (seq n)))
+            have bound_by_norm_one := conv_laplce_norm (n)
+            have norm_le_two_div := f_n_sub_conv  (n)
             nth_rw 1 [eLpNorm] at bound_by_norm_one
             simp at bound_by_norm_one
             grw [bound_by_norm_one]
-            have h_norm := H_n_norm ((eps_seq (seq n)))
+            have h_norm := H_n_norm (n)
             simp [eLpNorm, eLpNorm'] at h_norm
             rw [h_norm]
             simp
             simp_rw [Laplace_b]
-            grw [norm_le_two_div]
+            simp [eLpNorm] at norm_le_two_div
+            exact norm_le_two_div
 
         rw [← ENNReal.tendsto_toReal_iff] at laplace_conv_tendsto_zero
 
@@ -6794,11 +6796,11 @@ lemma nontrivial_harmonic_common (k: ℕ) (F: G → ℝ) (H_n: ℕ → G → ℝ
             . simp
             .
               -- TODO - deduplicate this
-              have bound_by_norm_one := conv_laplce_norm (eps_seq (seq n))
-              have norm_le_two_div := f_n_sub_conv  (eps_seq (seq n))
+              have bound_by_norm_one := conv_laplce_norm n H_n
+              have norm_le_two_div := f_n_sub_conv  n
               nth_rw 1 [eLpNorm] at bound_by_norm_one
               simp at bound_by_norm_one
-              have h_norm := H_n_norm (eps_seq (seq n))
+              have h_norm := H_n_norm n
               simp [eLpNorm, eLpNorm'] at h_norm
               rw [h_norm] at bound_by_norm_one
               simp only [eLpNormEssSup] at bound_by_norm_one
@@ -6820,7 +6822,7 @@ lemma nontrivial_harmonic_common (k: ℕ) (F: G → ℝ) (H_n: ℕ → G → ℝ
           arg 1
           rw [← Function.comp_def]
         rw [← tendsto_zero_iff_abs_tendsto_zero] at laplace_real_tendsto_zero
-        simp_rw [Function.comp_def] at lim_f_g_sub
+        --simp_rw [Function.comp_def] at lim_f_g_sub
         conv at laplace_real_tendsto_zero =>
           arg 1
           intro n
@@ -6829,7 +6831,7 @@ lemma nontrivial_harmonic_common (k: ℕ) (F: G → ℝ) (H_n: ℕ → G → ℝ
         conv at lim_f_g_sub =>
           arg 1
           intro n
-          rw [← Finset.sum_subtype (s := S) (f := fun s => Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) (s * g)) (h := by
+          rw [← Finset.sum_subtype (s := S) (f := fun s => Conv (H_n n) (f_n n) (s * g)) (h := by
             intro s
             simp
           )]
@@ -6859,7 +6861,7 @@ lemma nontrivial_harmonic_common (k: ℕ) (F: G → ℝ) (H_n: ℕ → G → ℝ
             rhs
             rhs
             arg 1
-            equals ∑ x ∈ S, (fun g => f_n (eps_seq (seq n)) (x • g)) =>
+            equals ∑ x ∈ S, (fun g => f_n (n) (x • g)) =>
               funext g
               simp
 
@@ -6911,7 +6913,7 @@ lemma nontrivial_harmonic_common (k: ℕ) (F: G → ℝ) (H_n: ℕ → G → ℝ
   }
   use F_lipschitzh
   intro z
-  have not_conv_tendsto_zero: ¬Filter.Tendsto (fun n => ENNReal.ofReal |Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) 1 - Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) (↑s)⁻¹|) Filter.atTop (nhds 0) := by
+  have not_conv_tendsto_zero: ¬Filter.Tendsto (fun n => ENNReal.ofReal |Conv (H_n (n)) (f_n (n)) 1 - Conv (H_n (n)) (f_n (n)) (↑s)⁻¹|) Filter.atTop (nhds 0) := by
     rw [Filter.not_tendsto_iff_exists_frequently_notMem]
     use eps
     refine ⟨h_eps, ?_⟩
