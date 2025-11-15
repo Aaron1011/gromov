@@ -6080,6 +6080,13 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
 
 noncomputable def G_n (n: ℕ) (hn: 0 < n) := Classical.choose (laplace_g_n n hn )
 
+lemma g_n_ne_zero (n: ℕ) (hn: 0 < n): G_n n hn ≠ 0 := by
+  simp
+  by_contra!
+  have g_n_prop := (laplace_g_n n hn).choose_spec
+  simp [G_n] at this
+  simp [this] at g_n_prop
+
 
 lemma g_sub_norm_gt (n: ℕ): ∃ s ∈ S, ‖(G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))‖^2 > 1 := by
   by_contra!
@@ -6140,7 +6147,17 @@ noncomputable def H_n (n: ℕ) (s: G): (MeasureTheory.Lp ℝ 2 (μ := volume (α
   (1 / (‖(((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))‖)) •
     MeasureTheory.Lp.compMeasurePreserving (Inv.inv) (measure_preserving_inv) (((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))
 
+-- TODO - we need to define H_n on a sequence in the infinite set from g_sub_norm_single_s
 lemma H_n_norm (n: ℕ) (s: G): ‖H_n (n + 1) s‖ = 1 := by
+  rw [H_n]
+  rw [norm_smul]
+  rw [MeasureTheory.Lp.norm_compMeasurePreserving]
+  field_simp
+  simp
+  rw [mul_inv_cancel₀]
+  simp
+
+
   sorry
 
 lemma laplace_spectrum_contains_zero: 0 ∈ spectrum ℝ (Laplace_linear ) := by
@@ -6617,6 +6634,320 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 -- lp.memℓp_of_tendsto
 -- MeasureTheory.ae_bdd_liminf_atTop_of_eLpNorm_bdd
 -- IsCompact.tendsto_subseq
+
+lemma haar_eq_haar_add : myHaar = myHaarAddOpp := by
+  rfl
+
+lemma conv_laplce_norm (n: ℕ) (H_n: ℕ → G → ℝ): eLpNorm ((Laplace_b ((Conv (H_n n)) (f_n n)))) ⊤ (μ := volume (α := G)) ≤ eLpNorm (H_n n) ⊤ * (eLpNorm (Laplace_b (f_n n)) 1 (μ := volume (α := G))) := by
+  rw [laplace_conv_eq_laplace_right]
+  .
+    unfold Conv
+    eta_reduce
+    simp only [volume]
+    rw [haar_eq_haar_add]
+
+    have my_norm := ENNReal.eLpNorm_convolution_le_enorm_mul (f := H_n n) (G := (Additive G)) (L := (ContinuousLinearMap.mul ℝ ℝ))
+      (g := Laplace_b (f_n n)) (r := ⊤) (p := ⊤) (q := 1) (μ := myHaarAddOpp)
+      (by simp)
+      (by simp)
+      (by simp)
+      (by simp)
+      (by apply AEMeasurable.of_discrete)
+      (by apply AEMeasurable.of_discrete)
+
+
+    grw [my_norm]
+    simp [enorm]
+  .
+    apply conv_exists_fin_supp
+    right
+    exact f_n_fin_supp n
+  . apply f_n_nonneg
+  . exact f_n_fin_supp n
+
+lemma nontrivial_harmonic_common (k: ℕ) (F: G → ℝ) (H_n: ℕ → G → ℝ) (h_conv_lipschitz: ∀ n, LipschitzWith k (Conv (H_n n) (f_n n)))
+(tendsto_F: Filter.Tendsto ((fun n ↦ Conv (H_n n) (f_n n))) Filter.atTop (nhds F)):
+    ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstLipschitzH z := by
+
+  let conv_h_n_cont (n: ℕ): C(G, ℝ) := {
+    toFun := Conv (H_n n) (f_n n),
+    continuous_toFun := by exact continuous_of_discreteTopology
+  }
+
+  let F_lipschitzh: LipschitzH := {
+    toFun := (fun (g: G) => Complex.ofReal (F g)),
+    lipschitz := by
+      use k
+      rw [← Function.comp_def]
+      conv =>
+        arg 1
+        equals ((1 * k) : NNReal) =>
+          simp
+      apply LipschitzWith.comp (Kf := 1) (Kg := k)
+      .
+        exact Isometry.lipschitz (Complex.isometry_ofReal)
+      .
+        have closed_lipschitz := isClosed_setOf_lipschitzWith (α := G) (β := ℝ) k
+        apply IsClosed.isSeqClosed at closed_lipschitz
+        simp [IsSeqClosed] at closed_lipschitz
+        have F_lipschitz := closed_lipschitz (p := F) (x := (fun n ↦ Conv (H_n n) (f_n n))) (by
+          intro n
+          simp
+          apply h_conv_lipschitz
+        ) tendsto_F
+        exact F_lipschitz
+    harmonic := by
+      simp [Harmonic]
+      intro g
+      rw [tendsto_pi_nhds] at tendsto_F
+      have lim_f_sum := tendsto_finset_sum (ι := S) (M := ℝ) (s := Finset.univ) (a := fun s => F (s.val * g)) (f := (fun (s: S) n ↦ Conv (H_n n) (f_n n) (s.val *g))) (x := Filter.atTop (α := ℕ)) ?_
+
+      -- TODO - figure out why lean hangs without this
+      have my_mul : ContinuousMul ℝ := instIsTopologicalRingReal.toContinuousMul
+      have lim_f_mul_sum := Filter.Tendsto.const_mul ((#S) : ℝ)⁻¹ lim_f_sum
+      .
+        have lim_f_g := tendsto_F g
+        have lim_f_g_sub := Filter.Tendsto.sub lim_f_g lim_f_mul_sum
+
+        have laplace_conv_tendsto_zero: Filter.Tendsto (fun n => eLpNorm (Laplace_b (Conv (H_n n) (f_n (n)))) ⊤) Filter.atTop (nhds 0) := by
+          apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := fun (n: ℕ) => ENNReal.ofReal ((2: ℝ) / (n + 1) : ℝ))
+          . simp
+          .
+            rw [← ENNReal.tendsto_toReal_iff]
+            conv =>
+              arg 1
+              intro n
+              rw [ENNReal.toReal_ofReal (by
+                norm_cast
+                positivity
+              )]
+            conv =>
+              arg 1
+              intro n
+              rhs
+              equals (((((n + 1): ℕ)) : ℕ ) : ℝ) => simp
+            conv =>
+              arg 1
+              equals (fun (n: ℕ) => (2 : ℝ) / (n) ) ∘ (fun n => n + 1) =>
+                ext n
+                simp
+            apply Filter.Tendsto.comp
+            .
+              conv =>
+                arg 1
+                equals (fun (n: ℕ) => (2 : ℝ) / ((n) : ℕ)) =>
+                  ext n
+                  simp
+              --rw [Filter.tendsto_add_atTop_iff_nat (f := fun n => (2 : ℝ) / (n))]
+              apply tendsto_const_div_atTop_nhds_zero_nat
+            .
+              --apply Filter.tendsto_atTop_add_const_right (f := fun n => eps_seq (seq n))
+              apply Filter.Tendsto.comp
+              . conv =>
+                  arg 1
+                  equals fun n => n + 1 =>
+                    simp
+                apply Filter.tendsto_add_atTop_nat
+
+              . simp
+                exact fun ⦃U⦄ a ↦ a
+            . simp
+            . simp
+          . rw [Pi.le_def]
+            intro x
+            simp
+          . rw [Pi.le_def]
+            intro n
+            simp
+            have bound_by_norm_one := conv_laplce_norm ((eps_seq (seq n)))
+            have norm_le_two_div := f_n_sub_conv  ((eps_seq (seq n)))
+            nth_rw 1 [eLpNorm] at bound_by_norm_one
+            simp at bound_by_norm_one
+            grw [bound_by_norm_one]
+            have h_norm := H_n_norm ((eps_seq (seq n)))
+            simp [eLpNorm, eLpNorm'] at h_norm
+            rw [h_norm]
+            simp
+            simp_rw [Laplace_b]
+            grw [norm_le_two_div]
+
+        rw [← ENNReal.tendsto_toReal_iff] at laplace_conv_tendsto_zero
+
+        have laplace_real_tendsto_zero: Filter.Tendsto (fun n => |(Laplace_b (Conv (H_n (n)) (f_n n)) (g))|) Filter.atTop (nhds 0)  := by
+          apply squeeze_zero (g := fun n => (eLpNorm (Laplace_b (Conv (H_n n) (f_n n))) ⊤ volume).toReal)
+          .
+            intro n
+            simp
+          . intro n
+            have ae_le := ENNReal.ae_le_essSup (fun x ↦ ‖Laplace_b (Conv (H_n n) (f_n n)) x‖ₑ) (μ := volume)
+            simp [volume] at ae_le
+            rw [my_haar_eq_count] at ae_le
+            rw [count_ae_everywhere] at ae_le
+            specialize ae_le g
+            simp [eLpNorm, eLpNorm']
+            simp [eLpNormEssSup]
+            rw [← ENNReal.toReal_le_toReal] at ae_le
+            simp only [toReal_enorm, Real.norm_eq_abs, OrderTop.bddAbove] at ae_le
+            simp [volume]
+            rw [my_haar_eq_count]
+            exact ae_le
+            . simp
+            .
+              -- TODO - deduplicate this
+              have bound_by_norm_one := conv_laplce_norm (eps_seq (seq n))
+              have norm_le_two_div := f_n_sub_conv  (eps_seq (seq n))
+              nth_rw 1 [eLpNorm] at bound_by_norm_one
+              simp at bound_by_norm_one
+              have h_norm := H_n_norm (eps_seq (seq n))
+              simp [eLpNorm, eLpNorm'] at h_norm
+              rw [h_norm] at bound_by_norm_one
+              simp only [eLpNormEssSup] at bound_by_norm_one
+              simp [volume] at bound_by_norm_one
+              rw [my_haar_eq_count] at bound_by_norm_one
+              rw [← WithTop.lt_top_iff_ne_top]
+              grw [bound_by_norm_one]
+              simp_rw [Laplace_b]
+              simp [volume] at norm_le_two_div
+              rw [my_haar_eq_count] at norm_le_two_div
+              grw [norm_le_two_div]
+              apply ENNReal.ofReal_lt_top
+          . apply laplace_conv_tendsto_zero
+
+        simp_rw [Laplace_b] at laplace_real_tendsto_zero
+        simp_rw [f_conv_mu] at laplace_real_tendsto_zero
+        beta_reduce at laplace_real_tendsto_zero
+        conv at laplace_real_tendsto_zero =>
+          arg 1
+          rw [← Function.comp_def]
+        rw [← tendsto_zero_iff_abs_tendsto_zero] at laplace_real_tendsto_zero
+        simp_rw [Function.comp_def] at lim_f_g_sub
+        conv at laplace_real_tendsto_zero =>
+          arg 1
+          intro n
+          simp
+
+        conv at lim_f_g_sub =>
+          arg 1
+          intro n
+          rw [← Finset.sum_subtype (s := S) (f := fun s => Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) (s * g)) (h := by
+            intro s
+            simp
+          )]
+        have lim_eq := tendsto_nhds_unique laplace_real_tendsto_zero lim_f_g_sub
+        rw [eq_comm] at lim_eq
+        rw [sub_eq_zero] at lim_eq
+        rw [lim_eq]
+        norm_cast
+        rw [← Finset.sum_subtype (s := S) (f := fun i => (F (i * g)))]
+        simp
+        . simp
+        . intro n
+          -- TODO - deduplicate this. I'm sure there's lots of other versions of it scattered around this file
+          rw [← WithTop.lt_top_iff_ne_top]
+          grw [conv_laplce_norm]
+          rw [H_n_norm]
+          simp
+          simp_rw [Laplace_b]
+          grw [MeasureTheory.eLpNorm_sub_le]
+          rw [f_n_norm_one]
+          simp_rw [f_conv_mu]
+          simp_rw [← smul_eq_mul]
+          rw [← Pi.smul_def]
+          rw [MeasureTheory.eLpNorm_const_smul]
+          conv =>
+            lhs
+            rhs
+            rhs
+            arg 1
+            equals ∑ x ∈ S, (fun g => f_n (eps_seq (seq n)) (x • g)) =>
+              funext g
+              simp
+
+
+          grw [MeasureTheory.eLpNorm_sum_le]
+          simp_rw [← Function.comp_def]
+          conv =>
+            lhs
+            rhs
+            rhs
+            arg 2
+            intro x
+            rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := MeasureTheory.volume) (by
+              apply MeasureTheory.AEStronglyMeasurable.of_discrete
+            ) (by
+            exact {
+              measurable := by
+                apply Measurable.of_discrete
+              map_eq := by
+                simp [MeasureTheory.volume]
+            }
+          )]
+          simp_rw [f_n_norm_one]
+          simp
+          field_simp
+          norm_cast
+          rw [Real.enorm_eq_ofReal_abs]
+          simp
+          norm_cast
+          rw [ENNReal.add_lt_top]
+          refine ⟨by simp, ?_⟩
+          apply ENNReal.mul_lt_top
+          . simp
+          . simp
+          .
+            intro s hs
+            apply AEStronglyMeasurable.of_discrete
+          . simp
+          . apply AEStronglyMeasurable.of_discrete
+          . apply AEStronglyMeasurable.of_discrete
+          . simp
+
+
+
+
+        . simp
+      . intro s hs
+        apply tendsto_F
+  }
+  use F_lipschitzh
+  intro z
+  have not_conv_tendsto_zero: ¬Filter.Tendsto (fun n => ENNReal.ofReal |Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) 1 - Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) (↑s)⁻¹|) Filter.atTop (nhds 0) := by
+    rw [Filter.not_tendsto_iff_exists_frequently_notMem]
+    use eps
+    refine ⟨h_eps, ?_⟩
+    simp_rw [← fn_sub_norm]
+    apply Filter.Frequently.of_forall
+    intro n
+    exact eps_seq_gt_x (seq n)
+
+  have F_non_const: F 1 ≠ F s⁻¹ := by
+    by_contra!
+    rw [← sub_eq_zero] at this
+    rw [tendsto_pi_nhds] at tendsto_F
+    have lim_f_sub := Filter.Tendsto.sub (tendsto_F 1) (tendsto_F s⁻¹)
+    rw [this] at lim_f_sub
+    simp_rw [Function.comp_def] at lim_f_sub
+    rw [tendsto_zero_iff_abs_tendsto_zero] at lim_f_sub
+    rw [Function.comp_def] at lim_f_sub
+    have f_sub_ennreal := ENNReal.tendsto_ofReal lim_f_sub
+    simp only [ENNReal.ofReal_zero] at f_sub_ennreal
+    contradiction
+
+  by_contra!
+  -- TODO - there must be a cleaner way
+  have app_one_eq: F_lipschitzh 1 = ConstLipschitzH z (1: G) := by
+    rw [this]
+  unfold F_lipschitzh ConstLipschitzH at app_one_eq
+  simp [DFunLike.coe] at app_one_eq
+
+  have app_s_inv_eq: F_lipschitzh s⁻¹ = ConstLipschitzH z (s⁻¹: G) := by
+    rw [this]
+  unfold F_lipschitzh ConstLipschitzH at app_s_inv_eq
+  simp [DFunLike.coe] at app_s_inv_eq
+  rw [← app_one_eq] at app_s_inv_eq
+  norm_cast at app_s_inv_eq
+  rw [eq_comm] at app_s_inv_eq
+  contradiction
 
 -- Case two of Theorem 3.6
 set_option maxHeartbeats 2000000 in
