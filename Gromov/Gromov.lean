@@ -6343,293 +6343,6 @@ lemma bounded_from_elpnorm_bound (f: G → ℝ) (p: ℕ) (hp: p ≠ 0) (C: ℝ) 
 
 
 
-lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstLipschitzH z := by
-
-
-
-  let H_n (n: ℕ) (s: G): (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) :=
-    (1 / (‖(((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))‖)) •
-      MeasureTheory.Lp.compMeasurePreserving (Inv.inv) (measure_preserving_inv) (((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))
-
-  obtain ⟨s, s_mem_S, s_infinite⟩ := g_sub_norm_single_s
-  let seq := Nat.nth ({n | ‖(G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp))‖ ^ 2 > 1})
-  have seq_mono : StrictMono seq := Nat.nth_strictMono s_infinite
-
-
-  have H_n_norm (n: ℕ): ‖H_n (seq n) s‖ = 1 := by
-    unfold H_n
-    have norm_gt := Nat.nth_mem_of_infinite s_infinite n
-    rw [norm_smul]
-    rw [MeasureTheory.Lp.norm_compMeasurePreserving]
-    field_simp
-    simp
-    rw [mul_inv_cancel₀]
-    simp [seq]
-    simp at norm_gt
-    by_contra!
-    simp [setOf] at this
-    simp [this] at norm_gt
-
-  have F_n_le (s: S) (n: ℕ): (F_n n - (Conv (F_n n) (delta s.val)))^2 ≤ |(f_n n - (Conv (f_n n) (delta s.val)))| := by
-    simp [f_conv_delta_helper, F_n]
-    rw [Pi.le_def]
-    intro g
-    simp [Function.comp_def]
-    grw [sub_sq_le_abs]
-    simp [Real.sq_sqrt, f_n_nonneg]
-    . apply Real.sqrt_nonneg
-    . apply Real.sqrt_nonneg
-
-  have conv_delta_tendsto (s: S): Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm ((F_n n) - (Conv (F_n n) (delta s.val))) 2 MeasureTheory.volume (α := G)) Filter.atTop (nhds 0) := by
-    apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := (fun x => x^((1 : ℝ) / 2)) ∘ (fun n: ℕ => (MeasureTheory.eLpNorm ((f_n n) - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume (α := G))))
-    . simp
-    .
-      apply Filter.Tendsto.comp (y := (nhds 0))
-      .
-        conv =>
-          arg 3
-          equals nhds (0 ^ ((1 : ℝ) / 2)) =>
-            simp
-        apply Filter.Tendsto.ennrpow_const (m := id)
-        exact fun ⦃U⦄ a ↦ a
-      . apply f_n_limit
-    . rw [Pi.le_def]
-      intro n
-      simp
-    .
-      rw [Pi.le_def]
-      intro n
-      simp [eLpNorm, eLpNorm', lintegral_g_eq_add]
-      apply ENNReal.rpow_le_rpow
-      .
-        apply Summable.tsum_le_tsum
-        . intro g
-          rw [Real.enorm_eq_ofReal_abs]
-          rw [← ENNReal.ofReal_pow]
-          rw [sq_abs]
-          rw [Real.enorm_eq_ofReal_abs]
-          apply ENNReal.ofReal_le_ofReal
-          . apply F_n_le
-          . simp
-        . simp
-        . simp
-      . simp
-
-  -- Lemma 3.16
-  have laplace_tendsto: (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (Laplace_b (F_n n)) 2 MeasureTheory.volume (α := G)) Filter.atTop (nhds 0)) := by
-    apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := (fun n: ℕ => (#(S) : ENNReal)⁻¹ * (( ∑ s : S, MeasureTheory.eLpNorm (F_n n - (Conv (F_n n) (delta s.val))) 2 MeasureTheory.volume (α := G)))))
-    . simp
-    .
-      conv =>
-        pattern (nhds 0)
-        equals nhds ( (#(S) : ENNReal)⁻¹ * 0) =>
-          simp
-      apply ENNReal.Tendsto.const_mul
-      . conv =>
-          pattern (nhds 0)
-          equals nhds (∑ s : S, 0) =>
-            simp
-        apply tendsto_finset_sum
-        intro s hs
-        apply conv_delta_tendsto s
-      .
-        simp only [ne_eq, not_true_eq_false, ENNReal.inv_eq_top, Nat.cast_eq_zero,
-          Finset.card_eq_zero, false_or]
-        exact Finset.nonempty_iff_ne_empty.mp S_nonempty
-    . rw [Pi.le_def]
-      simp
-    . rw [Pi.le_def]
-      intro n
-      simp [Laplace_b, f_conv_mu]
-
-      have card_ne_zero: #(S) ≠ 0 := by
-        have foo := S_nonempty
-        simp at foo
-        simp
-        exact Finset.nonempty_iff_ne_empty.mp foo
-
-      conv =>
-        lhs
-        arg 1
-        equals ((#S) : ℝ)⁻¹ • (∑ s_1 : S, ((F_n n) - Conv (F_n n) (delta s_1.val))) =>
-          funext g
-          simp
-          field_simp [card_s_ne]
-          rw [mul_comm]
-          simp_rw [f_conv_delta]
-          conv =>
-            lhs
-            rhs
-            arg 1
-            rw [S_eq_Sinv ]
-          simp
-          rw [← Finset.sum_attach]
-
-      rw [MeasureTheory.eLpNorm_const_smul]
-      apply mul_le_mul
-      .
-        field_simp
-        rw [Real.enorm_of_nonneg]
-        .
-          rw [ENNReal.ofReal_le_iff_le_toReal]
-          . simp
-          . simp
-            have s_nonempty := Finset.nonempty_iff_ne_empty.mp (S_nonempty )
-            exact s_nonempty
-        . simp
-      .
-        grw [MeasureTheory.eLpNorm_sum_le]
-        . rfl
-        . intro s hs
-          apply AEStronglyMeasurable.of_discrete
-        . simp
-      . simp
-      . simp
-
-
-
-
-  -- WRONG - we cannot just use 'F_n' directly
-  -- Consider the sequence of functions 'A_n' where A_n(g_n) = 1, and A_n(g) = 0 for all other g
-  -- Each of these functions has Lp2 norm equal to 1, but their pointwise limit is the constant zero function
-
-  let F_n_cont (n: ℕ): C(G, ℝ) := {
-    toFun := F_n n,
-    continuous_toFun := by exact continuous_of_discreteTopology
-  }
-
-  have abs_F_n_le_one: ∀ g: G, ∀ n: ℕ, |F_n n g| ≤ 1 := by
-    intro g n
-    have F_n_norm := F_n_norm_eq_one n
-    have bound := bounded_from_elpnorm_bound (F_n n)  2 (by simp) 1 (by simp)
-    simp only [Nat.cast_ofNat, ENNReal.ofReal_one] at bound
-    rw [F_n_norm] at bound
-    apply bound (by simp)
-
-  have F_n_lipschitz (n: ℕ): LipschitzWith 2 (F_n_cont n) := by
-    unfold F_n_cont
-    simp [LipschitzWith]
-    intro x y
-    by_cases x_eq_y: x = y
-    . simp [x_eq_y]
-    .
-      norm_cast
-      rw [edist_dist]
-      rw [Real.dist_eq]
-      rw [edist_dist]
-      conv =>
-        rhs
-        equals ENNReal.ofReal (2 * (dist x y)) =>
-          rw [ENNReal.ofReal_mul]
-          . simp
-          . linarith
-      rw [ENNReal.ofReal_le_ofReal_iff]
-      .
-        grw [abs_sub]
-        grw [abs_F_n_le_one x]
-        grw [abs_F_n_le_one y]
-        rw [one_add_one_eq_two]
-        simp
-        simp [dist]
-        have dist_ne_zero: dist x y ≠ 0 := by
-          exact dist_ne_zero.mpr x_eq_y
-        simp [dist] at dist_ne_zero
-        omega
-      . simp [dist]
-
-
-
-  -- The set of 'F_n' for all n
-  let all_F_n_conv: Set C(G, ℝ) := Set.range F_n_cont
-
-  have compact_closure_f: IsCompact (closure ( (Set.range (fun n => (F_n  n))))) := by
-    rw [Pi.isCompact_closure_iff]
-    intro g
-    apply Bornology.IsBounded.isCompact_closure
-    rw [Metric.isBounded_iff]
-    use 2
-    intro x hx y hy
-    simp at hx
-    simp at hy
-    obtain ⟨n, h_x_n⟩ := hx
-    obtain ⟨m, h_y_m⟩ := hy
-    rw [Real.dist_eq]
-    grw [abs_sub]
-    rw [← h_x_n, ← h_y_m]
-    grw [abs_F_n_le_one]
-    grw [abs_F_n_le_one]
-    linarith
-
-  have F_n_pointwise_converge := IsCompact.tendsto_subseq compact_closure_f (x := fun n => F_n n) (by
-    intro n
-    simp
-    apply Set.mem_of_subset_of_mem (_root_.subset_closure)
-    simp
-  )
-  -- We now have a sequence of functions which converges pointwise, where all of the
-  -- elements of the sequence satisfy the 'norm > ε' condition
-  obtain ⟨F, F_mem, seq, seq_mono, tendsto_F⟩ := F_n_pointwise_converge
-
-  let F_lipschitzh: LipschitzH := {
-    toFun := (fun (g: G) => Complex.ofReal (F g)),
-    lipschitz := by
-      use 2
-      rw [← Function.comp_def]
-      conv =>
-        arg 1
-        equals 1 * 2 => simp
-      apply LipschitzWith.comp (Kf := 1) (Kg := 2)
-      .
-        exact Isometry.lipschitz (Complex.isometry_ofReal)
-      .
-        have closed_lipschitz := isClosed_setOf_lipschitzWith (α := G) (β := ℝ) 2
-        apply IsClosed.isSeqClosed at closed_lipschitz
-        simp [IsSeqClosed] at closed_lipschitz
-        have F_lipschitz := closed_lipschitz (p := F) (x := (fun n ↦ F_n n) ∘ seq) (by
-          intro n
-          simp
-          apply F_n_lipschitz
-        ) tendsto_F
-        exact F_lipschitz
-    harmonic := by
-      simp [Harmonic]
-      intro g
-      rw [tendsto_pi_nhds] at tendsto_F
-      have lim_f_sum := tendsto_finset_sum (ι := S) (M := ℝ) (s := Finset.univ) (a := fun s => F (s.val * g)) (f := (fun (s: S) n ↦ (F_n n) (s.val *g))) (x := Filter.atTop (α := ℕ)) ?_
-
-      -- TODO - figure out why lean hangs without this
-      have my_mul : ContinuousMul ℝ := instIsTopologicalRingReal.toContinuousMul
-      have lim_f_mul_sum := Filter.Tendsto.const_mul ((#S) : ℝ)⁻¹ lim_f_sum
-
-      specialize tendsto_F g
-
-      simp_rw [Laplace_b] at laplace_tendsto
-      sorry
-      sorry
-  }
-  use F_lipschitzh
-  intro z
-
-
-  have norm_eq := MeasureTheory.Lp.eLpNorm'_lim_eq_lintegral_liminf (f := (fun n => F_n n) ∘ seq) (f_lim := F) (p := 2) (μ := volume) ?_
-  . simp at norm_eq
-    simp_rw [lintegral_g_eq_add] at norm_eq
-
-    have norm_ne_zero: eLpNorm' F 2 volume ≠ 0 := by
-      rw [norm_eq]
-      simp only [ne_eq, ENNReal.rpow_eq_zero_iff, ENNReal.tsum_eq_zero, inv_pos, Nat.ofNat_pos,
-        and_true, inv_neg'', not_or, not_forall, not_and, not_lt, Nat.ofNat_nonneg, implies_true]
-      by_contra!
-      have F_n_norm := F_n_norm_eq_one
-      sorry
-
-
-    sorry
-  . apply Filter.Eventually.of_forall
-    rw [tendsto_pi_nhds] at tendsto_F
-    apply tendsto_F
-
-
 
   --simp at norm_zero
   --have foo (n: ℕ) := F_n_norm_eq_one (seq n)
@@ -6922,6 +6635,382 @@ def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (h_seq: Filter.Tendst
         apply tendsto_F
   }
   exact F_lipschitzh
+
+
+lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstLipschitzH z := by
+
+
+
+  let H_n (n: ℕ) (s: G): (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) :=
+    (1 / (‖(((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))‖)) •
+      MeasureTheory.Lp.compMeasurePreserving (Inv.inv) (measure_preserving_inv) (((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))
+
+  obtain ⟨s, s_mem_S, s_infinite⟩ := g_sub_norm_single_s
+  let seq := Nat.nth ({n | ‖(G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp))‖ ^ 2 > 1})
+  have seq_mono : StrictMono seq := Nat.nth_strictMono s_infinite
+
+
+  have H_n_norm (n: ℕ): ‖H_n (seq n) s‖ = 1 := by
+    unfold H_n
+    have norm_gt := Nat.nth_mem_of_infinite s_infinite n
+    rw [norm_smul]
+    rw [MeasureTheory.Lp.norm_compMeasurePreserving]
+    field_simp
+    simp
+    rw [mul_inv_cancel₀]
+    simp [seq]
+    simp at norm_gt
+    by_contra!
+    simp [setOf] at this
+    simp [this] at norm_gt
+    norm_num at norm_gt
+
+  have F_lipschitz := nontrivial_harmonic_common (2 * #(S)) seq (by exact StrictMono.tendsto_atTop seq_mono)
+
+
+  let conv_h_n_cont (n: ℕ): C(G, ℝ) := {
+    toFun := Conv (H_n (seq n) s) (f_n (seq n)),
+    continuous_toFun := by exact continuous_of_discreteTopology
+  }
+
+  -- TODO - we need the more complicated argument from the paper
+
+
+  have conv_h_n_lipschitz (n: ℕ): LipschitzWith (2 * #(S)) (conv_h_n_cont n) := by
+    unfold conv_h_n_cont
+    simp [LipschitzWith]
+    intro x y
+    by_cases x_eq_y: x = y
+    . simp [x_eq_y]
+    .
+      norm_cast
+      rw [edist_dist]
+      rw [Real.dist_eq]
+      rw [edist_dist]
+      conv =>
+        rhs
+        equals ENNReal.ofReal (2 * #(S) * (dist x y)) =>
+          rw [ENNReal.ofReal_mul]
+          .
+            rw [ENNReal.ofReal_mul]
+            simp
+            linarith
+          . linarith
+      rw [ENNReal.ofReal_le_ofReal_iff]
+      .
+        sorry
+      . simp [dist]
+        positivity
+
+
+
+
+  have compact_closure_f: IsCompact (closure ( (Set.range (fun n => (Conv (H_n (seq n) s) (f_n (seq n))))))) := by
+    rw [Pi.isCompact_closure_iff]
+    intro g
+    apply Bornology.IsBounded.isCompact_closure
+    rw [Metric.isBounded_iff]
+    use 2
+    intro x hx y hy
+    simp at hx
+    simp at hy
+    obtain ⟨n, h_x_n⟩ := hx
+    obtain ⟨m, h_y_m⟩ := hy
+    rw [Real.dist_eq]
+    grw [abs_sub]
+    rw [← h_x_n, ← h_y_m]
+    grw [abs_conv_le_one]
+    grw [abs_conv_le_one]
+    linarith
+
+
+  rw [Filter.not_tendsto_iff_exists_frequently_notMem] at hs
+  obtain ⟨eps, h_eps, frequently_gt_eps⟩ := hs
+    -- We obtain a subsequence where all of the points satisfy the 'norm > ε' condition
+  obtain ⟨eps_seq, mono_eps_seq, eps_seq_gt_x⟩ := Filter.extraction_of_frequently_atTop frequently_gt_eps
+
+  -- Along this sequence, the evauation of 'Conv H_n f_n' at is leq to 1,
+  -- so it's in a compact set
+  have locally_bounded_at_g: ∀ g: G, ∀ n, Conv (H_n (eps_seq n)) (f_n (eps_seq n)) g ∈ Metric.closedBall 0 1 := by
+    intro g n
+    simp
+    apply abs_conv_le_one
+
+
+  have h_n_pointwise_converge := IsCompact.tendsto_subseq compact_closure_f (x := fun n => (Conv (H_n (eps_seq n)) (f_n (eps_seq n)))) (by
+    intro n
+    simp
+    apply Set.mem_of_subset_of_mem (_root_.subset_closure)
+    simp
+  )
+  -- We now have a sequence of functions which converges pointwise, where all of the
+  -- elements of the sequence satisfy the 'norm > ε' condition
+  obtain ⟨F, F_mem, new_seq, new_seq_mono, tendsto_F⟩ := h_n_pointwise_converge
+
+
+
+  -- OLD
+  have F_n_le (s: S) (n: ℕ): (F_n n - (Conv (F_n n) (delta s.val)))^2 ≤ |(f_n n - (Conv (f_n n) (delta s.val)))| := by
+    simp [f_conv_delta_helper, F_n]
+    rw [Pi.le_def]
+    intro g
+    simp [Function.comp_def]
+    grw [sub_sq_le_abs]
+    simp [Real.sq_sqrt, f_n_nonneg]
+    . apply Real.sqrt_nonneg
+    . apply Real.sqrt_nonneg
+
+  have conv_delta_tendsto (s: S): Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm ((F_n n) - (Conv (F_n n) (delta s.val))) 2 MeasureTheory.volume (α := G)) Filter.atTop (nhds 0) := by
+    apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := (fun x => x^((1 : ℝ) / 2)) ∘ (fun n: ℕ => (MeasureTheory.eLpNorm ((f_n n) - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume (α := G))))
+    . simp
+    .
+      apply Filter.Tendsto.comp (y := (nhds 0))
+      .
+        conv =>
+          arg 3
+          equals nhds (0 ^ ((1 : ℝ) / 2)) =>
+            simp
+        apply Filter.Tendsto.ennrpow_const (m := id)
+        exact fun ⦃U⦄ a ↦ a
+      . apply f_n_limit
+    . rw [Pi.le_def]
+      intro n
+      simp
+    .
+      rw [Pi.le_def]
+      intro n
+      simp [eLpNorm, eLpNorm', lintegral_g_eq_add]
+      apply ENNReal.rpow_le_rpow
+      .
+        apply Summable.tsum_le_tsum
+        . intro g
+          rw [Real.enorm_eq_ofReal_abs]
+          rw [← ENNReal.ofReal_pow]
+          rw [sq_abs]
+          rw [Real.enorm_eq_ofReal_abs]
+          apply ENNReal.ofReal_le_ofReal
+          . apply F_n_le
+          . simp
+        . simp
+        . simp
+      . simp
+
+  -- Lemma 3.16
+  have laplace_tendsto: (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (Laplace_b (F_n n)) 2 MeasureTheory.volume (α := G)) Filter.atTop (nhds 0)) := by
+    apply tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun n => 0) (h := (fun n: ℕ => (#(S) : ENNReal)⁻¹ * (( ∑ s : S, MeasureTheory.eLpNorm (F_n n - (Conv (F_n n) (delta s.val))) 2 MeasureTheory.volume (α := G)))))
+    . simp
+    .
+      conv =>
+        pattern (nhds 0)
+        equals nhds ( (#(S) : ENNReal)⁻¹ * 0) =>
+          simp
+      apply ENNReal.Tendsto.const_mul
+      . conv =>
+          pattern (nhds 0)
+          equals nhds (∑ s : S, 0) =>
+            simp
+        apply tendsto_finset_sum
+        intro s hs
+        apply conv_delta_tendsto s
+      .
+        simp only [ne_eq, not_true_eq_false, ENNReal.inv_eq_top, Nat.cast_eq_zero,
+          Finset.card_eq_zero, false_or]
+        exact Finset.nonempty_iff_ne_empty.mp S_nonempty
+    . rw [Pi.le_def]
+      simp
+    . rw [Pi.le_def]
+      intro n
+      simp [Laplace_b, f_conv_mu]
+
+      have card_ne_zero: #(S) ≠ 0 := by
+        have foo := S_nonempty
+        simp at foo
+        simp
+        exact Finset.nonempty_iff_ne_empty.mp foo
+
+      conv =>
+        lhs
+        arg 1
+        equals ((#S) : ℝ)⁻¹ • (∑ s_1 : S, ((F_n n) - Conv (F_n n) (delta s_1.val))) =>
+          funext g
+          simp
+          field_simp [card_s_ne]
+          rw [mul_comm]
+          simp_rw [f_conv_delta]
+          conv =>
+            lhs
+            rhs
+            arg 1
+            rw [S_eq_Sinv ]
+          simp
+          rw [← Finset.sum_attach]
+
+      rw [MeasureTheory.eLpNorm_const_smul]
+      apply mul_le_mul
+      .
+        field_simp
+        rw [Real.enorm_of_nonneg]
+        .
+          rw [ENNReal.ofReal_le_iff_le_toReal]
+          . simp
+          . simp
+            have s_nonempty := Finset.nonempty_iff_ne_empty.mp (S_nonempty )
+            exact s_nonempty
+        . simp
+      .
+        grw [MeasureTheory.eLpNorm_sum_le]
+        . rfl
+        . intro s hs
+          apply AEStronglyMeasurable.of_discrete
+        . simp
+      . simp
+      . simp
+
+
+
+
+  -- WRONG - we cannot just use 'F_n' directly
+  -- Consider the sequence of functions 'A_n' where A_n(g_n) = 1, and A_n(g) = 0 for all other g
+  -- Each of these functions has Lp2 norm equal to 1, but their pointwise limit is the constant zero function
+
+  let F_n_cont (n: ℕ): C(G, ℝ) := {
+    toFun := F_n n,
+    continuous_toFun := by exact continuous_of_discreteTopology
+  }
+
+  have abs_F_n_le_one: ∀ g: G, ∀ n: ℕ, |F_n n g| ≤ 1 := by
+    intro g n
+    have F_n_norm := F_n_norm_eq_one n
+    have bound := bounded_from_elpnorm_bound (F_n n)  2 (by simp) 1 (by simp)
+    simp only [Nat.cast_ofNat, ENNReal.ofReal_one] at bound
+    rw [F_n_norm] at bound
+    apply bound (by simp)
+
+  have F_n_lipschitz (n: ℕ): LipschitzWith 2 (F_n_cont n) := by
+    unfold F_n_cont
+    simp [LipschitzWith]
+    intro x y
+    by_cases x_eq_y: x = y
+    . simp [x_eq_y]
+    .
+      norm_cast
+      rw [edist_dist]
+      rw [Real.dist_eq]
+      rw [edist_dist]
+      conv =>
+        rhs
+        equals ENNReal.ofReal (2 * (dist x y)) =>
+          rw [ENNReal.ofReal_mul]
+          . simp
+          . linarith
+      rw [ENNReal.ofReal_le_ofReal_iff]
+      .
+        grw [abs_sub]
+        grw [abs_F_n_le_one x]
+        grw [abs_F_n_le_one y]
+        rw [one_add_one_eq_two]
+        simp
+        simp [dist]
+        have dist_ne_zero: dist x y ≠ 0 := by
+          exact dist_ne_zero.mpr x_eq_y
+        simp [dist] at dist_ne_zero
+        omega
+      . simp [dist]
+
+
+
+  -- The set of 'F_n' for all n
+  let all_F_n_conv: Set C(G, ℝ) := Set.range F_n_cont
+
+  have compact_closure_f: IsCompact (closure ( (Set.range (fun n => (F_n  n))))) := by
+    rw [Pi.isCompact_closure_iff]
+    intro g
+    apply Bornology.IsBounded.isCompact_closure
+    rw [Metric.isBounded_iff]
+    use 2
+    intro x hx y hy
+    simp at hx
+    simp at hy
+    obtain ⟨n, h_x_n⟩ := hx
+    obtain ⟨m, h_y_m⟩ := hy
+    rw [Real.dist_eq]
+    grw [abs_sub]
+    rw [← h_x_n, ← h_y_m]
+    grw [abs_F_n_le_one]
+    grw [abs_F_n_le_one]
+    linarith
+
+  have F_n_pointwise_converge := IsCompact.tendsto_subseq compact_closure_f (x := fun n => F_n n) (by
+    intro n
+    simp
+    apply Set.mem_of_subset_of_mem (_root_.subset_closure)
+    simp
+  )
+  -- We now have a sequence of functions which converges pointwise, where all of the
+  -- elements of the sequence satisfy the 'norm > ε' condition
+  obtain ⟨F, F_mem, seq, seq_mono, tendsto_F⟩ := F_n_pointwise_converge
+
+  let F_lipschitzh: LipschitzH := {
+    toFun := (fun (g: G) => Complex.ofReal (F g)),
+    lipschitz := by
+      use 2
+      rw [← Function.comp_def]
+      conv =>
+        arg 1
+        equals 1 * 2 => simp
+      apply LipschitzWith.comp (Kf := 1) (Kg := 2)
+      .
+        exact Isometry.lipschitz (Complex.isometry_ofReal)
+      .
+        have closed_lipschitz := isClosed_setOf_lipschitzWith (α := G) (β := ℝ) 2
+        apply IsClosed.isSeqClosed at closed_lipschitz
+        simp [IsSeqClosed] at closed_lipschitz
+        have F_lipschitz := closed_lipschitz (p := F) (x := (fun n ↦ F_n n) ∘ seq) (by
+          intro n
+          simp
+          apply F_n_lipschitz
+        ) tendsto_F
+        exact F_lipschitz
+    harmonic := by
+      simp [Harmonic]
+      intro g
+      rw [tendsto_pi_nhds] at tendsto_F
+      have lim_f_sum := tendsto_finset_sum (ι := S) (M := ℝ) (s := Finset.univ) (a := fun s => F (s.val * g)) (f := (fun (s: S) n ↦ (F_n n) (s.val *g))) (x := Filter.atTop (α := ℕ)) ?_
+
+      -- TODO - figure out why lean hangs without this
+      have my_mul : ContinuousMul ℝ := instIsTopologicalRingReal.toContinuousMul
+      have lim_f_mul_sum := Filter.Tendsto.const_mul ((#S) : ℝ)⁻¹ lim_f_sum
+
+      specialize tendsto_F g
+
+      simp_rw [Laplace_b] at laplace_tendsto
+      sorry
+      sorry
+  }
+  use F_lipschitzh
+  intro z
+
+
+  have norm_eq := MeasureTheory.Lp.eLpNorm'_lim_eq_lintegral_liminf (f := (fun n => F_n n) ∘ seq) (f_lim := F) (p := 2) (μ := volume) ?_
+  . simp at norm_eq
+    simp_rw [lintegral_g_eq_add] at norm_eq
+
+    have norm_ne_zero: eLpNorm' F 2 volume ≠ 0 := by
+      rw [norm_eq]
+      simp only [ne_eq, ENNReal.rpow_eq_zero_iff, ENNReal.tsum_eq_zero, inv_pos, Nat.ofNat_pos,
+        and_true, inv_neg'', not_or, not_forall, not_and, not_lt, Nat.ofNat_nonneg, implies_true]
+      by_contra!
+      have F_n_norm := F_n_norm_eq_one
+      sorry
+
+
+    sorry
+  . apply Filter.Eventually.of_forall
+    rw [tendsto_pi_nhds] at tendsto_F
+    apply tendsto_F
+
+
+
 
 -- Case two of Theorem 3.6
 set_option maxHeartbeats 2000000 in
@@ -7248,8 +7337,6 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
 
 
 
-  -- The set of 'Conv (H_n f_n)' for all n
-  let all_h_f_conv: Set C(G, ℝ) := Set.range conv_h_n_cont
 
   have compact_closure_f: IsCompact (closure ( (Set.range (fun n => (Conv (H_n n) (f_n n)))))) := by
     rw [Pi.isCompact_closure_iff]
