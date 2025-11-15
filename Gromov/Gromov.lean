@@ -6143,22 +6143,7 @@ lemma g_sub_norm_single_s: ∃ s ∈ S, { n: ℕ | ‖(G_n (n + 1) (by simp)) - 
   refine ⟨s_mem, ?_⟩
   simpa using s_frequently
 
--- noncomputable def H_n (n: ℕ) (s: G): (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) :=
---   (1 / (‖(((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))‖)) •
---     MeasureTheory.Lp.compMeasurePreserving (Inv.inv) (measure_preserving_inv) (((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))
 
--- -- TODO - we need to define H_n on a sequence in the infinite set from g_sub_norm_single_s
--- lemma H_n_norm (n: ℕ) (s: G): ‖H_n (n + 1) s‖ = 1 := by
---   rw [H_n]
---   rw [norm_smul]
---   rw [MeasureTheory.Lp.norm_compMeasurePreserving]
---   field_simp
---   simp
---   rw [mul_inv_cancel₀]
---   simp
-
-
---   sorry
 
 lemma laplace_spectrum_contains_zero: 0 ∈ spectrum ℝ (Laplace_linear ) := by
   rw [spectrum.zero_mem_iff]
@@ -6359,6 +6344,31 @@ lemma bounded_from_elpnorm_bound (f: G → ℝ) (p: ℕ) (hp: p ≠ 0) (C: ℝ) 
 
 
 lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstLipschitzH z := by
+
+
+
+  let H_n (n: ℕ) (s: G): (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) :=
+    (1 / (‖(((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))‖)) •
+      MeasureTheory.Lp.compMeasurePreserving (Inv.inv) (measure_preserving_inv) (((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))
+
+  obtain ⟨s, s_mem_S, s_infinite⟩ := g_sub_norm_single_s
+  let seq := Nat.nth ({n | ‖(G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp))‖ ^ 2 > 1})
+  have seq_mono : StrictMono seq := Nat.nth_strictMono s_infinite
+
+
+  have H_n_norm (n: ℕ): ‖H_n (seq n) s‖ = 1 := by
+    unfold H_n
+    have norm_gt := Nat.nth_mem_of_infinite s_infinite n
+    rw [norm_smul]
+    rw [MeasureTheory.Lp.norm_compMeasurePreserving]
+    field_simp
+    simp
+    rw [mul_inv_cancel₀]
+    simp [seq]
+    simp at norm_gt
+    by_contra!
+    simp [setOf] at this
+    simp [this] at norm_gt
 
   have F_n_le (s: S) (n: ℕ): (F_n n - (Conv (F_n n) (delta s.val)))^2 ≤ |(f_n n - (Conv (f_n n) (delta s.val)))| := by
     simp [f_conv_delta_helper, F_n]
