@@ -6670,7 +6670,7 @@ def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (F: G → ℝ) (H_n: 
 (H_n_norm: ∀ n: ℕ, MeasureTheory.eLpNorm (H_n n) (p := ⊤) MeasureTheory.volume = 1): LipschitzH := by
 
   let conv_h_n_cont (n: ℕ): C(G, ℝ) := {
-    toFun := Conv (H_n n) (f_n n),
+    toFun := Conv (H_n (seq n)) (f_n (seq n)),
     continuous_toFun := by exact continuous_of_discreteTopology
   }
 
@@ -6690,7 +6690,7 @@ def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (F: G → ℝ) (H_n: 
         have closed_lipschitz := isClosed_setOf_lipschitzWith (α := G) (β := ℝ) k
         apply IsClosed.isSeqClosed at closed_lipschitz
         simp [IsSeqClosed] at closed_lipschitz
-        have F_lipschitz := closed_lipschitz (p := F) (x := (fun n ↦ Conv (H_n n) (f_n n))) (by
+        have F_lipschitz := closed_lipschitz (p := F) (x := (fun n ↦ Conv (H_n (seq n)) (f_n (seq n)))) (by
           intro n
           simp
           apply h_conv_lipschitz
@@ -6700,7 +6700,7 @@ def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (F: G → ℝ) (H_n: 
       simp [Harmonic]
       intro g
       rw [tendsto_pi_nhds] at tendsto_F
-      have lim_f_sum := tendsto_finset_sum (ι := S) (M := ℝ) (s := Finset.univ) (a := fun s => F (s.val * g)) (f := (fun (s: S) n ↦ Conv (H_n n) (f_n n) (s.val *g))) (x := Filter.atTop (α := ℕ)) ?_
+      have lim_f_sum := tendsto_finset_sum (ι := S) (M := ℝ) (s := Finset.univ) (a := fun s => F (s.val * g)) (f := (fun (s: S) n ↦ Conv (H_n (seq n)) (f_n (seq n)) (s.val *g))) (x := Filter.atTop (α := ℕ)) ?_
 
       -- TODO - figure out why lean hangs without this
       have my_mul : ContinuousMul ℝ := instIsTopologicalRingReal.toContinuousMul
@@ -6774,13 +6774,13 @@ def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (F: G → ℝ) (H_n: 
 
         rw [← ENNReal.tendsto_toReal_iff] at laplace_conv_tendsto_zero
 
-        have laplace_real_tendsto_zero: Filter.Tendsto (fun n => |(Laplace_b (Conv (H_n (n)) (f_n n)) (g))|) Filter.atTop (nhds 0)  := by
-          apply squeeze_zero (g := fun n => (eLpNorm (Laplace_b (Conv (H_n n) (f_n n))) ⊤ volume).toReal)
+        have laplace_real_tendsto_zero: Filter.Tendsto (fun n => |(Laplace_b (Conv (H_n (seq n)) (f_n (seq n))) (g))|) Filter.atTop (nhds 0)  := by
+          apply squeeze_zero (g := fun n => (eLpNorm (Laplace_b (Conv (H_n (seq n)) (f_n (seq n)))) ⊤ volume).toReal)
           .
             intro n
             simp
           . intro n
-            have ae_le := ENNReal.ae_le_essSup (fun x ↦ ‖Laplace_b (Conv (H_n n) (f_n n)) x‖ₑ) (μ := volume)
+            have ae_le := ENNReal.ae_le_essSup (fun x ↦ ‖Laplace_b (Conv (H_n (seq n)) (f_n (seq n))) x‖ₑ) (μ := volume)
             simp [volume] at ae_le
             rw [my_haar_eq_count] at ae_le
             rw [count_ae_everywhere] at ae_le
@@ -6830,7 +6830,7 @@ def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (F: G → ℝ) (H_n: 
         conv at lim_f_g_sub =>
           arg 1
           intro n
-          rw [← Finset.sum_subtype (s := S) (f := fun s => Conv (H_n n) (f_n n) (s * g)) (h := by
+          rw [← Finset.sum_subtype (s := S) (f := fun s => Conv (H_n (seq n)) (f_n (seq n)) (s * g)) (h := by
             intro s
             simp
           )]
