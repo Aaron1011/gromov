@@ -2056,7 +2056,7 @@ lemma rho_g_contains_abelian : ∃ M: Subgroup ((rho_g)), IsMulCommutative M ∧
     definite := by simp
   }
 
-  let temp_inner := InnerProductSpace.ofCore inner_prod_core
+  let temp_inner := InnerProductSpace.ofCore inner_prod_core.toCore
   let add_comm := InnerProductSpace.Core.toNormedAddCommGroup (𝕜 := ℂ) (F := (FreshTopology (W)))
 
   let normed_space := InnerProductSpace.Core.toNormedSpace (𝕜 := ℂ) (F := (FreshTopology (W)))
@@ -5331,7 +5331,10 @@ lemma laplace_zero_iff_zero (g: (Lp ℝ 2 volume (α := G))) (eq_zero: Laplace g
     rw [← g_const] at new_g_const_zero
     simp [MeasureTheory.Lp.memLp] at new_g_const_zero
     simp [volume, my_haar_eq_count] at new_g_const_zero
+    have g_infinity := hGS.g_infinite
+    rw [← not_infinite_iff_finite] at new_g_const_zero
     simp [hGS.g_infinite] at new_g_const_zero
+
 
     have g_eq_zero: g.val.cast = 0 := by
       rw [g_const]
