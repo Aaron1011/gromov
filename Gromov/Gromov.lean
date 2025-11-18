@@ -201,25 +201,111 @@ noncomputable instance WordDist.instPseudoMetricSpace: PseudoMetricSpace G where
     norm_cast
     exact WordDist_triangle  x y z
 
+lemma word_norm_eq_zero {x y: G} (hdist: WordDist x y = 0): x = y := by
+  simp [WordDist, WordNorm] at hdist
+  match hdist with
+  | .inl empty_prod =>
+    unfold ProdS at empty_prod
+    simp only [List.unattach_nil, List.prod_nil] at empty_prod
+    apply_fun (fun y => y * x) at empty_prod
+    simpa using empty_prod
+  | .inr empty_set =>
+    obtain ⟨l, hl⟩ := mem_S_prod_list  (y * x⁻¹)
+    unfold ProdS at hl
+    have len_in_set: l.unattach.length ∈ (∅ : Set ℕ) := by
+      rw [← empty_set]
+      simp only [List.length_unattach, Set.mem_setOf_eq]
+      use l
+      refine ⟨rfl, hl⟩
+    simp only [Set.mem_empty_iff_false] at len_in_set
+
+lemma dist_word_mul {x y : G} (hy: y ∈ S): dist x (y * x) ≤ 1 := by
+  simp [dist, WordDist, WordNorm]
+  apply csInf_le
+  . simp
+  . simp
+    use [⟨y, hy⟩]
+    simp [ProdS]
+
+lemma dist_word_mul_le {x y z : G} (hy: y ∈ S): dist x (y * z) ≤ 1 + dist x z := by
+  conv =>
+    lhs
+    simp [dist, WordDist, WordNorm]
+
+  grw [csInf_le (a := 1 + (WordDist x z))]
+  . simp [dist]
+  . simp
+  . simp
+
+    have dist_eq: dist x z = dist x z := rfl
+    conv at dist_eq =>
+      lhs
+      simp [dist, WordDist, WordNorm]
+
+    have inf_mem := csInf_mem (s := {n | ∃ l, l.length = n ∧ ProdS (z * x⁻¹) l}) ?_
+    .
+      simp at inf_mem
+      obtain ⟨l, l_len, l_prod⟩ := inf_mem
+      simp [ProdS] at l_prod
+      use [⟨y, hy⟩] ++ l
+      simp [l_len, WordDist, WordNorm]
+      rw [add_comm]
+      simp
+      simp [ProdS]
+      rw [l_prod]
+      group
+    .
+      obtain ⟨l, l_prod⟩ := mem_S_prod_list (z * x⁻¹)
+      use l.length
+      simp
+      use l
+
+lemma dist_word_le_mul {x y z : G} (hy: y ∈ S): WordDist x z ≤ (WordDist x (y * z)) + 1 := by
+  by_cases x_eq: x = y * z
+  . simp [x_eq]
+    rw [WordDist_self]
+    simp
+    simp [WordDist_comm]
+    have mul_dist := dist_word_mul (x := z) (y := y) hy
+    simp [dist] at mul_dist
+    exact mul_dist
+
+
+  conv =>
+    lhs
+    simp [dist, WordDist, WordNorm]
+
+
+  grw [csInf_le (a := (WordDist x (y * z)) + 1)]
+  .
+    simp
+
+
+  simp
+  obtain ⟨l, l_prod, l_len⟩ := word_norm_prod (n := WordDist x (y * z)) (y * z * x⁻¹) (rfl)
+  match l with
+  | [] =>
+    simp [ProdS] at l_prod
+    simp at l_len
+    simp [← l_len]
+    simp [ProdS]
+    rw [eq_comm] at l_prod
+    rw [mul_inv_eq_one] at l_prod
+    grind
+  | h::tail =>
+    use [ ⟨y⁻¹, by simp [hGS.has_inv, hy]⟩, ⟨h.val, by simp [hGS.has_inv]⟩,] ++ tail
+    simp [ProdS]
+    simp [← l_len]
+    simp [ProdS] at l_prod
+    simp [l_prod]
+    group
+
 noncomputable instance WordDist.instMetricSpace: MetricSpace G where
   eq_of_dist_eq_zero := by
     intro x y hdist
-    simp [dist, WordDist, WordNorm] at hdist
-    match hdist with
-    | .inl empty_prod =>
-      unfold ProdS at empty_prod
-      simp only [List.unattach_nil, List.prod_nil] at empty_prod
-      apply_fun (fun y => y * x) at empty_prod
-      simpa using empty_prod
-    | .inr empty_set =>
-      obtain ⟨l, hl⟩ := mem_S_prod_list  (y * x⁻¹)
-      unfold ProdS at hl
-      have len_in_set: l.unattach.length ∈ (∅ : Set ℕ) := by
-        rw [← empty_set]
-        simp only [List.length_unattach, Set.mem_setOf_eq]
-        use l
-        refine ⟨rfl, hl⟩
-      simp only [Set.mem_empty_iff_false] at len_in_set
+    apply word_norm_eq_zero
+    simp [dist] at hdist
+    exact hdist
 
 -- TODO - is there an easier way to transfer all of the theorems/instances from `G` to `Additive G`?
 
@@ -237,6 +323,7 @@ noncomputable instance WordDist.instMetricSpaceAddOpp: MetricSpace (Additive G) 
     intro x y hxy
     have := MetricSpace.eq_of_dist_eq_zero (x := x.toMul) (y := y.toMul) hxy
     exact this
+
 
 --def WordMetricSpace := MetricSpace.ofDistTopology ()
 noncomputable instance WordDist.instMeasurableSpace: MeasurableSpace G := borel G
@@ -812,6 +899,121 @@ lemma lipschiz_norm_zero: LipschitzSemiNorm  (0) = 0 := by
 
 
 #synth IsStrictOrderedRing NNReal
+
+lemma lipschitzWith_discrete (f: G → ℂ) {C: NNReal} (hf: ∀ g: G, ∀ s ∈ S, ‖f (s*g) - f (g)‖ ≤ C):
+    LipschitzWith (C) f := by
+
+  apply LipschitzWith.of_dist_le_mul
+  intro x s
+  have s_mem: s ∈ Subgroup.closure S := by
+    have foo := hGS.generates
+    simp at foo
+    simp [foo]
+
+  have x_mem: x ∈ Subgroup.closure S := by
+    have foo := hGS.generates
+    simp at foo
+    simp [foo]
+
+  -- have dist_x_s: dist s x = dist s x := rfl
+  -- conv at dist_x_s =>
+  --   lhs
+  --   simp [dist, WordDist, WordNorm]
+
+
+  -- have dist_mem := csInf_mem (s := {n | ∃ l, l.length = n ∧ ProdS (x * s⁻¹) l}) ?_
+  -- simp at dist_mem
+  -- simp [dist] at dist_x_s
+  -- rw [dist_x_s] at dist_mem
+  -- obtain ⟨l, l_len, l_prod⟩ := dist_mem
+  -- simp [ProdS] at l_prod
+
+  --simp at dist_x_s
+
+  induction s_mem using Subgroup.closure_induction_left with
+  | one =>
+    sorry
+  | mul_left y hy z hz dist_le =>
+
+    grw [dist_triangle (y := f (z))]
+    grw [dist_le]
+    nth_rw 1 [Complex.dist_eq]
+    rw [norm_sub_rev]
+    grw [hf]
+
+    have foo := dist_word_mul_le (x := x) (y := y) (z := z) hy
+
+
+
+    have foo := hf z y hy
+    grw [dist_triangle (y := f (y * x))]
+    nth_rw 1 [Complex.dist_eq]
+    rw [norm_sub_rev]
+    grw [hf]
+    grw [dist_triangle (y := f x)]
+    nth_rw 1 [Complex.dist_eq]
+    grw [hf]
+    grw [dist_triangle (y := f z)]
+    grw [dist_le]
+    nth_rw 1 [Complex.dist_eq]
+    rw [norm_sub_rev]
+    grw [hf]
+    grw [dist_triangle (y := y * z)]
+    nth_rw 2 [dist_comm]
+    grw [dist_word_mul hy]
+    simp
+    rw [mul_add]
+    ring_nf
+
+
+
+    grw [dist_triangle (x := f (y * x)) (y := x)]
+    grw [dist_le]
+    rw [Complex.dist_eq]
+    rw [norm_sub_rev]
+    grw [foo]
+
+
+  | inv_mul_cancel x hx y hy _ => sorry
+
+
+  induction s_mem using Subgroup.closure_induction with
+  | mem a ha =>
+    induction x_mem using Subgroup.closure_induction with
+    | mem y hy =>
+      sorry
+    | one =>
+      sorry
+    | mul x y hx hy _ _ => sorry
+    | inv x hx _ => sorry
+  | one =>
+    induction x_mem using Subgroup.closure_induction with
+    | mem y hy =>
+      by_cases y_eq_one: y = 1
+      . simp [y_eq_one]
+      .
+        have foo := hf 1 y hy
+        rw [Complex.dist_eq]
+        simp at foo
+        grw [foo]
+        apply le_mul_of_one_le_right
+        . simp
+        .
+          simp [dist]
+          rw [Nat.one_le_iff_ne_zero]
+          by_contra!
+          apply word_norm_eq_zero at this
+          contradiction
+    | one =>
+      simp
+    | mul y z hy hz y_dist z_dist =>
+
+      sorry
+    | inv x hx _ => sorry
+  | mul y z hy hz y_mem z_mem =>
+
+    sorry
+  | inv x hx _ => sorry
 
 -- TODO - upstream to mathlib
 lemma lipschitz_attains_norm (f: G → ℂ) (hf: IsLipschitz f): LipschitzWith (LipschitzSemiNorm f) f := by
@@ -6668,16 +6870,12 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
   have F_lipschitz := nontrivial_harmonic_common (2 * #(S)) seq (by exact StrictMono.tendsto_atTop seq_mono)
 
 
-  let conv_h_n_cont (n: ℕ): C(G, ℝ) := {
-    toFun := Conv (H_n (seq n) s) (f_n (seq n)),
-    continuous_toFun := by exact continuous_of_discreteTopology
-  }
+
 
   -- TODO - we need the more complicated argument from the paper
 
 
-  have conv_h_n_lipschitz (n: ℕ): LipschitzWith (2 * #(S)) (conv_h_n_cont n) := by
-    unfold conv_h_n_cont
+  have conv_h_n_lipschitz (n: ℕ): LipschitzWith (2 * #(S)) (Conv (H_n (seq n) s) (f_n (seq n))) := by
     simp [LipschitzWith]
     intro x y
     by_cases x_eq_y: x = y
@@ -6698,11 +6896,26 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
           . linarith
       rw [ENNReal.ofReal_le_ofReal_iff]
       .
+
         sorry
       . simp [dist]
         positivity
 
+  let conv_h_n_bounded (n: ℕ): BoundedContinuousFunction G ℝ := {
+    toFun := Conv (H_n (seq n) s) (f_n (seq n)),
+    continuous_toFun := by exact continuous_of_discreteTopology
+    map_bounded' := by
+      specialize conv_h_n_lipschitz n
+      rw [LipschitzWith] at conv_h_n_lipschitz
+      use (2 * #(S))
+      dsimp [dist]
+      simp [edist, PseudoMetricSpace.edist] at conv_h_n_lipschitz
 
+      exact conv_h_n_lipschitz
+      sorry
+  }
+
+  have compact_conv_set := BoundedContinuousFunction.arzela_ascoli₁
 
 
   have compact_closure_f: IsCompact (closure ( (Set.range (fun n => (Conv (H_n (seq n) s) (f_n (seq n))))))) := by
