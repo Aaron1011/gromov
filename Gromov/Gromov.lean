@@ -900,120 +900,39 @@ lemma lipschiz_norm_zero: LipschitzSemiNorm  (0) = 0 := by
 
 #synth IsStrictOrderedRing NNReal
 
+
+lemma lipschitzWith_mul_prod (f: G → ℂ) {C: NNReal} (hf: ∀ g: G, ∀ s ∈ S, ‖f (s*g) - f (g)‖ ≤ C)
+  (g: G) (s: List S): ‖f (s.unattach.prod * g) - (f g)‖ ≤ C * s.length := by
+
+  induction s with
+  | nil =>
+    simp
+  | cons head tail ih =>
+    simp
+    have triangle := dist_triangle (f (head * tail.unattach.prod * g)) (f (tail.unattach.prod * g)) (f g)
+    simp [Complex.dist_eq] at triangle
+    grw [triangle]
+    grw [ih]
+    rw [mul_assoc]
+    grw [hf _ _ (by simp)]
+    grind
+
 lemma lipschitzWith_discrete (f: G → ℂ) {C: NNReal} (hf: ∀ g: G, ∀ s ∈ S, ‖f (s*g) - f (g)‖ ≤ C):
-    LipschitzWith (C) f := by
+    LipschitzWith C f := by
 
   apply LipschitzWith.of_dist_le_mul
-  intro x s
-  have s_mem: s ∈ Subgroup.closure S := by
-    have foo := hGS.generates
-    simp at foo
-    simp [foo]
+  intro x y
 
-  have x_mem: x ∈ Subgroup.closure S := by
-    have foo := hGS.generates
-    simp at foo
-    simp [foo]
+  have prod_eq := word_norm_prod (y * x⁻¹) (WordNorm (y * x⁻¹)) rfl
+  obtain ⟨l, l_prod, l_len⟩ := prod_eq
+  simp [ProdS] at l_prod
 
-  -- have dist_x_s: dist s x = dist s x := rfl
-  -- conv at dist_x_s =>
-  --   lhs
-  --   simp [dist, WordDist, WordNorm]
-
-
-  -- have dist_mem := csInf_mem (s := {n | ∃ l, l.length = n ∧ ProdS (x * s⁻¹) l}) ?_
-  -- simp at dist_mem
-  -- simp [dist] at dist_x_s
-  -- rw [dist_x_s] at dist_mem
-  -- obtain ⟨l, l_len, l_prod⟩ := dist_mem
-  -- simp [ProdS] at l_prod
-
-  --simp at dist_x_s
-
-  induction s_mem using Subgroup.closure_induction_left with
-  | one =>
-    sorry
-  | mul_left y hy z hz dist_le =>
-
-    grw [dist_triangle (y := f (z))]
-    grw [dist_le]
-    nth_rw 1 [Complex.dist_eq]
-    rw [norm_sub_rev]
-    grw [hf]
-
-    have foo := dist_word_mul_le (x := x) (y := y) (z := z) hy
-
-
-
-    have foo := hf z y hy
-    grw [dist_triangle (y := f (y * x))]
-    nth_rw 1 [Complex.dist_eq]
-    rw [norm_sub_rev]
-    grw [hf]
-    grw [dist_triangle (y := f x)]
-    nth_rw 1 [Complex.dist_eq]
-    grw [hf]
-    grw [dist_triangle (y := f z)]
-    grw [dist_le]
-    nth_rw 1 [Complex.dist_eq]
-    rw [norm_sub_rev]
-    grw [hf]
-    grw [dist_triangle (y := y * z)]
-    nth_rw 2 [dist_comm]
-    grw [dist_word_mul hy]
-    simp
-    rw [mul_add]
-    ring_nf
-
-
-
-    grw [dist_triangle (x := f (y * x)) (y := x)]
-    grw [dist_le]
-    rw [Complex.dist_eq]
-    rw [norm_sub_rev]
-    grw [foo]
-
-
-  | inv_mul_cancel x hx y hy _ => sorry
-
-
-  induction s_mem using Subgroup.closure_induction with
-  | mem a ha =>
-    induction x_mem using Subgroup.closure_induction with
-    | mem y hy =>
-      sorry
-    | one =>
-      sorry
-    | mul x y hx hy _ _ => sorry
-    | inv x hx _ => sorry
-  | one =>
-    induction x_mem using Subgroup.closure_induction with
-    | mem y hy =>
-      by_cases y_eq_one: y = 1
-      . simp [y_eq_one]
-      .
-        have foo := hf 1 y hy
-        rw [Complex.dist_eq]
-        simp at foo
-        grw [foo]
-        apply le_mul_of_one_le_right
-        . simp
-        .
-          simp [dist]
-          rw [Nat.one_le_iff_ne_zero]
-          by_contra!
-          apply word_norm_eq_zero at this
-          contradiction
-    | one =>
-      simp
-    | mul y z hy hz y_dist z_dist =>
-
-      sorry
-    | inv x hx _ => sorry
-  | mul y z hy hz y_mem z_mem =>
-
-    sorry
-  | inv x hx _ => sorry
+  have mul_prod := lipschitzWith_mul_prod f hf x l
+  simp [l_prod] at mul_prod
+  rw [Complex.dist_eq]
+  rw [norm_sub_rev]
+  grw [mul_prod]
+  simp [dist, WordDist, l_len]
 
 -- TODO - upstream to mathlib
 lemma lipschitz_attains_norm (f: G → ℂ) (hf: IsLipschitz f): LipschitzWith (LipschitzSemiNorm f) f := by
