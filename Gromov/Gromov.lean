@@ -6940,7 +6940,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
 
 
-
     -- intro x hx y hy
     -- simp at hx
     -- simp at hy
@@ -6953,17 +6952,30 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     -- grw [abs_conv_le_one]
     -- linarith
 
-
-  have h_n_pointwise_converge (g: G) := IsCompact.tendsto_subseq compact_closure_f (x := fun n => (Conv (H_n (seq n) s) (f_n (seq n)))) (by
+  have h_n_pointwise_converge (g: G) := IsCompact.tendsto_subseq (compact_with_fixed_g g) (x := fun n => H_G_conv_zero n g) (by
     intro n
     simp
     apply Set.mem_of_subset_of_mem (_root_.subset_closure)
     simp
   )
 
+  let h_n_each_lim := fun g => Classical.choose (h_n_pointwise_converge g)
+  let h_n_each_seq := fun g => (h_n_pointwise_converge g).choose_spec.2.choose
   have F_lipschitz := nontrivial_harmonic_common (2 * #(S)) seq (by exact StrictMono.tendsto_atTop seq_mono)
 
-
+  --
+  have F_lim := (tendsto_pi_nhds (f := fun (n: ℕ) (g: G) => (H_G_conv_zero (h_n_each_seq g n)) g) (u := Filter.atTop) (g := h_n_each_lim)).mpr ?_
+  .
+    use {
+      toFun := fun g => h_n_each_lim g
+      lipschitz := by
+        sorry
+      harmonic := by
+        sorry
+    }
+    sorry
+  . intro g
+    exact (Classical.choose_spec (Classical.choose_spec (h_n_pointwise_converge g)).2).2
 
 
   -- TODO - we need the more complicated argument from the paper
