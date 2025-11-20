@@ -6871,9 +6871,12 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             field_simp at g_inner_laplace
             rw [eq_div_iff_mul_eq] at g_inner_laplace
 
-            simp at g_inner_laplace
-            simp_rw [mul_comm] at g_inner_laplace
-            sorry
+            --simp at g_inner_laplace
+            --simp_rw [mul_comm] at g_inner_laplace
+            . sorry
+            . simp
+              grind
+            . sorry
           . infer_instance
           . apply AEMeasurable.of_discrete
           . apply AEMeasurable.of_discrete
@@ -6882,6 +6885,14 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         . simp
       . sorry
       . sorry
+    . sorry
+    . sorry
+    . sorry
+    . sorry
+    . simp
+    . intro a
+      simp [delta, Pi.single, Function.update]
+      positivity
 
 
   --let F := fun (n : ℕ) (g: G) => (Conv (H_n (seq n) s) (f_n (seq n)))
