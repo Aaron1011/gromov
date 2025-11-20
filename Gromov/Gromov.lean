@@ -6199,6 +6199,10 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
 
 noncomputable def G_n (n: ℕ) (hn: 0 < n) := Classical.choose (laplace_g_n n hn )
 
+lemma g_n_conv_norm (n: ℕ) (hn: 0 < n): ⟪Laplace (G_n n hn), (G_n n hn)⟫ = 1 := by
+  have g_n_prop := (laplace_g_n n hn).choose_spec
+  exact g_n_prop.2
+
 lemma g_n_ne_zero (n: ℕ) (hn: 0 < n): G_n n hn ≠ 0 := by
   simp
   by_contra!
@@ -6767,6 +6771,12 @@ lemma counting_le_essSup (f: G → ℝ): ∀ g : G, ‖f g‖ₑ ≤ essSup  (fu
   rw [my_haar_eq_count]
   exact ae_le
 
+lemma essSup_eq_elpNorm_top (f: G → ℝ): (essSup (fun g => ‖f g‖ₑ) volume) = (eLpNorm f ⊤ volume) := by
+  rfl
+
+lemma neg_smul (f: G → ℝ): -f = (-1 : ℝ) • f := by
+  simp
+
 lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstLipschitzH z := by
 
 
@@ -6780,7 +6790,11 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
   have seq_mono : StrictMono seq := Nat.nth_strictMono s_infinite
 
 
-  have H_n_norm (n: ℕ): ‖H_n (seq n) s‖ = 1 := by
+  have H_n_norm (n: ℕ): ‖H_n (seq n) s‖ₑ = 1 := by
+    conv =>
+      rhs
+      equals ‖(1: ℝ)‖ₑ => simp
+    rw [enorm_eq_iff_norm_eq]
     unfold H_n
     have norm_gt := Nat.nth_mem_of_infinite s_infinite n
     rw [norm_smul]
@@ -6795,8 +6809,12 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     simp [this] at norm_gt
     norm_num at norm_gt
 
-  have h_n_f_lipschitz: ∀ n: ℕ, LipschitzWith (2 * #(S)) (Conv (H_n (seq n) s) (f_n (seq n))) := by
+  have seq_add_pos: ∀ {n}, 0 < (seq (n + 1)) := by
+    sorry
+
+  have h_n_f_lipschitz: ∀ n: ℕ, LipschitzWith (2 * #(S)) (Conv (H_n (seq (n + 1)) s) (G_n (seq (n + 1)) (seq_add_pos))) := by
     intro n
+    let G'_n := (G_n (seq (n + 1)) (seq_add_pos))
     apply lipschitzWith_discrete
     intro g y hy
     rw [Real.dist_eq]
@@ -6804,14 +6822,67 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     rw [norm_sub_rev]
     have y_eq_inv_inv: y = y⁻¹⁻¹ := by simp
     rw [y_eq_inv_inv]
-    rw [← f_conv_delta (f := Conv (↑↑(H_n (seq n) s)) (f_n (seq n)))]
+    rw [← f_conv_delta (f := Conv (↑↑(H_n (seq (n + 1)) s)) (G_n (seq (n + 1)) (seq_add_pos)))]
     rw [← Pi.sub_apply]
+    rw [sub_eq_add_neg]
+    rw [neg_smul]
+    rw [← conv_smul]
+    rw [ ← smul_conv]
+    rw [conv_assoc]
+    .
+      rw [← conv_add_right]
+      .
+        rw [← ENNReal.ofReal_le_ofReal_iff]
+        .
+          rw [ofReal_norm_eq_enorm]
+          grw [counting_le_essSup]
+          rw [essSup_eq_elpNorm_top]
+          simp only [volume]
+          simp_rw [my_haar_eq_count]
+          rw [← my_haar_eq_count]
+          conv =>
+            lhs
+            arg 1
+            arg 0
+            unfold Conv
+          eta_reduce
+          simp_rw [my_haar_eq_count]
+          conv =>
+            arg 1
+            arg 3
+            equals myHaarAddOpp =>
+              rw [← my_add_haar_eq_count]
 
-    have le_top_norm := counting_le_essSup (Conv (↑↑(H_n (seq n) s)) (f_n (seq n)) - Conv (Conv (↑↑(H_n (seq n) s)) (f_n (seq n))) (delta y⁻¹)) g
+          grw [ENNReal.eLpNorm_top_convolution_le (μ := myHaarAddOpp) (c := 1) (p := 2) (q := 2)]
+          .
+            simp
+            simp [norm, volume] at H_n_norm
+            simp_rw [my_haar_eq_count] at H_n_norm
+            rw [my_add_haar_eq_count]
+            simp [H_n_norm]
 
+            have sum_norm := proposition_3_18 G'_n
+            have g_inner_laplace := MeasureTheory.L2.inner_def (Laplace G'_n) G'_n (𝕜 := ℝ) (α := G)
+            have g_n_prop := (Classical.choose_spec (laplace_g_n (n + 1) (by simp))).2
+            rw [integral_eq_eq_sum] at g_inner_laplace
+            simp at g_inner_laplace
+            rw [sum_norm] at g_inner_laplace
+            rw [g_n_conv_norm] at g_inner_laplace
+            field_simp at g_inner_laplace
+            rw [eq_div_iff_mul_eq] at g_inner_laplace
 
+            simp at g_inner_laplace
+            simp_rw [mul_comm] at g_inner_laplace
+            sorry
+          . infer_instance
+          . apply AEMeasurable.of_discrete
+          . apply AEMeasurable.of_discrete
+          . intro a b
+            simp
+        . simp
+      . sorry
+      . sorry
 
-    sorry
 
   --let F := fun (n : ℕ) (g: G) => (Conv (H_n (seq n) s) (f_n (seq n)))
   --have F_tendsto: Filter.Tendsto F Filter.atTop
