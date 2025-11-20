@@ -6755,6 +6755,17 @@ def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (h_seq: Filter.Tendst
   }
   exact F_lipschitzh
 
+lemma counting_le_essSup (f: G → ℝ): ∀ g : G, ‖f g‖ₑ ≤ essSup  (fun g => ‖f g‖ₑ) volume := by
+  intro g
+  have ae_le := ENNReal.ae_le_essSup (fun g => ‖f g‖ₑ) (μ := volume)
+  simp [MeasureTheory.volume] at ae_le
+  rw [my_haar_eq_count] at ae_le
+  rw [count_ae_everywhere] at ae_le
+  specialize ae_le g
+  simp
+  simp [volume]
+  rw [my_haar_eq_count]
+  exact ae_le
 
 lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstLipschitzH z := by
 
@@ -6787,10 +6798,18 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
   have h_n_f_lipschitz: ∀ n: ℕ, LipschitzWith (2 * #(S)) (Conv (H_n (seq n) s) (f_n (seq n))) := by
     intro n
     apply lipschitzWith_discrete
-    apply LipschitzWith.of_dist_le_mul
-    intro x y
+    intro g y hy
     rw [Real.dist_eq]
+    rw [← Real.norm_eq_abs]
+    rw [norm_sub_rev]
+    have y_eq_inv_inv: y = y⁻¹⁻¹ := by simp
+    rw [y_eq_inv_inv]
+    rw [← f_conv_delta (f := Conv (↑↑(H_n (seq n) s)) (f_n (seq n)))]
     rw [← Pi.sub_apply]
+
+    have le_top_norm := counting_le_essSup (Conv (↑↑(H_n (seq n) s)) (f_n (seq n)) - Conv (Conv (↑↑(H_n (seq n) s)) (f_n (seq n))) (delta y⁻¹)) g
+
+
 
     sorry
 
