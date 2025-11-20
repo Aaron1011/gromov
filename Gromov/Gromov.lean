@@ -6899,15 +6899,22 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
       simp [delta, Pi.single, Function.update]
       positivity
 
+  -- Now rename Hn ∗Gn such that we have added a constant so that Hn ∗Gn(e) = 0
+  have new_seq: ℕ → ℕ := sorry
+  let H_G_conv_zero (n: ℕ) (g: G) := ((Conv (H_n (new_seq n) s) (G_n ((new_seq n)) (sorry))) g) - (Conv (H_n (new_seq n) s) (G_n ((new_seq n)) (sorry)) 1)
+
+
+  have H_G_conv_zero_lipschitz: ∀ n: ℕ, LipschitzWith (2 * #(S)) (H_G_conv_zero n) := by
+    sorry
 
   --let F := fun (n : ℕ) (g: G) => (Conv (H_n (seq n) s) (f_n (seq n)))
   --have F_tendsto: Filter.Tendsto F Filter.atTop
 
-  have compact_with_fixed_g (g: G): IsCompact (closure ( (Set.range (fun n => (Conv (H_n (seq (n + 1)) s) (G_n (seq (n + 1)) (seq_add_pos))) g)))) := by
+  have compact_with_fixed_g (g: G): IsCompact (closure ( (Set.range (fun n => H_G_conv_zero n g)))) := by
 
     apply Bornology.IsBounded.isCompact_closure
     rw [Metric.isBounded_iff]
-    use 2 * #(S)
+    use 4 * #(S) * (dist g 1)
     intro x hx y hy
     simp at hx
     simp at hy
@@ -6918,9 +6925,19 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     rw [← ha, ← hb]
 
 
-    have foo := (h_n_f_lipschitz (seq (a + 1))).dist_le_mul g s
+    have new_seq_pos: ∀ n, 0 < new_seq n := sorry
+    have foo := (H_G_conv_zero_lipschitz a).dist_le_mul g 1
+    have bar := (H_G_conv_zero_lipschitz b).dist_le_mul g 1
+    grw [dist_triangle (y := (H_G_conv_zero a) 1)]
+    grw [foo]
+    grw [dist_triangle (y := (H_G_conv_zero b) 1)]
+    rw [dist_comm] at bar
+    grw [bar]
+    simp [H_G_conv_zero]
+    ring
+    simp
 
-    have foo := lipschitzWith_discrete
+
 
 
 
