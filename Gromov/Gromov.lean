@@ -6876,7 +6876,12 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             . sorry
             . simp
               grind
-            . sorry
+            . simp [Integrable]
+              refine ⟨by apply AEStronglyMeasurable.of_discrete, ?_⟩
+              simp [HasFiniteIntegral]
+              rw [lintegral_g_eq_add]
+              simp_rw [← enorm_mul]
+              sorry
           . infer_instance
           . apply AEMeasurable.of_discrete
           . apply AEMeasurable.of_discrete
@@ -6898,7 +6903,8 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
   --let F := fun (n : ℕ) (g: G) => (Conv (H_n (seq n) s) (f_n (seq n)))
   --have F_tendsto: Filter.Tendsto F Filter.atTop
 
-  have compact_with_fixed_g (g: G): IsCompact (closure ( (Set.range (fun n => (Conv (H_n (seq n) s) (f_n (seq n))) g)))) := by
+  have compact_with_fixed_g (g: G): IsCompact (closure ( (Set.range (fun n => (Conv (H_n (seq (n + 1)) s) (G_n (seq (n + 1)) (seq_add_pos))) g)))) := by
+
     apply Bornology.IsBounded.isCompact_closure
     rw [Metric.isBounded_iff]
     use 2 * #(S)
@@ -6910,6 +6916,9 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     obtain ⟨b, hb⟩ := hy
 
     rw [← ha, ← hb]
+
+
+    have foo := (h_n_f_lipschitz (seq (a + 1))).dist_le_mul g s
 
     have foo := lipschitzWith_discrete
 
