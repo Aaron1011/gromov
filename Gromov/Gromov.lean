@@ -901,8 +901,8 @@ lemma lipschiz_norm_zero: LipschitzSemiNorm  (0) = 0 := by
 #synth IsStrictOrderedRing NNReal
 
 
-lemma lipschitzWith_mul_prod (f: G → ℂ) {C: NNReal} (hf: ∀ g: G, ∀ s ∈ S, ‖f (s*g) - f (g)‖ ≤ C)
-  (g: G) (s: List S): ‖f (s.unattach.prod * g) - (f g)‖ ≤ C * s.length := by
+lemma lipschitzWith_mul_prod  {K: Type*} [RCLike K] (f: G → K) {C: NNReal} (hf: ∀ g: G, ∀ s ∈ S, dist (f (s*g)) (f (g)) ≤ C)
+  (g: G) (s: List S): dist (f (s.unattach.prod * g)) (f g) ≤ C * s.length := by
 
   induction s with
   | nil =>
@@ -910,14 +910,13 @@ lemma lipschitzWith_mul_prod (f: G → ℂ) {C: NNReal} (hf: ∀ g: G, ∀ s ∈
   | cons head tail ih =>
     simp
     have triangle := dist_triangle (f (head * tail.unattach.prod * g)) (f (tail.unattach.prod * g)) (f g)
-    simp [Complex.dist_eq] at triangle
     grw [triangle]
     grw [ih]
     rw [mul_assoc]
     grw [hf _ _ (by simp)]
     grind
 
-lemma lipschitzWith_discrete (f: G → ℂ) {C: NNReal} (hf: ∀ g: G, ∀ s ∈ S, ‖f (s*g) - f (g)‖ ≤ C):
+lemma lipschitzWith_discrete {K: Type*} [RCLike K] (f: G → K) {C: NNReal} (hf: ∀ g: G, ∀ s ∈ S, dist (f (s*g)) (f (g)) ≤ C):
     LipschitzWith C f := by
 
   apply LipschitzWith.of_dist_le_mul
@@ -929,8 +928,7 @@ lemma lipschitzWith_discrete (f: G → ℂ) {C: NNReal} (hf: ∀ g: G, ∀ s ∈
 
   have mul_prod := lipschitzWith_mul_prod f hf x l
   simp [l_prod] at mul_prod
-  rw [Complex.dist_eq]
-  rw [norm_sub_rev]
+  rw [dist_comm]
   grw [mul_prod]
   simp [dist, WordDist, l_len]
 
@@ -1230,8 +1228,8 @@ set_option maxHeartbeats 9000000
 abbrev GL_W := (W →L[ℂ] W)ˣ
 
 --#synth LieGroup (modelWithCornersSelf ℂ ((W →L[ℂ] W))) 1 (GL_W)
-#synth TopologicalSpace ((W →L[ℂ] W))
-#synth TopologicalSpace ((W →L[ℂ] W))ˣ
+--#synth TopologicalSpace ((W →L[ℂ] W))
+--#synth TopologicalSpace ((W →L[ℂ] W))ˣ
 
 
 #synth NormedRing (((W →L[ℂ] W)))
@@ -1848,9 +1846,9 @@ def isembedding_units_val := Units.isEmbedding_val_mk' (M := (W →L[ℂ] W)) (f
 -- This is a combination of Cartan's Theorem and Theorem 3.6, giving us the conclusion that
 -- ρ(G) contains an abelian subgroup of finite index
 
-#synth MeasurableSpace (W →L[ℂ] W)ˣ
-#synth TopologicalSpace (W →L[ℂ] W)ˣ
-#synth BorelSpace (W →L[ℂ] W)
+--#synth MeasurableSpace (W →L[ℂ] W)ˣ
+--#synth TopologicalSpace (W →L[ℂ] W)ˣ
+--#synth BorelSpace (W →L[ℂ] W)
 
 
 
@@ -6785,6 +6783,56 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     simp [setOf] at this
     simp [this] at norm_gt
     norm_num at norm_gt
+
+  have h_n_f_lipschitz: ∀ n: ℕ, LipschitzWith (2 * #(S)) (Conv (H_n (seq n) s) (f_n (seq n))) := by
+    intro n
+    apply lipschitzWith_discrete
+    apply LipschitzWith.of_dist_le_mul
+    intro x y
+    rw [Real.dist_eq]
+    rw [← Pi.sub_apply]
+
+    sorry
+
+  --let F := fun (n : ℕ) (g: G) => (Conv (H_n (seq n) s) (f_n (seq n)))
+  --have F_tendsto: Filter.Tendsto F Filter.atTop
+
+  have compact_with_fixed_g (g: G): IsCompact (closure ( (Set.range (fun n => (Conv (H_n (seq n) s) (f_n (seq n))) g)))) := by
+    apply Bornology.IsBounded.isCompact_closure
+    rw [Metric.isBounded_iff]
+    use 2 * #(S)
+    intro x hx y hy
+    simp at hx
+    simp at hy
+
+    obtain ⟨a, ha⟩ := hx
+    obtain ⟨b, hb⟩ := hy
+
+    rw [← ha, ← hb]
+
+    have foo := lipschitzWith_discrete
+
+
+
+    -- intro x hx y hy
+    -- simp at hx
+    -- simp at hy
+    -- obtain ⟨n, h_x_n⟩ := hx
+    -- obtain ⟨m, h_y_m⟩ := hy
+    -- rw [Real.dist_eq]
+    -- grw [abs_sub]
+    -- rw [← h_x_n, ← h_y_m]
+    -- grw [abs_conv_le_one]
+    -- grw [abs_conv_le_one]
+    -- linarith
+
+
+  have h_n_pointwise_converge (g: G) := IsCompact.tendsto_subseq compact_closure_f (x := fun n => (Conv (H_n (seq n) s) (f_n (seq n)))) (by
+    intro n
+    simp
+    apply Set.mem_of_subset_of_mem (_root_.subset_closure)
+    simp
+  )
 
   have F_lipschitz := nontrivial_harmonic_common (2 * #(S)) seq (by exact StrictMono.tendsto_atTop seq_mono)
 
