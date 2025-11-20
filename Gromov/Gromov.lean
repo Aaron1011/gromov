@@ -6959,8 +6959,9 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     simp
   )
 
-  let h_n_each_lim := fun g => Classical.choose (h_n_pointwise_converge g)
+  let h_n_each_lim := fun g => (h_n_pointwise_converge g).choose
   let h_n_each_seq := fun g => (h_n_pointwise_converge g).choose_spec.2.choose
+  let h_n_conv_tendso := fun g => (h_n_pointwise_converge g).choose_spec.2.choose_spec.2
   have F_lipschitz := nontrivial_harmonic_common (2 * #(S)) seq (by exact StrictMono.tendsto_atTop seq_mono)
 
   --
@@ -6973,7 +6974,24 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
       harmonic := by
         sorry
     }
+    intro z
+    by_contra!
+
+    apply_fun (fun f => f 1 - f (s⁻¹)) at this
+    simp [ConstLipschitzH ] at this
+    rw [sub_eq_zero] at this
+    norm_cast at this
+
+    have tendsto_1 := h_n_conv_tendso 1
+    have tendsto_s := h_n_conv_tendso s⁻¹
+    have tendsto_sub := tendsto_1.sub tendsto_s
+    simp [h_n_each_lim] at this
+    simp [this] at tendsto_sub
     sorry
+
+
+
+
   . intro g
     exact (Classical.choose_spec (Classical.choose_spec (h_n_pointwise_converge g)).2).2
 
