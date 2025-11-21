@@ -6777,6 +6777,13 @@ lemma essSup_eq_elpNorm_top (f: G → ℝ): (essSup (fun g => ‖f g‖ₑ) volu
 lemma neg_smul (f: G → ℝ): -f = (-1 : ℝ) • f := by
   simp
 
+-- lemma aeqfun_cast (f: G →ₘ[volume] ℝ):  := by
+--   have eq_fun := MeasureTheory.AEEqFun.coeFn_mk f (μ := MeasureTheory.volume (α := G)) (by apply MeasureTheory.AEStronglyMeasurable.of_discrete)
+--   rw [ae_eq_everywhere] at eq_fun
+--   nth_rw 2 [← eq_fun]
+--   rfl
+
+
 lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstLipschitzH z := by
 
 
@@ -6901,11 +6908,63 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
   -- Now rename Hn ∗Gn such that we have added a constant so that Hn ∗Gn(e) = 0
   have new_seq: ℕ → ℕ := sorry
-  let H_G_conv_zero (n: ℕ) (g: G) := ((Conv (H_n (new_seq n) s) (G_n ((new_seq n)) (sorry))) g) - (Conv (H_n (new_seq n) s) (G_n ((new_seq n)) (sorry)) 1)
+  let H_G_conv_zero (n: ℕ) (g: G) := ((Conv (H_n ((new_seq n) + 1) s) (G_n ((new_seq n) + 1) (by simp))) g) - (Conv (H_n ((new_seq n) + 1) s) (G_n ((new_seq n) + 1) (by simp)) 1)
 
 
   have H_G_conv_zero_lipschitz: ∀ n: ℕ, LipschitzWith (2 * #(S)) (H_G_conv_zero n) := by
     sorry
+
+  -- have H_conv_g_eq: ∀ n: ℕ, Conv ((H_n (new_seq n)) s) ((G_n ((new_seq n)) (sorry)) - (conv_finsupp_lp2 (((G_n ((new_seq n)) (sorry)))) (delta s) (by simp [delta]))) = ‖(G_n ((new_seq n)) (sorry)) - (conv_finsupp_lp2 (((G_n ((new_seq n)) (sorry)))) (delta s) (by simp [delta]))‖ := by
+  --   sorry
+
+  have H_n_conv_zero_eq: ∀ n: ℕ, (H_G_conv_zero (n) 1) - (H_G_conv_zero (n) s⁻¹) = ‖(G_n ((new_seq n)) (sorry)) - (conv_finsupp_lp2 (((G_n ((new_seq n)) (sorry)))) (delta s) (by simp [delta]))‖ := by
+    intro n
+    simp [H_G_conv_zero]
+    have s_inv_eq: s⁻¹ = s⁻¹ * 1 := by
+      simp
+    rw [s_inv_eq]
+    rw [← f_conv_delta  (f := Conv ((H_n ((new_seq n) + 1) s)) ((G_n ((new_seq n) + 1) (by simp))))]
+    rw [← Pi.sub_apply]
+    rw [sub_eq_add_neg]
+    rw [neg_smul]
+    rw [← conv_smul]
+    rw [ ← smul_conv]
+    rw [conv_assoc]
+    .
+      rw [← conv_add_right]
+      .
+        simp [H_n, conv_finsupp_lp2]
+        rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_smul _ _)]
+        rw [conv_smul]
+        conv =>
+          lhs
+          lhs
+          arg 0
+          unfold Conv
+
+        rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)]
+        rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_compMeasurePreserving _ _)]
+        rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_compMeasurePreserving _ _)]
+        simp only [convolution,
+          ContinuousLinearMap.coe_sub', ContinuousLinearMap.mul_apply', Pi.smul_apply, smul_eq_mul]
+        simp
+        have t_fake_inv: ∀ (t: G), (t: (Additive G))⁻¹ = -(Additive.ofMul t) := by
+          intro t
+          rfl
+
+        simp [t_fake_inv, Additive.ofMul]
+        have one_g_eq: (1 : G) = (0 : (Additive G)) := rfl
+        simp_rw [one_g_eq]
+        simp_rw [zero_sub]
+
+        simp [AEEqFun.compMeasurePreserving, AEEqFun.compQuasiMeasurePreserving]
+        unfold MeasureTheory.Lp.compMeasurePreserving
+
+
+
+
+    sorry
+
 
   --let F := fun (n : ℕ) (g: G) => (Conv (H_n (seq n) s) (f_n (seq n)))
   --have F_tendsto: Filter.Tendsto F Filter.atTop
@@ -6972,6 +7031,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
       lipschitz := by
         sorry
       harmonic := by
+
         sorry
     }
     intro z
@@ -6987,6 +7047,8 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     have tendsto_sub := tendsto_1.sub tendsto_s
     simp [h_n_each_lim] at this
     simp [this] at tendsto_sub
+
+
     sorry
 
 
