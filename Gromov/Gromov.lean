@@ -6908,7 +6908,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
   -- Now rename Hn ∗Gn such that we have added a constant so that Hn ∗Gn(e) = 0
   have new_seq: ℕ → ℕ := sorry
-  let H_G_conv_zero (n: ℕ) (g: G) := ((Conv (H_n ((new_seq n) + 1) s) (G_n ((new_seq n) + 1) (by simp))) g) - (Conv (H_n ((new_seq n) + 1) s) (G_n ((new_seq n) + 1) (by simp)) 1)
+  let H_G_conv_zero (n: ℕ) (g: G) := ((Conv (H_n ((new_seq n)) s) (G_n ((new_seq n) + 1) (by simp))) g) - (Conv (H_n ((new_seq n)) s) (G_n ((new_seq n) + 1) (by simp)) 1)
 
 
   have H_G_conv_zero_lipschitz: ∀ n: ℕ, LipschitzWith (2 * #(S)) (H_G_conv_zero n) := by
@@ -6917,13 +6917,13 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
   -- have H_conv_g_eq: ∀ n: ℕ, Conv ((H_n (new_seq n)) s) ((G_n ((new_seq n)) (sorry)) - (conv_finsupp_lp2 (((G_n ((new_seq n)) (sorry)))) (delta s) (by simp [delta]))) = ‖(G_n ((new_seq n)) (sorry)) - (conv_finsupp_lp2 (((G_n ((new_seq n)) (sorry)))) (delta s) (by simp [delta]))‖ := by
   --   sorry
 
-  have H_n_conv_zero_eq: ∀ n: ℕ, (H_G_conv_zero (n) 1) - (H_G_conv_zero (n) s⁻¹) = ‖(G_n ((new_seq n)) (sorry)) - (conv_finsupp_lp2 (((G_n ((new_seq n)) (sorry)))) (delta s) (by simp [delta]))‖ := by
+  have H_n_conv_zero_eq: ∀ n: ℕ, (H_G_conv_zero (n) 1) - (H_G_conv_zero (n) s⁻¹) = ‖(G_n ((new_seq n) + 1) (sorry)) - (conv_finsupp_lp2 (((G_n ((new_seq n) + 1) (sorry)))) (delta s) (by simp [delta]))‖ := by
     intro n
     simp [H_G_conv_zero]
     have s_inv_eq: s⁻¹ = s⁻¹ * 1 := by
       simp
     rw [s_inv_eq]
-    rw [← f_conv_delta  (f := Conv ((H_n ((new_seq n) + 1) s)) ((G_n ((new_seq n) + 1) (by simp))))]
+    rw [← f_conv_delta  (f := Conv ((H_n ((new_seq n)) s)) ((G_n ((new_seq n) + 1) (by simp))))]
     rw [← Pi.sub_apply]
     rw [sub_eq_add_neg]
     rw [neg_smul]
@@ -6956,14 +6956,71 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         have one_g_eq: (1 : G) = (0 : (Additive G)) := rfl
         simp_rw [one_g_eq]
         simp_rw [zero_sub]
+        conv =>
+          lhs
+          rhs
+          arg 2
+          intro t
+          rhs
+          rhs
+          equals (conv_finsupp_lp2 (-(G_n (new_seq n + 1) (by simp))) (delta s) (by simp [delta])) (-t) =>
+            simp [conv_finsupp_lp2]
+            simp_rw [tolp_apply]
+            norm_cast
+            rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_neg _)]
 
-        simp [AEEqFun.compMeasurePreserving, AEEqFun.compQuasiMeasurePreserving]
-        unfold MeasureTheory.Lp.compMeasurePreserving
+        simp [conv_finsupp_lp2]
+        norm_cast
+        simp_rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_neg _)]
+        simp_rw [neg_smul]
+        simp_rw [conv_smul]
+        simp
+        rw [MeasureTheory.MemLp.toLp_neg (by
+          sorry
+        )]
+        rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_neg _)]
+        simp_rw [← Pi.sub_apply]
+        have real_inner: ∀ a b : ℝ, ⟪a, b⟫ = a * b := by
+          intro a b
+          simp
+          rw [mul_comm]
+        conv =>
+          lhs
+          rhs
+          arg 2
+          intro t
+          rw [← Pi.add_apply]
+          rw [← Pi.mul_apply]
 
 
+        rw [MeasureTheory.integral_neg_eq_self]
+        simp_rw [Pi.mul_apply]
+        simp_rw [← real_inner]
+        simp_rw [← sub_eq_add_neg]
+        conv =>
+          lhs
+          rhs
+          equals ‖(G_n (new_seq n + 1) (sorry)) - (MemLp.toLp (Conv (↑↑(G_n (new_seq n + 1) (sorry))) (delta s)) (sorry))‖^2 =>
+            rw [← real_inner_self_eq_norm_sq]
+            rw [MeasureTheory.L2.inner_def]
+            simp
+            norm_cast
+            simp_rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)]
+            rfl
 
+        rw [pow_two]
+        simp
+      . sorry
+      . sorry
+    . sorry
+    . sorry
+    . sorry
+    . sorry
+    . sorry
+    . intro a
+      simp [delta, Pi.single, Function.update]
+      positivity
 
-    sorry
 
 
   --let F := fun (n : ℕ) (g: G) => (Conv (H_n (seq n) s) (f_n (seq n)))
