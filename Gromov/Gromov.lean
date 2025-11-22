@@ -6821,7 +6821,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     have prev_lt := (seq_mono.lt_iff_lt (a := n) (b := n + 1)).mpr (by simp)
     grind
 
-  have h_n_f_lipschitz: ∀ n: ℕ, LipschitzWith (2 * #(S)) (Conv (H_n (seq (n + 1)) s) (G_n (seq (n + 1)) (seq_add_pos))) := by
+  have h_n_f_lipschitz: ∀ n: ℕ, LipschitzWith ((2 * #(S))^((2 : ℝ)⁻¹)) (Conv (H_n (seq (n + 1)) s) (G_n (seq (n + 1)) (seq_add_pos))) := by
     intro n
     let G'_n := (G_n (seq (n + 1)) (seq_add_pos))
     apply lipschitzWith_discrete
@@ -6882,7 +6882,20 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
             --simp at g_inner_laplace
             --simp_rw [mul_comm] at g_inner_laplace
-            . sorry
+            .
+              simp [eLpNorm, eLpNorm']
+              simp [MeasureTheory.Lp.norm_def, eLpNorm, eLpNorm', conv_finsupp_lp2] at g_inner_laplace
+              rw [← ENNReal.ofReal_rpow_of_pos]
+              .
+                apply ENNReal.rpow_le_rpow
+                .
+                  generalize y⁻¹ = foo
+                  grw [Finset.single_le_sum (s := S) (a := y⁻¹)]
+                  sorry
+                . sorry
+              . sorry
+
+              -- Finset.single_le_sum
             . simp
               grind
             . simp [Integrable]
