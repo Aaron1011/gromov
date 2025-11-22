@@ -7059,7 +7059,24 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
   })
 
   have arzela_compact := ArzelaAscoli.isCompact_of_equicontinuous (closure H_n_continuous) (by
-    sorry
+    apply IsCompact.image
+    . sorry
+    . sorry
+    -- rw [Pi.isCompact_iff]
+    -- refine ⟨?_, ?_⟩
+    -- .
+
+    --   rw [Pi.isClosed_iff]
+    --   sorry
+    -- .
+    --   intro g
+    --   simp
+
+    -- rw [← IsClosedMap.closure_image_eq_of_continuous]
+    -- .
+    --   apply Bornology.IsBounded.isCompact_closure
+    -- . simp
+    -- sorry
   ) (by
     intro x
     rw [Metric.equicontinuousAt_iff]
@@ -7089,7 +7106,9 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
   have arzela_tendsto := IsCompact.tendsto_subseq arzela_compact (x := fun n => {
     toFun := H_G_conv_zero n
     continuous_toFun := by exact continuous_of_discreteTopology
-  }) sorry
+  }) (by
+    sorry
+  )
   obtain ⟨arzela_lim, arzela_lim_mem, arzela_seq, arzela_seq_mono, tendsto_arzela_lim⟩ := arzela_tendsto
   rw [ContinuousMap.tendsto_iff_forall_isCompact_tendstoUniformlyOn] at tendsto_arzela_lim
 
