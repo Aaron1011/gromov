@@ -7053,57 +7053,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     ring
     simp
 
-  let H_n_continuous: Set C(G, ℝ) := Set.range (fun n => {
-    toFun := H_G_conv_zero n
-    continuous_toFun := by exact continuous_of_discreteTopology
-  })
-
-  have arzela_compact := ArzelaAscoli.isCompact_of_equicontinuous (closure H_n_continuous) (by
-    apply IsCompact.image
-    . sorry
-    . sorry
-    -- rw [Pi.isCompact_iff]
-    -- refine ⟨?_, ?_⟩
-    -- .
-
-    --   rw [Pi.isClosed_iff]
-    --   sorry
-    -- .
-    --   intro g
-    --   simp
-
-    -- rw [← IsClosedMap.closure_image_eq_of_continuous]
-    -- .
-    --   apply Bornology.IsBounded.isCompact_closure
-    -- . simp
-    -- sorry
-  ) (by
-    intro x
-    rw [Metric.equicontinuousAt_iff]
-    intro eps heps
-    use (1/2)
-    simp
-    intro y h_dist
-    simp [dist] at h_dist
-    norm_num at h_dist
-    apply le_of_lt at h_dist
-    by_cases word_dist_zero: WordDist y x = 0
-    .
-      have dist_eq_zero: dist x y = 0 := by
-        rw [dist_comm]
-        simp [dist]
-        simp [word_dist_zero]
-      simp at dist_eq_zero
-      simp [dist_eq_zero]
-      intro a
-      grind
-    .
-
-      rw [←Nat.le_floor_iff' word_dist_zero] at h_dist
-      norm_num at h_dist
-      contradiction
-  )
-
   have new_compact_closure: IsCompact (closure (Set.range (fun n => H_G_conv_zero n))) := by
     rw [Pi.isCompact_closure_iff]
     intro g
@@ -7119,8 +7068,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
     rw [← ha, ← hb]
 
-
-    have new_seq_pos: ∀ n, 0 < new_seq n := sorry
     have foo := (H_G_conv_zero_lipschitz a).dist_le_mul g 1
     have bar := (H_G_conv_zero_lipschitz b).dist_le_mul g 1
     grw [dist_triangle (y := (H_G_conv_zero a) 1)]
