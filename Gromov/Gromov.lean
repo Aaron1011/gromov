@@ -7053,6 +7053,27 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     ring
     simp
 
+  let H_n_continuous: Set C(G, ℝ) := Set.range (fun n => {
+    toFun := H_G_conv_zero n
+    continuous_toFun := by exact continuous_of_discreteTopology
+  })
+
+  have arzela_compact := ArzelaAscoli.isCompact_of_equicontinuous H_n_continuous sorry sorry
+  have arzela_tendsto := IsCompact.tendsto_subseq arzela_compact (x := fun n => {
+    toFun := H_G_conv_zero n
+    continuous_toFun := by exact continuous_of_discreteTopology
+  }) sorry
+  obtain ⟨arzela_lim, arzela_lim_mem, arzela_seq, arzela_seq_mono, tendsto_arzela_lim⟩ := arzela_tendsto
+  rw [ContinuousMap.tendsto_iff_forall_isCompact_tendstoUniformlyOn] at tendsto_arzela_lim
+
+  have tendsto_one := (tendsto_arzela_lim {1, s⁻¹} (sorry)).tendsto_at (x := 1) (by simp)
+  have tendsto_s_inv := (tendsto_arzela_lim {1, s⁻¹} (sorry)).tendsto_at (x := s⁻¹) (by simp)
+  simp at tendsto_one
+  simp at tendsto_s_inv
+
+  have tendsto_sub := tendsto_one.sub tendsto_s_inv
+  rw [ContinuousMap.tendsto_nhds_compactOpen] at tendsto_arzela_lim
+
 
 
 
@@ -7077,6 +7098,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
   let h_n_each_lim := fun g => (h_n_pointwise_converge g).choose
   let h_n_each_seq := fun g => (h_n_pointwise_converge g).choose_spec.2.choose
+
   let h_n_conv_tendso := fun g => (h_n_pointwise_converge g).choose_spec.2.choose_spec.2
   have F_lipschitz := nontrivial_harmonic_common (2 * #(S)) seq (by exact StrictMono.tendsto_atTop seq_mono)
 
@@ -7101,9 +7123,14 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
     have tendsto_1 := h_n_conv_tendso 1
     have tendsto_s := h_n_conv_tendso s⁻¹
+    -- We may need a diagonal sequence here, since we currently have two different sequences
     have tendsto_sub := tendsto_1.sub tendsto_s
     simp [h_n_each_lim] at this
     simp [this] at tendsto_sub
+    -- conv at tendsto_sub =>
+    --   arg 1
+    --   intro x
+    --   rw [H_n_conv_zero_eq]
 
 
     sorry
