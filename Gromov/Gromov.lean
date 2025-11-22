@@ -6817,7 +6817,9 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     norm_num at norm_gt
 
   have seq_add_pos: ∀ {n}, 0 < (seq (n + 1)) := by
-    sorry
+    intro n
+    have prev_lt := (seq_mono.lt_iff_lt (a := n) (b := n + 1)).mpr (by simp)
+    grind
 
   have h_n_f_lipschitz: ∀ n: ℕ, LipschitzWith (2 * #(S)) (Conv (H_n (seq (n + 1)) s) (G_n (seq (n + 1)) (seq_add_pos))) := by
     intro n
