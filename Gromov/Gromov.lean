@@ -7058,7 +7058,34 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     continuous_toFun := by exact continuous_of_discreteTopology
   })
 
-  have arzela_compact := ArzelaAscoli.isCompact_of_equicontinuous H_n_continuous sorry sorry
+  have arzela_compact := ArzelaAscoli.isCompact_of_equicontinuous (closure H_n_continuous) (by
+    sorry
+  ) (by
+    intro x
+    rw [Metric.equicontinuousAt_iff]
+    intro eps heps
+    use (1/2)
+    simp
+    intro y h_dist
+    simp [dist] at h_dist
+    norm_num at h_dist
+    apply le_of_lt at h_dist
+    by_cases word_dist_zero: WordDist y x = 0
+    .
+      have dist_eq_zero: dist x y = 0 := by
+        rw [dist_comm]
+        simp [dist]
+        simp [word_dist_zero]
+      simp at dist_eq_zero
+      simp [dist_eq_zero]
+      intro a
+      grind
+    .
+
+      rw [←Nat.le_floor_iff' word_dist_zero] at h_dist
+      norm_num at h_dist
+      contradiction
+  )
   have arzela_tendsto := IsCompact.tendsto_subseq arzela_compact (x := fun n => {
     toFun := H_G_conv_zero n
     continuous_toFun := by exact continuous_of_discreteTopology
