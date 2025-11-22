@@ -7103,17 +7103,51 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
       norm_num at h_dist
       contradiction
   )
-  have arzela_tendsto := IsCompact.tendsto_subseq arzela_compact (x := fun n => {
-    toFun := H_G_conv_zero n
-    continuous_toFun := by exact continuous_of_discreteTopology
-  }) (by
-    sorry
+
+  have new_compact_closure: IsCompact (closure (Set.range (fun n => H_G_conv_zero n))) := by
+    rw [Pi.isCompact_closure_iff]
+    intro g
+    apply Bornology.IsBounded.isCompact_closure
+    rw [Metric.isBounded_iff]
+    use 4 * #(S) * (dist g 1)
+    intro x hx y hy
+    simp at hx
+    simp at hy
+
+    obtain ⟨a, ha⟩ := hx
+    obtain ⟨b, hb⟩ := hy
+
+    rw [← ha, ← hb]
+
+
+    have new_seq_pos: ∀ n, 0 < new_seq n := sorry
+    have foo := (H_G_conv_zero_lipschitz a).dist_le_mul g 1
+    have bar := (H_G_conv_zero_lipschitz b).dist_le_mul g 1
+    grw [dist_triangle (y := (H_G_conv_zero a) 1)]
+    grw [foo]
+    grw [dist_triangle (y := (H_G_conv_zero b) 1)]
+    rw [dist_comm] at bar
+    grw [bar]
+    simp [H_G_conv_zero]
+    ring
+    simp
+
+  --have new_arzela_compact := (EquicontinuousOn.isClosed_range_uniformOnFun_iff_pi (F := fun n => H_G_conv_zero n) (𝔖 := Set.range (fun g => {g})) sorry sorry sorry).mpr ?_
+
+
+  have arzela_tendsto := IsCompact.tendsto_subseq new_compact_closure (x := fun n => (
+    H_G_conv_zero n
+  )) (by
+    intro n
+    simp
+    apply _root_.subset_closure
+    simp
   )
   obtain ⟨arzela_lim, arzela_lim_mem, arzela_seq, arzela_seq_mono, tendsto_arzela_lim⟩ := arzela_tendsto
-  rw [ContinuousMap.tendsto_iff_forall_isCompact_tendstoUniformlyOn] at tendsto_arzela_lim
+  rw [tendsto_pi_nhds] at tendsto_arzela_lim
 
-  have tendsto_one := (tendsto_arzela_lim {1, s⁻¹} (sorry)).tendsto_at (x := 1) (by simp)
-  have tendsto_s_inv := (tendsto_arzela_lim {1, s⁻¹} (sorry)).tendsto_at (x := s⁻¹) (by simp)
+  have tendsto_one := tendsto_arzela_lim 1
+  have tendsto_s_inv := tendsto_arzela_lim s⁻¹
   simp at tendsto_one
   simp at tendsto_s_inv
 
