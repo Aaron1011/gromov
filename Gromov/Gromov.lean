@@ -7099,7 +7099,22 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
   simp at tendsto_s_inv
 
   have tendsto_sub := tendsto_one.sub tendsto_s_inv
-  rw [ContinuousMap.tendsto_nhds_compactOpen] at tendsto_arzela_lim
+  use {
+    toFun := fun g => arzela_lim g
+    lipschitz := sorry
+    harmonic := sorry
+  }
+  intro z
+  by_contra!
+  have lim_ge := ge_of_tendsto tendsto_sub (b := 1) (by
+    apply Filter.Eventually.of_forall
+    sorry
+  )
+
+  apply_fun (fun f => f 1 - f s⁻¹) at this
+  simp [ConstLipschitzH] at this
+  norm_cast at this
+  grind
 
 
 
