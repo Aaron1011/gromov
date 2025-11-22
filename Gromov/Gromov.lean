@@ -7108,6 +7108,8 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
   by_contra!
   have lim_ge := ge_of_tendsto tendsto_sub (b := 1) (by
     apply Filter.Eventually.of_forall
+    intro n
+    rw [H_n_conv_zero_eq]
     sorry
   )
 
