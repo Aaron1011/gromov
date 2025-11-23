@@ -6926,12 +6926,12 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
               -- Finset.single_le_sum
             . simp
               grind
-            . simp [Integrable]
-              refine ⟨by apply AEStronglyMeasurable.of_discrete, ?_⟩
-              simp [HasFiniteIntegral]
-              rw [lintegral_g_eq_add]
-              simp_rw [← enorm_mul]
-              sorry
+            .
+              apply MeasureTheory.Integrable.of_integral_ne_zero
+              rw [← g_inner_laplace]
+              simp [G'_n]
+              have foo := g_n_conv_norm (seq (n + 1)) seq_add_pos
+              grind
           . infer_instance
           . apply AEMeasurable.of_discrete
           . apply AEMeasurable.of_discrete
