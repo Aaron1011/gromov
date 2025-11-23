@@ -3692,6 +3692,85 @@ lemma conv_assoc {f g h: G → ℝ} (h_fg: ConvExists f g) (h_gh: ConvExists g h
 --     simp
 
 
+-- TODO - we can probably replace 'conv_assoc' with this
+lemma conv_assoc_of_lp2 {f g h: G → ℝ} (hf: MemLp f 2 Measure.count) (hg: MemLp g 2 Measure.count) (hh: MemLp h 2 Measure.count): Conv (Conv f g) h = Conv f (Conv g h) := by
+  unfold Conv
+  funext x
+  conv =>
+    lhs
+    arg 1
+    simp
+    eta_reduce
+  rw [MeasureTheory.convolution_assoc (L := ContinuousLinearMap.mul ℝ ℝ) (L₂ := ContinuousLinearMap.mul ℝ ℝ) (L₃ := ContinuousLinearMap.mul ℝ ℝ) (L₄ := ContinuousLinearMap.mul ℝ ℝ)]
+  . rfl
+  . intro x y z
+    simp
+    rw [mul_assoc]
+  . apply MeasureTheory.AEStronglyMeasurable.of_discrete
+  . apply MeasureTheory.AEStronglyMeasurable.of_discrete
+  . apply MeasureTheory.AEStronglyMeasurable.of_discrete
+  .
+    apply Filter.Eventually.of_forall
+    intro a
+    rw [my_add_haar_eq_count]
+    apply ENNReal.ConvolutionExists.of_memLp_memLp (p := 2) (q := 2) (μ := Measure.count)
+    . infer_instance
+    . simp
+    . apply AEStronglyMeasurable.of_discrete
+    . apply AEStronglyMeasurable.of_discrete
+    .
+      exact hf
+    . exact hg
+  . apply Filter.Eventually.of_forall
+    intro a
+    rw [my_add_haar_eq_count]
+    apply ENNReal.ConvolutionExists.of_memLp_memLp (p := 2) (q := 2) (μ := Measure.count)
+    . infer_instance
+    . simp
+    . apply AEStronglyMeasurable.of_discrete
+    . apply AEStronglyMeasurable.of_discrete
+    .
+      apply MeasureTheory.MemLp.abs
+      exact hg
+    . apply MeasureTheory.MemLp.abs
+      exact hh
+  .
+    rw [my_add_haar_eq_count]
+    apply ENNReal.ConvolutionExists.of_memLp_memLp (p := 2) (q := 2) (μ := Measure.count)
+    . infer_instance
+    . simp
+    . apply AEStronglyMeasurable.of_discrete
+    . apply AEStronglyMeasurable.of_discrete
+    .
+      apply MeasureTheory.MemLp.abs
+      exact hf
+    .
+      unfold MeasureTheory.MemLp
+      refine ⟨by apply AEStronglyMeasurable.of_discrete, ?_⟩
+      rw [← my_add_haar_eq_count]
+      grw [ENNReal.eLpNorm_convolution_le_enorm_mul' (p := 2) (q := 2)]
+      .
+        simp
+        apply ENNReal.mul_lt_top
+        . apply ENNReal.mul_lt_top
+          . simp
+          .
+            simp_rw [← Real.norm_eq_abs]
+            rw [MeasureTheory.eLpNorm_norm]
+            rw [my_add_haar_eq_count]
+            exact MemLp.eLpNorm_lt_top hg
+        .
+          simp_rw [← Real.norm_eq_abs]
+          rw [MeasureTheory.eLpNorm_norm]
+          rw [my_add_haar_eq_count]
+          exact MemLp.eLpNorm_lt_top hh
+      . simp
+      . simp
+      . simp
+      . sorry
+      . apply AEStronglyMeasurable.of_discrete
+      . apply AEStronglyMeasurable.of_discrete
+
 
 -- TODO - figure out why we need these
 instance Real.t2Space: T2Space ℝ := TopologicalSpace.t2Space_of_metrizableSpace
