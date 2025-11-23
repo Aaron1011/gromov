@@ -6957,7 +6957,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
       positivity
 
   -- Now rename Hn ∗Gn such that we have added a constant so that Hn ∗Gn(e) = 0
-  have new_seq: ℕ → ℕ := sorry
+  have new_seq: ℕ → ℕ := seq
   let H_G_conv_zero (n: ℕ) (g: G) := ((Conv (H_n ((new_seq n)) s) (G_n ((new_seq n) + 1) (by simp))) g) - (Conv (H_n ((new_seq n)) s) (G_n ((new_seq n) + 1) (by simp)) 1)
 
 
@@ -6967,7 +6967,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
   -- have H_conv_g_eq: ∀ n: ℕ, Conv ((H_n (new_seq n)) s) ((G_n ((new_seq n)) (sorry)) - (conv_finsupp_lp2 (((G_n ((new_seq n)) (sorry)))) (delta s) (by simp [delta]))) = ‖(G_n ((new_seq n)) (sorry)) - (conv_finsupp_lp2 (((G_n ((new_seq n)) (sorry)))) (delta s) (by simp [delta]))‖ := by
   --   sorry
 
-  have H_n_conv_zero_eq: ∀ n: ℕ, (H_G_conv_zero (n) 1) - (H_G_conv_zero (n) s⁻¹) = ‖(G_n ((new_seq n) + 1) (sorry)) - (conv_finsupp_lp2 (((G_n ((new_seq n) + 1) (sorry)))) (delta s) (by simp [delta]))‖ := by
+  have H_n_conv_zero_eq: ∀ n: ℕ, (H_G_conv_zero (n) 1) - (H_G_conv_zero (n) s⁻¹) = ‖(G_n ((new_seq n) + 1) (by simp)) - (conv_finsupp_lp2 (((G_n ((new_seq n) + 1) (by simp)))) (delta s) (by simp [delta]))‖ := by
     intro n
     simp [H_G_conv_zero]
     have s_inv_eq: s⁻¹ = s⁻¹ * 1 := by
@@ -7091,7 +7091,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     rw [← ha, ← hb]
 
 
-    have new_seq_pos: ∀ n, 0 < new_seq n := sorry
     have foo := (H_G_conv_zero_lipschitz a).dist_le_mul g 1
     have bar := (H_G_conv_zero_lipschitz b).dist_le_mul g 1
     grw [dist_triangle (y := (H_G_conv_zero a) 1)]
