@@ -7101,21 +7101,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
                   generalize_proofs p_1 p_2 p_3
                   -- TODO - make this less horrible
                   grw [Finset.single_le_sum (f := (fun g => ∫⁻ (a : Additive G), ‖(G_n ((seq n) + 1) (by simp)) a + Conv (-↑↑(G_n ((seq n) + 1) (by simp))) (delta g) a‖ₑ ^ 2 ∂Measure.count)) (s := S) (hf := by simp) (h := (by rw [S_eq_Sinv]; simp [hy]))]
-                  --apply_fun ENNReal.ofReal at g_inner_laplace
-                  --simp [-AddSubgroupClass.coe_sub, -AddSubgroup.coe_sub] at g_inner_laplace
-                  --rw [ENNReal.ofReal_sum_of_nonneg (by simp)] at g_inner_laplace
-                  --simp [-AddSubgroupClass.coe_sub, -AddSubgroup.coe_sub] at g_inner_laplace
-                  -- conv at g_inner_laplace =>
-                  --   arg 2
-                  --   arg 2
-                  --   intro x
-                  --   rw [ENNReal.ofReal_toReal (by
-
-                  --     simp
-                  --     sorry
-                  --   )]
-
-
 
 
 
@@ -7698,17 +7683,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
           apply Lp.memLp
         . rw [← my_haar_eq_count]
           apply Lp.memLp
-
-        -- rw [← ENNReal.toReal_le_toReal (by simp) (by sorry)] at ae_le
-        -- rw [ENNReal.toReal_ofReal] at ae_le
-        -- .
-        --   grw [ae_le]
-        --   simp
-        --   simp [H_G_conv_zero]
-        --   simp [Laplace_b]
-        --   --rw [laplace_conv_eq_laplace_right]
-        --   sorry
-        -- . simp
       .
         simp
         simp_rw [← two_mul]
