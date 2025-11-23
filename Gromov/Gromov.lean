@@ -6521,6 +6521,42 @@ lemma f_n_fin_supp (n: ℕ): (f_n  n).support.Finite := by
   . intro m hm
     apply mu_conv_finsupp
 
+lemma laplace_conv_eq_laplace_right_of_lp2 (f g: G → ℝ) (hfg: ConvExists f g) (hf: MemLp f 2 Measure.count) (hg: MemLp g 2 Measure.count): Laplace_b (Conv f g) = Conv f (Laplace_b g) := by
+  simp_rw [Laplace_b]
+  rw [conv_assoc_of_lp2]
+
+  nth_rw 2 [sub_eq_add_neg]
+  rw [conv_add_right]
+  -- TODO - figure out how to do this without a 'conv' block
+  conv =>
+    rhs
+    rhs
+    equals Conv f ((-1 : ℝ) • (Conv g (mu ))) =>
+      simp
+  rw [smul_conv]
+  simp
+  . rw [← sub_eq_add_neg]
+  . exact hfg
+  .
+    simp [ConvExists, MeasureTheory.ConvolutionExists, MeasureTheory.ConvolutionExistsAt]
+    intro a
+    simp_rw [← neg_mul]
+    simp_rw [f_conv_mu]
+    simp_rw [← mul_assoc, mul_comm, mul_assoc]
+    apply MeasureTheory.Integrable.const_mul
+    simp_rw [Finset.mul_sum]
+    apply MeasureTheory.integrable_finset_sum
+    intro s hs
+    simp [ConvExists, MeasureTheory.ConvolutionExists, MeasureTheory.ConvolutionExistsAt] at hfg
+    specialize hfg (s * a)
+    simp only [neg_mul]
+    apply MeasureTheory.Integrable.neg
+    simp_rw [mul_div]
+    exact hfg
+  . exact hf
+  . exact hg
+  . apply mu_finsupp
+
 lemma laplace_conv_eq_laplace_right (f g: G → ℝ) (hfg: ConvExists f g) (g_nonneg: ∀ a: G, 0 ≤ g a) (g_finsupp: g.support.Finite): Laplace_b (Conv f g) = Conv f (Laplace_b g) := by
   simp_rw [Laplace_b]
   rw [conv_assoc]
@@ -7561,7 +7597,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         rw [sub_eq_add_neg]
         grw [abs_add_le]
         simp
-        rw [laplace_conv_eq_laplace_right]
+        rw [laplace_conv_eq_laplace_right_of_lp2]
         .
           simp [Conv]
           rw [← ENNReal.ofReal_le_ofReal_iff]
@@ -7628,9 +7664,31 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
           . apply AEMeasurable.of_discrete
           . positivity
 
-        . sorry
-        . sorry
-        . sorry
+        .
+          -- TODO - deduplicate this
+          simp [ConvExists]
+          rw [my_add_haar_eq_count]
+          apply ENNReal.ConvolutionExists.of_memLp_memLp (p := 2) (q := 2) (μ := Measure.count)
+          . infer_instance
+          . simp
+          . apply AEStronglyMeasurable.of_discrete
+          . apply AEStronglyMeasurable.of_discrete
+          . rw [← Function.comp_def]
+            apply MeasureTheory.MemLp.comp_measurePreserving
+            . apply Lp.memLp
+            . simp [volume]
+              rw [my_haar_eq_count]
+              apply MeasureTheory.MeasurePreserving.id
+          .
+            apply MeasureTheory.MemLp.comp_measurePreserving
+            . apply Lp.memLp
+            . simp [volume]
+              rw [my_haar_eq_count]
+              apply MeasureTheory.MeasurePreserving.id
+        . rw [← my_haar_eq_count]
+          apply Lp.memLp
+        . rw [← my_haar_eq_count]
+          apply Lp.memLp
 
         -- rw [← ENNReal.toReal_le_toReal (by simp) (by sorry)] at ae_le
         -- rw [ENNReal.toReal_ofReal] at ae_le
@@ -7645,7 +7703,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
       .
         simp
         simp_rw [← two_mul]
-        apply tendsto_const_div_atTop_nhds_zero_nat\
+        apply tendsto_const_div_atTop_nhds_zero_nat
   }
   intro z
   by_contra!
