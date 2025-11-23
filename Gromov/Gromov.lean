@@ -6521,6 +6521,20 @@ lemma f_n_fin_supp (n: ℕ): (f_n  n).support.Finite := by
   . intro m hm
     apply mu_conv_finsupp
 
+lemma laplace_b_const (k: ℝ): Laplace_b (fun g => k) = 0 := by
+  simp [Laplace_b]
+  simp [f_conv_mu]
+  ext a
+  simp
+  norm_cast
+  rw [← mul_assoc]
+
+  rw [inv_mul_cancel₀]
+  . simp
+  . simp
+    have foo := S_nonempty
+    grind
+
 lemma laplace_conv_eq_laplace_right_of_lp2 (f g: G → ℝ) (hfg: ConvExists f g) (hf: MemLp f 2 Measure.count) (hg: MemLp g 2 Measure.count): Laplace_b (Conv f g) = Conv f (Laplace_b g) := by
   simp_rw [Laplace_b]
   rw [conv_assoc_of_lp2]
@@ -7640,6 +7654,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             have g_norm := g_n_laplace_enorm_le (seq (arzela_seq n) + 1) (by simp)
             rw [MeasureTheory.Lp.enorm_def] at g_norm
             simp only [Laplace] at g_norm
+            rw [laplace_b_const]
             simp [Laplace_b]
             rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)] at g_norm
             simp only [conv_mu_lp2] at g_norm
@@ -7651,21 +7666,19 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             simp
             grw [g_norm]
             rw [ENNReal.ofReal_add (by positivity) (by positivity)]
-            apply add_le_add
-            . norm_cast
-              simp
-              norm_cast
-              rw [ENNReal.ofReal_inv_of_pos (by positivity)]
-              simp
-              norm_cast
-              have seq_le_n : n ≤ seq (arzela_seq n) := by
-                have n_arzela : n ≤ arzela_seq n := by
-                  apply nat_mono_le arzela_seq_mono
-                apply LE.le.trans n_arzela
+            norm_cast
+            simp
+            norm_cast
+            rw [ENNReal.ofReal_inv_of_pos (by positivity)]
+            simp
+            norm_cast
+            have seq_le_n : n ≤ seq (arzela_seq n) := by
+              have n_arzela : n ≤ arzela_seq n := by
+                apply nat_mono_le arzela_seq_mono
+              apply LE.le.trans n_arzela
 
-                apply nat_mono_le seq_mono
-              omega
-            . sorry
+              apply nat_mono_le seq_mono
+            omega
           . simp
           . simp
           . simp
@@ -7683,7 +7696,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             norm_num
           . apply AEMeasurable.of_discrete
           . apply AEMeasurable.of_discrete
-          . positivity
 
         .
           -- TODO - deduplicate this
