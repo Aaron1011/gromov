@@ -7575,7 +7575,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
       have lim_zero := squeeze_zero (t₀ := Filter.atTop)
         (f := (fun x_1 ↦ |((fun n ↦ H_G_conv_zero n) ∘ arzela_seq) x_1 x - (↑(#S))⁻¹ * ∑ c ∈ S, ((fun n ↦ H_G_conv_zero n) ∘ arzela_seq) x_1 (c * x)|))
-        (g := fun n => (1 / (n + 1)) + (1 / (n + 1)))
+        (g := fun n => (1 / (n + 1)))
         ?_ ?_ ?_
       .
         have target_eq_zero := tendsto_nhds_unique ((abs_tendsto _).comp tendsto_sub) (lim_zero)
@@ -7678,6 +7678,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
               apply LE.le.trans n_arzela
 
               apply nat_mono_le seq_mono
+
             omega
           . simp
           . simp
@@ -7724,8 +7725,8 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
           apply Lp.memLp
       .
         simp
-        simp_rw [← two_mul]
-        apply tendsto_const_div_atTop_nhds_zero_nat
+        simp_rw [inv_eq_one_div]
+        apply tendsto_one_div_add_atTop_nhds_zero_nat
   }
   intro z
   by_contra!
