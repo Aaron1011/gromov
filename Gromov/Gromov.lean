@@ -4870,6 +4870,29 @@ noncomputable def conv_finsupp_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.vo
 noncomputable def Laplace_b (f: G → ℝ): G → ℝ := f - (Conv f (mu ))
 noncomputable def Laplace (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := f - (conv_mu_lp2 f)
 
+lemma conv_neg_left (f g: G → ℝ): Conv (-f) g = -(Conv f g) := by
+  conv =>
+    pattern -f
+    equals (-1 : ℝ) • f => simp
+
+  rw [conv_smul]
+  simp
+
+lemma laplace_b_sub (f g: G → ℝ): Laplace_b (f - g) = Laplace_b f - Laplace_b g := by
+  simp [Laplace_b]
+  nth_rw 3 [sub_eq_add_neg]
+  rw [conv_add_left]
+  .
+    rw [conv_neg_left]
+    ring_nf
+  .
+    apply conv_exists_fin_supp
+    right
+    apply mu_finsupp
+  . apply conv_exists_fin_supp
+    right
+    apply mu_finsupp
+
 lemma measure_preserving_inv: MeasurePreserving Inv.inv ((MeasureTheory.volume (α := G))) (MeasureTheory.volume (α := G)) := {
   measurable := by
     exact measurable_inv
@@ -6341,6 +6364,10 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
 
 noncomputable def G_n (n: ℕ) (hn: 0 < n) := Classical.choose (laplace_g_n n hn )
 
+lemma g_n_laplace_enorm_le (n: ℕ) (hn: 0 < n): ‖Laplace (G_n n hn)‖ₑ ≤ 1/n := by
+  have g_n_prop := (laplace_g_n n hn).choose_spec
+  sorry
+
 lemma g_n_laplace_norm_le (n: ℕ) (hn: 0 < n): ‖Laplace (G_n n hn)‖ ≤ 1/n := by
   have g_n_prop := (laplace_g_n n hn).choose_spec
   exact g_n_prop.1
@@ -7225,8 +7252,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
       apply h_n_f_lipschitz
     . apply LipschitzWith.const
 
-  -- have H_conv_g_eq: ∀ n: ℕ, Conv ((H_n (new_seq n)) s) ((G_n ((new_seq n)) (sorry)) - (conv_finsupp_lp2 (((G_n ((new_seq n)) (sorry)))) (delta s) (by simp [delta]))) = ‖(G_n ((new_seq n)) (sorry)) - (conv_finsupp_lp2 (((G_n ((new_seq n)) (sorry)))) (delta s) (by simp [delta]))‖ := by
-  --   sorry
 
   have H_n_conv_zero_eq: ∀ n: ℕ, (H_G_conv_zero (n) 1) - (H_G_conv_zero (n) s⁻¹) = ‖(G_n ((new_seq n) + 1) (by simp)) - (conv_finsupp_lp2 (((G_n ((new_seq n) + 1) (by simp)))) (delta s) (by simp [delta]))‖ := by
     intro n
@@ -7444,9 +7469,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     ring
     simp
 
-  --have new_arzela_compact := (EquicontinuousOn.isClosed_range_uniformOnFun_iff_pi (F := fun n => H_G_conv_zero n) (𝔖 := Set.range (fun g => {g})) sorry sorry sorry).mpr ?_
-
-
   have arzela_tendsto := IsCompact.tendsto_subseq new_compact_closure (x := fun n => (
     H_G_conv_zero n
   )) (by
@@ -7505,7 +7527,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
       have lim_zero := squeeze_zero (t₀ := Filter.atTop)
         (f := (fun x_1 ↦ |((fun n ↦ H_G_conv_zero n) ∘ arzela_seq) x_1 x - (↑(#S))⁻¹ * ∑ c ∈ S, ((fun n ↦ H_G_conv_zero n) ∘ arzela_seq) x_1 (c * x)|))
-        (g := fun n => (1 / n))
+        (g := fun n => (1 / n) + (1 / n))
         ?_ ?_ ?_
       .
         have target_eq_zero := tendsto_nhds_unique ((abs_tendsto _).comp tendsto_sub) (lim_zero)
@@ -7528,16 +7550,95 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         rw [my_haar_eq_count] at ae_le
         rw [count_ae_everywhere] at ae_le
         specialize ae_le x
-        rw [← ENNReal.toReal_le_toReal (by simp) (by sorry)] at ae_le
-        rw [ENNReal.toReal_ofReal] at ae_le
+        rw [← ENNReal.ofReal_le_ofReal_iff (by simp)]
+        grw [ae_le]
+
+        simp [H_G_conv_zero]
+        intro i
+        rw [← Pi.sub_def]
+        rw [laplace_b_sub]
+        simp
+        rw [sub_eq_add_neg]
+        grw [abs_add_le]
+        simp
+        rw [laplace_conv_eq_laplace_right]
         .
-          grw [ae_le]
-          simp
-          simp [H_G_conv_zero]
-          simp [Laplace_b]
-          --rw [laplace_conv_eq_laplace_right]
+          simp [Conv]
+          rw [← ENNReal.ofReal_le_ofReal_iff]
+          grw [ENNReal.ofReal_add_le]
+          rw [← Real.enorm_eq_ofReal_abs]
+          grw [counting_le_essSup]
+          rw [essSup_eq_elpNorm_top]
+          simp only [volume]
+          simp_rw [my_haar_eq_count]
+          rw [← my_add_haar_eq_count]
+          conv =>
+            lhs
+            arg 1
+            arg 1
+            arg 2
+            equals (Laplace_b (G_n ((new_seq (arzela_seq n)) + 1) (by simp))) ∘ Additive.toMul =>
+              rfl
+
+          conv =>
+            lhs
+            arg 1
+            arg 1
+            arg 1
+            equals (H_n (new_seq (arzela_seq n)) s) ∘ Additive.toMul =>
+              rfl
+
+          grw [ENNReal.eLpNorm_convolution_le_enorm_mul (G := Additive G) (p := 2) (q := 2)]
+          .
+            conv =>
+              lhs
+              pattern _ ∘ Additive.toMul
+              equals ↑↑(H_n (seq (arzela_seq n)) s) => rfl
+
+
+            rw [my_add_haar_eq_count]
+            rw [← my_haar_eq_count]
+            have my_haar_eq : myHaar = volume := rfl
+            simp_rw [my_haar_eq]
+            rw [← MeasureTheory.Lp.enorm_def]
+            simp only [new_seq]
+            rw [H_n_norm]
+            simp [enorm]
+            have g_norm := g_n_laplace_enorm_le (seq (arzela_seq n) + 1) (by simp)
+            rw [MeasureTheory.Lp.enorm_def] at g_norm
+            simp only [Laplace] at g_norm
+            simp [Laplace_b]
+            rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)] at g_norm
+            simp only [conv_mu_lp2] at g_norm
+            rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)] at g_norm
+            conv =>
+              lhs
+              pattern ⇑Additive.toMul
+              equals id => rfl
+            simp
+            grw [g_norm]
+
+
+          rw [ENNReal.ofReal_add]
+          apply add_le_add
+          .
+
+          . sorry
+
           sorry
-        . simp
+        . sorry
+        . sorry
+
+        -- rw [← ENNReal.toReal_le_toReal (by simp) (by sorry)] at ae_le
+        -- rw [ENNReal.toReal_ofReal] at ae_le
+        -- .
+        --   grw [ae_le]
+        --   simp
+        --   simp [H_G_conv_zero]
+        --   simp [Laplace_b]
+        --   --rw [laplace_conv_eq_laplace_right]
+        --   sorry
+        -- . simp
       .
         exact tendsto_one_div_atTop_nhds_zero_nat
   }
