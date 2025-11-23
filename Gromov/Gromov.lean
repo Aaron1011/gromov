@@ -7216,14 +7216,14 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
 
   -- TODO - the lipschitz constant can be improved
-  have H_G_conv_zero_lipschitz: ∀ n: ℕ, LipschitzWith ((((2 * #(S))^((2 : ℝ)⁻¹))) + (((2 * #(S))^((2 : ℝ)⁻¹)))) (H_G_conv_zero n) := by
+  have H_G_conv_zero_lipschitz: ∀ n: ℕ, LipschitzWith ((((2 * #(S))^((2 : ℝ)⁻¹))) + 0) (H_G_conv_zero n) := by
     intro n
-    simp [H_G_conv_zero]
-    simp [new_seq]
+    simp only [H_G_conv_zero]
+    simp only [new_seq]
     apply LipschitzWith.sub
     .
       apply h_n_f_lipschitz
-    . apply LipschitzWith.const'
+    . apply LipschitzWith.const
 
   -- have H_conv_g_eq: ∀ n: ℕ, Conv ((H_n (new_seq n)) s) ((G_n ((new_seq n)) (sorry)) - (conv_finsupp_lp2 (((G_n ((new_seq n)) (sorry)))) (delta s) (by simp [delta]))) = ‖(G_n ((new_seq n)) (sorry)) - (conv_finsupp_lp2 (((G_n ((new_seq n)) (sorry)))) (delta s) (by simp [delta]))‖ := by
   --   sorry
@@ -7396,7 +7396,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
     apply Bornology.IsBounded.isCompact_closure
     rw [Metric.isBounded_iff]
-    use 4 * ((↑(#S) * 2) ^ (2 : ℝ)⁻¹) * (dist g 1)
+    use 2 * ((↑(#S) * 2) ^ (2 : ℝ)⁻¹) * (dist g 1)
     intro x hx y hy
     simp at hx
     simp at hy
@@ -7423,7 +7423,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     intro g
     apply Bornology.IsBounded.isCompact_closure
     rw [Metric.isBounded_iff]
-    use 4 * ((↑(#S) * 2) ^ (2 : ℝ)⁻¹) * (dist g 1)
+    use 2 * ((↑(#S) * 2) ^ (2 : ℝ)⁻¹) * (dist g 1)
     intro x hx y hy
     simp at hx
     simp at hy
@@ -7472,14 +7472,14 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
   use {
     toFun := fun g => arzela_lim g
     lipschitz := by
-      use ⟨((2 * (#S : ℝ))), by positivity⟩
+      use ⟨(((↑(#S) * 2) ^ (2 : ℝ)⁻¹)), by positivity⟩
       apply LipschitzWith.of_dist_le_mul
       intro x y
       rw [Complex.dist_eq]
       simp
 
       have new_tendsto_sub := (abs_tendsto _).comp ((tendsto_arzela_lim x).sub (tendsto_arzela_lim y))
-      have sub_le := le_of_tendsto new_tendsto_sub (b := 2 * (#S) * (dist x y)) ?_
+      have sub_le := le_of_tendsto new_tendsto_sub (b := ((↑(#S) * 2) ^ (2 : ℝ)⁻¹) * (dist x y)) ?_
       . norm_cast
         norm_cast at sub_le
       . apply Filter.Eventually.of_forall
@@ -7488,7 +7488,11 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         rw [Real.dist_eq] at foo
         simp
         norm_cast
+        simp at foo
         norm_cast at foo
+        ring_nf at foo
+        ring_nf
+        exact foo
 
     harmonic := by
       simp [Harmonic]
@@ -7531,7 +7535,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
           simp
           simp [H_G_conv_zero]
           simp [Laplace_b]
-          rw [laplace_conv_eq_laplace_right]
+          --rw [laplace_conv_eq_laplace_right]
           sorry
         . simp
       .
