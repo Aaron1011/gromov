@@ -6967,9 +6967,9 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     have prev_lt := (seq_mono.lt_iff_lt (a := n) (b := n + 1)).mpr (by simp)
     grind
 
-  have h_n_f_lipschitz: ∀ n: ℕ, LipschitzWith ((2 * #(S))^((2 : ℝ)⁻¹)) (Conv (H_n (seq (n + 1)) s) (G_n (seq (n + 1)) (seq_add_pos))) := by
+  have h_n_f_lipschitz: ∀ n: ℕ, LipschitzWith ((2 * #(S))^((2 : ℝ)⁻¹)) (Conv (H_n (seq (n)) s) (G_n ((seq n) + 1) (by simp))) := by
     intro n
-    let G'_n := (G_n (seq (n + 1)) (seq_add_pos))
+    let G'_n := (G_n ((seq n) + 1) (by simp))
     apply lipschitzWith_discrete
     intro g y hy
     rw [Real.dist_eq]
@@ -6977,7 +6977,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     rw [norm_sub_rev]
     have y_eq_inv_inv: y = y⁻¹⁻¹ := by simp
     rw [y_eq_inv_inv]
-    rw [← f_conv_delta (f := Conv (↑↑(H_n (seq (n + 1)) s)) (G_n (seq (n + 1)) (seq_add_pos)))]
+    rw [← f_conv_delta (f := Conv (↑↑(H_n (seq (n)) s)) (G_n ((seq n) + 1) (by simp)))]
     rw [← Pi.sub_apply]
     rw [sub_eq_add_neg]
     rw [neg_smul]
@@ -7037,7 +7037,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
                 .
                   generalize_proofs p_1 p_2 p_3
                   -- TODO - make this less horrible
-                  grw [Finset.single_le_sum (f := (fun g => ∫⁻ (a : Additive G), ‖(G_n (seq (n + 1)) p_3) a + Conv (-↑↑(G_n (seq (n + 1)) p_3)) (delta g) a‖ₑ ^ 2 ∂Measure.count)) (s := S) (hf := by simp) (h := (by rw [S_eq_Sinv]; simp [hy]))]
+                  grw [Finset.single_le_sum (f := (fun g => ∫⁻ (a : Additive G), ‖(G_n ((seq n) + 1) (by simp)) a + Conv (-↑↑(G_n ((seq n) + 1) (by simp))) (delta g) a‖ₑ ^ 2 ∂Measure.count)) (s := S) (hf := by simp) (h := (by rw [S_eq_Sinv]; simp [hy]))]
                   --apply_fun ENNReal.ofReal at g_inner_laplace
                   --simp [-AddSubgroupClass.coe_sub, -AddSubgroup.coe_sub] at g_inner_laplace
                   --rw [ENNReal.ofReal_sum_of_nonneg (by simp)] at g_inner_laplace
@@ -7080,7 +7080,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
                       arg 2
                       intro i
                       rw [ENNReal.ofReal_toReal (by
-                        have g_norm := MeasureTheory.Lp.eLpNorm_lt_top (G_n (seq (n + 1)) seq_add_pos)
+                        have g_norm := MeasureTheory.Lp.eLpNorm_lt_top (G_n ((seq n) + 1) (by simp))
                         simp [eLpNorm, eLpNorm'] at g_norm
                         rw [← lt_top_iff_ne_top]
 
@@ -7107,7 +7107,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
               apply MeasureTheory.Integrable.of_integral_ne_zero
               rw [← g_inner_laplace]
               simp [G'_n]
-              have foo := g_n_conv_norm (seq (n + 1)) seq_add_pos
+              have foo := g_n_conv_norm (seq (n) + 1) (by simp)
               grind
           . infer_instance
           . apply AEMeasurable.of_discrete
@@ -7153,7 +7153,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
               arg 1
               arg 1
               arg 1
-              equals ↑↑(G_n (seq (n + 1)) (seq_add_pos)) ∘ Additive.toMul =>
+              equals ↑↑(G_n ((seq (n)) + 1) (by simp)) ∘ Additive.toMul =>
                 rfl
 
             conv =>
@@ -7215,8 +7215,15 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
   let H_G_conv_zero (n: ℕ) (g: G) := ((Conv (H_n ((new_seq n)) s) (G_n ((new_seq n) + 1) (by simp))) g) - (Conv (H_n ((new_seq n)) s) (G_n ((new_seq n) + 1) (by simp)) 1)
 
 
-  have H_G_conv_zero_lipschitz: ∀ n: ℕ, LipschitzWith (2 * #(S)) (H_G_conv_zero n) := by
-    sorry
+  -- TODO - the lipschitz constant can be improved
+  have H_G_conv_zero_lipschitz: ∀ n: ℕ, LipschitzWith ((((2 * #(S))^((2 : ℝ)⁻¹))) + (((2 * #(S))^((2 : ℝ)⁻¹)))) (H_G_conv_zero n) := by
+    intro n
+    simp [H_G_conv_zero]
+    simp [new_seq]
+    apply LipschitzWith.sub
+    .
+      apply h_n_f_lipschitz
+    . apply LipschitzWith.const'
 
   -- have H_conv_g_eq: ∀ n: ℕ, Conv ((H_n (new_seq n)) s) ((G_n ((new_seq n)) (sorry)) - (conv_finsupp_lp2 (((G_n ((new_seq n)) (sorry)))) (delta s) (by simp [delta]))) = ‖(G_n ((new_seq n)) (sorry)) - (conv_finsupp_lp2 (((G_n ((new_seq n)) (sorry)))) (delta s) (by simp [delta]))‖ := by
   --   sorry
@@ -7517,7 +7524,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         rw [my_haar_eq_count] at ae_le
         rw [count_ae_everywhere] at ae_le
         specialize ae_le x
-        rw [← ENNReal.toReal_le_toReal (by simp) (sorry)] at ae_le
+        rw [← ENNReal.toReal_le_toReal (by simp) (by sorry)] at ae_le
         rw [ENNReal.toReal_ofReal] at ae_le
         .
           grw [ae_le]
