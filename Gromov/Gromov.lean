@@ -7396,7 +7396,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
     apply Bornology.IsBounded.isCompact_closure
     rw [Metric.isBounded_iff]
-    use 4 * #(S) * (dist g 1)
+    use 4 * ((↑(#S) * 2) ^ (2 : ℝ)⁻¹) * (dist g 1)
     intro x hx y hy
     simp at hx
     simp at hy
@@ -7423,7 +7423,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     intro g
     apply Bornology.IsBounded.isCompact_closure
     rw [Metric.isBounded_iff]
-    use 4 * #(S) * (dist g 1)
+    use 4 * ((↑(#S) * 2) ^ (2 : ℝ)⁻¹) * (dist g 1)
     intro x hx y hy
     simp at hx
     simp at hy
