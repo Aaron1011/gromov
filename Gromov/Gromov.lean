@@ -6993,6 +6993,21 @@ lemma neg_smul (f: G → ℝ): -f = (-1 : ℝ) • f := by
 --   rfl
 
 
+-- TODO - cleanup and upstream to mathlib
+lemma nat_mono_le {f: ℕ → ℕ} (hf: StrictMono f) (n: ℕ): n ≤ f n := by
+  induction n with
+  | zero =>
+    simp
+  | succ k ih =>
+    have k_le := hf (a := k) (b := k + 1) (by simp)
+    have succ_le : k + 1 ≤ (f k) + 1 := by grind
+
+    have succ_le_f: (f k) + 1 ≤ f (k + 1) := by
+      have foo := hf.add_le_nat 1 k
+      grind
+    grind
+
+
 lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstLipschitzH z := by
 
 
@@ -7645,8 +7660,10 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
               norm_cast
               have seq_le_n : n ≤ seq (arzela_seq n) := by
                 have n_arzela : n ≤ arzela_seq n := by
-                  grind
-                grind
+                  apply nat_mono_le arzela_seq_mono
+                apply LE.le.trans n_arzela
+
+                apply nat_mono_le seq_mono
               omega
             . sorry
           . simp
