@@ -7128,17 +7128,13 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
                       arg 2
                       intro i
                       rw [ENNReal.ofReal_toReal (by
-                        have g_norm := MeasureTheory.Lp.eLpNorm_lt_top (G_n ((seq n) + 1) (by simp))
-                        simp [eLpNorm, eLpNorm'] at g_norm
-                        rw [← lt_top_iff_ne_top]
-
-                        simp_rw [f_conv_delta_helper]
-                        --grw [MeasureTheory.lintegral_mono (g := fun a => )]
-                        have g_conv := g_n_conv_norm (seq (n + 1)) seq_add_pos
-                        rw [MeasureTheory.L2.inner_def] at g_conv
-                        simp [inner] at g_conv
-                        sorry
-
+                        simp [f_conv_delta_helper]
+                        have g_norm := MeasureTheory.Lp.eLpNorm_lt_top ((G_n ((seq n) + 1) (by simp)) - (Lp.compMeasurePreserving (fun x => i⁻¹ * x) (sorry) (G_n ((seq n) + 1) (by simp))))
+                        rw [ae_eq_everywhere.mp (Lp.coeFn_sub _ _)] at g_norm
+                        rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_compMeasurePreserving _ _)] at g_norm
+                        simp [eLpNorm, eLpNorm', Lp.compMeasurePreserving] at g_norm
+                        rw [ENNReal.rpow_lt_top_iff_of_pos (by simp)] at g_norm
+                        grind
                       )]
                     simp [volume]
                     simp_rw [my_haar_eq_count]
