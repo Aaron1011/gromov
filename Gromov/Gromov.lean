@@ -7050,7 +7050,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         conv =>
           lhs
           rhs
-          equals ‖(G_n (new_seq n + 1) (sorry)) - (MemLp.toLp (Conv (↑↑(G_n (new_seq n + 1) (sorry))) (delta s)) (sorry))‖^2 =>
+          equals ‖(G_n (new_seq n + 1) (by simp)) - (MemLp.toLp (Conv (↑↑(G_n (new_seq n + 1) (by simp))) (delta s)) (by sorry))‖^2 =>
             rw [← real_inner_self_eq_norm_sq]
             rw [MeasureTheory.L2.inner_def]
             simp
