@@ -3692,10 +3692,21 @@ lemma conv_assoc {f g h: G → ℝ} (h_fg: ConvExists f g) (h_gh: ConvExists g h
 --     simp
 
 
--- TODO - we can probably replace 'conv_assoc' with this
-lemma conv_assoc_of_lp2 {f g h: G → ℝ} (hf: MemLp f 2 Measure.count) (hg: MemLp g 2 Measure.count) (hh: MemLp h 2 Measure.count): Conv (Conv f g) h = Conv f (Conv g h) := by
+-- TODO - can we replace 'conv_assoc' with this?
+lemma conv_assoc_of_lp2 {f g h: G → ℝ} (hf: MemLp f 2 Measure.count) (hg: MemLp g 2 Measure.count) (h_finsupp: h.support.Finite): Conv (Conv f g) h = Conv f (Conv g h) := by
   unfold Conv
   funext x
+
+
+  have h_lp_n (n: ℕ): MemLp h n myHaarAddOpp := by
+    apply Continuous.memLp_of_hasCompactSupport
+    . fun_prop
+    .
+      simp [HasCompactSupport]
+      apply Set.Finite.isCompact
+      simp [tsupport]
+      exact h_finsupp
+
   conv =>
     lhs
     arg 1
@@ -3733,7 +3744,8 @@ lemma conv_assoc_of_lp2 {f g h: G → ℝ} (hf: MemLp f 2 Measure.count) (hg: Me
       apply MeasureTheory.MemLp.abs
       exact hg
     . apply MeasureTheory.MemLp.abs
-      exact hh
+      rw [← my_add_haar_eq_count]
+      apply h_lp_n
   .
     rw [my_add_haar_eq_count]
     apply ENNReal.ConvolutionExists.of_memLp_memLp (p := 2) (q := 2) (μ := Measure.count)
@@ -3748,7 +3760,7 @@ lemma conv_assoc_of_lp2 {f g h: G → ℝ} (hf: MemLp f 2 Measure.count) (hg: Me
       unfold MeasureTheory.MemLp
       refine ⟨by apply AEStronglyMeasurable.of_discrete, ?_⟩
       rw [← my_add_haar_eq_count]
-      grw [ENNReal.eLpNorm_convolution_le_enorm_mul' (p := 2) (q := 2)]
+      grw [ENNReal.eLpNorm_convolution_le_enorm_mul' (p := 2) (q := 1)]
       .
         simp
         apply ENNReal.mul_lt_top
@@ -3760,14 +3772,20 @@ lemma conv_assoc_of_lp2 {f g h: G → ℝ} (hf: MemLp f 2 Measure.count) (hg: Me
             rw [my_add_haar_eq_count]
             exact MemLp.eLpNorm_lt_top hg
         .
+
+
+
           simp_rw [← Real.norm_eq_abs]
           rw [MeasureTheory.eLpNorm_norm]
           rw [my_add_haar_eq_count]
-          exact MemLp.eLpNorm_lt_top hh
+          rw [← my_add_haar_eq_count]
+          have foo := h_lp_n 1
+          simp at foo
+          exact MemLp.eLpNorm_lt_top foo
       . simp
       . simp
       . simp
-      . sorry
+      . simp
       . apply AEStronglyMeasurable.of_discrete
       . apply AEStronglyMeasurable.of_discrete
 
