@@ -7002,7 +7002,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
       positivity
 
   -- Now rename Hn ∗Gn such that we have added a constant so that Hn ∗Gn(e) = 0
-  have new_seq: ℕ → ℕ := seq
+  let new_seq: ℕ → ℕ := seq
   let H_G_conv_zero (n: ℕ) (g: G) := ((Conv (H_n ((new_seq n)) s) (G_n ((new_seq n) + 1) (by simp))) g) - (Conv (H_n ((new_seq n)) s) (G_n ((new_seq n) + 1) (by simp)) 1)
 
 
@@ -7272,6 +7272,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
           grw [ae_le]
           simp
           simp [H_G_conv_zero]
+          simp [Laplace_b]
           rw [laplace_conv_eq_laplace_right]
           sorry
         . simp
@@ -7284,9 +7285,11 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     apply Filter.Eventually.of_forall
     intro n
     rw [H_n_conv_zero_eq]
-    have norm_gt := Nat.nth_mem_of_infinite s_infinite n
-
-    sorry
+    simp [new_seq, seq]
+    have norm_gt := Nat.nth_mem_of_infinite s_infinite ((arzela_seq n))
+    simp at norm_gt
+    apply le_of_lt
+    exact norm_gt
   )
 
   apply_fun (fun f => f 1 - f s⁻¹) at this
