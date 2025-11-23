@@ -3201,6 +3201,8 @@ noncomputable def Conv (f g: G → ℝ) (x: G) : ℝ :=
 
 def ConvExists (f g: G → ℝ) := MeasureTheory.ConvolutionExists (G := Additive G) (fun x => f x.toMul) (fun x => g x.toMul) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp
 
+def ConvExistsAt (f g: G → ℝ) (x: G) := MeasureTheory.ConvolutionExistsAt (G := Additive G) (fun x => f x.toMul) (fun x => g x.toMul) x (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp
+
 -- lemma conv_lp2 (f g: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): MemLp (Conv f g) 2 := by
 --   unfold Conv
 --   have foo := ENNReal.eLpNorm_top_convolution_le
@@ -3572,6 +3574,7 @@ lemma smul_conv (f h: G → ℝ) (k: ℝ): Conv f (k • h) = k • Conv f h := 
   rw [MeasureTheory.convolution_smul]
   simp
 
+
 -- Proving associativity in full generality is very annoying
 -- Fortunately, we only need to use it once, so we can use restrictive hypothesis that match
 -- the functions we invoke this with
@@ -3645,6 +3648,48 @@ lemma conv_assoc {f g h: G → ℝ} (h_fg: ConvExists f g) (h_gh: ConvExists g h
     --   rw [Function.support_comp_eq]
     --   . apply f_finsupp
     --   . simp
+
+
+-- -- We take advantage of junk values to avoid needing to prove that the convolutions actually exist
+-- lemma conv_assoc_le {f g h b: G → ℝ} (x: G) (right_le: ‖Conv f (Conv g h) x‖ ≤ ‖b x‖): ‖Conv (Conv f g) h x‖ ≤ ‖b x‖ := by
+--   by_cases f_g_exists: ConvExistsAt f g x
+--   .
+--     rw [conv_assoc]
+--   .
+--     conv =>
+--       arg 1
+--       arg 1
+--       arg 1
+--       unfold Conv
+--     simp [convolution, integral]
+--     unfold ConvExistsAt ConvolutionExistsAt at f_g_exists
+--     simp [-toMul_sub] at f_g_exists
+--     conv at f_g_exists =>
+--       arg 1
+--       arg 1
+--       equals fun t ↦ f (t) * g (((Additive.ofMul x) - (Additive.ofMul t))) =>
+--         rfl
+
+
+--     conv =>
+--       lhs
+--       arg 1
+--       arg 1
+--       intro x
+--       arg 2
+--       intro y
+--       rw [dif_neg (by
+--         exact f_g_exists
+--       )]
+--       arg 2
+--       equals (fun (hf: Integrable (fun t ↦ f (t) * g (((Additive.ofMul x) - (Additive.ofMul t))))) ↦ L1.integral (Integrable.toL1 (fun t ↦ f (t) * g (((Additive.ofMul x) - (Additive.ofMul t)))) hf)) =>
+--         rfl
+
+
+
+--     simp
+--     simp [f_g_exists]
+--     simp
 
 
 
@@ -7026,7 +7071,12 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         simp_rw [conv_smul]
         simp
         rw [MeasureTheory.MemLp.toLp_neg (by
-          sorry
+          rw [f_conv_delta_helper]
+          rw [← Function.comp_def]
+          apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
+          . apply MeasureTheory.Lp.memLp
+          .
+            exact measurePreserving_mul_left volume s⁻¹
         )]
         rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_neg _)]
         simp_rw [← Pi.sub_apply]
@@ -7050,7 +7100,15 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         conv =>
           lhs
           rhs
-          equals ‖(G_n (new_seq n + 1) (by simp)) - (MemLp.toLp (Conv (↑↑(G_n (new_seq n + 1) (by simp))) (delta s)) (by sorry))‖^2 =>
+          equals ‖(G_n (new_seq n + 1) (by simp)) - (MemLp.toLp (Conv (↑↑(G_n (new_seq n + 1) (by simp))) (delta s)) (by
+              rw [f_conv_delta_helper]
+              rw [← Function.comp_def]
+              apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
+              . apply MeasureTheory.Lp.memLp
+              .
+                exact measurePreserving_mul_left volume s⁻¹
+              . simp
+            ))‖^2 =>
             rw [← real_inner_self_eq_norm_sq]
             rw [MeasureTheory.L2.inner_def]
             simp
@@ -7066,7 +7124,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     . sorry
     . sorry
     . sorry
-    . sorry
+    . simp [delta]
     . intro a
       simp [delta, Pi.single, Function.update]
       positivity
@@ -7213,6 +7271,8 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         .
           grw [ae_le]
           simp
+          simp [H_G_conv_zero]
+          rw [laplace_conv_eq_laplace_right]
           sorry
         . simp
       .
@@ -7224,6 +7284,8 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     apply Filter.Eventually.of_forall
     intro n
     rw [H_n_conv_zero_eq]
+    have norm_gt := Nat.nth_mem_of_infinite s_infinite n
+
     sorry
   )
 
