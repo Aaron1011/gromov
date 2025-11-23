@@ -7665,7 +7665,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
               equals id => rfl
             simp
             grw [g_norm]
-            rw [ENNReal.ofReal_add (by positivity) (by positivity)]
             norm_cast
             simp
             norm_cast
