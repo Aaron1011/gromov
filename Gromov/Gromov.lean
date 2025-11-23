@@ -6922,13 +6922,20 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
                   norm_num
                   . sorry
                   . sorry
-                  . sorry
-                  . sorry
-                  . sorry
-                  . sorry
-                  . sorry
-                . sorry
-              . sorry
+                  . simp
+                    intro b hb
+
+
+                    sorry
+                  . exact ENNReal.ofReal_ne_top
+                  . simp
+                  . simp
+                  .
+                    rw [S_eq_Sinv]
+                    simp [hy]
+                . simp
+              .
+                simpa using hGS.hS
 
               -- Finset.single_le_sum
             . simp
