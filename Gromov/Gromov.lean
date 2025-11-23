@@ -7117,7 +7117,26 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
         rw [pow_two]
         simp
-      . sorry
+      .
+        simp [ConvExists]
+        rw [my_add_haar_eq_count]
+        apply ENNReal.ConvolutionExists.of_memLp_memLp (p := 2) (q := 2) (μ := Measure.count)
+        . infer_instance
+        . simp
+        . apply AEStronglyMeasurable.of_discrete
+        . apply AEStronglyMeasurable.of_discrete
+        . rw [← Function.comp_def]
+          apply MeasureTheory.MemLp.comp_measurePreserving
+          . apply Lp.memLp
+          . simp [volume]
+            rw [my_haar_eq_count]
+            apply MeasureTheory.MeasurePreserving.id
+        .
+          apply MeasureTheory.MemLp.comp_measurePreserving
+          . apply Lp.memLp
+          . simp [volume]
+            rw [my_haar_eq_count]
+            apply MeasureTheory.MeasurePreserving.id
       . sorry
     . sorry
     . sorry
