@@ -8580,6 +8580,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
   simp [nontrivial_harmonic_common] at app_s_inv_eq
   contradiction
 
+#print sorries nontrivial_harmonic_case_one
 #print sorries nontrivial_harmonic_case_two
 
 #synth OrderTopology ENNReal
