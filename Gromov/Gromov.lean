@@ -7546,7 +7546,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
       have lim_zero := squeeze_zero (t₀ := Filter.atTop)
         (f := (fun x_1 ↦ |((fun n ↦ H_G_conv_zero n) ∘ arzela_seq) x_1 x - (↑(#S))⁻¹ * ∑ c ∈ S, ((fun n ↦ H_G_conv_zero n) ∘ arzela_seq) x_1 (c * x)|))
-        (g := fun n => (1 / n) + (1 / n))
+        (g := fun n => (1 / (n + 1)) + (1 / (n + 1)))
         ?_ ?_ ?_
       .
         have target_eq_zero := tendsto_nhds_unique ((abs_tendsto _).comp tendsto_sub) (lim_zero)
@@ -7569,7 +7569,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         rw [my_haar_eq_count] at ae_le
         rw [count_ae_everywhere] at ae_le
         specialize ae_le x
-        rw [← ENNReal.ofReal_le_ofReal_iff (by simp)]
+        rw [← ENNReal.ofReal_le_ofReal_iff (by positivity)]
         grw [ae_le]
 
         simp [H_G_conv_zero]
@@ -7583,7 +7583,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         rw [laplace_conv_eq_laplace_right_of_lp2]
         .
           simp [Conv]
-          rw [← ENNReal.ofReal_le_ofReal_iff]
           grw [ENNReal.ofReal_add_le]
           rw [← Real.enorm_eq_ofReal_abs]
           grw [counting_le_essSup]
@@ -7636,7 +7635,20 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
               equals id => rfl
             simp
             grw [g_norm]
-            sorry
+            rw [ENNReal.ofReal_add (by positivity) (by positivity)]
+            apply add_le_add
+            . norm_cast
+              simp
+              norm_cast
+              rw [ENNReal.ofReal_inv_of_pos (by positivity)]
+              simp
+              norm_cast
+              have seq_le_n : n ≤ seq (arzela_seq n) := by
+                have n_arzela : n ≤ arzela_seq n := by
+                  grind
+                grind
+              omega
+            . sorry
           . simp
           . simp
           . simp
