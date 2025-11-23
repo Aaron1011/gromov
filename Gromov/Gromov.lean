@@ -7148,11 +7148,33 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
   simp at tendsto_one
   simp at tendsto_s_inv
 
+  have abs_tendsto : ∀ z: ℝ, Filter.Tendsto (fun x => |x|) (nhds z) (nhds |z|)  := by
+    intro z
+    apply Continuous.tendsto
+    fun_prop
+
   have tendsto_sub := tendsto_one.sub tendsto_s_inv
   use {
     toFun := fun g => arzela_lim g
     lipschitz := by
-      sorry
+      use ⟨((2 * (#S : ℝ))), by positivity⟩
+      apply LipschitzWith.of_dist_le_mul
+      intro x y
+      rw [Complex.dist_eq]
+      simp
+
+      have new_tendsto_sub := (abs_tendsto _).comp ((tendsto_arzela_lim x).sub (tendsto_arzela_lim y))
+      have sub_le := le_of_tendsto new_tendsto_sub (b := 2 * (#S) * (dist x y)) ?_
+      . norm_cast
+        norm_cast at sub_le
+      . apply Filter.Eventually.of_forall
+        intro n
+        have foo := (H_G_conv_zero_lipschitz (arzela_seq n)).dist_le_mul x y
+        rw [Real.dist_eq] at foo
+        simp
+        norm_cast
+        norm_cast at foo
+
     harmonic := by
       simp [Harmonic]
       intro x
@@ -7160,10 +7182,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
       have sum_lim := tendsto_finset_sum (s := S) (fun s hs => tendsto_arzela_lim (s * x))
       have tendsto_sub := (tendsto_arzela_lim x).sub (sum_lim.const_mul ((#S : ℝ))⁻¹)
-      have abs_tendsto : ∀ z: ℝ, Filter.Tendsto (fun x => |x|) (nhds z) (nhds |z|)  := by
-        intro z
-        apply Continuous.tendsto
-        fun_prop
       norm_cast
 
       have lim_zero := squeeze_zero (t₀ := Filter.atTop)
