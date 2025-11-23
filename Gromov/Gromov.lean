@@ -6939,7 +6939,9 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             simp
         .
           positivity
-      . sorry
+      . simp [ConvExists]
+
+        sorry
       . sorry
     . sorry
     . sorry
@@ -7147,7 +7149,26 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     toFun := fun g => arzela_lim g
     lipschitz := by
       sorry
-    harmonic := sorry
+    harmonic := by
+      simp [Harmonic]
+      intro x
+      rw [← sub_eq_zero]
+
+      have sum_lim := tendsto_finset_sum (s := S) (fun s hs => tendsto_arzela_lim (s * x))
+      have tendsto_sub := (tendsto_arzela_lim x).sub (sum_lim.const_mul ((#S : ℝ))⁻¹)
+      norm_cast
+
+      have lim_zero := squeeze_zero (t₀ := Filter.atTop)
+        (f := (fun x_1 ↦ ((fun n ↦ H_G_conv_zero n) ∘ arzela_seq) x_1 x - (↑(#S))⁻¹ * ∑ c ∈ S, ((fun n ↦ H_G_conv_zero n) ∘ arzela_seq) x_1 (c * x)))
+        (g := fun n => (eLpNorm (H_G_conv_zero n) ⊤).toReal)
+        ?_ ?_ ?_
+      .
+        have target_eq_zero := tendsto_nhds_unique tendsto_sub lim_zero
+        rw [sub_eq_zero] at target_eq_zero
+        simp [target_eq_zero]
+      . sorry
+      . sorry
+      . sorry
   }
   intro z
   by_contra!
