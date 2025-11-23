@@ -7176,7 +7176,28 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         rw [sub_eq_zero] at target_eq_zero
         simp [target_eq_zero]
       . simp
-      . sorry
+      . intro n
+        simp
+        conv =>
+          lhs
+          arg 1
+          equals Laplace_b (H_G_conv_zero (arzela_seq n)) x =>
+            simp [Laplace_b]
+            simp [f_conv_mu]
+
+
+        have ae_le := ENNReal.ae_le_essSup (fun x ↦ ENNReal.ofReal |Laplace_b (H_G_conv_zero (arzela_seq n)) x|) (μ := volume)
+        simp [volume] at ae_le
+        rw [my_haar_eq_count] at ae_le
+        rw [count_ae_everywhere] at ae_le
+        specialize ae_le x
+        rw [← ENNReal.toReal_le_toReal (by simp) (sorry)] at ae_le
+        rw [ENNReal.toReal_ofReal] at ae_le
+        .
+          grw [ae_le]
+          simp
+          sorry
+        . simp
       .
         exact tendsto_one_div_atTop_nhds_zero_nat
   }
