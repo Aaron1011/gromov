@@ -6983,7 +6983,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     rw [neg_smul]
     rw [← conv_smul]
     rw [ ← smul_conv]
-    rw [conv_assoc]
+    rw [conv_assoc_of_lp2]
     .
       rw [← conv_add_right]
       .
@@ -7085,18 +7085,18 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             simp
         .
           positivity
-      . simp [ConvExists]
+      .
+        simp [ConvExists]
 
         sorry
       . sorry
-    . sorry
-    . sorry
-    . sorry
-    . sorry
+    . rw [← my_add_haar_eq_count]
+      apply Lp.memLp
+    . rw [← my_add_haar_eq_count]
+      simp
+      apply MemLp.neg
+      apply Lp.memLp
     . simp
-    . intro a
-      simp [delta, Pi.single, Function.update]
-      positivity
 
   -- Now rename Hn ∗Gn such that we have added a constant so that Hn ∗Gn(e) = 0
   let new_seq: ℕ → ℕ := seq
