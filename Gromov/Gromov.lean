@@ -7129,7 +7129,9 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
                       intro i
                       rw [ENNReal.ofReal_toReal (by
                         simp [f_conv_delta_helper]
-                        have g_norm := MeasureTheory.Lp.eLpNorm_lt_top ((G_n ((seq n) + 1) (by simp)) - (Lp.compMeasurePreserving (fun x => i⁻¹ * x) (sorry) (G_n ((seq n) + 1) (by simp))))
+                        have g_norm := MeasureTheory.Lp.eLpNorm_lt_top ((G_n ((seq n) + 1) (by simp)) - (Lp.compMeasurePreserving (fun x => i⁻¹ * x) (by
+                          apply measurePreserving_mul_left
+                        ) (G_n ((seq n) + 1) (by simp))))
                         rw [ae_eq_everywhere.mp (Lp.coeFn_sub _ _)] at g_norm
                         rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_compMeasurePreserving _ _)] at g_norm
                         simp [eLpNorm, eLpNorm', Lp.compMeasurePreserving] at g_norm
