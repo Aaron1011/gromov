@@ -6891,16 +6891,16 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
                 .
                   generalize_proofs p_1 p_2 p_3
                   -- TODO - make this less horrible
-                  grw [Finset.single_le_sum (f := (fun g => ∫⁻ (a : Additive G), ‖(G_n (seq (n + 1)) p_3) a + Conv (-↑↑(G_n (seq (n + 1)) p_3)) (delta g) a‖ₑ ^ 2 ∂Measure.count)) (s := S)]
+                  grw [Finset.single_le_sum (f := (fun g => ∫⁻ (a : Additive G), ‖(G_n (seq (n + 1)) p_3) a + Conv (-↑↑(G_n (seq (n + 1)) p_3)) (delta g) a‖ₑ ^ 2 ∂Measure.count)) (s := S) (hf := by simp) (h := (by rw [S_eq_Sinv]; simp [hy]))]
                   apply_fun ENNReal.ofReal at g_inner_laplace
                   simp [-AddSubgroupClass.coe_sub, -AddSubgroup.coe_sub] at g_inner_laplace
-                  rw [ENNReal.ofReal_sum_of_nonneg] at g_inner_laplace
+                  rw [ENNReal.ofReal_sum_of_nonneg (by simp)] at g_inner_laplace
                   simp [-AddSubgroupClass.coe_sub, -AddSubgroup.coe_sub] at g_inner_laplace
                   simp [-AddSubgroupClass.coe_sub, -AddSubgroup.coe_sub, ENNReal.ofReal_toReal (by sorry)] at g_inner_laplace
 
 
-                  rw [←  ENNReal.toReal_le_toReal]
-                  rw [ENNReal.toReal_sum]
+
+
                   simp_rw [← ENNReal.rpow_natCast] at g_inner_laplace
                   simp_rw [← ENNReal.rpow_mul] at g_inner_laplace
                   simp  [-AddSubgroupClass.coe_sub, -AddSubgroup.coe_sub] at g_inner_laplace
@@ -6912,27 +6912,13 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
                   simp
                   simp_rw [← sub_eq_add_neg]
                   simp [G'_n] at g_inner_laplace
-                  apply_fun ENNReal.toReal at g_inner_laplace
-                  rw [ENNReal.toReal_sum] at g_inner_laplace
+                  --apply_fun ENNReal.toReal at g_inner_laplace
+                  --rw [ENNReal.toReal_sum] at g_inner_laplace
                   simp_rw [← my_add_haar_eq_count]
                   conv =>
                     lhs
-                    equals (2 * (#S : ENNReal)).toReal =>
+                    equals (2 * (#S : ENNReal)) =>
                       exact g_inner_laplace.symm
-                  norm_num
-                  . sorry
-                  . sorry
-                  . simp
-                    intro b hb
-
-
-                    sorry
-                  . exact ENNReal.ofReal_ne_top
-                  . simp
-                  . simp
-                  .
-                    rw [S_eq_Sinv]
-                    simp [hy]
                 . simp
               .
                 simpa using hGS.hS
