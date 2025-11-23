@@ -6199,6 +6199,10 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
 
 noncomputable def G_n (n: ℕ) (hn: 0 < n) := Classical.choose (laplace_g_n n hn )
 
+lemma g_n_laplace_norm_le (n: ℕ) (hn: 0 < n): ‖Laplace (G_n n hn)‖ ≤ 1/n := by
+  have g_n_prop := (laplace_g_n n hn).choose_spec
+  exact g_n_prop.1
+
 lemma g_n_conv_norm (n: ℕ) (hn: 0 < n): ⟪Laplace (G_n n hn), (G_n n hn)⟫ = 1 := by
   have g_n_prop := (laplace_g_n n hn).choose_spec
   exact g_n_prop.2
@@ -7164,7 +7168,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
       have lim_zero := squeeze_zero (t₀ := Filter.atTop)
         (f := (fun x_1 ↦ |((fun n ↦ H_G_conv_zero n) ∘ arzela_seq) x_1 x - (↑(#S))⁻¹ * ∑ c ∈ S, ((fun n ↦ H_G_conv_zero n) ∘ arzela_seq) x_1 (c * x)|))
-        (g := fun n => (eLpNorm (H_G_conv_zero n) ⊤).toReal)
+        (g := fun n => (1 / n))
         ?_ ?_ ?_
       .
         have target_eq_zero := tendsto_nhds_unique ((abs_tendsto _).comp tendsto_sub) (lim_zero)
@@ -7173,7 +7177,8 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         simp [target_eq_zero]
       . simp
       . sorry
-      . sorry
+      .
+        exact tendsto_one_div_atTop_nhds_zero_nat
   }
   intro z
   by_contra!
