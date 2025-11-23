@@ -7233,7 +7233,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     rw [neg_smul]
     rw [← conv_smul]
     rw [ ← smul_conv]
-    rw [conv_assoc]
+    rw [conv_assoc_of_lp2]
     .
       rw [← conv_add_right]
       .
@@ -7372,14 +7372,13 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             rw [my_haar_eq_count]
             refine MeasurePreserving.mul_left Measure.count s⁻¹ ?_
             apply MeasureTheory.MeasurePreserving.id
-    . sorry
-    . sorry
-    . sorry
-    . sorry
+    . rw [← my_haar_eq_count]
+      apply Lp.memLp
+    . rw [← my_haar_eq_count]
+      simp
+      apply MemLp.neg
+      apply Lp.memLp
     . simp [delta]
-    . intro a
-      simp [delta, Pi.single, Function.update]
-      positivity
 
 
 
