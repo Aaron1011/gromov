@@ -7087,9 +7087,90 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
           positivity
       .
         simp [ConvExists]
+        rw [my_add_haar_eq_count]
+        apply ENNReal.ConvolutionExists.of_memLp_memLp (p := 2) (q := 2) (μ := Measure.count)
+        . infer_instance
+        . simp
+        . apply AEStronglyMeasurable.of_discrete
+        . apply AEStronglyMeasurable.of_discrete
+        . rw [← my_add_haar_eq_count]
+          apply Lp.memLp
+        . rw [← my_add_haar_eq_count]
+          apply Lp.memLp
+      .
+        simp [ConvExists]
+        rw [my_add_haar_eq_count]
+        apply ENNReal.ConvolutionExists.of_memLp_memLp (p := 2) (q := 2) (μ := Measure.count)
+        . infer_instance
+        . simp
+        . apply AEStronglyMeasurable.of_discrete
+        . apply AEStronglyMeasurable.of_discrete
+        . rw [← my_haar_eq_count]
+          apply Lp.memLp
+        .
+          refine ⟨by apply AEStronglyMeasurable.of_discrete, ?_⟩
+          rw [← my_add_haar_eq_count]
+          rw [neg_smul]
+          rw [conv_smul]
+          simp
+          rw [← Pi.neg_def]
+          simp [Conv]
+          rw [← Function.comp_def (β := Additive G)]
+          rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := Measure.count)]
+          .
+            conv =>
+              arg 1
+              arg 1
+              arg 1
+              equals ↑↑(G_n (seq (n + 1)) (seq_add_pos)) ∘ Additive.toMul =>
+                rfl
 
-        sorry
-      . sorry
+            conv =>
+              arg 1
+              arg 1
+              arg 2
+              equals (delta y⁻¹) ∘ Additive.toMul =>
+                rfl
+
+            rw [← my_add_haar_eq_count]
+            grw [ENNReal.eLpNorm_convolution_le_enorm_mul (p := 2) (q := 1)]
+            .
+              rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := Measure.count)]
+              .
+                apply ENNReal.mul_lt_top
+                . apply ENNReal.mul_lt_top
+                  . simp
+                  .
+                    rw [← my_haar_eq_count]
+                    apply MemLp.eLpNorm_lt_top
+                    apply Lp.memLp
+                .
+                  apply MemLp.eLpNorm_lt_top
+                  apply Continuous.memLp_of_hasCompactSupport
+                  . fun_prop
+                  . simp [HasCompactSupport, tsupport]
+                    apply Set.Finite.isCompact
+                    simp [delta]
+                    simp [Function.comp_def]
+                    conv =>
+                      arg 1
+                      arg 1
+                      intro x
+                      arg 3
+                      equals x => rfl
+                    simp
+              . apply AEStronglyMeasurable.of_discrete
+              . rw [my_add_haar_eq_count]
+                apply MeasurePreserving.id
+            . simp
+            . simp
+            . simp
+            . simp
+            . apply AEMeasurable.of_discrete
+            . apply AEMeasurable.of_discrete
+          . apply AEStronglyMeasurable.of_discrete
+          . rw [my_add_haar_eq_count]
+            apply MeasurePreserving.id
     . rw [← my_add_haar_eq_count]
       apply Lp.memLp
     . rw [← my_add_haar_eq_count]
