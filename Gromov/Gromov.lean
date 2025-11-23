@@ -7617,15 +7617,18 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
               equals id => rfl
             simp
             grw [g_norm]
+            sorry
+          . simp
+          . simp
+          . simp
+          . norm_num
+            norm_cast
+            simp
+          . apply AEMeasurable.of_discrete
+          . apply AEMeasurable.of_discrete
+          . positivity
 
-
-          rw [ENNReal.ofReal_add]
-          apply add_le_add
-          .
-
-          . sorry
-
-          sorry
+        . sorry
         . sorry
         . sorry
 
@@ -7640,7 +7643,9 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         --   sorry
         -- . simp
       .
-        exact tendsto_one_div_atTop_nhds_zero_nat
+        simp
+        simp_rw [← two_mul]
+        apply tendsto_const_div_atTop_nhds_zero_nat\
   }
   intro z
   by_contra!
