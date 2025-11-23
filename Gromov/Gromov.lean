@@ -6884,14 +6884,49 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             --simp_rw [mul_comm] at g_inner_laplace
             .
               simp [eLpNorm, eLpNorm']
-              simp [MeasureTheory.Lp.norm_def, eLpNorm, eLpNorm', conv_finsupp_lp2] at g_inner_laplace
+              simp [-AddSubgroupClass.coe_sub, -AddSubgroup.coe_sub, MeasureTheory.Lp.norm_def, eLpNorm, eLpNorm', conv_finsupp_lp2] at g_inner_laplace
               rw [← ENNReal.ofReal_rpow_of_pos]
               .
                 apply ENNReal.rpow_le_rpow
                 .
-                  generalize y⁻¹ = foo
-                  grw [Finset.single_le_sum (s := S) (a := y⁻¹)]
-                  sorry
+                  generalize_proofs p_1 p_2 p_3
+                  -- TODO - make this less horrible
+                  grw [Finset.single_le_sum (f := (fun g => ∫⁻ (a : Additive G), ‖(G_n (seq (n + 1)) p_3) a + Conv (-↑↑(G_n (seq (n + 1)) p_3)) (delta g) a‖ₑ ^ 2 ∂Measure.count)) (s := S)]
+                  apply_fun ENNReal.ofReal at g_inner_laplace
+                  simp [-AddSubgroupClass.coe_sub, -AddSubgroup.coe_sub] at g_inner_laplace
+                  rw [ENNReal.ofReal_sum_of_nonneg] at g_inner_laplace
+                  simp [-AddSubgroupClass.coe_sub, -AddSubgroup.coe_sub] at g_inner_laplace
+                  simp [-AddSubgroupClass.coe_sub, -AddSubgroup.coe_sub, ENNReal.ofReal_toReal (by sorry)] at g_inner_laplace
+
+
+                  rw [←  ENNReal.toReal_le_toReal]
+                  rw [ENNReal.toReal_sum]
+                  simp_rw [← ENNReal.rpow_natCast] at g_inner_laplace
+                  simp_rw [← ENNReal.rpow_mul] at g_inner_laplace
+                  simp  [-AddSubgroupClass.coe_sub, -AddSubgroup.coe_sub] at g_inner_laplace
+                  simp_rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)] at g_inner_laplace
+                  simp_rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)] at g_inner_laplace
+                  simp at g_inner_laplace
+                  rw [neg_smul]
+                  simp_rw [conv_smul]
+                  simp
+                  simp_rw [← sub_eq_add_neg]
+                  simp [G'_n] at g_inner_laplace
+                  apply_fun ENNReal.toReal at g_inner_laplace
+                  rw [ENNReal.toReal_sum] at g_inner_laplace
+                  simp_rw [← my_add_haar_eq_count]
+                  conv =>
+                    lhs
+                    equals (2 * (#S : ENNReal)).toReal =>
+                      exact g_inner_laplace.symm
+                  norm_num
+                  . sorry
+                  . sorry
+                  . sorry
+                  . sorry
+                  . sorry
+                  . sorry
+                  . sorry
                 . sorry
               . sorry
 
