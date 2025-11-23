@@ -7659,6 +7659,13 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
           . simp
           . norm_num
             norm_cast
+            conv =>
+              lhs
+              equals (ENNReal.ofReal ((2: ℝ)⁻¹ + (2: ℝ)⁻¹)) =>
+                rw [ENNReal.ofReal_add]
+                . simp
+                . simp
+                . simp
             simp
           . apply AEMeasurable.of_discrete
           . apply AEMeasurable.of_discrete
