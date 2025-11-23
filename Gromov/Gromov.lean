@@ -7215,7 +7215,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
   let H_G_conv_zero (n: ℕ) (g: G) := ((Conv (H_n ((new_seq n)) s) (G_n ((new_seq n) + 1) (by simp))) g) - (Conv (H_n ((new_seq n)) s) (G_n ((new_seq n) + 1) (by simp)) 1)
 
 
-  -- TODO - the lipschitz constant can be improved
+  -- TODO - can the lipschitz constant can be improved?
   have H_G_conv_zero_lipschitz: ∀ n: ℕ, LipschitzWith ((((2 * #(S))^((2 : ℝ)⁻¹))) + 0) (H_G_conv_zero n) := by
     intro n
     simp only [H_G_conv_zero]
@@ -7316,7 +7316,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         conv =>
           lhs
           rhs
-          equals ‖(G_n (new_seq n + 1) (by simp)) - (MemLp.toLp (Conv (↑↑(G_n ((new_seq n) + 1) sorry)) (delta s)) (by
+          equals ‖(G_n (new_seq n + 1) (by simp)) - (MemLp.toLp (Conv (↑↑(G_n ((new_seq n) + 1) (by simp))) (delta s)) (by
               rw [f_conv_delta_helper]
               rw [← Function.comp_def]
               apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
