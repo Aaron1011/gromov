@@ -6951,7 +6951,8 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
           . apply AEMeasurable.of_discrete
           . intro a b
             simp
-        . simp
+        .
+          positivity
       . sorry
       . sorry
     . sorry
