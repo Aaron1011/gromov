@@ -4930,8 +4930,30 @@ noncomputable def Laplace_linear: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G
 --lemma laplce_spectrum_real (z: ℂ) (hz: z ∈ spectrum ℂ (Laplace_linear )): z.im = 0 := by
 --  sorry
 
+lemma f_n_fin_supp (n: ℕ): (f_n  n).support.Finite := by
+  unfold f_n
+  simp
+  apply Set.Finite.inter_of_right
+  apply Set.Finite.subset (hs := ?_) (ht := Finset.support_sum _ _)
+  refine Set.Finite.biUnion' ?_ ?_
+  . exact Set.toFinite (Membership.mem Finset.univ.val)
+  . intro m hm
+    apply mu_conv_finsupp
+
 noncomputable def F_n (n : ℕ) := Real.sqrt ∘ (f_n  n)
-noncomputable def F_n_lp2 (n : ℕ) := MeasureTheory.MemLp.toLp (F_n  n) (by sorry) (μ := volume (α := G)) (p := 2)
+noncomputable def F_n_lp2 (n : ℕ) := MeasureTheory.MemLp.toLp (F_n  n) (by
+  simp [volume]
+  rw [my_haar_eq_count]
+  apply finsupp_lp_top
+  simp [F_n]
+  apply Set.Finite.subset (s := (f_n n).support)
+  .
+    unfold f_n
+    apply f_n_fin_supp
+  .
+    apply Function.support_comp_subset
+    simp
+) (μ := volume (α := G)) (p := 2)
 
 noncomputable def laplace_range := LinearMap.range (Laplace_linear )
 
@@ -5969,15 +5991,7 @@ lemma laplace_spectrum_contains_zero: 0 ∈ spectrum ℝ (Laplace_linear ) := by
 #print axioms laplace_self_adjoint
 #print axioms laplace_positive_semidefinite
 
-lemma f_n_fin_supp (n: ℕ): (f_n  n).support.Finite := by
-  unfold f_n
-  simp
-  apply Set.Finite.inter_of_right
-  apply Set.Finite.subset (hs := ?_) (ht := Finset.support_sum _ _)
-  refine Set.Finite.biUnion' ?_ ?_
-  . exact Set.toFinite (Membership.mem Finset.univ.val)
-  . intro m hm
-    apply mu_conv_finsupp
+
 
 lemma laplace_b_const (k: ℝ): Laplace_b (fun g => k) = 0 := by
   simp [Laplace_b]
