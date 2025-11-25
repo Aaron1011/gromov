@@ -11779,4 +11779,31 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
       rw [bddAbove_def]
       exact pow_cards_bounded
   | succ k ih =>
+    obtain ⟨data⟩ := exists_theorem_3_1_input
+    apply theorem_3_1 data n (by omega) h
+    intro Q Q_dec_eq Q_group Q_FG hS
+
+    let generates: Generates := {
+      G := Q,
+      g_group := Q_group
+      g_eq := Q_dec_eq
+      S := Q_FG.out.choose ∪ Q_FG.out.choose⁻¹ ∪ {1}
+      hS := by simp
+      generates := by
+        simp
+        rw [Subgroup.closure_union]
+        rw [Q_FG.out.choose_spec]
+        simp
+      one_mem := by
+        simp
+      has_inv := by
+        intro g hg
+        simp at hg
+        simp
+        grind
+      g_infinite := by
+        sorry
+    }
+    have new_poly := poly_growth_equiv_generates generates Q_FG.out.choose (d := n - 1) sorry
+    have prev := @ih generates (by sorry) (n - 1) sorry
     sorry
