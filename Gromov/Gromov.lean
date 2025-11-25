@@ -1688,7 +1688,9 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
     . infer_instance
   .
     have dim_ge_two: 2 ≤ Module.finrank ℂ (V) := by omega
-    obtain ⟨N, N_comm, N_finite_index⟩ := compact_lie_virtually_abelian (Module.finrank ℂ V) (by omega) G' G'_fg sorry
+    obtain ⟨N, N_comm, N_finite_index⟩ := compact_lie_virtually_abelian (Module.finrank ℂ V) (by omega) G' G'_fg (by
+      sorry
+    )
 
     let new_N := N
     simp [G'] at new_N
@@ -4366,6 +4368,7 @@ lemma measure_preserving_unop_tomul: MeasurePreserving (fun (x: Additive (G)) �
 lemma measure_preserving_op_add: MeasurePreserving (fun (x: G) ↦ Additive.ofMul (x)) volume myHaarAddOpp := by
   apply MeasureTheory.MeasurePreserving.id
 
+
 -- Proposition 3.17.1: "∆ is bounded" from Vikman
 -- The paper also proves that the Laplace operator is self-adjoint as part of this step,
 -- but we split it out
@@ -4954,6 +4957,19 @@ noncomputable def F_n_lp2 (n : ℕ) := MeasureTheory.MemLp.toLp (F_n  n) (by
     apply Function.support_comp_subset
     simp
 ) (μ := volume (α := G)) (p := 2)
+
+-- Lemma 3.16 in Vikman
+
+-- The case split statement in Vikman
+def f_n_conv_delta_tendsto: Prop :=  ∀ s: S, Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0)
+
+lemma F_n_conv_mu_lim (f_n_limit: f_n_conv_delta_tendsto):
+    Filter.Tendsto (fun n => ‖(F_n_lp2 n) - conv_mu_lp2 (F_n_lp2 n)‖ₑ) Filter.atTop (nhds 0) := by
+
+
+
+  sorry
+
 
 noncomputable def laplace_range := LinearMap.range (Laplace_linear )
 
@@ -5921,7 +5937,7 @@ lemma g_sub_norm_single_s: ∃ s ∈ S, { n: ℕ | ‖(G_n (n + 1) (by simp)) - 
 
 
 
-lemma laplace_spectrum_contains_zero: 0 ∈ spectrum ℝ (Laplace_linear ) := by
+lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ spectrum ℝ (Laplace_linear ) := by
   rw [spectrum.zero_mem_iff]
   by_contra this
   obtain ⟨f, hf⟩ := this
@@ -5961,10 +5977,44 @@ lemma laplace_spectrum_contains_zero: 0 ∈ spectrum ℝ (Laplace_linear ) := by
       sorry
 
 
-  sorry
-  sorry
-  sorry
-  sorry
+  .
+    rw [isBoundedLinearMap_iff] at inv_bounded
+    obtain ⟨M, M_pos, le_M⟩ := inv_bounded.2
+
+    have foo := F_n_conv_mu_lim f_n_limit
+    rw [ENNReal.tendsto_atTop_zero] at foo
+    obtain ⟨n, hn⟩ := foo  ((1: ENNReal) /(2 * ‖cont_equiv.symm.toContinuousLinearMap‖ₑ)) (by
+      simp
+      rw [ENNReal.mul_eq_top]
+      simp
+    )
+    specialize hn n (by simp)
+
+    rw [Lp.enorm_def] at hn
+    specialize inv_norm_ge n
+    simp [Laplace_b] at inv_norm_ge
+    rw [ae_eq_everywhere.mp (Lp.coeFn_sub _ _)] at hn
+    simp only [F_n_lp2, conv_mu_lp2] at hn
+    simp_rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)] at hn
+    simp [ENNReal.inv_le_iff_inv_le] at inv_norm_ge
+    grw [hn] at inv_norm_ge
+    simp at inv_norm_ge
+
+    have norm_nonzero :‖cont_equiv.symm.toContinuousLinearMap‖ ≠ 0 := by
+      by_contra!
+      simp [this] at norm_mul_bound
+      norm_num at norm_mul_bound
+
+    simp [enorm] at inv_norm_ge
+    norm_cast at inv_norm_ge
+    rw [two_mul] at inv_norm_ge
+    simp at inv_norm_ge
+    apply_fun norm at inv_norm_ge
+    rw [inv_norm_ge] at norm_nonzero
+    simp at norm_nonzero
+  . simp
+  . simp
+  . sorry
     -- ContinuousLinearMap.le_opNorm
 
 
