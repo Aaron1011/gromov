@@ -1556,13 +1556,6 @@ lemma GRepW_norm_le (g: G): ‖(GRepW (GRepW_base g)).val‖ ≤ 1 := by
 
 --#synth CompleteSpace (W)
 
-lemma measurable_GRepW: Measurable (fun g => GRepW (GRepW_base g)) := by
-  simp [GRepW_base, GRepW]
-  apply Measurable.comp (g := GRepW) (f := fun g => ((GRepW_non_invertible).asGroupHom g))
-  . simp [GRepW]
-    sorry
-  . sorry
-  . sorry
     --infer_instance
 
 lemma continuous_GRepW : Continuous (fun g => GRepW (GRepW_base g)) := by
@@ -1888,8 +1881,6 @@ def isembedding_units_val := Units.isEmbedding_val_mk' (M := (W →L[ℂ] W)) (f
 -- }
 
 
-instance Borel_GL_W: BorelSpace (GL_W) := by
-  sorry
 
 -- instance Borel_rho_g: BorelSpace ↥(rho_g) := by
 --   apply Subtype.borelSpace
