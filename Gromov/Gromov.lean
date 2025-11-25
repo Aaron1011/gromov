@@ -6014,28 +6014,10 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
     simp at norm_nonzero
   . simp
   . simp
-  . sorry
-    -- ContinuousLinearMap.le_opNorm
+  . intro x
+    rw [hf]
+    apply laplace_bounded'
 
-
-  --rw [mul_comm] at norm_mul_bound
-  --apply div_le_of_le  _mul₀ at norm_mul_bound
-
-  --have foo := ContinuousLinearMap.le_of_opNorm_le norm_mul_bound
-
-  -- ContinuousLinearMap.le_of_opNorm_le
-
-
-  --let cont_equiv := LinearEquiv.toContinuousLinearEquiv laplace_equiv
-
-  -- have cont_iff_bounded := (IsBoundedLinearMap.isLinearMap_and_continuous_iff_isBoundedLinearMap laplace_equiv.symm ( 𝕜 := ℝ)).mp (by
-  --   refine ⟨?_, ?_⟩
-  --   .
-  -- )
-
-  -- have inv_bounded := ContinuousLinearMap.isBoundedLinearMap cont_inv
-
-  -- LinearEquiv.continuous_symm
 
 #print axioms laplace_bounded
 #print axioms laplace_self_adjoint
