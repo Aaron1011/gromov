@@ -1050,8 +1050,6 @@ lemma lipschitzH_norm_triangle (x y z: LipschitzH): LipschitzSemiNorm (x - z) �
 
 
 
---def lift_triangle (x y z: LipschitzH) := Quotient.lift lipschitzH_norm_triangle sorry
-
 --section lipschitz_norm
 noncomputable local instance LipschitzH_seminorm: SeminormedAddCommGroup (LipschitzH) where
   norm := fun v => LipschitzSemiNorm v
@@ -1161,64 +1159,6 @@ instance const_isClosed: IsClosed (ConstF : Set (LipschitzH)) := by
 #synth NormedAddCommGroup (W )
 
 #synth TopologicalSpace (W)
-
-
--- noncomputable instance W_seminorm: SeminormedAddCommGroup (W) where
---   norm := fun f => (LipschitzSemiNorm_w f).val
---   dist_self := by
---     intro w
---     simp [LipschitzSemiNorm_w]
---     rw [← Submodule.Quotient.mk_zero]
---     unfold Submodule.Quotient.mk
---     rw [Quotient.lift_mk]
---     exact lipschiz_norm_zero
---   dist_comm := by
---     intro x w
---     simp
---     dsimp [LipschitzSemiNorm_w]
---     conv =>
---       pattern w - x
---       equals -(x - w) =>
---         field_simp
-
---     have forward_elem: Submodule.Quotient.mk (x - w).out = x - w := by
---       simp [Submodule.Quotient.mk]
---     rw [← forward_elem]
---     rw [← Submodule.Quotient.mk_neg]
-
-
---     unfold Submodule.Quotient.mk
---     repeat rw [Quotient.lift_mk]
---     simp [LipschitzSemiNorm]
---     conv =>
---       rhs
---       arg 1
---       arg 1
---       intro k
---       rw [lipschitz_neg_tofun]
---       rw [lipschitzWith_neg_iff]
---   dist_triangle := by
---     intro x y z
---     simp [LipschitzSemiNorm_w]
-
---     have forward_elem (w: W): Submodule.Quotient.mk (w).out = w := by
---       simp [Submodule.Quotient.mk]
---     rw [← forward_elem (w := (x - z))]
---     rw [← forward_elem (w := (x - y))]
---     rw [← forward_elem (w := (y - z))]
---     unfold Submodule.Quotient.mk
---     rw [Quotient.lift_mk]
---     rw [Quotient.lift_mk]
---     rw [Quotient.lift_mk]
-
---     have triangle := lipschitz_norm_triangle (Quotient.out (x)).toFun (Quotient.out (y)).toFun (Quotient.out (z)).toFun sorry sorry sorry
-
---     simp [LipschitzSemiNorm]
---     conv =>
---       pattern x - z
---       equals (x - y) + (y - z) =>
---         field_simp
-
 
 
 set_option synthInstance.maxHeartbeats 400000
@@ -1407,12 +1347,6 @@ noncomputable def GRepW: (W →ₗ[ℂ] W)ˣ →* (W →L[ℂ] W)ˣ := {
 #synth Group (GL_W)
 
 lemma quotient_norm_eq_norm (f: LipschitzH): ‖(Submodule.Quotient.mk f : W)‖ = ‖f‖ := by
-  --dsimp [norm]
-  -- conv =>
-  --   lhs
-  --   arg 2
-  --   equals ‖↑ f‖ =>
-  --     sorry
   have foo := QuotientAddGroup.norm_mk (S := ConstF.toAddSubgroup) f
   conv =>
     lhs
@@ -1450,67 +1384,6 @@ lemma quotient_norm_eq_norm (f: LipschitzH): ‖(Submodule.Quotient.mk f : W)‖
   rw [biInf_const ?_]
   . simp
   . exact Submodule.nonempty ConstF
-
--- Define the norm on invertible maps (Units) using the norm on the underlying linear maps
---noncomputable instance GL_W_opNorm : Norm (GL_W) where
---  norm := fun f => ‖f.val‖
-
--- noncomputable instance GL_W_psuedoMetric: PseudoMetricSpace (GL_W) := PseudoMetricSpace.ofDistTopology
---   (dist := fun f g => ‖f.val - g.val‖)
---   (dist_self := by simp)
---   (dist_comm := by
---     intro x y
---     simp
---     conv =>
---       rhs
---       arg 1
---       equals -(x.val - y.val) =>
---         simp
---     rw [ContinuousLinearMap.opNorm_neg]
---   )
---   sorry
---   sorry
-
--- Unfortunately, we cannot use 'NormedGroup', since we have a multiplicate group,
--- but we want our distance function to be ‖f - g‖, not ‖f * g⁻¹‖
--- noncomputable instance GL_W_psuedoMetric: PseudoMetricSpace (GL_W) where
---   dist := fun f g => ‖f.val - g.val‖
---   dist_self := by
---     simp
---   dist_comm := by
---     intro x y
---     conv =>
---       rhs
---       arg 1
---       equals -(x.val - y.val) =>
---         simp
---     rw [ContinuousLinearMap.opNorm_neg]
---   dist_triangle := by
---     intro x y z
---     conv =>
---       lhs
---       arg 1
---       equals (x.val - y.val + y.val - z.val) =>
---         simp
-
---     have triangle := ContinuousLinearMap.opNorm_add_le (f := x.val - y.val) (g := y.val - z.val)
---     field_simp at triangle
---     field_simp
---     exact triangle
-
--- noncomputable instance GL_W_NormedGroup : SeminormedGroup (GL_W) := {
---   norm := GL_W_opNorm.norm,
---   dist_self := by
---     simp
---     simp [norm]
---     unfold ContinuousLinearMap.opNorm
---     simp
-
---   dist_comm := by sorry
---   dist_eq := by sorry
--- }
-
---#synth MetricSpace (LinearMap.GeneralLinearGroup ℝ ℝ)
 
 #synth NormedRing (W →L[ℂ] W)
 #synth TopologicalSpace (W →L[ℂ] W)ˣ
@@ -1617,223 +1490,14 @@ def isembedding_units_val := Units.isEmbedding_val_mk' (M := (W →L[ℂ] W)) (f
   . exact u.inv_val
 )
 
---def unit_val_isometry := Topology.IsEmbedding.to_isometry (isembedding_units_val)
---def units_val_inducing := (isembedding_units_val.isInducing)
---def units_openMap := Units.isOpenMap_val (R := (W →L[ℂ] W))
-
---noncomputable instance GL_W_psuedo: PseudoMetricSpace (GL_W) := Topology.IsInducing.comapPseudoMetricSpace (isembedding_units_val.isInducing)
---   apply FiniteDimensional.proper_rclike (K := ℂ)
---#synth FiniteDimensional ℂ  (GL_W)
-
--- noncomputable instance GL_W_proper: ProperSpace (GL_W) := {
---   isCompact_closedBall := by
---     intro w r
---     apply isCompact_of_finite_subcover
---     intro cov_ty cover h_cover_open covers_ball
-
---     rw [← Isometry.preimage_closedBall unit_val_isometry]
---     -- In the vector space M_n_x (not-necessarily-invertible matrices), the closed ball is compact
---     have matrix_ball_compact: IsCompact (Metric.closedBall (w.val) r) := by
---       apply isCompact_closedBall
-
---     have ball_inv := Isometry.preimage_closedBall (unit_val_isometry) w r
-
---     have ball_image_cover: (Metric.closedBall (w.val) r) ⊆ ⋃ i, Units.val '' (cover i) := by
---       intro p hp
---       rw [Isometry.preimage_closedBall unit_val_isometry] at hp
---       simp
-
-
--- }
-
-
--- instance GL_W_Proper: ProperSpace (GL_W) := {
---   isCompact_closedBall := by
---     intro w r
---     --have foo := _root_.Submonoid.units_isCompact (α := (W →L[ℂ] W))
---     have ball_closed: IsClosed (Metric.closedBall (w) r) := by
---       apply Metric.isClosed_closedBall
---     rw [Topology.IsInducing.isClosed_iff units_val_inducing] at ball_closed
---     obtain ⟨w_ball, w_ball_closed, inv_ball⟩ := ball_closed
---     rw [← inv_ball]
---     rw [Topology.IsInducing.isCompact_iff units_val_inducing]
---     rw [Set.image_preimage_eq_range_inter]
---     sorry
--- }
-
---#synth Bornology (GL_W)
-
---set_option maxHeartbeats 500000
---set_option synthInstance.maxHeartbeats 40000
-
--- instance GL_Star_Mul: StarMul (W →L[ℂ] W) := {
---   star := fun f => star f.toLinearMap
--- }
-
 #synth NormedSpace ℂ (W →L[ℂ] W)
 #synth MetricSpace (W →L[ℂ] W)
 
 
 
---lemma rho_g_subset_unitary: (toEuclidean '' (Units.val '' ((rho_g).carrier))) ⊆ (unitary _).carrier := by
---  sorry
 
 -- All norms are equivalent on finite-dimensional spaces:
 -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Analysis/Normed/Module/FiniteDimension.html
-
--- lemma closed_image_rho_g: closure (Units.val '' (rho_g_closure)) = Units.val '' (closure (rho_g_closure)) := by
---   ext w
---   refine ⟨?_, ?_⟩
---   . sorry
---   .
---     intro hw
---     sorry
---     --rw [Topology.IsEmbedding.closure_eq_preimage_closure_image (isembedding_units_val) _]
---     --simp
-
-
--- In the Vikman paper, rho_g is precompact, and the closure of rho_g is a compact subgroup
--- LinearMap.finiteDimensional
--- set_option maxHeartbeats 2000000 in
--- theorem compact_rho_g: IsCompact (rho_g_closure) := by
---   --unfold rho_g_closure rho_g
---   unfold rho_g_closure
---   rw [Topology.IsEmbedding.isCompact_iff (isembedding_units_val)]
---   rw [Metric.isCompact_iff_isClosed_bounded]
---   have closed_original: IsClosed (_root_.closure (rho_g).carrier) := by
---     apply isClosed_closure
---   refine ⟨?_, ?_⟩
---   .
---     rw [← isOpen_compl_iff]
---     rw [isOpen_iff_forall_mem_open]
---     intro x hx
---     by_cases invertible: ∃ x_unit: GL_W, x_unit.val = x
---     .
---       obtain ⟨x_unit, hx_unit⟩ := invertible
---       rw [← isOpen_compl_iff] at closed_original
---       rw [Metric.isOpen_iff] at closed_original
---       obtain ⟨r, r_gt_zero, ball_r⟩ := closed_original x_unit (by
---         rw [← hx_unit] at hx
---         simp at hx
---         simp
---         exact fun a ↦ hx x_unit a rfl
---       )
---       have ball_r_subset := Isometry.mapsTo_ball (unit_val_isometry) x_unit r
---       apply Set.MapsTo.image_subset at ball_r_subset
---       --rw [Set.MapsTo] at ball_r_subset
---       -- specialize ball_r_subset (x := x_unit) (by
---       --   apply Metric.mem_closedBall_self
---       --   linarith
---       -- )
---       use Units.val '' Metric.ball (x_unit) (r)
---       refine ⟨?_, ?_, ?_⟩
---       .
---         intro a ha
---         specialize ball_r_subset ha
---         simp
---         simp at ball_r_subset
---         simp at ha
---         obtain ⟨p, p_mem, p_eq⟩ := ha
---         specialize ball_r p_mem
---         simp at ball_r
---         intro x hx
---         by_contra!
---         rw [← p_eq] at this
---         norm_cast at this
---         rw [this] at hx
---         contradiction
---       .
---         apply units_openMap
---         simp
---       .
---         rw [← hx_unit]
---         simp
---         use x_unit
---         simp
---         exact r_gt_zero
---     .
---       simp at invertible
---       simp at hx
---       sorry
-
-
-
-
-
-
---   rw [Topology.IsEmbedding.closure_eq_preimage_closure_image (isembedding_units_val)]
---   --rw [Topology.IsInducing.isCompact_preimage_iff]
---   --. sorry
---   --. apply (isembedding_units_val).isInducing
---   --.
---   --  rw [IsClosed.closure_eq]
---   --  . simp
---   --  .
-
---   --    sorry
---     --simp
---   --rw [Topology.IsEmbedding.isCompact_iff (isembedding_units_val)]
-
---   -- rw [Topology.IsEmbedding.closure_eq_preimage_closure_image (isembedding_units_val)]
-
---   -- apply Topology.IsClosedEmbedding.isCompact_preimage
---   -- . apply Continuous.isClosedEmbedding
---   -- apply IsCompact.preimage_continuous
-
-
---   have compact_closure_of: IsCompact (_root_.closure (Units.val '' _root_.closure (rho_g).carrier)) := by
---     rw [closure_image_closure (by exact Units.continuous_val)]
---     apply Bornology.IsBounded.isCompact_closure
---     rw [Metric.isBounded_iff]
---     use 2
---     intro p hp q hq
---     rw [Set.mem_image] at hp
---     rw [Set.mem_image] at hq
---     simp [rho_g] at hp
---     simp [rho_g] at hq
---     obtain ⟨a, p_eq_a_rep⟩ := hp
---     obtain ⟨b, q_eq_b_rep⟩ := hq
---     simp [dist]
---     rw [ContinuousLinearMap.seminorm]
---     apply csInf_le (by
---       simp [BddBelow]
---       apply Set.nonempty_of_mem (x := 0)
---       rw [mem_lowerBounds]
---       simp
---       intro x hx _
---       exact hx
---     )
---     simp
---     intro x
---     rw [sub_eq_add_neg]
---     have norm_triangle := norm_add_le (p x) (- q x)
---     simp only [norm_neg] at norm_triangle
---     rw [← p_eq_a_rep, ← q_eq_b_rep] at norm_triangle
---     rw [GLW_preseves_norm] at norm_triangle
---     rw [GLW_preseves_norm] at norm_triangle
---     rw [two_mul]
---     rw [p_eq_a_rep] at norm_triangle
---     rw [q_eq_b_rep] at norm_triangle
---     exact norm_triangle
-
---   have foo := image_closure_subset_closure_image (Units.continuous_val) (s := _root_.closure (rho_g).carrier)
---   sorry
-  --rw [image_closure_of_isCompact]
-  --. exact compact_closure_of
-  --. sorry
-
-
-  --have foo := Topology.IsEmbedding.isCompact_iff (isembedding_units_val)
-
-  --rw [Topology.IsEmbedding.isCompact_iff isembedding_units_val]
-  --let val := Units.val (α := (W →L[ℂ] W))
-  --have units_val_openMap := (Units.isOpenMap_val (R := (W →L[ℂ] W)))
-  --have units_val_openMap := (Units.isEmbedding_val₀ (G₀ := (W →L[ℂ] W)))
-  --have compact_iff := Topology.IsEmbedding.isCompact_iff (X := GL_W)
-  --  (Y := (W →L[ℂ] W)) (f := Units.val (α := (W →L[ℂ] W))) (Units.isOpenMap_val (R := (W →L[ℂ] W)))
-  --rw [Topology.IsEmbedding.isCompact_iff Units.isEmbedding_val₀]
-
-
 
 -- Section 3.3 in Vikmanm, "Construction of a representation"
 -- This is a combination of Cartan's Theorem and Theorem 3.6, giving us the conclusion that
@@ -1853,47 +1517,6 @@ def isembedding_units_val := Units.isEmbedding_val_mk' (M := (W →L[ℂ] W)) (f
 #synth ContinuousMul (W →L[ℂ] W)
 
 
-
--- instance units_borel: BorelSpace (GL_W) := {
---   measurable_eq := by
---     rw [borel_comap]
---     simp [Units.instMeasurableSpace]
---     sorry
--- }
-
--- instance rho_g_local_compact: LocallyCompactSpace (rho_g) := by
---   sorry
--- instance rho_g_borel: BorelSpace (rho_g) := by
---   sorry
-
--- instance w_map_inner_prod: InnerProductSpace ℂ (W) := by sorry
---   --apply Subgroup.instBorelSpace_subgroup
---   --apply units_borel
-
--- instance GL_W_IsTopologicalGroup: IsTopologicalGroup (GL_W) := {
---   continuous_mul := by
---     apply (Topology.IsInducing.continuousMul (f := Units.coeHom _) (by apply Topology.IsInducing.induced)).continuous_mul
---   continuous_inv := by
---     apply Continuous.inv₀
-
-
---     sorry
--- }
-
-
-
--- instance Borel_rho_g: BorelSpace ↥(rho_g) := by
---   apply Subtype.borelSpace
-
---instance LocallyCompact_GL_W: LocallyCompactSpace (GL_W) := by
-  --apply Topology.IsInducing.locallyCompactSpace (isembedding_units_val.isInducing)
-  --sorry
-  --apply Topology.IsEmbedding.locallyCompactSpace (isembedding_units_val)
-
--- instance LocallyCompact_rho_g: LocallyCompactSpace (rho_g) := by
---   apply IsOpen.locallyCompactSpace
---   sorry
-
 #synth NormedAddCommGroup (W)
 
 #synth FiniteDimensional ℂ (W)
@@ -1905,28 +1528,6 @@ def isembedding_units_val := Units.isEmbedding_val_mk' (M := (W →L[ℂ] W)) (f
 
 
 --end lipschitz_norm
-
-
-
--- noncomputable instance W_norm: NormedAddCommGroup (W) where
---   norm := fun f => LipschitzSemiNorm f.out
---   eq_of_dist_eq_zero := by
---     sorry
---   dist_self := by
---     intro x
---     simp [LipschitzSemiNorm]
---     sorry
---   dist_comm := by
---     intro x y
---     simp [LipschitzSemiNorm]
---     sorry
---   dist_triangle := by
---     intro x y z
---     simp [LipschitzSemiNorm]
---     sorry
-
---noncomputable instance W_normed: NormedSpace ℂ (W) where
---  norm_smul_le := by sorry
 
 
 
@@ -3408,67 +3009,6 @@ lemma conv_exists (p q : ℝ) (hp: 0 < p) (hq: 0 < q) (hpq: p.HolderConjugate q)
       .
         exact LT.lt.ne_top foo
 
--- -- For now, we should add additional hypothesis that 'f' and 'g' are non-negative
--- -- This is enoguh for the Vikman proof
--- lemma conv_exists_bad (c: ℝ) (hc: 0 ≤ c) (p q : ENNReal) (hpq: p.HolderConjugate q) (f g: G → ℝ)
---   (hf: MeasureTheory.MemLp ((fun x => f x.toMul.unop)) p myHaarAddOpp)
---   (hg: MeasureTheory.MemLp ((fun x => g x.toMul.unop)) q myHaarAddOpp)
---   : MeasureTheory.ConvolutionExists (G := Additive (MulOpposite G)) (fun x => f x.toMul.unop) (fun x => g x.toMul.unop) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp := by
---   unfold MeasureTheory.ConvolutionExists MeasureTheory.ConvolutionExistsAt
---   intro x
---   -- We can use young's hypothesis to bound the norm of the convolution function, giving us something like `∫ ∫ q < ⊤ ` (or stronger)
---   -- However, we also need the convolution to exist at all (e.g. the inner integral converges: `∫ q < ⊤ )
---   have h_young := ENNReal.eLpNorm_top_convolution_le' (p := p) (q := q) (L := (ContinuousLinearMap.mul ℝ ℝ)) (𝕜 := ℝ) (F := ℝ) (E := ℝ) (E' := ℝ) (G := Additive (MulOpposite G)) (f := (fun x => f x.toMul.unop)) (g := (fun x => g x.toMul.unop)) (μ := myHaarAddOpp)
---     hpq MeasureTheory.AEStronglyMeasurable.of_discrete MeasureTheory.AEStronglyMeasurable.of_discrete (c := c) ?_
-
---   .
---     unfold MeasureTheory.Integrable
---     refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
---     unfold MeasureTheory.HasFiniteIntegral
---     simp only [MeasureTheory.eLpNorm_exponent_top] at h_young
-
---     have f_finite := hf.2
---     have g_finite := hg.2
---     rw [lt_top_iff_ne_top] at f_finite g_finite
---     rw [← ENNReal.ofReal_toReal f_finite] at h_young
---     rw [← ENNReal.ofReal_toReal g_finite] at h_young
---     rw [← ENNReal.ofReal_mul hc] at h_young
---     rw [← ENNReal.ofReal_mul ?_] at h_young
---     . have other_lt_top := ENNReal.ofReal_lt_top (r := (c * (MeasureTheory.eLpNorm (fun x ↦ f (MulOpposite.unop (Additive.toMul x))) p myHaarAddOpp).toReal *
---         (MeasureTheory.eLpNorm (fun x ↦ g (MulOpposite.unop (Additive.toMul x))) q myHaarAddOpp).toReal))
-
---       have ess_sup_lt_top := lt_of_le_of_lt h_young other_lt_top
---       unfold MeasureTheory.convolution at ess_sup_lt_top
---       rw [my_add_haar_eq_count] at ess_sup_lt_top
---       rw [MeasureTheory.eLpNormEssSup_eq_essSup_enorm] at ess_sup_lt_top
---       simp at ess_sup_lt_top
---       rw [lt_top_iff_ne_top] at ess_sup_lt_top
---       rw [ne_eq] at ess_sup_lt_top
---       rw [not_iff_not.mpr (iSup_eq_top _)] at ess_sup_lt_top
---       simp at ess_sup_lt_top
---       obtain ⟨C, hC, bound_integral⟩ := ess_sup_lt_top
---       specialize bound_integral x.toMul.unop
---       simp only [toMul_sub, MulOpposite.unop_div, ContinuousLinearMap.mul_apply',
---         gt_iff_lt]
---       norm_cast at bound_integral
---       rw [MeasureTheory.integral_eq_lintegral_of_nonneg_ae] at bound_integral
---       conv at bound_integral =>
---         lhs
---         arg 1
---         arg 1
---         arg 2
---         intro a
---         rw [← Real.enorm_of_nonneg]
---         tactic =>
---           sorry
---         tactic =>
-
---           sorry
---       simp_rw [← Real.enorm_of_nonneg ?_] at bound_integral
---       have ae_lt := ae_lt_of_essSup_lt other_lt_top
-
---       sorry
---   . sorry
 
 -- Defintion 3.11 in Vikman: The function 'μ',  not to be confused with a measure on a measure space
 noncomputable def mu: G → ℝ := ((1 : ℝ) / (#(S) : ℝ)) • ∑ s ∈ S, Pi.single s (1 : ℝ)
@@ -3949,19 +3489,6 @@ lemma f_conv_mu (f: G → ℝ): (Conv  f (mu )) = fun g => ((1 : ℝ) / (#(S) : 
       rhs
       equals (∑ s ∈ S, (Pi.single s (1 : ℝ) ((g * (Additive.toMul a)⁻¹)))) =>
         simp
-
-
-        -- rw [tsum_eq_sum (s := Finset.image opAdd S) (by
-        --   intro b hb
-        --   simp
-        --   right
-        --   simp at hb
-        --   simp [Pi.single, Function.update]
-        --   simp [opAdd] at hb
-        --   by_contra!
-        --   simp_rw [← this] at hb
-        --   sorry
-        -- )]
 
     simp_rw [Finset.mul_sum]
     rw [Summable.tsum_finsetSum]
@@ -4701,66 +4228,6 @@ theorem f_n_sub_conv (n: ℕ): MeasureTheory.eLpNorm ((f_n  n) - (Conv (f_n  n) 
         simp
         positivity
   . exact mu_finsupp
-
-  --   MeasureTheory.eLpNorm_add_le
-  --   rw [MeasureTheory.eLpNorm_nsmul]
-  --   rw [Finset.sum_range_sub]
-  --   have telescope := Finset.sum_range_sub (f := fun (x: Fin n) => muConv  (x + 1)) (by sorry)
-  --   rw [telescope]
-  --   nth_rw 1 [muConv]
-  --   sorry
-  -- . apply mu_finsupp
-  -- rw [← Pi.smul_def]
-  -- rw [smul_assoc]
-  -- rw [← smul_sub]
-
-  -- conv =>
-  --   lhs
-  --   arg 1
-  --   rhs
-  --   rhs
-  --   rhs
-  --   intro g
-  --   rw [Finset.sum_comm]
-
-  -- conv =>
-  --   lhs
-  --   arg 1
-  --   rhs
-  --   rhs
-  --   simp [Pi.smul_def]
-  --   intro i
-  --   rw [Finset.mul_sum]
-  --   arg 2
-  --   intro j
-  --   rw [Finset.mul_sum]
-
-  -- conv =>
-  --   lhs
-  --   arg 1
-  --   rhs
-  --   rhs
-  --   equals ∑ j: Fin n, ∑ i_1 ∈ S, fun i => (↑(#S))⁻¹ * muConv (↑j + 1) (i * i_1) =>
-  --     funext a
-  --     simp
-
-  -- rw [← Finset.sum_sub_distrib]
-  -- conv =>
-  --   lhs
-  --   arg 1
-  --   rhs
-  --   arg 2
-  --   intro x
-
-  -- rw [Finset.sub_sum]
-  -- simp_rw [mul_comm]
-
-  -- conv =>
-  --   lhs
-  --   arg 1
-  --   rhs
-  --   intro g
-  --   rhs
 
 
   -- rw [conv_const_mul]
