@@ -5956,6 +5956,12 @@ lemma F_n_norm_eq_one: ∀ n, MeasureTheory.eLpNorm (F_n n) 2 MeasureTheory.volu
   simp [f_n_nonneg, abs_of_nonneg] at norm_one
   simp [norm_one]
 
+lemma ennreal_ofReal_toReal_eq (a: ENNReal): ENNReal.ofReal a.toReal = a ∨ ENNReal.ofReal a.toReal = 0 := by
+  match a with
+  | none =>
+    simp
+  | some val =>
+    simp
 lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ spectrum ℝ (Laplace_linear ) := by
   rw [spectrum.zero_mem_iff]
   by_contra this
@@ -6031,7 +6037,7 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
         conv at foo =>
           rhs
           equals 0 =>
-            sorry
+            rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)]
         simp [foo]
         unfold Conv
         simp
@@ -6039,14 +6045,20 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
           lhs
           pattern MemLp.toLp _ _
           equals 0 =>
-            sorry
+            conv =>
+              arg 1
+              arg 1
+              equals 0 =>
+                ext a
+                simp
+            simp
         simp
         conv =>
           arg 1
           arg 1
           arg 1
           equals 0 =>
-            sorry
+            rw [ae_eq_everywhere.mp (MeasureTheory.AEEqFun.coeFn_zero)]
         simp
       -- . rw [Lp.norm_def] at norm_eq_zero
       --   rw [ae_eq_everywhere.mp (Lp.coeFn_sub _ _)]  at norm_eq_zero
