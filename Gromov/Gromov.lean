@@ -6051,7 +6051,6 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
     rw [ae_eq_everywhere.mp (Lp.coeFn_sub _ _)] at hn
     simp only [F_n_lp2, conv_mu_lp2] at hn
     simp_rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)] at hn
-    simp [ENNReal.inv_le_iff_inv_le] at inv_norm_ge
     grw [hn] at inv_norm_ge
     simp at inv_norm_ge
 
