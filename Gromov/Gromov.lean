@@ -5962,6 +5962,18 @@ lemma ennreal_ofReal_toReal_eq (a: ENNReal): ENNReal.ofReal a.toReal = a ∨ ENN
     simp
   | some val =>
     simp
+
+-- lemma ennreal_div_le_of_zero (a b c: ENNReal) (ha: (((ENNReal.ofReal a.toReal) / b) ≤ c)): a / b ≤ c  := by
+--   by_cases a_eq_top: a = ⊤
+--   .
+--     rw [a_eq_top] at ha
+--   cases ha
+--   . rename_i a_top
+--     simp [a_top]
+--   . rename_i div_le
+--     grw [ENNReal.ofReal_toReal_le]
+--     exact div_le
+
 lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ spectrum ℝ (Laplace_linear ) := by
   rw [spectrum.zero_mem_iff]
   by_contra this
@@ -6019,10 +6031,10 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
         rhs
         simp [cont_equiv, laplace_equiv]
         simp [hf, Laplace_linear]
-      simp [Laplace]
-      simp at other
+      simp [-AddSubgroupClass.coe_sub, -AddSubgroup.coe_sub, Laplace]
       apply_fun ENNReal.ofReal at other
-      simp at other
+      -- TODO - consider removing @[simp] from 'AddSubgroupClass.coe_sub'
+      simp only [ContinuousLinearEquiv.coe_coe, map_sub, ofReal_norm] at other
       simp only [F_n_lp2, Laplace_b, conv_mu_lp2]
       simp_rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)]
       by_cases norm_f_eq_zero: ‖F_n_lp2 n - conv_mu_lp2 (F_n_lp2 n)‖ = 0
@@ -6076,11 +6088,15 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
         rw [ae_eq_everywhere.mp (Lp.coeFn_sub _ _)] at other
         simp only [F_n_lp2, conv_mu_lp2] at other
         simp_rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)] at other
-
         rw [ENNReal.ofReal_toReal] at other
         .
+          rw [ae_eq_everywhere.mp (Lp.coeFn_sub _ _)]
+          rw [ae_eq_everywhere.mp (Lp.coeFn_sub _ _)] at other
+          simp_rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)] at other
           exact other
-        . sorry
+        .
+          rw [← ae_eq_everywhere.mp (Lp.coeFn_sub _ _)]
+          apply MeasureTheory.Lp.eLpNorm_ne_top
       . simpa using norm_f_eq_zero
       . exact ENNReal.ofReal_mono
   .
