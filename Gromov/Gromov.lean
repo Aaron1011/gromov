@@ -5935,7 +5935,26 @@ lemma g_sub_norm_single_s: ∃ s ∈ S, { n: ℕ | ‖(G_n (n + 1) (by simp)) - 
   refine ⟨s_mem, ?_⟩
   simpa using s_frequently
 
+lemma f_n_nonneg: ∀ n: ℕ, ∀ g: G,  0 ≤ f_n n g := by
+  intro n g
+  simp [f_n]
+  apply mul_nonneg
+  . positivity
+  . apply Finset.sum_nonneg
+    intro i hi
+    apply mu_conv_nonneg
 
+lemma F_n_norm_eq_one: ∀ n, MeasureTheory.eLpNorm (F_n n) 2 MeasureTheory.volume (α := G) = 1 := by
+  simp [eLpNorm, eLpNorm', lintegral_g_eq_add]
+  simp [F_n, Real.enorm_eq_ofReal_abs, ← ENNReal.ofReal_pow]
+
+  intro n
+  simp [f_n_nonneg]
+  have norm_one := f_n_norm_one (n)
+  simp [eLpNorm, eLpNorm', lintegral_g_eq_add] at norm_one
+  simp_rw [Real.enorm_eq_ofReal_abs] at norm_one
+  simp [f_n_nonneg, abs_of_nonneg] at norm_one
+  simp [norm_one]
 
 lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ spectrum ℝ (Laplace_linear ) := by
   rw [spectrum.zero_mem_iff]
@@ -5957,7 +5976,7 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
           simp
       }
   have laplace_cont := continuous_of_linear_of_bound (C := 2) (𝕜 := ℝ ) (f := f.val) ?_ ?_ ?_
-  have cont_equiv :=  LinearEquiv.toContinuousLinearEquivOfContinuous laplace_equiv laplace_cont
+  let cont_equiv :=  LinearEquiv.toContinuousLinearEquivOfContinuous laplace_equiv laplace_cont
 
   have inv_bounded := ContinuousLinearMap.isBoundedLinearMap (𝕜 := ℝ) (cont_equiv.symm.toContinuousLinearMap)
   have nontrival_lp : Nontrivial ↥(Lp ℝ 2 (volume (α := G))) := by
@@ -5968,15 +5987,51 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
 
 
   have inv_norm_ge (n: ℕ) : (1 : ENNReal) / (eLpNorm (Laplace_b (F_n n)) 2 (μ := volume (α := G))) ≤ ENNReal.ofReal ‖cont_equiv.symm.toContinuousLinearMap‖ := by
+
     calc
     _ = (eLpNorm (F_n n) 2 (μ := volume (α := G))) / ((eLpNorm (Laplace_b (F_n n)) 2 (μ := volume (α := G)))) := by
-      sorry
+      rw [F_n_norm_eq_one]
     _ = (eLpNorm (cont_equiv.symm.toFun (cont_equiv.toFun (F_n_lp2 n))) 2) / ((eLpNorm (Laplace_b (F_n n)) 2 (μ := volume (α := G)))) := by
-      sorry
+      simp [F_n_lp2]
+      rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)]
     _ ≤ ENNReal.ofReal ‖cont_equiv.symm.toContinuousLinearMap‖ := by
-      sorry
+      have other := ContinuousLinearMap.ratio_le_opNorm (f := cont_equiv.symm.toContinuousLinearMap) (x := (((F_n_lp2 n) - conv_mu_lp2 (F_n_lp2 n))))
+      conv at other =>
+        lhs
+        rw [Lp.norm_def]
+        --rw [ContinuousLinearMap.map_sub]
+        --rw [ae_eq_everywhere.mp (Lp.coeFn_sub _ _)]
 
 
+
+      conv =>
+        lhs
+        arg 1
+        arg 1
+        rhs
+        rhs
+        rhs
+        simp [cont_equiv, laplace_equiv]
+        simp [hf, Laplace_linear]
+      simp [Laplace]
+      simp at other
+      apply_fun ENNReal.ofReal at other
+      simp at other
+      rw [ENNReal.ofReal_div_of_pos] at other
+      .
+        simp only [ofReal_norm, Lp.enorm_def] at other
+        rw [ae_eq_everywhere.mp (Lp.coeFn_sub _ _)] at other
+        simp only [F_n_lp2, conv_mu_lp2] at other
+        simp_rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)] at other
+
+        rw [ENNReal.ofReal_toReal] at other
+        .
+          simp only [F_n_lp2, Laplace_b, conv_mu_lp2]
+          simp_rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)]
+          exact other
+        . sorry
+      . sorry
+      . exact ENNReal.ofReal_mono
   .
     rw [isBoundedLinearMap_iff] at inv_bounded
     obtain ⟨M, M_pos, le_M⟩ := inv_bounded.2
@@ -6121,26 +6176,7 @@ lemma laplace_conv_eq_laplace_right (f g: G → ℝ) (hfg: ConvExists f g) (g_no
 
 #print axioms laplace_conv_eq_laplace_right
 
-lemma f_n_nonneg: ∀ n: ℕ, ∀ g: G,  0 ≤ f_n n g := by
-  intro n g
-  simp [f_n]
-  apply mul_nonneg
-  . positivity
-  . apply Finset.sum_nonneg
-    intro i hi
-    apply mu_conv_nonneg
 
-lemma F_n_norm_eq_one: ∀ n, MeasureTheory.eLpNorm (F_n n) 2 MeasureTheory.volume (α := G) = 1 := by
-  simp [eLpNorm, eLpNorm', lintegral_g_eq_add]
-  simp [F_n, Real.enorm_eq_ofReal_abs, ← ENNReal.ofReal_pow]
-
-  intro n
-  simp [f_n_nonneg]
-  have norm_one := f_n_norm_one (n)
-  simp [eLpNorm, eLpNorm', lintegral_g_eq_add] at norm_one
-  simp_rw [Real.enorm_eq_ofReal_abs] at norm_one
-  simp [f_n_nonneg, abs_of_nonneg] at norm_one
-  simp [norm_one]
 
 #synth Module ℝ (Lp ℝ 2 (μ := MeasureTheory.volume (α := G)))
 
