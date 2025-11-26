@@ -5997,8 +5997,28 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
   let cont_equiv :=  LinearEquiv.toContinuousLinearEquivOfContinuous laplace_equiv laplace_cont
 
   have inv_bounded := ContinuousLinearMap.isBoundedLinearMap (𝕜 := ℝ) (cont_equiv.symm.toContinuousLinearMap)
+
   have nontrival_lp : Nontrivial ↥(Lp ℝ 2 (volume (α := G))) := by
-    sorry
+    rw [nontrivial_iff]
+    use 0
+    use MemLp.toLp (Pi.single 1 1) (by
+      apply Continuous.memLp_of_hasCompactSupport
+      . apply continuous_of_discreteTopology
+      . simp [HasCompactSupport, tsupport]
+    )
+    simp
+    rw [MeasureTheory.Lp.ext_iff]
+    rw [ae_eq_everywhere]
+    rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)]
+    conv =>
+      arg 1
+      lhs
+      equals 0 =>
+        rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)]
+    by_contra!
+    apply_fun (fun f => f 1) at this
+    simp at this
+
 
   have norm_mul_bound := ContinuousLinearEquiv.one_le_norm_mul_norm_symm cont_equiv
 
