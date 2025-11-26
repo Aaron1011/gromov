@@ -6017,6 +6017,47 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
       simp at other
       apply_fun ENNReal.ofReal at other
       simp at other
+      simp only [F_n_lp2, Laplace_b, conv_mu_lp2]
+      simp_rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)]
+      by_cases norm_f_eq_zero: ‖F_n_lp2 n - conv_mu_lp2 (F_n_lp2 n)‖ = 0
+      . rw [norm_eq_zero] at norm_f_eq_zero
+        have foo := laplace_zero_iff_zero (F_n_lp2 n) (by
+          simp [Laplace]
+          exact norm_f_eq_zero
+        )
+        simp [F_n_lp2] at foo
+        apply_fun (fun f => (f: (G → ℝ))) at foo
+        simp_rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)] at foo
+        conv at foo =>
+          rhs
+          equals 0 =>
+            sorry
+        simp [foo]
+        unfold Conv
+        simp
+        conv =>
+          lhs
+          pattern MemLp.toLp _ _
+          equals 0 =>
+            sorry
+        simp
+        conv =>
+          arg 1
+          arg 1
+          arg 1
+          equals 0 =>
+            sorry
+        simp
+      -- . rw [Lp.norm_def] at norm_eq_zero
+      --   rw [ae_eq_everywhere.mp (Lp.coeFn_sub _ _)]  at norm_eq_zero
+      --   simp only [F_n_lp2, conv_mu_lp2] at norm_eq_zero
+      --   simp_rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)] at norm_eq_zero
+      --   rw [ENNReal.toReal_eq_zero_iff] at norm_eq_zero
+      --   cases norm_eq_zero
+      --   . rename_i foo
+      --     simp [foo]
+      --   simp [norm_eq_zero]
+      --   sorry
       rw [ENNReal.ofReal_div_of_pos] at other
       .
         simp only [ofReal_norm, Lp.enorm_def] at other
@@ -6026,11 +6067,9 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
 
         rw [ENNReal.ofReal_toReal] at other
         .
-          simp only [F_n_lp2, Laplace_b, conv_mu_lp2]
-          simp_rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)]
           exact other
         . sorry
-      . sorry
+      . simpa using norm_f_eq_zero
       . exact ENNReal.ofReal_mono
   .
     rw [isBoundedLinearMap_iff] at inv_bounded
