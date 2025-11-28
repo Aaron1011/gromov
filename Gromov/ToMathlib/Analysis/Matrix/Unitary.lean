@@ -285,8 +285,11 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             lhs
             arg 1
             arg 1
+            -- TODO - figure out why toLin_mul doesn't work here
+            equals ((Matrix.toLin (EuclideanSpace.basisFun (Fin n) ℂ).toBasis (EuclideanSpace.basisFun (Fin n) ℂ).toBasis) (↑↑↑x)) ∘ₗ (((Matrix.toLin (EuclideanSpace.basisFun (Fin n) ℂ).toBasis (EuclideanSpace.basisFun (Fin n) ℂ).toBasis) (↑↑↑y))) =>
+              rw [← Matrix.toLin_mul]
 
-          sorry
+          rfl
         . intro x y hxy
           simpa using hxy
     }
@@ -346,6 +349,10 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         sorry
       .
         intro a
+        have first_prop := a.fst.property
+        have second_prop := a.snd.property
+        simp only [prod_hom]
+        rw [MonoidHom.mem_range] at first_prop
         sorry
     )
 
