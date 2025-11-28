@@ -352,15 +352,41 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         let y_map := LinearMap.ofIsCompl a_b_compl (map_first_y_new) (map_second_y_new)
 
         have first_eq_second: x_map = y_map := by
-          sorry
+          simp [x_map]
+          apply LinearMap.ofIsCompl_eq
+          . intro z
+            simp [y_map]
+            simp [map_first_x_new, map_first_y_new]
+            apply_fun (fun f => f.val) at first_eq
+            simp at first_eq
+            simp [map_first_hom, map_first_unitary] at first_eq
+            rw [Function.Injective.eq_iff] at first_eq
+            .
+              rw [first_eq]
+            . apply LinearEquiv.injective
+          . intro z
+            apply LinearMap.ofIsCompl_eq
+            . sorry
+            . sorry
 
 
 
         have x_map_eq: x_map = x.val.val.val.toEuclideanLin := by
-          sorry
+          simp [x_map]
+          apply LinearMap.ofIsCompl_eq
+          . intro z
+            rfl
+          . intro z
+            rfl
 
         have y_map_eq: y_map = y.val.val.val.toEuclideanLin := by
-          sorry
+          simp [x_map]
+          apply LinearMap.ofIsCompl_eq
+          . intro z
+            rfl
+          . intro z
+            rfl
+
 
         rw [x_map_eq, y_map_eq] at first_eq_second
         simp at first_eq_second
