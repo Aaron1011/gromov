@@ -36,7 +36,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
 
 
 
-  obtain ⟨k, hk⟩ := Module.End.exists_eigenvalue g.val.val.toLin'
+  obtain ⟨k, hk⟩ := Module.End.exists_eigenvalue g.val.val.toEuclideanLin
   by_cases gen_eigenspace_top: Module.End.maxGenEigenspace g.val.val.toLin' k = ⊤
   .
 
@@ -361,11 +361,19 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
     exact {
       a := d
       ha := by
-        sorry
-        -- rw [Nat.ne_zero_iff_zero_lt]
-        -- apply Module.End.pos_finrank_genEigenspace_of_hasEigenvalue hk
-        -- simp [Module.End.maxGenEigenspaceIndex]
-        -- sorry
+        rw [Nat.ne_zero_iff_zero_lt]
+        unfold d
+        rw [Module.End.genEigenspace_top_eq_maxUnifEigenspaceIndex]
+        apply Module.End.pos_finrank_genEigenspace_of_hasEigenvalue
+        . exact hk
+        . by_contra!
+          have eigen_one_le := Module.End.genEigenspace_le_genEigenspace_maxUnifEigenspaceIndex (Matrix.toEuclideanLin g.val.val) k 1
+          simp at this
+          simp [this] at eigen_one_le
+          rw [Module.End.hasEigenvalue_iff] at hk
+          rw [Module.End.eigenspace_def] at hk
+          rw [← Module.End.genEigenspace_one] at hk
+          contradiction
       A := _
       B := _
       iso := prod_iso
