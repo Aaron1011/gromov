@@ -5501,7 +5501,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       obtain ⟨first_subgroup, first_subgroup_abelian, first_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.first_n) (by linarith [data.first_n_pos]) (data.first_group) (by sorry) (first_new_data)
       obtain ⟨second_subgroup, second_subgroup_abelian, second_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.second_n) (by linarith [data.second_n_pos]) (data.second_group) (sorry) (second_new_data)
 
-      let iso := Subgroup.map data.iso.symm.toMonoidHom
+      let iso := Subgroup.comap data.iso.toMonoidHom
       --let Gi' := fun i : Fin (data.k) => compact_lie_virtually_abelian (data.n_i i) (data.positive_n_i i) (data.groups i) (subgroup_fg i) (new_S_data i)
 
       --let first_inv := data.iso.sym ''
@@ -5581,8 +5581,8 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
 
       -- Page 48 : Let Gᵢ := πᵢ⁻¹(πᵢ(G)′) = {g ∈ G : πᵢ(g) ∈ πᵢ(G)′}
-      let G_1 := Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.fst data.first_group data.second_group) first_subgroup)
-      let G_2 := Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.snd data.first_group data.second_group) second_subgroup)
+      let G_1 := Subgroup.comap data.iso.toMonoidHom (Subgroup.comap (MonoidHom.fst data.first_group data.second_group) first_subgroup)
+      let G_2 := Subgroup.comap data.iso.toMonoidHom (Subgroup.comap (MonoidHom.snd data.first_group data.second_group) second_subgroup)
 
       let pre_G' := G_1 ⊓ G_2
 
@@ -5609,22 +5609,27 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
         unfold G_1 at a_first b_first
         unfold G_2 at a_second b_second
 
-        rw [Subgroup.mem_map] at a_first b_first
-        obtain ⟨a_pre, a_pre_mem, a_eq⟩ := a_first
-        obtain ⟨b_pre, b_pre_mem, b_eq⟩ := b_first
-        rw [Subgroup.mem_comap] at a_pre_mem b_pre_mem
-        simp at a_pre_mem b_pre_mem
+        rw [Subgroup.mem_comap] at b_first
+        rw [Subgroup.mem_comap] at a_first
+        rw [Subgroup.mem_comap] at a_first
+        rw [Subgroup.mem_comap] at b_first
 
-        rw [Subgroup.mem_map] at a_second b_second
-        obtain ⟨a2_pre, a2_pre_mem, a2_eq⟩ := a_second
-        obtain ⟨b2_pre, b2_pre_mem, b2_eq⟩ := b_second
-        rw [Subgroup.mem_comap] at a2_pre_mem b2_pre_mem
-        simp at a2_pre_mem b2_pre_mem
+        -- obtain ⟨a_pre, a_pre_mem, a_eq⟩ := a_first
+        -- obtain ⟨b_pre, b_pre_mem, b_eq⟩ := b_first
+        -- rw [Subgroup.mem_comap] at a_pre_mem b_pre_mem
+        -- simp at a_pre_mem b_pre_mem
 
-        have first_comm := first_subgroup_abelian.is_comm.comm ⟨a_pre.1, a_pre_mem⟩ ⟨b_pre.1, b_pre_mem⟩
-        have second_comm := second_subgroup_abelian.is_comm.comm ⟨a2_pre.2, a2_pre_mem⟩ ⟨b2_pre.2, b2_pre_mem⟩
-        simp at a_eq
-        simp at b_eq
+        rw [Subgroup.mem_comap] at a_second b_second
+        rw [Subgroup.mem_comap] at a_second b_second
+        --obtain ⟨a2_pre, a2_pre_mem, a2_eq⟩ := a_second
+        --obtain ⟨b2_pre, b2_pre_mem, b2_eq⟩ := b_second
+        --rw [Subgroup.mem_comap] at a2_pre_mem b2_pre_mem
+        --simp at a2_pre_mem b2_pre_mem
+
+        have first_comm := first_subgroup_abelian.is_comm.comm ⟨_, a_first⟩ ⟨_, b_first⟩
+        have second_comm := second_subgroup_abelian.is_comm.comm ⟨_, a_second⟩ ⟨_, b_second⟩
+        --simp at a_eq
+        --simp at b_eq
         simp at first_comm second_comm
         rw [Subtype.ext_iff]
         simp
@@ -5632,12 +5637,8 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
         simp
         apply Prod.ext
         . simp
-          rw [← a_eq, ← b_eq]
-          simp
           exact first_comm
         . simp
-          rw [← a2_eq, ← b2_eq]
-          simp
           exact second_comm
 
       have G'_abeliean : IsMulCommutative G' := by
