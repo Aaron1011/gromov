@@ -276,8 +276,8 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
 
 
     let map_second (h: Subgroup.centralizer {g}) := h.val.val.val.toEuclideanLin.restrict
-      (p :=  ⨆ (i : { i : Module.End.Eigenvalues g.val.val.toEuclideanLin // i.val ≠ k }), Module.End.maxGenEigenspace g.val.val.toEuclideanLin i)
-      (q :=  ⨆ (i : { i : Module.End.Eigenvalues g.val.val.toEuclideanLin // i.val ≠ k }), Module.End.maxGenEigenspace g.val.val.toEuclideanLin i)
+      (p :=  ↑((iSup fun (i : ℂ) ↦ ⨆ (_ : i ≠ k), Module.End.maxGenEigenspace (Matrix.toEuclideanLin g.val.val) i)))
+      (q :=  ↑((iSup fun (i : ℂ) ↦ ⨆ (_ : i ≠ k), Module.End.maxGenEigenspace (Matrix.toEuclideanLin g.val.val) i)))
       (by
         --exact other_invariant h
         sorry
@@ -322,7 +322,21 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         intro x y hxy
         simp at hxy
         obtain ⟨first_eq, second_eq⟩ := hxy
-        simp [map_first_hom, map_first_unitary, map_first] at first_eq
+
+        let map_first_new: ((Module.End.genEigenspace (Matrix.toEuclideanLin g.val.val) k) ⊤) →ₗ[ℂ] (EuclideanSpace ℂ (Fin n)) := {
+          toFun := fun a => map_first x a
+          map_add' := by simp
+          map_smul' := by simp
+        }
+
+        let map_second_new: ↑((iSup fun (i : ℂ) ↦ ⨆ (_ : i ≠ k), Module.End.maxGenEigenspace (Matrix.toEuclideanLin g.val.val) i)) →ₗ[ℂ] (EuclideanSpace ℂ (Fin n)) := {
+          toFun := fun a => map_second x a
+          map_add' := by simp
+          map_smul' := by simp
+        }
+
+        have x_map := LinearMap.ofIsCompl a_b_compl (map_first_new) (map_second_new)
+        --simp [map_first_hom, map_first_unitary, map_first] at first_eq
         sorry
       .
         intro a
@@ -341,12 +355,6 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
       b := _
       hab := by
         have sum_eq := Submodule.finrank_add_eq_of_isCompl a_b_compl
-        unfold d
-        conv at sum_eq =>
-          lhs
-          rhs
-          equals Module.finrank ℂ ↑(⨆ (i : { i : Module.End.Eigenvalues g.val.val.toEuclideanLin // i.val ≠ k}), Module.End.maxGenEigenspace g.val.val.toEuclideanLin i) =>
-            sorry
         simp at sum_eq
         apply sum_eq
       ha := by
