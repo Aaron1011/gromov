@@ -7,7 +7,7 @@ structure IsoData {n: ℕ} {G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)} (g: G
   B: Subgroup (Matrix.unitaryGroup (Fin (n - a)) ℂ)
   iso: Subgroup.centralizer {g} ≃* A × B
 
-lemma diag_of_eigenspace_span {n: ℕ} [hn: NeZero n] (g: ((Fin n) → ℂ) →ₗ[ℂ] (Fin n) → ℂ) (k: ℂ) (hg: Module.End.eigenspace g k = ⊤):
+lemma diag_of_eigenspace_span {A: Type*} [Nontrivial A] [AddCommGroup A] [Module ℂ A] (g: A →ₗ[ℂ] A) (k: ℂ) (hg: Module.End.eigenspace g k = ⊤):
   g = k • 1 := by
 
   rw [LinearMap.ext_iff]
@@ -16,7 +16,7 @@ lemma diag_of_eigenspace_span {n: ℕ} [hn: NeZero n] (g: ((Fin n) → ℂ) →�
 
   have has_eigenvalue: Module.End.HasEigenvalue g k := by
     rw [Module.End.hasEigenvalue_iff, hg]
-    simp
+    simp only [ne_eq, top_ne_bot, not_false_eq_true]
 
   have x_mem: x ∈ Module.End.eigenspace g k := by
     simp [hg]
@@ -51,12 +51,11 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
     rw [Module.End.maxGenEigenspace_eq] at gen_eigenspace_top
     apply Module.End.HasEigenvalue.exists_hasEigenvector at hk
 
-    sorry
-    -- have eq_diag := diag_of_eigenspace_span g.val.val.toEuclideanLin k eigenspace_top
-    -- specialize g_not k
-    -- apply_fun (fun f => f.toMatrix') at eq_diag
-    -- simp at eq_diag
-    -- contradiction
+    have eq_diag := diag_of_eigenspace_span g.val.val.toEuclideanLin k eigenspace_top
+    specialize g_not k
+    apply_fun (fun f =>  LinearMap.toMatrix (EuclideanSpace.basisFun (Fin n) ℂ).toBasis (EuclideanSpace.basisFun (Fin n) ℂ).toBasis f) at eq_diag
+    simp [Matrix.toEuclideanLin_eq_toLin_orthonormal] at eq_diag
+    contradiction
   .
     have span := Module.End.iSup_maxGenEigenspace_eq_top g.val.val.toEuclideanLin
     rw [iSup_split_single _ k] at span
