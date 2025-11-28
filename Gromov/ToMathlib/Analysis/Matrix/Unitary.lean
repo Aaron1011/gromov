@@ -129,8 +129,6 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
           lhs
           -- TODO - why does this timeout when not inside 'conv'?
           rw [Matrix.star_eq_conjTranspose]
-        -- rw [← LinearMap.toMatrix_adjoint]
-        -- simp
 
         simp only [LinearMap.toMatrixOrthonormal_apply]
         simp []
@@ -140,31 +138,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
           -- TODO - why does this timeout when not inside 'conv'?
           rw [← LinearMap.toMatrix_adjoint]
           arg 2
-          --rw [← LinearMap.star_eq_adjoint]
         rw [← LinearMap.toMatrix_mul]
-        conv =>
-          lhs
-          rhs
-          rhs
-          arg 1
-          --arg 1
-          --rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
-        -- conv =>
-        --   lhs
-        --   rhs
-        --   rhs
-        --   rw [← Matrix.toEuclideanLin_conjTranspose_eq_adjoint]
-        --   arg 1
-        --   rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
-
-
-        -- conv =>
-        --   lhs
-        --   rhs
-        --   arg 2
-        --   arg 1
-        --   rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
-
 
         apply_fun Matrix.toLin (stdOrthonormalBasis ℂ _).toBasis (stdOrthonormalBasis ℂ _).toBasis
         rw [Matrix.toLin_toMatrix]
@@ -193,17 +167,6 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
           equals 1 =>
             ext z
             simp
-        -- exact h_unitary
-        -- rw [LinearMap.ext_iff]
-        -- intro y
-        -- simp
-        -- rw [LinearMap.restrict_apply]
-
-
-        -- rw [← Matrix.toEuclideanLin_conjTranspose_eq_adjoint]
-        -- conv =>
-          --lhs
-          --rw [← linearmap_comp_eq_mul]
 
         apply_fun (fun f => LinearMap.toContinuousLinearMap f)
         simp [-EmbeddingLike.apply_eq_iff_eq]
