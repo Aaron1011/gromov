@@ -286,7 +286,103 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
 
     let map_second_unitary (h: Subgroup.centralizer {g}): Matrix.unitaryGroup _ ℂ := {
       val := LinearMap.toMatrixOrthonormal (stdOrthonormalBasis ℂ _) (map_second h)
-      property := sorry
+      property := by
+        -- TODO - deduplicate this with 'map_first_unitary'
+        rw [Matrix.mem_unitaryGroup_iff']
+
+        conv =>
+          lhs
+          lhs
+          -- TODO - why does this timeout when not inside 'conv'?
+          rw [Matrix.star_eq_conjTranspose]
+
+        simp only [LinearMap.toMatrixOrthonormal_apply]
+        simp []
+        conv =>
+          lhs
+          lhs
+          -- TODO - why does this timeout when not inside 'conv'?
+          rw [← LinearMap.toMatrix_adjoint]
+          arg 2
+        rw [← LinearMap.toMatrix_mul]
+
+        apply_fun Matrix.toLin (stdOrthonormalBasis ℂ _).toBasis (stdOrthonormalBasis ℂ _).toBasis
+        rw [Matrix.toLin_toMatrix]
+        rw [Matrix.toLin_one]
+        conv =>
+          rhs
+          equals 1 =>
+            ext a
+            simp
+
+        simp [map_first]
+        have h_unitary := Unitary.star_mul_self_of_mem h.val.val.property
+        apply_fun Matrix.toEuclideanLin at h_unitary
+        rw [Matrix.toEuclideanLin_eq_toLin_orthonormal] at h_unitary
+        conv at h_unitary =>
+          lhs
+          equals (Matrix.toEuclideanLin (star h.val.val.val)) ∘ₗ (Matrix.toEuclideanLin (h.val.val.val)) =>
+            rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
+            rw [← Matrix.toLin_mul]
+        rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal] at h_unitary
+        rw [Matrix.star_eq_conjTranspose] at h_unitary
+        rw [Matrix.toEuclideanLin_conjTranspose_eq_adjoint] at h_unitary
+        conv at h_unitary =>
+          rhs
+          rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
+          equals 1 =>
+            ext z
+            simp
+
+        apply_fun (fun f => LinearMap.toContinuousLinearMap f)
+        simp [-EmbeddingLike.apply_eq_iff_eq]
+        conv =>
+          lhs
+          rw [← linearmap_comp_eq_mul]
+          rw [linearmap_comp_toContinuousLinearMap]
+          rw [ContinuousLinearMap.mul_def]
+          lhs
+          rw [LinearMap.adjoint_toContinuousLinearMap]
+
+        conv =>
+          rhs
+          equals 1 =>
+            ext z
+            simp
+        rw [← ContinuousLinearMap.norm_map_iff_adjoint_comp_self]
+        simp only [LinearMap.coe_toContinuousLinearMap']
+        conv =>
+          intro x
+          rw [LinearMap.restrict_apply (by
+            apply Module.End.mapsTo_genEigenspace_of_comm (by
+              apply comm_g_h
+            )
+          )]
+          simp
+          rw [← LinearMap.coe_toContinuousLinearMap']
+
+
+        apply_fun (fun f => LinearMap.toContinuousLinearMap f) at h_unitary
+        simp [-EmbeddingLike.apply_eq_iff_eq] at h_unitary
+        conv at h_unitary =>
+          lhs
+          rw [linearmap_comp_toContinuousLinearMap]
+          rw [ContinuousLinearMap.mul_def]
+          lhs
+          rw [LinearMap.adjoint_toContinuousLinearMap]
+
+        conv at h_unitary =>
+          rhs
+          equals 1 =>
+            ext x
+            simp
+        rw [← ContinuousLinearMap.norm_map_iff_adjoint_comp_self] at h_unitary
+        intro x
+        specialize h_unitary x.val
+        exact h_unitary
+        . exact LinearEquiv.injective LinearMap.toContinuousLinearMap
+        . intro x y hxy
+          simpa using hxy
     }
 
     let map_second_hom: MonoidHom (Subgroup.centralizer {g}) _ := {
@@ -318,6 +414,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
       unfold Function.Bijective
       refine ⟨?_, ?_⟩
       .
+        -- TODO - this can probably be much simpler
         simp [prod_hom]
         intro x y hxy
         simp at hxy
