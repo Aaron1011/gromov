@@ -64,12 +64,14 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
 
     have a_b_compl: IsCompl _ _ := {
       disjoint := by
-        conv =>
-          rhs
-          equals ⨆ (i : Module.End.Eigenvalues g.val.val.toEuclideanLin), ⨆ (_: i.val ≠ k), Module.End.maxGenEigenspace g.val.val.toEuclideanLin i =>
-            sorry
+        -- conv =>
+        --   rhs
+        --   equals ⨆ (i : Module.End.Eigenvalues g.val.val.toEuclideanLin), ⨆ (_: i.val ≠ k), Module.End.maxGenEigenspace g.val.val.toEuclideanLin i =>
+        --     sorry
 
-        sorry
+        have foo := Module.End.independent_genEigenspace (g.val.val.toEuclideanLin) ⊤
+        rw [iSupIndep_def] at foo
+        apply foo
       codisjoint := span
     }
 
