@@ -323,21 +323,66 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         simp at hxy
         obtain ⟨first_eq, second_eq⟩ := hxy
 
-        let map_first_new: ((Module.End.genEigenspace (Matrix.toEuclideanLin g.val.val) k) ⊤) →ₗ[ℂ] (EuclideanSpace ℂ (Fin n)) := {
+        let map_first_x_new: ((Module.End.genEigenspace (Matrix.toEuclideanLin g.val.val) k) ⊤) →ₗ[ℂ] (EuclideanSpace ℂ (Fin n)) := {
           toFun := fun a => map_first x a
           map_add' := by simp
           map_smul' := by simp
         }
 
-        let map_second_new: ↑((iSup fun (i : ℂ) ↦ ⨆ (_ : i ≠ k), Module.End.maxGenEigenspace (Matrix.toEuclideanLin g.val.val) i)) →ₗ[ℂ] (EuclideanSpace ℂ (Fin n)) := {
+        let map_second_x_new: ↑((iSup fun (i : ℂ) ↦ ⨆ (_ : i ≠ k), Module.End.maxGenEigenspace (Matrix.toEuclideanLin g.val.val) i)) →ₗ[ℂ] (EuclideanSpace ℂ (Fin n)) := {
           toFun := fun a => map_second x a
           map_add' := by simp
           map_smul' := by simp
         }
 
-        have x_map := LinearMap.ofIsCompl a_b_compl (map_first_new) (map_second_new)
-        --simp [map_first_hom, map_first_unitary, map_first] at first_eq
-        sorry
+        let x_map := LinearMap.ofIsCompl a_b_compl (map_first_x_new) (map_second_x_new)
+
+        let map_first_y_new: ((Module.End.genEigenspace (Matrix.toEuclideanLin g.val.val) k) ⊤) →ₗ[ℂ] (EuclideanSpace ℂ (Fin n)) := {
+          toFun := fun a => map_first y a
+          map_add' := by simp
+          map_smul' := by simp
+        }
+
+        let map_second_y_new: ↑((iSup fun (i : ℂ) ↦ ⨆ (_ : i ≠ k), Module.End.maxGenEigenspace (Matrix.toEuclideanLin g.val.val) i)) →ₗ[ℂ] (EuclideanSpace ℂ (Fin n)) := {
+          toFun := fun a => map_second y a
+          map_add' := by simp
+          map_smul' := by simp
+        }
+
+        let y_map := LinearMap.ofIsCompl a_b_compl (map_first_y_new) (map_second_y_new)
+
+        have first_eq_second: x_map = y_map := by
+          sorry
+
+
+
+        have x_map_eq: x_map = x.val.val.val.toEuclideanLin := by
+          sorry
+
+        have y_map_eq: y_map = y.val.val.val.toEuclideanLin := by
+          sorry
+
+        rw [x_map_eq, y_map_eq] at first_eq_second
+        simp at first_eq_second
+        exact first_eq_second
+
+        -- have x_map_inj: Function.Injective x_map := by
+        --   rw [x_map_eq]
+        --   intro a b hab
+        --   rw [Matrix.toEuclideanLin_apply] at hab
+        --   rw [Matrix.toEuclideanLin_apply] at hab
+        --   simp at hab
+        --   rw [Function.Injective.eq_iff] at hab
+        --   .
+        --     rw [Function.Injective.eq_iff] at hab
+        --     . exact hab
+        --     . exact WithLp.ofLp_injective 2
+        --   .
+        --     apply Matrix.mulVec_injective_of_isUnit
+        --     exact Unitary.isUnit_coe
+
+        -- --simp [map_first_hom, map_first_unitary, map_first] at first_eq
+        -- sorry
       .
         intro a
         have first_prop := a.fst.property
