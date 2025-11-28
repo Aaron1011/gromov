@@ -2,9 +2,11 @@ import Mathlib
 
 structure IsoData {n: ℕ} {G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)} (g: G) where
   a : ℕ
+  b: ℕ
   ha: a ≠ 0
+  hab: a + b = n
   A: Subgroup (Matrix.unitaryGroup (Fin a) ℂ)
-  B: Subgroup (Matrix.unitaryGroup (Fin (n - a)) ℂ)
+  B: Subgroup (Matrix.unitaryGroup (Fin b) ℂ)
   iso: Subgroup.centralizer {g} ≃* A × B
 
 lemma diag_of_eigenspace_span {A: Type*} [Nontrivial A] [AddCommGroup A] [Module ℂ A] (g: A →ₗ[ℂ] A) (k: ℂ) (hg: Module.End.eigenspace g k = ⊤):
@@ -43,9 +45,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
     have eigenspace_top: Module.End.eigenspace g.val.val.toEuclideanLin k = ⊤ := by
       ext a
       simp
-      -- have a_mem_top: a ∈ (⊤ : (Submodule ℂ (Fin n → ℂ))) := by simp
-      -- rw [← gen_eigenspace_top] at a_mem_top
-      -- simp at a_mem_top
+      -- This needs to somehow use the fact that g is unitary
       sorry
 
     rw [Module.End.maxGenEigenspace_eq] at gen_eigenspace_top
@@ -283,7 +283,8 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         sorry
       )
 
-    let map_second_unitary (h: Subgroup.centralizer {g}): Matrix.unitaryGroup (Fin (_)) ℂ := {
+
+    let map_second_unitary (h: Subgroup.centralizer {g}): Matrix.unitaryGroup _ ℂ := {
       val := LinearMap.toMatrixOrthonormal (stdOrthonormalBasis ℂ _) (map_second h)
       property := sorry
     }
@@ -337,6 +338,17 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
     apply Nonempty.intro
     exact {
       a := d
+      b := _
+      hab := by
+        have sum_eq := Submodule.finrank_add_eq_of_isCompl a_b_compl
+        unfold d
+        conv at sum_eq =>
+          lhs
+          rhs
+          equals Module.finrank ℂ ↑(⨆ (i : { i : Module.End.Eigenvalues g.val.val.toEuclideanLin // i.val ≠ k}), Module.End.maxGenEigenspace g.val.val.toEuclideanLin i) =>
+            sorry
+        simp at sum_eq
+        apply sum_eq
       ha := by
         rw [Nat.ne_zero_iff_zero_lt]
         unfold d
