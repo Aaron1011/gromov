@@ -37,38 +37,50 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
 
 
   obtain ⟨k, hk⟩ := Module.End.exists_eigenvalue g.val.val.toEuclideanLin
-  by_cases gen_eigenspace_top: Module.End.maxGenEigenspace g.val.val.toLin' k = ⊤
+  by_cases gen_eigenspace_top: Module.End.maxGenEigenspace g.val.val.toEuclideanLin k = ⊤
   .
 
-    have eigenspace_top: Module.End.eigenspace g.val.val.toLin' k = ⊤ := by
+    have eigenspace_top: Module.End.eigenspace g.val.val.toEuclideanLin k = ⊤ := by
       ext a
       simp
-      have a_mem_top: a ∈ (⊤ : (Submodule ℂ (Fin n → ℂ))) := by simp
-      rw [← gen_eigenspace_top] at a_mem_top
-      simp at a_mem_top
+      -- have a_mem_top: a ∈ (⊤ : (Submodule ℂ (Fin n → ℂ))) := by simp
+      -- rw [← gen_eigenspace_top] at a_mem_top
+      -- simp at a_mem_top
       sorry
 
     rw [Module.End.maxGenEigenspace_eq] at gen_eigenspace_top
     apply Module.End.HasEigenvalue.exists_hasEigenvector at hk
 
-    have eq_diag := diag_of_eigenspace_span g.val.val.toLin' k eigenspace_top
-    specialize g_not k
-    apply_fun (fun f => f.toMatrix') at eq_diag
-    simp at eq_diag
-    contradiction
+    sorry
+    -- have eq_diag := diag_of_eigenspace_span g.val.val.toEuclideanLin k eigenspace_top
+    -- specialize g_not k
+    -- apply_fun (fun f => f.toMatrix') at eq_diag
+    -- simp at eq_diag
+    -- contradiction
   .
-    have span := Module.End.iSup_maxGenEigenspace_eq_top g.val.val.toLin'
+    have span := Module.End.iSup_maxGenEigenspace_eq_top g.val.val.toEuclideanLin
     rw [iSup_split_single _ k] at span
     rw [← codisjoint_iff] at span
+
+    have a_b_compl: IsCompl _ _ := {
+      disjoint := by
+        conv =>
+          rhs
+          equals ⨆ (i : Module.End.Eigenvalues g.val.val.toEuclideanLin), ⨆ (_: i.val ≠ k), Module.End.maxGenEigenspace g.val.val.toEuclideanLin i =>
+            sorry
+
+        sorry
+      codisjoint := span
+    }
 
     have other_ne_bot := Codisjoint.ne_bot_of_ne_top span gen_eigenspace_top
     rw [codisjoint_iff] at span
 
-    have preserves := Module.End.mapsTo_genEigenspace_of_comm (f := g.val.val.toLin') (g := g.val.val.toLin') (by simp) k (Module.End.maxGenEigenspaceIndex g.val.val.toLin' k)
+    have preserves := Module.End.mapsTo_genEigenspace_of_comm (f := g.val.val.toEuclideanLin) (g := g.val.val.toEuclideanLin) (by simp) k (Module.End.maxGenEigenspaceIndex g.val.val.toEuclideanLin k)
     rw [← Module.End.maxGenEigenspace_eq] at preserves
     rw [← iSup_ne_bot_subtype] at span
 
-    have new_ne_bot: ⨆ (i : Module.End.Eigenvalues g.val.val.toLin'), ⨆ (_: i.val ≠ k), Module.End.maxGenEigenspace g.val.val.toLin' i ≠ ⊥ := by
+    have new_ne_bot: ⨆ (i : Module.End.Eigenvalues g.val.val.toEuclideanLin), ⨆ (_: i.val ≠ k), Module.End.maxGenEigenspace g.val.val.toEuclideanLin i ≠ ⊥ := by
       sorry
 
 
@@ -83,19 +95,6 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
     --   arg 1
     --   intro hi
 
-
-    have other_invariant:  ⨆ (i : { i : Module.End.Eigenvalues g.val.val.toLin' // i.val ≠ k }), Module.End.maxGenEigenspace g.val.val.toLin' i ∈ (Module.End.invtSubmodule g.val.val.toLin') := by
-      apply SupClosed.iSup_mem
-      . simp
-      . simp
-      .
-        intro i
-        simp
-        apply Module.End.mapsTo_genEigenspace_of_comm
-        simp
-
-    rw [Module.End.mem_invtSubmodule_iff_forall_mem_of_mem] at other_invariant
-
     have comm_g_h (h: Subgroup.centralizer {g}): Commute (Matrix.toEuclideanLin g.val.val) (Matrix.toEuclideanLin h.val.val) := by
       have foo := h.property
       rw [Subgroup.mem_centralizer_iff] at foo
@@ -107,6 +106,21 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
       simp only [LinearEquiv.trans_apply, Matrix.toLin'_mul] at foo
       unfold Matrix.toEuclideanLin
       exact foo
+
+    have other_invariant (h: Subgroup.centralizer {g}):  ⨆ (i : { i : Module.End.Eigenvalues g.val.val.toEuclideanLin // i.val ≠ k }), Module.End.maxGenEigenspace h.val.val.val.toEuclideanLin i ∈ (Module.End.invtSubmodule g.val.val.toEuclideanLin) := by
+      apply SupClosed.iSup_mem
+      . simp
+      . simp
+      .
+        intro i
+        simp
+        apply Module.End.mapsTo_genEigenspace_of_comm
+        rw [Commute.symm_iff]
+        apply comm_g_h
+
+    --simp_rw [Module.End.mem_invtSubmodule_iff_forall_mem_of_mem] at other_invariant
+
+
 
 
     let map_first (h: Subgroup.centralizer {g}) := h.val.val.val.toEuclideanLin.restrict (Module.End.mapsTo_genEigenspace_of_comm (f := g.val.val.toEuclideanLin) (g := h.val.val.val.toEuclideanLin) (by
@@ -260,18 +274,16 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
     let first_range := map_first_hom.range
 
 
-    let map_second (h: Subgroup.centralizer {g}) := h.val.val.val.toLin'.restrict
-      (p :=  ⨆ (i : { i : Module.End.Eigenvalues g.val.val.toLin' // i.val ≠ k }), Module.End.maxGenEigenspace g.val.val.toLin' i)
-      (q :=  ⨆ (i : { i : Module.End.Eigenvalues g.val.val.toLin' // i.val ≠ k }), Module.End.maxGenEigenspace g.val.val.toLin' i)
+    let map_second (h: Subgroup.centralizer {g}) := h.val.val.val.toEuclideanLin.restrict
+      (p :=  ⨆ (i : { i : Module.End.Eigenvalues g.val.val.toEuclideanLin // i.val ≠ k }), Module.End.maxGenEigenspace g.val.val.toEuclideanLin i)
+      (q :=  ⨆ (i : { i : Module.End.Eigenvalues g.val.val.toEuclideanLin // i.val ≠ k }), Module.End.maxGenEigenspace g.val.val.toEuclideanLin i)
       (by
-        intro x hx
+        --exact other_invariant h
         sorry
       )
 
-    let map_second_unitary (h: Subgroup.centralizer {g}): Matrix.unitaryGroup (Fin (n - d)) ℂ := {
-      val := by
-        let foo := (map_second h)
-        sorry
+    let map_second_unitary (h: Subgroup.centralizer {g}): Matrix.unitaryGroup (Fin (_)) ℂ := {
+      val := LinearMap.toMatrixOrthonormal (stdOrthonormalBasis ℂ _) (map_second h)
       property := sorry
     }
 
