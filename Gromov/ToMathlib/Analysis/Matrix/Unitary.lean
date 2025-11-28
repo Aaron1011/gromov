@@ -82,8 +82,8 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
     rw [← Module.End.maxGenEigenspace_eq] at preserves
     rw [← iSup_ne_bot_subtype] at span
 
-    have new_ne_bot: ⨆ (i : Module.End.Eigenvalues g.val.val.toEuclideanLin), ⨆ (_: i.val ≠ k), Module.End.maxGenEigenspace g.val.val.toEuclideanLin i ≠ ⊥ := by
-      sorry
+    -- have new_ne_bot: ⨆ (i : Module.End.Eigenvalues g.val.val.toEuclideanLin), ⨆ (_: i.val ≠ k), Module.End.maxGenEigenspace g.val.val.toEuclideanLin i ≠ ⊥ := by
+    --   sorry
 
 
 
@@ -332,6 +332,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         rw [MonoidHom.mem_range] at first_prop
         sorry
     )
+    -- Submodule.finrank_add_eq_of_isCompl
 
 
     apply Nonempty.intro
