@@ -365,9 +365,12 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
               rw [first_eq]
             . apply LinearEquiv.injective
           . intro z
-            apply LinearMap.ofIsCompl_eq
-            . sorry
-            . sorry
+            simp [y_map]
+            simp [map_second_x_new, map_second_y_new]
+            apply_fun (fun f => f.val) at second_eq
+            simp at second_eq
+            simp [map_second_hom, map_second_unitary] at second_eq
+            congr
 
 
 
