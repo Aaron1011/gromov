@@ -315,7 +315,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             ext a
             simp
 
-        simp [map_first]
+        simp [map_second]
         have h_unitary := Unitary.star_mul_self_of_mem h.val.val.property
         apply_fun Matrix.toEuclideanLin at h_unitary
         rw [Matrix.toEuclideanLin_eq_toLin_orthonormal] at h_unitary
@@ -354,9 +354,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         conv =>
           intro x
           rw [LinearMap.restrict_apply (by
-            apply Module.End.mapsTo_genEigenspace_of_comm (by
-              apply comm_g_h
-            )
+            sorry
           )]
           simp
           rw [← LinearMap.coe_toContinuousLinearMap']
@@ -387,18 +385,40 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
 
     let map_second_hom: MonoidHom (Subgroup.centralizer {g}) _ := {
       toFun := map_second_unitary
+      -- TODO - deduplicate these with 'map_first_hom'
       map_one' := by
         simp [map_second_unitary, map_second]
-        sorry
-        -- rw [LinearMap.ext_iff]
-        -- intro x
-        -- rw [LinearMap.restrict_apply]
-        -- simp
+        apply_fun Matrix.toLin (stdOrthonormalBasis ℂ _).toBasis (stdOrthonormalBasis ℂ _).toBasis
+        .
+          simp
+          simp_rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
+          simp
+          ext a
+          simp
+        . intro x y hxy
+          simpa using hxy
       map_mul' := by
         intro x y
-        sorry
-        -- simp [map_first]
-        -- rfl
+        simp [map_second_unitary, map_second]
+        apply_fun Matrix.toLin (stdOrthonormalBasis ℂ _).toBasis (stdOrthonormalBasis ℂ _).toBasis
+        .
+          simp
+          rw [LinearMap.ext_iff]
+          intro a
+          rw [← LinearMap.toMatrix_mul]
+          simp
+          simp_rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
+          conv =>
+            lhs
+            arg 1
+            arg 1
+            -- TODO - figure out why toLin_mul doesn't work here
+            equals ((Matrix.toLin (EuclideanSpace.basisFun (Fin n) ℂ).toBasis (EuclideanSpace.basisFun (Fin n) ℂ).toBasis) (↑↑↑x)) ∘ₗ (((Matrix.toLin (EuclideanSpace.basisFun (Fin n) ℂ).toBasis (EuclideanSpace.basisFun (Fin n) ℂ).toBasis) (↑↑↑y))) =>
+              rw [← Matrix.toLin_mul]
+
+          rfl
+        . intro x y hxy
+          simpa using hxy
     }
 
     -- let first_iso := MonoidHom.ofInjective (f := map_first_hom) (by
