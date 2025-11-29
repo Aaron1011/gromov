@@ -63,11 +63,6 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
 
     have a_b_compl: IsCompl _ _ := {
       disjoint := by
-        -- conv =>
-        --   rhs
-        --   equals ⨆ (i : Module.End.Eigenvalues g.val.val.toEuclideanLin), ⨆ (_: i.val ≠ k), Module.End.maxGenEigenspace g.val.val.toEuclideanLin i =>
-        --     sorry
-
         have foo := Module.End.independent_genEigenspace (g.val.val.toEuclideanLin) ⊤
         rw [iSupIndep_def] at foo
         apply foo
@@ -81,8 +76,6 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
     rw [← Module.End.maxGenEigenspace_eq] at preserves
     rw [← iSup_ne_bot_subtype] at span
 
-    -- have new_ne_bot: ⨆ (i : Module.End.Eigenvalues g.val.val.toEuclideanLin), ⨆ (_: i.val ≠ k), Module.End.maxGenEigenspace g.val.val.toEuclideanLin i ≠ ⊥ := by
-    --   sorry
 
 
 
@@ -432,14 +425,6 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
           simpa using hxy
     }
 
-    -- let first_iso := MonoidHom.ofInjective (f := map_first_hom) (by
-    --   simp [map_first_hom, map_first_unitary]
-    --   intro x y hxy
-    --   simp at hxy
-    --   simp [map_first] at hxy
-
-    -- )
-    -- let second_iso := MonoidHom.ofInjective (f := map_second_hom) (by sorry)
     let prod_hom := MonoidHom.prod map_first_hom.rangeRestrict map_second_hom.rangeRestrict
     let prod_iso := MulEquiv.ofBijective prod_hom (by
       unfold Function.Bijective
@@ -522,24 +507,6 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         rw [x_map_eq, y_map_eq] at first_eq_second
         simp at first_eq_second
         exact first_eq_second
-
-        -- have x_map_inj: Function.Injective x_map := by
-        --   rw [x_map_eq]
-        --   intro a b hab
-        --   rw [Matrix.toEuclideanLin_apply] at hab
-        --   rw [Matrix.toEuclideanLin_apply] at hab
-        --   simp at hab
-        --   rw [Function.Injective.eq_iff] at hab
-        --   .
-        --     rw [Function.Injective.eq_iff] at hab
-        --     . exact hab
-        --     . exact WithLp.ofLp_injective 2
-        --   .
-        --     apply Matrix.mulVec_injective_of_isUnit
-        --     exact Unitary.isUnit_coe
-
-        -- --simp [map_first_hom, map_first_unitary, map_first] at first_eq
-        -- sorry
       .
         intro a
         have first_prop := a.fst.property
@@ -577,9 +544,3 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
       B := _
       iso := prod_iso
     }
-
-
-  -- let f: Subgroup.centralizer {g} ≃* A × B := {
-
-  -- }
-  -- sorry
