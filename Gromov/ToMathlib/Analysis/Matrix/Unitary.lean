@@ -31,7 +31,7 @@ lemma linearmap_comp_eq_mul {P: Type*} [AddCommMonoid P] [Module ℂ P] (a b: P 
 lemma linearmap_comp_toContinuousLinearMap {P: Type*} [AddCommGroup P] [Module ℂ P] [TopologicalSpace P] [IsTopologicalAddGroup P] [ContinuousSMul ℂ P] [T2Space P]  [FiniteDimensional ℂ P]  (a b: P →ₗ[ℂ] P):
   (a.comp b).toContinuousLinearMap = a.toContinuousLinearMap * b.toContinuousLinearMap := rfl
 
-set_option maxHeartbeats 3000000 in
+set_option maxHeartbeats 4000000 in
 set_option synthInstance.maxHeartbeats 100000 in
 lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) (g_not: ∀ z: ℂ, g.val.val ≠ z • 1):
     Nonempty (IsoData g) := by
@@ -531,10 +531,32 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         }
 
         let new := LinearMap.ofIsCompl a_b_compl map_first_x_new map_second_y_new
-        use ⟨⟨(LinearMap.toMatrixOrthonormal (stdOrthonormalBasis ℂ _) new).reindex (finCongr (by simp)) (finCongr (by simp)), by sorry⟩, by sorry⟩
+        have basis: OrthonormalBasis (Fin n) ℂ (EuclideanSpace ℂ (Fin n)) := sorry
+        use ⟨⟨(LinearMap.toMatrixOrthonormal (n := Fin n) basis new), by sorry⟩, by sorry⟩
 
 
-        sorry
+        apply Prod.ext
+        .
+          rw [Subtype.ext_iff]
+          conv =>
+            rhs
+            rw [← hx]
+          simp
+          apply congrArg
+          rw [Subtype.ext_iff]
+          simp
+          rw [Subtype.ext_iff]
+          simp
+          apply_fun (fun f => Matrix.toLin basis.toBasis basis.toBasis f)
+          simp [new]
+          apply LinearMap.ofIsCompl_eq
+          . intro z
+            simp [map_first_x_new, map_first]
+            sorry
+          . intro z
+            simp [map_second_y_new, map_second]
+            sorry
+        . sorry
     )
     -- Submodule.finrank_add_eq_of_isCompl
 
