@@ -531,8 +531,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         }
 
         let new := LinearMap.ofIsCompl a_b_compl map_first_x_new map_second_y_new
-        have basis: OrthonormalBasis (Fin n) ℂ (EuclideanSpace ℂ (Fin n)) := sorry
-        use ⟨⟨(LinearMap.toMatrixOrthonormal (n := Fin n) basis new), by sorry⟩, by sorry⟩
+        use ⟨⟨(Matrix.toEuclideanLin.symm new), by sorry⟩, by sorry⟩
 
 
         apply Prod.ext
@@ -542,22 +541,14 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             rhs
             rw [← hx]
           simp
+          simp [map_first_hom, map_first_unitary]
           apply congrArg
+          simp [map_first]
+          rw [LinearMap.ext_iff]
+          intro z
           rw [Subtype.ext_iff]
-          simp
-          rw [Subtype.ext_iff]
-          simp
-          apply_fun (fun f => Matrix.toLin basis.toBasis basis.toBasis f)
           simp [new]
-          apply LinearMap.ofIsCompl_eq
-          . intro z
-            simp [map_first_x_new, map_first]
-            sorry
-          . intro z
-            simp [map_second_y_new, map_second]
-            sorry
-          . intro x y hxy
-            simpa using hxy
+          simp [map_first_x_new, map_first]
         . sorry
     )
     -- Submodule.finrank_add_eq_of_isCompl
