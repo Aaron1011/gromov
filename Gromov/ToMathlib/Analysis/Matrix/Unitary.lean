@@ -556,6 +556,8 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
           . intro z
             simp [map_second_y_new, map_second]
             sorry
+          . intro x y hxy
+            simpa using hxy
         . sorry
     )
     -- Submodule.finrank_add_eq_of_isCompl
