@@ -513,6 +513,27 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         have second_prop := a.snd.property
         simp only [prod_hom]
         rw [MonoidHom.mem_range] at first_prop
+        rw [MonoidHom.mem_range] at second_prop
+
+        obtain ⟨x, hx⟩ := first_prop
+        obtain ⟨y, hy⟩ := second_prop
+
+        let map_first_x_new: ((Module.End.genEigenspace (Matrix.toEuclideanLin g.val.val) k) ⊤) →ₗ[ℂ] (EuclideanSpace ℂ (Fin n)) := {
+          toFun := fun a => map_first x a
+          map_add' := by simp
+          map_smul' := by simp
+        }
+
+        let map_second_y_new: ↑((iSup fun (i : ℂ) ↦ ⨆ (_ : i ≠ k), Module.End.maxGenEigenspace (Matrix.toEuclideanLin g.val.val) i)) →ₗ[ℂ] (EuclideanSpace ℂ (Fin n)) := {
+          toFun := fun a => map_second y a
+          map_add' := by simp
+          map_smul' := by simp
+        }
+
+        let new := LinearMap.ofIsCompl a_b_compl map_first_x_new map_second_y_new
+        use ⟨⟨(LinearMap.toMatrixOrthonormal (stdOrthonormalBasis ℂ _) new).reindex (finCongr (by simp)) (finCongr (by simp)), by sorry⟩, by sorry⟩
+
+
         sorry
     )
     -- Submodule.finrank_add_eq_of_isCompl
