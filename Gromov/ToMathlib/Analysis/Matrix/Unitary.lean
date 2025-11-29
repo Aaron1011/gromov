@@ -531,7 +531,29 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         }
 
         let new := LinearMap.ofIsCompl a_b_compl map_first_x_new map_second_y_new
-        use ⟨⟨(Matrix.toEuclideanLin.symm new), by sorry⟩, by sorry⟩
+        use ⟨⟨(Matrix.toEuclideanLin.symm new), (by
+          simp [Matrix.mem_unitaryGroup_iff']
+          apply_fun (fun f => Matrix.toEuclideanLin f)
+          . simp [-EmbeddingLike.apply_eq_iff_eq, new]
+            rw [Matrix.star_eq_conjTranspose]
+            simp_rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
+            simp
+            --rw [← linearmap_comp_eq_mul]
+            nth_rw 1 [Matrix.toLin_mul (M₁ := (EuclideanSpace ℂ (Fin n))) (M₂ := (EuclideanSpace ℂ (Fin n))) (v₂ := (EuclideanSpace.basisFun (Fin n) ℂ).toBasis)]
+            simp
+            rw [← LinearMap.toMatrix_adjoint]
+            -- simp
+            -- conv =>
+            --   lhs
+            --   equals ((LinearMap.ofIsCompl a_b_compl map_first_x_new map_second_y_new)).conjTranspose ∘ₗ LinearMap.ofIsCompl a_b_compl map_first_x_new map_second_y_new =>
+            --     apply Matrix.toLin_toMatrix
+            -- rw [Matrix.toLin_toMatrix]
+            -- simp_rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal]
+          . intro x y hxy
+            simpa using hxy
+        )⟩, (by
+          simp
+        )⟩
 
 
         apply Prod.ext
