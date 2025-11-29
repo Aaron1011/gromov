@@ -7,7 +7,7 @@ structure IsoData {n: ℕ} {G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)} (g: G
   hab: a + b = n
   A: Subgroup (Matrix.unitaryGroup (Fin a) ℂ)
   B: Subgroup (Matrix.unitaryGroup (Fin b) ℂ)
-  iso: Subgroup.centralizer {g} ≃* A × B
+  iso: Subgroup.centralizer {g.val} ≃* A × B
 
 lemma diag_of_eigenspace_span {A: Type*} [Nontrivial A] [AddCommGroup A] [Module ℂ A] (g: A →ₗ[ℂ] A) (k: ℂ) (hg: Module.End.eigenspace g k = ⊤):
   g = k • 1 := by
@@ -96,19 +96,21 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
     --   arg 1
     --   intro hi
 
-    have comm_g_h (h: Subgroup.centralizer {g}): Commute (Matrix.toEuclideanLin g.val.val) (Matrix.toEuclideanLin h.val.val) := by
+    have comm_g_h (h: Subgroup.centralizer {g.val}): Commute (Matrix.toEuclideanLin g.val.val) (Matrix.toEuclideanLin h.val.val) := by
       have foo := h.property
       rw [Subgroup.mem_centralizer_iff] at foo
       rw [commute_iff_eq]
       simp at foo
-      apply_fun (fun m => m.val.val.toEuclideanLin) at foo
-      simp only [Subgroup.coe_mul, Submonoid.coe_mul] at foo
-      unfold Matrix.toEuclideanLin at foo
-      simp only [LinearEquiv.trans_apply, Matrix.toLin'_mul] at foo
-      unfold Matrix.toEuclideanLin
-      exact foo
+      rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
+      rw [← linearmap_comp_eq_mul]
+      rw [← Matrix.toLin_mul]
+      rw [← linearmap_comp_eq_mul]
+      rw [← Matrix.toLin_mul]
+      apply_fun (fun f => f.val) at foo
+      simp at foo
+      rw [foo]
 
-    have other_invariant (h: Subgroup.centralizer {g}):  ⨆ (i : { i : Module.End.Eigenvalues g.val.val.toEuclideanLin // i.val ≠ k }), Module.End.maxGenEigenspace h.val.val.val.toEuclideanLin i ∈ (Module.End.invtSubmodule g.val.val.toEuclideanLin) := by
+    have other_invariant (h: Subgroup.centralizer {g.val}):  ⨆ (i : { i : Module.End.Eigenvalues g.val.val.toEuclideanLin // i.val ≠ k }), Module.End.maxGenEigenspace h.val.val.toEuclideanLin i ∈ (Module.End.invtSubmodule g.val.val.toEuclideanLin) := by
       apply SupClosed.iSup_mem
       . simp
       . simp
@@ -124,7 +126,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
 
 
 
-    let map_first (h: Subgroup.centralizer {g}) := h.val.val.val.toEuclideanLin.restrict (Module.End.mapsTo_genEigenspace_of_comm (f := g.val.val.toEuclideanLin) (g := h.val.val.val.toEuclideanLin) (by
+    let map_first (h: Subgroup.centralizer {g.val}) := h.val.val.toEuclideanLin.restrict (Module.End.mapsTo_genEigenspace_of_comm (f := g.val.val.toEuclideanLin) (g := h.val.val.toEuclideanLin) (by
       apply comm_g_h
     ) k ⊤)
 
@@ -132,7 +134,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
 
     --let d := Module.finrank ℂ (Module.End.genEigenspace g.val.val.toEuclideanLin k ⊤)
     let d := (Module.finrank ℂ ↥((Module.End.genEigenspace (Matrix.toEuclideanLin g.val.val) k) ⊤))
-    let map_first_unitary (h: Subgroup.centralizer {g}): Matrix.unitaryGroup (Fin d) ℂ := {
+    let map_first_unitary (h: Subgroup.centralizer {g.val}): Matrix.unitaryGroup (Fin d) ℂ := {
       val := LinearMap.toMatrixOrthonormal (stdOrthonormalBasis ℂ _) (map_first h)
       property := by
 
@@ -165,12 +167,12 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             simp
 
         simp [map_first]
-        have h_unitary := Unitary.star_mul_self_of_mem h.val.val.property
+        have h_unitary := Unitary.star_mul_self_of_mem h.val.property
         apply_fun Matrix.toEuclideanLin at h_unitary
         rw [Matrix.toEuclideanLin_eq_toLin_orthonormal] at h_unitary
         conv at h_unitary =>
           lhs
-          equals (Matrix.toEuclideanLin (star h.val.val.val)) ∘ₗ (Matrix.toEuclideanLin (h.val.val.val)) =>
+          equals (Matrix.toEuclideanLin (star h.val.val)) ∘ₗ (Matrix.toEuclideanLin (h.val.val)) =>
             rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
             rw [← Matrix.toLin_mul]
         rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal] at h_unitary
@@ -235,7 +237,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
     }
 
 
-    let map_first_hom: MonoidHom (Subgroup.centralizer {g}) _ := {
+    let map_first_hom: MonoidHom (Subgroup.centralizer {g.val}) _ := {
       toFun := map_first_unitary
       map_one' := by
         simp [map_first_unitary, map_first]
@@ -275,7 +277,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
     let first_range := map_first_hom.range
 
 
-    let map_second (h: Subgroup.centralizer {g}) := h.val.val.val.toEuclideanLin.restrict
+    let map_second (h: Subgroup.centralizer {g.val}) := h.val.val.toEuclideanLin.restrict
       (p :=  ↑((iSup fun (i : ℂ) ↦ ⨆ (_ : i ≠ k), Module.End.maxGenEigenspace (Matrix.toEuclideanLin g.val.val) i)))
       (q :=  ↑((iSup fun (i : ℂ) ↦ ⨆ (_ : i ≠ k), Module.End.maxGenEigenspace (Matrix.toEuclideanLin g.val.val) i)))
       (by
@@ -284,7 +286,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
       )
 
 
-    let map_second_unitary (h: Subgroup.centralizer {g}): Matrix.unitaryGroup _ ℂ := {
+    let map_second_unitary (h: Subgroup.centralizer {g.val}): Matrix.unitaryGroup _ ℂ := {
       val := LinearMap.toMatrixOrthonormal (stdOrthonormalBasis ℂ _) (map_second h)
       property := by
         -- TODO - deduplicate this with 'map_first_unitary'
@@ -316,12 +318,12 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             simp
 
         simp [map_second]
-        have h_unitary := Unitary.star_mul_self_of_mem h.val.val.property
+        have h_unitary := Unitary.star_mul_self_of_mem h.val.property
         apply_fun Matrix.toEuclideanLin at h_unitary
         rw [Matrix.toEuclideanLin_eq_toLin_orthonormal] at h_unitary
         conv at h_unitary =>
           lhs
-          equals (Matrix.toEuclideanLin (star h.val.val.val)) ∘ₗ (Matrix.toEuclideanLin (h.val.val.val)) =>
+          equals (Matrix.toEuclideanLin (star h.val.val)) ∘ₗ (Matrix.toEuclideanLin (h.val.val)) =>
             rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
             rw [← Matrix.toLin_mul]
         rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal] at h_unitary
@@ -383,7 +385,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
           simpa using hxy
     }
 
-    let map_second_hom: MonoidHom (Subgroup.centralizer {g}) _ := {
+    let map_second_hom: MonoidHom (Subgroup.centralizer {g.val}) _ := {
       toFun := map_second_unitary
       -- TODO - deduplicate these with 'map_first_hom'
       map_one' := by
@@ -491,7 +493,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
 
 
 
-        have x_map_eq: x_map = x.val.val.val.toEuclideanLin := by
+        have x_map_eq: x_map = x.val.val.toEuclideanLin := by
           simp [x_map]
           apply LinearMap.ofIsCompl_eq
           . intro z
@@ -499,7 +501,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
           . intro z
             rfl
 
-        have y_map_eq: y_map = y.val.val.val.toEuclideanLin := by
+        have y_map_eq: y_map = y.val.val.toEuclideanLin := by
           simp [x_map]
           apply LinearMap.ofIsCompl_eq
           . intro z
