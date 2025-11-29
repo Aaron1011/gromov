@@ -28,6 +28,51 @@ lemma diag_of_eigenspace_span {A: Type*} [Nontrivial A] [AddCommGroup A] [Module
 
 lemma linearmap_comp_eq_mul {P: Type*} [AddCommMonoid P] [Module ℂ P] (a b: P →ₗ[ℂ] P): a.comp b = a * b := rfl
 
+-- FALSE - an element could be a sum of elements from p and q
+lemma ofIsCompl_apply_prop {R : Type*} [Ring R] {E : Type*} [AddCommGroup E] [Module R E] {F : Type*} [AddCommGroup F] [Module R F] {p q : Submodule R E} (h : IsCompl p q) (φ : ↥p →ₗ[R] F) (ψ : ↥q →ₗ[R] F) (f_prop: F → Prop):
+    (∀ f, f_prop ((LinearMap.ofIsCompl h φ ψ) f)) ↔ (∀ p_val, f_prop (φ p_val)) ∧ (∀ q_val, f_prop (ψ q_val)) := by
+
+  refine ⟨?_, ?_⟩
+  .
+    intro all_mem
+    refine ⟨?_, ?_⟩
+    .
+      intro p_val
+      specialize all_mem p_val
+      simpa using all_mem
+    . intro q_val
+      specialize all_mem q_val
+      simpa using all_mem
+  .
+    intro sub_mem
+    intro f
+    by_cases f_mem_p: f ∈ p
+    .
+      have foo := sub_mem.1 ⟨f, f_mem_p⟩
+      have f_eq: f = (⟨f, f_mem_p⟩ : p) := by simp
+      rw [f_eq]
+      rw [LinearMap.ofIsCompl_left_apply]
+      exact foo
+    .
+      rw [isCompl_iff] at h
+      have f_mem_q: f ∈ q := by
+        have mem_top: f ∈ (⊤ : (Submodule R E)) := by simp
+        have bar := h.2
+        rw [codisjoint_iff] at bar
+        rw [← bar] at mem_top
+        rw [Submodule.mem_sup] at mem_top
+        obtain ⟨x, hx, y, hy, f_eq_add⟩ := mem_top
+
+        sorry
+
+      have foo := sub_mem.2 ⟨f, f_mem_q⟩
+      have f_eq: f = (⟨f, f_mem_q⟩ : q) := by simp
+      rw [f_eq]
+      rw [LinearMap.ofIsCompl_right_apply]
+      exact foo
+
+
+
 lemma linearmap_comp_toContinuousLinearMap {P: Type*} [AddCommGroup P] [Module ℂ P] [TopologicalSpace P] [IsTopologicalAddGroup P] [ContinuousSMul ℂ P] [T2Space P]  [FiniteDimensional ℂ P]  (a b: P →ₗ[ℂ] P):
   (a.comp b).toContinuousLinearMap = a.toContinuousLinearMap * b.toContinuousLinearMap := rfl
 
@@ -542,6 +587,63 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             nth_rw 1 [Matrix.toLin_mul (M₁ := (EuclideanSpace ℂ (Fin n))) (M₂ := (EuclideanSpace ℂ (Fin n))) (v₂ := (EuclideanSpace.basisFun (Fin n) ℂ).toBasis)]
             simp
             rw [← LinearMap.toMatrix_adjoint]
+            simp
+
+            apply_fun (fun f => LinearMap.toContinuousLinearMap f)
+            simp [-EmbeddingLike.apply_eq_iff_eq]
+            conv =>
+              lhs
+              rw [linearmap_comp_toContinuousLinearMap]
+              rw [ContinuousLinearMap.mul_def]
+              lhs
+              rw [LinearMap.adjoint_toContinuousLinearMap]
+
+            conv =>
+              rhs
+              equals 1 =>
+                ext z
+                simp
+            rw [← ContinuousLinearMap.norm_map_iff_adjoint_comp_self]
+            simp only [LinearMap.coe_toContinuousLinearMap']
+            intro z
+            rw [LinearMap.ofIsCompl_eq_add]
+            -- conv =>
+            --   intro x
+            --   rw [LinearMap.restrict_apply (by
+            --     apply Module.End.mapsTo_genEigenspace_of_comm (by
+            --       apply comm_g_h
+            --     )
+            --   )]
+            --   simp
+            --   rw [← LinearMap.coe_toContinuousLinearMap']
+
+
+            -- Submodule.existsUnique_add_of_isCompl
+            sorry
+            apply_fun (fun f => LinearMap.toContinuousLinearMap f) at h_unitary
+            simp [-EmbeddingLike.apply_eq_iff_eq] at h_unitary
+            conv at h_unitary =>
+              lhs
+              rw [linearmap_comp_toContinuousLinearMap]
+              rw [ContinuousLinearMap.mul_def]
+              lhs
+              rw [LinearMap.adjoint_toContinuousLinearMap]
+
+            conv at h_unitary =>
+              rhs
+              equals 1 =>
+                ext x
+                simp
+            rw [← ContinuousLinearMap.norm_map_iff_adjoint_comp_self] at h_unitary
+            intro x
+            specialize h_unitary x.val
+            exact h_unitary
+            . exact LinearEquiv.injective LinearMap.toContinuousLinearMap
+            . intro x y hxy
+              simpa using hxy
+
+
+
             -- simp
             -- conv =>
             --   lhs
@@ -553,6 +655,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             simpa using hxy
         )⟩, (by
           simp
+          sorry
         )⟩
 
 
