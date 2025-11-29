@@ -549,7 +549,19 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
           rw [Subtype.ext_iff]
           simp [new]
           simp [map_first_x_new, map_first]
-        . sorry
+        .
+          rw [Subtype.ext_iff]
+          conv =>
+            rhs
+            rw [← hy]
+          simp
+          simp [map_second_hom, map_second_unitary]
+          simp [map_second]
+          rw [LinearMap.ext_iff]
+          intro z
+          rw [Subtype.ext_iff]
+          simp [new]
+          simp [map_second_y_new, map_second]
     )
     -- Submodule.finrank_add_eq_of_isCompl
 
