@@ -282,7 +282,13 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
       (q :=  ↑((iSup fun (i : ℂ) ↦ ⨆ (_ : i ≠ k), Module.End.maxGenEigenspace (Matrix.toEuclideanLin g.val.val) i)))
       (by
         --exact other_invariant h
-        sorry
+        intro x hx
+        apply LinearMap.mapsTo_biSup_of_mapsTo
+        .
+          intro z
+          apply Module.End.mapsTo_maxGenEigenspace_of_comm
+          apply comm_g_h
+        . exact hx
       )
 
 
@@ -356,7 +362,10 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         conv =>
           intro x
           rw [LinearMap.restrict_apply (by
-            sorry
+            apply LinearMap.mapsTo_biSup_of_mapsTo
+            intro z
+            apply Module.End.mapsTo_maxGenEigenspace_of_comm
+            apply comm_g_h
           )]
           simp
           rw [← LinearMap.coe_toContinuousLinearMap']
