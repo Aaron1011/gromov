@@ -29,48 +29,190 @@ lemma diag_of_eigenspace_span {A: Type*} [Nontrivial A] [AddCommGroup A] [Module
 lemma linearmap_comp_eq_mul {P: Type*} [AddCommMonoid P] [Module ℂ P] (a b: P →ₗ[ℂ] P): a.comp b = a * b := rfl
 
 -- FALSE - an element could be a sum of elements from p and q
-lemma ofIsCompl_apply_prop {R : Type*} [Ring R] {E : Type*} [AddCommGroup E] [Module R E] {F : Type*} [AddCommGroup F] [Module R F] {p q : Submodule R E} (h : IsCompl p q) (φ : ↥p →ₗ[R] F) (ψ : ↥q →ₗ[R] F) (f_prop: F → Prop):
-    (∀ f, f_prop ((LinearMap.ofIsCompl h φ ψ) f)) ↔ (∀ p_val, f_prop (φ p_val)) ∧ (∀ q_val, f_prop (ψ q_val)) := by
+-- lemma ofIsCompl_apply_prop {R : Type*} [Ring R] {E : Type*} [AddCommGroup E] [Module R E] {F : Type*} [AddCommGroup F] [Module R F] {p q : Submodule R E} (h : IsCompl p q) (φ : ↥p →ₗ[R] F) (ψ : ↥q →ₗ[R] F) (f_prop: F → Prop):
+--     (∀ f, f_prop ((LinearMap.ofIsCompl h φ ψ) f)) ↔ (∀ p_val, f_prop (φ p_val)) ∧ (∀ q_val, f_prop (ψ q_val)) := by
 
-  refine ⟨?_, ?_⟩
-  .
-    intro all_mem
-    refine ⟨?_, ?_⟩
-    .
-      intro p_val
-      specialize all_mem p_val
-      simpa using all_mem
-    . intro q_val
-      specialize all_mem q_val
-      simpa using all_mem
-  .
-    intro sub_mem
-    intro f
-    by_cases f_mem_p: f ∈ p
-    .
-      have foo := sub_mem.1 ⟨f, f_mem_p⟩
-      have f_eq: f = (⟨f, f_mem_p⟩ : p) := by simp
-      rw [f_eq]
-      rw [LinearMap.ofIsCompl_left_apply]
-      exact foo
-    .
-      rw [isCompl_iff] at h
-      have f_mem_q: f ∈ q := by
-        have mem_top: f ∈ (⊤ : (Submodule R E)) := by simp
-        have bar := h.2
-        rw [codisjoint_iff] at bar
-        rw [← bar] at mem_top
-        rw [Submodule.mem_sup] at mem_top
-        obtain ⟨x, hx, y, hy, f_eq_add⟩ := mem_top
+--   refine ⟨?_, ?_⟩
+--   .
+--     intro all_mem
+--     refine ⟨?_, ?_⟩
+--     .
+--       intro p_val
+--       specialize all_mem p_val
+--       simpa using all_mem
+--     . intro q_val
+--       specialize all_mem q_val
+--       simpa using all_mem
+--   .
+--     intro sub_mem
+--     intro f
+--     by_cases f_mem_p: f ∈ p
+--     .
+--       have foo := sub_mem.1 ⟨f, f_mem_p⟩
+--       have f_eq: f = (⟨f, f_mem_p⟩ : p) := by simp
+--       rw [f_eq]
+--       rw [LinearMap.ofIsCompl_left_apply]
+--       exact foo
+--     .
+--       rw [isCompl_iff] at h
+--       have f_mem_q: f ∈ q := by
+--         have mem_top: f ∈ (⊤ : (Submodule R E)) := by simp
+--         have bar := h.2
+--         rw [codisjoint_iff] at bar
+--         rw [← bar] at mem_top
+--         rw [Submodule.mem_sup] at mem_top
+--         obtain ⟨x, hx, y, hy, f_eq_add⟩ := mem_top
 
-        sorry
+--         sorry
 
-      have foo := sub_mem.2 ⟨f, f_mem_q⟩
-      have f_eq: f = (⟨f, f_mem_q⟩ : q) := by simp
-      rw [f_eq]
-      rw [LinearMap.ofIsCompl_right_apply]
-      exact foo
+--       have foo := sub_mem.2 ⟨f, f_mem_q⟩
+--       have f_eq: f = (⟨f, f_mem_q⟩ : q) := by simp
+--       rw [f_eq]
+--       rw [LinearMap.ofIsCompl_right_apply]
+--       exact foo
 
+lemma swap_terms_helper {A: Type*} [AddCommGroup A] (a b c d: A): (a + b) + (c + d) = a + c + b + d := by abel
+
+
+-- lemma adjoint_eval_congr  {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]  [FiniteDimensional ℂ E] (A B : E →ₗ[ℂ] E) (x : E)
+--     (ha: A x = B x): (A.adjoint) x = (B.adjoint) x := by
+
+
+--   rw [ext_iff_inner_left (𝕜 := ℂ)]
+--   simp_rw [LinearMap.adjoint_inner_right]
+--   intro v
+
+--   have a_eq := LinearMap.adjoint_inner_left A x
+--   have b_eq := LinearMap.adjoint_inner_left B x
+
+--   have inner_eq: ∀ y: E, inner ℂ ((LinearMap.adjoint B) y) x = inner ℂ ((LinearMap.adjoint A) y) x := by
+--     intro y
+--     rw [a_eq]
+--     rw [b_eq]
+--     rw [ha]
+
+
+
+
+
+
+--   have inner_congr := ext_inner_right 𝕜
+
+
+--   sorry
+
+
+lemma ofIsCompl_adjoint_comp {P: Type*} [NormedAddCommGroup P] [InnerProductSpace ℂ P] [FiniteDimensional ℂ P]  {p q : Submodule ℂ P} (h : IsCompl p q) (hpq: p ⟂ q) (φ : p →ₗ[ℂ] p) (ψ : q →ₗ[ℂ] q) (hφ: (LinearMap.adjoint φ) ∘ₗ φ = 1):
+  (LinearMap.ofIsCompl h ((Submodule.subtype _) ∘ₗ φ) (((Submodule.subtype _) ∘ₗ ψ))).adjoint ∘ₗ(LinearMap.ofIsCompl h ((Submodule.subtype _) ∘ₗ φ) (((Submodule.subtype _) ∘ₗ ψ))) = 1  := by
+    rw [LinearMap.ext_iff]
+    intro a
+    obtain ⟨x, y, a_eq, other⟩ := Submodule.existsUnique_add_of_isCompl h a
+    rw [← a_eq]
+    simp
+    conv =>
+      lhs
+      lhs
+      arg 1
+      equals ((LinearMap.ofIsCompl h (p.subtype ∘ₗ φ.adjoint) (q.subtype ∘ₗ ψ.adjoint))) =>
+
+        rw [eq_comm]
+        -- rw [LinearMap.eq_adjoint_iff]
+        -- intro r s
+
+        -- obtain ⟨f, g, r_eq, _⟩ := Submodule.existsUnique_add_of_isCompl h r
+        -- rw [← r_eq]
+        -- rw [map_add, LinearMap.ofIsCompl_left_apply,  LinearMap.ofIsCompl_right_apply]
+        -- rw [inner_add_left]
+        -- rw [LinearMap.adjoint_inner_left]
+
+
+        apply LinearMap.ofIsCompl_eq
+        . intro r
+          simp
+          rw [LinearMap.ofIsCompl_eq_add]
+          rw [map_add]
+          rw [LinearMap.add_apply]
+
+          rw [LinearMap.adjoint_comp]
+          simp
+          conv =>
+            pattern (LinearMap.adjoint p.subtype)
+            -- TODO - make this a lemma and upstream it
+            equals ↑p.orthogonalProjection =>
+              rw [eq_comm]
+              simp [LinearMap.eq_adjoint_iff]
+
+          simp
+          conv =>
+            rhs
+            lhs
+            lhs
+            equals p.subtype =>
+              rw [eq_comm]
+              simp [-Submodule.coe_linearProjOfIsCompl_apply, LinearMap.eq_adjoint_iff]
+              intro b hb z
+              obtain ⟨x, y, z_eq, other⟩ := Submodule.existsUnique_add_of_isCompl h z
+              rw [← z_eq]
+              simp
+              rw [inner_add_right]
+              simp
+              have b_eq : b = (⟨b, hb⟩: p) := by simp
+              rw [b_eq]
+              apply Submodule.IsOrtho.inner_eq hpq (by simp [hb]) (by simp)
+
+          simp only [Submodule.subtype_apply]
+          conv =>
+            rhs
+            rhs
+            lhs
+            equals q.subtype =>
+              rw [eq_comm]
+              simp [-Submodule.coe_linearProjOfIsCompl_apply, LinearMap.eq_adjoint_iff]
+              intro b hb z
+              obtain ⟨x, y, z_eq, other⟩ := Submodule.existsUnique_add_of_isCompl h z
+              rw [← z_eq]
+              simp
+              rw [inner_add_right]
+              simp
+              apply Submodule.IsOrtho.inner_eq hpq.symm (hb) (by simp)
+          simp
+          conv =>
+            pattern (LinearMap.adjoint q.subtype)
+            -- TODO - make this a lemma and upstream it
+            equals ↑q.orthogonalProjection =>
+              rw [eq_comm]
+              simp [LinearMap.eq_adjoint_iff]
+          simp
+          rw [Submodule.orthogonalProjection_mem_subspace_orthogonalComplement_eq_zero]
+          . simp
+          . have foo := Submodule.IsOrtho.ge hpq.symm
+            exact foo r.property
+        . intro r
+          simp
+          sorry
+    simp
+    apply_fun (fun f => f x) at hφ
+    simp at hφ
+    simp [hφ]
+    sorry
+    -- sorry
+    -- rw [LinearMap.ofIsCompl_eq_add]
+    -- rw [map_add, LinearMap.add_apply]
+    -- rw [swap_terms_helper]
+    -- rw [← map_add]
+
+
+    -- nth_rw 2 [add_comm]
+    -- rw [add_assoc]
+    -- nth_rw 1 [add_comm]
+
+
+
+
+    -- rw [add_comm]
+    -- --rw [Function.comp_apply]
+    -- simp only [map_add, LinearMap.adjoint_comp, LinearMap.add_apply, LinearMap.coe_comp,
+    --   Function.comp_apply]
 
 
 lemma linearmap_comp_toContinuousLinearMap {P: Type*} [AddCommGroup P] [Module ℂ P] [TopologicalSpace P] [IsTopologicalAddGroup P] [ContinuousSMul ℂ P] [T2Space P]  [FiniteDimensional ℂ P]  (a b: P →ₗ[ℂ] P):
@@ -603,6 +745,8 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
               equals 1 =>
                 ext z
                 simp
+
+            sorry
             rw [← ContinuousLinearMap.norm_map_iff_adjoint_comp_self]
             simp only [LinearMap.coe_toContinuousLinearMap']
             intro z
