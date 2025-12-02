@@ -28,6 +28,7 @@ lemma star_normal_toContinuousLinearMap {A: Type*} [NormedAddCommGroup A] [Inner
 lemma eigenvalue_adjoint {A: Type*} [NormedAddCommGroup A] [InnerProductSpace ℂ A] [FiniteDimensional ℂ A] (f: Module.End ℂ A) (k: ℂ) (v: A) (hf: IsStarNormal f):
   f.HasEigenvector k v ↔ (star f).HasEigenvector (star k) v := by
 
+  -- TODO - figure out a way to re-use 'spectrum.map_star'
   have hf_cont := hf
   rw [star_normal_toContinuousLinearMap] at hf_cont
   have ker_adjoint := ContinuousLinearMap.IsStarNormal.ker_adjoint_eq_ker hf_cont
@@ -37,48 +38,29 @@ lemma eigenvalue_adjoint {A: Type*} [NormedAddCommGroup A] [InnerProductSpace �
   . simp [v_eq_zero]
   .
     simp only [ne_eq, v_eq_zero, not_false_eq_true, and_true]
-    refine ⟨?_, ?_⟩
+    rw [Module.End.eigenspace_def]
+    rw [← LinearMap.ker_toContinuousLinearMap]
+    rw [← ContinuousLinearMap.IsStarNormal.ker_adjoint_eq_ker]
     .
-      intro hf
-      rw [Module.End.eigenspace_def] at hf
+      rw [← LinearMap.adjoint_toContinuousLinearMap]
+      rw [LinearMap.ker_toContinuousLinearMap]
+      rw [Module.End.eigenspace_def]
+      rw [LinearMap.star_eq_adjoint]
+      rw [map_sub]
+      rw [LinearEquiv.map_smulₛₗ]
+      conv =>
+        pattern 1
+        equals LinearMap.id =>
+          rw [LinearMap.ext_iff]
+          simp
+      rw [LinearMap.adjoint_id]
+      simp
+    .
+      rw [← star_normal_toContinuousLinearMap]
+      apply Commute.isStarNormal_sub
+      rw [commute_iff_eq]
+      simp
 
-      rw [← LinearMap.ker_toContinuousLinearMap] at hf
-      rw [← ContinuousLinearMap.IsStarNormal.ker_adjoint_eq_ker] at hf
-      .
-        rw [← LinearMap.adjoint_toContinuousLinearMap] at hf
-        rw [LinearMap.ker_toContinuousLinearMap] at hf
-        rw [Module.End.eigenspace_def]
-        rw [LinearMap.star_eq_adjoint]
-        rw [map_sub] at hf
-        rw [LinearEquiv.map_smulₛₗ] at hf
-        conv at hf =>
-          pattern 1
-          equals LinearMap.id =>
-            rw [LinearMap.ext_iff]
-            simp
-        rw [LinearMap.adjoint_id] at hf
-        simpa using hf
-      .
-        rw [← star_normal_toContinuousLinearMap]
-        apply Commute.isStarNormal_sub
-        rw [commute_iff_eq]
-        simp
-    . sorry
-
-  -- TODO - figure out a way to re-use 'spectrum.map_star'
-  -- refine ⟨?_, ?_⟩
-  -- .
-  --   intro hf
-  --   have has_eigen: f.HasEigenvalue k := hf.hasUnifEigenvalue
-  --   rw [Module.End.hasEigenvalue_iff_mem_spectrum] at has_eigen
-  --   have foo := Set.mem_image_of_mem star has_eigen
-  --   have star_spec := spectrum.map_star f (R := ℂ)
-  --   simp only [Set.image_star] at foo
-  --   rw [← star_spec] at foo
-  --   rw [← Module.End.hasEigenvalue_iff_mem_spectrum] at foo
-
-
-  -- sorry
 
 lemma diag_of_eigenspace_span {A: Type*} [Nontrivial A] [AddCommGroup A] [Module ℂ A] (g: A →ₗ[ℂ] A) (k: ℂ) (hg: Module.End.eigenspace g k = ⊤):
   g = k • 1 := by
