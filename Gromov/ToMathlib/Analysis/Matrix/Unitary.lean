@@ -82,6 +82,25 @@ lemma eigenvector_orthogonal {A: Type*} [NormedAddCommGroup A] [InnerProductSpac
   simp [hjk] at first_eq
   exact first_eq
 
+lemma eigenspace_orthogonal  {A: Type*} [NormedAddCommGroup A] [InnerProductSpace ℂ A] [FiniteDimensional ℂ A] (f: Module.End ℂ A) (hf: IsStarNormal f) (j k: ℂ) (hjk: j ≠ k):
+    f.eigenspace k ⟂ f.eigenspace j := by
+
+  rw [Submodule.isOrtho_iff_inner_eq]
+  intro v hv w hw
+  by_cases v_eq_zero: v = 0
+  . simp [v_eq_zero]
+
+  by_cases w_eq_zero: w = 0
+  . simp [w_eq_zero]
+  rw [eigenvector_orthogonal f k j]
+  . exact hf
+  .
+    rw [Module.End.hasEigenvector_iff]
+    refine ⟨hv, v_eq_zero⟩
+  .
+    rw [Module.End.hasEigenvector_iff]
+    refine ⟨hw, w_eq_zero⟩
+  . exact id (Ne.symm hjk)
 
 lemma diag_of_eigenspace_span {A: Type*} [Nontrivial A] [AddCommGroup A] [Module ℂ A] (g: A →ₗ[ℂ] A) (k: ℂ) (hg: Module.End.eigenspace g k = ⊤):
   g = k • 1 := by
