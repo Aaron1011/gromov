@@ -1,15 +1,5 @@
 import Mathlib
 
-structure IsoData {n: ℕ} {G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)} (g: G) where
-  a : ℕ
-  b: ℕ
-  ha: a ≠ 0
-  hab: a + b = n
-  A: Subgroup (Matrix.unitaryGroup (Fin a) ℂ)
-  B: Subgroup (Matrix.unitaryGroup (Fin b) ℂ)
-  iso: Subgroup.centralizer {g.val} ≃* A × B
-
-
 lemma star_normal_toContinuousLinearMap {A: Type*} [NormedAddCommGroup A] [InnerProductSpace ℂ A] [FiniteDimensional ℂ A]  (f: A →ₗ[ℂ] A):
     IsStarNormal f ↔ IsStarNormal (LinearMap.toContinuousLinearMap f) := by
 
@@ -101,6 +91,12 @@ lemma eigenspace_orthogonal  {A: Type*} [NormedAddCommGroup A] [InnerProductSpac
     rw [Module.End.hasEigenvector_iff]
     refine ⟨hw, w_eq_zero⟩
   . exact id (Ne.symm hjk)
+
+
+lemma star_normal_maxGenEigenspace_eq_eigenspace  {A: Type*} [NormedAddCommGroup A] [InnerProductSpace ℂ A] [FiniteDimensional ℂ A] (f: Module.End ℂ A) (hf: IsStarNormal f) (k: ℂ):
+    f.maxGenEigenspace k = f.eigenspace k := by
+  sorry
+
 
 lemma diag_of_eigenspace_span {A: Type*} [Nontrivial A] [AddCommGroup A] [Module ℂ A] (g: A →ₗ[ℂ] A) (k: ℂ) (hg: Module.End.eigenspace g k = ⊤):
   g = k • 1 := by
