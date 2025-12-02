@@ -25,7 +25,7 @@ lemma star_normal_toContinuousLinearMap {A: Type*} [NormedAddCommGroup A] [Inner
   simp
 
 -- https://math.stackexchange.com/a/4217008/367657
-lemma eigenvalue_adjoint {A: Type*} [NormedAddCommGroup A] [InnerProductSpace ℂ A] [FiniteDimensional ℂ A] (f: Module.End ℂ A) (k: ℂ) (v: A) (hf: IsStarNormal f):
+lemma eigenvalue_adjoint {A: Type*} [NormedAddCommGroup A] [InnerProductSpace ℂ A] [FiniteDimensional ℂ A] {f: Module.End ℂ A} {k: ℂ} {v: A} (hf: IsStarNormal f):
   f.HasEigenvector k v ↔ (star f).HasEigenvector (star k) v := by
 
   -- TODO - figure out a way to re-use 'spectrum.map_star'
@@ -60,6 +60,27 @@ lemma eigenvalue_adjoint {A: Type*} [NormedAddCommGroup A] [InnerProductSpace �
       apply Commute.isStarNormal_sub
       rw [commute_iff_eq]
       simp
+
+lemma eigenvector_orthogonal {A: Type*} [NormedAddCommGroup A] [InnerProductSpace ℂ A] [FiniteDimensional ℂ A] (f: Module.End ℂ A) (j k: ℂ) (v w: A)
+  (hf: IsStarNormal f) (hjv: f.HasEigenvector j v) (hkw: f.HasEigenvector k w) (hjk: j ≠ k): inner ℂ v w = 0 := by
+
+  have first_eq: inner ℂ v (f w) = k * (inner ℂ v w) := by
+    apply Module.End.HasEigenvector.apply_eq_smul at hkw
+    rw [hkw]
+    simp
+
+  have second_eq: inner ℂ v (f w) = j * (inner ℂ v w) := by
+    rw [← LinearMap.adjoint_inner_left]
+    rw [eigenvalue_adjoint hf] at hjv
+    apply Module.End.HasEigenvector.apply_eq_smul at hjv
+    rw [LinearMap.star_eq_adjoint] at hjv
+    rw [hjv]
+    rw [inner_smul_left]
+    simp
+
+  rw [second_eq] at first_eq
+  simp [hjk] at first_eq
+  exact first_eq
 
 
 lemma diag_of_eigenspace_span {A: Type*} [Nontrivial A] [AddCommGroup A] [Module ℂ A] (g: A →ₗ[ℂ] A) (k: ℂ) (hg: Module.End.eigenspace g k = ⊤):
