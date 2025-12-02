@@ -102,18 +102,83 @@ lemma swap_terms_helper {A: Type*} [AddCommGroup A] (a b c d: A): (a + b) + (c +
 --   sorry
 
 
-lemma ofIsCompl_adjoint_comp {P: Type*} [NormedAddCommGroup P] [InnerProductSpace ℂ P] [FiniteDimensional ℂ P]  {p q : Submodule ℂ P} (h : IsCompl p q) (hpq: p ⟂ q) (φ : p →ₗ[ℂ] p) (ψ : q →ₗ[ℂ] q) (hφ: (LinearMap.adjoint φ) ∘ₗ φ = 1):
-  (LinearMap.ofIsCompl h ((Submodule.subtype _) ∘ₗ φ) (((Submodule.subtype _) ∘ₗ ψ))).adjoint ∘ₗ(LinearMap.ofIsCompl h ((Submodule.subtype _) ∘ₗ φ) (((Submodule.subtype _) ∘ₗ ψ))) = 1  := by
+lemma ofIsCompl_adjoint_comp {P: Type*} [NormedAddCommGroup P] [CompleteSpace P] [InnerProductSpace ℂ P] [FiniteDimensional ℂ P]  {p q : Submodule ℂ P} (h : IsCompl p q) (hpq: p ⟂ q) (φ : p →ₗ[ℂ] P) (ψ : q →ₗ[ℂ] P) (hφ: (LinearMap.adjoint φ) ∘ₗ φ = 1) (hφ_map: ∀ x: p, φ x ∈ p) (hψ: (LinearMap.adjoint ψ) ∘ₗ ψ = 1) (hψ_map: ∀ x: q, ψ x ∈ q):
+  (LinearMap.ofIsCompl h (φ) (ψ)).adjoint ∘ₗ(LinearMap.ofIsCompl h φ ψ) = 1  := by
     rw [LinearMap.ext_iff]
     intro a
     obtain ⟨x, y, a_eq, other⟩ := Submodule.existsUnique_add_of_isCompl h a
     rw [← a_eq]
     simp
+    rw [LinearMap.ofIsCompl_eq_add]
+    simp
+
+    have adjoint_compl_p_eq : LinearMap.adjoint (p.linearProjOfIsCompl q h) = p.subtype := by
+      rw [eq_comm]
+      simp [-Submodule.coe_linearProjOfIsCompl_apply, LinearMap.eq_adjoint_iff]
+      intro b hb z
+      obtain ⟨x, y, z_eq, other⟩ := Submodule.existsUnique_add_of_isCompl h z
+      rw [← z_eq]
+      simp
+      rw [inner_add_right]
+      simp
+      have b_eq : b = (⟨b, hb⟩: p) := by simp
+      rw [b_eq]
+      apply Submodule.IsOrtho.inner_eq hpq (by simp [hb]) (by simp)
+
+    have adjoint_compl_q_eq : LinearMap.adjoint (q.linearProjOfIsCompl p h.symm) = q.subtype := by
+      rw [eq_comm]
+      simp [-Submodule.coe_linearProjOfIsCompl_apply, LinearMap.eq_adjoint_iff]
+      intro b hb z
+      obtain ⟨x, y, z_eq, other⟩ := Submodule.existsUnique_add_of_isCompl h z
+      rw [← z_eq]
+      simp
+      rw [inner_add_right]
+      simp
+      have b_eq : b = (⟨b, hb⟩: q) := by simp
+      rw [b_eq]
+      apply Submodule.IsOrtho.inner_eq hpq.symm (by simp [hb]) (by simp)
+
+
+    simp [adjoint_compl_p_eq, adjoint_compl_q_eq]
+    apply_fun (fun f => f x) at hφ
+    simp at hφ
+    simp [hφ]
+
+    apply_fun (fun f => f y) at hψ
+    simp at hψ
+    simp [hψ]
+
+
+    conv =>
+      lhs
+
+    have first_zero: (ψ.toContinuousLinearMap.adjoint) (φ x) = 0 := by
+      have foo := ContinuousLinearMap.IsStarNormal.adjoint_apply_eq_zero_iff (T := (ψ.codRestrict _ hψ_map).toContinuousLinearMap) ?_
+      .
+
+        specialize foo (⟨φ x, hφ_map x⟩)
+        have bar := foo.mpr ?_
+        . simp at bar
+          sorry
+        . simp
+          rw [Subtype.ext_iff]
+          simp
+          sorry
+
+        apply foo.mpr
+      rw [ContinuousLinearMap.IsStarNormal.adjoint_apply_eq_zero_iff (T := (φ.codRestrict _ hφ_map).toContinuousLinearMap)]
+      apply_fun (fun f => LinearMap.toContinuousLinearMap f)
+      rw [ContinuousLinearMap.IsStarNormal.adjoint_apply_eq_zero_iff]
+
+
     conv =>
       lhs
       lhs
       arg 1
-      equals ((LinearMap.ofIsCompl h (p.subtype ∘ₗ φ.adjoint) (q.subtype ∘ₗ ψ.adjoint))) =>
+      rw [LinearMap.ofIsCompl_eq_add]
+      simp
+
+      equals ((LinearMap.ofIsCompl h (p.subtype ∘ₗ φ.adjoint ∘ₗ p.subtype) (q.subtype ∘ₗ ψ.adjoint  ∘ₗ q.subtype))) =>
 
         rw [eq_comm]
         -- rw [LinearMap.eq_adjoint_iff]
@@ -731,14 +796,15 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             rw [← LinearMap.toMatrix_adjoint]
             simp
 
-            apply_fun (fun f => LinearMap.toContinuousLinearMap f)
-            simp [-EmbeddingLike.apply_eq_iff_eq]
-            conv =>
-              lhs
-              rw [linearmap_comp_toContinuousLinearMap]
-              rw [ContinuousLinearMap.mul_def]
-              lhs
-              rw [LinearMap.adjoint_toContinuousLinearMap]
+
+            --apply_fun (fun f => LinearMap.toContinuousLinearMap f)
+            --simp [-EmbeddingLike.apply_eq_iff_eq]
+            -- conv =>
+            --   lhs
+            --   rw [linearmap_comp_toContinuousLinearMap]
+            --   rw [ContinuousLinearMap.mul_def]
+            --   lhs
+            --   rw [LinearMap.adjoint_toContinuousLinearMap]
 
             conv =>
               rhs
@@ -746,7 +812,14 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
                 ext z
                 simp
 
-            sorry
+
+
+            apply ofIsCompl_adjoint_comp
+            . sorry
+            . sorry
+            . sorry
+            . sorry
+            . sorry
             rw [← ContinuousLinearMap.norm_map_iff_adjoint_comp_self]
             simp only [LinearMap.coe_toContinuousLinearMap']
             intro z
