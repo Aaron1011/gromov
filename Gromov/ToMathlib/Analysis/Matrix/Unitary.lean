@@ -140,6 +140,23 @@ lemma ofIsCompl_adjoint_comp {P: Type*} [NormedAddCommGroup P] [CompleteSpace P]
     simp at hψ
     simp [hψ]
 
+    conv =>
+      lhs
+      lhs
+      rhs
+      arg 1
+      equals (ContinuousLinearMap.adjoint (ψ.toContinuousLinearMap)) (φ x) =>
+        rfl
+
+    conv =>
+      lhs
+      lhs
+      rhs
+      arg 1
+      equals 0 =>
+        
+        rw [ContinuousLinearMap.IsStarNormal.adjoint_apply_eq_zero_iff]
+
 
     conv =>
       lhs
