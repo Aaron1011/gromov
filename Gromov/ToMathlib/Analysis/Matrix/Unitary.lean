@@ -1,102 +1,5 @@
 import Mathlib
-
-lemma star_normal_toContinuousLinearMap {A: Type*} [NormedAddCommGroup A] [InnerProductSpace ℂ A] [FiniteDimensional ℂ A]  (f: A →ₗ[ℂ] A):
-    IsStarNormal f ↔ IsStarNormal (LinearMap.toContinuousLinearMap f) := by
-
-  rw [isStarNormal_iff]
-  rw [isStarNormal_iff]
-  rw [ContinuousLinearMap.star_eq_adjoint]
-  rw [← LinearMap.adjoint_toContinuousLinearMap]
-  rw [LinearMap.star_eq_adjoint]
-  rw [commute_iff_eq]
-  rw [commute_iff_eq]
-  rw [LinearMap.ext_iff]
-  rw [ContinuousLinearMap.ext_iff]
-  simp
-
--- https://math.stackexchange.com/a/4217008/367657
-lemma eigenvalue_adjoint {A: Type*} [NormedAddCommGroup A] [InnerProductSpace ℂ A] [FiniteDimensional ℂ A] {f: Module.End ℂ A} {k: ℂ} {v: A} (hf: IsStarNormal f):
-  f.HasEigenvector k v ↔ (star f).HasEigenvector (star k) v := by
-
-  -- TODO - figure out a way to re-use 'spectrum.map_star'
-  have hf_cont := hf
-  rw [star_normal_toContinuousLinearMap] at hf_cont
-  have ker_adjoint := ContinuousLinearMap.IsStarNormal.ker_adjoint_eq_ker hf_cont
-  rw [Module.End.hasEigenvector_iff]
-  rw [Module.End.hasEigenvector_iff]
-  by_cases v_eq_zero: v = 0
-  . simp [v_eq_zero]
-  .
-    simp only [ne_eq, v_eq_zero, not_false_eq_true, and_true]
-    rw [Module.End.eigenspace_def]
-    rw [← LinearMap.ker_toContinuousLinearMap]
-    rw [← ContinuousLinearMap.IsStarNormal.ker_adjoint_eq_ker]
-    .
-      rw [← LinearMap.adjoint_toContinuousLinearMap]
-      rw [LinearMap.ker_toContinuousLinearMap]
-      rw [Module.End.eigenspace_def]
-      rw [LinearMap.star_eq_adjoint]
-      rw [map_sub]
-      rw [LinearEquiv.map_smulₛₗ]
-      conv =>
-        pattern 1
-        equals LinearMap.id =>
-          rw [LinearMap.ext_iff]
-          simp
-      rw [LinearMap.adjoint_id]
-      simp
-    .
-      rw [← star_normal_toContinuousLinearMap]
-      apply Commute.isStarNormal_sub
-      rw [commute_iff_eq]
-      simp
-
-lemma eigenvector_orthogonal {A: Type*} [NormedAddCommGroup A] [InnerProductSpace ℂ A] [FiniteDimensional ℂ A] (f: Module.End ℂ A) (j k: ℂ) (v w: A)
-  (hf: IsStarNormal f) (hjv: f.HasEigenvector j v) (hkw: f.HasEigenvector k w) (hjk: j ≠ k): inner ℂ v w = 0 := by
-
-  have first_eq: inner ℂ v (f w) = k * (inner ℂ v w) := by
-    apply Module.End.HasEigenvector.apply_eq_smul at hkw
-    rw [hkw]
-    simp
-
-  have second_eq: inner ℂ v (f w) = j * (inner ℂ v w) := by
-    rw [← LinearMap.adjoint_inner_left]
-    rw [eigenvalue_adjoint hf] at hjv
-    apply Module.End.HasEigenvector.apply_eq_smul at hjv
-    rw [LinearMap.star_eq_adjoint] at hjv
-    rw [hjv]
-    rw [inner_smul_left]
-    simp
-
-  rw [second_eq] at first_eq
-  simp [hjk] at first_eq
-  exact first_eq
-
-lemma eigenspace_orthogonal  {A: Type*} [NormedAddCommGroup A] [InnerProductSpace ℂ A] [FiniteDimensional ℂ A] (f: Module.End ℂ A) (hf: IsStarNormal f) (j k: ℂ) (hjk: j ≠ k):
-    f.eigenspace k ⟂ f.eigenspace j := by
-
-  rw [Submodule.isOrtho_iff_inner_eq]
-  intro v hv w hw
-  by_cases v_eq_zero: v = 0
-  . simp [v_eq_zero]
-
-  by_cases w_eq_zero: w = 0
-  . simp [w_eq_zero]
-  rw [eigenvector_orthogonal f k j]
-  . exact hf
-  .
-    rw [Module.End.hasEigenvector_iff]
-    refine ⟨hv, v_eq_zero⟩
-  .
-    rw [Module.End.hasEigenvector_iff]
-    refine ⟨hw, w_eq_zero⟩
-  . exact id (Ne.symm hjk)
-
-
-lemma star_normal_maxGenEigenspace_eq_eigenspace  {A: Type*} [NormedAddCommGroup A] [InnerProductSpace ℂ A] [FiniteDimensional ℂ A] (f: Module.End ℂ A) (hf: IsStarNormal f) (k: ℂ):
-    f.maxGenEigenspace k = f.eigenspace k := by
-  sorry
-
+import Mathlib.Analysis.Matrix.StarNormalEigen
 
 lemma diag_of_eigenspace_span {A: Type*} [Nontrivial A] [AddCommGroup A] [Module ℂ A] (g: A →ₗ[ℂ] A) (k: ℂ) (hg: Module.End.eigenspace g k = ⊤):
   g = k • 1 := by
@@ -372,6 +275,70 @@ lemma ofIsCompl_adjoint_comp {P: Type*} [NormedAddCommGroup P] [CompleteSpace P]
 lemma linearmap_comp_toContinuousLinearMap {P: Type*} [AddCommGroup P] [Module ℂ P] [TopologicalSpace P] [IsTopologicalAddGroup P] [ContinuousSMul ℂ P] [T2Space P]  [FiniteDimensional ℂ P]  (a b: P →ₗ[ℂ] P):
   (a.comp b).toContinuousLinearMap = a.toContinuousLinearMap * b.toContinuousLinearMap := rfl
 
+
+structure IsoData {n: ℕ} {G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)} (g: G) where
+  a : ℕ
+  b: ℕ
+  ha: a ≠ 0
+  hab: a + b = n
+  A: Subgroup (Matrix.unitaryGroup (Fin a) ℂ)
+  B: Subgroup (Matrix.unitaryGroup (Fin b) ℂ)
+  iso: Subgroup.centralizer {g.val} ≃* A × B
+
+-- TODO - cleanup and PR to mathlib
+@[simp]
+lemma isStarNormal_unitary_coe {n: ℕ} (f: Matrix.unitaryGroup (Fin n) ℂ): IsStarNormal (Matrix.toEuclideanLin f.val) := by
+  apply isStarNormal_of_mem_unitary
+
+  rw [Unitary.mem_iff]
+  refine ⟨?_, ?_⟩
+  .
+    have f_prop := f.property
+    rw [Matrix.mem_unitaryGroup_iff'] at f_prop
+    apply_fun Matrix.toEuclideanLin at f_prop
+    rw [LinearMap.star_eq_adjoint]
+    rw [← Matrix.toEuclideanLin_conjTranspose_eq_adjoint]
+    rw [Matrix.star_eq_conjTranspose] at f_prop
+
+    rw [Matrix.toEuclideanLin_eq_toLin_orthonormal] at f_prop
+    -- TODO - make a better lemma and PR to mathlib
+    rw [Matrix.toLin_mul (v₂ := (EuclideanSpace.basisFun (Fin n) ℂ).toBasis )] at f_prop
+    rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal] at f_prop
+    conv at f_prop =>
+      lhs
+      equals (f.val.conjTranspose.toEuclideanLin) * (f.val.toEuclideanLin) =>
+        rfl
+
+
+    rw [f_prop]
+    rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
+    rw [LinearMap.ext_iff]
+    intro x
+    simp
+
+  .
+    have f_prop := f.property
+    rw [Matrix.mem_unitaryGroup_iff] at f_prop
+    apply_fun Matrix.toEuclideanLin at f_prop
+    rw [LinearMap.star_eq_adjoint]
+    rw [← Matrix.toEuclideanLin_conjTranspose_eq_adjoint]
+    rw [Matrix.star_eq_conjTranspose] at f_prop
+
+    rw [Matrix.toEuclideanLin_eq_toLin_orthonormal] at f_prop
+    -- TODO - make a better lemma and PR to mathlib
+    rw [Matrix.toLin_mul (v₂ := (EuclideanSpace.basisFun (Fin n) ℂ).toBasis )] at f_prop
+    rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal] at f_prop
+    conv at f_prop =>
+      lhs
+      equals (f.val.toEuclideanLin) * (f.val.conjTranspose.toEuclideanLin) =>
+        rfl
+
+    rw [f_prop]
+    rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
+    rw [LinearMap.ext_iff]
+    intro x
+    simp
+
 set_option maxHeartbeats 4000000 in
 set_option synthInstance.maxHeartbeats 100000 in
 lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) (g_not: ∀ z: ℂ, g.val.val ≠ z • 1):
@@ -382,17 +349,10 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
   obtain ⟨k, hk⟩ := Module.End.exists_eigenvalue g.val.val.toEuclideanLin
   by_cases gen_eigenspace_top: Module.End.maxGenEigenspace g.val.val.toEuclideanLin k = ⊤
   .
-
-    have eigenspace_top: Module.End.eigenspace g.val.val.toEuclideanLin k = ⊤ := by
-      ext a
-      simp
-      -- This needs to somehow use the fact that g is unitary
-      sorry
-
-    rw [Module.End.maxGenEigenspace_eq] at gen_eigenspace_top
+    rw [star_normal_maxGenEigenspace_eq_eigenspace (by simp)] at gen_eigenspace_top
     apply Module.End.HasEigenvalue.exists_hasEigenvector at hk
 
-    have eq_diag := diag_of_eigenspace_span g.val.val.toEuclideanLin k eigenspace_top
+    have eq_diag := diag_of_eigenspace_span g.val.val.toEuclideanLin k gen_eigenspace_top
     specialize g_not k
     apply_fun (fun f =>  LinearMap.toMatrix (EuclideanSpace.basisFun (Fin n) ℂ).toBasis (EuclideanSpace.basisFun (Fin n) ℂ).toBasis f) at eq_diag
     simp [Matrix.toEuclideanLin_eq_toLin_orthonormal] at eq_diag

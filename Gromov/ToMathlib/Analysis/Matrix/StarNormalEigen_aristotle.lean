@@ -120,7 +120,7 @@ lemma IsStarNormal.ker_sq_eq_ker {A : Type*} [NormedAddCommGroup A] [InnerProduc
           -- Since $f$ is star-normal, we have $f * f^* = f^* * f$. Therefore, for any $x$, $f(f^*(x)) = f^*(f(x))$.
           have h_comm : f * f.adjoint = f.adjoint * f := by
             cases hf;
-            exact?;
+            (expose_names; exact id (Commute.symm star_comm_self));
           exact fun x => by simpa using congr_arg ( fun g => g x ) h_comm.symm;
         -- Since $f$ is star-normal, we have $f^* f = f f^*$. Therefore, $f^*(f(x)) = f(f^*(x))$. Applying $f^*$ to both sides of $f(f(x)) = 0$, we get $f^*(f(f(x))) = f^*(0) = 0$.
         have h_apply_adjoint : ∀ x, f (f x) = 0 → f.adjoint (f x) = 0 := by
@@ -150,8 +150,8 @@ lemma star_normal_maxGenEigenspace_eq_eigenspace  {A: Type*} [NormedAddCommGroup
         simp_all +decide [ sub_mul, mul_sub, smul_sub, sub_smul ];
         simp_all +decide [ sub_eq_iff_eq_add, IsStarNormal, smul_smul ];
         simp_all +decide [ mul_comm, sub_eq_add_neg, add_assoc, add_left_comm, add_comm ];
-        exact?;
-      exact?;
+        exact Eq.symm (star_comm_self' f);
+      exact (isStarNormal_iff (f - k • 1)).mpr (id (Eq.symm h_star_normal));
     -- By induction on $w$, we can show that $\ker((f - kI)^w) = \ker(f - kI)$ for all $w \geq 1$.
     have h_ker_pow_eq_ker : ∀ w ≥ 1, LinearMap.ker ((f - k • 1) ^ w) = LinearMap.ker (f - k • 1) := by
       intro w hw
@@ -163,4 +163,6 @@ lemma star_normal_maxGenEigenspace_eq_eigenspace  {A: Type*} [NormedAddCommGroup
     by_cases hw : 1 ≤ w <;> aesop;
     replace h_ker_pow_eq_ker := SetLike.ext_iff.mp ( h_ker_pow_eq_ker w hw ) x; aesop;
     exact eq_of_sub_eq_zero h_ker_pow_eq_ker;
-  · exact?
+  · exact Module.End.eigenspace_le_maxGenEigenspace
+
+#print axioms star_normal_maxGenEigenspace_eq_eigenspace
