@@ -229,6 +229,26 @@ lemma ofIsCompl_adjoint_comp {P: Type*} [NormedAddCommGroup P] [CompleteSpace P]
     -- simp only [map_add, LinearMap.adjoint_comp, LinearMap.add_apply, LinearMap.coe_comp,
     --   Function.comp_apply]
 
+lemma ofIsCompl_commute {P: Type*} [NormedAddCommGroup P] [CompleteSpace P] [InnerProductSpace ℂ P] [FiniteDimensional ℂ P]  {p q : Submodule ℂ P} (h : IsCompl p q)
+    (φ : p →ₗ[ℂ] P) (ψ : q →ₗ[ℂ] P)
+    (a: P →ₗ[ℂ] P) (a_map_p: ∀ x: p, a x ∈ p) (a_map_q: ∀ x: q, a x ∈ q)
+    (phi_a_comm: ∀ x: p, φ ⟨a x, a_map_p x⟩ = a (φ x))
+    (psi_a_comm: ∀ x: q, ψ ⟨a x, a_map_q x⟩ = a (ψ x))
+    : (LinearMap.ofIsCompl h (φ) (ψ)) * a = a * (LinearMap.ofIsCompl h (φ) (ψ)) := by
+
+  rw [LinearMap.ext_iff]
+  intro v
+  obtain ⟨x, y, v_eq, other⟩ := Submodule.existsUnique_add_of_isCompl h v
+  rw [← v_eq]
+  simp
+
+  have a_x: a x = (⟨a x, a_map_p x⟩ : p).val := by simp
+  have a_y: a y = (⟨a y, a_map_q y⟩ : q).val := by simp
+
+  rw [a_x, a_y]
+  rw [LinearMap.ofIsCompl_left_apply, LinearMap.ofIsCompl_right_apply]
+  rw [phi_a_comm]
+  rw [psi_a_comm]
 
 
 
@@ -920,7 +940,50 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             simpa using hxy
         )⟩, (by
           simp
-          sorry
+          rw [Subgroup.mem_centralizer_iff]
+          simp
+          apply_fun (fun f => Matrix.toEuclideanLin f.val)
+          simp only []
+          simp_rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
+          simp only [Matrix.toLin_symm, Submonoid.coe_mul]
+          rw [Matrix.toLin_mul (v₂ := (EuclideanSpace.basisFun (Fin n) ℂ).toBasis )]
+          simp
+          rw [Matrix.toLin_mul (v₂ := (EuclideanSpace.basisFun (Fin n) ℂ).toBasis )]
+          simp [new]
+          rw [eq_comm]
+          apply ofIsCompl_commute
+          .
+            sorry
+          . sorry
+          .
+            intro z
+            apply Module.End.mapsTo_maxGenEigenspace_of_comm
+            rw [commute_iff_eq]
+            rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
+            simp
+          .
+            intro x
+            apply LinearMap.mapsTo_biSup_of_mapsTo
+            .
+              intro z
+              apply Module.End.mapsTo_maxGenEigenspace_of_comm
+              rw [commute_iff_eq]
+              rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
+              simp
+            . exact hx
+            -- intro z
+            -- apply (Module.End.mem_invtSubmodule_iff_mapsTo _).mp
+            -- sorry
+          . intro a b hab
+            simpa using hab
+          -- rw [Matrix.toLin_toMatrix]
+          -- simp_rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal]
+          -- rw [LinearMap.ext_iff]
+          -- intro v
+          -- simp [new]
+          -- obtain ⟨x, y, c_eq, _⟩ := Submodule.existsUnique_add_of_isCompl h v
+
+          -- sorry
         )⟩
 
 
