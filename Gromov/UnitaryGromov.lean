@@ -1,4 +1,5 @@
 import Mathlib
+import Mathlib.Analysis.Matrix.Unitary
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 --open scoped ComplexInnerProductSpace
@@ -5306,7 +5307,10 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
       have n_ge_two : 2 ≤ n := by
         omega
-      obtain ⟨data⟩ := inductive_lemma n n_ge_two G g g_not_multiple_I
+
+      have n_ne_zero: NeZero n := by
+        exact { out := hn }
+      obtain ⟨data⟩ := centralizer_iso G g g_not_multiple_I
 
       -- TODO - extract this into a general lemma about finitely generated products of subgroups, and PR to mathlib
       -- have subgroup_fg : ∀ i : Fin (data.k), (data.groups i).FG := by
@@ -5390,22 +5394,27 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       -- The abelian subgroup of G_i.
       -- TODO - we need to construct a generating set for the smaller subgroup
       -- TODO - is there existing API for this in mathlib?
-      let g_to_central: G ≃* (Subgroup.centralizer {g}) := {
-        toFun := fun a => ⟨a, all_mem_central a⟩,
-        invFun := fun a => a.val
+      let g_to_central: G →* (Subgroup.centralizer {g.val}) := {
+        toFun := fun a => ⟨a, by
+          rw [Subgroup.mem_centralizer_iff]
+          simp
+          rw [Set.mem_center_iff] at g_central
+          rw [isMulCentral_iff] at g_central
+          have foo := (g_central.1) a
+          rw [commute_iff_eq] at foo
+          rw [Subtype.ext_iff] at foo
+          simpa using foo
+        ⟩,
+        map_one' := by
+          simp
         map_mul' := by
-          intro a b
-          simp
-        left_inv := by
-          intro a
-          simp
-        right_inv := by
-          intro a
           simp
       }
 
-      let first_new_data: SPolyData (n := (data.first_n)) (by linarith [data.first_n_pos]) (data.first_group) := {
-        S := (MonoidHom.fst _ _ '' (data.iso.toMonoidHom '' (g_to_central.toMonoidHom '' S_data.S))),
+      have ha := data.ha
+
+      let first_new_data: SPolyData (n := (data.a)) (by omega) (data.A) := {
+        S := (MonoidHom.fst _ _ '' (data.iso.toMonoidHom '' (g_to_central '' S_data.S))),
         S_one := sorry
         S_inv := sorry
         S_finite := by
@@ -5424,17 +5433,27 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
             rw [Subgroup.map_top_of_surjective]
             intro a
             simp
-          . simp
-            exact MulEquiv.surjective g_to_central
+          . sorry
+            --simp
+            --exact MulEquiv.surjective g_to_central
         S_poly_const := S_data.S_poly_const
         S_poly_const_pos := S_data.S_poly_const_pos
         S_poly_deg := S_data.S_poly_deg
         S_poly := sorry
       }
 
+      have data_b_pos: 0 < data.b := by
+        have hab := data.hab
+        have ha := data.ha
+        have n_ne_zero: n ≠ 0 := by grind
+        by_contra!
+        simp at this
+        simp [this] at hab
+        sorry
+
       -- TODO - deduplicate 'first_new_data' and 'second_new_data'
-      let second_new_data: SPolyData (n := (data.second_n)) (by linarith [data.second_n_pos]) (data.second_group) := {
-        S := (MonoidHom.snd _ _ '' (data.iso.toMonoidHom '' (g_to_central.toMonoidHom '' S_data.S))),
+      let second_new_data: SPolyData (n := (data.b)) (by omega) (data.B) := {
+        S := (MonoidHom.snd _ _ '' (data.iso.toMonoidHom '' (g_to_central '' S_data.S))),
         S_one := sorry
         S_inv := sorry
         S_finite := by
@@ -5453,8 +5472,9 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
             rw [Subgroup.map_top_of_surjective]
             intro a
             simp
-          . simp
-            exact MulEquiv.surjective g_to_central
+          . sorry
+            --simp
+            --exact MulEquiv.surjective g_to_central
         S_poly_const := S_data.S_poly_const
         S_poly_const_pos := S_data.S_poly_const_pos
         S_poly_deg := S_data.S_poly_deg
@@ -5498,8 +5518,8 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       -- } : SPolyData (n := (data.n_i i)) (by sorry) ((data.groups i) ))
 
 
-      obtain ⟨first_subgroup, first_subgroup_abelian, first_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.first_n) (by linarith [data.first_n_pos]) (data.first_group) (by sorry) (first_new_data)
-      obtain ⟨second_subgroup, second_subgroup_abelian, second_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.second_n) (by linarith [data.second_n_pos]) (data.second_group) (sorry) (second_new_data)
+      obtain ⟨first_subgroup, first_subgroup_abelian, first_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.a) (by grind) (data.A) (by sorry) (first_new_data)
+      obtain ⟨second_subgroup, second_subgroup_abelian, second_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.b) (by grind) (data.B) (sorry) (second_new_data)
 
       let iso := Subgroup.map data.iso.symm.toMonoidHom
       --let Gi' := fun i : Fin (data.k) => compact_lie_virtually_abelian (data.n_i i) (data.positive_n_i i) (data.groups i) (subgroup_fg i) (new_S_data i)
@@ -5581,18 +5601,18 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
 
       -- Page 48 : Let Gᵢ := πᵢ⁻¹(πᵢ(G)′) = {g ∈ G : πᵢ(g) ∈ πᵢ(G)′}
-      let G_1 := Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.fst data.first_group data.second_group) first_subgroup)
-      let G_2 := Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.snd data.first_group data.second_group) second_subgroup)
+      let G_1 := Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.fst data.A data.B) first_subgroup)
+      let G_2 := Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.snd data.A data.B) second_subgroup)
 
       let pre_G' := G_1 ⊓ G_2
 
-      have central_equiv: Subgroup.centralizer {g} ≃* G := {
-        toFun := fun a => a.val,
-        invFun := fun a => ⟨a, all_mem_central a⟩,
-        map_mul' := by simp
-      }
+      -- have central_equiv: Subgroup.centralizer {g} ≃* G := {
+      --   toFun := fun a => a.val,
+      --   invFun := fun a => ⟨a, all_mem_central a⟩,
+      --   map_mul' := by simp
+      -- }
 
-      let G' := Subgroup.map central_equiv.toMonoidHom pre_G'
+      let G' := Subgroup.comap g_to_central pre_G'
 
       have pre_G'_abeliean : IsMulCommutative pre_G' := by
         unfold pre_G'
@@ -5641,7 +5661,10 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           exact second_comm
 
       have G'_abeliean : IsMulCommutative G' := by
-        apply Subgroup.map_isMulCommutative
+        apply Subgroup.comap_injective_isMulCommutative
+        intro a b hab
+        simp [g_to_central] at hab
+        exact hab
 
       -- have G'_comm : ∀ a b : G', a * b = b * a := by
       --   intro a b
@@ -5721,7 +5744,9 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
         unfold G'
         rw [Subgroup.finiteIndex_iff]
         simp
-        exact Subgroup.finiteIndex_iff.mp pre_G'_finite_index
+        rw [Subgroup.index_comap]
+        sorry
+        --exact Subgroup.finiteIndex_iff.mp pre_G'_finite_index
 
       --unfold UnitaryProd at centralizer_iso
       use G'
@@ -5919,7 +5944,9 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 termination_by (n, G.index)
 decreasing_by
   · apply Prod.Lex.left
-    apply data.first_n_lt
+    have hab := data.hab
+    grind
   . apply Prod.Lex.left
-    apply data.second_n_lt
+    have hab := data.hab
+    grind
 #print axioms compact_lie_virtually_abelian
