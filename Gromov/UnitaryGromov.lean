@@ -5537,6 +5537,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
             simp
             exact second_comm
         . intro a b hab
+          simp [g_to_central] at hab
           simpa using hab
 
       use G'
