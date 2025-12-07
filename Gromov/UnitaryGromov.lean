@@ -5453,13 +5453,8 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       }
 
       have data_b_pos: 0 < data.b := by
-        have hab := data.hab
-        have ha := data.ha
-        have n_ne_zero: n ≠ 0 := by grind
-        by_contra!
-        simp at this
-        simp [this] at hab
-        sorry
+        have hab := data.hb
+        omega
 
       -- TODO - deduplicate 'first_new_data' and 'second_new_data'
       let second_new_data: SPolyData (n := (data.b)) (by omega) (data.B) := {
@@ -5611,8 +5606,25 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
 
       -- Page 48 : Let Gᵢ := πᵢ⁻¹(πᵢ(G)′) = {g ∈ G : πᵢ(g) ∈ πᵢ(G)′}
-      let G_1 := Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.fst data.A data.B) first_subgroup)
-      let G_2 := Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.snd data.A data.B) second_subgroup)
+      let G_1 := Subgroup.comap g_to_central (Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.fst data.A data.B) first_subgroup))
+      let G_2 := Subgroup.comap g_to_central (Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.snd data.A data.B) second_subgroup)
+
+      let new_G_1 := Subgroup.comap g_to_central G_1
+      -- TODO - figure out why this proof actually works
+      have new_g1_finiteindex: new_G_1.FiniteIndex := by
+        unfold new_G_1 G_1
+        simp
+        rw [Subgroup.finiteIndex_iff]
+        rw [Subgroup.index_comap]
+        rw [Subgroup.map_equiv_eq_comap_symm]
+        simp
+        rw [Subgroup.relIndex_comap]
+        rw [Subgroup.relIndex_comap]
+        have foo: (first_subgroup.subgroupOf (Subgroup.map (MonoidHom.fst ↥data.A ↥data.B) (Subgroup.map (↑data.iso) g_to_central.range))).FiniteIndex := by
+          infer_instance
+
+        rw [Subgroup.finiteIndex_iff] at foo
+        exact foo
 
       let pre_G' := G_1 ⊓ G_2
 
