@@ -216,6 +216,59 @@ structure IsoData {n: ℕ} {G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)} (g: G
   B: Subgroup (Matrix.unitaryGroup (Fin b) ℂ)
   iso: Subgroup.centralizer {g.val} ≃* A × B
 
+-- @[simp]
+-- lemma isStarNormal_unitary_coe_toLin {n: ℕ} (f: Matrix.unitaryGroup (Fin n) ℂ)  (v : Module.Basis (Fin n) ℂ (EuclideanSpace ℂ (Fin n))): IsStarNormal (Matrix.toLin v v f) := by
+--   apply isStarNormal_of_mem_unitary
+
+--   rw [Unitary.mem_iff]
+--   refine ⟨?_, ?_⟩
+--   .
+--     have f_prop := f.property
+--     rw [Matrix.mem_unitaryGroup_iff'] at f_prop
+--     apply_fun Matrix.toEuclideanLin at f_prop
+--     rw [LinearMap.star_eq_adjoint]
+--     rw [Matrix.star_eq_conjTranspose] at f_prop
+
+--     rw [Matrix.toEuclideanLin_eq_toLin_orthonormal] at f_prop
+--     -- TODO - make a better lemma and PR to mathlib
+--     rw [Matrix.toLin_mul (v₂ := v)] at f_prop
+--     rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal] at f_prop
+
+--     conv at f_prop =>
+--       lhs
+--       equals (f.val.conjTranspose.toEuclideanLin) * (f.val.toEuclideanLin) =>
+--         rfl
+
+
+--     rw [f_prop]
+--     rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
+--     rw [LinearMap.ext_iff]
+--     intro x
+--     simp
+
+--   .
+--     have f_prop := f.property
+--     rw [Matrix.mem_unitaryGroup_iff] at f_prop
+--     apply_fun Matrix.toEuclideanLin at f_prop
+--     rw [LinearMap.star_eq_adjoint]
+--     rw [← Matrix.toEuclideanLin_conjTranspose_eq_adjoint]
+--     rw [Matrix.star_eq_conjTranspose] at f_prop
+
+--     rw [Matrix.toEuclideanLin_eq_toLin_orthonormal] at f_prop
+--     -- TODO - make a better lemma and PR to mathlib
+--     rw [Matrix.toLin_mul (v₂ := (EuclideanSpace.basisFun (Fin n) ℂ).toBasis )] at f_prop
+--     rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal] at f_prop
+--     conv at f_prop =>
+--       lhs
+--       equals (f.val.toEuclideanLin) * (f.val.conjTranspose.toEuclideanLin) =>
+--         rfl
+
+--     rw [f_prop]
+--     rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
+--     rw [LinearMap.ext_iff]
+--     intro x
+--     simp
+
 -- TODO - cleanup and PR to mathlib
 @[simp]
 lemma isStarNormal_unitary_coe {n: ℕ} (f: Matrix.unitaryGroup (Fin n) ℂ): IsStarNormal (Matrix.toEuclideanLin f.val) := by
@@ -269,6 +322,11 @@ lemma isStarNormal_unitary_coe {n: ℕ} (f: Matrix.unitaryGroup (Fin n) ℂ): Is
     rw [LinearMap.ext_iff]
     intro x
     simp
+
+@[simp]
+lemma isStarNormal_unitary_coe_toLin {n: ℕ} (f: Matrix.unitaryGroup (Fin n) ℂ): IsStarNormal (Matrix.toLin ((EuclideanSpace.basisFun (Fin n) ℂ).toBasis) ((EuclideanSpace.basisFun (Fin n) ℂ).toBasis ) f.val) := by
+  rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal]
+  simp
 
 set_option maxHeartbeats 4000000 in
 set_option synthInstance.maxHeartbeats 100000 in
@@ -795,9 +853,22 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
 
 
             apply ofIsCompl_adjoint_comp
+            .
+              rw [star_normal_maxGenEigenspace_eq_eigenspace (by simp)]
+              conv =>
+                rhs
+                arg 1
+                intro x
+                arg 1
+                intro x
+                rw [star_normal_maxGenEigenspace_eq_eigenspace (by simp)]
+              simp
+              intro i hi
+              apply eigenspace_orthogonal
+              . simp
+              . omega
             . sorry
-            . sorry
-            . sorry
+            . simp [map_first_x_new]
             . sorry
             . simp [map_second_y_new]
             rw [← ContinuousLinearMap.norm_map_iff_adjoint_comp_self]
