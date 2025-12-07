@@ -85,7 +85,40 @@ lemma swap_terms_helper {A: Type*} [AddCommGroup A] (a b c d: A): (a + b) + (c +
 
 
 
+lemma linearmap_comp_toContinuousLinearMap {P: Type*} [AddCommGroup P] [Module ℂ P] [TopologicalSpace P] [IsTopologicalAddGroup P] [ContinuousSMul ℂ P] [T2Space P]  [FiniteDimensional ℂ P]  (a b: P →ₗ[ℂ] P):
+  (a.comp b).toContinuousLinearMap = a.toContinuousLinearMap * b.toContinuousLinearMap := rfl
 
+lemma unitary_preserves_norm (n: ℕ) (h: Matrix.unitaryGroup (Fin n) ℂ) (x: EuclideanSpace ℂ (Fin n)): ‖(Matrix.toEuclideanLin h.val) x‖ = ‖x‖ := by
+  have h_unitary := Unitary.star_mul_self_of_mem h.property
+  apply_fun Matrix.toEuclideanLin at h_unitary
+  rw [Matrix.toEuclideanLin_eq_toLin_orthonormal] at h_unitary
+  conv at h_unitary =>
+    lhs
+    equals (Matrix.toEuclideanLin (star h.val)) ∘ₗ (Matrix.toEuclideanLin (h.val)) =>
+      rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
+      rw [← Matrix.toLin_mul]
+  rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal] at h_unitary
+  rw [Matrix.star_eq_conjTranspose] at h_unitary
+  rw [Matrix.toEuclideanLin_conjTranspose_eq_adjoint] at h_unitary
+
+  apply_fun (fun f => LinearMap.toContinuousLinearMap f) at h_unitary
+  simp [-EmbeddingLike.apply_eq_iff_eq] at h_unitary
+  conv at h_unitary =>
+    lhs
+    rw [linearmap_comp_toContinuousLinearMap]
+    rw [ContinuousLinearMap.mul_def]
+    lhs
+    rw [LinearMap.adjoint_toContinuousLinearMap]
+
+  conv at h_unitary =>
+    rhs
+    equals 1 =>
+      ext x
+      simp
+  rw [← ContinuousLinearMap.norm_map_iff_adjoint_comp_self] at h_unitary
+  specialize h_unitary x
+  simp at h_unitary
+  exact h_unitary
 
 
 --   have inner_congr := ext_inner_right 𝕜
@@ -203,8 +236,6 @@ lemma ofIsCompl_adjoint_comp {P: Type*} [NormedAddCommGroup P] [CompleteSpace P]
     --   Function.comp_apply]
 
 
-lemma linearmap_comp_toContinuousLinearMap {P: Type*} [AddCommGroup P] [Module ℂ P] [TopologicalSpace P] [IsTopologicalAddGroup P] [ContinuousSMul ℂ P] [T2Space P]  [FiniteDimensional ℂ P]  (a b: P →ₗ[ℂ] P):
-  (a.comp b).toContinuousLinearMap = a.toContinuousLinearMap * b.toContinuousLinearMap := rfl
 
 
 structure IsoData {n: ℕ} {G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)} (g: G) where
@@ -377,7 +408,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
     --   arg 1
     --   intro i
     --   arg 1
-    --   intro hi
+    --   intro hi‖
 
     have comm_g_h (h: Subgroup.centralizer {g.val}): Commute (Matrix.toEuclideanLin g.val.val) (Matrix.toEuclideanLin h.val.val) := by
       have foo := h.property
@@ -820,6 +851,24 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
           map_smul' := by simp
         }
 
+        have map_first_x_unitary: (ContinuousLinearMap.adjoint map_first_x_new.toContinuousLinearMap).comp map_first_x_new.toContinuousLinearMap = 1 := by
+          rw [← ContinuousLinearMap.norm_map_iff_adjoint_comp_self]
+          intro z
+          simp [map_first_x_new, map_first]
+          apply unitary_preserves_norm
+
+        apply_fun (fun f => f.toLinearMap) at map_first_x_unitary
+        simp at map_first_x_unitary
+
+        have map_second_y_unitary: (ContinuousLinearMap.adjoint map_second_y_new.toContinuousLinearMap).comp map_second_y_new.toContinuousLinearMap = 1 := by
+          rw [← ContinuousLinearMap.norm_map_iff_adjoint_comp_self]
+          intro z
+          simp [map_second_y_new, map_second]
+          apply unitary_preserves_norm
+
+        apply_fun (fun f => f.toLinearMap) at map_second_y_unitary
+        simp at map_second_y_unitary
+
         let new := LinearMap.ofIsCompl a_b_compl map_first_x_new map_second_y_new
         use ⟨⟨(Matrix.toEuclideanLin.symm new), (by
           simp [Matrix.mem_unitaryGroup_iff']
@@ -867,9 +916,11 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
               apply eigenspace_orthogonal
               . simp
               . omega
-            . sorry
+            .
+              apply map_first_x_unitary
             . simp [map_first_x_new]
-            . sorry
+            .
+              apply map_second_y_unitary
             . simp [map_second_y_new]
           . intro x y hxy
             simpa using hxy
