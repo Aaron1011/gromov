@@ -5415,7 +5415,17 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
       let first_new_data: SPolyData (n := (data.a)) (by omega) (data.A) := {
         S := (MonoidHom.fst _ _ '' (data.iso.toMonoidHom '' (g_to_central '' S_data.S))),
-        S_one := sorry
+        S_one := by
+          simp only [Set.mem_image]
+          use (1, 1)
+          use ⟨1, ?_⟩
+          . simp
+          . refine ⟨?_, ?_⟩
+            . use 1
+              simp [g_to_central]
+              apply S_data.S_one
+            . simp
+              rfl
         S_inv := sorry
         S_finite := by
           apply Set.Finite.image
