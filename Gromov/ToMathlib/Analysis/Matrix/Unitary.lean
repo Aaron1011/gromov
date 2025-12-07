@@ -969,8 +969,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
               apply Module.End.mapsTo_maxGenEigenspace_of_comm
               rw [commute_iff_eq]
               rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
-              simp
-            . exact hx
+            . simp
             -- intro z
             -- apply (Module.End.mem_invtSubmodule_iff_mapsTo _).mp
             -- sorry
