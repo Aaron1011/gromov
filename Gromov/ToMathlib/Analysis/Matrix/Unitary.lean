@@ -967,7 +967,21 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             rw [Subtype.ext_iff] at x_prop
             simp at x_prop
             rw [x_prop]
-          . sorry
+          .
+            intro z
+            simp [map_second_y_new, map_second]
+            simp_rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal]
+            rw [Matrix.toEuclideanLin_apply]
+            rw [Matrix.toEuclideanLin_apply]
+            rw [Matrix.toEuclideanLin_apply]
+            rw [Matrix.toEuclideanLin_apply]
+            simp
+            have y_prop := y.property
+            rw [Subgroup.mem_centralizer_iff] at y_prop
+            simp at y_prop
+            rw [Subtype.ext_iff] at y_prop
+            simp at y_prop
+            rw [y_prop]
           .
             intro z
             apply Module.End.mapsTo_maxGenEigenspace_of_comm
@@ -1057,3 +1071,5 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
       B := _
       iso := prod_iso
     }
+
+#print axioms centralizer_iso
