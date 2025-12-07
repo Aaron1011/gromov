@@ -130,6 +130,42 @@ lemma ofIsCompl_adjoint_comp {P: Type*} [NormedAddCommGroup P] [CompleteSpace P]
       rw [b_eq]
       apply Submodule.IsOrtho.inner_eq hpq.symm (by simp [hb]) (by simp)
 
+    let temp := φ.adjoint
+
+    have adjoint_phi_eq: (LinearMap.adjoint φ) =  (LinearMap.ofIsCompl h (LinearMap.domRestrict φ.adjoint p) 0) := by
+      rw [eq_comm]
+      rw [LinearMap.eq_adjoint_iff]
+      intro c d
+      simp
+      obtain ⟨x, y, c_eq, _⟩ := Submodule.existsUnique_add_of_isCompl h c
+      rw [← c_eq]
+      simp
+      rw [inner_add_left]
+
+      rw [Submodule.isOrtho_iff_inner_eq] at hpq
+      have my_inner := hpq (φ d) (by exact hφ_map d) y (by simp)
+      rw [inner_eq_zero_symm] at my_inner
+      simp [my_inner]
+      nth_rw 2 [← inner_conj_symm]
+      rw [← LinearMap.adjoint_inner_right]
+      simp
+
+    have adjoint_psi_eq: (LinearMap.adjoint ψ) =  (LinearMap.ofIsCompl h 0 (LinearMap.domRestrict ψ.adjoint q)) := by
+      rw [eq_comm]
+      rw [LinearMap.eq_adjoint_iff]
+      intro c d
+      simp
+      obtain ⟨x, y, c_eq, _⟩ := Submodule.existsUnique_add_of_isCompl h c
+      rw [← c_eq]
+      simp
+      rw [inner_add_left]
+
+      rw [Submodule.isOrtho_iff_inner_eq] at hpq
+      have my_inner := hpq x (by simp) (ψ d) (by exact hψ_map d)
+      simp [my_inner]
+      nth_rw 2 [← inner_conj_symm]
+      rw [← LinearMap.adjoint_inner_right]
+      simp
 
     simp [adjoint_compl_p_eq, adjoint_compl_q_eq]
     apply_fun (fun f => f x) at hφ
@@ -139,147 +175,25 @@ lemma ofIsCompl_adjoint_comp {P: Type*} [NormedAddCommGroup P] [CompleteSpace P]
     apply_fun (fun f => f y) at hψ
     simp at hψ
     simp [hψ]
-
+    rw [adjoint_phi_eq]
     conv =>
-      lhs
-      lhs
-      rhs
-      arg 1
-      equals (ContinuousLinearMap.adjoint (ψ.toContinuousLinearMap)) (φ x) =>
-        rfl
+      pattern ψ y
+      equals (⟨ψ y, by apply hψ_map⟩ : q).val =>
+        simp
 
-    conv =>
-      lhs
-      lhs
-      rhs
-      arg 1
-      equals 0 =>
-        
-        rw [ContinuousLinearMap.IsStarNormal.adjoint_apply_eq_zero_iff]
-
-
-    conv =>
-      lhs
-
-    have first_zero: (ψ.toContinuousLinearMap.adjoint) (φ x) = 0 := by
-      have foo := ContinuousLinearMap.IsStarNormal.adjoint_apply_eq_zero_iff (T := (ψ.codRestrict _ hψ_map).toContinuousLinearMap) ?_
-      .
-
-        specialize foo (⟨φ x, hφ_map x⟩)
-        have bar := foo.mpr ?_
-        . simp at bar
-          sorry
-        . simp
-          rw [Subtype.ext_iff]
-          simp
-          sorry
-
-        apply foo.mpr
-      rw [ContinuousLinearMap.IsStarNormal.adjoint_apply_eq_zero_iff (T := (φ.codRestrict _ hφ_map).toContinuousLinearMap)]
-      apply_fun (fun f => LinearMap.toContinuousLinearMap f)
-      rw [ContinuousLinearMap.IsStarNormal.adjoint_apply_eq_zero_iff]
-
-
-    conv =>
-      lhs
-      lhs
-      arg 1
-      rw [LinearMap.ofIsCompl_eq_add]
-      simp
-
-      equals ((LinearMap.ofIsCompl h (p.subtype ∘ₗ φ.adjoint ∘ₗ p.subtype) (q.subtype ∘ₗ ψ.adjoint  ∘ₗ q.subtype))) =>
-
-        rw [eq_comm]
-        -- rw [LinearMap.eq_adjoint_iff]
-        -- intro r s
-
-        -- obtain ⟨f, g, r_eq, _⟩ := Submodule.existsUnique_add_of_isCompl h r
-        -- rw [← r_eq]
-        -- rw [map_add, LinearMap.ofIsCompl_left_apply,  LinearMap.ofIsCompl_right_apply]
-        -- rw [inner_add_left]
-        -- rw [LinearMap.adjoint_inner_left]
-
-
-        apply LinearMap.ofIsCompl_eq
-        . intro r
-          simp
-          rw [LinearMap.ofIsCompl_eq_add]
-          rw [map_add]
-          rw [LinearMap.add_apply]
-
-          rw [LinearMap.adjoint_comp]
-          simp
-          conv =>
-            pattern (LinearMap.adjoint p.subtype)
-            -- TODO - make this a lemma and upstream it
-            equals ↑p.orthogonalProjection =>
-              rw [eq_comm]
-              simp [LinearMap.eq_adjoint_iff]
-
-          simp
-          conv =>
-            rhs
-            lhs
-            lhs
-            equals p.subtype =>
-              rw [eq_comm]
-              simp [-Submodule.coe_linearProjOfIsCompl_apply, LinearMap.eq_adjoint_iff]
-              intro b hb z
-              obtain ⟨x, y, z_eq, other⟩ := Submodule.existsUnique_add_of_isCompl h z
-              rw [← z_eq]
-              simp
-              rw [inner_add_right]
-              simp
-              have b_eq : b = (⟨b, hb⟩: p) := by simp
-              rw [b_eq]
-              apply Submodule.IsOrtho.inner_eq hpq (by simp [hb]) (by simp)
-
-          simp only [Submodule.subtype_apply]
-          conv =>
-            rhs
-            rhs
-            lhs
-            equals q.subtype =>
-              rw [eq_comm]
-              simp [-Submodule.coe_linearProjOfIsCompl_apply, LinearMap.eq_adjoint_iff]
-              intro b hb z
-              obtain ⟨x, y, z_eq, other⟩ := Submodule.existsUnique_add_of_isCompl h z
-              rw [← z_eq]
-              simp
-              rw [inner_add_right]
-              simp
-              apply Submodule.IsOrtho.inner_eq hpq.symm (hb) (by simp)
-          simp
-          conv =>
-            pattern (LinearMap.adjoint q.subtype)
-            -- TODO - make this a lemma and upstream it
-            equals ↑q.orthogonalProjection =>
-              rw [eq_comm]
-              simp [LinearMap.eq_adjoint_iff]
-          simp
-          rw [Submodule.orthogonalProjection_mem_subspace_orthogonalComplement_eq_zero]
-          . simp
-          . have foo := Submodule.IsOrtho.ge hpq.symm
-            exact foo r.property
-        . intro r
-          simp
-          sorry
+    rw [LinearMap.ofIsCompl_right_apply]
     simp
-    apply_fun (fun f => f x) at hφ
-    simp at hφ
-    simp [hφ]
-    sorry
-    -- sorry
-    -- rw [LinearMap.ofIsCompl_eq_add]
-    -- rw [map_add, LinearMap.add_apply]
-    -- rw [swap_terms_helper]
-    -- rw [← map_add]
+
+    rw [adjoint_psi_eq]
+    conv =>
+      lhs
+      rhs
+      equals (⟨φ x, by apply hφ_map⟩ : p).val =>
+        simp
 
 
-    -- nth_rw 2 [add_comm]
-    -- rw [add_assoc]
-    -- nth_rw 1 [add_comm]
-
+    rw [LinearMap.ofIsCompl_left_apply]
+    simp
 
 
 
@@ -885,7 +799,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             . sorry
             . sorry
             . sorry
-            . sorry
+            . simp [map_second_y_new]
             rw [← ContinuousLinearMap.norm_map_iff_adjoint_comp_self]
             simp only [LinearMap.coe_toContinuousLinearMap']
             intro z
