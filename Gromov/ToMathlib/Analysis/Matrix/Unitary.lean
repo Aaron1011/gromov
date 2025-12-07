@@ -256,6 +256,7 @@ structure IsoData {n: ℕ} {G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)} (g: G
   a : ℕ
   b: ℕ
   ha: a ≠ 0
+  hb: b ≠ 0
   hab: a + b = n
   A: Subgroup (Matrix.unitaryGroup (Fin a) ℂ)
   B: Subgroup (Matrix.unitaryGroup (Fin b) ℂ)
@@ -1067,6 +1068,17 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
           rw [Module.End.eigenspace_def] at hk
           rw [← Module.End.genEigenspace_one] at hk
           contradiction
+      hb := by
+        rw [Nat.ne_zero_iff_zero_lt]
+        by_contra!
+        have sum_eq := Submodule.finrank_add_eq_of_isCompl a_b_compl
+        simp at sum_eq
+        rw [Nat.le_zero] at this
+        rw [this] at sum_eq
+        simp at sum_eq
+        apply Submodule.finrank_lt at gen_eigenspace_top
+        rw [sum_eq] at gen_eigenspace_top
+        simp at gen_eigenspace_top
       A := _
       B := _
       iso := prod_iso
