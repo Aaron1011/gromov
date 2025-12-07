@@ -871,54 +871,6 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             . simp [map_first_x_new]
             . sorry
             . simp [map_second_y_new]
-            rw [← ContinuousLinearMap.norm_map_iff_adjoint_comp_self]
-            simp only [LinearMap.coe_toContinuousLinearMap']
-            intro z
-            rw [LinearMap.ofIsCompl_eq_add]
-            -- conv =>
-            --   intro x
-            --   rw [LinearMap.restrict_apply (by
-            --     apply Module.End.mapsTo_genEigenspace_of_comm (by
-            --       apply comm_g_h
-            --     )
-            --   )]
-            --   simp
-            --   rw [← LinearMap.coe_toContinuousLinearMap']
-
-
-            -- Submodule.existsUnique_add_of_isCompl
-            sorry
-            apply_fun (fun f => LinearMap.toContinuousLinearMap f) at h_unitary
-            simp [-EmbeddingLike.apply_eq_iff_eq] at h_unitary
-            conv at h_unitary =>
-              lhs
-              rw [linearmap_comp_toContinuousLinearMap]
-              rw [ContinuousLinearMap.mul_def]
-              lhs
-              rw [LinearMap.adjoint_toContinuousLinearMap]
-
-            conv at h_unitary =>
-              rhs
-              equals 1 =>
-                ext x
-                simp
-            rw [← ContinuousLinearMap.norm_map_iff_adjoint_comp_self] at h_unitary
-            intro x
-            specialize h_unitary x.val
-            exact h_unitary
-            . exact LinearEquiv.injective LinearMap.toContinuousLinearMap
-            . intro x y hxy
-              simpa using hxy
-
-
-
-            -- simp
-            -- conv =>
-            --   lhs
-            --   equals ((LinearMap.ofIsCompl a_b_compl map_first_x_new map_second_y_new)).conjTranspose ∘ₗ LinearMap.ofIsCompl a_b_compl map_first_x_new map_second_y_new =>
-            --     apply Matrix.toLin_toMatrix
-            -- rw [Matrix.toLin_toMatrix]
-            -- simp_rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal]
           . intro x y hxy
             simpa using hxy
         )⟩, (by
