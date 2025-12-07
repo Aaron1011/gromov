@@ -5607,12 +5607,11 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
       -- Page 48 : Let Gᵢ := πᵢ⁻¹(πᵢ(G)′) = {g ∈ G : πᵢ(g) ∈ πᵢ(G)′}
       let G_1 := Subgroup.comap g_to_central (Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.fst data.A data.B) first_subgroup))
-      let G_2 := Subgroup.comap g_to_central (Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.snd data.A data.B) second_subgroup)
+      let G_2 := Subgroup.comap g_to_central (Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.snd data.A data.B) second_subgroup))
 
-      let new_G_1 := Subgroup.comap g_to_central G_1
       -- TODO - figure out why this proof actually works
-      have new_g1_finiteindex: new_G_1.FiniteIndex := by
-        unfold new_G_1 G_1
+      have g_1_finite_index: G_1.FiniteIndex := by
+        unfold G_1
         simp
         rw [Subgroup.finiteIndex_iff]
         rw [Subgroup.index_comap]
@@ -5626,18 +5625,30 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
         rw [Subgroup.finiteIndex_iff] at foo
         exact foo
 
-      let pre_G' := G_1 ⊓ G_2
+      have g_2_finite_index: G_2.FiniteIndex := by
+        unfold G_2
+        simp
+        rw [Subgroup.finiteIndex_iff]
+        rw [Subgroup.index_comap]
+        rw [Subgroup.map_equiv_eq_comap_symm]
+        simp
+        rw [Subgroup.relIndex_comap]
+        rw [Subgroup.relIndex_comap]
+        have foo: (second_subgroup.subgroupOf (Subgroup.map (MonoidHom.snd ↥data.A ↥data.B) (Subgroup.map (↑data.iso) g_to_central.range))).FiniteIndex := by
+          infer_instance
 
-      -- have central_equiv: Subgroup.centralizer {g} ≃* G := {
-      --   toFun := fun a => a.val,
-      --   invFun := fun a => ⟨a, all_mem_central a⟩,
-      --   map_mul' := by simp
-      -- }
+        rw [Subgroup.finiteIndex_iff] at foo
+        exact foo
 
-      let G' := Subgroup.comap g_to_central pre_G'
+      let G' := G_1 ⊓ G_2
 
-      have pre_G'_abeliean : IsMulCommutative pre_G' := by
-        unfold pre_G'
+      have G'_finite_index : G'.FiniteIndex := by
+        unfold G'
+        infer_instance
+
+
+      have G'_abeliean : IsMulCommutative G' := by
+        unfold G'
         refine { is_comm := ?_ }
         refine { comm := ?_ }
         intro a b
@@ -5651,12 +5662,14 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
         unfold G_1 at a_first b_first
         unfold G_2 at a_second b_second
 
+        rw [Subgroup.mem_comap] at a_first b_first
         rw [Subgroup.mem_map] at a_first b_first
         obtain ⟨a_pre, a_pre_mem, a_eq⟩ := a_first
         obtain ⟨b_pre, b_pre_mem, b_eq⟩ := b_first
         rw [Subgroup.mem_comap] at a_pre_mem b_pre_mem
         simp at a_pre_mem b_pre_mem
 
+        rw [Subgroup.mem_comap] at a_second b_second
         rw [Subgroup.mem_map] at a_second b_second
         obtain ⟨a2_pre, a2_pre_mem, a2_eq⟩ := a_second
         obtain ⟨b2_pre, b2_pre_mem, b2_eq⟩ := b_second
@@ -5670,23 +5683,22 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
         simp at first_comm second_comm
         rw [Subtype.ext_iff]
         simp
+        apply_fun g_to_central
+        simp
         apply_fun data.iso
         simp
         apply Prod.ext
         . simp
-          rw [← a_eq, ← b_eq]
+          rw [← a_eq]
+          rw [← b_eq]
           simp
           exact first_comm
         . simp
-          rw [← a2_eq, ← b2_eq]
+          rw [← a2_eq]
+          rw [← b2_eq]
           simp
           exact second_comm
 
-      have G'_abeliean : IsMulCommutative G' := by
-        apply Subgroup.comap_injective_isMulCommutative
-        intro a b hab
-        simp [g_to_central] at hab
-        exact hab
 
       -- have G'_comm : ∀ a b : G', a * b = b * a := by
       --   intro a b
@@ -5705,21 +5717,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       --   have a_b_comm := inv_image_comm a b a_val b_val
       --   exact a_b_comm
 
-      have pre_G'_finite_index : pre_G'.FiniteIndex := by
-        unfold pre_G'
-        rw [Subgroup.finiteIndex_iff]
-        apply Subgroup.index_inf_ne_zero
-        .
-          simp [G_1]
-          rw [Subgroup.index_comap_of_surjective]
-          . exact Subgroup.finiteIndex_iff.mp first_subgroup_finite_index
-          . intro a
-            simp
-        . simp [G_2]
-          rw [Subgroup.index_comap_of_surjective]
-          . exact Subgroup.finiteIndex_iff.mp second_subgroup_finite_index
-          . intro a
-            simp
+
       -- have inv_image_finite_index : ∀ i : Fin (data.k), (inv_image i).FiniteIndex := by
       --   intro i
       --   have finite_index_subgroup := (Classical.choose_spec (Gi' i)).2
@@ -5762,12 +5760,6 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       --       }
       --   }
 
-      have G'_finite_index : G'.FiniteIndex := by
-        unfold G'
-        rw [Subgroup.finiteIndex_iff]
-        simp
-        rw [Subgroup.index_comap]
-        sorry
         --exact Subgroup.finiteIndex_iff.mp pre_G'_finite_index
 
       --unfold UnitaryProd at centralizer_iso
