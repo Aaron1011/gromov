@@ -953,7 +953,20 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
           rw [eq_comm]
           apply ofIsCompl_commute
           .
-            sorry
+            intro z
+            simp [map_first_x_new, map_first]
+            simp_rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal]
+            rw [Matrix.toEuclideanLin_apply]
+            rw [Matrix.toEuclideanLin_apply]
+            rw [Matrix.toEuclideanLin_apply]
+            rw [Matrix.toEuclideanLin_apply]
+            simp
+            have x_prop := x.property
+            rw [Subgroup.mem_centralizer_iff] at x_prop
+            simp at x_prop
+            rw [Subtype.ext_iff] at x_prop
+            simp at x_prop
+            rw [x_prop]
           . sorry
           .
             intro z
