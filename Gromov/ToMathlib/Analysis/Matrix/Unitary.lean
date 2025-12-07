@@ -55,7 +55,6 @@ lemma linearmap_comp_eq_mul {P: Type*} [AddCommMonoid P] [Module ℂ P] (a b: P 
 --         rw [Submodule.mem_sup] at mem_top
 --         obtain ⟨x, hx, y, hy, f_eq_add⟩ := mem_top
 
---         sorry
 
 --       have foo := sub_mem.2 ⟨f, f_mem_q⟩
 --       have f_eq: f = (⟨f, f_mem_q⟩ : q) := by simp
@@ -120,11 +119,6 @@ lemma unitary_preserves_norm (n: ℕ) (h: Matrix.unitaryGroup (Fin n) ℂ) (x: E
   simp at h_unitary
   exact h_unitary
 
-
---   have inner_congr := ext_inner_right 𝕜
-
-
---   sorry
 
 
 lemma ofIsCompl_adjoint_comp {P: Type*} [NormedAddCommGroup P] [CompleteSpace P] [InnerProductSpace ℂ P] [FiniteDimensional ℂ P]  {p q : Submodule ℂ P} (h : IsCompl p q) (hpq: p ⟂ q) (φ : p →ₗ[ℂ] P) (ψ : q →ₗ[ℂ] P) (hφ: (LinearMap.adjoint φ) ∘ₗ φ = 1) (hφ_map: ∀ x: p, φ x ∈ p) (hψ: (LinearMap.adjoint ψ) ∘ₗ ψ = 1) (hψ_map: ∀ x: q, ψ x ∈ q):
