@@ -1566,19 +1566,7 @@ instance T2_W: T2Space (W) := TopologicalSpace.t2Space_of_metrizableSpace
 #synth TopologicalSpace (W →L[ℂ] W)
 #synth FiniteDimensional ℂ (W →L[ℂ] W)
 
--- TODO: upstream to mathlib
-lemma group_fg_map {G G': Type*} [Group G] [Group G'] (H: Subgroup G) (h_fg: H.FG) (f: G →* G'): (Subgroup.map f H).FG := by
-  obtain ⟨s, hs⟩ := h_fg
-  classical
-  rw [Subgroup.fg_iff]
-  use s.image f
-  refine ⟨?_, ?_⟩
-  .
-    rw [Finset.coe_image]
-    rw [← MonoidHom.map_closure]
-    rw [hs]
-  . simp
-    exact Set.toFinite (⇑f '' ↑s)
+
 
 -- Theorem 3.8 in Vikman
 set_option maxHeartbeats 500000 in

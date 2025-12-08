@@ -4669,7 +4669,19 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
 
 end HnEpsData
 
-
+-- TODO: upstream to mathlib
+lemma group_fg_map {G G': Type*} [Group G] [Group G'] (H: Subgroup G) (h_fg: H.FG) (f: G →* G'): (Subgroup.map f H).FG := by
+  obtain ⟨s, hs⟩ := h_fg
+  classical
+  rw [Subgroup.fg_iff]
+  use s.image f
+  refine ⟨?_, ?_⟩
+  .
+    rw [Finset.coe_image]
+    rw [← MonoidHom.map_closure]
+    rw [hs]
+  . simp
+    exact Set.toFinite (⇑f '' ↑s)
 
 
 -- Helper for theorem 3.8
@@ -4875,7 +4887,12 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
 
       obtain ⟨first_subgroup, first_subgroup_abelian, first_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.a) (by grind) (data.A) (by
+        have foo := group_fg_map ⊤ (by
+          refine Group.fg_def.mp ?_
+          exact (Group.fg_iff_subgroup_fg G).mpr G_FG) ((MonoidHom.fst _ _).comp (data.iso.toMonoidHom.comp g_to_central))
+
         sorry
+
       ) (first_new_data)
       obtain ⟨second_subgroup, second_subgroup_abelian, second_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.b) (by grind) (data.B) (sorry) (second_new_data)
 
