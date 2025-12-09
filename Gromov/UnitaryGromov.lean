@@ -4798,18 +4798,6 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           rw [S_data.S_generates]
           rw [Subgroup.map_top_of_surjective]
           exact MonoidHom.rangeRestrict_surjective new_A_map
-          -- rw [← MonoidHom.map_closure]
-          -- rw [← MonoidHom.map_closure]
-          -- rw [S_data.S_generates]
-          -- rw [Subgroup.map_top_of_surjective]
-          -- .
-          --   simp
-          --   rw [Subgroup.map_top_of_surjective]
-          --   intro a
-          --   simp
-          -- . sorry
-            --simp
-            --exact MulEquiv.surjective g_to_central
         S_poly_const := S_data.S_poly_const
         S_poly_const_pos := S_data.S_poly_const_pos
         S_poly_deg := S_data.S_poly_deg
@@ -4835,69 +4823,30 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           use 1
           refine ⟨?_, ?_⟩
           . apply S_data.S_one
-          . simp [new_A_map]
-        S_inv := sorry
+          . simp [new_B_map]
+        S_inv := by
+          rw [← Set.image_inv]
+          rw [← S_data.S_inv]
         S_finite := by
           apply Set.Finite.image
           apply S_data.S_finite
         S_generates := by
-          sorry
-          -- rw [← MonoidHom.map_closure]
-          -- rw [← MonoidHom.map_closure]
-          -- rw [← MonoidHom.map_closure]
-          -- rw [S_data.S_generates]
-          -- rw [Subgroup.map_top_of_surjective]
-          -- .
-          --   simp
-          --   rw [Subgroup.map_top_of_surjective]
-          --   intro a
-          --   simp
-          -- . sorry
-            --simp
-            --exact MulEquiv.surjective g_to_central
+          rw [← MonoidHom.map_closure]
+          rw [S_data.S_generates]
+          rw [Subgroup.map_top_of_surjective]
+          exact MonoidHom.rangeRestrict_surjective new_B_map
         S_poly_const := S_data.S_poly_const
         S_poly_const_pos := S_data.S_poly_const_pos
         S_poly_deg := S_data.S_poly_deg
-        S_poly := sorry
+        S_poly := by
+          intro r hr
+          rw [Set.Finite.toFinset_image]
+          rw [← Finset.image_pow]
+          grw [Finset.card_image_le]
+          .
+            apply S_data.S_poly r hr
+          . exact S_data.S_finite
       }
-
-      -- let new_S := fun i: Fin (data.k) => (Pi.evalMonoidHom _ i) '' (data.iso.toMonoidHom '' (g_to_central.toMonoidHom '' S_data.S))
-      -- --let new_S := fun i : Fin (data.k) => (fun a: G => data.iso (⟨a, all_mem_central a⟩ : (Subgroup.centralizer {g})) i) '' S_data.S
-      -- let new_S_data := fun i : Fin (data.k) => ({
-      --   S := new_S i,
-      --   S_finite := by
-      --     simp [new_S]
-      --     apply Set.Finite.image
-      --     apply Set.Finite.image
-      --     apply Set.Finite.image
-      --     apply S_data.S_finite
-      --   S_generates := by
-      --     rw [← MonoidHom.map_closure]
-      --     beta_reduce
-      --     rw [← MonoidHom.map_closure]
-      --     rw [← MonoidHom.map_closure]
-      --     rw [S_data.S_generates]
-      --     simp
-      --     apply Subgroup.map_top_of_surjective
-      --     intro a
-      --     simp
-      --     use (fun k => if h_eq: i = k then ⟨⟨a.val.val.reindex (l := Fin (data.n_i k)) (o := Fin (data.n_i k)) (finCongr (by rw [h_eq])) (finCongr (by rw [h_eq])), ?_⟩, ?_⟩ else 1)
-      --     . simp
-      --     .
-      --       simp
-      --       sorry
-      --     .
-      --       simp
-      --       have a_prop := a.property
-      --       sorry
-
-      --   S_poly_const := S_data.S_poly_const
-      --   S_poly_const_pos := S_data.S_poly_const_pos
-      --   S_poly_deg := S_data.S_poly_deg
-      --   S_poly := sorry
-      -- } : SPolyData (n := (data.n_i i)) (by sorry) ((data.groups i) ))
-
-
 
       obtain ⟨first_subgroup, first_subgroup_abelian, first_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.a) (by grind) (new_A_map.range) (by
         rw [← Group.fg_iff_subgroup_fg]
@@ -5094,7 +5043,32 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       -- }
 
       by_cases G'_nontrivial_central : ∃ g : (G' n ε G), (∀ z : ℂ, g.val.val.val ≠ z • 1) ∧ g ∈ Set.center (G' n ε G)
-      · have G'_virtual := nontrivial_centrer_implies_virtual (Subgroup.map G.subtype (G' n ε G)) (by
+      ·
+        let foo := S_data_G'.S
+        let bar := G.subtype.subgroupMap (G' n ε G)
+        have subtype_S_data: SPolyData hn (Subgroup.map G.subtype (G' n ε G)) := {
+          S := (G.subtype.subgroupMap (G' n ε G)) '' S_data_G'.S
+          S_finite := by
+            apply Set.Finite.image
+            apply S_data_G'.S_finite
+          S_generates := by
+            rw [← MonoidHom.map_closure]
+            rw [S_data_G'.S_generates]
+            rw [Subgroup.map_top_of_surjective]
+            exact MonoidHom.subgroupMap_surjective G.subtype (G' n ε G)
+          S_poly_const_pos := S_data_G'.S_poly_const_pos
+          S_poly_deg := S_data_G'.S_poly_deg
+          S_poly := by
+            intro r hr
+            rw [Set.Finite.toFinset_image]
+            rw [← Finset.image_pow]
+            grw [Finset.card_image_le]
+            .
+              apply S_data_G'.S_poly r hr
+            . exact S_data_G'.S_finite
+        }
+
+        have G'_virtual := nontrivial_centrer_implies_virtual (Subgroup.map G.subtype (G' n ε G)) (by
           have G'_finite := G_eps.1
           have G_FG_other : Group.FG G := by
             exact (Group.fg_iff_subgroup_fg G).mpr G_FG
