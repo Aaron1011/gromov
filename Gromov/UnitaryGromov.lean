@@ -4787,13 +4787,17 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           refine ⟨?_, ?_⟩
           . apply S_data.S_one
           . simp [new_A_map]
-        S_inv := sorry
+        S_inv := by
+          rw [← Set.image_inv]
+          rw [← S_data.S_inv]
         S_finite := by
           apply Set.Finite.image
           apply S_data.S_finite
         S_generates := by
           rw [← MonoidHom.map_closure]
-          sorry
+          rw [S_data.S_generates]
+          rw [Subgroup.map_top_of_surjective]
+          exact MonoidHom.rangeRestrict_surjective new_A_map
           -- rw [← MonoidHom.map_closure]
           -- rw [← MonoidHom.map_closure]
           -- rw [S_data.S_generates]
@@ -4809,7 +4813,14 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
         S_poly_const := S_data.S_poly_const
         S_poly_const_pos := S_data.S_poly_const_pos
         S_poly_deg := S_data.S_poly_deg
-        S_poly := sorry
+        S_poly := by
+          intro r hr
+          rw [Set.Finite.toFinset_image]
+          rw [← Finset.image_pow]
+          grw [Finset.card_image_le]
+          .
+            apply S_data.S_poly r hr
+          . exact S_data.S_finite
       }
 
       have data_b_pos: 0 < data.b := by
