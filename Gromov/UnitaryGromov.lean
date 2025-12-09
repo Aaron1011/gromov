@@ -4776,37 +4776,33 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
       have ha := data.ha
 
-      let first_new_data: SPolyData (n := (data.a)) (by omega) (data.A) := {
-        S := (MonoidHom.fst _ _ '' (data.iso.toMonoidHom '' (g_to_central '' S_data.S))),
+      let new_A_map := (Subgroup.subtype _).comp ((MonoidHom.fst _ _).comp (data.iso.toMonoidHom.comp g_to_central))
+
+      let first_new_data: SPolyData (n := (data.a)) (by omega) (new_A_map.range) := {
+        S := new_A_map.rangeRestrict '' S_data.S,
         S_one := by
           simp only [Set.mem_image]
-          use (1, 1)
-          use ⟨1, ?_⟩
-          . simp
-          . refine ⟨?_, ?_⟩
-            . use 1
-              simp [g_to_central]
-              apply S_data.S_one
-            . simp
-              rfl
+          use 1
+          refine ⟨?_, ?_⟩
+          . apply S_data.S_one
+          . simp [new_A_map]
         S_inv := sorry
         S_finite := by
-          apply Set.Finite.image
-          apply Set.Finite.image
           apply Set.Finite.image
           apply S_data.S_finite
         S_generates := by
           rw [← MonoidHom.map_closure]
-          rw [← MonoidHom.map_closure]
-          rw [← MonoidHom.map_closure]
-          rw [S_data.S_generates]
-          rw [Subgroup.map_top_of_surjective]
-          .
-            simp
-            rw [Subgroup.map_top_of_surjective]
-            intro a
-            simp
-          . sorry
+          sorry
+          -- rw [← MonoidHom.map_closure]
+          -- rw [← MonoidHom.map_closure]
+          -- rw [S_data.S_generates]
+          -- rw [Subgroup.map_top_of_surjective]
+          -- .
+          --   simp
+          --   rw [Subgroup.map_top_of_surjective]
+          --   intro a
+          --   simp
+          -- . sorry
             --simp
             --exact MulEquiv.surjective g_to_central
         S_poly_const := S_data.S_poly_const
@@ -4886,38 +4882,29 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       -- } : SPolyData (n := (data.n_i i)) (by sorry) ((data.groups i) ))
 
 
-      obtain ⟨first_subgroup, first_subgroup_abelian, first_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.a) (by grind) (data.A) (by
-        have foo := group_fg_map ⊤ (by
-          refine Group.fg_def.mp ?_
-          exact (Group.fg_iff_subgroup_fg G).mpr G_FG) ((MonoidHom.fst _ _).comp (data.iso.toMonoidHom.comp g_to_central))
 
-        sorry
-
+      obtain ⟨first_subgroup, first_subgroup_abelian, first_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.a) (by grind) (new_A_map.range) (by
+        rw [← Group.fg_iff_subgroup_fg]
+        rw [← Group.fg_iff_subgroup_fg] at G_FG
+        apply Group.fg_range
       ) (first_new_data)
       obtain ⟨second_subgroup, second_subgroup_abelian, second_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.b) (by grind) (data.B) (sorry) (second_new_data)
 
       let iso := Subgroup.map data.iso.symm.toMonoidHom
 
-
       -- Page 48 : Let Gᵢ := πᵢ⁻¹(πᵢ(G)′) = {g ∈ G : πᵢ(g) ∈ πᵢ(G)′}
-      let G_1 := Subgroup.comap g_to_central (Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.fst data.A data.B) first_subgroup))
+      --let G_1 := Subgroup.comap new_A_map (Subgroup.map new_A_map.range.subtype first_subgroup)
+      let G_1 := (Subgroup.comap new_A_map.rangeRestrict first_subgroup)
       let G_2 := Subgroup.comap g_to_central (Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.snd data.A data.B) second_subgroup))
 
-      -- TODO - figure out why this proof actually works
       have g_1_finite_index: G_1.FiniteIndex := by
         unfold G_1
-        simp
         rw [Subgroup.finiteIndex_iff]
-        rw [Subgroup.index_comap]
-        rw [Subgroup.map_equiv_eq_comap_symm]
-        simp
-        rw [Subgroup.relIndex_comap]
-        rw [Subgroup.relIndex_comap]
-        have foo: (first_subgroup.subgroupOf (Subgroup.map (MonoidHom.fst ↥data.A ↥data.B) (Subgroup.map (↑data.iso) g_to_central.range))).FiniteIndex := by
-          infer_instance
-
-        rw [Subgroup.finiteIndex_iff] at foo
-        exact foo
+        rw [Subgroup.index_comap_of_surjective]
+        .
+          rw [← Subgroup.finiteIndex_iff]
+          apply first_subgroup_finite_index
+        . exact MonoidHom.rangeRestrict_surjective new_A_map
 
       have g_2_finite_index: G_2.FiniteIndex := by
         unfold G_2
