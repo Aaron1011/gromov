@@ -5051,11 +5051,20 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           S_finite := by
             apply Set.Finite.image
             apply S_data_G'.S_finite
+          S_one := by
+            simp only [Set.mem_image]
+            use 1
+            simp
+            apply S_data_G'.S_one
+          S_inv := by
+            rw [← Set.image_inv]
+            rw [← S_data_G'.S_inv]
           S_generates := by
             rw [← MonoidHom.map_closure]
             rw [S_data_G'.S_generates]
             rw [Subgroup.map_top_of_surjective]
             exact MonoidHom.subgroupMap_surjective G.subtype (G' n ε G)
+          S_poly_const := S_data_G'.S_poly_const
           S_poly_const_pos := S_data_G'.S_poly_const_pos
           S_poly_deg := S_data_G'.S_poly_deg
           S_poly := by
@@ -5078,7 +5087,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           apply Submonoid.FG.map
           rw [← Subgroup.fg_iff_submonoid_fg]
           exact (Group.fg_iff_subgroup_fg (G' n ε G)).mp G'_FG
-        ) (by sorry /-S_data_G'_subgroup-/) (by
+        ) (subtype_S_data) (by
           obtain ⟨g, hg⟩ := G'_nontrivial_central
           use ⟨g, by simp⟩
           refine ⟨?_, ?_⟩
