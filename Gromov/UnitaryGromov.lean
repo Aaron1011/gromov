@@ -4959,23 +4959,6 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
         rw [Subtype.ext_iff] at second_comm
         simp [new_B_map] at second_comm
 
-        --rw [Subgroup.mem_map] at a_first b_first
-        --obtain ⟨a_pre, a_pre_mem, a_eq⟩ := a_first
-        --obtain ⟨b_pre, b_pre_mem, b_eq⟩ := b_first
-        --rw [Subgroup.mem_comap] at a_pre_mem b_pre_mem
-        --simp at a_pre_mem b_pre_mem
-
-        -- rw [Subgroup.mem_comap] at a_second b_second
-        -- rw [Subgroup.mem_map] at a_second b_second
-        -- obtain ⟨a2_pre, a2_pre_mem, a2_eq⟩ := a_second
-        -- obtain ⟨b2_pre, b2_pre_mem, b2_eq⟩ := b_second
-        -- rw [Subgroup.mem_comap] at a2_pre_mem b2_pre_mem
-        -- simp at a2_pre_mem b2_pre_mem
-
-        -- --have first_comm := first_subgroup_abelian.is_comm.comm ⟨a_pre.1, a_pre_mem⟩ ⟨b_pre.1, b_pre_mem⟩
-        -- have second_comm := second_subgroup_abelian.is_comm.comm ⟨a2_pre.2, a2_pre_mem⟩ ⟨b2_pre.2, b2_pre_mem⟩
-        --simp at a_eq
-        --simp at b_eq
         rw [Subtype.ext_iff]
         simp
         apply_fun g_to_central
