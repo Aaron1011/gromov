@@ -4777,6 +4777,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       have ha := data.ha
 
       let new_A_map := (Subgroup.subtype _).comp ((MonoidHom.fst _ _).comp (data.iso.toMonoidHom.comp g_to_central))
+      let new_B_map := (Subgroup.subtype _).comp ((MonoidHom.snd _ _).comp (data.iso.toMonoidHom.comp g_to_central))
 
       let first_new_data: SPolyData (n := (data.a)) (by omega) (new_A_map.range) := {
         S := new_A_map.rangeRestrict '' S_data.S,
@@ -4816,27 +4817,31 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
         omega
 
       -- TODO - deduplicate 'first_new_data' and 'second_new_data'
-      let second_new_data: SPolyData (n := (data.b)) (by omega) (data.B) := {
-        S := (MonoidHom.snd _ _ '' (data.iso.toMonoidHom '' (g_to_central '' S_data.S))),
-        S_one := sorry
+      let second_new_data: SPolyData (n := (data.b)) (by omega) (new_B_map.range) := {
+        S := new_B_map.rangeRestrict '' S_data.S,
+        S_one := by
+          simp only [Set.mem_image]
+          use 1
+          refine ⟨?_, ?_⟩
+          . apply S_data.S_one
+          . simp [new_A_map]
         S_inv := sorry
         S_finite := by
           apply Set.Finite.image
-          apply Set.Finite.image
-          apply Set.Finite.image
           apply S_data.S_finite
         S_generates := by
-          rw [← MonoidHom.map_closure]
-          rw [← MonoidHom.map_closure]
-          rw [← MonoidHom.map_closure]
-          rw [S_data.S_generates]
-          rw [Subgroup.map_top_of_surjective]
-          .
-            simp
-            rw [Subgroup.map_top_of_surjective]
-            intro a
-            simp
-          . sorry
+          sorry
+          -- rw [← MonoidHom.map_closure]
+          -- rw [← MonoidHom.map_closure]
+          -- rw [← MonoidHom.map_closure]
+          -- rw [S_data.S_generates]
+          -- rw [Subgroup.map_top_of_surjective]
+          -- .
+          --   simp
+          --   rw [Subgroup.map_top_of_surjective]
+          --   intro a
+          --   simp
+          -- . sorry
             --simp
             --exact MulEquiv.surjective g_to_central
         S_poly_const := S_data.S_poly_const
@@ -4888,14 +4893,18 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
         rw [← Group.fg_iff_subgroup_fg] at G_FG
         apply Group.fg_range
       ) (first_new_data)
-      obtain ⟨second_subgroup, second_subgroup_abelian, second_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.b) (by grind) (data.B) (sorry) (second_new_data)
+      obtain ⟨second_subgroup, second_subgroup_abelian, second_subgroup_finite_index⟩ := compact_lie_virtually_abelian (data.b) (by grind) (new_B_map.range) (by
+        rw [← Group.fg_iff_subgroup_fg]
+        rw [← Group.fg_iff_subgroup_fg] at G_FG
+        apply Group.fg_range
+      ) (second_new_data)
 
       let iso := Subgroup.map data.iso.symm.toMonoidHom
 
       -- Page 48 : Let Gᵢ := πᵢ⁻¹(πᵢ(G)′) = {g ∈ G : πᵢ(g) ∈ πᵢ(G)′}
       --let G_1 := Subgroup.comap new_A_map (Subgroup.map new_A_map.range.subtype first_subgroup)
       let G_1 := (Subgroup.comap new_A_map.rangeRestrict first_subgroup)
-      let G_2 := Subgroup.comap g_to_central (Subgroup.map data.iso.symm.toMonoidHom (Subgroup.comap (MonoidHom.snd data.A data.B) second_subgroup))
+      let G_2 := (Subgroup.comap new_B_map.rangeRestrict second_subgroup)
 
       have g_1_finite_index: G_1.FiniteIndex := by
         unfold G_1
@@ -4908,18 +4917,13 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
       have g_2_finite_index: G_2.FiniteIndex := by
         unfold G_2
-        simp
         rw [Subgroup.finiteIndex_iff]
-        rw [Subgroup.index_comap]
-        rw [Subgroup.map_equiv_eq_comap_symm]
-        simp
-        rw [Subgroup.relIndex_comap]
-        rw [Subgroup.relIndex_comap]
-        have foo: (second_subgroup.subgroupOf (Subgroup.map (MonoidHom.snd ↥data.A ↥data.B) (Subgroup.map (↑data.iso) g_to_central.range))).FiniteIndex := by
-          infer_instance
+        rw [Subgroup.index_comap_of_surjective]
+        .
+          rw [← Subgroup.finiteIndex_iff]
+          apply second_subgroup_finite_index
+        . exact MonoidHom.rangeRestrict_surjective new_B_map
 
-        rw [Subgroup.finiteIndex_iff] at foo
-        exact foo
 
       let G' := G_1 ⊓ G_2
 
@@ -4949,24 +4953,29 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
         rw [Subtype.ext_iff] at first_comm
         rw [Subtype.ext_iff] at first_comm
         simp [new_A_map] at first_comm
+
+        have second_comm := second_subgroup_abelian.is_comm.comm ⟨_, a_second⟩ ⟨_, b_second⟩
+        rw [Subtype.ext_iff] at second_comm
+        rw [Subtype.ext_iff] at second_comm
+        simp [new_B_map] at second_comm
+
         --rw [Subgroup.mem_map] at a_first b_first
         --obtain ⟨a_pre, a_pre_mem, a_eq⟩ := a_first
         --obtain ⟨b_pre, b_pre_mem, b_eq⟩ := b_first
         --rw [Subgroup.mem_comap] at a_pre_mem b_pre_mem
         --simp at a_pre_mem b_pre_mem
 
-        rw [Subgroup.mem_comap] at a_second b_second
-        rw [Subgroup.mem_map] at a_second b_second
-        obtain ⟨a2_pre, a2_pre_mem, a2_eq⟩ := a_second
-        obtain ⟨b2_pre, b2_pre_mem, b2_eq⟩ := b_second
-        rw [Subgroup.mem_comap] at a2_pre_mem b2_pre_mem
-        simp at a2_pre_mem b2_pre_mem
+        -- rw [Subgroup.mem_comap] at a_second b_second
+        -- rw [Subgroup.mem_map] at a_second b_second
+        -- obtain ⟨a2_pre, a2_pre_mem, a2_eq⟩ := a_second
+        -- obtain ⟨b2_pre, b2_pre_mem, b2_eq⟩ := b_second
+        -- rw [Subgroup.mem_comap] at a2_pre_mem b2_pre_mem
+        -- simp at a2_pre_mem b2_pre_mem
 
-        --have first_comm := first_subgroup_abelian.is_comm.comm ⟨a_pre.1, a_pre_mem⟩ ⟨b_pre.1, b_pre_mem⟩
-        have second_comm := second_subgroup_abelian.is_comm.comm ⟨a2_pre.2, a2_pre_mem⟩ ⟨b2_pre.2, b2_pre_mem⟩
+        -- --have first_comm := first_subgroup_abelian.is_comm.comm ⟨a_pre.1, a_pre_mem⟩ ⟨b_pre.1, b_pre_mem⟩
+        -- have second_comm := second_subgroup_abelian.is_comm.comm ⟨a2_pre.2, a2_pre_mem⟩ ⟨b2_pre.2, b2_pre_mem⟩
         --simp at a_eq
         --simp at b_eq
-        simp at first_comm second_comm
         rw [Subtype.ext_iff]
         simp
         apply_fun g_to_central
@@ -4980,8 +4989,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
             simp
             exact first_comm
           . simp
-            rw [← a2_eq]
-            rw [← b2_eq]
+            rw [Subtype.ext_iff]
             simp
             exact second_comm
         . intro a b hab
