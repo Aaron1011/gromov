@@ -4944,11 +4944,16 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
         unfold G_2 at a_second b_second
 
         rw [Subgroup.mem_comap] at a_first b_first
-        rw [Subgroup.mem_map] at a_first b_first
-        obtain ⟨a_pre, a_pre_mem, a_eq⟩ := a_first
-        obtain ⟨b_pre, b_pre_mem, b_eq⟩ := b_first
-        rw [Subgroup.mem_comap] at a_pre_mem b_pre_mem
-        simp at a_pre_mem b_pre_mem
+
+        have first_comm := first_subgroup_abelian.is_comm.comm ⟨_, a_first⟩ ⟨_, b_first⟩
+        rw [Subtype.ext_iff] at first_comm
+        rw [Subtype.ext_iff] at first_comm
+        simp [new_A_map] at first_comm
+        --rw [Subgroup.mem_map] at a_first b_first
+        --obtain ⟨a_pre, a_pre_mem, a_eq⟩ := a_first
+        --obtain ⟨b_pre, b_pre_mem, b_eq⟩ := b_first
+        --rw [Subgroup.mem_comap] at a_pre_mem b_pre_mem
+        --simp at a_pre_mem b_pre_mem
 
         rw [Subgroup.mem_comap] at a_second b_second
         rw [Subgroup.mem_map] at a_second b_second
@@ -4957,10 +4962,10 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
         rw [Subgroup.mem_comap] at a2_pre_mem b2_pre_mem
         simp at a2_pre_mem b2_pre_mem
 
-        have first_comm := first_subgroup_abelian.is_comm.comm ⟨a_pre.1, a_pre_mem⟩ ⟨b_pre.1, b_pre_mem⟩
+        --have first_comm := first_subgroup_abelian.is_comm.comm ⟨a_pre.1, a_pre_mem⟩ ⟨b_pre.1, b_pre_mem⟩
         have second_comm := second_subgroup_abelian.is_comm.comm ⟨a2_pre.2, a2_pre_mem⟩ ⟨b2_pre.2, b2_pre_mem⟩
-        simp at a_eq
-        simp at b_eq
+        --simp at a_eq
+        --simp at b_eq
         simp at first_comm second_comm
         rw [Subtype.ext_iff]
         simp
@@ -4971,8 +4976,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           simp
           apply Prod.ext
           . simp
-            rw [← a_eq]
-            rw [← b_eq]
+            rw [Subtype.ext_iff]
             simp
             exact first_comm
           . simp
