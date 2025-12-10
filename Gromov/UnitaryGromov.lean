@@ -3185,7 +3185,6 @@ open scoped Pointwise
 set_option synthInstance.maxHeartbeats 100000 in
 set_option maxHeartbeats 2200000 in
 lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG)
-  (G_central_trivial : ∀ g : G, g ∈ Set.center G → ∃ z : ℂ, g.val.val = z • 1)
   (G'_central_trivial : ∀ g : (G' n (H_n_eps hn) G), g ∈ Set.center (G' n (H_n_eps hn) G) → ∃ z : ℂ, g.val.val.val = z • 1)
   (G'_finite_index: (G' n (H_n_eps hn) G).FiniteIndex)
   (S_poly_data: SPolyData (n := n) (by omega) (G' n (H_n_eps hn) G))
@@ -4411,13 +4410,8 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
 
         simp at hn
-        have target := HnEpsData.central_trivial_virtually_abelian n (by omega) G G_FG ?_ ?_ G_eps.1 S_data_G' ?_
+        have target := HnEpsData.central_trivial_virtually_abelian n (by omega) G G_FG ?_ G_eps.1 S_data_G' ?_
         · exact target
-        · intro g hg
-          specialize nontrivial_central g
-          rw [← not_imp_not] at nontrivial_central
-          simp at nontrivial_central
-          exact nontrivial_central hg
         · intro g hg
           simp only [ne_eq, not_exists, not_and] at G'_nontrivial_central
           specialize G'_nontrivial_central g
