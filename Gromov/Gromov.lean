@@ -5112,6 +5112,29 @@ def f_n_conv_delta_tendsto: Prop :=  ∀ s: S, Filter.Tendsto (fun n: ℕ => Mea
 lemma F_n_conv_mu_lim (f_n_limit: f_n_conv_delta_tendsto):
     Filter.Tendsto (fun n => ‖(F_n_lp2 n) - conv_mu_lp2 (F_n_lp2 n)‖ₑ) Filter.atTop (nhds 0) := by
 
+  have f_n_sub_norm: ∀ s ∈ S, ∀ (i : ℕ), ∑' (g : G), ‖f_n i g - f_n i (s * g)‖ₑ ≠ ⊤ := by
+    intro s hs n
+    have foo := f_n_norm_one n
+    rw [← lt_top_iff_ne_top]
+    rw [MeasureTheory.eLpNorm_eq_lintegral_rpow_enorm (by simp) (by simp)] at foo
+    rw [lintegral_g_eq_add] at foo
+    simp at foo
+    grw [ENNReal.tsum_le_tsum (g := fun g => ‖f_n n g‖ₑ + ‖(f_n n (s * g))‖ₑ)]
+    .
+      rw [ENNReal.tsum_add]
+      rw [ENNReal.add_lt_top]
+      . refine ⟨?_, ?_⟩
+        . simp [foo]
+        .
+          grw [ENNReal.tsum_comp_le_tsum_of_injective (g := fun a =>  ‖f_n n a‖ₑ)]
+          .
+            simp [foo]
+          . intro a b hab
+            simpa using hab
+    .
+      intro a
+      grw [enorm_sub_le]
+
   rw [← ENNReal.tendsto_toReal_iff]
   .
     have S_ne: (#S : ℝ) ≠ 0 := by
@@ -5239,7 +5262,7 @@ lemma F_n_conv_mu_lim (f_n_limit: f_n_conv_delta_tendsto):
         .
           apply ENNReal.rpow_ne_top_of_nonneg
           . simp
-          . sorry
+          . apply f_n_sub_norm s (by rw [S_eq_Sinv]; simp [hs])
       .
         unfold f_n_conv_delta_tendsto at f_n_limit
         simp at hs
@@ -5261,27 +5284,8 @@ lemma F_n_conv_mu_lim (f_n_limit: f_n_conv_delta_tendsto):
         .
           rw [← ENNReal.tendsto_toReal_iff] at f_n_limit
           . exact f_n_limit
-          . intro n
-            have foo := f_n_norm_one n
-            rw [← lt_top_iff_ne_top]
-            rw [MeasureTheory.eLpNorm_eq_lintegral_rpow_enorm (by simp) (by simp)] at foo
-            rw [lintegral_g_eq_add] at foo
-            simp at foo
-            grw [ENNReal.tsum_le_tsum (g := fun g => ‖f_n n g‖ₑ + ‖(f_n n (s * g))‖ₑ)]
-            .
-              rw [ENNReal.tsum_add]
-              rw [ENNReal.add_lt_top]
-              . refine ⟨?_, ?_⟩
-                . simp [foo]
-                .
-                  grw [ENNReal.tsum_comp_le_tsum_of_injective (g := fun a =>  ‖f_n n a‖ₑ)]
-                  .
-                    simp [foo]
-                  . intro a b hab
-                    simpa using hab
-            .
-              intro a
-              sorry
+          .
+            apply f_n_sub_norm s (by rw [S_eq_Sinv]; simp [hs])
           . simp
         . simp
   . intro n
