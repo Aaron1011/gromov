@@ -4435,3 +4435,34 @@ decreasing_by
     have hab := data.hab
     grind
 #print axioms compact_lie_virtually_abelian
+
+def map_S_data {G H: Type*} [Group G] [Group H] [DecidableEq G] [DecidableEq H] (A: Subgroup G) {f: G →* H} (S_data: SPolyData A): SPolyData (Subgroup.map f A) := {
+  S := f.subgroupMap A '' S_data.S
+  S_finite := by
+    apply Set.Finite.image
+    apply S_data.S_finite
+  S_one := by
+    simp only [Set.mem_image]
+    use 1
+    simp
+    apply S_data.S_one
+  S_inv := by
+    rw [← Set.image_inv]
+    rw [← S_data.S_inv]
+  S_generates := by
+    rw [← MonoidHom.map_closure]
+    rw [S_data.S_generates]
+    rw [Subgroup.map_top_of_surjective]
+    apply MonoidHom.subgroupMap_surjective
+  S_poly_const := S_data.S_poly_const
+  S_poly_const_pos := S_data.S_poly_const_pos
+  S_poly_deg := S_data.S_poly_deg
+  S_poly := by
+    intro r hr
+    rw [Set.Finite.toFinset_image]
+    rw [← Finset.image_pow]
+    grw [Finset.card_image_le]
+    .
+      apply S_data.S_poly r hr
+    . exact S_data.S_finite
+}

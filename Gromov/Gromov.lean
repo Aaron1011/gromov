@@ -1570,7 +1570,7 @@ instance T2_W: T2Space (W) := TopologicalSpace.t2Space_of_metrizableSpace
 
 -- Theorem 3.8 in Vikman
 set_option maxHeartbeats 500000 in
-lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V] (H: Subgroup (V →L[ℂ] V)ˣ) (h_compact: CompactSpace H) (G: Subgroup H) (G_fg: G.FG): ∃ A: Subgroup G, IsMulCommutative A ∧ A.FiniteIndex := by
+lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V] (H: Subgroup (V →L[ℂ] V)ˣ) (h_compact: CompactSpace H) (G: Subgroup H) (G_fg: G.FG) (S_data: SPolyData G): ∃ A: Subgroup G, IsMulCommutative A ∧ A.FiniteIndex := by
   obtain ⟨H', ⟨H_equiv_H'⟩⟩ := new_weyl_unitarian_trick (V := V) (H := H)
   --let first := Subgroup.map H'.subtype.restrict_range (Subgroup.map H_equiv_H'.symm.toMonoidHom G)
   let G' := Subgroup.map H'.subtype (Subgroup.map H_equiv_H'.symm.toMonoidHom G)
