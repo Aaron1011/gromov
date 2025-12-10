@@ -2654,8 +2654,8 @@ lemma g_hom_abelian {T: Type*} [Group T] (A: Subgroup G) (A_finite_index: A.Fini
 #print axioms g_hom_abelian
 
 -- Case 1 in Section 3.3 of Vikman, where the representation ρ(G) is infinite
-lemma rho_g_case_infinite (hr: Infinite (↥(rho_g))): Nonempty (Theorem3_1_Input G) := by
-  obtain ⟨H, H_abelian, H_finite_index⟩ := rho_g_contains_abelian
+lemma rho_g_case_infinite {d: ℕ} (hd: HasPolynomialGrowthD S d) (hr: Infinite (↥(rho_g))): Nonempty (Theorem3_1_Input G) := by
+  obtain ⟨H, H_abelian, H_finite_index⟩ := rho_g_contains_abelian hd
 
 
   have h_fg: Group.FG H := by
@@ -8314,9 +8314,9 @@ lemma mem_closure_iff_mem_pow (g: G): g ∈ Subgroup.closure S ↔ ∃ n, g ∈ 
     apply mem_closure g
 
 -- TODO - get rid of the duplicate 'hGS'
-lemma exists_theorem_3_1_input [hGS: Generates ]: Nonempty (Theorem3_1_Input G) := by
+lemma exists_theorem_3_1_input [hGS: Generates ] {d: ℕ} (hd: HasPolynomialGrowthD S d): Nonempty (Theorem3_1_Input G) := by
   by_cases rho_g_infinite: Infinite (↥(rho_g))
-  . exact rho_g_case_infinite rho_g_infinite
+  . exact rho_g_case_infinite hd rho_g_infinite
   . exact rho_g_case_finite (by simpa using rho_g_infinite)
 
 
@@ -11518,7 +11518,7 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
       rw [bddAbove_def]
       exact pow_cards_bounded
   | succ k ih =>
-    obtain ⟨data⟩ := exists_theorem_3_1_input
+    obtain ⟨data⟩ := exists_theorem_3_1_input h
     apply theorem_3_1 data n (by omega) h
     intro Q Q_dec_eq Q_group Q_FG hS
 
