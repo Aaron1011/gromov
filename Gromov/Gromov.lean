@@ -5227,8 +5227,17 @@ lemma F_n_conv_mu_lim (f_n_limit: f_n_conv_delta_tendsto):
               . simp
             . simp
           . simp
-        . sorry
-        . sorry
+        .
+          apply ENNReal.rpow_ne_top_of_nonneg
+          . simp
+          .
+            sorry
+            --simp_rw [← ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)]
+
+        .
+          apply ENNReal.rpow_ne_top_of_nonneg
+          . simp
+          . sorry
       .
         unfold f_n_conv_delta_tendsto at f_n_limit
         simp at hs
