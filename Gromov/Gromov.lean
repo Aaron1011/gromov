@@ -5203,7 +5203,26 @@ lemma F_n_conv_mu_lim (f_n_limit: f_n_conv_delta_tendsto):
         . apply AEStronglyMeasurable.of_discrete
         . apply AEStronglyMeasurable.of_discrete
         . simp
-      . sorry
+      .
+        apply ENNReal.mul_ne_top (by simp)
+        rw [ENNReal.sum_ne_top]
+        -- TODO - deduplicate this
+        intro s hs
+        rw [← lt_top_iff_ne_top]
+        grw [eLpNorm_sub_le]
+        .
+          rw [ENNReal.add_lt_top]
+          . refine ⟨?_, ?_⟩
+            . exact Lp.eLpNorm_lt_top (F_n_lp2 n)
+            .
+              simp_rw [← Function.comp_def]
+              rw [MeasureTheory.eLpNorm_comp_measurePreserving]
+              . exact Lp.eLpNorm_lt_top (F_n_lp2 n)
+              . apply AEStronglyMeasurable.of_discrete
+              . exact measurePreserving_mul_left volume s
+        . apply AEStronglyMeasurable.of_discrete
+        . apply AEStronglyMeasurable.of_discrete
+        . simp
       . intro s hs
         apply AEStronglyMeasurable.of_discrete
       . simp
