@@ -5177,8 +5177,14 @@ lemma F_n_conv_mu_lim (f_n_limit: f_n_conv_delta_tendsto):
       apply Filter.Tendsto.const_smul
       conv =>
         rhs
-        equals nhds (∑ x_1 ∈ S, (0: ℝ)) =>
+        equals nhds (∑ x_1 ∈ S⁻¹, (0: ℝ)) =>
           simp
+      conv =>
+        arg 1
+        intro x
+        arg 1
+        equals S⁻¹ =>
+          apply S_eq_Sinv
       apply tendsto_finset_sum
       intro s hs
       conv =>
@@ -5223,11 +5229,30 @@ lemma F_n_conv_mu_lim (f_n_limit: f_n_conv_delta_tendsto):
           . simp
         . sorry
         . sorry
-      . sorry
-      -- norm_sub_squared_le
+      .
+        unfold f_n_conv_delta_tendsto at f_n_limit
+        simp at hs
+        specialize f_n_limit ⟨s⁻¹, hs⟩
+        conv at f_n_limit =>
+          arg 1
+          intro n
+          rw [MeasureTheory.eLpNorm_eq_lintegral_rpow_enorm (by simp) (by simp)]
+          rw [lintegral_g_eq_add]
 
-
-
+        simp_rw [f_conv_delta_helper] at f_n_limit
+        simp at f_n_limit
+        conv =>
+          rhs
+          equals nhds (0 ^ (2 : ℝ)⁻¹) =>
+            simp
+        simp_rw [← ENNReal.toReal_rpow]
+        apply Filter.Tendsto.rpow_const
+        .
+          rw [← ENNReal.tendsto_toReal_iff] at f_n_limit
+          . exact f_n_limit
+          . sorry
+          . simp
+        . simp
   . intro n
     rw [MeasureTheory.Lp.enorm_def]
     apply MeasureTheory.Lp.eLpNorm_ne_top
