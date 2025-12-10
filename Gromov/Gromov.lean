@@ -1775,13 +1775,79 @@ instance rho_g_FG: Group.FG (rho_g) := by
   unfold rho_g
   apply Group.fg_range
 
+-- TODO - deduplicate with 'map_S_Data'
+def map_range_S_data {G H: Type*} [Group G] [Group H] [DecidableEq G] [DecidableEq H] {f: G →* H} (S_data: SPolyData (T := G) ⊤): SPolyData f.range := {
+  S := (f.rangeRestrict.comp (Subgroup.topEquiv.toMonoidHom)) '' S_data.S
+  S_finite := by
+    apply Set.Finite.image
+    apply S_data.S_finite
+  S_one := by
+    simp only [Set.mem_image]
+    use 1
+    simp
+    apply S_data.S_one
+  S_inv := by
+    rw [← Set.image_inv]
+    rw [← S_data.S_inv]
+  S_generates := by
+    rw [← MonoidHom.map_closure]
+    rw [S_data.S_generates]
+    rw [Subgroup.map_top_of_surjective]
+    simp
+    apply MonoidHom.rangeRestrict_surjective
+  S_poly_const := S_data.S_poly_const
+  S_poly_const_pos := S_data.S_poly_const_pos
+  S_poly_deg := S_data.S_poly_deg
+  S_poly := by
+    intro r hr
+    rw [Set.Finite.toFinset_image]
+    rw [← Finset.image_pow]
+    grw [Finset.card_image_le]
+    .
+      apply S_data.S_poly r hr
+    . exact S_data.S_finite
+}
+
+def map_equiv_S_data {A B: Type*} [Group A] [Group B] [DecidableEq A] [DecidableEq B] {G: Subgroup A} {H: Subgroup B} (f: G ≃* H) (S_data: SPolyData G): SPolyData H := {
+  S := f.toMonoidHom '' S_data.S
+  S_finite := by
+    apply Set.Finite.image
+    apply S_data.S_finite
+  S_one := by
+    simp only [Set.mem_image]
+    use 1
+    simp
+    apply S_data.S_one
+  S_inv := by
+    rw [← Set.image_inv]
+    rw [← S_data.S_inv]
+  S_generates := by
+    rw [← MonoidHom.map_closure]
+    rw [S_data.S_generates]
+    rw [Subgroup.map_top_of_surjective]
+    simp
+    exact MulEquiv.surjective f
+  S_poly_const := S_data.S_poly_const
+  S_poly_const_pos := S_data.S_poly_const_pos
+  S_poly_deg := S_data.S_poly_deg
+  S_poly := by
+    intro r hr
+    rw [Set.Finite.toFinset_image]
+    rw [← Finset.image_pow]
+    grw [Finset.card_image_le]
+    .
+      apply S_data.S_poly r hr
+    . exact S_data.S_finite
+}
+
 
 --#synth NormedAddCommGroup (W)
 open scoped ComplexInnerProductSpace in
 set_option maxHeartbeats 900000 in
 set_option synthInstance.maxHeartbeats 600000 in
 --set_option trace.Meta.synthInstance true in
-lemma rho_g_contains_abelian : ∃ M: Subgroup ((rho_g)), IsMulCommutative M ∧ M.FiniteIndex := by
+lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Subgroup ((rho_g)), IsMulCommutative M ∧ M.FiniteIndex := by
+  classical
   let my_map := Subgroup.subtype (rho_g)
   have W_equiv: (W) ≃ₗ[ℂ] EuclideanSpace ℂ (Fin <| Module.finrank ℂ W) := LinearEquiv.ofFinrankEq _ _ finrank_euclideanSpace_fin.symm
 
@@ -2190,8 +2256,20 @@ lemma rho_g_contains_abelian : ∃ M: Subgroup ((rho_g)), IsMulCommutative M ∧
     . simp [new_map_hom]
       apply continuous_new_map_entry
 
+  let map_sub_equiv := (Subgroup.subgroupOfEquivOfLe (H := map new_map_hom.toMonoidHom my_new_range) (K := mapped_group) (by
+    unfold mapped_group
+    simp
+    rw [Subgroup.map_le_map_iff]
+    apply le_sup_of_le_left
+    exact le_topologicalClosure my_new_range
+  )).symm
 
-  let data := theorem_3_8 (H := mapped_group) compact_mapped_group ((Subgroup.map new_map_hom.toMonoidHom my_new_range).subgroupOf mapped_group) ?_
+  have S_data_range := map_range_S_data (f := (GRepW.comp GRepW_base)) (G_SPolyData hd)
+  have mapped_S_data := map_S_data (f := new_map_hom.toMonoidHom) _ S_data_range
+  have final_data := map_equiv_S_data map_sub_equiv mapped_S_data
+
+
+  let data := theorem_3_8 (H := mapped_group) compact_mapped_group ((Subgroup.map new_map_hom.toMonoidHom my_new_range).subgroupOf mapped_group) ?_ (final_data)
   obtain ⟨B, B_abelian, B_finite_index⟩ := data
 
   let reverse_hom: ((map new_map_hom.toMonoidHom my_new_range).subgroupOf mapped_group) →* (GRepW_base).range := {
