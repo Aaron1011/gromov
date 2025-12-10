@@ -10952,68 +10952,68 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
 
 def iteratedCommutator {T: Type*} [Group T] {M: Subgroup T} (base right: M) (n: ℕ) := Nat.iterate (fun x => ⁅base, x⁆) n right
 
-structure G''CommData {T: Type*} [Group T] (M: Subgroup T) where
-  -- Our 'γ^α' element
-  gamma_alpha: M
-  -- The result of repeatedly applying commutators
-  cur: M
+-- structure G''CommData {T: Type*} [Group T] (M: Subgroup T) where
+--   -- Our 'γ^α' element
+--   gamma_alpha: M
+--   -- The result of repeatedly applying commutators
+--   cur: M
 
-  -- When we take a commutator, we increment the second component if we take a commutator with 'right',
-  -- and reset it to zero and increment the first component if we take a commutator with anything else
-  -- As a result, 'pos' strictly increases at each step
-  pos: Lex (ℕ × ℕ)
-  -- The first component of our position is our index in the lower central series of M
-  pos_first: cur ∈ (lowerCentralSeries M pos.1)
-  -- The second component is the number of copies of 'right' that occur in successive adjacent commutators
-  pos_second: pos.2 ≠ 0 → ∃ b: M, cur = iteratedCommutator b gamma_alpha pos.2
+--   -- When we take a commutator, we increment the second component if we take a commutator with 'right',
+--   -- and reset it to zero and increment the first component if we take a commutator with anything else
+--   -- As a result, 'pos' strictly increases at each step
+--   pos: Lex (ℕ × ℕ)
+--   -- The first component of our position is our index in the lower central series of M
+--   pos_first: cur ∈ (lowerCentralSeries M pos.1)
+--   -- The second component is the number of copies of 'right' that occur in successive adjacent commutators
+--   pos_second: pos.2 ≠ 0 → ∃ b: M, cur = iteratedCommutator b gamma_alpha pos.2
 
-set_option trace.profiler true in
-set_option trace.Elab.command true in
-set_option tactic.simp.trace true in
-open Classical in
-noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Normal) {M: Subgroup T} (gamma_alpha base next: M) (gamma_N: gamma_alpha.val ∈ N) (n: ℕ): G''CommData M := match n with
-| 0 => {
-  gamma_alpha := gamma_alpha
-  cur := base
-  pos := (0, 0)
-  pos_first := by
-    simp [lowerCentralSeries]
-  pos_second := by
-    simp
-}
-| n + 1 => {
-  gamma_alpha := gamma_alpha
-  cur := ⁅(G''_comm N_normal gamma_alpha base next gamma_N n).cur, next⁆
-  pos := if (next = gamma_alpha) then ((G''_comm N_normal gamma_alpha base next gamma_N n).pos.1, (G''_comm N_normal gamma_alpha base next gamma_N n).pos.2 + 1)
-         else ((G''_comm N_normal gamma_alpha base next gamma_N n).pos.1 + 1, 0)
-  pos_first := by
-    split_ifs
-    .
-      rename_i next_eq_gamma
-      simp [next_eq_gamma]
-      sorry
-    . sorry
-  pos_second := by
-    split_ifs
-    . rename_i next_eq_gamma
-      intro _
-      have prev := (G''_comm N_normal gamma_alpha base next gamma_N n).pos_second
-      by_cases prev_zero: (G''_comm N_normal gamma_alpha base next gamma_N n).pos.2 = 0
-      . use (G''_comm N_normal gamma_alpha base next gamma_N n).cur
-        simp [prev_zero]
-        simp [prev_zero, next_eq_gamma, iteratedCommutator]
-      . have prev_eq := prev prev_zero
-        obtain ⟨b, b_eq⟩ := prev_eq
-        use b
-        simp [next_eq_gamma, iteratedCommutator]
-        sorry
-    .
-      rename_i next_ne_gamma
-      simp
-}
-termination_by n
-decreasing_by
-  all_goals { sorry }
+-- set_option trace.profiler true in
+-- set_option trace.Elab.command true in
+-- set_option tactic.simp.trace true in
+-- open Classical in
+-- noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Normal) {M: Subgroup T} (gamma_alpha base next: M) (gamma_N: gamma_alpha.val ∈ N) (n: ℕ): G''CommData M := match n with
+-- | 0 => {
+--   gamma_alpha := gamma_alpha
+--   cur := base
+--   pos := (0, 0)
+--   pos_first := by
+--     simp [lowerCentralSeries]
+--   pos_second := by
+--     simp
+-- }
+-- | n + 1 => {
+--   gamma_alpha := gamma_alpha
+--   cur := ⁅(G''_comm N_normal gamma_alpha base next gamma_N n).cur, next⁆
+--   pos := if (next = gamma_alpha) then ((G''_comm N_normal gamma_alpha base next gamma_N n).pos.1, (G''_comm N_normal gamma_alpha base next gamma_N n).pos.2 + 1)
+--          else ((G''_comm N_normal gamma_alpha base next gamma_N n).pos.1 + 1, 0)
+--   pos_first := by
+--     split_ifs
+--     .
+--       rename_i next_eq_gamma
+--       simp [next_eq_gamma]
+--       sorry
+--     . sorry
+--   pos_second := by
+--     split_ifs
+--     . rename_i next_eq_gamma
+--       intro _
+--       have prev := (G''_comm N_normal gamma_alpha base next gamma_N n).pos_second
+--       by_cases prev_zero: (G''_comm N_normal gamma_alpha base next gamma_N n).pos.2 = 0
+--       . use (G''_comm N_normal gamma_alpha base next gamma_N n).cur
+--         simp [prev_zero]
+--         simp [prev_zero, next_eq_gamma, iteratedCommutator]
+--       . have prev_eq := prev prev_zero
+--         obtain ⟨b, b_eq⟩ := prev_eq
+--         use b
+--         simp [next_eq_gamma, iteratedCommutator]
+--         sorry
+--     .
+--       rename_i next_ne_gamma
+--       simp
+-- }
+-- termination_by n
+-- decreasing_by
+--   all_goals { sorry }
 -- StrictMono.not_bddAbove_range_of_wellFoundedLT
 
 
@@ -11486,7 +11486,41 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     --   has_inv := sorry
     --   g_infinite := sorry
     -- }
-    sorry
+
+    have one_mem_S: (1: (Multiplicative ↥data.φ.ker)) ∈ S_n_ker_phi data.φ γ hγ 1 := by
+      simp [S_n_ker_phi]
+      right
+      use 1
+      use ?_
+      . rfl
+      . simp [three_two_S_n]
+        use 1
+        simp
+        use 1
+        use ?_
+        . simp [gamma_m_helper, e_i_regular_helper]
+          rfl
+        . apply new_generates.one_mem
+
+    let orig_ker_phi := (S_n_ker_phi data.φ γ hγ 1)
+    let ker_generates: Generates := {
+      G := (Multiplicative data.φ.ker)
+      g_group := by infer_instance
+      g_eq := by infer_instance
+      S := (S_n_ker_phi data.φ γ hγ 1)
+      hS := by
+        use 1
+      generates := by
+        sorry
+      one_mem := by
+        apply one_mem_S
+      has_inv := by
+        sorry
+      g_infinite := by
+        sorry
+    }
+
+    apply poly_growth_equiv_generates ker_generates _ kernel_poly
 
 lemma three_two_kernel_virtually_nilpotent (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d) (g: G) (φ: (Additive G) →+ ℤ) (γ: G)  (hγ : φ γ = 1) (phi_gromov: Group.IsVirtuallyNilpotent (Multiplicative φ.ker))
  : HasPolynomialGrowthD (d - 1) (S := phi_generating n φ γ ) := by
