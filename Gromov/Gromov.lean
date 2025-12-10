@@ -1566,11 +1566,51 @@ instance T2_W: T2Space (W) := TopologicalSpace.t2Space_of_metrizableSpace
 #synth TopologicalSpace (W →L[ℂ] W)
 #synth FiniteDimensional ℂ (W →L[ℂ] W)
 
+noncomputable def G_SPolyData {d: ℕ} (h_poly: HasPolynomialGrowthD hGS.S d): SPolyData (T := G) ⊤ := {
+  S := Subgroup.topEquiv.symm.toMonoidHom '' hGS.S
+  S_finite := by
+    apply Set.Finite.image
+    simp
+  S_one := by
+    simp
+    apply hGS.one_mem
+  S_inv := by
+    rw [← Set.image_inv]
+    nth_rw 1 [S_eq_Sinv]
+    simp
+  S_generates := by
+    rw [← MonoidHom.map_closure]
+    have foo := hGS.generates
+    simp at foo
+    simp [foo]
+
+  S_poly_const := h_poly.choose
+  S_poly_const_pos := by
+    by_contra!
+    have foo := h_poly.choose_spec
+    simp [← this] at foo
+    specialize foo 1 (by simp)
+    simp at foo
+    have S_nonempty := hGS.hS
+    simp at S_nonempty
+    grind
+  S_poly_deg := d
+  S_poly := by
+    have foo := h_poly.choose_spec
+    intro r hr
+    rw [Set.Finite.toFinset_image]
+    rw [← Finset.image_pow]
+    grw [Finset.card_image_le]
+    .
+      specialize foo r hr
+      simpa using foo
+    . simp
+}
 
 
 -- Theorem 3.8 in Vikman
 set_option maxHeartbeats 500000 in
-lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V] (H: Subgroup (V →L[ℂ] V)ˣ) (h_compact: CompactSpace H) (G: Subgroup H) (G_fg: G.FG) (S_data: SPolyData G): ∃ A: Subgroup G, IsMulCommutative A ∧ A.FiniteIndex := by
+lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [FiniteDimensional ℂ V] (H: Subgroup (V →L[ℂ] V)ˣ) [DecidableEq H] (h_compact: CompactSpace H) (G: Subgroup H) (G_fg: G.FG) (S_data: SPolyData G): ∃ A: Subgroup G, IsMulCommutative A ∧ A.FiniteIndex := by
   obtain ⟨H', ⟨H_equiv_H'⟩⟩ := new_weyl_unitarian_trick (V := V) (H := H)
   --let first := Subgroup.map H'.subtype.restrict_range (Subgroup.map H_equiv_H'.symm.toMonoidHom G)
   let G' := Subgroup.map H'.subtype (Subgroup.map H_equiv_H'.symm.toMonoidHom G)
@@ -1676,9 +1716,7 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
     . infer_instance
   .
     have dim_ge_two: 2 ≤ Module.finrank ℂ (V) := by omega
-    obtain ⟨N, N_comm, N_finite_index⟩ := compact_lie_virtually_abelian (Module.finrank ℂ V) (by omega) G' G'_fg (by
-      sorry
-    )
+    obtain ⟨N, N_comm, N_finite_index⟩ := compact_lie_virtually_abelian (Module.finrank ℂ V) (by omega) G' G'_fg (map_S_data _ _ S_data)
 
     let new_N := N
     simp [G'] at new_N
