@@ -5068,6 +5068,42 @@ noncomputable def F_n_lp2 (n : ℕ) := MeasureTheory.MemLp.toLp (F_n  n) (by
     simp
 ) (μ := volume (α := G)) (p := 2)
 
+-- TODO - upstream to mathlib
+lemma abs_sub_le_abs_add (a b: ℝ) (ha: 0 ≤ a) (hb: 0 ≤ b): |a - b| ≤ |a + b| := by
+  rw [abs_sub_le_iff]
+  refine ⟨?_, ?_⟩
+  .
+    rw [le_abs]
+    grind
+  . rw [le_abs]
+    grind
+
+lemma norm_sub_squared_le (a b : ℝ) (ha: 0 ≤ a) (hb: 0 ≤ b): (a - b)^2 ≤ |a^2 - b^2| := by
+  conv =>
+    lhs
+    rw [← sq_abs]
+    rw [pow_two]
+
+  rw [sq_sub_sq]
+  rw [abs_mul]
+  nth_rw 2 [mul_comm]
+  have foo := abs_sub_le_abs_add a b ha hb
+  -- TODO - why doesn't grw work here?
+  apply mul_le_mul
+  . simp
+  . apply abs_sub_le_abs_add a b ha hb
+  . simp
+  . simp
+
+lemma f_n_nonneg: ∀ n: ℕ, ∀ g: G,  0 ≤ f_n n g := by
+  intro n g
+  simp [f_n]
+  apply mul_nonneg
+  . positivity
+  . apply Finset.sum_nonneg
+    intro i hi
+    apply mu_conv_nonneg
+
 -- Lemma 3.16 in Vikman
 
 -- The case split statement in Vikman
@@ -5076,9 +5112,126 @@ def f_n_conv_delta_tendsto: Prop :=  ∀ s: S, Filter.Tendsto (fun n: ℕ => Mea
 lemma F_n_conv_mu_lim (f_n_limit: f_n_conv_delta_tendsto):
     Filter.Tendsto (fun n => ‖(F_n_lp2 n) - conv_mu_lp2 (F_n_lp2 n)‖ₑ) Filter.atTop (nhds 0) := by
 
+  rw [← ENNReal.tendsto_toReal_iff]
+  .
+    have S_ne: (#S : ℝ) ≠ 0 := by
+      simp
+      have foo := hGS.hS
+      simp at foo
+      grind
+
+    simp_rw [MeasureTheory.Lp.enorm_def]
+    simp_rw [conv_mu_lp2, f_conv_mu]
+    simp_rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)]
+    simp_rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)]
+    conv =>
+      arg 1
+      intro n
+      arg 1
+      arg 1
+      lhs
+      equals (1 / (#S : ℝ)) • ∑ s ∈ S, ↑↑(F_n_lp2 n) =>
+        simp
+        conv =>
+          rhs
+          equals ((#S : ℝ))⁻¹ • (#S : ℝ) • (F_n_lp2 n).val.cast =>
+            norm_cast
+            simp
+        simp [S_ne]
+
+    conv =>
+      arg 1
+      intro n
+      arg 1
+      arg 1
+      rhs
+      equals (1 / ↑(#S : ℝ)) • ∑ s ∈ S, (fun g => (F_n_lp2 n) (s * g)) =>
+        ext a
+        simp
+
+    simp_rw [← smul_sub]
+    simp_rw [← Finset.sum_sub_distrib]
+    rw [ENNReal.toReal_zero]
+    apply squeeze_zero (g := fun n => (1 / ↑(#S : ℝ)) • ∑ x ∈ S, (eLpNorm ((F_n_lp2 n).val.cast - (fun (g: G) => (F_n_lp2 n) (x * g))) 2 volume).toReal)
+    . simp
+    .
+      intro n
+      rw [eLpNorm_const_smul]
+      grw [eLpNorm_sum_le]
+      .
+        simp
+        rw [ENNReal.toReal_sum]
+        intro s hs
+
+        sorry
+      . sorry
+      . intro s hs
+        apply AEStronglyMeasurable.of_discrete
+      . simp
+    .
+      conv =>
+        rhs
+        equals nhds ((1 / ↑(#S : ℝ)) • 0) =>
+          simp
+
+      apply Filter.Tendsto.const_smul
+      conv =>
+        rhs
+        equals nhds (∑ x_1 ∈ S, (0: ℝ)) =>
+          simp
+      apply tendsto_finset_sum
+      intro s hs
+      conv =>
+        arg 1
+        intro n
+        rw [MeasureTheory.eLpNorm_eq_lintegral_rpow_enorm (by simp) (by simp)]
+        rw [lintegral_g_eq_add]
+
+      simp
+      apply squeeze_zero (g := (fun n ↦ ((∑' (g : G), ‖(f_n n) g - (f_n n) (s * g)‖ₑ) ^ (2 : ℝ)⁻¹).toReal))
+      . simp
+      .
+        intro n
+        rw [ENNReal.toReal_le_toReal]
+        .
+          apply ENNReal.rpow_le_rpow
+          .
+            apply ENNReal.tsum_le_tsum
+            intro g
+            rw [Real.enorm_eq_ofReal_abs]
+            rw [Real.enorm_eq_ofReal_abs]
+            rw [← ENNReal.ofReal_pow]
+            .
+              apply ENNReal.ofReal_le_ofReal
+              simp [F_n_lp2]
+              simp [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)]
+              simp [F_n]
+              conv =>
+                rhs
+                arg 1
+                equals (Real.sqrt (f_n n g))^2 - (Real.sqrt (f_n n (s * g)))^2 =>
+                  rw [Real.sq_sqrt]
+                  .
+                    rw [Real.sq_sqrt]
+                    . apply f_n_nonneg
+                  . apply f_n_nonneg
+
+              apply norm_sub_squared_le
+              . simp
+              . simp
+            . simp
+          . simp
+        . sorry
+        . sorry
+      . sorry
+      -- norm_sub_squared_le
 
 
-  sorry
+
+  . intro n
+    rw [MeasureTheory.Lp.enorm_def]
+    apply MeasureTheory.Lp.eLpNorm_ne_top
+  . simp
 
 
 noncomputable def laplace_range := LinearMap.range (Laplace_linear )
@@ -6045,14 +6198,7 @@ lemma g_sub_norm_single_s: ∃ s ∈ S, { n: ℕ | ‖(G_n (n + 1) (by simp)) - 
   refine ⟨s_mem, ?_⟩
   simpa using s_frequently
 
-lemma f_n_nonneg: ∀ n: ℕ, ∀ g: G,  0 ≤ f_n n g := by
-  intro n g
-  simp [f_n]
-  apply mul_nonneg
-  . positivity
-  . apply Finset.sum_nonneg
-    intro i hi
-    apply mu_conv_nonneg
+
 
 lemma F_n_norm_eq_one: ∀ n, MeasureTheory.eLpNorm (F_n n) 2 MeasureTheory.volume (α := G) = 1 := by
   simp [eLpNorm, eLpNorm', lintegral_g_eq_add]
