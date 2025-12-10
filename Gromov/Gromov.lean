@@ -1716,7 +1716,13 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
     . infer_instance
   .
     have dim_ge_two: 2 ≤ Module.finrank ℂ (V) := by omega
-    obtain ⟨N, N_comm, N_finite_index⟩ := compact_lie_virtually_abelian (Module.finrank ℂ V) (by omega) G' G'_fg (map_S_data _ _ S_data)
+
+    let new_S_data := map_S_data G (f := H'.subtype.comp (H_equiv_H'.symm.toMonoidHom)) S_data
+    obtain ⟨N, N_comm, N_finite_index⟩ := compact_lie_virtually_abelian (Module.finrank ℂ V) (by omega) G' G'_fg (by
+      unfold G'
+      rw [Subgroup.map_map]
+      exact new_S_data
+    )
 
     let new_N := N
     simp [G'] at new_N
