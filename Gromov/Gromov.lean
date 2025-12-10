@@ -5286,11 +5286,24 @@ lemma F_n_conv_mu_lim (f_n_limit: f_n_conv_delta_tendsto):
             . simp
           . simp
         .
-          apply ENNReal.rpow_ne_top_of_nonneg
-          . simp
-          .
-            sorry
-
+          rw [← lt_top_iff_ne_top]
+          have norm_sub_lt: eLpNorm (((F_n_lp2 n).val.cast) - ((F_n_lp2 n) ∘ fun a ↦ s * a)) 2 volume < ⊤ := by
+            grw [eLpNorm_sub_le]
+            rw [ENNReal.add_lt_top]
+            refine ⟨?_, ?_⟩
+            . exact Lp.eLpNorm_lt_top (F_n_lp2 n)
+            .
+              rw [MeasureTheory.eLpNorm_comp_measurePreserving]
+              . exact Lp.eLpNorm_lt_top (F_n_lp2 n)
+              . apply AEStronglyMeasurable.of_discrete
+              . exact measurePreserving_mul_left volume s
+            . apply AEStronglyMeasurable.of_discrete
+            . apply AEStronglyMeasurable.of_discrete
+            . simp
+          rw [MeasureTheory.eLpNorm_eq_lintegral_rpow_enorm (by simp) (by simp)] at norm_sub_lt
+          rw [lintegral_g_eq_add] at norm_sub_lt
+          simp at norm_sub_lt
+          exact norm_sub_lt
         .
           apply ENNReal.rpow_ne_top_of_nonneg
           . simp
@@ -5325,6 +5338,7 @@ lemma F_n_conv_mu_lim (f_n_limit: f_n_conv_delta_tendsto):
     apply MeasureTheory.Lp.eLpNorm_ne_top
   . simp
 
+#print axioms F_n_conv_mu_lim
 
 noncomputable def laplace_range := LinearMap.range (Laplace_linear )
 
