@@ -1211,7 +1211,7 @@ structure InductiveLemmaData (n : ℕ) (G : Subgroup (Matrix.unitaryGroup (Fin n
 #check Pi.commSemigroup
 open scoped Pointwise Finset
 
-structure SPolyData {n : ℕ} (hn : n ≠ 0) {T: Type*} [DecidableEq T] [Group T] (G : Subgroup T) where
+structure SPolyData {T: Type*} [DecidableEq T] [Group T] (G : Subgroup T) where
   S: Set G
   S_finite: Set.Finite S
   S_one: 1 ∈ S
@@ -3187,7 +3187,7 @@ set_option maxHeartbeats 2200000 in
 lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG)
   (G'_central_trivial : ∀ g : (G' n (H_n_eps hn) G), g ∈ Set.center (G' n (H_n_eps hn) G) → ∃ z : ℂ, g.val.val.val = z • 1)
   (G'_finite_index: (G' n (H_n_eps hn) G).FiniteIndex)
-  (S_poly_data: SPolyData (n := n) (by omega) (G' n (H_n_eps hn) G))
+  (S_poly_data: SPolyData (G' n (H_n_eps hn) G))
   -- This parameter is kind of hack - ideally, we would refactor so that just 'h_n_eps_data' is enough
   (data_eq_degree: h_n_eps_data.degree = S_poly_data.S_poly_deg)
   : ∃ N : Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
@@ -4010,7 +4010,7 @@ lemma group_fg_map {G G': Type*} [Group G] [Group G'] (H: Subgroup G) (h_fg: H.F
 set_option synthInstance.maxHeartbeats 100000 in
 set_option maxHeartbeats 2000000 in
 lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG)
-  (S_data: SPolyData hn G): ∃ N : Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
+  (S_data: SPolyData G): ∃ N : Subgroup G, IsMulCommutative N ∧ N.FiniteIndex := by
 
 
   -- This will get used for the 'h_n_eps_data' variable via instance synthesis
@@ -4054,7 +4054,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           }
       }
     · exact Subgroup.instFiniteIndexTop
-  · have nontrivial_centrer_implies_virtual (G : Subgroup ↥(Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG) (S_data: SPolyData hn G) (nontrivial_central : ∃ g : G, (∀ z : ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G): ∃ N : Subgroup G, IsMulCommutative ↥N ∧ N.FiniteIndex := by
+  · have nontrivial_centrer_implies_virtual (G : Subgroup ↥(Matrix.unitaryGroup (Fin n) ℂ)) (G_FG : G.FG) (S_data: SPolyData G) (nontrivial_central : ∃ g : G, (∀ z : ℂ, g.val.val ≠ z • 1) ∧ g ∈ Set.center G): ∃ N : Subgroup G, IsMulCommutative ↥N ∧ N.FiniteIndex := by
       obtain ⟨g, g_not_multiple_I, g_central⟩ := nontrivial_central
 
 
@@ -4101,7 +4101,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       let new_A_map := (Subgroup.subtype _).comp ((MonoidHom.fst _ _).comp (data.iso.toMonoidHom.comp g_to_central))
       let new_B_map := (Subgroup.subtype _).comp ((MonoidHom.snd _ _).comp (data.iso.toMonoidHom.comp g_to_central))
 
-      let first_new_data: SPolyData (n := (data.a)) (by omega) (new_A_map.range) := {
+      let first_new_data: SPolyData (new_A_map.range) := {
         S := new_A_map.rangeRestrict '' S_data.S,
         S_one := by
           simp only [Set.mem_image]
@@ -4138,7 +4138,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
         omega
 
       -- TODO - deduplicate 'first_new_data' and 'second_new_data'
-      let second_new_data: SPolyData (n := (data.b)) (by omega) (new_B_map.range) := {
+      let second_new_data: SPolyData (new_B_map.range) := {
         S := new_B_map.rangeRestrict '' S_data.S,
         S_one := by
           simp only [Set.mem_image]
@@ -4291,7 +4291,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
       obtain ⟨b, hb, new_poly⟩ := my_equiv
 
-      let S_data_G': SPolyData hn ((G' n ε G)) := {
+      let S_data_G': SPolyData ((G' n ε G)) := {
         S := pre_S ∪ pre_S⁻¹ ∪ {1},
         S_finite := by simp,
         S_generates := by
@@ -4329,7 +4329,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       ·
         let foo := S_data_G'.S
         let bar := G.subtype.subgroupMap (G' n ε G)
-        have subtype_S_data: SPolyData hn (Subgroup.map G.subtype (G' n ε G)) := {
+        have subtype_S_data: SPolyData (Subgroup.map G.subtype (G' n ε G)) := {
           S := (G.subtype.subgroupMap (G' n ε G)) '' S_data_G'.S
           S_finite := by
             apply Set.Finite.image
