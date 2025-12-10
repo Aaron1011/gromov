@@ -5234,30 +5234,7 @@ lemma F_n_conv_mu_lim (f_n_limit: f_n_conv_delta_tendsto):
           apply ENNReal.rpow_ne_top_of_nonneg
           . simp
           .
-            have foo := f_n_norm_one n
-            rw [← lt_top_iff_ne_top]
-            rw [MeasureTheory.eLpNorm_eq_lintegral_rpow_enorm (by simp) (by simp)] at foo
-            rw [lintegral_g_eq_add] at foo
-            simp at foo
-            grw [ENNReal.tsum_le_tsum (g := fun g => ‖f_n n g‖ₑ + ‖(f_n n (s * g))‖ₑ)]
-            .
-              rw [ENNReal.tsum_add]
-              rw [ENNReal.add_lt_top]
-              . refine ⟨?_, ?_⟩
-                . simp [foo]
-                .
-                  grw [ENNReal.tsum_comp_le_tsum_of_injective (g := fun a =>  ‖f_n n a‖ₑ)]
-                  .
-                    simp [foo]
-                  . intro a b hab
-                    simpa using hab
-            . sorry
-
-            simp at foo
-            grw [tsum_sub_le]
-            simp_rw [f_n_conv_mu]
             sorry
-            --simp_rw [← ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)]
 
         .
           apply ENNReal.rpow_ne_top_of_nonneg
@@ -5285,7 +5262,26 @@ lemma F_n_conv_mu_lim (f_n_limit: f_n_conv_delta_tendsto):
           rw [← ENNReal.tendsto_toReal_iff] at f_n_limit
           . exact f_n_limit
           . intro n
-            sorry
+            have foo := f_n_norm_one n
+            rw [← lt_top_iff_ne_top]
+            rw [MeasureTheory.eLpNorm_eq_lintegral_rpow_enorm (by simp) (by simp)] at foo
+            rw [lintegral_g_eq_add] at foo
+            simp at foo
+            grw [ENNReal.tsum_le_tsum (g := fun g => ‖f_n n g‖ₑ + ‖(f_n n (s * g))‖ₑ)]
+            .
+              rw [ENNReal.tsum_add]
+              rw [ENNReal.add_lt_top]
+              . refine ⟨?_, ?_⟩
+                . simp [foo]
+                .
+                  grw [ENNReal.tsum_comp_le_tsum_of_injective (g := fun a =>  ‖f_n n a‖ₑ)]
+                  .
+                    simp [foo]
+                  . intro a b hab
+                    simpa using hab
+            .
+              intro a
+              sorry
           . simp
         . simp
   . intro n
