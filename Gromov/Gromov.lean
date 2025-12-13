@@ -11184,8 +11184,25 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     have N'_normal: N'.Normal := by
       infer_instance
 
+    let new_N': Subgroup (data.G') := Subgroup.map {
+      toFun := fun (g: (Multiplicative ↥data.φ.ker)) => Additive.toMul (data.φ.ker.subtype g)
+      map_one' := rfl
+      map_mul' := by
+        intro x y
+        rfl
+    } N'
 
-    have alpha_nilpotent := unipotent_commutator_trivial (N' := N') N'_normal N'_nilpotent
+    -- have new_normal: new_N'.Characteristic := by
+    --   unfold new_N'
+    --   sorry
+
+    -- have new_nilpotent: Group.IsNilpotent new_N' := by
+    --   unfold new_N'
+    --   apply?
+    --   infer_instance
+    --   sorry
+
+    have alpha_nilpotent := unipotent_commutator_trivial (N' := N')
 
     let G'' := Subgroup.closure (((Additive.toMul ∘ data.φ.ker.subtype) '' N'.carrier) ∪ {γ.toMul})
 
