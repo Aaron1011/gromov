@@ -2062,7 +2062,7 @@ lemma nat_le_mul (a n: ℕ) (hn: n ≠ 0): a ≤ n * a := by
   . simp
 
 -- List.countP (fun a ↦ !decide (↑a = gamma_alpha)) l
-lemma count_mem_group_implies_lowercentral {G: Type*} [Group G] {N': Subgroup G} [∀ a: G, Decidable (a ∈ N')] (N'_normal: N'.Normal) (N'_nilpotent: Group.IsNilpotent N') (N'_nilpotency_ne_zero: Group.nilpotencyClass N' ≠ 0) (l: List G) (g: G)
+lemma count_mem_group_implies_lowercentral {G: Type*} [Group G] {N': Subgroup G} [∀ a: G, Decidable (a ∈ N')] (N'_normal: N'.Normal) (l: List G) (g: G)
     (l_nonempty: l ≠ []) (count_ne_zero: (l.countP (fun a => decide (a ∈ N'))) ≠ 0):
     l.foldr (fun acc s ↦ ⁅s, acc⁆) g ∈ Subgroup.map N'.subtype (lowerCentralSeries N' ((l.countP (fun a => decide (a ∈ N'))) - 1)) := by
 
@@ -2157,7 +2157,7 @@ lemma count_mem_group_implies_lowercentral {G: Type*} [Group G] {N': Subgroup G}
 
   --   sorry
 
-lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_normal: N'.Normal) (N'_nilpotent: Group.IsNilpotent N') (N'_nilpotency_ne_zero: Group.nilpotencyClass N' ≠ 0) (gamma_alpha: G) (gamma_not_n: ¬(gamma_alpha ∈ N')) (m: ℕ) (m_ne_zero: m ≠ 0) (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g gamma_alpha m = 1):
+lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} [N'_normal: N'.Normal] [N'_nilpotent: Group.IsNilpotent N'] (gamma_alpha: G) (gamma_not_n: ¬(gamma_alpha ∈ N')) (m: ℕ) (m_ne_zero: m ≠ 0) (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g gamma_alpha m = 1):
   Group.IsNilpotent (Subgroup.closure (N'.carrier ∪ {gamma_alpha})) := by
 
   classical
@@ -2442,7 +2442,8 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] {N': Subgroup G} (N'_nor
                 simp
                 exact ih
 
-          have foo := count_mem_group_implies_lowercentral N'_normal N'_nilpotent N'_nilpotency_ne_zero l.unattach s ?_ ?_
+
+          have foo := count_mem_group_implies_lowercentral N'_normal l.unattach s ?_ ?_
           .
             rw [Subgroup.mem_map] at foo
             obtain ⟨x, x_mem, other⟩ := foo

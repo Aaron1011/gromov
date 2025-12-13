@@ -11136,7 +11136,10 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     have alpha_unipotent: ∃ α: ℕ, ∃ m: ℕ, ∀ g ∈ N', Nat.iterate (fun x => ⁅x, γ.toMul^α⁆) m g.val = 1 := by
       sorry
 
+
+
     obtain ⟨α, m, alpha_is_unipotent⟩ := alpha_unipotent
+
 
     have N'_le_N: N' ≤ N := by
       unfold N'
@@ -11180,6 +11183,9 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
     have N'_normal: N'.Normal := by
       infer_instance
+
+
+    have alpha_nilpotent := unipotent_commutator_trivial (N' := N') N'_normal N'_nilpotent
 
     let G'' := Subgroup.closure (((Additive.toMul ∘ data.φ.ker.subtype) '' N'.carrier) ∪ {γ.toMul})
 
@@ -11472,6 +11478,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
 
 
+
+    rw [Group.IsVirtuallyNilpotent]
 
     sorry
   .
