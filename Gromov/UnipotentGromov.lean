@@ -2413,9 +2413,11 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
             simp at fold_in_N
             rw [subsequent_comm_one]
             . rw [list_fold_comm_one]
-            . sorry
-              --exact fold_in_N
-            . sorry
+            .
+              obtain ⟨foo, bar⟩ := fold_in_N
+              exact foo
+            . obtain ⟨foo, bar⟩ := fold_in_N
+              exact bar
             . omega
           . rename_i fold_eq_gamma
             simp at fold_eq_gamma
