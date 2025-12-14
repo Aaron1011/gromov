@@ -11172,35 +11172,6 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       exact isNilpotent (N'.subgroupOf N)
 
     obtain ⟨α, m, alpha_is_unipotent⟩ := alpha_unipotent
-    -- by_cases m_eq: m = 0
-    -- .
-    --   simp_rw [m_eq] at alpha_is_unipotent
-    --   simp only [Nat.iterate] at alpha_is_unipotent
-    --   rw [Group.IsVirtuallyNilpotent]
-    --   use (Subgroup.map (Subgroup.subtype _) new_N')
-    --   refine ⟨?_, ?_⟩
-    --   .
-    --     rw [← Group.isNilpotent_congr (Subgroup.equivMapOfInjective _ _ _)]
-    --     .
-    --       unfold new_N'
-    --       rw [← Group.isNilpotent_congr (Subgroup.equivMapOfInjective _ _ _)]
-    --       . exact N'_nilpotent
-    --       . intro a b hab
-    --         simpa using hab
-    --     . exact subtype_injective data.G'
-    --   .
-    --     rw [Subgroup.finiteIndex_iff]
-    --     rw [Subgroup.index_map]
-    --     simp
-    --     refine ⟨?_, ?_⟩
-    --     . unfold new_N'
-    --       rw [Subgroup.index_map]
-    --       simp
-    --       refine ⟨?_, ?_⟩
-    --       . sorry
-    --       . sorry
-    --     . exact finiteIndex_iff.mp G'_finite_index
-
 
 
 
