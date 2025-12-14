@@ -11499,26 +11499,21 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                 have b_prop := b.property
                 rw [AddMonoidHom.mem_ker] at i_prop b_prop
                 simp [i_prop, b_prop]
-            . sorry
-            -- ext a
-            -- rw [Set.mem_iUnion]
-            -- rw [Set.mem_image]
-            -- refine ⟨?_, ?_⟩
-            -- . intro ha
-            --   obtain ⟨b, hb⟩ := ha
-            --   use a
-            --   refine ⟨?_, rfl⟩
-
-            --   simp
-            -- grind
-            -- sorry
-
-
-
-
-
-        -- Subgroup.smul_sup
-
+            .
+              intro hx
+              obtain ⟨x, hx, x_eq⟩ := hx
+              simp at hx
+              obtain ⟨x_ker, x_eq_smul⟩ := hx
+              rw [Set.mem_smul_set] at x_eq_smul
+              obtain ⟨y, hy, x_eq_y⟩ := x_eq_smul
+              use y.val
+              refine ⟨?_, ?_⟩
+              .
+                simp [new_N'_map]
+              . simp_rw [← x_eq]
+                rw [Subtype.ext_iff] at x_eq_y
+                simp at x_eq_y
+                exact x_eq_y
 
 
         sorry
