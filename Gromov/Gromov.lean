@@ -11243,14 +11243,16 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     have alpha_unipotent: ∃ α: ℕ, ∃ m: ℕ, ∀ g ∈ N', Nat.iterate (fun x => ⁅x, γ.toMul^α⁆) m g.val = 1 := by
       sorry
 
-
-    let new_N': Subgroup (data.G') := Subgroup.map {
+    let new_N'_map : _ →* _ := {
       toFun := fun (g: (Multiplicative ↥data.φ.ker)) => Additive.toMul (data.φ.ker.subtype g)
       map_one' := rfl
       map_mul' := by
         intro x y
         rfl
-    } N'
+    }
+
+
+    let new_N': Subgroup (data.G') := Subgroup.map new_N'_map N'
 
     have N'_le_N: N' ≤ N := by
       unfold N'
@@ -11432,29 +11434,39 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               arg 1
               intro hi
               arg 2
-              equals (fun a => a.val) '' N'.carrier =>
-                ext a
-                refine ⟨?_, ?_⟩
-                . sorry
-                .
-                  intro ha
-                  simp
-                  apply Subgroup.mem_closure_of_mem
-                  conv at ha =>
-                    arg 1
-                    arg 2
-                    equals ↑N' =>
-                      ext z
-                      simp
-                  exact ha
+              equals ↑((Subgroup.closure (new_N'_map '' ↑N'))) =>
+                rfl
 
-            rw [Set.image_iUnion]
+            simp_rw [← MonoidHom.map_closure]
             simp_rw [Set.image_iUnion]
+
+            -- sorry
+            --   equals (fun a => a.val) '' N'.carrier =>
+            --     ext a
+            --     refine ⟨?_, ?_⟩
+            --     .
+            --       intro ha
+            --       simp at ha
+
+            --       sorry
+            --     .
+            --       intro ha
+            --       simp
+            --       apply Subgroup.mem_closure_of_mem
+            --       conv at ha =>
+            --         arg 1
+            --         arg 2
+            --         equals ↑N' =>
+            --           ext z
+            --           simp
+            --       exact ha
+
             apply Set.iUnion_congr
             intro i
             apply Set.iUnion_congr
             intro hi
             ext z
+            simp only [closure_eq, coe_map]
             rw [Set.mem_smul_set]
             rw [Set.mem_image]
             refine ⟨?_, ?_⟩
@@ -11463,15 +11475,30 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               obtain ⟨a, ha⟩ := hy
               use (i • a)
               refine ⟨?_, ha.2⟩
-              have foo := ha.1
               simp
+              have foo := ha.1
+              rw [Set.mem_image] at foo
+              obtain ⟨b, b_mem, a_eq_b⟩ := foo
               use ?_
               .
-                rw [Set.mem_smul_set]
-                sorry
-
-
-              sorry
+                use b
+                refine ⟨b_mem, ?_⟩
+                rw [Subtype.ext_iff]
+                simp_rw [← a_eq_b]
+                rfl
+              .
+                simp_rw [← a_eq_b]
+                have b_prop := b.property
+                simp [new_N'_map]
+                conv =>
+                  lhs
+                  equals data.φ (i.val.val + b.val) =>
+                    rfl
+                rw [AddMonoidHom.map_add]
+                have i_prop := i.val.property
+                have b_prop := b.property
+                rw [AddMonoidHom.mem_ker] at i_prop b_prop
+                simp [i_prop, b_prop]
             . sorry
             -- ext a
             -- rw [Set.mem_iUnion]
