@@ -11216,11 +11216,17 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     --   infer_instance
     --   sorry
 
+    -- TODO - generalize and upstream to mathlib
     have phi_ker_normal: (AddSubgroup.toSubgroup' data.φ.ker).Normal := by
       have phi_normal: data.φ.ker.Normal := by
         infer_instance
       --exact phi_normal
-      sorry
+      exact {
+        conj_mem := by
+          intro a ha g
+          have foo := phi_normal.conj_mem a ha g
+          exact foo
+      }
 
     -- have N'_nilpotent: Group.IsNilpotent ↥N' := by
     --   exact N'_nilpotent
@@ -11233,7 +11239,10 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       by_contra!
 
       have gamma_alpha_mem_ker: (γ.toMul^α) ∈ data.φ.ker := by
-        sorry
+        -- This is *not* called 'extract_proofs'
+        generalize_proofs at this
+        rename_i mem_ker
+        exact mem_ker
 
       simp at gamma_alpha_mem_ker
       clear kernel_poly
