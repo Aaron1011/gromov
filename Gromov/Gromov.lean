@@ -11440,27 +11440,6 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
             simp_rw [← MonoidHom.map_closure]
             simp_rw [Set.image_iUnion]
 
-            -- sorry
-            --   equals (fun a => a.val) '' N'.carrier =>
-            --     ext a
-            --     refine ⟨?_, ?_⟩
-            --     .
-            --       intro ha
-            --       simp at ha
-
-            --       sorry
-            --     .
-            --       intro ha
-            --       simp
-            --       apply Subgroup.mem_closure_of_mem
-            --       conv at ha =>
-            --         arg 1
-            --         arg 2
-            --         equals ↑N' =>
-            --           ext z
-            --           simp
-            --       exact ha
-
             apply Set.iUnion_congr
             intro i
             apply Set.iUnion_congr
