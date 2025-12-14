@@ -2238,8 +2238,8 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
       obtain ⟨s, l, l_length, a_eq⟩ := a_mem
 
       -- TODO - extract this to its own lemma
-      have subsequent_comm_one: ∀ g ∈ N', ∀ k: ℕ, m ≤ k → iteratedCommutator g.val gamma_alpha k = 1 := by
-        intro g g_mem k hk
+      have subsequent_comm_one: ∀ g: N', ∀ k: ℕ, m ≤ k → iteratedCommutator g.val.val gamma_alpha k = 1 := by
+        intro g k hk
         simp [iteratedCommutator]
 
         apply Nat.le.dest at hk
@@ -2317,7 +2317,8 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
         rw [gamma_list_eq]
         rw [list_foldr_replicate]
         unfold iteratedCommutator at h_gamma_alpha
-        simp [iteratedCommutator] at subsequent_comm_one
+        unfold iteratedCommutator at subsequent_comm_one
+        simp [] at subsequent_comm_one
 
           --simp [l_suffix_nil]
 
@@ -2342,19 +2343,17 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
               . exact ih
           .
             clear h_list_eq
+            rw [← Subgroup.mem_map_iff_mem (f := H.subtype) (by simp)]
             induction l_suffix with
             | nil =>
               simp at s_mem_N'
               obtain ⟨hs, s_mem⟩ := s_mem_N'
               simp
-              exact s_mem
+              use hs
             | cons head tail ih =>
-              simp
-              sorry
-              -- apply normal_comm_mem
-              -- . infer_instance
-              -- . exact ih
-
+              simp [-Subgroup.mem_map]
+              apply normal_comm_mem (by infer_instance)
+              exact ih
           . simp
             omega
         .
@@ -2499,8 +2498,16 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
             conv at x_mem =>
               arg 1
               equals ⊥ =>
+                --sorry
+                have nilpotent_map: Group.IsNilpotent ↥(Subgroup.map H.subtype N') := by
+                  simp_rw [Group.isNilpotent_iff]
+                  simp_rw [Group.isNilpotent_iff] at N'_nilpotent
+                  obtain ⟨n, hn⟩ := N'_nilpotent
+                  use n
+
+                  sorry
+                rw [lowerCentralSeries_eq_bot_iff_nilpotencyClass_le]
                 sorry
-                --rw [lowerCentralSeries_eq_bot_iff_nilpotencyClass_le]
                 --omega
 
 
