@@ -11275,8 +11275,23 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       refine ⟨?_, ?_⟩
       .
 
+        have N'_subgroup_index: (N'.subgroupOf N).FiniteIndex := by
 
-        sorry
+          sorry
+
+        have N'_index: N'.FiniteIndex := by
+
+          sorry
+
+        obtain ⟨s, s_compl, s_cosets⟩ := Subgroup.exists_leftTransversal_of_FiniteIndex (D := N') (H := ⊤) (by simp)
+        simp at s_cosets
+
+        rw [← ne_eq]
+        rw [← Subgroup.finiteIndex_iff]
+        apply Subgroup.finiteIndex_of_leftCoset_cover_const (ι := s)
+        . sorry
+        . sorry
+        . sorry
       . have foo := data.finite_index
         rw [Subgroup.finiteIndex_iff] at foo
         exact foo
