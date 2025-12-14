@@ -11174,6 +11174,10 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     obtain ⟨α, m, alpha_is_unipotent⟩ := alpha_unipotent
 
 
+    -- This will probably come from the proof of 'alpha_unipotent'
+    have alpha_nonzero: α ≠ 0 := by
+      sorry
+
 
     have N'_char: Subgroup.Characteristic N' := by
       rw [Subgroup.characteristic_iff_map_eq]
@@ -11257,19 +11261,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       simp at hγ
       norm_cast at hγ
       rw [eq_comm] at hγ
-      simp_rw [hγ, pow_zero, commutatorElement_one_right] at alpha_is_unipotent
-      simp_rw [iterate_one] at alpha_is_unipotent
-      sorry
-
-
-      -- cases hx
-      -- . rename_i alpha_zero
-      --   simp_rw [alpha_zero, pow_zero, commutatorElement_one_right] at alpha_is_unipotent
-      --   simp_rw [iterate_one] at alpha_is_unipotent
-      --   simp? at alpha_is_unipotent
-      --   simp [alpha_zero] at this
-
-      -- simp at this
+      contradiction
     ) m alpha_is_unipotent
     rw [Group.IsVirtuallyNilpotent]
     rw [Group.isNilpotent_congr (Subgroup.equivMapOfInjective _ (Subgroup.subtype _) (by simp))] at alpha_nilpotent
