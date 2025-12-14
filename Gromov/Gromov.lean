@@ -11030,6 +11030,100 @@ def iteratedCommutator {T: Type*} [Group T] {M: Subgroup T} (base right: M) (n: 
 -- StrictMono.not_bddAbove_range_of_wellFoundedLT
 
 
+-- TODO - generalize and upstream to mathlib
+lemma subgroup_coe_sup_invariant {G: Type*} [Group G] {A B: Subgroup G} (hab: ∀ b ∈ B, ∀ a ∈ A, (b * a * b⁻¹) ∈ A): ↑((A ⊔ B) : Subgroup G) = (A: Set G) * (B: Set G) := by
+  ext a
+  simp
+  refine ⟨?_, ?_⟩
+  .
+    intro ha
+    rw [Subgroup.sup_eq_closure] at ha
+    induction ha using Subgroup.closure_induction with
+    | mem x hx =>
+      cases hx
+      . rename_i x_mem_a
+        conv =>
+          arg 2
+          equals x * 1 => simp
+        apply Set.mul_mem_mul
+        . exact x_mem_a
+        . simp
+      .
+        rename_i x_mem_b
+        conv =>
+          arg 2
+          equals 1 * x => simp
+        apply Set.mul_mem_mul
+        . simp
+        . simpa using x_mem_b
+    | one =>
+      conv =>
+        arg 2
+        equals 1 * 1 => simp
+      apply Set.mul_mem_mul
+      . simp
+      . simp
+    | mul x y hx hy x_mem y_mem =>
+      rw [Set.mem_mul] at x_mem y_mem
+      obtain ⟨b, b_mem, c, c_mem, x_eq⟩ := x_mem
+      obtain ⟨d, d_mem, e, e_mem, y_eq⟩ := y_mem
+
+      rw [← x_eq, ← y_eq]
+      rw [mul_assoc]
+      nth_rw 2 [← mul_assoc]
+      conv =>
+        arg 2
+        equals (b * (c * d * c⁻¹)) * (c * e) =>
+          group
+
+      apply Set.mul_mem_mul
+      . simp
+        apply Subgroup.mul_mem
+        . simpa using b_mem
+        .
+          apply hab
+          . simpa using c_mem
+          . simpa using d_mem
+      .
+        simp
+        apply Subgroup.mul_mem
+        . simpa using c_mem
+        . simpa using e_mem
+    | inv x hx other =>
+      rw [← Set.mem_inv]
+      simp [-Set.mem_inv]
+      rw [Set.mem_mul] at other
+      obtain ⟨a, ha, b, hb, x_eq⟩ := other
+      rw [← x_eq]
+      conv =>
+        arg 2
+        equals b * (b⁻¹ * a * b) =>
+          group
+
+      apply Set.mul_mem_mul
+      . exact hb
+      .
+        have foo := hab b⁻¹ (by simpa using hb) a ha
+        simpa using foo
+  . intro ha
+    rw [Set.mem_mul] at ha
+    obtain ⟨x, hx, y, hy, hxy⟩ := ha
+    rw [Subgroup.sup_eq_closure]
+    rw [Subgroup.closure_union]
+    rw [← hxy]
+    apply Subgroup.mul_mem_sup
+    . apply Subgroup.mem_closure_of_mem
+      exact hx
+    . apply Subgroup.mem_closure_of_mem
+      exact hy
+
+-- TODO - generalize and upstream to mathlib
+lemma set_smul_eq_mul {G: Type*} [Group G] (g: G) (A: Set G): g • A = {g} * A := by
+  ext a
+  rw [Set.mem_smul_set]
+  rw [Set.mem_mul]
+  simp
+
 -- TODO - add an explicit top-level universe parameter to avoid this 'omit hGS' hack
 set_option maxHeartbeats 2500000 in
 omit hGS in
@@ -11288,10 +11382,119 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
         rw [← ne_eq]
         rw [← Subgroup.finiteIndex_iff]
-        apply Subgroup.finiteIndex_of_leftCoset_cover_const (ι := s)
-        . sorry
-        . sorry
-        . sorry
+        apply Subgroup.finiteIndex_of_leftCoset_cover_const (s := s) (g := fun g => g.val.val.toMul)
+        simp_rw [Set.insert_eq, Subgroup.closure_union]
+        rename_bvar i → g
+
+        -- let N'_normal: N'.Normal := by
+        --   infer_instance
+
+        -- rw [← Set.iUnion_smul]
+        -- rw [Subgroup.coe_sup]
+        -- let A: Subgroup data.G' := ⊤
+        --have bar := Subgroup.coe_pointwise_smul (1 : A) A
+        conv =>
+          arg 1
+          arg 1
+          intro i
+          arg 1
+          intro hi
+          rw [sup_comm]
+          rw [subgroup_coe_sup_invariant (by
+            intro gamma_pow h_gamma_pow n hn
+            have n': N' := sorry
+            --let conj := N'_normal.conj_mem n' (by simp) gamma_pow
+            sorry
+
+
+          )]
+          rw [set_smul_eq_mul]
+          rw [← mul_assoc]
+          rw [← set_smul_eq_mul]
+
+
+        simp_rw [← Set.iUnion_mul]
+        conv =>
+          arg 1
+          arg 1
+          equals Additive.toMul '' data.φ.ker =>
+            apply_fun (fun s => Additive.toMul '' (Subtype.val '' s)) at s_cosets
+            conv at s_cosets =>
+              rhs
+              equals Additive.toMul '' data.φ.ker =>
+                ext a
+                simp
+            rw [← s_cosets]
+            conv =>
+              arg 1
+              arg 1
+              intro i
+              arg 1
+              intro hi
+              arg 2
+              equals (fun a => a.val) '' N'.carrier =>
+                ext a
+                refine ⟨?_, ?_⟩
+                . sorry
+                .
+                  intro ha
+                  simp
+                  apply Subgroup.mem_closure_of_mem
+                  conv at ha =>
+                    arg 1
+                    arg 2
+                    equals ↑N' =>
+                      ext z
+                      simp
+                  exact ha
+
+            rw [Set.image_iUnion]
+            simp_rw [Set.image_iUnion]
+            apply Set.iUnion_congr
+            intro i
+            apply Set.iUnion_congr
+            intro hi
+            ext z
+            rw [Set.mem_smul_set]
+            rw [Set.mem_image]
+            refine ⟨?_, ?_⟩
+            .
+              intro hy
+              obtain ⟨a, ha⟩ := hy
+              use (i • a)
+              refine ⟨?_, ha.2⟩
+              have foo := ha.1
+              simp
+              use ?_
+              .
+                rw [Set.mem_smul_set]
+                sorry
+
+
+              sorry
+            . sorry
+            -- ext a
+            -- rw [Set.mem_iUnion]
+            -- rw [Set.mem_image]
+            -- refine ⟨?_, ?_⟩
+            -- . intro ha
+            --   obtain ⟨b, hb⟩ := ha
+            --   use a
+            --   refine ⟨?_, rfl⟩
+
+            --   simp
+            -- grind
+            -- sorry
+
+
+
+
+
+        -- Subgroup.smul_sup
+
+
+
+        sorry
       . have foo := data.finite_index
         rw [Subgroup.finiteIndex_iff] at foo
         exact foo
@@ -11868,5 +12071,5 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
         sorry
     }
     have new_poly := poly_growth_equiv_generates generates Q_FG.out.choose (d := n - 1) sorry
-    have prev := @ih generates (by sorry) (n - 1) sorry
+    have prev := @ih generates (by sorry) (n - 1) sorry sorry
     sorry
