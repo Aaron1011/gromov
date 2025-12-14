@@ -2157,12 +2157,21 @@ lemma count_mem_group_implies_lowercentral {G: Type*} [Group G] {N': Subgroup G}
 
   --   sorry
 
+lemma map_nilpotent {G H: Type*} [Group G] [Group H] (A: Subgroup G) (f: G →* H) (hG: Group.IsNilpotent A): Group.IsNilpotent (Subgroup.map f A) := by
+
+  sorry
+
 lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Subgroup H} [H_normal: H.Normal] [N'_char: N'.Characteristic] [N'_nilpotent: Group.IsNilpotent N'] (gamma_alpha: G) (gamma_not_n: ¬(gamma_alpha ∈ (Subgroup.map (Subgroup.subtype _) N'))) (m: ℕ) (m_ne_zero: m ≠ 0) (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g.val gamma_alpha m = 1):
   Group.IsNilpotent (Subgroup.closure ((Subgroup.map (Subgroup.subtype _) N') ∪ {gamma_alpha})) := by
 
   classical
+
+  have nilpotent_map: Group.IsNilpotent ↥(Subgroup.map H.subtype N') := by
+    apply map_nilpotent
+    exact N'_nilpotent
+
   rw [nilpotent_iff_lowerCentralSeries]
-  use ((1 + Group.nilpotencyClass N') * (m + 1)) + 2
+  use ((1 + (Group.nilpotencyClass ↥(Subgroup.map H.subtype N'))) * (m + 1)) + 2
 
   apply comm_trivial_implies_nilpotent (S := Set.range (fun (a: ↑(((Subgroup.subtype _) '' N'.carrier) ∪ {gamma_alpha})) => ⟨a.val, by apply Subgroup.mem_closure_of_mem; grind⟩))
   .
@@ -2498,17 +2507,13 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
             conv at x_mem =>
               arg 1
               equals ⊥ =>
+
                 --sorry
                 have nilpotent_map: Group.IsNilpotent ↥(Subgroup.map H.subtype N') := by
-                  simp_rw [Group.isNilpotent_iff]
-                  simp_rw [Group.isNilpotent_iff] at N'_nilpotent
-                  obtain ⟨n, hn⟩ := N'_nilpotent
-                  use n
-
-                  sorry
+                  apply map_nilpotent
+                  exact N'_nilpotent
                 rw [lowerCentralSeries_eq_bot_iff_nilpotencyClass_le]
-                sorry
-                --omega
+                omega
 
 
 
@@ -2540,7 +2545,7 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
       simp at foo
       rw [foo] at iterate_mem
 
-      have one_mem_mul := one_mem_iterated_comm ((((Subgroup.map (Subgroup.subtype _) N').carrier ∪ {gamma_alpha}))) m (m := (1 + Group.nilpotencyClass N') * (m + 1) + 2) (by
+      have one_mem_mul := one_mem_iterated_comm ((((Subgroup.map (Subgroup.subtype _) N').carrier ∪ {gamma_alpha}))) m (m := (1 + ((Group.nilpotencyClass ↥(Subgroup.map H.subtype N')))) * (m + 1) + 2) (by
         nth_grw 1 [Nat.lt_add_one (n := m)]
         apply add_le_add
         .
