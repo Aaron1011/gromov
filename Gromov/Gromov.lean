@@ -11290,7 +11290,28 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       --   simp [alpha_zero] at this
 
       -- simp at this
-    )
+    ) m alpha_is_unipotent
+    rw [Group.IsVirtuallyNilpotent]
+    rw [Group.isNilpotent_congr (Subgroup.equivMapOfInjective _ (Subgroup.subtype _) (by simp))] at alpha_nilpotent
+    use (map data.G'.subtype (Subgroup.closure (↑(map (AddSubgroup.toSubgroup' data.φ.ker).subtype N') ∪ {toMul γ ^ α})))
+    refine ⟨?_, ?_⟩
+    . exact alpha_nilpotent
+    .
+      rw [Subgroup.finiteIndex_iff]
+      rw [Subgroup.index_map]
+      simp
+      refine ⟨?_, ?_⟩
+      .
+
+
+        sorry
+      . have foo := data.finite_index
+        rw [Subgroup.finiteIndex_iff] at foo
+        exact foo
+
+
+
+    use (Subgroup.closure (↑(map (AddSubgroup.toSubgroup' data.φ.ker).subtype N') ∪ {toMul γ ^ α}))
     let G'' := Subgroup.closure (((Additive.toMul ∘ data.φ.ker.subtype) '' N'.carrier) ∪ {γ.toMul})
 
     let N'_as_G'' := (AddSubgroup.map (AddSubgroup.subtype _) (Subgroup.toAddSubgroup' N')).toSubgroup'.subgroupOf G''
