@@ -11509,7 +11509,9 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               use y.val
               refine ⟨?_, ?_⟩
               .
-                simp [new_N'_map]
+                rw [Set.mem_image]
+                use y
+                refine ⟨hy, rfl⟩
               . simp_rw [← x_eq]
                 rw [Subtype.ext_iff] at x_eq_y
                 simp at x_eq_y
