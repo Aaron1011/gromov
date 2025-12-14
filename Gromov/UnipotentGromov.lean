@@ -2197,11 +2197,26 @@ lemma map_nilpotent {G H: Type*} [Group G] [Group H] (A: Subgroup G) (f: G →* 
   -- use n
   -- sorry
 
-lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Subgroup H} [H_normal: H.Normal] [N'_char: N'.Characteristic] [N'_nilpotent: Group.IsNilpotent N'] (gamma_alpha: G) (gamma_not_n: ¬(gamma_alpha ∈ (Subgroup.map (Subgroup.subtype _) N'))) (m: ℕ) (m_ne_zero: m ≠ 0) (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g.val gamma_alpha m = 1):
+lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Subgroup H} [H_normal: H.Normal] [N'_char: N'.Characteristic] [N'_nilpotent: Group.IsNilpotent N'] (gamma_alpha: G) (gamma_not_n: ¬(gamma_alpha ∈ (Subgroup.map (Subgroup.subtype _) N'))) (m: ℕ) (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g.val gamma_alpha m = 1):
   Group.IsNilpotent (Subgroup.closure ((Subgroup.map (Subgroup.subtype _) N') ∪ {gamma_alpha})) := by
 
   classical
 
+  by_cases m_eq: m = 0
+  .
+    simp [iteratedCommutator, m_eq] at h_gamma_alpha
+    have N'_bot: N' = ⊥ := by
+      rw [Subgroup.eq_bot_iff_forall]
+      simpa using h_gamma_alpha
+    rw [N'_bot]
+    simp
+
+    let foo := Subgroup.closureCommGroupOfComm (k := (Subtype.val '' {(1 : H)} ∪ {gamma_alpha})) ?_
+    . apply CommGroup.isNilpotent
+    . intro x hx y hy
+      simp at hx
+      simp at hy
+      aesop
   have nilpotent_map: Group.IsNilpotent ↥(Subgroup.map H.subtype N') := by
     apply map_nilpotent
     . exact Subgroup.subtype_injective H
