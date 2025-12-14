@@ -2157,9 +2157,45 @@ lemma count_mem_group_implies_lowercentral {G: Type*} [Group G] {N': Subgroup G}
 
   --   sorry
 
-lemma map_nilpotent {G H: Type*} [Group G] [Group H] (A: Subgroup G) (f: G →* H) (hG: Group.IsNilpotent A): Group.IsNilpotent (Subgroup.map f A) := by
+-- TODO - can the injectivity requirement be removed?
+lemma map_nilpotent {G H: Type*} [Group G] [Group H] (A: Subgroup G) (f: G →* H) (hf: Function.Injective f) (hG: Group.IsNilpotent A): Group.IsNilpotent (Subgroup.map f A) := by
+  rw [← Group.isNilpotent_congr (Subgroup.equivMapOfInjective _ _ _)]
+  . exact hG
+  . exact hf
+  -- rw [Group.isNilpotent_iff]
+  -- rw [Group.isNilpotent_iff] at hG
+  -- obtain ⟨n, hn⟩ := hG
+  -- use n
+  -- induction n with
+  -- | zero =>
+  --   simp
+  --   simp at hn
+  --   sorry
+  -- | succ n ih =>
+  --   rw [Subgroup.eq_top_iff']
+  --   intro x
+  --   rw [mem_upperCentralSeries_succ_iff]
+  --   intro y
+  --   rw [Subgroup.eq_top_iff'] at hn
+  --   have x_prop := x.property
+  --   rw [Subgroup.mem_map] at x_prop
+  --   obtain ⟨a, a_mem, x_eq⟩ := x_prop
+  --   specialize hn ⟨a, a_mem⟩
+  --   rw [mem_upperCentralSeries_succ_iff] at hn
+  --   have y_prop := y.property
+  --   have x_prop := x.property
+  --   rw [Subgroup.mem_map] at y_prop
+  --   obtain ⟨b, b_mem, y_eq⟩ := y_prop
+  --   specialize hn ⟨b, b_mem⟩
+  --   simp at hn
+  --   rw [← Subgroup.mem_map_iff_mem (f := f.comp (Subgroup.subtype _)) (by sorry)] at hn
 
-  sorry
+
+
+  --   sorry
+  -- apply_fun (Subgroup.map (Subgroup.subtype _)) at hn
+  -- use n
+  -- sorry
 
 lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Subgroup H} [H_normal: H.Normal] [N'_char: N'.Characteristic] [N'_nilpotent: Group.IsNilpotent N'] (gamma_alpha: G) (gamma_not_n: ¬(gamma_alpha ∈ (Subgroup.map (Subgroup.subtype _) N'))) (m: ℕ) (m_ne_zero: m ≠ 0) (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g.val gamma_alpha m = 1):
   Group.IsNilpotent (Subgroup.closure ((Subgroup.map (Subgroup.subtype _) N') ∪ {gamma_alpha})) := by
@@ -2168,7 +2204,8 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
 
   have nilpotent_map: Group.IsNilpotent ↥(Subgroup.map H.subtype N') := by
     apply map_nilpotent
-    exact N'_nilpotent
+    . exact Subgroup.subtype_injective H
+    . exact N'_nilpotent
 
   rw [nilpotent_iff_lowerCentralSeries]
   use ((1 + (Group.nilpotencyClass ↥(Subgroup.map H.subtype N'))) * (m + 1)) + 2
@@ -2511,7 +2548,8 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
                 --sorry
                 have nilpotent_map: Group.IsNilpotent ↥(Subgroup.map H.subtype N') := by
                   apply map_nilpotent
-                  exact N'_nilpotent
+                  . exact Subgroup.subtype_injective H
+                  . exact N'_nilpotent
                 rw [lowerCentralSeries_eq_bot_iff_nilpotencyClass_le]
                 omega
 

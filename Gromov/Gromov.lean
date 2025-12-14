@@ -10950,6 +10950,19 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
 
 #print axioms three_two_kernel_poly_growth
 
+lemma iterate_one {G: Type*} [Monoid G] {n: ℕ}: Nat.iterate (fun (g: G) => (1 : G)) n = (fun g => if n = 0 then g else 1) := by
+  induction n with
+  | zero =>
+    simp
+    ext a
+    simp
+  | succ n ih =>
+    simp
+    simp [ih]
+    ext a
+    simp
+
+
 def iteratedCommutator {T: Type*} [Group T] {M: Subgroup T} (base right: M) (n: ℕ) := Nat.iterate (fun x => ⁅base, x⁆) n right
 
 -- structure G''CommData {T: Type*} [Group T] (M: Subgroup T) where
@@ -11137,9 +11150,13 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       sorry
 
 
-
-    obtain ⟨α, m, alpha_is_unipotent⟩ := alpha_unipotent
-
+    let new_N': Subgroup (data.G') := Subgroup.map {
+      toFun := fun (g: (Multiplicative ↥data.φ.ker)) => Additive.toMul (data.φ.ker.subtype g)
+      map_one' := rfl
+      map_mul' := by
+        intro x y
+        rfl
+    } N'
 
     have N'_le_N: N' ≤ N := by
       unfold N'
@@ -11153,6 +11170,39 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     have N'_nilpotent: Group.IsNilpotent N' := by
       rw [← Group.isNilpotent_congr (Subgroup.subgroupOfEquivOfLe N'_le_N)]
       exact isNilpotent (N'.subgroupOf N)
+
+    obtain ⟨α, m, alpha_is_unipotent⟩ := alpha_unipotent
+    -- by_cases m_eq: m = 0
+    -- .
+    --   simp_rw [m_eq] at alpha_is_unipotent
+    --   simp only [Nat.iterate] at alpha_is_unipotent
+    --   rw [Group.IsVirtuallyNilpotent]
+    --   use (Subgroup.map (Subgroup.subtype _) new_N')
+    --   refine ⟨?_, ?_⟩
+    --   .
+    --     rw [← Group.isNilpotent_congr (Subgroup.equivMapOfInjective _ _ _)]
+    --     .
+    --       unfold new_N'
+    --       rw [← Group.isNilpotent_congr (Subgroup.equivMapOfInjective _ _ _)]
+    --       . exact N'_nilpotent
+    --       . intro a b hab
+    --         simpa using hab
+    --     . exact subtype_injective data.G'
+    --   .
+    --     rw [Subgroup.finiteIndex_iff]
+    --     rw [Subgroup.index_map]
+    --     simp
+    --     refine ⟨?_, ?_⟩
+    --     . unfold new_N'
+    --       rw [Subgroup.index_map]
+    --       simp
+    --       refine ⟨?_, ?_⟩
+    --       . sorry
+    --       . sorry
+    --     . exact finiteIndex_iff.mp G'_finite_index
+
+
+
 
     have N'_char: Subgroup.Characteristic N' := by
       rw [Subgroup.characteristic_iff_map_eq]
@@ -11184,13 +11234,6 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     have N'_normal: N'.Normal := by
       infer_instance
 
-    let new_N': Subgroup (data.G') := Subgroup.map {
-      toFun := fun (g: (Multiplicative ↥data.φ.ker)) => Additive.toMul (data.φ.ker.subtype g)
-      map_one' := rfl
-      map_mul' := by
-        intro x y
-        rfl
-    } N'
 
     -- have new_normal: new_N'.Characteristic := by
     --   unfold new_N'
@@ -11208,10 +11251,46 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       --exact phi_normal
       sorry
 
-    -- have N'_char: Group.IsNilpotent ↥N' := by
+    -- have N'_nilpotent: Group.IsNilpotent ↥N' := by
     --   exact N'_nilpotent
 
-    have alpha_nilpotent := unipotent_commutator_trivial (G := data.G') (H := data.φ.ker.toSubgroup') (N' := N')
+    have alpha_nilpotent := unipotent_commutator_trivial (G := data.G') (H := data.φ.ker.toSubgroup') (N' := N') (N'_nilpotent := by
+      exact N'_nilpotent
+    ) (γ.toMul^α) (by
+      simp
+      intro hx
+      by_contra!
+
+      have gamma_alpha_mem_ker: (γ.toMul^α) ∈ data.φ.ker := by
+        sorry
+
+      simp at gamma_alpha_mem_ker
+      clear kernel_poly
+      apply_fun (α • ·) at hγ
+      conv at gamma_alpha_mem_ker =>
+        lhs
+        equals (data.φ (α • γ)) =>
+          rfl
+
+      rw [AddMonoidHom.map_nsmul] at gamma_alpha_mem_ker
+      rw [gamma_alpha_mem_ker] at hγ
+      simp at hγ
+      norm_cast at hγ
+      rw [eq_comm] at hγ
+      simp_rw [hγ, pow_zero, commutatorElement_one_right] at alpha_is_unipotent
+      simp_rw [iterate_one] at alpha_is_unipotent
+      sorry
+
+
+      -- cases hx
+      -- . rename_i alpha_zero
+      --   simp_rw [alpha_zero, pow_zero, commutatorElement_one_right] at alpha_is_unipotent
+      --   simp_rw [iterate_one] at alpha_is_unipotent
+      --   simp? at alpha_is_unipotent
+      --   simp [alpha_zero] at this
+
+      -- simp at this
+    )
     let G'' := Subgroup.closure (((Additive.toMul ∘ data.φ.ker.subtype) '' N'.carrier) ∪ {γ.toMul})
 
     let N'_as_G'' := (AddSubgroup.map (AddSubgroup.subtype _) (Subgroup.toAddSubgroup' N')).toSubgroup'.subgroupOf G''
