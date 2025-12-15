@@ -9786,7 +9786,7 @@ lemma three_poly_poly_growth_all_s_n (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGro
 def e_i_with_gamma (φ: (Additive G) →+ ℤ) (γ : G) (s: S): Additive G := (ofMul s.val) + ((-1 : ℤ) • (φ (ofMul s.val))) • (ofMul (γ))
 
 
--- The 'e_i' terms from Vikman, together with γ, generate the original group G
+-- The 'e_i' terms from Vikman 3.2, together with γ, generate the original group G
 lemma e_i_and_gamma_generates_G (φ: (Additive G) →+ ℤ) (γ: G) (hγ: φ γ = 1) : Subgroup.closure ({1, γ, γ⁻¹} ∪ ((e_i_with_gamma φ γ) '' Set.univ)) = (Subgroup.closure S) := by
 
   have phi_ofmul: φ (ofMul γ) = 1 := by
@@ -11610,8 +11610,26 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
 
         ext a
+        have ker_gen := e_i_and_gamma_generates_G data.φ γ hγ
+        have foo := new_generates.generates
+        simp at foo
+        simp [foo] at ker_gen
+        rw [Subgroup.ext_iff] at ker_gen
         simp
-        sorry
+        simp at ker_gen
+        specialize ker_gen a
+        rw [Subgroup.closure_union] at ker_gen
+        rw [← SetLike.mem_coe] at ker_gen
+        rw [sup_comm] at ker_gen
+        rw [subgroup_coe_sup_invariant] at ker_gen
+        .
+          rw [Set.mem_mul] at ker_gen
+          obtain ⟨c, hc, d, hd, a_eq⟩ := ker_gen
+          rw [← a_eq]
+          apply Set.mul_mem_mul
+          . sorry
+          . sorry
+        . sorry
       . have foo := data.finite_index
         rw [Subgroup.finiteIndex_iff] at foo
         exact foo
