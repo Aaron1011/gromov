@@ -12227,6 +12227,8 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
       exact pow_cards_bounded
   | succ k ih =>
     obtain ⟨data⟩ := exists_theorem_3_1_input h
+    -- Consider changing 'theorem_3_1' to make 'inductive_gromov' take in 'Generates',
+    -- to avoid fiddling with 'FG.out' (which might not be symmetric)
     apply theorem_3_1 data n (by omega) h
     intro Q Q_dec_eq Q_group Q_FG hS
 
@@ -12270,6 +12272,10 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
         simp at ha
         have s_nonempty := hGS.one_mem
         grind
+
+      let new_poly := poly_growth_equiv_generates generates Q_FG.out.choose (d := n -1) (by
+        sorry
+      )
       have poly := poly_growth_equiv a (n - 1) (by omega) Q_FG.out.choose generates.S (sorry) (by sorry) (by sorry) sorry
 
       --obtain ⟨b, b_ge, hb⟩ := poly
@@ -12279,8 +12285,10 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
       --   exact hb
       -- )
       have prev := @ih generates (n - 1) (by
-        unfold HasPolynomialGrowthD
-        obtain ⟨b, b_ge, hb⟩ := poly
-        use b
+        sorry
+        -- exact new_poly
+        -- unfold HasPolynomialGrowthD
+        -- obtain ⟨b, b_ge, hb⟩ := poly
+        -- use b
       ) (by omega)
       exact prev
