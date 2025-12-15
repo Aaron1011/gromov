@@ -12252,5 +12252,5 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
         sorry
     }
     have new_poly := poly_growth_equiv_generates generates Q_FG.out.choose (d := n - 1) sorry
-    have prev := @ih generates (n - 1) sorry sorry
+    have prev := @ih generates (n - 1) sorry (by omega)
     exact prev
