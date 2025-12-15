@@ -11288,6 +11288,13 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     have alpha_unipotent: ∃ α: ℕ, ∃ m: ℕ, ∀ g ∈ N', Nat.iterate (fun x => ⁅x, γ.toMul^α⁆) m g.val = 1 := by
       sorry
 
+    obtain ⟨α, m, alpha_is_unipotent⟩ := alpha_unipotent
+
+    -- This will probably come from the proof of 'alpha_unipotent'
+    have alpha_nonzero: α ≠ 0 := by
+      sorry
+
+
     let new_N'_map : _ →* _ := {
       toFun := fun (g: (Multiplicative ↥data.φ.ker)) => Additive.toMul (data.φ.ker.subtype g)
       map_one' := rfl
@@ -11312,12 +11319,6 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       rw [← Group.isNilpotent_congr (Subgroup.subgroupOfEquivOfLe N'_le_N)]
       exact isNilpotent (N'.subgroupOf N)
 
-    obtain ⟨α, m, alpha_is_unipotent⟩ := alpha_unipotent
-
-
-    -- This will probably come from the proof of 'alpha_unipotent'
-    have alpha_nonzero: α ≠ 0 := by
-      sorry
 
 
     have N'_char: Subgroup.Characteristic N' := by
@@ -11655,8 +11656,26 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               exact hc
             )
             simpa using foo
-          . sorry
-        . sorry
+          .
+            -- WRONG - this will require adjusting eiher G'' or our nilpotency proof
+            sorry
+        . conv =>
+            intro b
+            arg 1
+            arg 1
+            equals Subgroup.closure {γ.toMul} =>
+              simp
+              conv =>
+                arg 1
+                arg 1
+                equals {γ.toMul} ∪ {γ.toMul⁻¹} =>
+                  rfl
+              rw [Subgroup.closure_union]
+              simp
+
+          intro b hb a ha
+
+          sorry
       . have foo := data.finite_index
         rw [Subgroup.finiteIndex_iff] at foo
         exact foo
@@ -12234,4 +12253,4 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
     }
     have new_poly := poly_growth_equiv_generates generates Q_FG.out.choose (d := n - 1) sorry
     have prev := @ih generates (by sorry) (n - 1) sorry sorry
-    sorry
+    exact prev
