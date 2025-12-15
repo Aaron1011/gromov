@@ -8613,11 +8613,6 @@ lemma exists_theorem_3_1_input [hGS: Generates ] {d: ℕ} (hd: HasPolynomialGrow
 
 
 
-
-
--- TODO - get rid of this, since all groups must be inhabited
-variable [Inhabited G]
-
 structure PreservesProd (T: Type*) (l h: List G) (γ: G) where
   prod_eq: l.prod = h.prod
   same_sum: (l.map (fun s => if s = γ then 1 else 0)).sum = (h.map (fun s => if s = γ then 1 else 0)).sum
@@ -10346,6 +10341,11 @@ lemma three_two_gamma_m_generates (φ: (Additive G) →+ ℤ) (γ: G) (hγ: φ �
               have unattach_len_pos: 0 < (List.dropWhile is_gamma list).unattach.length := by
                 rw [List.length_unattach]
                 exact List.length_pos_iff.mpr dropwhile_not_nul
+
+              -- TODO - this is gross, and should be removed
+              letI : Inhabited G := {
+                default := 1
+              }
 
               conv =>
                 lhs
@@ -12252,5 +12252,5 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
         sorry
     }
     have new_poly := poly_growth_equiv_generates generates Q_FG.out.choose (d := n - 1) sorry
-    have prev := @ih generates (by sorry) (n - 1) sorry sorry
+    have prev := @ih generates (n - 1) sorry sorry
     exact prev
