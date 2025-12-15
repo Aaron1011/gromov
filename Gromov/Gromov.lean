@@ -11410,6 +11410,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     ) m alpha_is_unipotent
     rw [Group.IsVirtuallyNilpotent]
     rw [Group.isNilpotent_congr (Subgroup.equivMapOfInjective _ (Subgroup.subtype _) (by simp))] at alpha_nilpotent
+    -- TODO - this is wrong. We need to use {toMul γ} so that we can prove that it has finite index (G'' is defined using
+    -- just gamma, not gamma^alpha)
     use (map data.G'.subtype (Subgroup.closure (↑(map (AddSubgroup.toSubgroup' data.φ.ker).subtype N') ∪ {toMul γ ^ α})))
     refine ⟨?_, ?_⟩
     . exact alpha_nilpotent
@@ -11627,7 +11629,32 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
           obtain ⟨c, hc, d, hd, a_eq⟩ := ker_gen
           rw [← a_eq]
           apply Set.mul_mem_mul
-          . sorry
+          .
+            have phi_zero_on: Set.EqOn (data.φ) (0 : _ →+ _) (Set.range (e_i_with_gamma data.φ γ)) := by
+              simp
+              ext s
+              simp [e_i_with_gamma]
+              conv =>
+                lhs
+                rhs
+                rhs
+                rhs
+                equals 1 =>
+                  exact hγ
+
+              simp
+              group
+              apply sub_self
+            apply AddMonoidHom.eqOn_closure at phi_zero_on
+            simp
+            have foo := phi_zero_on (x := ofMul c) (by
+              simp at hc
+              simp
+              rw [← AddSubgroup.mem_toSubgroup']
+              rw [AddSubgroup.toSubgroup'_closure]
+              exact hc
+            )
+            simpa using foo
           . sorry
         . sorry
       . have foo := data.finite_index
