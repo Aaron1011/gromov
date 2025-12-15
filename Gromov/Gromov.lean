@@ -11475,36 +11475,6 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                 exact conj_map
               .
                 rfl
-            specialize conj_map x
-
-
-            -- Cleanup the infoview
-            clear kernel_poly kernel_fg G'_poly inhabited_G' inhabited_G alpha_nonzero phi_ker_normal hd h_growth new_generates
-            apply Subgroup.mem_closure_of_mem
-            simp
-            rw [Subgroup.mem_map] at hn
-            obtain ⟨x, hx, x_eq_n⟩ := hn
-            simp_rw [← x_eq_n]
-            use ?_
-            .
-              unfold N'
-
-              apply Subgroup.mem_closure_of_mem
-
-
-              simp
-              sorry
-            .
-
-              have x_prop := x.property
-              rw [AddMonoidHom.mem_ker] at x_prop
-              exact x_prop
-            rw [Subgroup.mem_map] at hn
-            obtain ⟨x, x_mem, n_eq⟩ := hn
-            let conj := N'_normal.conj_mem x x_mem gamma_pow
-            sorry
-
-
           )]
           rw [set_smul_eq_mul]
           rw [← mul_assoc]
