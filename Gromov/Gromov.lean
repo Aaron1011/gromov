@@ -12230,48 +12230,57 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
     apply theorem_3_1 data n (by omega) h
     intro Q Q_dec_eq Q_group Q_FG hS
 
-    let generates: Generates := {
-      G := Q,
-      g_group := Q_group
-      g_eq := Q_dec_eq
-      S := Q_FG.out.choose ∪ Q_FG.out.choose⁻¹ ∪ {1}
-      hS := by simp
-      generates := by
-        simp
-        rw [Subgroup.closure_union]
-        rw [Q_FG.out.choose_spec]
-        simp
-      one_mem := by
-        simp
-      has_inv := by
-        intro g hg
-        simp at hg
-        simp
+    by_cases Q_finite: Finite Q
+    .
+      rw [Group.IsVirtuallyNilpotent]
+      use ⊥
+      refine ⟨?_, ?_⟩
+      . exact CommGroup.isNilpotent
+        -- TODO - prove that a finite group is nilpotent, and upstream to mathlib
+      . infer_instance
+    .
+      let generates: Generates := {
+        G := Q,
+        g_group := Q_group
+        g_eq := Q_dec_eq
+        S := Q_FG.out.choose ∪ Q_FG.out.choose⁻¹ ∪ {1}
+        hS := by simp
+        generates := by
+          simp
+          rw [Subgroup.closure_union]
+          rw [Q_FG.out.choose_spec]
+          simp
+        one_mem := by
+          simp
+        has_inv := by
+          intro g hg
+          simp at hg
+          simp
+          grind
+        g_infinite := by
+          simpa using Q_finite
+      }
+      have h_poly := h
+      unfold HasPolynomialGrowthD at h_poly
+      obtain ⟨a, ha⟩ := h_poly
+      have a_ne_zero: a ≠ 0 := by
+        by_contra a_eq_zero
+        simp [a_eq_zero] at ha
+        specialize ha 1 (by simp)
+        simp at ha
+        have s_nonempty := hGS.one_mem
         grind
-      g_infinite := by
-        sorry
-    }
-    have h_poly := h
-    unfold HasPolynomialGrowthD at h_poly
-    obtain ⟨a, ha⟩ := h_poly
-    have a_ne_zero: a ≠ 0 := by
-      by_contra a_eq_zero
-      simp [a_eq_zero] at ha
-      specialize ha 1 (by simp)
-      simp at ha
-      have s_nonempty := hGS.one_mem
-      grind
-    have poly := poly_growth_equiv a (n - 1) (by omega) (by sorry) generates.S (sorry) (by sorry) (by sorry) sorry
+      have poly := poly_growth_equiv a (n - 1) (by omega) Q_FG.out.choose generates.S (sorry) (by sorry) (by sorry) sorry
 
-    --obtain ⟨b, b_ge, hb⟩ := poly
-    -- have new_poly := poly_growth_equiv_generates generates Q_FG.out.choose (d := n - 1) (by
-    --   unfold HasPolynomialGrowthD
-    --   use b
-    --   exact hb
-    -- )
-    have prev := @ih generates (n - 1) (by
-      unfold HasPolynomialGrowthD
-      obtain ⟨b, b_ge, hb⟩ := poly
-      use b
-    ) (by omega)
-    exact prev
+      --obtain ⟨b, b_ge, hb⟩ := poly
+      -- have new_poly := poly_growth_equiv_generates generates Q_FG.out.choose (d := n - 1) (by
+      --   unfold HasPolynomialGrowthD
+      --   use b
+      --   exact hb
+      -- )
+      have prev := @ih generates (n - 1) (by
+        unfold HasPolynomialGrowthD
+        obtain ⟨b, b_ge, hb⟩ := poly
+        use b
+      ) (by omega)
+      exact prev
