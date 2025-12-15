@@ -9783,10 +9783,240 @@ lemma three_poly_poly_growth_all_s_n (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGro
       obtain ⟨q, q_mem, e_i_eq'⟩ := e_i_eq
       simp [e_i_regular_helper]
 
+def e_i_with_gamma (φ: (Additive G) →+ ℤ) (γ : G) (s: S): Additive G := (ofMul s.val) + ((-1 : ℤ) • (φ (ofMul s.val))) • (ofMul (γ))
+
+
+-- The 'e_i' terms from Vikman, together with γ, generate the original group G
+lemma e_i_and_gamma_generates_G (φ: (Additive G) →+ ℤ) (γ: G) (hγ: φ γ = 1) : Subgroup.closure ({1, γ, γ⁻¹} ∪ ((e_i_with_gamma φ γ) '' Set.univ)) = (Subgroup.closure S) := by
+
+  have phi_ofmul: φ (ofMul γ) = 1 := by
+    exact hγ
+
+  let e_i: S → (Additive G) := fun s => (ofMul s.val) +  ((-1 : ℤ) • (φ (ofMul s.val))) • (ofMul (γ))
+  let e_i_regular: S → G := fun s => (ofMul s.val) +  ((-1 : ℤ) • (φ (ofMul s.val))) • (ofMul (γ))
+
+  let max_phi := max 1 ((Finset.image Int.natAbs (Finset.image φ (Finset.image ofMul S))).max' (by simp [S_nonempty]))
+  have e_i_zero: ∀ s: S, φ (e_i s) = 0 := by
+    intro s
+    unfold e_i
+    simp
+    simp [phi_ofmul]
+
+  have e_i_regular_zero: ∀ s: S, φ (ofMul (e_i_regular s)) = 0 := by
+    dsimp [ofMul]
+    intro s
+    unfold e_i_regular
+    simp
+    simp [phi_ofmul]
+
+  have closure_enlarge: Subgroup.closure ({1, γ, γ⁻¹} ∪ (e_i '' Set.univ)) = Subgroup.closure (({1, γ, γ⁻¹} ∪ (e_i_regular '' Set.univ))^(max_phi + 1)) := by
+    rw [Subgroup.closure_pow]
+    . simp
+    . unfold max_phi
+      simp
+
+  conv =>
+    arg 1
+    arg 1
+    arg 2
+    arg 1
+    equals e_i_regular =>
+      rfl
+  rw [closure_enlarge]
+  apply Subgroup.closure_eq_of_le
+  .
+    rw [hGS.generates]
+    exact fun ⦃a⦄ a ↦ trivial
+  .
+    simp
+    intro s hs
+    simp
+    rw [← mem_toSubmonoid]
+    rw [Subgroup.closure_toSubmonoid]
+    dsimp [Membership.mem]
+    rw [Submonoid.closure_eq_image_prod]
+    -- TODO - why do we need any of this?
+    dsimp [Set.Mem]
+    rw [← Set.mem_def (a := s) (s := List.prod '' _)]
+    rw [Set.mem_image]
+
+
+    have foo := Submonoid.exists_list_of_mem_closure (s := ((S ∪ S⁻¹) : Set G)) (x := s)
+    rw [← Subgroup.closure_toSubmonoid _] at foo
+    simp only [mem_toSubmonoid, Finset.mem_coe] at foo
+    have generates := hGS.generates
+    have x_in_top: s ∈ (⊤: Set G) := by
+      simp
+
+    rw [← generates] at x_in_top
+    specialize foo x_in_top
+    obtain ⟨l, ⟨l_mem_s, l_prod⟩⟩ := foo
+    norm_cast at l_mem_s
+    rw [s_union_sinv] at l_mem_s
+
+    let l_attach := l.attach
+    let list_with_mem: List S := (l_attach).map (fun a => ⟨a.val, l_mem_s a.val a.prop⟩)
+    let new_list := list_with_mem.map (fun s => (e_i s) + ofMul (γ^(((φ (ofMul s.val))))))
+
+    have cancel_add_minus: max_phi - 1 + 1 = max_phi := by
+      omega
+
+    use new_list
+    refine ⟨?_, ?_⟩
+    .
+      simp
+      intro x hx
+      unfold new_list list_with_mem l_attach at hx
+      simp at hx
+      obtain ⟨a, ha, x_eq_sum⟩ := hx
+      left
+
+      have gamma_phi_in_minus_plus: γ^(φ a) ∈ ({1, γ, γ⁻¹} ∪ Set.range e_i_regular) ^ (max_phi - 1  +1) := by
+        by_cases val_pos: 0 < φ a
+        .
+          have eq_self: Int.natAbs (φ a) = φ a := by
+            simp [val_pos]
+            linarith
+          conv =>
+            arg 2
+            equals γ ^ (Int.natAbs (φ a)) =>
+              nth_rw 1 [← eq_self]
+              norm_cast
+          apply Set.pow_subset_pow_right (m := Int.natAbs (φ a)) (n := max_phi - 1 + 1)
+          . simp
+          .
+            rw [cancel_add_minus]
+            unfold max_phi
+            simp
+            right
+            apply Finset.le_max'
+            simp
+            use a
+            refine ⟨l_mem_s a ha, ?_⟩
+            conv =>
+              pattern ofMul a
+              equals a => rfl
+          .
+            apply Set.pow_mem_pow
+            simp
+        .
+          have eq_neg_abs: (φ a) = -(φ a).natAbs := by
+            rw [← Int.abs_eq_natAbs]
+            simp at val_pos
+            rw [← abs_eq_neg_self] at val_pos
+            omega
+          rw [eq_neg_abs]
+          conv =>
+            arg 2
+            equals (γ⁻¹) ^ (↑(φ a).natAbs) =>
+              simp
+              rw [Int.abs_eq_natAbs]
+              norm_cast
+          -- TOOD - deduplicate this with the positive case
+          apply Set.pow_subset_pow_right (m := Int.natAbs (φ a)) (n := max_phi - 1 + 1)
+          . simp
+          .
+            rw [cancel_add_minus]
+            unfold max_phi
+            simp
+            right
+            apply Finset.le_max'
+            simp
+            use a
+            refine ⟨l_mem_s a ha, ?_⟩
+            conv =>
+              pattern ofMul a
+              equals a => rfl
+          .
+            apply Set.pow_mem_pow
+            simp
+      have a_mem_s: a ∈ S := by exact l_mem_s a ha
+      have prod_mem_power: e_i_regular ⟨a, a_mem_s⟩ * γ ^ φ (ofMul a) ∈ ({1, γ, γ⁻¹} ∪ Set.range e_i_regular) ^ (max_phi - 1 + 1 + 1) := by
+        rw [pow_succ']
+        rw [Set.mem_mul]
+        use e_i_regular ⟨a, a_mem_s⟩
+        refine ⟨by simp, ?_⟩
+        use γ ^ φ (ofMul a)
+        refine ⟨gamma_phi_in_minus_plus, ?_⟩
+        simp
+
+      have prod_eq_sum: e_i ⟨a, l_mem_s a ha⟩ + φ (ofMul a) • ofMul γ = (e_i_regular ⟨a, a_mem_s⟩) * (γ ^ φ (ofMul a)) := by
+        simp [e_i, e_i_regular, cancel_add_minus]
+
+
+        conv =>
+          rhs
+          arg 1
+          equals ofMul (a* γ^(-(φ (ofMul a)))) =>
+            simp
+
+        apply_fun (fun x => x * (γ ^ (- φ (ofMul a))))
+        .
+          simp only
+          simp
+          conv =>
+            lhs
+            equals a * (γ ^ φ (ofMul a))⁻¹ =>
+              simp
+              rfl
+          conv =>
+            rhs
+            rhs
+            equals ofMul (γ ^ (- φ (ofMul a))) =>
+              simp
+
+          rw [← ofMul_mul]
+          conv =>
+            rhs
+            equals (a * γ ^ (-φ (ofMul a))) =>
+              rfl
+          simp
+        .
+          exact mul_left_injective (γ ^ (-φ (ofMul a)))
+
+
+
+
+
+
+      rw [← x_eq_sum]
+      rw [prod_eq_sum]
+      rw [cancel_add_minus] at prod_mem_power
+      apply prod_mem_power
+
+
+
+
+
+
+
+
+    unfold new_list list_with_mem l_attach
+    simp
+    conv =>
+      arg 1
+      arg 1
+      arg 1
+      arg 1
+      intro z
+      unfold e_i
+      simp
+    simp
+    conv =>
+      arg 1
+      arg 1
+      arg 1
+      equals id =>
+        rfl
+    simp
+    exact l_prod
+
+
+#print axioms e_i_and_gamma_generates_G
 
 -- The kernel of `φ` is generated by {γ_m_i}
 set_option maxHeartbeats 1000000
-lemma three_two_gamma_m_generates(φ: (Additive G) →+ ℤ) (γ: G) (hγ: φ γ = 1) : Subgroup.closure (Set.range (Function.uncurry (gamma_m_helper (S := S)  φ γ))) = AddSubgroup.toSubgroup φ.ker := by
+lemma three_two_gamma_m_generates (φ: (Additive G) →+ ℤ) (γ: G) (hγ: φ γ = 1) : Subgroup.closure (Set.range (Function.uncurry (gamma_m_helper (S := S)  φ γ))) = AddSubgroup.toSubgroup φ.ker := by
   have phi_ofmul: φ (ofMul γ) = 1 := by
     exact hγ
   --
@@ -11563,6 +11793,9 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                 exact x_eq_y
 
 
+
+        ext a
+        simp
         sorry
       . have foo := data.finite_index
         rw [Subgroup.finiteIndex_iff] at foo
