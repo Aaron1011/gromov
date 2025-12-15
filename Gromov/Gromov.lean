@@ -12251,6 +12251,27 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
       g_infinite := by
         sorry
     }
-    have new_poly := poly_growth_equiv_generates generates Q_FG.out.choose (d := n - 1) sorry
-    have prev := @ih generates (n - 1) sorry (by omega)
+    have h_poly := h
+    unfold HasPolynomialGrowthD at h_poly
+    obtain ⟨a, ha⟩ := h_poly
+    have a_ne_zero: a ≠ 0 := by
+      by_contra a_eq_zero
+      simp [a_eq_zero] at ha
+      specialize ha 1 (by simp)
+      simp at ha
+      have s_nonempty := hGS.one_mem
+      grind
+    have poly := poly_growth_equiv a (n - 1) (by omega) (by sorry) generates.S (sorry) (by sorry) (by sorry) sorry
+
+    --obtain ⟨b, b_ge, hb⟩ := poly
+    -- have new_poly := poly_growth_equiv_generates generates Q_FG.out.choose (d := n - 1) (by
+    --   unfold HasPolynomialGrowthD
+    --   use b
+    --   exact hb
+    -- )
+    have prev := @ih generates (n - 1) (by
+      unfold HasPolynomialGrowthD
+      obtain ⟨b, b_ge, hb⟩ := poly
+      use b
+    ) (by omega)
     exact prev
