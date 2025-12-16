@@ -11496,16 +11496,24 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                 simp
                 rw [Subgroup.mem_subgroupOf]
                 simp_rw [Set.insert_eq, Subgroup.closure_union]
-                apply Subgroup.mem_sup_left
-                rw [Subgroup.mem_closure_singleton]
-                use (z / (α : ℤ)) / α
-                conv =>
-                  lhs
-                  arg 1
-                  equals toMul γ ^ (α : ℤ) =>
-                    simp
+                rw [← SetLike.mem_coe]
+                rw [subgroup_coe_sup_invariant (by sorry)]
+                apply Set.mul_mem_mul
+                .
+                  simp
+                  rw [Subgroup.mem_closure_singleton]
+                  use (z / (α : ℤ))
+                  conv =>
+                    lhs
+                    arg 1
+                    equals toMul γ ^ (α : ℤ) =>
+                      simp
 
-                rw [← zpow_mul]
+                  rw [← zpow_mul]
+                .
+                  simp
+                  apply Subgroup.mem_closure_of_mem
+                  exact hb
               .
                 simp
                 rw [Subtype.ext_iff]
@@ -11524,15 +11532,16 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                 rfl
             .
               simp_rw [Set.insert_eq, Subgroup.closure_union]
-              apply Subgroup.mem_sup_left
-              rw [Subgroup.mem_closure_singleton]
-              use (z / (α : ℤ))
-              rfl
+              rw [← SetLike.mem_coe]
+              rw [subgroup_coe_sup_invariant (by sorry)]
+              apply Set.mul_mem_mul
+              .
+                simp [Subgroup.mem_closure_singleton]
+              .
+                simp
+                apply Subgroup.mem_closure_of_mem
+                exact hb
 
-
-
-
-          sorry
         .
 
         -- have gamma_alpha_relindex: (Subgroup.closure ({toMul γ ^ α} ∪ (new_N'_map '' N'))).IsFiniteRelIndex (Subgroup.closure ({toMul γ} ∪ (new_N'_map '' N'))) := by
