@@ -11453,7 +11453,86 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
         rw [← Subgroup.relIndex_mul_index gamma_alpha_le_gamma]
         simp
         refine ⟨?_, ?_⟩
-        . sorry
+        .
+          unfold Subgroup.relIndex
+          rw [← ne_eq]
+          rw [← Subgroup.finiteIndex_iff]
+          apply Subgroup.finiteIndex_of_leftCoset_cover_const (s := Finset.Ioo (-α : ℤ) (α)) (g := fun a => ⟨a • γ, (by
+            rw [Set.insert_eq, Subgroup.closure_union]
+            apply Subgroup.mem_sup_left
+            rw [Subgroup.mem_closure_singleton]
+            use a
+            rfl
+          )⟩)
+          ext g
+          simp
+          have g_prop := g.property
+          simp_rw [Set.insert_eq, Subgroup.closure_union] at g_prop
+          rw [← MonoidHom.map_closure] at g_prop
+          simp at g_prop
+          rw [← SetLike.mem_coe] at g_prop
+          rw [subgroup_coe_sup_invariant (by sorry)] at g_prop
+          rw [Set.mem_mul] at g_prop
+          obtain ⟨a, ha, b, hb, g_eq⟩ := g_prop
+          simp at ha
+          rw [Subgroup.mem_closure_singleton] at ha
+          obtain ⟨z, hz⟩ := ha
+          use z % α
+          refine ⟨?_, ?_⟩
+          .
+            have foo := Int.emod_lt_abs z (b := α) (by grind)
+            rw [lt_abs] at foo
+            refine ⟨?_, ?_⟩
+            .
+              have bar := Int.emod_nonneg z (b := α) (by simpa using alpha_nonzero)
+              grind
+            . grind
+          .
+            rw [Set.mem_smul_set]
+            use ⟨(((α : ℤ) * (z / (α : ℤ))) • γ) + (Additive.ofMul b), ?_⟩
+            .
+              refine ⟨?_, ?_⟩
+              .
+                simp
+                rw [Subgroup.mem_subgroupOf]
+                simp_rw [Set.insert_eq, Subgroup.closure_union]
+                apply Subgroup.mem_sup_left
+                rw [Subgroup.mem_closure_singleton]
+                use (z / (α : ℤ)) / α
+                conv =>
+                  lhs
+                  arg 1
+                  equals toMul γ ^ (α : ℤ) =>
+                    simp
+
+                rw [← zpow_mul]
+              .
+                simp
+                rw [Subtype.ext_iff]
+                simp
+                rw [← g_eq, ←hz]
+                nth_rw 3 [← Int.mul_ediv_add_emod (a := z) (b := α)]
+                rw [← toMul_zsmul]
+                conv =>
+                  lhs
+                  equals ((z % ↑α) • γ) + ((↑α * (z / ↑α)) • γ + ofMul b) =>
+                    rfl
+
+                rw [← add_assoc]
+                rw [← add_zsmul]
+                rw [add_comm]
+                rfl
+            .
+              simp_rw [Set.insert_eq, Subgroup.closure_union]
+              apply Subgroup.mem_sup_left
+              rw [Subgroup.mem_closure_singleton]
+              use (z / (α : ℤ))
+              rfl
+
+
+
+
+          sorry
         .
 
         -- have gamma_alpha_relindex: (Subgroup.closure ({toMul γ ^ α} ∪ (new_N'_map '' N'))).IsFiniteRelIndex (Subgroup.closure ({toMul γ} ∪ (new_N'_map '' N'))) := by
