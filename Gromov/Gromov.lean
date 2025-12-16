@@ -11075,7 +11075,7 @@ def iteratedCommutator {T: Type*} [Group T] {M: Subgroup T} (base right: M) (n: 
 -- StrictMono.not_bddAbove_range_of_wellFoundedLT
 
 
--- TODO - generalize and upstream to mathlib
+-- TODO - replace this with Subgroup.coe_mul_of_left_le_normalizer_right
 lemma subgroup_coe_sup_invariant {G: Type*} [Group G] {A B: Subgroup G} (hab: ∀ b ∈ B, ∀ a ∈ A, (b * a * b⁻¹) ∈ A): ↑((A ⊔ B) : Subgroup G) = (A: Set G) * (B: Set G) := by
   ext a
   simp
@@ -11423,259 +11423,301 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       refine ⟨?_, ?_⟩
       .
 
-        have N'_subgroup_index: (N'.subgroupOf N).FiniteIndex := by
+        simp_rw [Set.insert_eq]
 
+        have gamma_alpha_le_gamma: (Subgroup.closure ({toMul γ ^ α} ∪ (new_N'_map '' N')) ≤ (Subgroup.closure ({toMul γ} ∪ (new_N'_map '' N')))) := by
           sorry
 
-        have N'_index: N'.FiniteIndex := by
-
-          sorry
-
-        obtain ⟨s, s_compl, s_cosets⟩ := Subgroup.exists_leftTransversal_of_FiniteIndex (D := N') (H := ⊤) (by simp)
-        simp at s_cosets
-
-        rw [← ne_eq]
-        rw [← Subgroup.finiteIndex_iff]
-        apply Subgroup.finiteIndex_of_leftCoset_cover_const (s := s) (g := fun g => g.val.val.toMul)
-        simp_rw [Set.insert_eq, Subgroup.closure_union]
-        rename_bvar i → g
-
-        -- let N'_normal: N'.Normal := by
-        --   infer_instance
-
-        -- rw [← Set.iUnion_smul]
-        -- rw [Subgroup.coe_sup]
-        -- let A: Subgroup data.G' := ⊤
-        --have bar := Subgroup.coe_pointwise_smul (1 : A) A
         conv =>
           arg 1
           arg 1
-          intro i
-          arg 1
-          intro hi
-          rw [sup_comm]
-          rw [subgroup_coe_sup_invariant (by
-            intro gamma_pow h_gamma_pow n hn
-            conv at hn =>
-              arg 1
-              equals ((Subgroup.closure (new_N'_map '' ↑N'))) =>
-                rfl
-            simp_rw [← MonoidHom.map_closure] at hn
-            simp only [closure_eq] at hn
-            conv =>
-              arg 1
-              equals ((Subgroup.closure (new_N'_map '' ↑N'))) =>
-                rfl
-            simp_rw [← MonoidHom.map_closure]
-            simp only [closure_eq]
-            let conj_aut := MulAut.conjNormal gamma_pow (H := data.φ.ker.toSubgroup')
-            have conj_map := N'_char.fixed conj_aut
-            rw [Subgroup.ext_iff] at conj_map
-            rw [Subgroup.mem_map]
-
-            have conj_mem_ker: gamma_pow * n * gamma_pow⁻¹ ∈ data.φ.ker := by
-              simp
-              conv =>
-                lhs
-                arg 2
-                equals (Additive.ofMul gamma_pow) + (Additive.ofMul n) + (-(Additive.ofMul gamma_pow)) =>
-                  rfl
-              rw [Subgroup.mem_map] at hn
-              obtain ⟨y, hy, n_eq⟩ := hn
-              simp
-              have y_prop := y.property
-              simp_rw [← n_eq]
-              rw [AddMonoidHom.mem_ker] at y_prop
-              conv =>
-                lhs
-                arg 1
-                arg 2
-                equals 0 =>
-                  exact y_prop
-              group
-              conv =>
-                lhs
-                -- TODO - why do we need this explicit equals?
-                equals data.φ (ofMul gamma_pow) -data.φ (ofMul gamma_pow) =>
-                  rw [sub_eq_add_neg]
-                  congr
-                  rw [← AddMonoidHom.map_neg]
-                  rfl
-
-              group
-
-            use ⟨gamma_pow * n * gamma_pow⁻¹, conj_mem_ker⟩
-            .
-              refine ⟨?_, ?_⟩
-              .
-
-                rw [Subgroup.mem_map] at hn
-                obtain ⟨y, hy, n_eq⟩ := hn
-                conv =>
-                  arg 2
-                  equals conj_aut y =>
-                    rw [Subtype.ext_iff]
-                    simp [conj_aut]
-                    simp [← n_eq, new_N'_map]
-                    rfl
-                specialize conj_map y
-                simp [hy] at conj_map
-                exact conj_map
-              .
-                rfl
-          )]
-          rw [set_smul_eq_mul]
-          rw [← mul_assoc]
-          rw [← set_smul_eq_mul]
-
-
-        simp_rw [← Set.iUnion_mul]
-        conv =>
           arg 1
           arg 1
-          equals Additive.toMul '' data.φ.ker =>
-            apply_fun (fun s => Additive.toMul '' (Subtype.val '' s)) at s_cosets
-            conv at s_cosets =>
-              rhs
-              equals Additive.toMul '' data.φ.ker =>
-                ext a
-                simp
-            rw [← s_cosets]
-            conv =>
-              arg 1
-              arg 1
-              intro i
-              arg 1
-              intro hi
-              arg 2
-              equals ↑((Subgroup.closure (new_N'_map '' ↑N'))) =>
-                rfl
+          arg 2
+          equals (new_N'_map '' N') => rfl
+        rw [← Subgroup.relIndex_mul_index gamma_alpha_le_gamma]
+        simp
+        refine ⟨?_, ?_⟩
+        . sorry
+        .
 
-            simp_rw [← MonoidHom.map_closure]
-            simp_rw [Set.image_iUnion]
+        -- have gamma_alpha_relindex: (Subgroup.closure ({toMul γ ^ α} ∪ (new_N'_map '' N'))).IsFiniteRelIndex (Subgroup.closure ({toMul γ} ∪ (new_N'_map '' N'))) := by
+        --   sorry
 
-            apply Set.iUnion_congr
+
+
+        -- have gamma_finite_index: (Subgroup.closure ({toMul γ} ∪ (new_N'_map '' N'))).FiniteIndex := by
+        --   sorry
+
+        -- rw [← ne_eq]
+        -- rw [← Subgroup.finiteIndex_iff]
+        -- apply Subgroup.finiteIndex_of_le gamma_alpha_le_gamma
+
+          have N'_subgroup_index: (N'.subgroupOf N).FiniteIndex := by
+
+            sorry
+
+          have N'_index: N'.FiniteIndex := by
+
+            sorry
+
+          obtain ⟨s, s_compl, s_cosets⟩ := Subgroup.exists_leftTransversal_of_FiniteIndex (D := N') (H := ⊤) (by simp)
+          simp at s_cosets
+
+          rw [← ne_eq]
+          rw [← Subgroup.finiteIndex_iff]
+          apply Subgroup.finiteIndex_of_leftCoset_cover_const (s := s) (g := fun g => g.val.val.toMul)
+          simp_rw [Set.insert_eq, Subgroup.closure_union]
+          rename_bvar i → g
+
+          -- let N'_normal: N'.Normal := by
+          --   infer_instance
+
+          -- rw [← Set.iUnion_smul]
+          -- rw [Subgroup.coe_sup]
+          -- let A: Subgroup data.G' := ⊤
+          --have bar := Subgroup.coe_pointwise_smul (1 : A) A
+          conv =>
+            arg 1
+            arg 1
             intro i
-            apply Set.iUnion_congr
+            arg 1
             intro hi
-            ext z
-            simp only [closure_eq, coe_map]
-            rw [Set.mem_smul_set]
-            rw [Set.mem_image]
-            refine ⟨?_, ?_⟩
-            .
-              intro hy
-              obtain ⟨a, ha⟩ := hy
-              use (i • a)
-              refine ⟨?_, ha.2⟩
-              simp
-              have foo := ha.1
-              rw [Set.mem_image] at foo
-              obtain ⟨b, b_mem, a_eq_b⟩ := foo
-              use ?_
-              .
-                use b
-                refine ⟨b_mem, ?_⟩
-                rw [Subtype.ext_iff]
-                simp_rw [← a_eq_b]
-                rfl
-              .
-                simp_rw [← a_eq_b]
-                have b_prop := b.property
-                simp [new_N'_map]
+            rw [sup_comm]
+            rw [subgroup_coe_sup_invariant (by
+              intro gamma_pow h_gamma_pow n hn
+              conv at hn =>
+                arg 1
+                equals ((Subgroup.closure (new_N'_map '' ↑N'))) =>
+                  rfl
+              simp_rw [← MonoidHom.map_closure] at hn
+              simp only [closure_eq] at hn
+              conv =>
+                arg 1
+                equals ((Subgroup.closure (new_N'_map '' ↑N'))) =>
+                  rfl
+              simp_rw [← MonoidHom.map_closure]
+              simp only [closure_eq]
+              let conj_aut := MulAut.conjNormal gamma_pow (H := data.φ.ker.toSubgroup')
+              have conj_map := N'_char.fixed conj_aut
+              rw [Subgroup.ext_iff] at conj_map
+              rw [Subgroup.mem_map]
+
+              have conj_mem_ker: gamma_pow * n * gamma_pow⁻¹ ∈ data.φ.ker := by
+                simp
                 conv =>
                   lhs
-                  equals data.φ (i.val.val + b.val) =>
+                  arg 2
+                  equals (Additive.ofMul gamma_pow) + (Additive.ofMul n) + (-(Additive.ofMul gamma_pow)) =>
                     rfl
-                rw [AddMonoidHom.map_add]
-                have i_prop := i.val.property
-                have b_prop := b.property
-                rw [AddMonoidHom.mem_ker] at i_prop b_prop
-                simp [i_prop, b_prop]
-            .
-              intro hx
-              obtain ⟨x, hx, x_eq⟩ := hx
-              simp at hx
-              obtain ⟨x_ker, x_eq_smul⟩ := hx
-              rw [Set.mem_smul_set] at x_eq_smul
-              obtain ⟨y, hy, x_eq_y⟩ := x_eq_smul
-              use y.val
+                rw [Subgroup.mem_map] at hn
+                obtain ⟨y, hy, n_eq⟩ := hn
+                simp
+                have y_prop := y.property
+                simp_rw [← n_eq]
+                rw [AddMonoidHom.mem_ker] at y_prop
+                conv =>
+                  lhs
+                  arg 1
+                  arg 2
+                  equals 0 =>
+                    exact y_prop
+                group
+                conv =>
+                  lhs
+                  -- TODO - why do we need this explicit equals?
+                  equals data.φ (ofMul gamma_pow) -data.φ (ofMul gamma_pow) =>
+                    rw [sub_eq_add_neg]
+                    congr
+                    rw [← AddMonoidHom.map_neg]
+                    rfl
+
+                group
+
+              use ⟨gamma_pow * n * gamma_pow⁻¹, conj_mem_ker⟩
+              .
+                refine ⟨?_, ?_⟩
+                .
+
+                  rw [Subgroup.mem_map] at hn
+                  obtain ⟨y, hy, n_eq⟩ := hn
+                  conv =>
+                    arg 2
+                    equals conj_aut y =>
+                      rw [Subtype.ext_iff]
+                      simp [conj_aut]
+                      simp [← n_eq, new_N'_map]
+                      rfl
+                  specialize conj_map y
+                  simp [hy] at conj_map
+                  exact conj_map
+                .
+                  rfl
+            )]
+            rw [set_smul_eq_mul]
+            rw [← mul_assoc]
+            rw [← set_smul_eq_mul]
+
+
+          simp_rw [← Set.iUnion_mul]
+          conv =>
+            arg 1
+            arg 1
+            equals Additive.toMul '' data.φ.ker =>
+              apply_fun (fun s => Additive.toMul '' (Subtype.val '' s)) at s_cosets
+              conv at s_cosets =>
+                rhs
+                equals Additive.toMul '' data.φ.ker =>
+                  ext a
+                  simp
+              rw [← s_cosets]
+              conv =>
+                arg 1
+                arg 1
+                intro i
+                arg 1
+                intro hi
+                arg 2
+                equals ↑((Subgroup.closure (new_N'_map '' ↑N'))) =>
+                  rfl
+
+              simp_rw [← MonoidHom.map_closure]
+              simp_rw [Set.image_iUnion]
+
+              apply Set.iUnion_congr
+              intro i
+              apply Set.iUnion_congr
+              intro hi
+              ext z
+              simp only [closure_eq, coe_map]
+              rw [Set.mem_smul_set]
+              rw [Set.mem_image]
               refine ⟨?_, ?_⟩
               .
-                rw [Set.mem_image]
-                use y
-                refine ⟨hy, rfl⟩
-              . simp_rw [← x_eq]
-                rw [Subtype.ext_iff] at x_eq_y
-                simp at x_eq_y
-                exact x_eq_y
-
-
-
-        ext a
-        have ker_gen := e_i_and_gamma_generates_G data.φ γ hγ
-        have foo := new_generates.generates
-        simp at foo
-        simp [foo] at ker_gen
-        rw [Subgroup.ext_iff] at ker_gen
-        simp
-        simp at ker_gen
-        specialize ker_gen a
-        rw [Subgroup.closure_union] at ker_gen
-        rw [← SetLike.mem_coe] at ker_gen
-        rw [sup_comm] at ker_gen
-        rw [subgroup_coe_sup_invariant] at ker_gen
-        .
-          rw [Set.mem_mul] at ker_gen
-          obtain ⟨c, hc, d, hd, a_eq⟩ := ker_gen
-          rw [← a_eq]
-          apply Set.mul_mem_mul
-          .
-            have phi_zero_on: Set.EqOn (data.φ) (0 : _ →+ _) (Set.range (e_i_with_gamma data.φ γ)) := by
-              simp
-              ext s
-              simp [e_i_with_gamma]
-              conv =>
-                lhs
-                rhs
-                rhs
-                rhs
-                equals 1 =>
-                  exact hγ
-
-              simp
-              group
-              apply sub_self
-            apply AddMonoidHom.eqOn_closure at phi_zero_on
-            simp
-            have foo := phi_zero_on (x := ofMul c) (by
-              simp at hc
-              simp
-              rw [← AddSubgroup.mem_toSubgroup']
-              rw [AddSubgroup.toSubgroup'_closure]
-              exact hc
-            )
-            simpa using foo
-          .
-            -- WRONG - this will require adjusting eiher G'' or our nilpotency proof
-            sorry
-        . conv =>
-            intro b
-            arg 1
-            arg 1
-            equals Subgroup.closure {γ.toMul} =>
-              simp
-              conv =>
-                arg 1
-                arg 1
-                equals {γ.toMul} ∪ {γ.toMul⁻¹} =>
+                intro hy
+                obtain ⟨a, ha⟩ := hy
+                use (i • a)
+                refine ⟨?_, ha.2⟩
+                simp
+                have foo := ha.1
+                rw [Set.mem_image] at foo
+                obtain ⟨b, b_mem, a_eq_b⟩ := foo
+                use ?_
+                .
+                  use b
+                  refine ⟨b_mem, ?_⟩
+                  rw [Subtype.ext_iff]
+                  simp_rw [← a_eq_b]
                   rfl
-              rw [Subgroup.closure_union]
+                .
+                  simp_rw [← a_eq_b]
+                  have b_prop := b.property
+                  simp [new_N'_map]
+                  conv =>
+                    lhs
+                    equals data.φ (i.val.val + b.val) =>
+                      rfl
+                  rw [AddMonoidHom.map_add]
+                  have i_prop := i.val.property
+                  have b_prop := b.property
+                  rw [AddMonoidHom.mem_ker] at i_prop b_prop
+                  simp [i_prop, b_prop]
+              .
+                intro hx
+                obtain ⟨x, hx, x_eq⟩ := hx
+                simp at hx
+                obtain ⟨x_ker, x_eq_smul⟩ := hx
+                rw [Set.mem_smul_set] at x_eq_smul
+                obtain ⟨y, hy, x_eq_y⟩ := x_eq_smul
+                use y.val
+                refine ⟨?_, ?_⟩
+                .
+                  rw [Set.mem_image]
+                  use y
+                  refine ⟨hy, rfl⟩
+                . simp_rw [← x_eq]
+                  rw [Subtype.ext_iff] at x_eq_y
+                  simp at x_eq_y
+                  exact x_eq_y
+
+
+
+          ext a
+          have ker_gen := e_i_and_gamma_generates_G data.φ γ hγ
+          have foo := new_generates.generates
+          simp at foo
+          simp [foo] at ker_gen
+          rw [Subgroup.ext_iff] at ker_gen
+          simp
+          simp at ker_gen
+          specialize ker_gen a
+          rw [Subgroup.closure_union] at ker_gen
+          rw [← SetLike.mem_coe] at ker_gen
+          rw [sup_comm] at ker_gen
+          rw [subgroup_coe_sup_invariant] at ker_gen
+          .
+            rw [Set.mem_mul] at ker_gen
+            obtain ⟨c, hc, d, hd, a_eq⟩ := ker_gen
+            rw [← a_eq]
+            apply Set.mul_mem_mul
+            .
+              have phi_zero_on: Set.EqOn (data.φ) (0 : _ →+ _) (Set.range (e_i_with_gamma data.φ γ)) := by
+                simp
+                ext s
+                simp [e_i_with_gamma]
+                conv =>
+                  lhs
+                  rhs
+                  rhs
+                  rhs
+                  equals 1 =>
+                    exact hγ
+
+                simp
+                group
+                apply sub_self
+              apply AddMonoidHom.eqOn_closure at phi_zero_on
               simp
+              have foo := phi_zero_on (x := ofMul c) (by
+                simp at hc
+                simp
+                rw [← AddSubgroup.mem_toSubgroup']
+                rw [AddSubgroup.toSubgroup'_closure]
+                exact hc
+              )
+              simpa using foo
+            .
+              -- TODO - deduplicate this
+              conv at hd =>
+                arg 1
+                arg 1
+                equals Subgroup.closure {γ.toMul} =>
+                  simp
+                  conv =>
+                    arg 1
+                    arg 1
+                    equals {γ.toMul} ∪ {γ.toMul⁻¹} =>
+                      rfl
+                  rw [Subgroup.closure_union]
+                  simp
+              exact hd
+          . conv =>
+              intro b
+              arg 1
+              arg 1
+              equals Subgroup.closure {γ.toMul} =>
+                simp
+                conv =>
+                  arg 1
+                  arg 1
+                  equals {γ.toMul} ∪ {γ.toMul⁻¹} =>
+                    rfl
+                rw [Subgroup.closure_union]
+                simp
 
-          intro b hb a ha
+            intro b hb a ha
 
-          sorry
+            sorry
       . have foo := data.finite_index
         rw [Subgroup.finiteIndex_iff] at foo
         exact foo
