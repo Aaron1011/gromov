@@ -11426,7 +11426,22 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
         simp_rw [Set.insert_eq]
 
         have gamma_alpha_le_gamma: (Subgroup.closure ({toMul γ ^ α} ∪ (new_N'_map '' N')) ≤ (Subgroup.closure ({toMul γ} ∪ (new_N'_map '' N')))) := by
-          sorry
+          simp
+          intro g hg
+          rw [Set.insert_eq]
+          cases hg
+          . rename_i g_eq_gamma
+            rw [Subgroup.closure_union]
+            apply Subgroup.mem_sup_left
+            rw [Subgroup.mem_closure_singleton]
+            use α
+            rw [g_eq_gamma]
+            simp
+          . rename_i g_mem_map
+            rw [Subgroup.closure_union]
+            apply Subgroup.mem_sup_right
+            apply Subgroup.mem_closure_of_mem
+            exact g_mem_map
 
         conv =>
           arg 1
