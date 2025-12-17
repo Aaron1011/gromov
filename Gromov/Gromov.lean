@@ -11410,6 +11410,66 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       rw [eq_comm] at hγ
       contradiction
     ) m alpha_is_unipotent
+
+    have map_N'_invariant_gamma: ∀ b ∈ Subgroup.closure {toMul γ}, ∀ a ∈ map new_N'_map N', b * a * b⁻¹ ∈ map new_N'_map N'  := by
+      intro gamma_pow h_gamma_pow n hn
+      let conj_aut := MulAut.conjNormal gamma_pow (H := data.φ.ker.toSubgroup')
+      have conj_map := N'_char.fixed conj_aut
+      rw [Subgroup.ext_iff] at conj_map
+      rw [Subgroup.mem_map]
+
+      have conj_mem_ker: gamma_pow * n * gamma_pow⁻¹ ∈ data.φ.ker := by
+        simp
+        conv =>
+          lhs
+          arg 2
+          equals (Additive.ofMul gamma_pow) + (Additive.ofMul n) + (-(Additive.ofMul gamma_pow)) =>
+            rfl
+        rw [Subgroup.mem_map] at hn
+        obtain ⟨y, hy, n_eq⟩ := hn
+        simp
+        have y_prop := y.property
+        simp_rw [← n_eq]
+        rw [AddMonoidHom.mem_ker] at y_prop
+        conv =>
+          lhs
+          arg 1
+          arg 2
+          equals 0 =>
+            exact y_prop
+        group
+        conv =>
+          lhs
+          -- TODO - why do we need this explicit equals?
+          equals data.φ (ofMul gamma_pow) -data.φ (ofMul gamma_pow) =>
+            rw [sub_eq_add_neg]
+            congr
+            rw [← AddMonoidHom.map_neg]
+            rfl
+
+        group
+
+      use ⟨gamma_pow * n * gamma_pow⁻¹, conj_mem_ker⟩
+      .
+        refine ⟨?_, ?_⟩
+        .
+
+          rw [Subgroup.mem_map] at hn
+          obtain ⟨y, hy, n_eq⟩ := hn
+          conv =>
+            arg 2
+            equals conj_aut y =>
+              rw [Subtype.ext_iff]
+              simp [conj_aut]
+              simp [← n_eq, new_N'_map]
+              rfl
+          specialize conj_map y
+          simp [hy] at conj_map
+          exact conj_map
+        .
+          rfl
+
+
     rw [Group.IsVirtuallyNilpotent]
     rw [Group.isNilpotent_congr (Subgroup.equivMapOfInjective _ (Subgroup.subtype _) (by simp))] at alpha_nilpotent
     -- TODO - this is wrong. We need to use {toMul γ} so that we can prove that it has finite index (G'' is defined using
@@ -11472,7 +11532,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
             arg 1
             intro hi
             rw [(normal_iff_eq_cosets _).mp (by
-
+              apply Subgroup.normal_subgroupOf
               sorry
             )]
           ext g
@@ -11484,8 +11544,6 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
           rw [← SetLike.mem_coe] at g_prop
           rw [sup_comm] at g_prop
 
-          have map_N'_invariant_gamma: ∀ b ∈ Subgroup.closure {toMul γ}, ∀ a ∈ map new_N'_map N', b * a * b⁻¹ ∈ map new_N'_map N'  := by
-            sorry
 
           rw [subgroup_coe_sup_invariant map_N'_invariant_gamma] at g_prop
           rw [Set.mem_mul] at g_prop
@@ -11649,61 +11707,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                   rfl
               simp_rw [← MonoidHom.map_closure]
               simp only [closure_eq]
-              let conj_aut := MulAut.conjNormal gamma_pow (H := data.φ.ker.toSubgroup')
-              have conj_map := N'_char.fixed conj_aut
-              rw [Subgroup.ext_iff] at conj_map
-              rw [Subgroup.mem_map]
-
-              have conj_mem_ker: gamma_pow * n * gamma_pow⁻¹ ∈ data.φ.ker := by
-                simp
-                conv =>
-                  lhs
-                  arg 2
-                  equals (Additive.ofMul gamma_pow) + (Additive.ofMul n) + (-(Additive.ofMul gamma_pow)) =>
-                    rfl
-                rw [Subgroup.mem_map] at hn
-                obtain ⟨y, hy, n_eq⟩ := hn
-                simp
-                have y_prop := y.property
-                simp_rw [← n_eq]
-                rw [AddMonoidHom.mem_ker] at y_prop
-                conv =>
-                  lhs
-                  arg 1
-                  arg 2
-                  equals 0 =>
-                    exact y_prop
-                group
-                conv =>
-                  lhs
-                  -- TODO - why do we need this explicit equals?
-                  equals data.φ (ofMul gamma_pow) -data.φ (ofMul gamma_pow) =>
-                    rw [sub_eq_add_neg]
-                    congr
-                    rw [← AddMonoidHom.map_neg]
-                    rfl
-
-                group
-
-              use ⟨gamma_pow * n * gamma_pow⁻¹, conj_mem_ker⟩
-              .
-                refine ⟨?_, ?_⟩
-                .
-
-                  rw [Subgroup.mem_map] at hn
-                  obtain ⟨y, hy, n_eq⟩ := hn
-                  conv =>
-                    arg 2
-                    equals conj_aut y =>
-                      rw [Subtype.ext_iff]
-                      simp [conj_aut]
-                      simp [← n_eq, new_N'_map]
-                      rfl
-                  specialize conj_map y
-                  simp [hy] at conj_map
-                  exact conj_map
-                .
-                  rfl
+              apply map_N'_invariant_gamma _ h_gamma_pow _ hn
             )]
             rw [set_smul_eq_mul]
             rw [← mul_assoc]
