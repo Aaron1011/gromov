@@ -11411,7 +11411,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       contradiction
     ) m alpha_is_unipotent
 
-    have map_N'_invariant_gamma: ∀ b ∈ Subgroup.closure {toMul γ}, ∀ a ∈ map new_N'_map N', b * a * b⁻¹ ∈ map new_N'_map N'  := by
+    have map_N'_invariant_gamma {n: ℕ}: ∀ b ∈ Subgroup.closure {γ.toMul^n}, ∀ a ∈ map new_N'_map N', b * a * b⁻¹ ∈ map new_N'_map N'  := by
       intro gamma_pow h_gamma_pow n hn
       let conj_aut := MulAut.conjNormal gamma_pow (H := data.φ.ker.toSubgroup')
       have conj_map := N'_char.fixed conj_aut
@@ -11469,6 +11469,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
         .
           rfl
 
+    have map_N'_invariant_gamma_one := map_N'_invariant_gamma (n := 1)
+    simp only [pow_one] at map_N'_invariant_gamma_one
 
     rw [Group.IsVirtuallyNilpotent]
     rw [Group.isNilpotent_congr (Subgroup.equivMapOfInjective _ (Subgroup.subtype _) (by simp))] at alpha_nilpotent
@@ -11545,7 +11547,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
           rw [sup_comm] at g_prop
 
 
-          rw [subgroup_coe_sup_invariant map_N'_invariant_gamma] at g_prop
+          rw [subgroup_coe_sup_invariant map_N'_invariant_gamma_one] at g_prop
           rw [Set.mem_mul] at g_prop
           obtain ⟨b, hb, a, ha, g_eq⟩ := g_prop
           simp at ha
@@ -11574,7 +11576,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                 rw [sup_comm]
                 rw [subgroup_coe_sup_invariant (by
                   simp_rw [← MonoidHom.map_closure, Subgroup.closure_eq]
-                  sorry
+                  apply map_N'_invariant_gamma
                 )]
                 apply Set.mul_mem_mul
                 .
