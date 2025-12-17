@@ -11520,23 +11520,23 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
           unfold Subgroup.relIndex
           rw [← ne_eq]
           rw [← Subgroup.finiteIndex_iff]
-          apply Subgroup.finiteIndex_of_leftCoset_cover_const (s := Finset.Ioo (-α : ℤ) (α)) (g := fun a => ⟨a • γ, (by
+          apply Subgroup.finiteIndex_of_rightCoset_cover_const (s := Finset.Ioo (-α : ℤ) (α)) (g := fun a => ⟨a • γ, (by
             rw [Set.insert_eq, Subgroup.closure_union]
             apply Subgroup.mem_sup_left
             rw [Subgroup.mem_closure_singleton]
             use a
             rfl
           )⟩)
-          conv =>
-            arg 1
-            arg 1
-            intro i
-            arg 1
-            intro hi
-            rw [(normal_iff_eq_cosets _).mp (by
-              apply Subgroup.normal_subgroupOf
-              sorry
-            )]
+          -- conv =>
+          --   arg 1
+          --   arg 1
+          --   intro i
+          --   arg 1
+          --   intro hi
+          --   rw [(normal_iff_eq_cosets _).mp (by
+          --     apply Subgroup.normal_subgroupOf
+          --     sorry
+          --   )]
           ext g
           simp
           have g_prop := g.property
@@ -11618,7 +11618,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
               rw [subgroup_coe_sup_invariant (by
                 simp_rw [← MonoidHom.map_closure, Subgroup.closure_eq]
-                apply map_N'_invariant_gamma
+                apply map_N'_invariant_gamma_one
               )]
               apply Set.mul_mem_mul
               .
@@ -11709,7 +11709,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                   rfl
               simp_rw [← MonoidHom.map_closure]
               simp only [closure_eq]
-              apply map_N'_invariant_gamma _ h_gamma_pow _ hn
+              apply map_N'_invariant_gamma_one _ h_gamma_pow _ hn
             )]
             rw [set_smul_eq_mul]
             rw [← mul_assoc]
