@@ -11570,44 +11570,29 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               unfold Subgroup.relIndex
               rw [← ne_eq, ← Subgroup.finiteIndex_iff]
               rw [Subgroup.finiteIndex_iff_finite_quotient]
-              apply finite_of_nilpotent_fg_order N.index (by omega)
-              intro n hn
-              rw [orderOf_eq_iff (by omega)]
-              refine ⟨?_, ?_⟩
-              .
-                -- TODO - there should be a much simpler proof
-                let a := n.out
-                rw [← QuotientGroup.out_eq' (a := n)]
-                conv =>
-                  lhs
-                  arg 1
-                  equals QuotientGroup.mk' _ (n).out =>
-                    rfl
+              apply finite_of_nilpotent_fg_order
+              intro n
+              rw [isOfFinOrder_iff_pow_eq_one]
+              use N.index
+              refine ⟨by omega, ?_⟩
+              -- TODO - there should be a much simpler proof
+              let a := n.out
+              rw [← QuotientGroup.out_eq' (a := n)]
+              conv =>
+                lhs
+                arg 1
+                equals QuotientGroup.mk' _ (n).out =>
+                  rfl
 
-                rw [← MonoidHom.map_pow]
-                simp only [QuotientGroup.mk'_apply]
-                rw [QuotientGroup.eq_one_iff]
-                rw [Subgroup.mem_subgroupOf]
-                unfold N'
-                apply Subgroup.mem_closure_of_mem
-                rw [Set.mem_range]
-                use n.out
-                simp
-              .
-                intro k k_lt k_gt
-                by_contra!
-                rw [← QuotientGroup.out_eq' (a := n)] at this
-                conv at this =>
-                  lhs
-                  arg 1
-                  equals QuotientGroup.mk' _ (n).out =>
-                    rfl
-                rw [← MonoidHom.map_pow] at this
-                simp only [QuotientGroup.mk'_apply] at this
-                rw [QuotientGroup.eq_one_iff] at this
-                rw [Subgroup.mem_subgroupOf] at this
-                unfold N' at this
-                sorry
+              rw [← MonoidHom.map_pow]
+              simp only [QuotientGroup.mk'_apply]
+              rw [QuotientGroup.eq_one_iff]
+              rw [Subgroup.mem_subgroupOf]
+              unfold N'
+              apply Subgroup.mem_closure_of_mem
+              rw [Set.mem_range]
+              use n.out
+              simp
 
 
 
