@@ -1,6 +1,7 @@
 import Mathlib
 import Mathlib.Algebra.Group.Gromov.UnitaryGromov
 import Mathlib.Algebra.Group.Gromov.UnipotentGromov
+import Mathlib.Algebra.Group.Gromov.NilpotentFinite
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false
@@ -11556,13 +11557,68 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
         -- rw [← Subgroup.finiteIndex_iff]
         -- apply Subgroup.finiteIndex_of_le gamma_alpha_le_gamma
 
-          have N'_subgroup_index: (N'.subgroupOf N).FiniteIndex := by
+          -- have N'_subgroup_index: (N'.subgroupOf N).FiniteIndex := by
 
-            sorry
+          --   sorry
 
           have N'_index: N'.FiniteIndex := by
+            rw [Subgroup.finiteIndex_iff]
+            rw [← Subgroup.relIndex_mul_index N'_le_N]
+            simp
+            refine ⟨?_, ?_⟩
+            .
+              unfold Subgroup.relIndex
+              rw [← ne_eq, ← Subgroup.finiteIndex_iff]
+              rw [Subgroup.finiteIndex_iff_finite_quotient]
+              apply finite_of_nilpotent_fg_order N.index (by omega)
+              intro n hn
+              rw [orderOf_eq_iff (by omega)]
+              refine ⟨?_, ?_⟩
+              .
+                -- TODO - there should be a much simpler proof
+                let a := n.out
+                rw [← QuotientGroup.out_eq' (a := n)]
+                conv =>
+                  lhs
+                  arg 1
+                  equals QuotientGroup.mk' _ (n).out =>
+                    rfl
 
-            sorry
+                rw [← MonoidHom.map_pow]
+                simp only [QuotientGroup.mk'_apply]
+                rw [QuotientGroup.eq_one_iff]
+                rw [Subgroup.mem_subgroupOf]
+                unfold N'
+                apply Subgroup.mem_closure_of_mem
+                rw [Set.mem_range]
+                use n.out
+                simp
+              .
+                intro k k_lt k_gt
+                by_contra!
+                rw [← QuotientGroup.out_eq' (a := n)] at this
+                conv at this =>
+                  lhs
+                  arg 1
+                  equals QuotientGroup.mk' _ (n).out =>
+                    rfl
+                rw [← MonoidHom.map_pow] at this
+                simp only [QuotientGroup.mk'_apply] at this
+                rw [QuotientGroup.eq_one_iff] at this
+                rw [Subgroup.mem_subgroupOf] at this
+                unfold N' at this
+                sorry
+
+
+
+            .
+              exact N_finite_index
+            -- simp
+
+            -- unfold N'
+
+
+
 
           obtain ⟨s, s_compl, s_cosets⟩ := Subgroup.exists_leftTransversal_of_FiniteIndex (D := N') (H := ⊤) (by simp)
           simp at s_cosets
