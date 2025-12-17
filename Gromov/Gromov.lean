@@ -11786,6 +11786,67 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
 
 
+          conv =>
+            arg 1
+            lhs
+            equals ↑data.φ.ker.toSubgroup' =>
+              ext a
+              simp
+
+          -- ext g
+          -- simp
+          -- have ker_gen := e_i_and_gamma_generates_G data.φ γ hγ
+          -- have foo := new_generates.generates
+          -- simp at foo
+          -- simp [foo] at ker_gen
+          -- rw [Subgroup.ext_iff] at ker_gen
+          -- simp at ker_gen
+          rw [← subgroup_coe_sup_invariant]
+          .
+            simp
+            rw [eq_top_iff]
+            have ker_gen := e_i_and_gamma_generates_G data.φ γ hγ
+            have foo := new_generates.generates
+            simp at foo
+            rw [← foo, ← ker_gen]
+            simp_rw [Subgroup.closure_union]
+            conv =>
+              lhs
+              arg 1
+              equals Subgroup.closure {γ.toMul} =>
+                rw [Subgroup.ext_iff]
+                simp
+                sorry
+            simp_rw [← Subgroup.closure_union]
+            rw [Subgroup.closure_le]
+            rw [Set.union_subset_iff]
+            refine ⟨?_, ?_⟩
+            .
+              intro a ha
+              simp at ha
+              simp
+              apply Subgroup.mem_sup_right
+              simp [ha]
+            .
+              intro a ha
+              apply Subgroup.mem_sup_left
+              simp
+              simp at ha
+              obtain ⟨p, hp, a_eq⟩ := ha
+              simp [e_i_with_gamma] at a_eq
+              rw [← a_eq]
+              conv =>
+                arg 1
+                arg 2
+                equals (ofMul p) + -((data.φ (ofMul p)) • γ) =>
+                  rfl
+
+
+              simp [hγ]
+              group
+              apply sub_self
+          . sorry
+          rw [← Subgroup.coe_mapa]
           ext a
           have ker_gen := e_i_and_gamma_generates_G data.φ γ hγ
           have foo := new_generates.generates
