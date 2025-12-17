@@ -11814,9 +11814,15 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               lhs
               arg 1
               equals Subgroup.closure {γ.toMul} =>
-                rw [Subgroup.ext_iff]
+                simp [Subgroup.closure_union]
+                conv =>
+                  lhs
+                  arg 1
+                  equals {γ.toMul, γ.toMul⁻¹} => rfl
+                rw [Set.insert_eq]
+                rw [Subgroup.closure_union]
                 simp
-                sorry
+
             simp_rw [← Subgroup.closure_union]
             rw [Subgroup.closure_le]
             rw [Set.union_subset_iff]
@@ -11845,7 +11851,13 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               simp [hγ]
               group
               apply sub_self
-          . sorry
+          .
+            intro b hb a ha
+            rw [Subgroup.mem_closure_singleton] at hb
+            obtain ⟨n, b_eq⟩ := hb
+            simp [← b_eq]
+            simp at ha
+            exact ha
           rw [← Subgroup.coe_mapa]
           ext a
           have ker_gen := e_i_and_gamma_generates_G data.φ γ hγ
