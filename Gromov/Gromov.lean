@@ -11465,6 +11465,16 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
             use a
             rfl
           )⟩)
+          conv =>
+            arg 1
+            arg 1
+            intro i
+            arg 1
+            intro hi
+            rw [(normal_iff_eq_cosets _).mp (by
+
+              sorry
+            )]
           ext g
           simp
           have g_prop := g.property
@@ -11472,9 +11482,14 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
           rw [← MonoidHom.map_closure] at g_prop
           simp at g_prop
           rw [← SetLike.mem_coe] at g_prop
-          rw [subgroup_coe_sup_invariant (by sorry)] at g_prop
+          rw [sup_comm] at g_prop
+
+          have map_N'_invariant_gamma: ∀ b ∈ Subgroup.closure {toMul γ}, ∀ a ∈ map new_N'_map N', b * a * b⁻¹ ∈ map new_N'_map N'  := by
+            sorry
+
+          rw [subgroup_coe_sup_invariant map_N'_invariant_gamma] at g_prop
           rw [Set.mem_mul] at g_prop
-          obtain ⟨a, ha, b, hb, g_eq⟩ := g_prop
+          obtain ⟨b, hb, a, ha, g_eq⟩ := g_prop
           simp at ha
           rw [Subgroup.mem_closure_singleton] at ha
           obtain ⟨z, hz⟩ := ha
@@ -11490,7 +11505,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
             . grind
           .
             rw [Set.mem_smul_set]
-            use ⟨(((α : ℤ) * (z / (α : ℤ))) • γ) + (Additive.ofMul b), ?_⟩
+            use ⟨(Additive.ofMul b) + (((α : ℤ) * (z / (α : ℤ))) • γ), ?_⟩
             .
               refine ⟨?_, ?_⟩
               .
@@ -11498,8 +11513,16 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                 rw [Subgroup.mem_subgroupOf]
                 simp_rw [Set.insert_eq, Subgroup.closure_union]
                 rw [← SetLike.mem_coe]
-                rw [subgroup_coe_sup_invariant (by sorry)]
+                rw [sup_comm]
+                rw [subgroup_coe_sup_invariant (by
+                  simp_rw [← MonoidHom.map_closure, Subgroup.closure_eq]
+                  sorry
+                )]
                 apply Set.mul_mem_mul
+                .
+                  simp
+                  apply Subgroup.mem_closure_of_mem
+                  exact hb
                 .
                   simp
                   rw [Subgroup.mem_closure_singleton]
@@ -11511,10 +11534,6 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                       simp
 
                   rw [← zpow_mul]
-                .
-                  simp
-                  apply Subgroup.mem_closure_of_mem
-                  exact hb
               .
                 simp
                 rw [Subtype.ext_iff]
@@ -11524,43 +11543,31 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                 rw [← toMul_zsmul]
                 conv =>
                   lhs
-                  equals ((z % ↑α) • γ) + ((↑α * (z / ↑α)) • γ + ofMul b) =>
+                  equals (ofMul b) + ((↑α * (z / ↑α)) • γ) + ((z % ↑α) • γ) =>
                     rfl
 
-                rw [← add_assoc]
-                rw [← add_zsmul]
-                rw [add_comm]
+
+
+                rw [add_zsmul]
+                rw [add_assoc]
                 rfl
             .
               simp_rw [Set.insert_eq, Subgroup.closure_union]
+              rw [sup_comm]
               rw [← SetLike.mem_coe]
-              rw [subgroup_coe_sup_invariant (by sorry)]
+
+              rw [subgroup_coe_sup_invariant (by
+                simp_rw [← MonoidHom.map_closure, Subgroup.closure_eq]
+                apply map_N'_invariant_gamma
+              )]
               apply Set.mul_mem_mul
-              .
-                simp [Subgroup.mem_closure_singleton]
               .
                 simp
                 apply Subgroup.mem_closure_of_mem
                 exact hb
-
+              .
+                simp [Subgroup.mem_closure_singleton]
         .
-
-        -- have gamma_alpha_relindex: (Subgroup.closure ({toMul γ ^ α} ∪ (new_N'_map '' N'))).IsFiniteRelIndex (Subgroup.closure ({toMul γ} ∪ (new_N'_map '' N'))) := by
-        --   sorry
-
-
-
-        -- have gamma_finite_index: (Subgroup.closure ({toMul γ} ∪ (new_N'_map '' N'))).FiniteIndex := by
-        --   sorry
-
-        -- rw [← ne_eq]
-        -- rw [← Subgroup.finiteIndex_iff]
-        -- apply Subgroup.finiteIndex_of_le gamma_alpha_le_gamma
-
-          -- have N'_subgroup_index: (N'.subgroupOf N).FiniteIndex := by
-
-          --   sorry
-
           have N'_index: N'.FiniteIndex := by
             rw [Subgroup.finiteIndex_iff]
             rw [← Subgroup.relIndex_mul_index N'_le_N]
