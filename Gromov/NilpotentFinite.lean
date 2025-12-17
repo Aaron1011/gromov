@@ -13,7 +13,7 @@ The following was proved by Aristotle:
 import Mathlib
 
 
-lemma finite_of_nilpotent_fg_order {G: Type*} [Group G] [Group.FG G] [Group.IsNilpotent G] (m: ℕ) (hm: 0 < m) (hg: ∀ g : G, g^m = 1): Finite G := by
+lemma finite_of_nilpotent_fg_order {G: Type*} [Group G] [Group.FG G] [Group.IsNilpotent G] (hG: Monoid.IsTorsion G): Finite G := by
   induction' n : Group.nilpotencyClass G with n ih generalizing G <;> simp_all +decide [ Group.nilpotencyClass ];
   · rw [ eq_top_iff ] at n ; aesop;
     -- Since the top subgroup is equal to the bottom subgroup, G must be trivial.
@@ -24,9 +24,19 @@ lemma finite_of_nilpotent_fg_order {G: Type*} [Group G] [Group.FG G] [Group.IsNi
     have h_quot_finite : Finite (G ⧸ Subgroup.center G) := by
       -- By the induction hypothesis, $G/Z(G)$ is finite.
       apply ih;
-      · rintro ⟨ g ⟩ ; erw [ QuotientGroup.eq_one_iff ] ; aesop;
+      ·
+        intro g
+        specialize hG g.out
+        rw [isOfFinOrder_iff_pow_eq_one]
+        rw [isOfFinOrder_iff_pow_eq_one] at hG
+        obtain ⟨n, hn⟩ := hG
+        use n
+        refine ⟨hn.1, ?_⟩
+        rw [← QuotientGroup.out_eq' (a := g)]
+        erw [ QuotientGroup.eq_one_iff ]
+        simp [hn.2]
       · convert nilpotencyClass_quotient_center using 1;
-        exact?;
+        refine Nat.eq_sub_of_add_eq (id (Eq.symm n));
         infer_instance;
     -- Since $Z(G)$ is finitely generated and torsion, it is finite.
     have h_center_finite : Finite (Subgroup.center G) := by
@@ -34,9 +44,17 @@ lemma finite_of_nilpotent_fg_order {G: Type*} [Group G] [Group.FG G] [Group.IsNi
       have h_center_finite : Group.FG (Subgroup.center G) := by
         convert Subgroup.fg_of_index_ne_zero ?_;
         · infer_instance;
-        · exact?;
+        · exact Subgroup.finiteIndex_iff_finite_quotient.mpr h_quot_finite;
       have h_center_torsion : Monoid.IsTorsion (↥(Subgroup.center G)) := by
         intro x;
-        exact isOfFinOrder_iff_pow_eq_one.mpr ⟨ m, hm, by simpa [ Subtype.ext_iff ] using hg x ⟩;
-      exact?;
-    convert Finite.of_finite_quot_finite_subgroup ( H := Subgroup.center G )
+        rw [isOfFinOrder_iff_pow_eq_one]
+        specialize hG x
+        rw [isOfFinOrder_iff_pow_eq_one] at hG
+        obtain ⟨n, hn⟩ := hG
+        use n
+        refine ⟨hn.1, ?_⟩
+        rw [Subtype.ext_iff]
+        simp
+        exact hn.2
+      exact CommGroup.finite_of_fg_torsion (↥(Subgroup.center G)) h_center_torsion;
+    convert Finite.of_subgroup_quotient ( H := Subgroup.center G )
