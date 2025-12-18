@@ -10727,16 +10727,57 @@ lemma finite_virtually_nilpotent {G: Type*} [Group G] [Finite G]: Group.IsVirtua
     -- TODO - prove that a finite group is nilpotent, and upstream to mathlib
   . infer_instance
 
+
+omit hGS in
+structure GeneratesWithParam (G: Type*) [Group G] [DecidableEq G] where
+  S: Finset G
+  hS: Nonempty S
+  generates : ((closure (S : Set G) : Set G) = ⊤)
+  -- This should be fine, since the growth rate doesn't depend on the generating set
+  one_mem: (1 : G) ∈ S
+  has_inv: ∀ g ∈ S, g⁻¹ ∈ S
+  g_infinite: Infinite G
+
+
 -- TODO - figure out how to make this a 'let' without adding it to typeclass search
 omit hGS in
-def ker_generates {G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G) (S: Finset data.G')  (γ: Additive data.G') (hγ: data.φ γ = 1): Generates := {
+def ker_generates {G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G) (hGS: GeneratesWithParam data.G') (S: Finset data.G')  (γ: Additive data.G') (hγ: data.φ γ = 1): Generates := {
   G := (Multiplicative data.φ.ker)
   g_group := by infer_instance
   g_eq := by infer_instance
-  S := (S_n_ker_phi S data.φ γ hγ 1)
+  S := (S_n_ker_phi hGS.S data.φ γ hγ 1)
   hS := by
-    sorry
+    have one_mem_S: (1: (Multiplicative ↥data.φ.ker)) ∈ S_n_ker_phi hGS.S data.φ γ hγ 1 := by
+      simp [S_n_ker_phi]
+      right
+      use 1
+      use ?_
+      use ?_
+      . rfl
+      . simp [three_two_S_n]
+        use 1
+        simp
+        use 1
+        use ?_
+        . simp [gamma_m_helper, e_i_regular_helper]
+          refine ⟨?_, ?_⟩
+          . apply hGS.one_mem
+          . rw [Subtype.ext_iff]
+            simp
+            conv =>
+              lhs
+              rhs
+              arg 1
+              arg 1
+              arg 2
+              equals 0 =>
+                rfl
+            simp
+            rfl
+    use 1
+
   generates := by
+    simp
     sorry
   one_mem := by
     sorry
@@ -11299,25 +11340,20 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
   rw [AddGroup.fg_iff_mul_fg] at kernel_fg
 
 
-  have one_mem_S: (1: (Multiplicative ↥data.φ.ker)) ∈ S_n_ker_phi S data.φ γ hγ 1 := by
-    simp [S_n_ker_phi]
-    right
-    use 1
-    use ?_
-    . rfl
-    . simp [three_two_S_n]
-      use 1
-      simp
-      use 1
-      use ?_
-      . simp [gamma_m_helper, e_i_regular_helper]
-        rfl
-      . apply new_generates.one_mem
+
 
   let orig_ker_phi := (S_n_ker_phi S data.φ γ hγ 1)
 
+  let new_generate_data: GeneratesWithParam data.G' := {
+    S := new_generates.S
+    hS := new_generates.hS
+    generates := new_generates.generates
+    one_mem := new_generates.one_mem
+    has_inv := new_generates.has_inv
+    g_infinite := new_generates.g_infinite
+  }
 
-  have kernel_virtually_nilpotent := inductive_gromov (ker_generates data S γ hγ) ?_
+  have kernel_virtually_nilpotent := inductive_gromov (ker_generates data new_generate_data S γ hγ) ?_
   .
     obtain ⟨pre_N, pre_N_nilpotent, pre_N_finiteindex⟩ := kernel_virtually_nilpotent
     let N := pre_N.normalCore
