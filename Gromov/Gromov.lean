@@ -11664,8 +11664,9 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               unfold Subgroup.relIndex
               rw [← ne_eq, ← Subgroup.finiteIndex_iff]
               rw [Subgroup.finiteIndex_iff_finite_quotient]
+              -- TODO - why do we need this explicit instance?
               have foo : Group.IsNilpotent (↥N ⧸ N'.subgroupOf N) := by
-                sorry
+                infer_instance
               apply finite_of_nilpotent_fg_order
               intro n
               rw [isOfFinOrder_iff_pow_eq_one]
@@ -12137,12 +12138,5 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
       --   g_infinite := by
       --     simpa using Q_finite
       -- }
-      have prev := @ih Q_generates (n - 1) (by
-        sorry
-        -- exact new_poly
-        -- unfold HasPolynomialGrowthD
-        -- obtain ⟨b, b_ge, hb⟩ := poly
-        -- use b
-      ) (by omega)
-
+      have prev := @ih Q_generates (n - 1) Q_poly (by omega)
       exact prev
