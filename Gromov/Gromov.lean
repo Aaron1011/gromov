@@ -11875,23 +11875,23 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
     apply poly_growth_equiv_generates ker_generates _ kernel_poly
 
-lemma three_two_kernel_virtually_nilpotent (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d) (g: G) (φ: (Additive G) →+ ℤ) (γ: G)  (hγ : φ γ = 1) (phi_gromov: Group.IsVirtuallyNilpotent (Multiplicative φ.ker))
- : HasPolynomialGrowthD (d - 1) (S := phi_generating n φ γ ) := by
-  unfold HasPolynomialGrowthD
-  unfold Group.IsVirtuallyNilpotent at phi_gromov
-  obtain ⟨pre_N, nilpotent_pre_N, old_finite_index_pre_N⟩ := phi_gromov
-  let N := pre_N.normalCore
-  have nilpotent_N: Group.IsNilpotent N := by
-    rw [nilpotent_iff_lowerCentralSeries]
-    rw [nilpotent_iff_lowerCentralSeries] at nilpotent_pre_N
-    obtain ⟨n, hn⟩ := nilpotent_pre_N
-    have := lowerCentralSeries_map_subtype_le N n
-    simp at this
-    sorry
-  have N_normal: N.Normal := by
-    simp [N]
-    apply Subgroup.normalCore_normal
-  sorry
+-- lemma three_two_kernel_virtually_nilpotent (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d) (g: G) (φ: (Additive G) →+ ℤ) (γ: G)  (hγ : φ γ = 1) (phi_gromov: Group.IsVirtuallyNilpotent (Multiplicative φ.ker))
+--  : HasPolynomialGrowthD (d - 1) (S := phi_generating n φ γ ) := by
+--   unfold HasPolynomialGrowthD
+--   unfold Group.IsVirtuallyNilpotent at phi_gromov
+--   obtain ⟨pre_N, nilpotent_pre_N, old_finite_index_pre_N⟩ := phi_gromov
+--   let N := pre_N.normalCore
+--   have nilpotent_N: Group.IsNilpotent N := by
+--     rw [nilpotent_iff_lowerCentralSeries]
+--     rw [nilpotent_iff_lowerCentralSeries] at nilpotent_pre_N
+--     obtain ⟨n, hn⟩ := nilpotent_pre_N
+--     have := lowerCentralSeries_map_subtype_le N n
+--     simp at this
+--     sorry
+--   have N_normal: N.Normal := by
+--     simp [N]
+--     apply Subgroup.normalCore_normal
+--   sorry
 
 --have poly_r: ∀ r: ℕ, r * #()
 
