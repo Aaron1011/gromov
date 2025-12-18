@@ -8699,6 +8699,26 @@ def three_two_S_n {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (φ: (Addit
 -- "length at most n"
 -- The Vikman paper says "words of length n", which seems incorrect
 
+-- omit hGS in
+-- lemma three_two_S_n_inv_eq {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (hS: S = S⁻¹) (φ: (Additive G) →+ ℤ) (γ: G) (n: ℕ): three_two_S_n S φ γ n = (three_two_S_n S φ γ n)⁻¹ := by
+--   ext x
+--   simp [three_two_S_n, gamma_m_helper, e_i_regular_helper]
+--   simp_rw [← inv_eq_iff_eq_inv]
+--   simp
+--   refine ⟨?_, ?_⟩
+--   . intro hx
+--     obtain ⟨a, ha, s, hs, other⟩ := hx
+--     use a
+--     refine ⟨by omega, ?_⟩
+--     use s⁻¹
+--     rw [hS]
+--     simp
+--     refine ⟨hs, ?_⟩
+
+
+
+--   sorry
+
 omit hGS in
 lemma gamma_helper_subset_S_n {G: Type*} [Group G] [DecidableEq G] {S: Finset G} (φ: (Additive G) →+ ℤ) (γ: G) (n: ℕ): Set.range (gamma_m_helper (S := S) φ γ n) ⊆ three_two_S_n S  φ γ n := by
   intro val hval
@@ -10612,6 +10632,13 @@ lemma three_two_S_n_subset_ker {G: Type*} [Group G] [DecidableEq G] (S: Finset G
   simp
   exact id (Eq.symm prod_eq_x)
 
+-- lemma three_two_S_n_generates  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (γ : Additive G) (hγ: φ γ = 1):
+--   ∃ n: ℕ, Subgroup.closure (Finset.preimage (three_two_S_n S  φ γ (n)) Multiplicative.ofAdd (by
+--     apply Set.injOn_of_injective
+--     exact fun ⦃a₁ a₂⦄ a ↦ a
+--   )) = ⊤ := by
+--   sorry
+
 lemma three_two_ker_fg  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ): φ.ker.FG := by
   simp only [AddSubgroup.FG]
   obtain ⟨γ, phi_gamma⟩ := hφ 1
@@ -10783,6 +10810,7 @@ def ker_generates {G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G
   one_mem := by
     apply one_mem_S
   has_inv := by
+    unfold S_n_ker_phi
     sorry
   g_infinite := by
     exact ker_infinite
@@ -11366,7 +11394,6 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     .
       rw [not_finite_iff_infinite] at kernel_finite
       apply inductive_gromov (ker_generates data new_generate_data γ hγ kernel_finite)
-      apply poly_growth_equiv_generates
       exact kernel_poly
   .
     obtain ⟨pre_N, pre_N_nilpotent, pre_N_finiteindex⟩ := kernel_virtually_nilpotent

@@ -38,7 +38,7 @@ lemma mem_closure_prod_list {G: Type*} [Group G] (S: Set G) (S_eq_Sinv: S = S⁻
   unfold List.unattach
   simp [prod_eq]
 
--- Proof of proposition 3.18
+-- Proof of proposition 2.18
 -- Note - we additionaly assume that the generating set contains 1, as this us use a simpler
 -- definition of polynomial growth (since S^n ⊆ S^(n+1))
 -- We use this requirement throughout the entire proof, so it's fine
