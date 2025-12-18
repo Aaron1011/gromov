@@ -5548,6 +5548,7 @@ lemma laplace_zero_iff_zero (g: (Lp ℝ 2 volume (α := G))) (eq_zero: Laplace g
       . simp
     linarith
 
+
 lemma norm_conv_mu_le  (f: (Lp ℝ 2 volume (α := G))): ‖conv_mu_lp2 f‖ ≤ ‖f‖ := by
   simp [conv_mu_lp2]
   simp [f_conv_mu]
@@ -10583,7 +10584,8 @@ noncomputable def phi_generating (n: ℕ) (φ: (Additive G) →+ ℤ) (γ: G) :=
     exact fun ⦃a₁ a₂⦄ a ↦ a
   )
 
-lemma three_two_S_n_subset_ker  (φ: (Additive G) →+ ℤ) (γ: G) (phi_gamma: φ γ = 1) (n: ℕ):
+omit hGS in
+lemma three_two_S_n_subset_ker {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (φ: (Additive G) →+ ℤ) (γ: G) (phi_gamma: φ γ = 1) (n: ℕ):
    ↑(three_two_S_n S φ γ n) ⊆ Additive.toMul '' φ.ker.carrier := by
 
   intro x hx
@@ -10625,12 +10627,12 @@ lemma three_two_ker_fg  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (�
   . intro hz
     induction hz using AddSubgroup.closure_induction with
     | mem x hx =>
-      have helper := three_two_S_n_subset_ker φ γ phi_gamma n
+      have helper := three_two_S_n_subset_ker S φ γ phi_gamma n
       have x_mem: x ∈ three_two_S_n S φ γ n := by
         simp at hx
         exact hx
 
-      have helper := (three_two_S_n_subset_ker φ γ phi_gamma n) x_mem
+      have helper := (three_two_S_n_subset_ker S φ γ phi_gamma n) x_mem
       simpa using helper
     | zero =>
       simp
@@ -10710,10 +10712,39 @@ noncomputable def phi_S (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (�
 
 
 
-def S_n_ker_phi (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1) (n: ℕ)  : Finset φ.ker := (three_two_S_n S φ γ n).attach.image (fun x => ⟨x.val, (by
-have foo := (three_two_S_n_subset_ker φ γ hγ n) x.property
+omit hGS in
+def S_n_ker_phi  {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1) (n: ℕ)  : Finset φ.ker := (three_two_S_n S φ γ n).attach.image (fun x => ⟨x.val, (by
+have foo := (three_two_S_n_subset_ker S φ γ hγ n) x.property
 simpa using foo
 )⟩) ∪ {0}
+
+omit hGS in
+lemma finite_virtually_nilpotent {G: Type*} [Group G] [Finite G]: Group.IsVirtuallyNilpotent G := by
+  rw [Group.IsVirtuallyNilpotent]
+  use ⊥
+  refine ⟨?_, ?_⟩
+  . exact CommGroup.isNilpotent
+    -- TODO - prove that a finite group is nilpotent, and upstream to mathlib
+  . infer_instance
+
+-- TODO - figure out how to make this a 'let' without adding it to typeclass search
+omit hGS in
+def ker_generates {G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G) (S: Finset data.G')  (γ: Additive data.G') (hγ: data.φ γ = 1): Generates := {
+  G := (Multiplicative data.φ.ker)
+  g_group := by infer_instance
+  g_eq := by infer_instance
+  S := (S_n_ker_phi S data.φ γ hγ 1)
+  hS := by
+    sorry
+  generates := by
+    sorry
+  one_mem := by
+    sorry
+  has_inv := by
+    sorry
+  g_infinite := by
+    sorry
+}
 
 omit hGS in
 lemma poly_growth_equiv_generates (hG: Generates) (S': Finset hG.G) {d: ℕ} (h_poly: HasPolynomialGrowthD hG.S d): HasPolynomialGrowthD S' d := by
@@ -10732,7 +10763,7 @@ lemma poly_growth_equiv_generates (hG: Generates) (S': Finset hG.G) {d: ℕ} (h_
 
 
 lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1)
- : HasPolynomialGrowthD (G := Multiplicative φ.ker) (d - 1) (S := (S_n_ker_phi φ γ hγ n)) := by
+ : HasPolynomialGrowthD (G := Multiplicative φ.ker) (d - 1) (S := (S_n_ker_phi S φ γ hγ n)) := by
 
   -- The set S_n, viewed a subset of ker φ
 
@@ -10786,7 +10817,7 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
       rw [Fin.ext_iff]
       exact mul_eq
 
-  have card_union: #(((((S_n_ker_phi φ γ hγ n).image Multiplicative.ofAdd) ^ r).image ofMul).biUnion (fun a => Finset.image (mul_by_i a.val) Finset.univ)) = r * #(r • (S_n_ker_phi φ γ hγ n)) := by
+  have card_union: #(((((S_n_ker_phi S φ γ hγ n).image Multiplicative.ofAdd) ^ r).image ofMul).biUnion (fun a => Finset.image (mul_by_i a.val) Finset.univ)) = r * #(r • (S_n_ker_phi S φ γ hγ n)) := by
     rw [Finset.card_biUnion]
     .
       simp_rw [card_mul_range]
@@ -10796,7 +10827,7 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
         lhs
         arg 2
         arg 1
-        equals r • S_n_ker_phi φ γ hγ n =>
+        equals r • S_n_ker_phi S φ γ hγ n =>
           ext a
           rw [Finset.mem_image]
           simp_rw [Finset.mem_pow]
@@ -10878,7 +10909,7 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
 
 
 
-  have card_union_le: #(((((S_n_ker_phi φ γ hγ n).image Multiplicative.ofAdd) ^ r).image ofMul).biUnion (fun a => Finset.image (mul_by_i a.val) Finset.univ)) ≤ #(((three_two_S_n S φ γ n) ∪ {γ} ∪ {1}) ^ (2 * r)) := by
+  have card_union_le: #(((((S_n_ker_phi S φ γ hγ n).image Multiplicative.ofAdd) ^ r).image ofMul).biUnion (fun a => Finset.image (mul_by_i a.val) Finset.univ)) ≤ #(((three_two_S_n S φ γ n) ∪ {γ} ∪ {1}) ^ (2 * r)) := by
     grw [Finset.card_le_card]
     intro a ha
     rw [Finset.mem_biUnion] at ha
@@ -10969,11 +11000,11 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
         conv =>
           lhs
           arg 1
-          equals r • (S_n_ker_phi φ γ hγ n) =>
+          equals r • (S_n_ker_phi S φ γ hγ n) =>
             ext a
             rw [Finset.mem_pow]
             -- TODO - why do we need explicit args here
-            rw [Finset.mem_nsmul (a := a) (s := S_n_ker_phi φ γ hγ n) (n := r)]
+            rw [Finset.mem_nsmul (a := a) (s := S_n_ker_phi S φ γ hγ n) (n := r)]
             refine ⟨?_, ?_⟩
             .
               intro hf
@@ -11170,11 +11201,12 @@ lemma set_smul_eq_mul {G: Type*} [Group G] (g: G) (A: Set G): g • A = {g} * A 
   rw [Set.mem_mul]
   simp
 
+
 -- TODO - add an explicit top-level universe parameter to avoid this 'omit hGS' hack
 set_option maxHeartbeats 2500000 in
 omit hGS in
 lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (hd: 1 ≤ d) (h_growth: HasPolynomialGrowthD S d)
-(inductive_gromov: ∀ {Q: Type u}, [DecidableEq Q] → [Group Q] → (Q_fg: Group.FG Q) → (Q_growth : (HasPolynomialGrowthD (Q_fg.out.choose) (d - 1))) → Group.IsVirtuallyNilpotent Q)
+(inductive_gromov: ∀ (Q_generates: Generates.{u}),(Q_growth : (HasPolynomialGrowthD (Q_generates.S)) (d - 1)) → Group.IsVirtuallyNilpotent Q_generates.G)
 : Group.IsVirtuallyNilpotent G := by
 
   have G'_finite_index := data.finite_index
@@ -11266,7 +11298,26 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
   rw [← AddGroup.fg_iff_addSubgroup_fg] at kernel_fg
   rw [AddGroup.fg_iff_mul_fg] at kernel_fg
 
-  have kernel_virtually_nilpotent := inductive_gromov (Q := ↑(Multiplicative data.φ.ker)) kernel_fg ?_
+
+  have one_mem_S: (1: (Multiplicative ↥data.φ.ker)) ∈ S_n_ker_phi S data.φ γ hγ 1 := by
+    simp [S_n_ker_phi]
+    right
+    use 1
+    use ?_
+    . rfl
+    . simp [three_two_S_n]
+      use 1
+      simp
+      use 1
+      use ?_
+      . simp [gamma_m_helper, e_i_regular_helper]
+        rfl
+      . apply new_generates.one_mem
+
+  let orig_ker_phi := (S_n_ker_phi S data.φ γ hγ 1)
+
+
+  have kernel_virtually_nilpotent := inductive_gromov (ker_generates data S γ hγ) ?_
   .
     obtain ⟨pre_N, pre_N_nilpotent, pre_N_finiteindex⟩ := kernel_virtually_nilpotent
     let N := pre_N.normalCore
@@ -11316,7 +11367,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
     have N'_nilpotent: Group.IsNilpotent N' := by
       rw [← Group.isNilpotent_congr (Subgroup.subgroupOfEquivOfLe N'_le_N)]
-      exact isNilpotent (N'.subgroupOf N)
+      -- TODO - why isn't 'N_nilpotent' found by typeclass synthesis?
+      apply isNilpotent (N'.subgroupOf N) (hG := N_nilpotent)
 
 
 
@@ -11379,7 +11431,9 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
         exact mem_ker
 
       simp at gamma_alpha_mem_ker
-      clear kernel_poly
+      clear * - hγ α gamma_alpha_mem_ker alpha_nonzero
+      clear pre_N pre_N_nilpotent pre_N_finiteindex N N' N'_nilpotent N'_char N'_normal N_normal N_nilpotent
+
       apply_fun (α • ·) at hγ
       conv at gamma_alpha_mem_ker =>
         lhs
@@ -11610,6 +11664,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               unfold Subgroup.relIndex
               rw [← ne_eq, ← Subgroup.finiteIndex_iff]
               rw [Subgroup.finiteIndex_iff_finite_quotient]
+              have foo : Group.IsNilpotent (↥N ⧸ N'.subgroupOf N) := by
+                sorry
               apply finite_of_nilpotent_fg_order
               intro n
               rw [isOfFinOrder_iff_pow_eq_one]
@@ -11840,40 +11896,10 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
         rw [Subgroup.finiteIndex_iff] at foo
         exact foo
   .
-    have one_mem_S: (1: (Multiplicative ↥data.φ.ker)) ∈ S_n_ker_phi data.φ γ hγ 1 := by
-      simp [S_n_ker_phi]
-      right
-      use 1
-      use ?_
-      . rfl
-      . simp [three_two_S_n]
-        use 1
-        simp
-        use 1
-        use ?_
-        . simp [gamma_m_helper, e_i_regular_helper]
-          rfl
-        . apply new_generates.one_mem
+    apply poly_growth_equiv_generates
+    exact kernel_poly
 
-    let orig_ker_phi := (S_n_ker_phi data.φ γ hγ 1)
-    let ker_generates: Generates := {
-      G := (Multiplicative data.φ.ker)
-      g_group := by infer_instance
-      g_eq := by infer_instance
-      S := (S_n_ker_phi data.φ γ hγ 1)
-      hS := by
-        use 1
-      generates := by
-        sorry
-      one_mem := by
-        apply one_mem_S
-      has_inv := by
-        sorry
-      g_infinite := by
-        sorry
-    }
-
-    apply poly_growth_equiv_generates ker_generates _ kernel_poly
+    --apply poly_growth_equiv_generates ker_generates _ kernel_poly
 
 -- lemma three_two_kernel_virtually_nilpotent (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d) (g: G) (φ: (Additive G) →+ ℤ) (γ: G)  (hγ : φ γ = 1) (phi_gromov: Group.IsVirtuallyNilpotent (Multiplicative φ.ker))
 --  : HasPolynomialGrowthD (d - 1) (S := phi_generating n φ γ ) := by
@@ -12079,9 +12105,9 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
     -- Consider changing 'theorem_3_1' to make 'inductive_gromov' take in 'Generates',
     -- to avoid fiddling with 'FG.out' (which might not be symmetric)
     apply theorem_3_1 data n (by omega) h
-    intro Q Q_dec_eq Q_group Q_FG hS
+    intro Q_generates Q_poly
 
-    by_cases Q_finite: Finite Q
+    by_cases Q_finite: Finite Q_generates.G
     .
       rw [Group.IsVirtuallyNilpotent]
       use ⊥
@@ -12090,54 +12116,33 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
         -- TODO - prove that a finite group is nilpotent, and upstream to mathlib
       . infer_instance
     .
-      let generates: Generates := {
-        G := Q,
-        g_group := Q_group
-        g_eq := Q_dec_eq
-        S := Q_FG.out.choose ∪ Q_FG.out.choose⁻¹ ∪ {1}
-        hS := by simp
-        generates := by
-          simp
-          rw [Subgroup.closure_union]
-          rw [Q_FG.out.choose_spec]
-          simp
-        one_mem := by
-          simp
-        has_inv := by
-          intro g hg
-          simp at hg
-          simp
-          grind
-        g_infinite := by
-          simpa using Q_finite
-      }
-      have h_poly := h
-      unfold HasPolynomialGrowthD at h_poly
-      obtain ⟨a, ha⟩ := h_poly
-      have a_ne_zero: a ≠ 0 := by
-        by_contra a_eq_zero
-        simp [a_eq_zero] at ha
-        specialize ha 1 (by simp)
-        simp at ha
-        have s_nonempty := hGS.one_mem
-        grind
-
-      let new_poly := poly_growth_equiv_generates generates Q_FG.out.choose (d := n -1) (by
-        sorry
-      )
-      have poly := poly_growth_equiv a (n - 1) (by omega) Q_FG.out.choose generates.S (sorry) (by sorry) (by sorry) sorry
-
-      --obtain ⟨b, b_ge, hb⟩ := poly
-      -- have new_poly := poly_growth_equiv_generates generates Q_FG.out.choose (d := n - 1) (by
-      --   unfold HasPolynomialGrowthD
-      --   use b
-      --   exact hb
-      -- )
-      have prev := @ih generates (n - 1) (by
+      -- let generates: Generates := {
+      --   G := Q,
+      --   g_group := Q_group
+      --   g_eq := Q_dec_eq
+      --   S := Q_FG.out.choose ∪ Q_FG.out.choose⁻¹ ∪ {1}
+      --   hS := by simp
+      --   generates := by
+      --     simp
+      --     rw [Subgroup.closure_union]
+      --     rw [Q_FG.out.choose_spec]
+      --     simp
+      --   one_mem := by
+      --     simp
+      --   has_inv := by
+      --     intro g hg
+      --     simp at hg
+      --     simp
+      --     grind
+      --   g_infinite := by
+      --     simpa using Q_finite
+      -- }
+      have prev := @ih Q_generates (n - 1) (by
         sorry
         -- exact new_poly
         -- unfold HasPolynomialGrowthD
         -- obtain ⟨b, b_ge, hb⟩ := poly
         -- use b
       ) (by omega)
+
       exact prev
