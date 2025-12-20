@@ -108,7 +108,7 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
 
     .
       have start_pos_nonzero: 1 ≤ max_len := by omega
-      use a * (max_len ^ d)
+      use 2 * a * (max_len ^ d)
       refine ⟨?_, ?_⟩
       .
         rw [Nat.one_le_iff_ne_zero]
@@ -121,17 +121,22 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
       intro n hn
 
 
-      grw [Finset.card_le_card (t := (S ^ max_len) ^ n)]
+      grw [Finset.card_le_card (t := ((S ^ max_len)^n ∪ (S⁻¹ ^ max_len)^n))]
 
       .
+        rw [← pow_mul]
+        grw [Finset.card_union_le]
+        grw [s_poly _ (by exact Right.one_le_mul start_pos_nonzero hn)]
+        simp
         rw [← pow_mul]
         grw [s_poly _ (by exact Right.one_le_mul start_pos_nonzero hn)]
         rw [mul_pow]
         rw [← mul_assoc]
+        grind
       .
         intro s' hs'
 
-        have S'_subset_s_pow: S' ⊆ (S ^ max_len) := by
+        have S'_subset_s_pow: S' ⊆ (S ^ max_len) ∪ (S⁻¹ ^ max_len) := by
           intro a a'
 
 
@@ -184,8 +189,11 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
             . apply S_one
             . omega
 
+          simp
           simp at S_subset
-          exact S_subset S_one
+          --simp at S_subset
+          apply S_subset
+          simpa using S_one
         ) (by omega)
 
         exact pow_subset hs'
