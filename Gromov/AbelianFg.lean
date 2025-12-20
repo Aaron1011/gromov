@@ -3,6 +3,9 @@ import Mathlib
 lemma addgroup_fg_map {G G': Type*} [AddGroup G] [AddGroup G'] (H: AddSubgroup G) (h_fg: H.FG) (f: G →+ G'): (AddSubgroup.map f H).FG := by
   sorry
 
+lemma addsubgroup_z_map (n: ℕ) (H: AddSubgroup (Fin n → ℤ)): H.FG := by
+  sorry
+
 lemma fg_subgroup_of_abelian {G : Type*} [AddCommGroup G] (hG : AddGroup.FG G) (H : AddSubgroup G): H.FG := by
   have fg_top: (⊤ : AddSubgroup G).FG := by
     rw [← AddGroup.fg_def]
@@ -14,7 +17,7 @@ lemma fg_subgroup_of_abelian {G : Type*} [AddCommGroup G] (hG : AddGroup.FG G) (
   let H' := AddSubgroup.comap f H
 
   have H'_fg: H'.FG := by
-   sorry
+   apply addsubgroup_z_map
 
 
   let new_H := AddSubgroup.map f (AddSubgroup.comap f H)
