@@ -10833,7 +10833,7 @@ lemma poly_growth_equiv_generates (hG: Generates) (S': Finset hG.G) {d: ℕ} (h_
 
 
 lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1)
- : HasPolynomialGrowthD (G := Multiplicative φ.ker) (d - 1) (S := (S_n_ker_phi S φ γ hγ n)) := by
+ : HasPolynomialGrowthD (G := Multiplicative φ.ker) (d - 1) (S := (S_n_ker_phi S φ γ hγ n) ∪ (S_n_ker_phi S φ γ hγ n)⁻¹) := by
 
   -- The set S_n, viewed a subset of ker φ
 
@@ -10856,7 +10856,7 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
 
 
 
-  have S_n_poly := poly_growth_equiv a d (by omega) S (three_two_S_n S φ γ n ∪ {γ} ∪ {1}) S_eq_Sinv hGS.one_mem (by simpa using hGS.generates) ha
+  have S_n_poly := poly_growth_equiv a d (by omega) S ((three_two_S_n S φ γ n) ∪ ((three_two_S_n S φ γ n)⁻¹) ∪ {γ} ∪ {1}) S_eq_Sinv hGS.one_mem (by simpa using hGS.generates) ha
   obtain ⟨b, hb, ker_poly⟩ := S_n_poly
 
 
@@ -10887,7 +10887,7 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
       rw [Fin.ext_iff]
       exact mul_eq
 
-  have card_union: #(((((S_n_ker_phi S φ γ hγ n).image Multiplicative.ofAdd) ^ r).image ofMul).biUnion (fun a => Finset.image (mul_by_i a.val) Finset.univ)) = r * #(r • (S_n_ker_phi S φ γ hγ n)) := by
+  have card_union: #((((((S_n_ker_phi S φ γ hγ n) ∪ (-(S_n_ker_phi S φ γ hγ n))).image Multiplicative.ofAdd) ^ r).image ofMul).biUnion (fun a => Finset.image (mul_by_i a.val) Finset.univ)) = r * #(r • ((S_n_ker_phi S φ γ hγ n) ∪ -((S_n_ker_phi S φ γ hγ n)))) := by
     rw [Finset.card_biUnion]
     .
       simp_rw [card_mul_range]
@@ -10897,7 +10897,7 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
         lhs
         arg 2
         arg 1
-        equals r • S_n_ker_phi S φ γ hγ n =>
+        equals r • ((S_n_ker_phi S φ γ hγ n) ∪ -(S_n_ker_phi S φ γ hγ n)) =>
           ext a
           rw [Finset.mem_image]
           simp_rw [Finset.mem_pow]
@@ -10979,7 +10979,7 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
 
 
 
-  have card_union_le: #(((((S_n_ker_phi S φ γ hγ n).image Multiplicative.ofAdd) ^ r).image ofMul).biUnion (fun a => Finset.image (mul_by_i a.val) Finset.univ)) ≤ #(((three_two_S_n S φ γ n) ∪ {γ} ∪ {1}) ^ (2 * r)) := by
+  have card_union_le: #((((((S_n_ker_phi S φ γ hγ n) ∪ -(S_n_ker_phi S φ γ hγ n)).image Multiplicative.ofAdd) ^ r).image ofMul).biUnion (fun a => Finset.image (mul_by_i a.val) Finset.univ)) ≤ #(((three_two_S_n S φ γ n) ∪ ((three_two_S_n S φ γ n)⁻¹) ∪ {γ} ∪ {1}) ^ (2 * r)) := by
     grw [Finset.card_le_card]
     intro a ha
     rw [Finset.mem_biUnion] at ha
@@ -11014,11 +11014,27 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
           left
           rfl
         . rename_i g_eq_nonzero
-          obtain ⟨z, z_mem, hz⟩ := g_eq_nonzero
-          rw [← hz]
-          apply Finset.mem_union_left
-          apply Finset.mem_union_left
-          exact z_mem
+          cases g_eq_nonzero
+          . rename_i left
+            obtain ⟨z, z_mem, hz⟩ := left
+            rw [← hz]
+            apply Finset.mem_union_left
+            apply Finset.mem_union_left
+            apply Finset.mem_union_left
+            exact z_mem
+          .
+            rename_i right
+            obtain ⟨z, z_mem, hz⟩ := right
+            apply Finset.mem_union_left
+            apply Finset.mem_union_left
+            apply Finset.mem_union_right
+            simp
+            conv =>
+              arg 2
+              equals (-g).val =>
+                rfl
+            rw [← hz]
+            exact z_mem
       )⟩)
       rw [← hf]
       simp
@@ -11032,7 +11048,7 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
 
 
 
-      have gamma_r_subset: ({γ, 1} : Finset G)^r ⊆ (three_two_S_n S φ γ n ∪ {γ} ∪ {1})^r := by
+      have gamma_r_subset: ({γ, 1} : Finset G)^r ⊆ ((three_two_S_n S φ γ n) ∪ ((three_two_S_n S φ γ n)⁻¹) ∪ {γ} ∪ {1})^r := by
         apply Finset.pow_subset_pow
         . grind
         . grind
@@ -11070,11 +11086,11 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
         conv =>
           lhs
           arg 1
-          equals r • (S_n_ker_phi S φ γ hγ n) =>
+          equals r • ((S_n_ker_phi S φ γ hγ n) ∪ -(S_n_ker_phi S φ γ hγ n)) =>
             ext a
             rw [Finset.mem_pow]
             -- TODO - why do we need explicit args here
-            rw [Finset.mem_nsmul (a := a) (s := S_n_ker_phi S φ γ hγ n) (n := r)]
+            rw [Finset.mem_nsmul (a := a) (s := ((S_n_ker_phi S φ γ hγ n) ∪ -(S_n_ker_phi S φ γ hγ n))) (n := r)]
             refine ⟨?_, ?_⟩
             .
               intro hf
@@ -12015,6 +12031,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 #print axioms three_two_gamma_m_generates
 #print axioms three_two_ker_fg
 
+-- NOTE: from https://www.numdam.org/item/PMIHES_1981__53__53_0.pdf
+-- it looks like our definition of 'polynomial growth' should use `S ∪ S⁻¹`
 lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtuallyNilpotent G := by
   induction hn: n generalizing hGS n with
   | zero =>
