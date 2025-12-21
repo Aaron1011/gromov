@@ -10793,25 +10793,55 @@ lemma one_mem_S  {G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G)
         simp
         rfl
 
+-- TODO - generalize from InvolutiveInv and upstream to mathlib
+omit hGS in
+lemma finset_union_inv {α : Type*}  [DecidableEq α] [InvolutiveInv α] {s t : Finset α}: (s ∪ t)⁻¹ = s⁻¹ ∪ t⁻¹ := by
+  ext a
+  simp
+
+omit hGS in
+lemma finset_union_neg {α : Type*}  [DecidableEq α] [InvolutiveNeg α] {s t : Finset α}: -(s ∪ t) = -s ∪ -t := by
+  ext a
+  simp
+
+
+
 -- TODO - figure out how to make this a 'let' without adding it to typeclass search
 omit hGS in
 def ker_generates {G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G) (hGS: GeneratesWithParam data.G') (γ: Additive data.G') (hγ: data.φ γ = 1) (ker_infinite: Infinite (Multiplicative data.φ.ker)): Generates := {
   G := (Multiplicative data.φ.ker)
   g_group := by infer_instance
   g_eq := by infer_instance
-  S := (S_n_ker_phi hGS.S data.φ γ hγ 1)
+  S := (S_n_ker_phi hGS.S data.φ γ hγ 1) ∪ -(S_n_ker_phi hGS.S data.φ γ hγ 1)
   hS := by
     use 1
+    apply Finset.mem_union_left
     apply one_mem_S
   generates := by
     unfold S_n_ker_phi
     simp
     sorry
   one_mem := by
+    apply Finset.mem_union_left
     apply one_mem_S
   has_inv := by
-    unfold S_n_ker_phi
-    sorry
+    intro g hg
+    simp at hg
+    simp
+    rw [or_comm]
+    conv =>
+      lhs
+      equals g ∈ (S_n_ker_phi hGS.S data.φ γ hγ 1) =>
+        simp
+        rw [← Finset.mem_inv']
+        conv =>
+          lhs
+          arg 1
+          equals -(-S_n_ker_phi hGS.S data.φ γ hγ 1) =>
+            rfl
+        simp
+    rw [← Finset.mem_inv']
+    exact hg
   g_infinite := by
     exact ker_infinite
 }
