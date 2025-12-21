@@ -11455,11 +11455,45 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       rw [not_finite_iff_infinite] at kernel_finite
 
       have new_kernel_poly := kernel_poly
+      -- TODO - get rid of defeq abuse
       conv at new_kernel_poly =>
         arg 1
         equals (((Finset.image Additive.toMul (S_n_ker_phi S data.φ γ hγ 1)) ∪ (Inv.inv (α := Finset (Multiplicative _))) (Finset.image Additive.toMul ((S_n_ker_phi S data.φ γ hγ 1))))) =>
           ext a
-          sorry
+          refine ⟨?_, ?_⟩
+          . intro ha
+            rw [Finset.mem_union]
+            rw [Finset.mem_image]
+            simp at ha
+            cases ha
+            . rename_i left
+              left
+              use a
+              refine ⟨left, rfl⟩
+            . rename_i right
+              right
+              rw [Finset.mem_inv']
+              rw [Finset.mem_image]
+              use Additive.ofMul a⁻¹
+              refine ⟨right, rfl⟩
+          .
+            intro ha
+            rw [Finset.mem_union] at ha
+            rw [Finset.mem_union]
+            cases ha
+            . rename_i left
+              simp at left
+              left
+              exact left
+            . rename_i right
+              rw [Finset.mem_inv'] at right
+              rw [Finset.mem_image] at right
+              obtain ⟨b, hb, a_eq⟩ := right
+              right
+              rw [Finset.mem_inv']
+              rw [← a_eq]
+              exact hb
+
 
       let foo := ker_generates hd data new_generate_data γ hγ new_kernel_poly kernel_finite
       let bar := inductive_gromov foo new_kernel_poly
