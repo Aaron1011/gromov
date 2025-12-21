@@ -8747,7 +8747,7 @@ noncomputable def three_two_B_n {G: Type*} [Group G] [DecidableEq G] (S: Finset 
 
 -- If G has polynomial growth, than we can find an N such that S_n ⊆ B_n * B_n⁻¹
 set_option maxHeartbeats 2000000 in
-lemma new_three_two_poly_growth (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (γ: G) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ) (hγ: φ γ = 1) (s: G) (s_mem: s ∈ S): ∃ n, three_two_S_n (S := {s}) φ γ (n + 1) ⊆ ((three_two_B_n (S := {s}) φ γ n) * (three_two_B_n (S := {s}) φ γ n)⁻¹)  := by
+lemma new_three_two_poly_growth (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (γ: G) (φ: (Additive G) →+ ℤ)  (s: G) (s_mem: s ∈ S): ∃ n, three_two_S_n (S := {s}) φ γ (n + 1) ⊆ ((three_two_B_n (S := {s}) φ γ n) * (three_two_B_n (S := {s}) φ γ n)⁻¹)  := by
   by_contra!
   simp [HasPolynomialGrowthD] at hG
   have little_o_poly := isLittleO_pow_exp_pos_mul_atTop d (b := Real.log 2) (Real.log_pos (by simp))
@@ -9597,7 +9597,7 @@ lemma closure_iterate_mulact {T: Type*} [Group T] [DecidableEq T] (a b: T) (n: �
 #print axioms closure_iterate_mulact
 
 --- Consequence of `three_two_poly_growth` - the set of all 'γ^n *e_i γ^(-n)' is contained the closure of S_n
-lemma three_poly_poly_growth_all_s_n (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (γ: G) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ) (hγ: φ γ = 1)
+lemma three_poly_poly_growth_all_s_n (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (γ: G) (φ: (Additive G) →+ ℤ) (hγ: φ γ = 1)
   : ∃ n, ∀ m, (Finset.image (gamma_m_helper (S := S) φ γ m) Finset.univ).toSet ⊆ Subgroup.closure (three_two_S_n S  φ γ (n)).toSet := by
 
   -- by_cases S_empty: S = ∅
@@ -9628,7 +9628,7 @@ lemma three_poly_poly_growth_all_s_n (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGro
   let all_n_vals := { n : ℕ | three_two_S_n (S := {s}) φ γ (n + 1) ⊆ ((three_two_B_n (S := {s}) φ γ n) * (three_two_B_n (S := {s}) φ γ n)⁻¹)}
   let n := sInf all_n_vals
   have set_nonempty: all_n_vals.Nonempty := by
-    exact new_three_two_poly_growth  d hd hG γ φ hφ hγ s hs
+    exact new_three_two_poly_growth  d hd hG γ φ s hs
   have temp_s_n_subset := Nat.sInf_mem set_nonempty
   have s_n_subset: n ∈ all_n_vals := by
     exact temp_s_n_subset
@@ -10639,16 +10639,10 @@ lemma three_two_S_n_subset_ker {G: Type*} [Group G] [DecidableEq G] (S: Finset G
 --   )) = ⊤ := by
 --   sorry
 
-lemma three_two_ker_fg  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ): φ.ker.FG := by
-  simp only [AddSubgroup.FG]
-  obtain ⟨γ, phi_gamma⟩ := hφ 1
+lemma three_two_S_n_generates  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (γ : Additive G) (phi_gamma: φ γ = 1): ∃ n, AddSubgroup.closure (Additive.ofMul '' (three_two_S_n S φ γ (n))) = φ.ker := by
   --obtain ⟨n, hn⟩ := three_two_poly_growth d hd hG γ φ hφ phi_gamma
-  obtain ⟨n, hn⟩ := three_poly_poly_growth_all_s_n d hd hG γ φ hφ phi_gamma
-  use (Finset.preimage (three_two_S_n S  φ γ (n)) Multiplicative.ofAdd (by
-    apply Set.injOn_of_injective
-    exact fun ⦃a₁ a₂⦄ a ↦ a
-  ))
-  simp
+  obtain ⟨n, hn⟩ := three_poly_poly_growth_all_s_n d hd hG γ φ phi_gamma
+  use n
   ext z
   refine ⟨?_, ?_⟩
   . intro hz
@@ -10699,9 +10693,10 @@ lemma three_two_ker_fg  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (�
       rw [Set.range_subset_iff] at hn
       specialize hn ⟨s, s_mem⟩
       simp at hn
-
       rw [← helper_eq_a]
-      rw [← Subgroup.toAddSubgroup'_closure]
+      apply (AddSubgroup.mem_toSubgroup' _ (gamma_m_helper φ γ p ⟨s, s_mem⟩)).mp
+      rw [AddSubgroup.toSubgroup'_closure]
+      simp
       exact hn
     | .inr l_mem =>
       rw [← AddSubgroup.neg_mem_iff]
@@ -10715,8 +10710,13 @@ lemma three_two_ker_fg  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (�
       specialize hn ⟨s, s_mem⟩
       simp at hn
       rw [← helper_eq_a]
-      rw [← Subgroup.toAddSubgroup'_closure]
+      apply (AddSubgroup.mem_toSubgroup' _ (gamma_m_helper φ γ p ⟨s, s_mem⟩)).mp
+      rw [AddSubgroup.toSubgroup'_closure]
+      simp
       exact hn
+
+lemma three_two_ker_fg  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ): φ.ker.FG := by
+  sorry
 
 -- Extract a generatating set for the kernel of φ
 noncomputable def phi_S (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ): Finset (φ.ker) := by
@@ -10818,7 +10818,8 @@ def ker_generates {G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G
     apply Finset.mem_union_left
     apply one_mem_S
   generates := by
-    unfold S_n_ker_phi
+    simp
+    rw [Subgroup.closure_union]
     simp
     sorry
   one_mem := by
