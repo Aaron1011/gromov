@@ -10775,33 +10775,8 @@ structure GeneratesWithParam (G: Type*) [Group G] [DecidableEq G] where
   has_inv: ∀ g ∈ S, g⁻¹ ∈ S
   g_infinite: Infinite G
 
-lemma one_mem_S  {G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G) (hGS: GeneratesWithParam data.G') (γ: Additive data.G') (hγ: data.φ γ = 1): (1: (Multiplicative ↥data.φ.ker)) ∈ S_n_ker_phi hGS.S data.φ γ hγ 1 := by
+lemma one_mem_S  {G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G) (hGS: GeneratesWithParam data.G') (γ: Additive data.G') (hγ: data.φ γ = 1): 0 ∈ S_n_ker_phi hGS.S data.φ γ hγ 1 := by
   simp [S_n_ker_phi]
-  right
-  use 1
-  use ?_
-  use ?_
-  . rfl
-  . simp [three_two_S_n]
-    use 1
-    simp
-    use 1
-    use ?_
-    . simp [gamma_m_helper, e_i_regular_helper]
-      refine ⟨?_, ?_⟩
-      . apply hGS.one_mem
-      . rw [Subtype.ext_iff]
-        simp
-        conv =>
-          lhs
-          rhs
-          arg 1
-          arg 1
-          arg 2
-          equals 0 =>
-            rfl
-        simp
-        rfl
 
 -- TODO - generalize from InvolutiveInv and upstream to mathlib
 omit hGS in
@@ -10818,18 +10793,17 @@ lemma finset_union_neg {α : Type*}  [DecidableEq α] [InvolutiveNeg α] {s t : 
 
 -- TODO - figure out how to make this a 'let' without adding it to typeclass search
 omit hGS in
-def ker_generates {d: ℕ} (hd: 1 ≤ d) {n: ℕ} {G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G) (hGS: GeneratesWithParam data.G') (γ: data.G') (hγ: data.φ γ = 1)
-  (ker_poly: HasPolynomialGrowthD (G := Multiplicative (data.φ.ker)) ((Finset.image Additive.toMul (S_n_ker_phi hGS.S data.φ γ hγ n)) ∪ (Finset.image Additive.toMul ((S_n_ker_phi hGS.S data.φ γ hγ n)))⁻¹) (d - 1))
+def ker_generates {d: ℕ} (hd: 1 ≤ d){G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G) (hGS: GeneratesWithParam data.G') (γ: data.G') (hγ: data.φ γ = 1)
+  (ker_poly: HasPolynomialGrowthD (G := Multiplicative (data.φ.ker)) ((Finset.image Additive.toMul (S_n_ker_phi hGS.S data.φ γ hγ 1)) ∪ (Finset.image Additive.toMul ((S_n_ker_phi hGS.S data.φ γ hγ 1)))⁻¹) (d - 1))
   (ker_infinite: Infinite (Multiplicative data.φ.ker)): Generates := {
   G := (Multiplicative data.φ.ker)
   g_group := by infer_instance
   g_eq := by infer_instance
-  S := (Finset.image Additive.toMul (S_n_ker_phi hGS.S data.φ γ hγ n)) ∪ (Finset.image Additive.toMul ((S_n_ker_phi hGS.S data.φ γ hγ n)))⁻¹
+  S := (Finset.image Additive.toMul (S_n_ker_phi hGS.S data.φ γ hγ 1)) ∪ (Finset.image Additive.toMul ((S_n_ker_phi hGS.S data.φ γ hγ 1)))⁻¹
   hS := by
-    sorry
-    -- use 1
-    -- apply Finset.mem_union_left
-    -- apply one_mem_S
+    use 1
+    simp
+    exact one_mem_S data hGS γ hγ
   generates := by
     -- simp
     -- rw [Subgroup.closure_union]
@@ -10837,24 +10811,17 @@ def ker_generates {d: ℕ} (hd: 1 ≤ d) {n: ℕ} {G: Type*} [Group G] [Decidabl
     sorry
   one_mem := by
     apply Finset.mem_union_left
-    apply one_mem_S
+    rw [Finset.mem_image]
+    use 0
+    simp
+    -- TODO - figure out wht 'apply one_mem_S' is slow
+    exact one_mem_S data hGS γ hγ
+
   has_inv := by
     intro g hg
     simp at hg
     simp
     rw [or_comm]
-    conv =>
-      lhs
-      equals g ∈ (S_n_ker_phi hGS.S data.φ γ hγ 1) =>
-        simp
-        rw [← Finset.mem_inv']
-        conv =>
-          lhs
-          arg 1
-          equals -(-S_n_ker_phi hGS.S data.φ γ hγ 1) =>
-            rfl
-        simp
-    rw [← Finset.mem_inv']
     exact hg
   g_infinite := by
     exact ker_infinite
