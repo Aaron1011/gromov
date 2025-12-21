@@ -10716,7 +10716,17 @@ lemma three_two_S_n_generates  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S
       exact hn
 
 lemma three_two_ker_fg  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ): φ.ker.FG := by
-  sorry
+  rw [AddSubgroup.fg_iff]
+  obtain ⟨γ, hγ⟩ := hφ 1
+  obtain ⟨n, hn⟩ := three_two_S_n_generates d hd hG φ γ hγ
+  use ofMul '' ↑(three_two_S_n S φ γ n)
+  refine ⟨hn, ?_⟩
+  rw [Set.finite_image_iff]
+  .
+    simp
+  . intro a b hab
+    simpa using hab
+
 
 -- Extract a generatating set for the kernel of φ
 noncomputable def phi_S (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (hφ: Function.Surjective φ): Finset (φ.ker) := by
@@ -10808,19 +10818,22 @@ lemma finset_union_neg {α : Type*}  [DecidableEq α] [InvolutiveNeg α] {s t : 
 
 -- TODO - figure out how to make this a 'let' without adding it to typeclass search
 omit hGS in
-def ker_generates {G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G) (hGS: GeneratesWithParam data.G') (γ: Additive data.G') (hγ: data.φ γ = 1) (ker_infinite: Infinite (Multiplicative data.φ.ker)): Generates := {
+def ker_generates {d: ℕ} (hd: 1 ≤ d) {n: ℕ} {G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G) (hGS: GeneratesWithParam data.G') (γ: data.G') (hγ: data.φ γ = 1)
+  (ker_poly: HasPolynomialGrowthD (G := Multiplicative (data.φ.ker)) ((Finset.image Additive.toMul (S_n_ker_phi hGS.S data.φ γ hγ n)) ∪ (Finset.image Additive.toMul ((S_n_ker_phi hGS.S data.φ γ hγ n)))⁻¹) (d - 1))
+  (ker_infinite: Infinite (Multiplicative data.φ.ker)): Generates := {
   G := (Multiplicative data.φ.ker)
   g_group := by infer_instance
   g_eq := by infer_instance
-  S := (S_n_ker_phi hGS.S data.φ γ hγ 1) ∪ -(S_n_ker_phi hGS.S data.φ γ hγ 1)
+  S := (Finset.image Additive.toMul (S_n_ker_phi hGS.S data.φ γ hγ n)) ∪ (Finset.image Additive.toMul ((S_n_ker_phi hGS.S data.φ γ hγ n)))⁻¹
   hS := by
-    use 1
-    apply Finset.mem_union_left
-    apply one_mem_S
+    sorry
+    -- use 1
+    -- apply Finset.mem_union_left
+    -- apply one_mem_S
   generates := by
-    simp
-    rw [Subgroup.closure_union]
-    simp
+    -- simp
+    -- rw [Subgroup.closure_union]
+    -- simp
     sorry
   one_mem := by
     apply Finset.mem_union_left
@@ -11440,8 +11453,18 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       . infer_instance
     .
       rw [not_finite_iff_infinite] at kernel_finite
-      apply inductive_gromov (ker_generates data new_generate_data γ hγ kernel_finite)
-      exact kernel_poly
+
+      have new_kernel_poly := kernel_poly
+      conv at new_kernel_poly =>
+        arg 1
+        equals (((Finset.image Additive.toMul (S_n_ker_phi S data.φ γ hγ 1)) ∪ (Inv.inv (α := Finset (Multiplicative _))) (Finset.image Additive.toMul ((S_n_ker_phi S data.φ γ hγ 1))))) =>
+          ext a
+          sorry
+
+      let foo := ker_generates hd data new_generate_data γ hγ new_kernel_poly kernel_finite
+      let bar := inductive_gromov foo new_kernel_poly
+      apply inductive_gromov foo
+      exact new_kernel_poly
   .
     obtain ⟨pre_N, pre_N_nilpotent, pre_N_finiteindex⟩ := kernel_virtually_nilpotent
     let N := pre_N.normalCore
