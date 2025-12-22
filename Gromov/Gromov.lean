@@ -5040,10 +5040,6 @@ noncomputable def Laplace_linear: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G
     rw [MeasureTheory.MemLp.toLp_const_smul]
     rw [smul_sub]
 }
--- spectrum.norm_le_norm_mul_of_mem
---lemma laplce_spectrum_real (z: ℂ) (hz: z ∈ spectrum ℂ (Laplace_linear )): z.im = 0 := by
---  sorry
-
 lemma f_n_fin_supp (n: ℕ): (f_n  n).support.Finite := by
   unfold f_n
   simp
@@ -5796,9 +5792,9 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
   --     simp_rw [Laplace]
   --     simp_rw [inner_sub_left, conv_mu_lp2]
   --     simp_rw [f_conv_mu]
-  --     sorry
+  --     s orry
   --     --grw [real_inner_le_norm]
-  --   . sorry
+  --   . s orry
 
 
   -- -- Show that the punctured open ball is nonempty, so a dense set has a nonempty intersection with it
@@ -5874,7 +5870,7 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
   -- simp only [laplace_range] at g_range
   -- simp only [LinearMap.mem_range] at g_range
   -- obtain ⟨a, ha⟩ := g_range
-  -- sorry
+  -- s orry
 
   -- by_cases inner_laplace_nonneg: 0 ≤ ⟪Laplace a, a⟫
   -- .
@@ -5909,7 +5905,7 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
   --       rw [eq_comm] at ha
   --       contradiction
   --     . exact inner_laplace_nonneg
-  -- . sorry
+  -- . s orry
 
 
 #print axioms laplace_g_n
@@ -6285,12 +6281,6 @@ lemma g_sub_norm_gt (n: ℕ): ∃ s ∈ S, ‖(G_n (n + 1) (by simp)) - (conv_fi
 
 
 
-
-
-
-  -- field_simp at sum_norm
-  -- sorry
-
 #print sorries proposition_3_18
 #print axioms proposition_3_18
 #print axioms laplace_range_dense
@@ -6456,16 +6446,6 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
           equals 0 =>
             rw [ae_eq_everywhere.mp (MeasureTheory.AEEqFun.coeFn_zero)]
         simp
-      -- . rw [Lp.norm_def] at norm_eq_zero
-      --   rw [ae_eq_everywhere.mp (Lp.coeFn_sub _ _)]  at norm_eq_zero
-      --   simp only [F_n_lp2, conv_mu_lp2] at norm_eq_zero
-      --   simp_rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)] at norm_eq_zero
-      --   rw [ENNReal.toReal_eq_zero_iff] at norm_eq_zero
-      --   cases norm_eq_zero
-      --   . rename_i foo
-      --     simp [foo]
-      --   simp [norm_eq_zero]
-      --   sorry
       rw [ENNReal.ofReal_div_of_pos] at other
       .
         simp only [ofReal_norm, Lp.enorm_def] at other
@@ -6679,20 +6659,6 @@ lemma bounded_from_elpnorm_bound (f: G → ℝ) (p: ℕ) (hp: p ≠ 0) (C: ℝ) 
 
 
 
-
-  --simp at norm_zero
-  --have foo (n: ℕ) := F_n_norm_eq_one (seq n)
-  --simp [F_n_norm_eq_one] at norm_zero
-
-    -- apply Filter.Eventually.of_forall
-    -- rw [tendsto_pi_nhds] at tendsto_F
-    -- apply tendsto_F
-
-  --sorry
--- We need to prove that a bounded seqence of Lipschitz harmonic functions has a subsequence that converges to a Lipschitz harmonic function
--- lp.memℓp_of_tendsto
--- MeasureTheory.ae_bdd_liminf_atTop_of_eLpNorm_bdd
--- IsCompact.tendsto_subseq
 
 lemma haar_eq_haar_add : myHaar = myHaarAddOpp := by
   rfl
@@ -8574,45 +8540,6 @@ lemma exists_theorem_3_1_input [hGS: Generates ] {d: ℕ} (hd: HasPolynomialGrow
   . exact rho_g_case_finite (by simpa using rho_g_infinite)
 
 
--- lemma poly_growth_implies (S': Finset G) (d: ℕ) (hd: HasPolynomialGrowthD S d): HasPolynomialGrowthD S' d := by
-
---   simp [HasPolynomialGrowthD] at hd
---   obtain ⟨a, s_poly⟩ := hd
---   simp [HasPolynomialGrowthD]
---   have b: ℕ := 1
---   have C: ℕ := 0
---   use #(S ^ C) * ↑a
---   intro n hn
---   --have inject_s_card := Finset.card_le_card_of_injOn (s := S') (t := S ^ C) sorry sorry sorry
---   specialize s_poly n hn
---   have le_pow := Finset.card_pow_le (s := S') (n := n)
-
---   calc
---     #(S' ^ n) ≤ #((S ^ C) * S^n) := sorry
---     _ ≤ #((S ^ C)) * #(S ^ n) := by
---       exact Finset.card_mul_le
---     _ ≤ #((S ^ C)) * (↑a * n ^ d) := by
---       exact Nat.mul_le_mul_left (#(S ^ C)) s_poly
-
---     -- _ = #((S ^ n) ^ C) := by
---     --   rw [← pow_mul]
---     --   rw [mul_comm]
---     --   rw [pow_mul]
---     -- _ ≤ #(S ^ n)^C := by exact Finset.card_pow_le
---     -- _ ≤ (↑a * n ^ d)^C := by
---     --   exact Nat.pow_le_pow_left s_poly C
-
---   rw [← mul_assoc]
---   -- calc
---   --   #(S' ^ n) ≤ #(S') ^ n := by apply Finset.card_pow_le
---   --   _ ≤ #(S ^ C) ^ n := by exact Nat.pow_le_pow_left inject_s_card n
---   --   _ ≤ (↑a * C ^ d)^n := by exact Nat.pow_le_pow_left s_poly n
-
-
--- #print axioms poly_growth_implies
-
-
-
 
 
 structure PreservesProd (T: Type*) (l h: List G) (γ: G) where
@@ -8693,31 +8620,12 @@ lemma gamma_m_eq_mulAt (φ: (Additive G) →+ ℤ) (γ: G) (m: ℤ) (s: S): gamm
 -- The set {γ_m_i}_{m ≤ n}
 omit hGS in
 def three_two_S_n {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (φ: (Additive G) →+ ℤ) (γ: G) (n: ℕ): Finset G := Finset.image (Function.uncurry (gamma_m_helper φ γ)) ((Finset.Icc (-n : ℤ) n).product S.attach)
---def three_two_S_n (φ: (Additive G) →+ ℤ) (γ: G) (n: ℕ): Finset G := (Function.uncurry (gamma_m_helper  φ γ)) '' ({ m: ℤ | |m| ≤ n} ×ˢ Set.univ)
 -- The set of words of at length at most n generated by {γ_m_i}_{m ≤ n}
 -- Note - This is based on https://terrytao.wordpress.com/2010/02/18/a-proof-of-gromovs-theorem/, which uses
 -- "length at most n"
 -- The Vikman paper says "words of length n", which seems incorrect
 
--- omit hGS in
--- lemma three_two_S_n_inv_eq {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (hS: S = S⁻¹) (φ: (Additive G) →+ ℤ) (γ: G) (n: ℕ): three_two_S_n S φ γ n = (three_two_S_n S φ γ n)⁻¹ := by
---   ext x
---   simp [three_two_S_n, gamma_m_helper, e_i_regular_helper]
---   simp_rw [← inv_eq_iff_eq_inv]
---   simp
---   refine ⟨?_, ?_⟩
---   . intro hx
---     obtain ⟨a, ha, s, hs, other⟩ := hx
---     use a
---     refine ⟨by omega, ?_⟩
---     use s⁻¹
---     rw [hS]
---     simp
---     refine ⟨hs, ?_⟩
 
-
-
---   sorry
 
 omit hGS in
 lemma gamma_helper_subset_S_n {G: Type*} [Group G] [DecidableEq G] {S: Finset G} (φ: (Additive G) →+ ℤ) (γ: G) (n: ℕ): Set.range (gamma_m_helper (S := S) φ γ n) ⊆ three_two_S_n S  φ γ n := by
@@ -10632,13 +10540,6 @@ lemma three_two_S_n_subset_ker {G: Type*} [Group G] [DecidableEq G] (S: Finset G
   simp
   exact id (Eq.symm prod_eq_x)
 
--- lemma three_two_S_n_generates  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (γ : Additive G) (hγ: φ γ = 1):
---   ∃ n: ℕ, Subgroup.closure (Finset.preimage (three_two_S_n S  φ γ (n)) Multiplicative.ofAdd (by
---     apply Set.injOn_of_injective
---     exact fun ⦃a₁ a₂⦄ a ↦ a
---   )) = ⊤ := by
---   sorry
-
 lemma three_two_S_n_generates  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (φ: (Additive G) →+ ℤ) (γ : Additive G) (phi_gamma: φ γ = 1): ∃ n, AddSubgroup.closure (Additive.ofMul '' (three_two_S_n S φ γ (n))) = φ.ker := by
   --obtain ⟨n, hn⟩ := three_two_poly_growth d hd hG γ φ hφ phi_gamma
   obtain ⟨n, hn⟩ := three_poly_poly_growth_all_s_n d hd hG γ φ phi_gamma
@@ -11247,8 +11148,8 @@ def iteratedCommutator {T: Type*} [Group T] {M: Subgroup T} (base right: M) (n: 
 --     .
 --       rename_i next_eq_gamma
 --       simp [next_eq_gamma]
---       sorry
---     . sorry
+--       s orry
+--     . s orry
 --   pos_second := by
 --     split_ifs
 --     . rename_i next_eq_gamma
@@ -11262,14 +11163,14 @@ def iteratedCommutator {T: Type*} [Group T] {M: Subgroup T} (base right: M) (n: 
 --         obtain ⟨b, b_eq⟩ := prev_eq
 --         use b
 --         simp [next_eq_gamma, iteratedCommutator]
---         sorry
+--         s orry
 --     .
 --       rename_i next_ne_gamma
 --       simp
 -- }
 -- termination_by n
 -- decreasing_by
---   all_goals { sorry }
+--   all_goals { s orry }
 -- StrictMono.not_bddAbove_range_of_wellFoundedLT
 
 
@@ -12144,30 +12045,6 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       . have foo := data.finite_index
         rw [Subgroup.finiteIndex_iff] at foo
         exact foo
-
-    --apply poly_growth_equiv_generates ker_generates _ kernel_poly
-
--- lemma three_two_kernel_virtually_nilpotent (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolynomialGrowthD S d) (g: G) (φ: (Additive G) →+ ℤ) (γ: G)  (hγ : φ γ = 1) (phi_gromov: Group.IsVirtuallyNilpotent (Multiplicative φ.ker))
---  : HasPolynomialGrowthD (d - 1) (S := phi_generating n φ γ ) := by
---   unfold HasPolynomialGrowthD
---   unfold Group.IsVirtuallyNilpotent at phi_gromov
---   obtain ⟨pre_N, nilpotent_pre_N, old_finite_index_pre_N⟩ := phi_gromov
---   let N := pre_N.normalCore
---   have nilpotent_N: Group.IsNilpotent N := by
---     rw [nilpotent_iff_lowerCentralSeries]
---     rw [nilpotent_iff_lowerCentralSeries] at nilpotent_pre_N
---     obtain ⟨n, hn⟩ := nilpotent_pre_N
---     have := lowerCentralSeries_map_subtype_le N n
---     simp at this
---     sorry
---   have N_normal: N.Normal := by
---     simp [N]
---     apply Subgroup.normalCore_normal
---   sorry
-
---have poly_r: ∀ r: ℕ, r * #()
-
-  --let new_elem := fun (s: G) => s * (γ ^ )
 
 
 
