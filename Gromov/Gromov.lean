@@ -11459,11 +11459,28 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     S := S_G'
     g_group := by infer_instance
     g_eq := inferInstance
-    hS := sorry
-    generates := sorry
-    one_mem := sorry
-    has_inv := sorry
-    g_infinite := sorry
+    hS := by
+      use 1
+      unfold S_G'
+      simp
+    generates := by
+      unfold S_G'
+      simp
+      rw [Subgroup.closure_union]
+      have foo := G'_fg.out.choose_spec
+      simp [foo]
+    one_mem := by
+      simp [S_G']
+    has_inv := by
+      unfold S_G'
+      intro g
+      rw [← Finset.mem_inv']
+      simp
+      nth_rw 2 [or_comm]
+      simp
+    g_infinite := by
+      have foo := Infinite.of_surjective _ data.hφ
+      exact foo
   }
   -- TODO - why can't this be an inline instance for hGS
   obtain ⟨n, generates_with_n⟩ := three_two_S_n_generates  (hGS := bad_instance) d hd G'_poly data.φ γ hγ
