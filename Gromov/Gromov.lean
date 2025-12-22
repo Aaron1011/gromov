@@ -10775,7 +10775,7 @@ structure GeneratesWithParam (G: Type*) [Group G] [DecidableEq G] where
   has_inv: ∀ g ∈ S, g⁻¹ ∈ S
   g_infinite: Infinite G
 
-lemma one_mem_S  {G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G) (hGS: GeneratesWithParam data.G') (γ: Additive data.G') (hγ: data.φ γ = 1): 0 ∈ S_n_ker_phi hGS.S data.φ γ hγ 1 := by
+lemma one_mem_S  {G: Type*} [Group G] [DecidableEq G] {n: ℕ} (data: Theorem3_1_Input G) (hGS: GeneratesWithParam data.G') (γ: Additive data.G') (hγ: data.φ γ = 1): 0 ∈ S_n_ker_phi hGS.S data.φ γ hγ n := by
   simp [S_n_ker_phi]
 
 -- TODO - generalize from InvolutiveInv and upstream to mathlib
@@ -10793,22 +10793,92 @@ lemma finset_union_neg {α : Type*}  [DecidableEq α] [InvolutiveNeg α] {s t : 
 
 -- TODO - figure out how to make this a 'let' without adding it to typeclass search
 omit hGS in
-def ker_generates {d: ℕ} (hd: 1 ≤ d){G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G) (hGS: GeneratesWithParam data.G') (γ: data.G') (hγ: data.φ γ = 1)
-  (ker_poly: HasPolynomialGrowthD (G := Multiplicative (data.φ.ker)) ((Finset.image Additive.toMul (S_n_ker_phi hGS.S data.φ γ hγ 1)) ∪ (Finset.image Additive.toMul ((S_n_ker_phi hGS.S data.φ γ hγ 1)))⁻¹) (d - 1))
-  (ker_infinite: Infinite (Multiplicative data.φ.ker)): Generates := {
+def ker_generates {d: ℕ} {n: ℕ} (hd: 1 ≤ d){G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G) (hGS: GeneratesWithParam data.G') (γ: data.G') (hγ: data.φ γ = 1)
+  (ker_poly: HasPolynomialGrowthD (G := Multiplicative (data.φ.ker)) ((Finset.image Additive.toMul (S_n_ker_phi hGS.S data.φ γ hγ n)) ∪ (Finset.image Additive.toMul ((S_n_ker_phi hGS.S data.φ γ hγ n)))⁻¹) (d - 1))
+  (ker_infinite: Infinite (Multiplicative data.φ.ker))
+  (ker_generates: AddSubgroup.closure (Additive.ofMul '' (three_two_S_n hGS.S data.φ γ (n))) = data.φ.ker)
+  : Generates := {
   G := (Multiplicative data.φ.ker)
   g_group := by infer_instance
   g_eq := by infer_instance
-  S := (Finset.image Additive.toMul (S_n_ker_phi hGS.S data.φ γ hγ 1)) ∪ (Finset.image Additive.toMul ((S_n_ker_phi hGS.S data.φ γ hγ 1)))⁻¹
+  S := (Finset.image Additive.toMul (S_n_ker_phi hGS.S data.φ γ hγ n)) ∪ (Finset.image Additive.toMul ((S_n_ker_phi hGS.S data.φ γ hγ n)))⁻¹
   hS := by
     use 1
     simp
     exact one_mem_S data hGS γ hγ
   generates := by
-    -- simp
-    -- rw [Subgroup.closure_union]
-    -- simp
-    sorry
+    simp
+    rw [Subgroup.closure_union]
+    conv =>
+      arg 1
+      arg 1
+      equals ⊤ =>
+
+        let f := (AddSubgroup.subtype data.φ.ker).toMultiplicative
+        -- have foo := Subgroup.map_eq_map_iff (G) (f := Subgroup.subtype (G := Multiplicative (data.φ.ker))) (H := ⊤) (K := ⊤)
+        -- let b := Subgroup.map a
+        -- apply_fun (fun f => Subgroup.map (Subgroup.subtype (G := Multiplicative (data.φ.ker))) f)
+        ext a
+        simp
+        rw [AddSubgroup.ext_iff] at ker_generates
+        specialize ker_generates a.val
+        have foo := ker_generates.mpr a.prop
+        simp at foo
+        conv at foo =>
+          arg 2
+          equals Additive.ofMul a.val => rfl
+
+        apply (AddSubgroup.mem_toSubgroup' _ _).mpr at foo
+        rw [AddSubgroup.toSubgroup'_closure] at foo
+        simp at foo
+        unfold S_n_ker_phi
+        simp
+        rw [Set.insert_eq]
+        rw [Set.image_union]
+        rw [Subgroup.closure_union]
+        simp
+        rw [← Subgroup.mem_map_iff_mem (f := f)]
+        .
+          simp only [f, Subgroup.subtype_apply]
+          rw [MonoidHom.map_closure]
+          simp
+          conv =>
+            arg 2
+            equals a.val => rfl
+          conv =>
+            arg 1
+            arg 1
+            equals (three_two_S_n hGS.S data.φ γ n).toSet =>
+              ext b
+              rw [Set.mem_image]
+              refine ⟨?_, ?_⟩
+              . intro hb
+                obtain ⟨c, c_mem, b_eq⟩ := hb
+                rw [← b_eq]
+                simp
+                rw [Set.mem_image] at c_mem
+                obtain ⟨d, hd, c_eq⟩ := c_mem
+                rw [← c_eq]
+                simp at hd
+                obtain ⟨x, hx, x_mem, x_eq⟩ := hd
+                rw [← x_eq]
+                exact x_mem
+              . intro hb
+                have b_mem := (three_two_S_n_subset_ker hGS.S data.φ γ hγ n) hb
+                use ⟨b, by simpa using b_mem⟩
+                refine ⟨?_, rfl⟩
+                rw [Set.mem_image]
+                use ⟨b, by simpa using b_mem⟩
+                refine ⟨?_, rfl⟩
+                simp
+                use b.val
+                simp
+                simpa using hb
+          exact foo
+        . simp [f]
+          intro x y hxy
+          simpa using hxy
+    simp
   one_mem := by
     apply Finset.mem_union_left
     rw [Finset.mem_image]
@@ -11384,8 +11454,20 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
 
   obtain ⟨γ, hγ⟩ := data.hφ 1
-  have kernel_poly := three_two_kernel_poly_growth (hGS := new_generates) d hd 1 G'_poly data.φ γ hγ
-
+  let bad_instance: Generates := {
+    G := data.G'
+    S := S_G'
+    g_group := by infer_instance
+    g_eq := inferInstance
+    hS := sorry
+    generates := sorry
+    one_mem := sorry
+    has_inv := sorry
+    g_infinite := sorry
+  }
+  -- TODO - why can't this be an inline instance for hGS
+  obtain ⟨n, generates_with_n⟩ := three_two_S_n_generates  (hGS := bad_instance) d hd G'_poly data.φ γ hγ
+  have kernel_poly := three_two_kernel_poly_growth (hGS := new_generates) d hd n G'_poly data.φ γ hγ
   have kernel_fg := three_two_ker_fg d hd G'_poly data.φ data.hφ
   --have kernel_poly_fg_out := poly_growth_equiv_generates new_generates kernel_fg.choose (d := 2)
 
@@ -11425,7 +11507,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       -- TODO - get rid of defeq abuse
       conv at new_kernel_poly =>
         arg 1
-        equals (((Finset.image Additive.toMul (S_n_ker_phi S data.φ γ hγ 1)) ∪ (Inv.inv (α := Finset (Multiplicative _))) (Finset.image Additive.toMul ((S_n_ker_phi S data.φ γ hγ 1))))) =>
+        equals (((Finset.image Additive.toMul (S_n_ker_phi S data.φ γ hγ n)) ∪ (Inv.inv (α := Finset (Multiplicative _))) (Finset.image Additive.toMul ((S_n_ker_phi S data.φ γ hγ n))))) =>
           ext a
           refine ⟨?_, ?_⟩
           . intro ha
@@ -11462,7 +11544,9 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               exact hb
 
 
-      let foo := ker_generates hd data new_generate_data γ hγ new_kernel_poly kernel_finite
+      let foo := ker_generates hd data new_generate_data γ hγ new_kernel_poly kernel_finite (by
+        exact generates_with_n
+      )
       let bar := inductive_gromov foo new_kernel_poly
       apply inductive_gromov foo
       exact new_kernel_poly
