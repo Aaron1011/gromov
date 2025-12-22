@@ -1,7 +1,17 @@
 import Mathlib
 
 lemma addgroup_fg_map {G G': Type*} [AddGroup G] [AddGroup G'] (H: AddSubgroup G) (h_fg: H.FG) (f: G →+ G'): (AddSubgroup.map f H).FG := by
-  sorry
+  obtain ⟨s, hs⟩ := h_fg
+  classical
+  rw [AddSubgroup.fg_iff]
+  use s.image f
+  refine ⟨?_, ?_⟩
+  .
+    rw [Finset.coe_image]
+    rw [← AddMonoidHom.map_closure]
+    rw [hs]
+  . simp
+    exact Set.toFinite (⇑f '' ↑s)
 
 lemma addsubgroup_z_map (n: ℕ) (H: AddSubgroup (Fin n → ℤ)): H.FG := by
   sorry
