@@ -10794,7 +10794,6 @@ lemma finset_union_neg {α : Type*}  [DecidableEq α] [InvolutiveNeg α] {s t : 
 -- TODO - figure out how to make this a 'let' without adding it to typeclass search
 omit hGS in
 def ker_generates {d: ℕ} {n: ℕ} (hd: 1 ≤ d){G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G) (hGS: GeneratesWithParam data.G') (γ: data.G') (hγ: data.φ γ = 1)
-  (ker_poly: HasPolynomialGrowthD (G := Multiplicative (data.φ.ker)) ((Finset.image Additive.toMul (S_n_ker_phi hGS.S data.φ γ hγ n)) ∪ (Finset.image Additive.toMul ((S_n_ker_phi hGS.S data.φ γ hγ n)))⁻¹) (d - 1))
   (ker_infinite: Infinite (Multiplicative data.φ.ker))
   (ker_generates: AddSubgroup.closure (Additive.ofMul '' (three_two_S_n hGS.S data.φ γ (n))) = data.φ.ker)
   : Generates := {
@@ -11561,7 +11560,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               exact hb
 
 
-      let foo := ker_generates hd data new_generate_data γ hγ new_kernel_poly kernel_finite (by
+      let foo := ker_generates hd data new_generate_data γ hγ kernel_finite (by
         exact generates_with_n
       )
       let bar := inductive_gromov foo new_kernel_poly
