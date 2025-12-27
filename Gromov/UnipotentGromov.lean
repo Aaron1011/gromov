@@ -1398,6 +1398,7 @@ lemma torsion_characteristic {G: Type*} [CommGroup G]: (CommGroup.torsion G).Cha
   apply MonoidHom.isOfFinOrder
   exact hg
 
+-- TODO - generalize and upstream to mathlib
 lemma eigen_one_unipotent {A: Type*} [Nontrivial A] [AddCommGroup A] [Module ℂ A] [Module.Finite ℂ A] (f: Module.End ℂ A) (hf: ∀ k : Module.End.Eigenvalues f, k.val = 1): ∃ n, (f - 1)^n = 0 := by
 
   have charpoly_mono: ∀ x ∈ f.charpoly.roots, x = 1 := by
@@ -1451,10 +1452,13 @@ lemma eigen_one_unipotent {A: Type*} [Nontrivial A] [AddCommGroup A] [Module ℂ
   have foo := Polynomial.prod_multiset_X_sub_C_of_monic_of_roots_card_eq monic (by exact
     IsAlgClosed.card_roots_eq_natDegree)
 
-  conv at foo =>
-    pattern f.charpoly.roots
+  rw [charpoly_roots] at foo
+  simp at foo
 
-  grind
+  have f_eval := LinearMap.aeval_self_charpoly f
+  rw [← foo] at f_eval
+  simp at f_eval
+  use f.charpoly.natDegree
 
 
 
