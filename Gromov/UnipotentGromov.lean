@@ -1399,7 +1399,7 @@ lemma torsion_characteristic {G: Type*} [CommGroup G]: (CommGroup.torsion G).Cha
   exact hg
 
 -- TODO - generalize and upstream to mathlib
-lemma eigen_one_unipotent {A: Type*} [Nontrivial A] [AddCommGroup A] [Module ℂ A] [Module.Finite ℂ A] (f: Module.End ℂ A) (hf: ∀ k : Module.End.Eigenvalues f, k.val = 1): ∃ n, (f - 1)^n = 0 := by
+lemma eigen_one_unipotent {A: Type*}  [AddCommGroup A] [Module ℂ A] [Module.Finite ℂ A] (f: Module.End ℂ A) (hf: ∀ k : Module.End.Eigenvalues f, k.val = 1): ∃ n, (f - 1)^n = 0 := by
 
   have charpoly_mono: ∀ x ∈ f.charpoly.roots, x = 1 := by
     intro x hx
@@ -1439,9 +1439,8 @@ lemma eigen_one_unipotent {A: Type*} [Nontrivial A] [AddCommGroup A] [Module ℂ
       .
         by_contra!
         have foo := LinearMap.charpoly_natDegree f
-        simp [this] at foo
-        have foo := Module.finrank_pos (R := ℂ) (M := A)
-        grind
+        have monic := LinearMap.charpoly_monic f
+        simp [this] at monic
 
 
 
@@ -1618,24 +1617,24 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
 
 
 
-  have torsion_ne_top: CommGroup.torsion ↥(Subgroup.center ↥N) ≠ ⊤ := by
+  -- have torsion_ne_top: CommGroup.torsion ↥(Subgroup.center ↥N) ≠ ⊤ := by
 
-    sorry
+  --   sorry
 
 
-  have quot_nontrivial : Nontrivial ((Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)) := by
-    -- TODO - use QuotientGroup.nontrivial_iff
-    sorry
+  -- have quot_nontrivial : Nontrivial ((Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)) := by
+  --   -- TODO - use QuotientGroup.nontrivial_iff
+  --   sorry
 
   -- Module.free_of_finite_type_torsion_free'
   -- QuotientGroup.instIsMulTorsionFree
 
-  have rank_ne_zero: NeZero (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)))) := by
-    rw [neZero_iff]
-    rw [Nat.ne_zero_iff_zero_lt]
+  -- have rank_ne_zero: NeZero (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)))) := by
+  --   rw [neZero_iff]
+  --   rw [Nat.ne_zero_iff_zero_lt]
 
-    -- QuotientGroup.nontrivial_iff
-    apply Module.finrank_pos
+  --   -- QuotientGroup.nontrivial_iff
+  --   apply Module.finrank_pos
 
   obtain ⟨m, hm⟩ := eigen_one_unipotent _ gamma_pow_eigen
 
