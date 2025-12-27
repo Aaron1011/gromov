@@ -1462,6 +1462,7 @@ lemma eigen_one_unipotent {A: Type*}  [AddCommGroup A] [Module ℂ A] [Module.Fi
 
 
 
+set_option maxHeartbeats 300000 in
 lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N] [N_normal: N.Normal] (hN: Subgroup.FG N) (gamma: G):
     ∃ a n, ∀ g ∈ Subgroup.center N, iteratedCommutator g.val (gamma^a) n = 1 := by
 
@@ -1487,25 +1488,25 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
   let center_fst := (MonoidHom.fst _ _).comp center_iso.toMonoidHom
   let aut_congr := MulAut.congr center_iso
 
-  let gamma_conj: MulAut ↥(Subgroup.center ↥N) := {
-    toFun := fun a => ⟨⟨gamma * a * gamma⁻¹, by
+  let gamma_pow_conj (n: ℕ): MulAut ↥(Subgroup.center ↥N) := {
+    toFun := fun a => ⟨⟨gamma^n * a * (gamma^n)⁻¹, by
       apply N_normal.conj_mem
       simp
     ⟩, by
       have map_normal: (Subgroup.map (Subgroup.subtype _) (Subgroup.center N)).Normal := by
         infer_instance
-      have foo := map_normal.conj_mem a (by simp) gamma
+      have foo := map_normal.conj_mem a (by simp) (gamma^n)
       simp at foo
       obtain ⟨a_mem, other_mem⟩ := foo
       exact other_mem
     ⟩
-    invFun := fun a =>  ⟨⟨gamma⁻¹ * a * gamma, by
+    invFun := fun a =>  ⟨⟨(gamma^n)⁻¹ * a * (gamma^n), by
       apply N_normal.conj_mem'
       simp
     ⟩, by (
       have map_normal: (Subgroup.map (Subgroup.subtype _) (Subgroup.center N)).Normal := by
         infer_instance
-      have foo := map_normal.conj_mem' a (by simp) gamma
+      have foo := map_normal.conj_mem' a (by simp) (gamma^n)
       simp at foo
       obtain ⟨a_mem, other_mem⟩ := foo
       exact other_mem
@@ -1519,6 +1520,10 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     map_mul' := by
       simp
   }
+
+
+
+  let gamma_conj := gamma_pow_conj 1
 
   have torsion_free: IsMulTorsionFree ((Subgroup.center N) ⧸ (CommGroup.torsion (Subgroup.center N))) := by
     apply QuotientGroup.instIsMulTorsionFree
@@ -1638,26 +1643,99 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
 
   obtain ⟨m, hm⟩ := eigen_one_unipotent _ gamma_pow_eigen
 
-  let induced_gamma_aut := aut_congr gamma_conj
+  have quotient_comm_trivial: ∀ z : (↥(Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)), iteratedCommutator z.out.val.val ((gamma) ^ (n_prod)) m ∈ Subgroup.map (Subgroup.subtype _) (Subgroup.center N) := by
+    clear * - gamma_conj
+    intro z
+
+    have comm_eq: ∀ n: ℕ, iteratedCommutator z.out.val.val ((gamma) ^ (n_prod)) 1 = (center_quot_equiv.symm ((-((gamma_int ^ n_prod) - 1)) ((center_quot_equiv z)))).out.val.val := by
+
+      intro n
+      simp [iteratedCommutator, Bracket.bracket]
+      conv =>
+        lhs
+        equals z.out.val.val * ((gamma_pow_conj n_prod) z.out⁻¹) =>
+          simp [gamma_pow_conj]
+          group
+
+      rw [← Subgroup.coe_mul, ← Subgroup.coe_mul]
+      rw [← Subtype.ext_iff, ← Subtype.ext_iff]
+      simp
 
 
-  have induced_trivial: ∀ g: Subgroup.center N, ((induced_gamma_aut^K) (center_iso g)).snd = 1 := by
-    intro g
-    simp [induced_gamma_aut, aut_congr]
-    --rw [← MonoidHom.map_pow]
+      sorry
 
-    simp [K]
     sorry
 
-  -- let induced_snd_aut: MulAut (((i : I) → Multiplicative (ZMod (I_pow i ^ K_map i)))) := {
-  --   toFun := fun a => aut_congr gamma_conj
-  -- }
 
-  --let center_aut_fst := (MonoidHom.fst _ _).comp aut_congr.toMonoidHom
+  let K := Nat.card (MulAut ↥(Subgroup.map N.subtype (Subgroup.center ↥N)))
 
-  have gamma_snd_trivial: ∀ g: Subgroup.center N, (center_iso g^K).snd = 1 := by
-    intro g
-    simp [K]
+
+
+  use (n_prod * K)
+  use (m + 1)
+  intro g hg
+  unfold iteratedCommutator
+  rw [Function.iterate_succ']
+  simp
+
+  have comm_torsion_trivial: ∀ h ∈ (CommGroup.torsion ↥(Subgroup.center ↥N)), ⁅h.val.val, gamma ^ (n_prod * K)⁆ = 1 := by
+    intro h h_mem
+    rw [commutatorElement_def]
+
+    have conj_trivial: MulAut.conjNormal (H := Subgroup.map (Subgroup.subtype _) (Subgroup.center N)) (gamma ^ (n_prod * K)) = 1 := by
+      rw [MonoidHom.map_pow]
+      rw [pow_mul']
+      unfold K
+      simp
+
+    apply_fun (fun f => f ⟨h⁻¹, by simp⟩) at conj_trivial
+    rw [Subtype.ext_iff] at conj_trivial
+    rw [MulAut.conjNormal_apply] at conj_trivial
+    simp at conj_trivial
+    conv =>
+      lhs
+      equals h.val.val * (gamma ^ (n_prod * K) * (↑↑h)⁻¹ * (gamma ^ (n_prod * K))⁻¹) =>
+        group
+    simp [conj_trivial]
+
+
+  have mem_N: (fun x ↦ ⁅x, gamma ^ (n_prod * K)⁆)^[m] ↑g ∈ N := by
+    sorry
+
+  have mem_center: ⟨_, mem_N⟩ ∈ Subgroup.center N := by
+    sorry
+
+  have mem_torsion: ⟨_, mem_center⟩ ∈ CommGroup.torsion ↥(Subgroup.center ↥N) := by
+    sorry
+
+  specialize comm_torsion_trivial _ mem_torsion
+  simpa using comm_torsion_trivial
+
+
+
+
+
+
+  -- let induced_gamma_aut := aut_congr gamma_conj
+
+
+  -- have induced_trivial: ∀ g: Subgroup.center N, ((induced_gamma_aut^K) (center_iso g)).snd = 1 := by
+  --   intro g
+  --   simp [induced_gamma_aut, aut_congr]
+  --   --rw [← MonoidHom.map_pow]
+
+  --   simp [K]
+  --   sorry
+
+  -- -- let induced_snd_aut: MulAut (((i : I) → Multiplicative (ZMod (I_pow i ^ K_map i)))) := {
+  -- --   toFun := fun a => aut_congr gamma_conj
+  -- -- }
+
+  -- --let center_aut_fst := (MonoidHom.fst _ _).comp aut_congr.toMonoidHom
+
+  -- have gamma_snd_trivial: ∀ g: Subgroup.center N, (center_iso g^K).snd = 1 := by
+  --   intro g
+  --   simp [K]
 
 
 
@@ -1741,7 +1819,6 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
   --have conj_gamma := ((MulAut.conj gamma).toMonoidHom.restrict N).restrict (Subgroup.center N)
   --let comp_hom := MonoidHom.comp conj_gamma center_iso.symm.toMonoidHom
 
-  sorry
 
 lemma normal_comm_mem_right {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (a b: G) (hb: b ∈ N) :
   ⁅a, b⁆ ∈ N := by
