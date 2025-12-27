@@ -1398,6 +1398,66 @@ lemma torsion_characteristic {G: Type*} [CommGroup G]: (CommGroup.torsion G).Cha
   apply MonoidHom.isOfFinOrder
   exact hg
 
+lemma eigen_one_unipotent {A: Type*} [Nontrivial A] [AddCommGroup A] [Module ℂ A] [Module.Finite ℂ A] (f: Module.End ℂ A) (hf: ∀ k : Module.End.Eigenvalues f, k.val = 1): ∃ n, (f - 1)^n = 0 := by
+
+  have charpoly_mono: ∀ x ∈ f.charpoly.roots, x = 1 := by
+    intro x hx
+    have x_root: f.charpoly.IsRoot x := by
+      exact Polynomial.isRoot_of_mem_roots hx
+
+    apply hasEigenvalue_of_isRoot_charpoly at x_root
+    specialize hf ⟨x, x_root⟩
+    simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val] at hf
+    exact hf
+
+  have charpoly_roots: f.charpoly.roots = Multiset.replicate f.charpoly.natDegree 1 := by
+    rw [Multiset.ext]
+    intro x
+    rw [Multiset.count_replicate]
+    by_cases x_eq_one: 1 = x
+    .
+      simp [-Polynomial.count_roots, x_eq_one]
+      conv =>
+        arg 1
+        equals f.charpoly.roots.card =>
+          rw [Multiset.count_eq_card]
+          simp_rw [← x_eq_one, eq_comm]
+          exact charpoly_mono
+
+      exact IsAlgClosed.card_roots_eq_natDegree
+    .
+      simp only [x_eq_one]
+      simp only [↓reduceIte]
+      simp
+      intro hx
+      rw [← Polynomial.IsRoot.def] at hx
+      rw [← Polynomial.mem_roots] at hx
+      .
+        specialize charpoly_mono _ hx
+        grind
+      .
+        by_contra!
+        have foo := LinearMap.charpoly_natDegree f
+        simp [this] at foo
+        have foo := Module.finrank_pos (R := ℂ) (M := A)
+        grind
+
+
+
+
+
+
+  have monic: f.charpoly.Monic := by exact LinearMap.charpoly_monic f
+  have foo := Polynomial.prod_multiset_X_sub_C_of_monic_of_roots_card_eq monic (by exact
+    IsAlgClosed.card_roots_eq_natDegree)
+
+  conv at foo =>
+    pattern f.charpoly.roots
+
+  grind
+
+
+
 
 lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N] [N_normal: N.Normal] (hN: Subgroup.FG N) (gamma: G):
     ∃ a n, ∀ g ∈ Subgroup.center N, iteratedCommutator g.val (gamma^a) n = 1 := by
@@ -1485,14 +1545,21 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
 
   -- use pow_eq_one_of_norm_le_one (Kronecker's Theorem) once mathlib is bumped
 
-  have gamma_eigen_unity: ∀ k : Module.End.Eigenvalues gamma_matrix.toLin', ∃ n, k.val^n = 1 := by
+  have gamma_eigen_unity: ∀ k : Module.End.Eigenvalues gamma_matrix.toLin', ∃ n, 0 < n ∧ k.val^n = 1 := by
     sorry
 
   choose k_root h_k_root using gamma_eigen_unity
   let n_prod := ∏ n ∈ (Finset.image k_root Finset.univ), n
 
   have n_prod_ne: n_prod ≠ 0 := by
-    sorry
+    unfold n_prod
+    rw [Finset.prod_ne_zero_iff]
+    intro k hk
+    simp at hk
+    obtain ⟨a, ha⟩ := hk
+    have gamma_pow := (h_k_root a).1
+    rw [ha] at gamma_pow
+    grind
 
   have n_prod_pow: ∀ k: Module.End.Eigenvalues gamma_matrix.toLin', k.val^n_prod = 1 := by
     intro k
@@ -1517,7 +1584,8 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
       rw [Module.End.hasEigenvector_iff]
       refine ⟨?_, ?_⟩
       .
-        simp
+        simp only [Module.End.mem_genEigenspace_one]
+        simp only [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val]
         sorry
       .
         by_contra!
