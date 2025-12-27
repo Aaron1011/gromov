@@ -936,9 +936,9 @@ structure G''CommData {T: Type*} [Group T] (N: Subgroup T) (gamma_alpha: T) wher
   pos_second: pos.2 ≠ 0 → ∃ b: T, cur = iteratedCommutator b gamma_alpha pos.2
 
 
-set_option trace.profiler true
+--set_option trace.profiler true
 
-set_option Elab.async false
+--set_option Elab.async false
 --set_option trace.Meta.Tactic.simp true in
 --set_option trace.Meta.Tactic.simp.numSteps true in
 --set_option trace.Elab.command true in
@@ -1618,12 +1618,26 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
 
 
 
+  have torsion_ne_top: CommGroup.torsion ↥(Subgroup.center ↥N) ≠ ⊤ := by
+
+    sorry
 
 
+  have quot_nontrivial : Nontrivial ((Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)) := by
+    -- TODO - use QuotientGroup.nontrivial_iff
+    sorry
 
   -- Module.free_of_finite_type_torsion_free'
   -- QuotientGroup.instIsMulTorsionFree
 
+  have rank_ne_zero: NeZero (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)))) := by
+    rw [neZero_iff]
+    rw [Nat.ne_zero_iff_zero_lt]
+
+    -- QuotientGroup.nontrivial_iff
+    apply Module.finrank_pos
+
+  obtain ⟨m, hm⟩ := eigen_one_unipotent _ gamma_pow_eigen
 
   let induced_gamma_aut := aut_congr gamma_conj
 
