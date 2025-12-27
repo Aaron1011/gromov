@@ -607,6 +607,22 @@ lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)ˣ)
 
 #print axioms int_matrix_exponential_growth
 
+lemma int_matrix_poly_growth_eigenvalue {d p: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (S: Finset (Matrix (Fin d) (Fin d) ℂ)ˣ) (hS: ∃ a, ∀ n ≥ 1, #(S ^ n) ≤ a * n^p):
+  ∀ k : Module.End.Eigenvalues (A.val.map (complexOfIntHom)).toLin', ‖k.val‖ = 1 := by
+
+    cases int_matrix_eigenvalue A
+    .
+      rename_i eigen_norm_one
+      intro k
+      apply eigen_norm_one k k.property
+    .
+      rename_i gt_one
+      obtain ⟨k, kh, one_lt_k⟩ := gt_one
+      sorry
+
+
+#print axioms int_matrix_poly_growth_eigenvalue
+
 def homToComplex  {d: ℕ} (g: ((Fin d) → ℤ) ≃+ ((Fin d) → ℤ)) := (g.toAddMonoidHom.toIntLinearMap).toMatrix'.map complexOfIntHom
 
 open scoped Pointwise Finset

@@ -1,8 +1,10 @@
 import Mathlib
+import Mathlib.Algebra.Group.Gromov.MatrixSubsum
 
 set_option linter.style.longLine false
 set_option linter.style.commandStart false
 set_option linter.style.cdot false
+
 
 def iteratedCommutator {T: Type*} [Group T] (base right: T) (n: ℕ) := Nat.iterate (fun x => ⁅x, right⁆) n base
 
@@ -1384,6 +1386,19 @@ lemma normal_comm_mem {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) 
 --   }
 -- }
 
+-- TODO - cleanup and upstream to mathlib
+lemma torsion_characteristic {G: Type*} [CommGroup G]: (CommGroup.torsion G).Characteristic := by
+  rw [Subgroup.characteristic_iff_le_map]
+  intro f g hg
+  simp
+  rw [CommGroup.mem_torsion] at hg
+  use (f.symm.toMonoidHom g)
+  refine ⟨?_, by simp⟩
+  rw [CommGroup.mem_torsion]
+  apply MonoidHom.isOfFinOrder
+  exact hg
+
+
 lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N] [N_normal: N.Normal] (hN: Subgroup.FG N) (gamma: G):
     ∃ a n, ∀ g ∈ Subgroup.center N, iteratedCommutator g.val (gamma^a) n = 1 := by
 
@@ -1421,7 +1436,17 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
       obtain ⟨a_mem, other_mem⟩ := foo
       exact other_mem
     ⟩
-    invFun := fun a =>  ⟨⟨gamma⁻¹ * a * gamma, by sorry⟩, by sorry⟩
+    invFun := fun a =>  ⟨⟨gamma⁻¹ * a * gamma, by
+      apply N_normal.conj_mem'
+      simp
+    ⟩, by (
+      have map_normal: (Subgroup.map (Subgroup.subtype _) (Subgroup.center N)).Normal := by
+        infer_instance
+      have foo := map_normal.conj_mem' a (by simp) gamma
+      simp at foo
+      obtain ⟨a_mem, other_mem⟩ := foo
+      exact other_mem
+    )⟩
     left_inv := by
       intro a
       group
@@ -1432,7 +1457,104 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
       simp
   }
 
+  have torsion_free: IsMulTorsionFree ((Subgroup.center N) ⧸ (CommGroup.torsion (Subgroup.center N))) := by
+    apply QuotientGroup.instIsMulTorsionFree
+
+  have center_quot_equiv := finDimVectorspaceEquiv (R := ℤ) (n := Module.finrank ℤ (Additive (((Subgroup.center N) ⧸ (CommGroup.torsion (Subgroup.center N)))))) (hn := by simp) (M := Additive (((Subgroup.center N) ⧸ (CommGroup.torsion (Subgroup.center N)))))
+
+  let gamma_quot := QuotientGroup.congr (CommGroup.torsion (Subgroup.center N)) (CommGroup.torsion (Subgroup.center N)) gamma_conj (by
+    conv =>
+      arg 1
+      arg 1
+      equals gamma_conj.toMonoidHom => rfl
+    apply Subgroup.characteristic_iff_map_eq (H := (CommGroup.torsion (Subgroup.center N))).mp
+    apply torsion_characteristic
+  )
+
+  have add_gamma_conj := gamma_quot.toAdditive.toIntLinearEquiv
+  let gamma_int := LinearEquiv.conj center_quot_equiv (add_gamma_conj)
+  let gamma_matrix := gamma_int.toMatrix'.map (complexOfIntHom)
+
+  have gamma_eigenvalues := int_matrix_poly_growth_eigenvalue {
+    val := gamma_int.toMatrix'
+    inv := sorry
+    val_inv := sorry
+    inv_val := sorry
+  } (p := sorry) sorry sorry
+  simp only [] at gamma_eigenvalues
+
+  -- use pow_eq_one_of_norm_le_one (Kronecker's Theorem) once mathlib is bumped
+
+  have gamma_eigen_unity: ∀ k : Module.End.Eigenvalues gamma_matrix.toLin', ∃ n, k.val^n = 1 := by
+    sorry
+
+  choose k_root h_k_root using gamma_eigen_unity
+  let n_prod := ∏ n ∈ (Finset.image k_root Finset.univ), n
+
+  have n_prod_ne: n_prod ≠ 0 := by
+    sorry
+
+  have n_prod_pow: ∀ k: Module.End.Eigenvalues gamma_matrix.toLin', k.val^n_prod = 1 := by
+    intro k
+    unfold n_prod
+    rw [← Finset.prod_erase_mul (a := k_root k)]
+    .
+      rw [pow_mul']
+      simp [h_k_root]
+    . simp
+
+
+
+
+  have gamma_pow_eigen: ∀ k: Module.End.Eigenvalues ((gamma_matrix.toLin')^(n_prod)), k.val = 1 := by
+    intro k
+    have k_prop := k.property
+    rw [Module.End.HasUnifEigenvalue, Submodule.ne_bot_iff] at k_prop
+    obtain ⟨x, hx, x_ne⟩ := k_prop
+    simp at hx
+
+    have x_eigen: Module.End.HasEigenvector gamma_matrix.toLin' (k.val^(1/(n_prod: ℂ))) ((gamma_matrix ^ (n_prod - 1)).toLin' x) := by
+      rw [Module.End.hasEigenvector_iff]
+      refine ⟨?_, ?_⟩
+      .
+        simp
+        sorry
+      .
+        by_contra!
+        simp at this
+        nth_rw 1 [← mul_pow_sub_one (n := n_prod) n_prod_ne] at hx
+        simp [Module.End.mul_eq_comp] at hx
+        simp [this] at hx
+
+        have k_ne_zero: k.val ≠ 0 := by
+          sorry
+
+
+        rw [eq_comm, smul_eq_zero] at hx
+        simp at x_ne
+        simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val] at k_ne_zero
+        simp [x_ne, k_ne_zero] at hx
+
+    have foo := x_eigen.hasUnifEigenvalue
+    specialize n_prod_pow ⟨_, foo⟩
+    simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val] at n_prod_pow
+    simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val]
+    field_simp at n_prod_pow
+    rw [← Complex.cpow_mul_nat] at n_prod_pow
+    field_simp [n_prod_ne] at n_prod_pow
+    simpa using n_prod_pow
+
+
+
+
+
+
+  -- Module.free_of_finite_type_torsion_free'
+  -- QuotientGroup.instIsMulTorsionFree
+
+
   let induced_gamma_aut := aut_congr gamma_conj
+
 
   have induced_trivial: ∀ g: Subgroup.center N, ((induced_gamma_aut^K) (center_iso g)).snd = 1 := by
     intro g
