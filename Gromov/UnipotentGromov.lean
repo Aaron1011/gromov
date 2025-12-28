@@ -1481,9 +1481,19 @@ lemma iterated_comm_normal_eq_iterated {T: Type*} [Group T] {N: Subgroup T} [hN:
     rw [ih]
 
 
-set_option maxHeartbeats 400000 in
+-- TODO - upstream to mathlib
+instance subgroup_map_finite {A B: Type*} [Group A] [Group B] (f: A →* B) (G: Subgroup A) [Finite G]: Finite (Subgroup.map f G) := by
+  have foo: (Subgroup.map f G) ≃ (Set.image f G.carrier) := {
+    toFun := fun a => a
+    invFun := fun a => a
+  }
+  rw [Equiv.finite_iff foo]
+  rw [Set.finite_coe_iff]
+  apply Finite.Set.finite_image
+
+set_option maxHeartbeats 500000 in
 lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N] [N_normal: N.Normal] (hN: Subgroup.FG N) (gamma: G):
-    ∃ a n, ∀ g ∈ Subgroup.center N, iteratedCommutator g.val (gamma^a) n = 1 := by
+    ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N, iteratedCommutator g.val (gamma^a) n = 1 := by
 
   have center_fg: Group.FG (Subgroup.center N) := by
     sorry
@@ -1565,7 +1575,9 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
   have gamma_eigenvalues := int_matrix_poly_growth_eigenvalue {
     val := gamma_int.toMatrix'
     inv := sorry
-    val_inv := sorry
+    val_inv := by
+      unfold gamma_int
+      sorry
     inv_val := sorry
   } (p := sorry) sorry sorry
   simp only [] at gamma_eigenvalues
@@ -1687,12 +1699,39 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     sorry
 
 
-  let K := Nat.card (MulAut ↥(Subgroup.map N.subtype (Subgroup.center ↥N)))
+  let K := Nat.card (MulAut ↥(Subgroup.map (N.subtype.comp (Subgroup.center ↥N).subtype) (CommGroup.torsion ↥(Subgroup.center ↥N))))
 
 
 
   use (n_prod * K)
   use (m + 1)
+  refine ⟨?_, ?_⟩
+  .
+    simp [K]
+    refine ⟨n_prod_ne, ?_⟩
+    rw [← ne_eq]
+    rw [Nat.card_ne_zero]
+    refine ⟨by infer_instance, ?_⟩
+    unfold MulAut
+
+    have torsion_fg: Group.FG ↥(CommGroup.torsion ↥(Subgroup.center ↥N)) := by
+      sorry
+
+
+    have torsion_finite : Finite (CommGroup.torsion ↥(Subgroup.center ↥N)) := by
+      apply CommGroup.finite_of_fg_torsion
+      -- TODO - extract this and pr to mathlib
+      intro g
+      have foo := g.property
+      rw [CommGroup.mem_torsion] at foo
+      rw [isOfFinOrder_iff_pow_eq_one] at foo
+      rw [isOfFinOrder_iff_pow_eq_one]
+      simp_rw [Subtype.ext_iff]
+      simp_rw [Subtype.ext_iff] at foo
+      simpa using foo
+
+    apply MulEquiv.finite_left
+
   intro g hg
   unfold iteratedCommutator
   rw [Function.iterate_succ']
@@ -1702,13 +1741,54 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     intro h h_mem
     rw [commutatorElement_def]
 
-    have conj_trivial: MulAut.conjNormal (H := Subgroup.map (Subgroup.subtype _) (Subgroup.center N)) (gamma ^ (n_prod * K)) = 1 := by
+    have normal_center_map: (Subgroup.map (N.subtype.comp (Subgroup.center ↥N).subtype) (CommGroup.torsion ↥(Subgroup.center ↥N))).Normal := {
+      conj_mem := by
+        intro f hf
+        intro g
+        simp
+        use ?_
+        . use ?_
+          .
+            rw [CommGroup.mem_torsion]
+            sorry
+          . sorry
+        . sorry
+
+        -- apply Subgroup.Normal.of_conjugate_fixed
+        -- intro g
+        -- ext a
+        -- simp [MulAut.conj]
+
+        -- rw [Subgroup.characteristic_iff_le_map]
+        -- intro f g hg
+        -- simp
+        -- simp at hg
+        -- obtain ⟨g_mem_N, g_mem_center, g_mem_torsion⟩ := hg
+        -- rw [CommGroup.mem_torsion] at g_mem_torsion
+        -- use (f.symm.toMonoidHom g)
+        -- refine ⟨?_, by simp⟩
+        -- sorry
+    }
+
+      -- use ?_
+      -- .
+      --   use ?_
+
+      -- .
+
+      --   sorry
+      -- refine ⟨?_, by simp⟩
+      -- rw [CommGroup.mem_torsion]
+      -- apply MonoidHom.isOfFinOrder
+      -- exact hg
+
+    have conj_trivial: MulAut.conjNormal (H := Subgroup.map ((Subgroup.subtype _).comp (Subgroup.subtype _)) ((CommGroup.torsion ↥(Subgroup.center ↥N)))) (gamma ^ (n_prod * K)) = 1 := by
       rw [MonoidHom.map_pow]
       rw [pow_mul']
       unfold K
       simp
 
-    apply_fun (fun f => f ⟨h⁻¹, by simp⟩) at conj_trivial
+    apply_fun (fun f => f ⟨h⁻¹, by simpa using h_mem⟩) at conj_trivial
     rw [Subtype.ext_iff] at conj_trivial
     rw [MulAut.conjNormal_apply] at conj_trivial
     simp at conj_trivial
