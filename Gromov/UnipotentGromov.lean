@@ -1491,6 +1491,19 @@ instance subgroup_map_finite {A B: Type*} [Group A] [Group B] (f: A →* B) (G: 
   rw [Set.finite_coe_iff]
   apply Finite.Set.finite_image
 
+-- TODO - generalize and pr to mathlib
+lemma matrix_map_pow  {n : Type*} {α : Type*} {β : Type*} [CommSemiring α] [Fintype n] [DecidableEq n] {L : Matrix n n α} [CommSemiring β] {f : α →+* β} (k: ℕ):
+  (L.map f)^k = (L^k).map f := by
+
+  induction k with
+  | zero =>
+    simp
+  | succ k ih =>
+    rw [pow_succ]
+    rw [pow_succ]
+    simp
+    rw [ih]
+
 set_option maxHeartbeats 700000 in
 set_option synthInstance.maxHeartbeats 40000 in
 lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N] [N_normal: N.Normal] (hN: Subgroup.FG N) (gamma: G):
@@ -1912,7 +1925,21 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
         equals ((gamma_int.toMatrix'^(n_prod) - 1)^m).map complexOfIntHom =>
           rw [Matrix.ext_iff_mulVec]
           intro v
-          sorry
+          rw [matrix_map_pow]
+          conv =>
+            pattern -1
+            equals (-1 : Matrix _ _ ℤ).map complexOfIntHom =>
+              ext i j
+              simp
+              simp [Matrix.one_apply]
+
+          rw [← Matrix.map_add]
+          .
+            rw [matrix_map_pow]
+            rfl
+          .
+            intro x y
+            simp
 
 
 
