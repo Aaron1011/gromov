@@ -1481,7 +1481,7 @@ lemma iterated_comm_normal_eq_iterated {T: Type*} [Group T] {N: Subgroup T} [hN:
     rw [ih]
 
 
-set_option maxHeartbeats 300000 in
+set_option maxHeartbeats 400000 in
 lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N] [N_normal: N.Normal] (hN: Subgroup.FG N) (gamma: G):
     ∃ a n, ∀ g ∈ Subgroup.center N, iteratedCommutator g.val (gamma^a) n = 1 := by
 
@@ -1662,6 +1662,7 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
 
   obtain ⟨m, hm⟩ := eigen_one_unipotent _ gamma_pow_eigen
 
+
   have quotient_comm_trivial: ∀ z : (↥(Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)), iteratedCommutator z.out.val.val ((gamma) ^ (n_prod)) m ∈ Subgroup.map (Subgroup.subtype _) (Subgroup.center N) := by
     clear * - gamma_conj
     intro z
@@ -1734,7 +1735,85 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     . exact Subgroup.subtype_injective N
 
   have mem_torsion: ⟨_, mem_center⟩ ∈ CommGroup.torsion ↥(Subgroup.center ↥N) := by
-    sorry
+    rw [← QuotientGroup.eq_one_iff]
+    apply_fun center_quot_equiv
+    .
+      conv =>
+        lhs
+        equals (-1)^m * ((((gamma_int ^ n_prod) - 1)^m) (center_quot_equiv (QuotientGroup.mk (⟨_, hg⟩)))) =>
+          induction m with
+          | zero =>
+            simp
+          | succ j ih =>
+            simp_rw [Function.iterate_succ']
+            simp [Bracket.bracket]
+            sorry
+
+      rw [← Matrix.toLin'_pow] at hm
+      conv at hm =>
+        lhs
+        arg 1
+        rhs
+        equals Matrix.toLin' 1 =>
+          simp
+          ext a
+          simp
+
+      rw [sub_eq_add_neg] at hm
+      conv at hm =>
+        lhs
+        arg 1
+        rhs
+        equals Matrix.toLin' (-1) =>
+          simp
+
+      rw [← LinearEquiv.map_add] at hm
+      rw [← Matrix.toLin'_pow] at hm
+      apply_fun (fun f => LinearMap.toMatrix' f) at hm
+      rw [LinearMap.toMatrix'_toLin'] at hm
+      simp at hm
+      unfold gamma_matrix at hm
+      conv at hm =>
+        lhs
+        equals (gamma_int.toMatrix'^(n_prod) - 1).map complexOfIntHom =>
+          rw [Matrix.ext_iff_mulVec]
+          intro v
+          sorry
+
+
+
+
+      have gamma_int_app_zero: (LinearMap.toMatrix' gamma_int ^ n_prod - 1) = 0 := by
+        ext i j
+        simp
+        rw [← Matrix.ext_iff] at hm
+        specialize hm i j
+        simp at hm
+        norm_cast at hm
+
+      conv =>
+        lhs
+        arg 2
+        arg 1
+        equals 0 =>
+          apply_fun (fun f => LinearMap.toMatrix' f)
+          .
+            simp only [map_zero]
+            rw [← gamma_int_app_zero]
+            ext i j
+            simp
+            sorry
+          .
+            intro a b hab
+            simpa using hab
+
+
+      simp
+      conv =>
+        rhs
+        equals center_quot_equiv ((0 : Additive _)) => rfl
+      simp
+    . exact LinearEquiv.injective center_quot_equiv
 
   specialize comm_torsion_trivial _ mem_torsion
   simpa using comm_torsion_trivial
