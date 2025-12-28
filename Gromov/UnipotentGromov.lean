@@ -1492,6 +1492,7 @@ instance subgroup_map_finite {A B: Type*} [Group A] [Group B] (f: A →* B) (G: 
   apply Finite.Set.finite_image
 
 set_option maxHeartbeats 700000 in
+set_option synthInstance.maxHeartbeats 40000 in
 lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N] [N_normal: N.Normal] (hN: Subgroup.FG N) (gamma: G):
     ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N, iteratedCommutator g.val (gamma^a) n = 1 := by
 
@@ -1572,13 +1573,43 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
   let gamma_int := LinearEquiv.conj center_quot_equiv (add_gamma_conj)
   let gamma_matrix := gamma_int.toMatrix'.map (complexOfIntHom)
 
+  -- TODO - deduplicate the val_inv and inv_val code
   have gamma_eigenvalues := int_matrix_poly_growth_eigenvalue {
     val := gamma_int.toMatrix'
-    inv := sorry
+    inv := (LinearEquiv.conj center_quot_equiv (add_gamma_conj.symm)).toMatrix'
     val_inv := by
       unfold gamma_int
-      sorry
-    inv_val := sorry
+      rw [← LinearMap.toMatrix'_mul]
+      apply_fun (fun f => Matrix.toLin' f)
+      .
+        simp
+        conv =>
+          lhs
+          equals (center_quot_equiv.conj add_gamma_conj).comp (center_quot_equiv.conj (add_gamma_conj.symm)) =>
+            rfl
+
+        rw [← LinearEquiv.conj_comp]
+        simp
+      .
+        intro a b hab
+        simpa using hab
+    inv_val := by
+      unfold gamma_int
+      rw [← LinearMap.toMatrix'_mul]
+      apply_fun (fun f => Matrix.toLin' f)
+      .
+        simp
+        conv =>
+          lhs
+          equals (center_quot_equiv.conj add_gamma_conj.symm).comp (center_quot_equiv.conj (add_gamma_conj)) =>
+            rfl
+
+        rw [← LinearEquiv.conj_comp]
+        simp
+      .
+        intro a b hab
+        simpa using hab
+
   } (p := sorry) sorry sorry
   simp only [] at gamma_eigenvalues
 
@@ -1743,16 +1774,39 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
 
     have normal_center_map: (Subgroup.map (N.subtype.comp (Subgroup.center ↥N).subtype) (CommGroup.torsion ↥(Subgroup.center ↥N))).Normal := {
       conj_mem := by
-        intro f hf
-        intro g
+        intro f hf k
+        simp at hf
+        obtain ⟨f_mem_N, f_mem_center, f_mem_torsion⟩ := hf
         simp
         use ?_
         . use ?_
           .
             rw [CommGroup.mem_torsion]
+            conv =>
+              arg 1
+              arg 1
+              arg 1
+              equals (MulAut.conj k) f =>
+                rfl
+
+            rw [isOfFinOrder_iff_pow_eq_one]
+            simp_rw [Subtype.ext_iff]
+            simp
+            rw [← isOfFinOrder_iff_pow_eq_one]
+            rw [CommGroup.mem_torsion] at f_mem_torsion
+            rw [isOfFinOrder_iff_pow_eq_one] at f_mem_torsion
+            simp_rw [Subtype.ext_iff] at f_mem_torsion
+            simp at f_mem_torsion
+            rw [← isOfFinOrder_iff_pow_eq_one] at f_mem_torsion
+            exact f_mem_torsion
+          .
+            rw [← Subgroup.mem_map_iff_mem (f := Subgroup.subtype _)]
+            rw [Subgroup.mem_map]
             sorry
-          . sorry
-        . sorry
+            sorry
+        .
+          apply N_normal.conj_mem
+          exact f_mem_N
 
         -- apply Subgroup.Normal.of_conjugate_fixed
         -- intro g
