@@ -1387,7 +1387,7 @@ lemma normal_comm_mem {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) 
 -- }
 
 -- TODO - cleanup and upstream to mathlib
-lemma torsion_characteristic {G: Type*} [CommGroup G]: (CommGroup.torsion G).Characteristic := by
+instance torsion_characteristic {G: Type*} [CommGroup G]: (CommGroup.torsion G).Characteristic := by
   rw [Subgroup.characteristic_iff_le_map]
   intro f g hg
   simp
@@ -1719,28 +1719,28 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
   obtain ⟨m, hm⟩ := eigen_one_unipotent _ gamma_pow_eigen
 
 
-  have quotient_comm_trivial: ∀ z : (↥(Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)), iteratedCommutator z.out.val.val ((gamma) ^ (n_prod)) m ∈ Subgroup.map (Subgroup.subtype _) (Subgroup.center N) := by
-    clear * - gamma_conj
-    intro z
+  -- have quotient_comm_trivial: ∀ z : (↥(Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)), iteratedCommutator z.out.val.val ((gamma) ^ (n_prod)) m ∈ Subgroup.map (Subgroup.subtype _) (Subgroup.center N) := by
+  --   clear * - gamma_conj
+  --   intro z
 
-    have comm_eq: ∀ n: ℕ, iteratedCommutator z.out.val.val ((gamma) ^ (n_prod)) 1 = (center_quot_equiv.symm ((-((gamma_int ^ n_prod) - 1)) ((center_quot_equiv z)))).out.val.val := by
+  --   have comm_eq: ∀ n: ℕ, iteratedCommutator z.out.val.val ((gamma) ^ (n_prod)) 1 = (center_quot_equiv.symm ((-((gamma_int ^ n_prod) - 1)) ((center_quot_equiv z)))).out.val.val := by
 
-      intro n
-      simp [iteratedCommutator, Bracket.bracket]
-      conv =>
-        lhs
-        equals z.out.val.val * ((gamma_pow_conj n_prod) z.out⁻¹) =>
-          simp [gamma_pow_conj]
-          group
+  --     intro n
+  --     simp [iteratedCommutator, Bracket.bracket]
+  --     conv =>
+  --       lhs
+  --       equals z.out.val.val * ((gamma_pow_conj n_prod) z.out⁻¹) =>
+  --         simp [gamma_pow_conj]
+  --         group
 
-      rw [← Subgroup.coe_mul, ← Subgroup.coe_mul]
-      rw [← Subtype.ext_iff, ← Subtype.ext_iff]
-      simp
+  --     rw [← Subgroup.coe_mul, ← Subgroup.coe_mul]
+  --     rw [← Subtype.ext_iff, ← Subtype.ext_iff]
+  --     simp
 
 
-      sorry
+  --     sorry
 
-    sorry
+  --   sorry
 
 
   let K := Nat.card (MulAut ↥(Subgroup.map (N.subtype.comp (Subgroup.center ↥N).subtype) (CommGroup.torsion ↥(Subgroup.center ↥N))))
@@ -1785,6 +1785,9 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     intro h h_mem
     rw [commutatorElement_def]
 
+
+
+    -- TODO - this can probably be generalized into a lemma about characteristic subgroups, and pr'd to mathlib
     have normal_center_map: (Subgroup.map (N.subtype.comp (Subgroup.center ↥N).subtype) (CommGroup.torsion ↥(Subgroup.center ↥N))).Normal := {
       conj_mem := by
         intro f hf k
@@ -1813,10 +1816,13 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
             rw [← isOfFinOrder_iff_pow_eq_one] at f_mem_torsion
             exact f_mem_torsion
           .
-            rw [← Subgroup.mem_map_iff_mem (f := Subgroup.subtype _)]
-            rw [Subgroup.mem_map]
-            sorry
-            sorry
+            have first := ConjAct.normal_of_characteristic_of_normal (H := N) (K := Subgroup.center ↥N)
+            --have center_normal: Subgroup.Normal (Subgroup.center N) := by infer_instance
+            --have foo := center_normal.conj_mem ⟨_, f_mem_N⟩ f_mem_center
+            have foo := first.conj_mem f (by simp; use f_mem_N) k
+            simp at foo
+            obtain ⟨mem_n, mem_center⟩ := foo
+            exact mem_center
         .
           apply N_normal.conj_mem
           exact f_mem_N
@@ -1888,6 +1894,7 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
       conv =>
         lhs
         equals (-1)^m * ((((gamma_int ^ n_prod) - 1)^m) (center_quot_equiv (QuotientGroup.mk (⟨_, hg⟩)))) =>
+
           induction m with
           | zero =>
             simp
