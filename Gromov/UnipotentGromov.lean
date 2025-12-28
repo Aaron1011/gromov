@@ -1461,6 +1461,25 @@ lemma eigen_one_unipotent {A: Type*}  [AddCommGroup A] [Module ℂ A] [Module.Fi
 
 
 
+def iteratedCommutatorNormal {T: Type*} [Group T] {N: Subgroup T} [hN: N.Normal] (base: N) (right: T) (n: ℕ) := Nat.iterate (fun x => ⟨⁅x.val, right⁆, (by
+  apply normal_comm_mem hN
+  simp
+)⟩) n base
+
+lemma iterated_comm_normal_eq_iterated {T: Type*} [Group T] {N: Subgroup T} [hN: N.Normal] (base: N) (right: T) (n: ℕ):
+    (iteratedCommutatorNormal base right n).val = iteratedCommutator base.val right n := by
+
+  induction n with
+  | zero =>
+    simp [iteratedCommutatorNormal, iteratedCommutator]
+  | succ n ih =>
+    simp only [iteratedCommutatorNormal, iteratedCommutator]
+    simp only [iteratedCommutatorNormal, iteratedCommutator] at ih
+    rw [Function.iterate_succ']
+    rw [Function.iterate_succ']
+    simp
+    rw [ih]
+
 
 set_option maxHeartbeats 300000 in
 lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N] [N_normal: N.Normal] (hN: Subgroup.FG N) (gamma: G):
@@ -1700,10 +1719,19 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
 
 
   have mem_N: (fun x ↦ ⁅x, gamma ^ (n_prod * K)⁆)^[m] ↑g ∈ N := by
-    sorry
+    have foo := iterated_comm_normal_eq_iterated g (gamma ^ (n_prod * K)) m
+    unfold iteratedCommutator at foo
+    rw [← foo]
+    simp
 
   have mem_center: ⟨_, mem_N⟩ ∈ Subgroup.center N := by
-    sorry
+    have foo := iterated_comm_normal_eq_iterated (N := Subgroup.map (Subgroup.subtype _) (Subgroup.center N)) ⟨g, by simpa using hg⟩ (gamma ^ (n_prod * K)) m
+    unfold iteratedCommutator at foo
+    simp at foo
+    simp_rw [← foo]
+    rw [← Subgroup.mem_map_iff_mem (f := Subgroup.subtype _)]
+    . simp
+    . exact Subgroup.subtype_injective N
 
   have mem_torsion: ⟨_, mem_center⟩ ∈ CommGroup.torsion ↥(Subgroup.center ↥N) := by
     sorry
@@ -3016,24 +3044,7 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
 #print axioms unipotent_commutator_trivial
 
 
-def iteratedCommutatorNormal {T: Type*} [Group T] {N: Subgroup T} [hN: N.Normal] (base: N) (right: T) (n: ℕ) := Nat.iterate (fun x => ⟨⁅x.val, right⁆, (by
-  apply normal_comm_mem hN
-  simp
-)⟩) n base
 
-lemma iterated_comm_normal_eq_iterated {T: Type*} [Group T] {N: Subgroup T} [hN: N.Normal] (base: N) (right: T) (n: ℕ):
-    (iteratedCommutatorNormal base right n).val = iteratedCommutator base.val right n := by
-
-  induction n with
-  | zero =>
-    simp [iteratedCommutatorNormal, iteratedCommutator]
-  | succ n ih =>
-    simp only [iteratedCommutatorNormal, iteratedCommutator]
-    simp only [iteratedCommutatorNormal, iteratedCommutator] at ih
-    rw [Function.iterate_succ']
-    rw [Function.iterate_succ']
-    simp
-    rw [ih]
 
 
 -- TODO - this theorem statement is wrong
