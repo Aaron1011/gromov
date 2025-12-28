@@ -1491,7 +1491,7 @@ instance subgroup_map_finite {A B: Type*} [Group A] [Group B] (f: A →* B) (G: 
   rw [Set.finite_coe_iff]
   apply Finite.Set.finite_image
 
-set_option maxHeartbeats 500000 in
+set_option maxHeartbeats 700000 in
 lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N] [N_normal: N.Normal] (hN: Subgroup.FG N) (gamma: G):
     ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N, iteratedCommutator g.val (gamma^a) n = 1 := by
 
@@ -1855,7 +1855,7 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
       unfold gamma_matrix at hm
       conv at hm =>
         lhs
-        equals (gamma_int.toMatrix'^(n_prod) - 1).map complexOfIntHom =>
+        equals ((gamma_int.toMatrix'^(n_prod) - 1)^m).map complexOfIntHom =>
           rw [Matrix.ext_iff_mulVec]
           intro v
           sorry
@@ -1863,7 +1863,7 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
 
 
 
-      have gamma_int_app_zero: (LinearMap.toMatrix' gamma_int ^ n_prod - 1) = 0 := by
+      have gamma_int_app_zero: (LinearMap.toMatrix' gamma_int ^ n_prod - 1)^m = 0 := by
         ext i j
         simp
         rw [← Matrix.ext_iff] at hm
@@ -1882,7 +1882,20 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
             rw [← gamma_int_app_zero]
             ext i j
             simp
-            sorry
+            rw [← LinearMap.toMatrix_eq_toMatrix']
+            rw [LinearMap.toMatrix_pow]
+            rw [LinearMap.toMatrix_eq_toMatrix']
+            conv =>
+              rhs
+              arg 1
+              equals LinearMap.toMatrix' ((gamma_int^n_prod) - 1) =>
+                ext i j
+                simp [Matrix.one_apply]
+
+            rw [← LinearMap.toMatrix_eq_toMatrix']
+            rw [LinearMap.toMatrix_pow]
+            rw [LinearMap.toMatrix_eq_toMatrix']
+            simp
           .
             intro a b hab
             simpa using hab

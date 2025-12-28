@@ -11478,6 +11478,9 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       rw [← Group.isNilpotent_congr normalCore_iso]
       apply Subgroup.isNilpotent
 
+    have N_fg: Subgroup.FG N := by
+      infer_instance
+
     rw [Subgroup.finiteIndex_iff] at N_finite_index
     let N' := Subgroup.closure (Set.range (fun (a: Multiplicative data.φ.ker) => a ^ N.index))
 
@@ -11550,6 +11553,58 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
     have N'_normal: N'.Normal := by
       infer_instance
+
+
+    have N'_index: N'.FiniteIndex := by
+      rw [Subgroup.finiteIndex_iff]
+      rw [← Subgroup.relIndex_mul_index N'_le_N]
+      simp
+      refine ⟨?_, ?_⟩
+      .
+        unfold Subgroup.relIndex
+        rw [← ne_eq, ← Subgroup.finiteIndex_iff]
+        rw [Subgroup.finiteIndex_iff_finite_quotient]
+        -- TODO - why do we need this explicit instance?
+        have foo : Group.IsNilpotent (↥N ⧸ N'.subgroupOf N) := by
+          infer_instance
+        apply finite_of_nilpotent_fg_order
+        intro n
+        rw [isOfFinOrder_iff_pow_eq_one]
+        use N.index
+        refine ⟨by omega, ?_⟩
+        -- TODO - there should be a much simpler proof
+        let a := n.out
+        rw [← QuotientGroup.out_eq' (a := n)]
+        conv =>
+          lhs
+          arg 1
+          equals QuotientGroup.mk' _ (n).out =>
+            rfl
+
+        rw [← MonoidHom.map_pow]
+        simp only [QuotientGroup.mk'_apply]
+        rw [QuotientGroup.eq_one_iff]
+        rw [Subgroup.mem_subgroupOf]
+        unfold N'
+        apply Subgroup.mem_closure_of_mem
+        rw [Set.mem_range]
+        use n.out
+        simp
+      .
+        exact N_finite_index
+      -- simp
+
+      -- unfold N'
+
+
+    have N'_fg: Subgroup.FG N' := by
+      rw [← Group.fg_iff_subgroup_fg]
+      apply Subgroup.fg_of_index_ne_zero
+
+
+
+
+    --have new_alpha := center_unipotent N'_fg γ.toMul
 
     -- TODO - generalize and upstream to mathlib
     have phi_ker_normal: (AddSubgroup.toSubgroup' data.φ.ker).Normal := by
@@ -11804,53 +11859,6 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               .
                 simp [Subgroup.mem_closure_singleton]
         .
-          have N'_index: N'.FiniteIndex := by
-            rw [Subgroup.finiteIndex_iff]
-            rw [← Subgroup.relIndex_mul_index N'_le_N]
-            simp
-            refine ⟨?_, ?_⟩
-            .
-              unfold Subgroup.relIndex
-              rw [← ne_eq, ← Subgroup.finiteIndex_iff]
-              rw [Subgroup.finiteIndex_iff_finite_quotient]
-              -- TODO - why do we need this explicit instance?
-              have foo : Group.IsNilpotent (↥N ⧸ N'.subgroupOf N) := by
-                infer_instance
-              apply finite_of_nilpotent_fg_order
-              intro n
-              rw [isOfFinOrder_iff_pow_eq_one]
-              use N.index
-              refine ⟨by omega, ?_⟩
-              -- TODO - there should be a much simpler proof
-              let a := n.out
-              rw [← QuotientGroup.out_eq' (a := n)]
-              conv =>
-                lhs
-                arg 1
-                equals QuotientGroup.mk' _ (n).out =>
-                  rfl
-
-              rw [← MonoidHom.map_pow]
-              simp only [QuotientGroup.mk'_apply]
-              rw [QuotientGroup.eq_one_iff]
-              rw [Subgroup.mem_subgroupOf]
-              unfold N'
-              apply Subgroup.mem_closure_of_mem
-              rw [Set.mem_range]
-              use n.out
-              simp
-
-
-
-            .
-              exact N_finite_index
-            -- simp
-
-            -- unfold N'
-
-
-
-
           obtain ⟨s, s_compl, s_cosets⟩ := Subgroup.exists_leftTransversal_of_FiniteIndex (D := N') (H := ⊤) (by simp)
           simp at s_cosets
 
