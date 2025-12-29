@@ -1582,7 +1582,7 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     apply torsion_characteristic
   )
 
-  have add_gamma_conj := gamma_quot.toAdditive.toIntLinearEquiv
+  let add_gamma_conj := gamma_quot.toAdditive.toIntLinearEquiv
   let gamma_int := LinearEquiv.conj center_quot_equiv (add_gamma_conj)
   let gamma_matrix := gamma_int.toMatrix'.map (complexOfIntHom)
 
@@ -1718,6 +1718,21 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
 
   obtain ⟨m, hm⟩ := eigen_one_unipotent _ gamma_pow_eigen
 
+  -- have m_ne_zero: m ≠ 0 := by
+  --   by_contra!
+  --   simp [this] at hm
+  --   rw [eq_comm] at hm
+  --   rw [LinearMap.ext_iff] at hm
+  --   specialize hm 1
+  --   rw [LinearMap.zero_apply] at hm
+  --   rw [Module.End.one_apply] at hm
+  --   rw [funext_iff] at hm
+  --   specialize hm ⟨0, ?_⟩
+  --   .
+  --     apply Module.finrank_pos
+  --   .
+  --     simp at hm
+
 
   -- have quotient_comm_trivial: ∀ z : (↥(Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)), iteratedCommutator z.out.val.val ((gamma) ^ (n_prod)) m ∈ Subgroup.map (Subgroup.subtype _) (Subgroup.center N) := by
   --   clear * - gamma_conj
@@ -1748,7 +1763,8 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
 
 
   use (n_prod * K)
-  use (m + 1)
+  -- Using 'm + 2' avoids an issue with the quotient group being trivial
+  use (m + 2)
   refine ⟨?_, ?_⟩
   .
     simp [K]
@@ -1872,16 +1888,16 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     simp [conj_trivial]
 
 
-  have mem_N: (fun x ↦ ⁅x, gamma ^ (n_prod * K)⁆)^[m] ↑g ∈ N := by
-    have foo := iterated_comm_normal_eq_iterated g (gamma ^ (n_prod * K)) m
+  have mem_N: (fun x ↦ ⁅x, gamma ^ (n_prod * K)⁆)^[m + 1] ↑g ∈ N := by
+    have foo := iterated_comm_normal_eq_iterated g (gamma ^ (n_prod * K)) (m + 1)
     unfold iteratedCommutator at foo
     rw [← foo]
     simp
 
   have mem_center: ⟨_, mem_N⟩ ∈ Subgroup.center N := by
-    have foo := iterated_comm_normal_eq_iterated (N := Subgroup.map (Subgroup.subtype _) (Subgroup.center N)) ⟨g, by simpa using hg⟩ (gamma ^ (n_prod * K)) m
+    have foo := iterated_comm_normal_eq_iterated (N := Subgroup.map (Subgroup.subtype _) (Subgroup.center N)) ⟨g, by simpa using hg⟩ (gamma ^ (n_prod * K)) (m + 1)
     unfold iteratedCommutator at foo
-    simp at foo
+    simp only [] at foo
     simp_rw [← foo]
     rw [← Subgroup.mem_map_iff_mem (f := Subgroup.subtype _)]
     . simp
@@ -1893,15 +1909,134 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     .
       conv =>
         lhs
-        equals (-1)^m * ((((gamma_int ^ n_prod) - 1)^m) (center_quot_equiv (QuotientGroup.mk (⟨_, hg⟩)))) =>
+        equals (-1)^(m + 1) * ((((gamma_int ^ (n_prod * K)) - 1)^(m + 1)) (center_quot_equiv (Additive.ofMul (QuotientGroup.mk (⟨_, hg⟩))))) =>
 
-          induction m with
-          | zero =>
+          apply_fun center_quot_equiv.symm
+          .
             simp
-          | succ j ih =>
-            simp_rw [Function.iterate_succ']
-            simp [Bracket.bracket]
-            sorry
+            induction m with
+            | zero =>
+              simp [Bracket.bracket]
+              apply_fun center_quot_equiv ∘ (Additive.ofMul)
+              .
+                simp [-EmbeddingLike.apply_eq_iff_eq]
+                conv =>
+                  lhs
+                  arg 2
+                  arg 2
+                  arg 1
+                  equals ⟨g, hg⟩ * ⟨⟨gamma ^ (n_prod * K) * (↑g)⁻¹ * (gamma ^ (n_prod * K))⁻¹, sorry⟩, sorry⟩ =>
+                    simp
+                    rw [Subtype.ext_iff]
+                    simp
+                    group
+                rw [QuotientGroup.mk_mul]
+                rw [ofMul_mul]
+                rw [LinearEquiv.map_add]
+                conv =>
+                  rhs
+                  arg 2
+                  arg 1
+                  unfold Additive.ofMul
+                simp
+                rw [sub_eq_add_neg]
+                simp
+                unfold gamma_int
+                conv =>
+                  rhs
+                  arg 1
+                  arg 1
+                  equals center_quot_equiv.conj (add_gamma_conj ^ (n_prod * K)) =>
+                    sorry
+                rw [LinearEquiv.conj_apply_apply]
+                nth_rw 1 [← neg_one_smul (R := ℤ)]
+                rw [← LinearEquiv.map_smul]
+                rw [neg_one_smul]
+                congr
+                simp
+                conv =>
+                  rhs
+                  arg 1
+                  arg 2
+                  equals Additive.ofMul (QuotientGroup.mk' (CommGroup.torsion ↥(Subgroup.center ↥N)) (⟨⟨(gamma^(n_prod * K)) * g * gamma^(-(((n_prod * K) : ℕ) : ℤ)), sorry⟩, sorry⟩)) =>
+                    clear * -
+                    induction (n_prod * K) with
+                    | zero =>
+                      simp
+                    | succ q ih =>
+                      simp
+                      nth_rw 1 [pow_succ']
+                      conv =>
+                        lhs
+                        equals (add_gamma_conj.toLinearMap) ((add_gamma_conj.toLinearMap ^ (q)) (Additive.ofMul (QuotientGroup.mk ⟨g, hg⟩))) =>
+                          simp
+                      rw [ih]
+                      simp [add_gamma_conj, gamma_quot, gamma_conj, gamma_pow_conj]
+                      group
+
+                simp
+                rw [← QuotientGroup.mk_inv]
+                congr
+                simp
+                group
+              . sorry
+              rw [Subtype.ext_iff]
+              simp
+            | succ j ih =>
+              simp_rw [Function.iterate_succ']
+              simp [Bracket.bracket]
+              sorry
+          . exact LinearEquiv.injective center_quot_equiv.symm
+
+      -- v * (B * v)⁻¹
+
+      -- v * (B * v)⁻¹ * (B * (v * (B * v)⁻¹))⁻¹
+      --
+
+      -- conv =>
+      --   lhs
+      --   arg 2
+      --   arg 1
+      --   arg 1
+      --   arg 1
+      --   equals ((g.val * ((gamma_pow_conj (n_prod * K)) ⟨g⁻¹, by simpa using hg⟩))^(((-1 : ℤ)^(m + 1))))^((m + 1)) =>
+      --     clear * -
+      --     -- TODO - extract this to a lemma
+      --     induction m with
+      --     | zero =>
+      --       simp [Bracket.bracket, gamma_pow_conj]
+      --       group
+      --     | succ n ih =>
+      --       rw [Function.iterate_succ']
+      --       simp only [Function.comp_apply]
+      --       simp_rw [ih]
+      --       simp [gamma_pow_conj]
+      --       simp [Bracket.bracket]
+      --       set q := (gamma ^ (n_prod * K))
+      --       set f := ((↑g * (q * (↑g)⁻¹ * q⁻¹)))
+      --       nth_rw 6 [pow_succ]
+      --       rw [pow_succ (n := n + 1)]
+      --       simp
+      --       rw [← mul_inv_rev]
+      --       rw [← pow_succ']
+      --       simp
+      --       rw [← inv_zpow]
+      --       simp
+      --       simp [gamma_pow_conj]
+      --       nth_rw 3 [pow_succ]
+      --       rw [pow_succ (a := (-1 : ℤ))]
+      --       simp
+      --       nth_rw 2 [← inv_pow]
+      --       nth_rw 4 [← inv_pow]
+
+      --       rw [← inv_zpow]
+      --       simp
+
+      --       simp
+      --       nth_rw 1 [← inv_pow]
+      --       simp
+      --       group
+      --       sorry
 
       rw [← Matrix.toLin'_pow] at hm
       conv at hm =>
