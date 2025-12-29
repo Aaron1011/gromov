@@ -1649,11 +1649,34 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     rw [ha] at gamma_pow
     grind
 
+  have K_ne_zero: K ≠ 0 := by
+    unfold K
+    rw [Nat.card_ne_zero]
+    refine ⟨by infer_instance, ?_⟩
+    unfold MulAut
+
+    have torsion_fg: Group.FG ↥(CommGroup.torsion ↥(Subgroup.center ↥N)) := by
+      sorry
+
+
+    have torsion_finite : Finite (CommGroup.torsion ↥(Subgroup.center ↥N)) := by
+      apply CommGroup.finite_of_fg_torsion
+      -- TODO - extract this and pr to mathlib
+      intro g
+      have foo := g.property
+      rw [CommGroup.mem_torsion] at foo
+      rw [isOfFinOrder_iff_pow_eq_one] at foo
+      rw [isOfFinOrder_iff_pow_eq_one]
+      simp_rw [Subtype.ext_iff]
+      simp_rw [Subtype.ext_iff] at foo
+      simpa using foo
+
+    apply MulEquiv.finite_left
+
   have n_prod_mul_ne: (n_prod * K : ℕ) ≠ (0 : ℂ) := by
     simp
     refine ⟨n_prod_ne, ?_⟩
-    unfold K
-    sorry
+    apply K_ne_zero
 
   have n_prod_pow: ∀ k: Module.End.Eigenvalues gamma_matrix.toLin', k.val^(n_prod * K) = 1 := by
     intro k
@@ -1783,28 +1806,7 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
   .
     simp [K]
     refine ⟨n_prod_ne, ?_⟩
-    rw [← ne_eq]
-    rw [Nat.card_ne_zero]
-    refine ⟨by infer_instance, ?_⟩
-    unfold MulAut
-
-    have torsion_fg: Group.FG ↥(CommGroup.torsion ↥(Subgroup.center ↥N)) := by
-      sorry
-
-
-    have torsion_finite : Finite (CommGroup.torsion ↥(Subgroup.center ↥N)) := by
-      apply CommGroup.finite_of_fg_torsion
-      -- TODO - extract this and pr to mathlib
-      intro g
-      have foo := g.property
-      rw [CommGroup.mem_torsion] at foo
-      rw [isOfFinOrder_iff_pow_eq_one] at foo
-      rw [isOfFinOrder_iff_pow_eq_one]
-      simp_rw [Subtype.ext_iff]
-      simp_rw [Subtype.ext_iff] at foo
-      simpa using foo
-
-    apply MulEquiv.finite_left
+    apply K_ne_zero
 
   intro g hg
   unfold iteratedCommutator
