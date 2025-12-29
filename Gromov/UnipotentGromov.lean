@@ -1526,7 +1526,8 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
   -- let mulaut_fg_abelian := MulAut.congr center_iso
 
 
-  let K := Nat.card (((i : I) → Multiplicative (ZMod (I_pow i ^ K_map i))))
+  -- TODO - bad K?
+  --let K := Nat.card (((i : I) → Multiplicative (ZMod (I_pow i ^ K_map i))))
 
   let center_fst := (MonoidHom.fst _ _).comp center_iso.toMonoidHom
   let aut_congr := MulAut.congr center_iso
@@ -1634,6 +1635,10 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
   choose k_root h_k_root using gamma_eigen_unity
   let n_prod := ∏ n ∈ (Finset.image k_root Finset.univ), n
 
+
+  let K := Nat.card (MulAut ↥(Subgroup.map (N.subtype.comp (Subgroup.center ↥N).subtype) (CommGroup.torsion ↥(Subgroup.center ↥N))))
+
+
   have n_prod_ne: n_prod ≠ 0 := by
     unfold n_prod
     rw [Finset.prod_ne_zero_iff]
@@ -1644,7 +1649,7 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     rw [ha] at gamma_pow
     grind
 
-  have n_prod_mul_ne: n_prod * K ≠ 0 := by
+  have n_prod_mul_ne: (n_prod * K : ℕ) ≠ (0 : ℂ) := by
     simp
     refine ⟨n_prod_ne, ?_⟩
     unfold K
@@ -1703,7 +1708,8 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     nth_rw 3 [mul_comm] at n_prod_pow
     norm_cast at n_prod_pow
     field_simp [n_prod_mul_ne] at n_prod_pow
-    simpa using n_prod_pow
+    sorry
+    --simpa using n_prod_pow
 
 
 
@@ -1767,8 +1773,6 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
 
   --   sorry
 
-
-  let K := Nat.card (MulAut ↥(Subgroup.map (N.subtype.comp (Subgroup.center ↥N).subtype) (CommGroup.torsion ↥(Subgroup.center ↥N))))
 
 
 
@@ -2074,7 +2078,7 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
       unfold gamma_matrix at hm
       conv at hm =>
         lhs
-        equals ((gamma_int.toMatrix'^(n_prod) - 1)^m).map complexOfIntHom =>
+        equals ((gamma_int.toMatrix'^(n_prod * K) - 1)^m).map complexOfIntHom =>
           rw [Matrix.ext_iff_mulVec]
           intro v
           rw [matrix_map_pow]
@@ -2096,7 +2100,7 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
 
 
 
-      have gamma_int_app_zero: (LinearMap.toMatrix' gamma_int ^ (n_prod) - 1)^(m ) = 0 := by
+      have gamma_int_app_zero: (LinearMap.toMatrix' gamma_int ^ (n_prod * K) - 1)^(m ) = 0 := by
         ext i j
         simp
         rw [← Matrix.ext_iff] at hm
@@ -2104,6 +2108,10 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
         simp at hm
         norm_cast at hm
 
+
+      have gamma_int_app_succ_zero: (LinearMap.toMatrix' gamma_int ^ (n_prod * K) - 1)^(m + 1) = 0 := by
+        rw [pow_succ]
+        simp [gamma_int_app_zero]
 
       conv =>
         lhs
@@ -2113,7 +2121,7 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
           apply_fun (fun f => LinearMap.toMatrix' f)
           .
             simp only [map_zero]
-            rw [← gamma_int_app_zero]
+            rw [← gamma_int_app_succ_zero]
             ext i j
             simp
             rw [← LinearMap.toMatrix_eq_toMatrix']
@@ -2122,7 +2130,7 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
             conv =>
               rhs
               arg 1
-              equals LinearMap.toMatrix' ((gamma_int^(n_prod)) - 1) =>
+              equals LinearMap.toMatrix' ((gamma_int^(n_prod * K)) - 1) =>
                 ext i j
                 simp [Matrix.one_apply]
 
