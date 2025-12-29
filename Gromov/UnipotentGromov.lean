@@ -1504,7 +1504,7 @@ lemma matrix_map_pow  {n : Type*} {α : Type*} {β : Type*} [CommSemiring α] [F
     simp
     rw [ih]
 
-set_option maxHeartbeats 700000 in
+set_option maxHeartbeats 900000 in
 set_option synthInstance.maxHeartbeats 40000 in
 lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N] [N_normal: N.Normal] (hN: Subgroup.FG N) (gamma: G):
     ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N, iteratedCommutator g.val (gamma^a) n = 1 := by
@@ -1644,8 +1644,15 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     rw [ha] at gamma_pow
     grind
 
-  have n_prod_pow: ∀ k: Module.End.Eigenvalues gamma_matrix.toLin', k.val^n_prod = 1 := by
+  have n_prod_mul_ne: n_prod * K ≠ 0 := by
+    simp
+    refine ⟨n_prod_ne, ?_⟩
+    unfold K
+    sorry
+
+  have n_prod_pow: ∀ k: Module.End.Eigenvalues gamma_matrix.toLin', k.val^(n_prod * K) = 1 := by
     intro k
+    rw [pow_mul]
     unfold n_prod
     rw [← Finset.prod_erase_mul (a := k_root k)]
     .
@@ -1656,14 +1663,14 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
 
 
 
-  have gamma_pow_eigen: ∀ k: Module.End.Eigenvalues ((gamma_matrix.toLin')^(n_prod)), k.val = 1 := by
+  have gamma_pow_eigen: ∀ k: Module.End.Eigenvalues ((gamma_matrix.toLin')^(n_prod * K)), k.val = 1 := by
     intro k
     have k_prop := k.property
     rw [Module.End.HasUnifEigenvalue, Submodule.ne_bot_iff] at k_prop
     obtain ⟨x, hx, x_ne⟩ := k_prop
     simp at hx
 
-    have x_eigen: Module.End.HasEigenvector gamma_matrix.toLin' (k.val^(1/(n_prod: ℂ))) ((gamma_matrix ^ (n_prod - 1)).toLin' x) := by
+    have x_eigen: Module.End.HasEigenvector gamma_matrix.toLin' (k.val^(1/((n_prod*K): ℂ))) ((gamma_matrix ^ ((n_prod*K) - 1)).toLin' x) := by
       rw [Module.End.hasEigenvector_iff]
       refine ⟨?_, ?_⟩
       .
@@ -1672,19 +1679,20 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
         sorry
       .
         by_contra!
-        simp at this
-        nth_rw 1 [← mul_pow_sub_one (n := n_prod) n_prod_ne] at hx
-        simp [Module.End.mul_eq_comp] at hx
-        simp [this] at hx
+        sorry
+        -- simp at this
+        -- nth_rw 1 [← mul_pow_sub_one (n := n_prod) n_prod_ne] at hx
+        -- simp [Module.End.mul_eq_comp] at hx
+        -- simp [this] at hx
 
-        have k_ne_zero: k.val ≠ 0 := by
-          sorry
+        -- have k_ne_zero: k.val ≠ 0 := by
+        --   sorry
 
 
-        rw [eq_comm, smul_eq_zero] at hx
-        simp at x_ne
-        simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val] at k_ne_zero
-        simp [x_ne, k_ne_zero] at hx
+        -- rw [eq_comm, smul_eq_zero] at hx
+        -- simp at x_ne
+        -- simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val] at k_ne_zero
+        -- simp [x_ne, k_ne_zero] at hx
 
     have foo := x_eigen.hasUnifEigenvalue
     specialize n_prod_pow ⟨_, foo⟩
@@ -1692,7 +1700,9 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val]
     field_simp at n_prod_pow
     rw [← Complex.cpow_mul_nat] at n_prod_pow
-    field_simp [n_prod_ne] at n_prod_pow
+    nth_rw 3 [mul_comm] at n_prod_pow
+    norm_cast at n_prod_pow
+    field_simp [n_prod_mul_ne] at n_prod_pow
     simpa using n_prod_pow
 
 
@@ -2086,13 +2096,14 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
 
 
 
-      have gamma_int_app_zero: (LinearMap.toMatrix' gamma_int ^ n_prod - 1)^m = 0 := by
+      have gamma_int_app_zero: (LinearMap.toMatrix' gamma_int ^ (n_prod) - 1)^(m ) = 0 := by
         ext i j
         simp
         rw [← Matrix.ext_iff] at hm
         specialize hm i j
         simp at hm
         norm_cast at hm
+
 
       conv =>
         lhs
@@ -2111,7 +2122,7 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
             conv =>
               rhs
               arg 1
-              equals LinearMap.toMatrix' ((gamma_int^n_prod) - 1) =>
+              equals LinearMap.toMatrix' ((gamma_int^(n_prod)) - 1) =>
                 ext i j
                 simp [Matrix.one_apply]
 
