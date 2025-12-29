@@ -1979,9 +1979,9 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
                 congr
                 simp
                 group
-              . sorry
-              rw [Subtype.ext_iff]
-              simp
+              .
+                intro a b hab
+                simpa using hab
             | succ j ih =>
               simp_rw [Function.iterate_succ']
               simp [Bracket.bracket]
