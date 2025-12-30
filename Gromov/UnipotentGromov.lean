@@ -1689,9 +1689,6 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     . simp
 
 
-  have fin_ne: NeZero (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)))) := by
-    sorry
-
 
   -- TODO - generalize and pr to mathlib
   have gamma_pow_eigen: ∀ k: Module.End.Eigenvalues ((gamma_matrix.toLin')^(n_prod * K)), k.val = 1 := by
@@ -1702,18 +1699,23 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     rw [Module.End.hasEigenvalue_iff_mem_spectrum] at has_eigen
     rw [← AlgEquiv.spectrum_eq (f := Module.End.toContinuousLinearMap _)] at has_eigen
     simp at has_eigen
-    rw [spectrum.map_pow] at has_eigen
-    rw [AlgEquiv.spectrum_eq] at has_eigen
-    simp at has_eigen
-    obtain ⟨c, c_mem, c_pow_eq⟩ := has_eigen
-    simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val]
-    simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val] at c_pow_eq
-    rw [← c_pow_eq]
-    rw [← Matrix.spectrum_toLin'] at c_mem
-    rw [← Module.End.hasEigenvalue_iff_mem_spectrum] at c_mem
-    specialize n_prod_pow ⟨_, c_mem⟩
-    simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val] at n_prod_pow
-    exact n_prod_pow
+    rw [spectrum.map_pow_of_pos] at has_eigen
+    .
+      rw [AlgEquiv.spectrum_eq] at has_eigen
+      simp at has_eigen
+      obtain ⟨c, c_mem, c_pow_eq⟩ := has_eigen
+      simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val]
+      simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val] at c_pow_eq
+      rw [← c_pow_eq]
+      rw [← Matrix.spectrum_toLin'] at c_mem
+      rw [← Module.End.hasEigenvalue_iff_mem_spectrum] at c_mem
+      specialize n_prod_pow ⟨_, c_mem⟩
+      simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val] at n_prod_pow
+      exact n_prod_pow
+    .
+      simp at n_prod_mul_ne
+      simp
+      omega
 
 
 
