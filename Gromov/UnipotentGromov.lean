@@ -1504,7 +1504,7 @@ lemma matrix_map_pow  {n : Type*} {α : Type*} {β : Type*} [CommSemiring α] [F
     simp
     rw [ih]
 
-set_option maxHeartbeats 900000 in
+set_option maxHeartbeats 1000000 in
 set_option synthInstance.maxHeartbeats 40000 in
 lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N] [N_normal: N.Normal] (hN: Subgroup.FG N) (gamma: G):
     ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N, iteratedCommutator g.val (gamma^a) n = 1 := by
@@ -1689,50 +1689,31 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     . simp
 
 
+  have fin_ne: NeZero (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)))) := by
+    sorry
 
 
+  -- TODO - generalize and pr to mathlib
   have gamma_pow_eigen: ∀ k: Module.End.Eigenvalues ((gamma_matrix.toLin')^(n_prod * K)), k.val = 1 := by
     intro k
     have k_prop := k.property
-    rw [Module.End.HasUnifEigenvalue, Submodule.ne_bot_iff] at k_prop
-    obtain ⟨x, hx, x_ne⟩ := k_prop
-    simp at hx
-
-    have x_eigen: Module.End.HasEigenvector gamma_matrix.toLin' (k.val^(1/((n_prod*K): ℂ))) ((gamma_matrix ^ ((n_prod*K) - 1)).toLin' x) := by
-      rw [Module.End.hasEigenvector_iff]
-      refine ⟨?_, ?_⟩
-      .
-        simp only [Module.End.mem_genEigenspace_one]
-        simp only [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val]
-        sorry
-      .
-        by_contra!
-        sorry
-        -- simp at this
-        -- nth_rw 1 [← mul_pow_sub_one (n := n_prod) n_prod_ne] at hx
-        -- simp [Module.End.mul_eq_comp] at hx
-        -- simp [this] at hx
-
-        -- have k_ne_zero: k.val ≠ 0 := by
-        --   sorry
-
-
-        -- rw [eq_comm, smul_eq_zero] at hx
-        -- simp at x_ne
-        -- simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val] at k_ne_zero
-        -- simp [x_ne, k_ne_zero] at hx
-
-    have foo := x_eigen.hasUnifEigenvalue
-    specialize n_prod_pow ⟨_, foo⟩
-    simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val] at n_prod_pow
+    have has_eigen: Module.End.HasEigenvalue (Matrix.toLin' gamma_matrix ^ (n_prod * K)) k := by
+      exact k.property
+    rw [Module.End.hasEigenvalue_iff_mem_spectrum] at has_eigen
+    rw [← AlgEquiv.spectrum_eq (f := Module.End.toContinuousLinearMap _)] at has_eigen
+    simp at has_eigen
+    rw [spectrum.map_pow] at has_eigen
+    rw [AlgEquiv.spectrum_eq] at has_eigen
+    simp at has_eigen
+    obtain ⟨c, c_mem, c_pow_eq⟩ := has_eigen
     simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val]
-    field_simp at n_prod_pow
-    rw [← Complex.cpow_mul_nat] at n_prod_pow
-    nth_rw 3 [mul_comm] at n_prod_pow
-    norm_cast at n_prod_pow
-    field_simp [n_prod_mul_ne] at n_prod_pow
-    sorry
-    --simpa using n_prod_pow
+    simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val] at c_pow_eq
+    rw [← c_pow_eq]
+    rw [← Matrix.spectrum_toLin'] at c_mem
+    rw [← Module.End.hasEigenvalue_iff_mem_spectrum] at c_mem
+    specialize n_prod_pow ⟨_, c_mem⟩
+    simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val] at n_prod_pow
+    exact n_prod_pow
 
 
 
