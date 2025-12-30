@@ -618,6 +618,18 @@ lemma int_matrix_poly_growth_eigenvalue {d p: ℕ} (A: (Matrix (Fin d) (Fin d) �
     .
       rename_i gt_one
       obtain ⟨k, kh, one_lt_k⟩ := gt_one
+      apply Module.End.HasEigenvalue.exists_hasEigenvector at kh
+      obtain ⟨v, hv⟩ := kh
+      rw [Module.End.hasEigenvector_iff] at hv
+      have map_v := hv.1
+      simp at map_v
+
+      have foo := int_matrix_exponential_growth (d := d)
+        (A.map (complexOfIntHom.mapMatrix (m := Fin d))) v (by simpa using hv.2) k (by simpa using map_v)
+        one_lt_k
+
+      obtain ⟨N, hN⟩ := foo
+      
       sorry
 
 
