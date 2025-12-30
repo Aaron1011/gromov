@@ -1944,8 +1944,28 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
                   rhs
                   arg 1
                   arg 1
+                  -- TODO - extract this to a lemma and upstream to mathlib
                   equals center_quot_equiv.conj (add_gamma_conj ^ (n_prod * K)) =>
-                    sorry
+                    induction (n_prod * K) with
+                    | zero =>
+                      simp
+                      conv =>
+                        rhs
+                        arg 2
+                        equals LinearMap.id => rfl
+                      simp
+                      rfl
+                    | succ k ih =>
+                      rw [pow_succ']
+                      rw [ih]
+                      rw [pow_succ']
+                      conv =>
+                        rhs
+                        pattern _ * _
+                        equals add_gamma_conj.toLinearMap ∘ₗ (add_gamma_conj.toLinearMap ^ k) =>
+                          rfl
+                      rw [LinearEquiv.conj_comp]
+                      rfl
                 rw [LinearEquiv.conj_apply_apply]
                 nth_rw 1 [← neg_one_smul (R := ℤ)]
                 rw [← LinearEquiv.map_smul]
