@@ -1972,20 +1972,24 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
                 rw [neg_one_smul]
                 congr
                 simp
+                -- TODO - investigate why this needed to be explicitly factored out and generalized over 'n'
+                -- for the induction proof below to work
+                have pow_mem_N: ∀ n, gamma ^ (n) * ↑g * gamma⁻¹ ^ (n) ∈ N := by
+                  simp
+                  intro n
+                  apply N_normal.conj_mem
+                  simp
                 conv =>
                   rhs
                   arg 1
                   arg 2
-                  equals Additive.ofMul (QuotientGroup.mk' (CommGroup.torsion ↥(Subgroup.center ↥N)) (⟨⟨(gamma^(n_prod * K)) * g * gamma^(-(((n_prod * K) : ℕ) : ℤ)), (by
-                    simp
-                    norm_cast
-                    apply N_normal.conj_mem g (by simp) (gamma ^ (n_prod * K))
-                  )⟩, (by
+                  equals Additive.ofMul (QuotientGroup.mk' (CommGroup.torsion ↥(Subgroup.center ↥N)) (⟨⟨(gamma^(n_prod * K)) * g * gamma⁻¹^((n_prod * K)), (pow_mem_N _)⟩, (by
                     simp
                     norm_cast
                     -- TODO - deduplicate this
                     let map_normal: (Subgroup.map (Subgroup.subtype _) (Subgroup.center N)).Normal := by
                       infer_instance
+
 
                     have foo := map_normal.conj_mem g (by simp [hg]) (gamma ^ (n_prod * K))
                     simp at foo
@@ -1993,11 +1997,20 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
                     exact mem_center
                   )⟩)) =>
                     clear * -
+                    simp
+                    norm_cast
+                    -- rw[← QuotientGroup.out_eq' (a := Additive.toMul _)]
+                    -- rw [QuotientGroup.eq]
+
+                    -- congr
+                    -- rw [Subtype.ext_iff]
+                    -- simp
+                    -- rw [Subtype.ext_iff]
+                    -- simp
                     induction (n_prod * K) with
                     | zero =>
                       simp
                     | succ q ih =>
-                      simp
                       nth_rw 1 [pow_succ']
                       conv =>
                         lhs
