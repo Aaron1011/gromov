@@ -1849,8 +1849,6 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
             exact f_mem_torsion
           .
             have first := ConjAct.normal_of_characteristic_of_normal (H := N) (K := Subgroup.center ↥N)
-            --have center_normal: Subgroup.Normal (Subgroup.center N) := by infer_instance
-            --have foo := center_normal.conj_mem ⟨_, f_mem_N⟩ f_mem_center
             have foo := first.conj_mem f (by simp; use f_mem_N) k
             simp at foo
             obtain ⟨mem_n, mem_center⟩ := foo
@@ -1858,34 +1856,7 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
         .
           apply N_normal.conj_mem
           exact f_mem_N
-
-        -- apply Subgroup.Normal.of_conjugate_fixed
-        -- intro g
-        -- ext a
-        -- simp [MulAut.conj]
-
-        -- rw [Subgroup.characteristic_iff_le_map]
-        -- intro f g hg
-        -- simp
-        -- simp at hg
-        -- obtain ⟨g_mem_N, g_mem_center, g_mem_torsion⟩ := hg
-        -- rw [CommGroup.mem_torsion] at g_mem_torsion
-        -- use (f.symm.toMonoidHom g)
-        -- refine ⟨?_, by simp⟩
-        -- sorry
     }
-
-      -- use ?_
-      -- .
-      --   use ?_
-
-      -- .
-
-      --   sorry
-      -- refine ⟨?_, by simp⟩
-      -- rw [CommGroup.mem_torsion]
-      -- apply MonoidHom.isOfFinOrder
-      -- exact hg
 
     have conj_trivial: MulAut.conjNormal (H := Subgroup.map ((Subgroup.subtype _).comp (Subgroup.subtype _)) ((CommGroup.torsion ↥(Subgroup.center ↥N)))) (gamma ^ (n_prod * K)) = 1 := by
       rw [MonoidHom.map_pow]
@@ -1941,7 +1912,18 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
                   arg 2
                   arg 2
                   arg 1
-                  equals ⟨g, hg⟩ * ⟨⟨gamma ^ (n_prod * K) * (↑g)⁻¹ * (gamma ^ (n_prod * K))⁻¹, sorry⟩, sorry⟩ =>
+                  equals ⟨g, hg⟩ * ⟨⟨gamma ^ (n_prod * K) * (↑g)⁻¹ * (gamma ^ (n_prod * K))⁻¹, (by
+                    have foo := N_normal.conj_mem g⁻¹ (by simp) (gamma ^ (n_prod * K))
+                    exact foo
+                  )⟩, (by
+                    let map_normal: (Subgroup.map (Subgroup.subtype _) (Subgroup.center N)).Normal := by
+                      infer_instance
+
+                    have foo := map_normal.conj_mem g⁻¹ (by simp [hg]) (gamma ^ (n_prod * K))
+                    simp at foo
+                    obtain ⟨mem_N, mem_center⟩ := foo
+                    exact mem_center
+                  )⟩ =>
                     simp
                     rw [Subtype.ext_iff]
                     simp
