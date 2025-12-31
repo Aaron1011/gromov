@@ -1,5 +1,6 @@
 import Mathlib
 import Mathlib.Algebra.Group.Gromov.MatrixSubsum
+import Mathlib.Algebra.Group.Gromov.AbelianFg
 
 set_option linter.style.longLine false
 set_option linter.style.commandStart false
@@ -1511,7 +1512,6 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
 
   have center_fg: Group.FG (Subgroup.center N) := by
     sorry
-
   have center_iso := CommGroup.equiv_free_prod_directSum_zmod (Subgroup.center N)
   obtain ⟨I, J, fin_I, fin_J, I_pow, I_pow_prime, K_map, ⟨center_iso⟩⟩ := center_iso
 
@@ -1656,8 +1656,10 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     unfold MulAut
 
     have torsion_fg: Group.FG ↥(CommGroup.torsion ↥(Subgroup.center ↥N)) := by
-      sorry
-
+      simp
+      rw [Subgroup.fg_iff_add_fg]
+      apply fg_subgroup_of_abelian
+      apply AddGroup.fg_of_group_fg
 
     have torsion_finite : Finite (CommGroup.torsion ↥(Subgroup.center ↥N)) := by
       apply CommGroup.finite_of_fg_torsion
