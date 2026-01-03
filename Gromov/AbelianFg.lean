@@ -1,5 +1,40 @@
 import Mathlib
 
+lemma new_group_fg_map {G G': Type*} [Group G] [Group G'] (H: Subgroup G) (h_fg: H.FG) (f: G →* G'): (Subgroup.map f H).FG := by
+  obtain ⟨s, hs⟩ := h_fg
+  classical
+  rw [Subgroup.fg_iff]
+  use s.image f
+  refine ⟨?_, ?_⟩
+  .
+    rw [Finset.coe_image]
+    rw [← MonoidHom.map_closure]
+    rw [hs]
+  . simp
+    exact Set.toFinite (⇑f '' ↑s)
+
+
+
+-- lemma group_fg_comap {G G': Type*} [Group G] [Group G'] (H: Subgroup G') (h_fg: H.FG) (f: G →* G'): (Subgroup.comap f H).FG := by
+--   obtain ⟨s, hs⟩ := h_fg
+--   classical
+--   rw [Subgroup.fg_iff]
+--   use Set.preimage f s
+--   refine ⟨?_, ?_⟩
+--   .
+--     apply_fun (Subgroup.map f)
+--     . sorry
+--     .
+--       apply Subgroup.map_injective
+
+--     simp
+--     rw [Finset.coe_image]
+--     rw [← MonoidHom.map_closure]
+--     rw [hs]
+--   .
+
+--     exact Set.toFinite (⇑f '' ↑s)
+
 lemma addgroup_fg_map {G G': Type*} [AddGroup G] [AddGroup G'] (H: AddSubgroup G) (h_fg: H.FG) (f: G →+ G'): (AddSubgroup.map f H).FG := by
   obtain ⟨s, hs⟩ := h_fg
   classical
@@ -59,36 +94,13 @@ lemma mem_S_prod_list_of_gen {G: Type*} [Group G] [DecidableEq G] (S: Finset G) 
   unfold List.unattach
   simp
 
+-- TODO - simplify and pr to mathlib
 lemma fg_of_quot {G: Type*} [DecidableEq G] [Group G] (H: Subgroup G) [DecidableEq (G ⧸ H)]  [H.Normal] (fg_H: Subgroup.FG H) [fg_quot: Group.FG (G ⧸ H)]: Group.FG G := by
   rw [Group.fg_iff]
   have foo := Subgroup.groupEquivQuotientProdSubgroup (s := H)
   have h_group_fg: Group.FG H := by
     rw [Group.fg_iff_subgroup_fg]
     apply fg_H
-  -- have fg_prod: Group.FG ((G ⧸ H) × ↥H) := by apply Prod.instGroupFG
-
-  -- use (Finset.image foo.symm fg_prod.out.choose)
-  -- refine ⟨?_, by apply Finset.finite_toSet⟩
-  -- simp
-  -- have choose_fg := fg_prod.out.choose_spec
-  -- ext a
-  -- simp
-
-  -- have a_mem_top: (foo a) ∈ (⊤ : Subgroup ((G ⧸ H) × ↥H)) := by simp
-  -- rw [← choose_fg] at a_mem_top
-  -- have bar := mem_S_prod_list_of_gen _ choose_fg (foo a)
-  -- obtain ⟨l, hl⟩ := bar
-  -- rw [← hl] at a_mem_top
-
-
-  -- apply_fun foo.symm at hl
-  -- simp at hl
-  -- rw [← hl]
-
-
-
-
-  -- rw [Subgroup.mem_closure_iff_of_fintype]
 
   obtain ⟨S_H, S_H_closure⟩ := fg_H
   use S_H ∪ ((Finset.image (fun a => a.out) fg_quot.out.choose) ∪ ((Finset.image (fun a => a⁻¹.out) fg_quot.out.choose)))
@@ -117,8 +129,6 @@ lemma fg_of_quot {G: Type*} [DecidableEq G] [Group G] (H: Subgroup G) [Decidable
         rw [List.map_map]
         simp
 
-
-
     unfold List.unattach at hl
     simp at hl
     rw [QuotientGroup.eq] at hl
@@ -126,17 +136,12 @@ lemma fg_of_quot {G: Type*} [DecidableEq G] [Group G] (H: Subgroup G) [Decidable
     obtain ⟨b, hb⟩ := QuotientGroup.mk_out_eq_mul H a
     rw [Subgroup.closure_union]
     apply mul_inv_eq_of_eq_mul at hb
-    --rw [← hb]
     rw [sup_comm]
 
     have a_eq: a = ((List.map (fun a ↦ Quotient.out a) l.unattach).prod) * ((List.map (fun a ↦ Quotient.out a) l.unattach).prod⁻¹ * a) := by
       simp
 
     rw [a_eq]
-
-
-
-    --simp at a_mem
 
     apply Subgroup.mul_mem_sup
     .
@@ -163,16 +168,63 @@ lemma fg_of_quot {G: Type*} [DecidableEq G] [Group G] (H: Subgroup G) [Decidable
   .
     apply Finset.finite_toSet
 
-lemma subgroup_fg_of_nilpotent_fg {G: Type*} [Group G] [Group.IsNilpotent G] [Group.FG G] (H: Subgroup G): Group.FG H:= by
-  apply nilpotent_center_quotient_ind (P := fun A _ _ => Group.FG A)
+
+lemma new_subgroup_fg_of_nilpotent_fg {G: Type*} [Group G] [hG: Group.IsNilpotent G] [Group.FG G] (H: Subgroup G): H.FG:= by
+  induction hn: Group.nilpotencyClass H generalizing H G with
+  | zero =>
+    rw [nilpotencyClass_zero_iff_subsingleton] at hn
+    rw [← Group.fg_iff_subgroup_fg]
+    infer_instance
+  | succ n ih =>
+    have center_class: Group.nilpotencyClass (Subgroup.center H) ≤ 1 := by
+      apply CommGroup.nilpotencyClass_le_one
+
+    have quot_center := nilpotencyClass_quotient_center (G := H)
+    rw [hn] at quot_center
+    simp at quot_center
+
+
+
+
+
+    have prev := ih (G := (H ⧸ (Subgroup.center H))) ⊤
+
+
+
+lemma subgroup_fg_of_nilpotent_fg {G: Type*} [Group G] [hG: Group.IsNilpotent G] [Group.FG G]: ∀ (H: Subgroup G), H.FG:= by
+
+  apply nilpotent_center_quotient_ind (P := fun A _ _ => ∀ (B: Subgroup A), B.FG)
   .
     intro A _ hA
+    intro BAll
+    rw [← Group.fg_iff_subgroup_fg]
     infer_instance
   . intro A _ _ h_quot
+    classical
 
-    have foo := Module.Finite.of_submodule_quotient ((Subgroup.toAddSubgroup A).toIntSubmodule) (M := Additive A)
+    intro B
+
+    let B' := Subgroup.map (QuotientGroup.mk' (Subgroup.center A)) B
+    have B'_fg := h_quot B'
+
+    let A' := Subgroup.map (QuotientGroup.mk' (Subgroup.center A)) (Subgroup.center A)
+    have A'_fg := h_quot A'
+
+    have foo := comap_upperCentralSeries_quotient_center (G := A) 2
+    apply_fun (Subgroup.map (QuotientGroup.mk' (Subgroup.center A))) at foo
+    rw [Subgroup.map_comap_eq_self] at foo
+    .
+      have bar := new_group_fg_map (upperCentralSeries A (Nat.succ 2)) (by sorry) (QuotientGroup.mk' (Subgroup.center A))
+      rw [← foo] at bar
+      sorry
+    . simp
+
+    have a_fg := h_quot ⊤
+    rw [← Group.fg_def] at a_fg
+
+
+
+
     sorry
-
-  rw [Subgroup.fg_iff_add_fg]
-  apply induction_nilp
-  --have : Module.Finite ℤ (Subgroup.toAddSubgroup H).toIntSubmodule := by inferInstance
+    apply fg_of_quot (H := (Subgroup.center A))
+    sorry
