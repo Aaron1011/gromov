@@ -168,63 +168,65 @@ lemma fg_of_quot {G: Type*} [DecidableEq G] [Group G] (H: Subgroup G) [Decidable
   .
     apply Finset.finite_toSet
 
-
-lemma new_subgroup_fg_of_nilpotent_fg {G: Type*} [Group G] [hG: Group.IsNilpotent G] [Group.FG G] (H: Subgroup G): H.FG:= by
-  induction hn: Group.nilpotencyClass H generalizing H G with
-  | zero =>
-    rw [nilpotencyClass_zero_iff_subsingleton] at hn
-    rw [← Group.fg_iff_subgroup_fg]
-    infer_instance
-  | succ n ih =>
-    have center_class: Group.nilpotencyClass (Subgroup.center H) ≤ 1 := by
-      apply CommGroup.nilpotencyClass_le_one
-
-    have quot_center := nilpotencyClass_quotient_center (G := H)
-    rw [hn] at quot_center
-    simp at quot_center
-
-
-
-
-
-    have prev := ih (G := (H ⧸ (Subgroup.center H))) ⊤
-
-
-
 lemma subgroup_fg_of_nilpotent_fg {G: Type*} [Group G] [hG: Group.IsNilpotent G] [Group.FG G]: ∀ (H: Subgroup G), H.FG:= by
+  sorry
 
-  apply nilpotent_center_quotient_ind (P := fun A _ _ => ∀ (B: Subgroup A), B.FG)
-  .
-    intro A _ hA
-    intro BAll
-    rw [← Group.fg_iff_subgroup_fg]
-    infer_instance
-  . intro A _ _ h_quot
-    classical
+-- lemma new_subgroup_fg_of_nilpotent_fg {G: Type*} [Group G] [hG: Group.IsNilpotent G] [Group.FG G] (H: Subgroup G): H.FG:= by
+--   induction hn: Group.nilpotencyClass H generalizing H G with
+--   | zero =>
+--     rw [nilpotencyClass_zero_iff_subsingleton] at hn
+--     rw [← Group.fg_iff_subgroup_fg]
+--     infer_instance
+--   | succ n ih =>
+--     have center_class: Group.nilpotencyClass (Subgroup.center H) ≤ 1 := by
+--       apply CommGroup.nilpotencyClass_le_one
 
-    intro B
-
-    let B' := Subgroup.map (QuotientGroup.mk' (Subgroup.center A)) B
-    have B'_fg := h_quot B'
-
-    let A' := Subgroup.map (QuotientGroup.mk' (Subgroup.center A)) (Subgroup.center A)
-    have A'_fg := h_quot A'
-
-    have foo := comap_upperCentralSeries_quotient_center (G := A) 2
-    apply_fun (Subgroup.map (QuotientGroup.mk' (Subgroup.center A))) at foo
-    rw [Subgroup.map_comap_eq_self] at foo
-    .
-      have bar := new_group_fg_map (upperCentralSeries A (Nat.succ 2)) (by sorry) (QuotientGroup.mk' (Subgroup.center A))
-      rw [← foo] at bar
-      sorry
-    . simp
-
-    have a_fg := h_quot ⊤
-    rw [← Group.fg_def] at a_fg
+--     have quot_center := nilpotencyClass_quotient_center (G := H)
+--     rw [hn] at quot_center
+--     simp at quot_center
 
 
 
 
-    sorry
-    apply fg_of_quot (H := (Subgroup.center A))
-    sorry
+
+--     have prev := ih (G := (H ⧸ (Subgroup.center H))) ⊤
+
+
+
+--lemma subgroup_fg_of_nilpotent_fg {G: Type*} [Group G] [hG: Group.IsNilpotent G] [Group.FG G]: ∀ (H: Subgroup G), H.FG:= by
+
+  -- apply nilpotent_center_quotient_ind (P := fun A _ _ => ∀ (B: Subgroup A), B.FG)
+  -- .
+  --   intro A _ hA
+  --   intro BAll
+  --   rw [← Group.fg_iff_subgroup_fg]
+  --   infer_instance
+  -- . intro A _ _ h_quot
+  --   classical
+
+  --   intro B
+
+  --   let B' := Subgroup.map (QuotientGroup.mk' (Subgroup.center A)) B
+  --   have B'_fg := h_quot B'
+
+  --   let A' := Subgroup.map (QuotientGroup.mk' (Subgroup.center A)) (Subgroup.center A)
+  --   have A'_fg := h_quot A'
+
+  --   have foo := comap_upperCentralSeries_quotient_center (G := A) 2
+  --   apply_fun (Subgroup.map (QuotientGroup.mk' (Subgroup.center A))) at foo
+  --   rw [Subgroup.map_comap_eq_self] at foo
+  --   .
+  --     have bar := new_group_fg_map (upperCentralSeries A (Nat.succ 2)) (by sorry) (QuotientGroup.mk' (Subgroup.center A))
+  --     rw [← foo] at bar
+  --     sorry
+  --   . simp
+
+  --   have a_fg := h_quot ⊤
+  --   rw [← Group.fg_def] at a_fg
+
+
+
+
+  --   sorry
+  --   apply fg_of_quot (H := (Subgroup.center A))
+  --   sorry
