@@ -13,7 +13,7 @@ lemma lowerCentralSeries_congr {G H: Type*} [Group G] [Group H] [Group.IsNilpote
   have second := nilpotencyClass_le_of_surjective f.symm.toMonoidHom (by simp; exact MulEquiv.surjective f.symm)
   linarith
 
-lemma lowerCentralSeries_nilpotencyClass_succ {G: Type*} [Group G] [Group.IsNilpotent G] (n: ℕ):
+lemma lowerCentralSeries_nilpotencyClass_succ {G: Type*} [Group G] [Group.IsNilpotent G] :
     Group.nilpotencyClass (lowerCentralSeries G (Group.nilpotencyClass (G))) ≤ (Group.nilpotencyClass G) - 1 := by
 
   match hn: (Group.nilpotencyClass G) with
