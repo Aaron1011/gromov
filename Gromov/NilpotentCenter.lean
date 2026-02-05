@@ -16,28 +16,19 @@ lemma lowerCentralSeries_congr {G H: Type*} [Group G] [Group H] [Group.IsNilpote
 lemma lowerCentralSeries_nilpotencyClass_succ {G: Type*} [Group G] [Group.IsNilpotent G] (n: ℕ):
     Group.nilpotencyClass (lowerCentralSeries G (Group.nilpotencyClass (G))) ≤ (Group.nilpotencyClass G) - 1 := by
 
-  induction hn: Group.nilpotencyClass G generalizing G with
-  | zero =>
+  match hn: (Group.nilpotencyClass G) with
+  | 0 =>
     simp
     rw [nilpotencyClass_zero_iff_subsingleton] at hn
     rw [nilpotencyClass_zero_iff_subsingleton]
     infer_instance
-
-    -- let unique: Unique (Subgroup G) := by infer_instance
-    -- simp [commutator]
-    -- have subgroup_sub: Subsingleton (Subgroup G) := by infer_instance
-    -- rw [← subsingleton_iff_bot_eq_top] at subgroup_sub
-
-    -- rw [unique.uniq (a := commutator G)]
-    -- rw [← unique.uniq (a := ⊤)]
-    -- exact Group.FG.out
-  | succ k ih =>
+  | n + 1 =>
     have foo := le_of_eq hn
     have bar := lowerCentralSeries_eq_bot_iff_nilpotencyClass_le.mpr foo
     rw [bar]
     simp
     rw [← lowerCentralSeries_eq_bot_iff_nilpotencyClass_le]
-    match k with
+    match n with
     | 0 =>
       simp
       exact Subgroup.eq_bot_of_subsingleton ⊤
