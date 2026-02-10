@@ -16,14 +16,17 @@ lemma lowerCentralSeries_congr {G H: Type*} [Group G] [Group H] [Group.IsNilpote
 lemma lowerCentralSeries_lowerCentralSeries {G: Type*} [Group G] [Group.IsNilpotent G] {a b: ℕ}:
     Subgroup.map (Subgroup.subtype _) (lowerCentralSeries (lowerCentralSeries G a) b) = lowerCentralSeries G (a + b) := by
 
-  induction a with
+  induction b with
   | zero =>
     simp
     rw [le_antisymm_iff]
     refine ⟨?_, ?_⟩
-    . grw [lowerCentralSeries_map_subtype_le]
     .
-      induction b with
+      intro x hx
+      simp at hx
+      simpa using hx
+    .
+      induction a with
       | zero =>
         simp
         ext a
@@ -31,34 +34,106 @@ lemma lowerCentralSeries_lowerCentralSeries {G: Type*} [Group G] [Group.IsNilpot
       | succ n ih =>
         rw [lowerCentralSeries_succ]
         simp
-        intro x hx
-        simp at hx
-        simp
-        obtain ⟨p, hp, q, hq⟩ := hx
-        rw [mem_lowerCentralSeries_succ_iff]
-        apply Subgroup.mem_closure_of_mem
-        simp
-        use p
-        refine ⟨?_, ?_⟩
-        .
-          specialize ih hp
-          simpa using ih
-        .
-          use q
-          rw [← hq]
-          rfl
+        -- intro x hx
+        -- simp at hx
+        -- simp
+        -- obtain ⟨p, hp, q, hq⟩ := hx
+        -- rw [mem_lowerCentralSeries_succ_iff]
+        -- apply Subgroup.mem_closure_of_mem
+        -- simp
+        -- use p
+        -- refine ⟨?_, ?_⟩
+        -- .
+        --   specialize ih hp
+        --   simpa using ih
+        -- .
+        --   use q
+        --   rw [← hq]
+        --   rfl
   | succ n ih =>
-    ext a
+    rw [le_antisymm_iff]
     refine ⟨?_, ?_⟩
     .
-      intro ha
-      simp at ha
-      obtain ⟨a_mem, a_mem_nested⟩ := ha
-      rw [add_comm, ← add_assoc]
-      rw [mem_lowerCentralSeries_succ_iff]
+      rw [lowerCentralSeries_succ]
+      rw [← add_assoc]
+      rw [lowerCentralSeries_succ]
+      rw [Subgroup.map_le_iff_le_comap]
+      rw [Subgroup.closure_le]
+      intro x hx
+      simp
+      rw [Subgroup.mem_subgroupOf]
+      rw [← ih]
       apply Subgroup.mem_closure_of_mem
       simp
-      
+      simp only [Set.mem_setOf_eq] at hx
+      obtain ⟨p, hp, q, hq, hx⟩ := hx
+      use p
+      use ?_
+      .
+        use q
+        simp [← hx]
+      . use ?_
+        simp
+    .
+      rw [← add_assoc]
+      rw [lowerCentralSeries_succ]
+      rw [Subgroup.closure_le]
+      rw [← ih]
+      intro x hx
+
+      rw [lowerCentralSeries_succ]
+      simp only [Set.mem_setOf_eq] at hx
+      simp only [
+        Subgroup.coe_map, Subgroup.subtype_apply, Set.mem_image, SetLike.mem_coe, exists_and_right,
+        ]
+      use ⟨x, ?_⟩
+      . refine ⟨?_, ?_⟩
+        .
+          apply Subgroup.mem_closure_of_mem
+          simp only [Set.mem_setOf_eq]
+          obtain ⟨p, hp, q, hq, hx⟩ := hx
+          simp at hp
+          obtain ⟨p_mem, p_mem_nested⟩ := hp
+          use ⟨p, p_mem⟩
+          use ?_
+          .
+            
+            use q
+            simp [← hx]
+          . use ?_
+            simp
+
+      use x
+    ext x
+    refine ⟨?_, ?_⟩
+    .
+      intro hx
+      simp at hx
+      obtain ⟨x_mem, x_mem_nested⟩ := hx
+      rw [← add_assoc]
+      -- rw [mem_lowerCentralSeries_succ_iff]
+      -- apply Subgroup.mem_closure_of_mem
+      -- simp
+      --rw [← ih]
+
+      rw [mem_lowerCentralSeries_succ_iff] at x_mem_nested
+      rw [mem_lowerCentralSeries_succ_iff]
+      rw [← Subgroup.mem_map_iff_mem (f := Subgroup.subtype _)] at x_mem_nested
+      .
+        simp only [Subgroup.subtype_apply] at x_mem_nested
+        rw [← ih]
+
+
+
+        rw [Subgroup.mem_map] at x_mem_nested
+        grw [lowerCentralSeries_map_subtype_le] at x_mem_nested
+
+
+
+      . simp
+      apply_fun (Subgroup.subtype _) at x_mem_nested
+    . sorry
+
 
 
 
