@@ -137,59 +137,59 @@ lemma lowerCentralSeries_congr {G H: Type*} [Group G] [Group H] [Group.IsNilpote
 
 
 
-lemma new_lowerCentralSeries_nilpotencyClass_succ {G: Type*} [Group G] [Group.IsNilpotent G] [Nontrivial G] :
-  (Group.nilpotencyClass (lowerCentralSeries G 1)) = (Group.nilpotencyClass G) - 1 := by
+-- lemma new_lowerCentralSeries_nilpotencyClass_succ {G: Type*} [Group G] [Group.IsNilpotent G] [Nontrivial G] :
+--   (Group.nilpotencyClass (lowerCentralSeries G 1)) = (Group.nilpotencyClass G) - 1 := by
 
-  generalize hn : Group.nilpotencyClass G = n
-  rcases n with (rfl | n)
-  · simp only [nilpotencyClass_zero_iff_subsingleton, zero_tsub] at *
-    exact instSubsingletonSubtype_mathlib fun x ↦ x ∈ lowerCentralSeries G 1
-  ·
-    simp
-    apply le_antisymmw
-    ·
+--   generalize hn : Group.nilpotencyClass G = n
+--   rcases n with (rfl | n)
+--   · simp only [nilpotencyClass_zero_iff_subsingleton, zero_tsub] at *
+--     exact instSubsingletonSubtype_mathlib fun x ↦ x ∈ lowerCentralSeries G 1
+--   ·
+--     simp
+--     apply le_antisymm
+--     ·
 
-      rw [← lowerCentralSeries_eq_bot_iff_nilpotencyClass_le]
-      apply le_of_eq at hn
-      rw [← lowerCentralSeries_eq_bot_iff_nilpotencyClass_le] at hn
-      apply_fun (Subgroup.map (Subgroup.subtype _))
-      .
-        simp [← hn]
-        ext a
-        refine ⟨?_, ?_⟩
-        .
-          intro ha
-          simp at ha
-          rw [mem_lowerCentralSeries_succ_iff]
-          obtain ⟨ha, a_mem_lower⟩ := ha
-          apply Subgroup.mem_closure_of_mem
-          simp
+--       rw [← lowerCentralSeries_eq_bot_iff_nilpotencyClass_le]
+--       apply le_of_eq at hn
+--       rw [← lowerCentralSeries_eq_bot_iff_nilpotencyClass_le] at hn
+--       apply_fun (Subgroup.map (Subgroup.subtype _))
+--       .
+--         simp [← hn]
+--         ext a
+--         refine ⟨?_, ?_⟩
+--         .
+--           intro ha
+--           simp at ha
+--           rw [mem_lowerCentralSeries_succ_iff]
+--           obtain ⟨ha, a_mem_lower⟩ := ha
+--           apply Subgroup.mem_closure_of_mem
+--           simp
 
-          sorry
-        .
-          intro ha
-          simp
-          sorry
-      . apply Subgroup.map_injective
-        exact Subgroup.subtype_injective (commutator G)
-      apply comap_injective (f := (mk' (center G))) Quot.mk_surjective
-      rw [comap_upperCentralSeries_quotient_center, comap_top, Nat.succ_eq_add_one, ← hn]
-      exact upperCentralSeries_nilpotencyClass
-    ·
+--           sorry
+--         .
+--           intro ha
+--           simp
+--           sorry
+--       . apply Subgroup.map_injective
+--         exact Subgroup.subtype_injective (commutator G)
+--       apply comap_injective (f := (mk' (center G))) Quot.mk_surjective
+--       rw [comap_upperCentralSeries_quotient_center, comap_top, Nat.succ_eq_add_one, ← hn]
+--       exact upperCentralSeries_nilpotencyClass
+--     ·
 
-      apply le_of_add_le_add_right (a := 1)
-      rw [← hn]
-      rw [← lowerCentralSeries_eq_bot_iff_nilpotencyClass_le]
-
-
-      apply nilpotencyClass_le_of_ker_le_center
+--       apply le_of_add_le_add_right (a := 1)
+--       rw [← hn]
+--       rw [← lowerCentralSeries_eq_bot_iff_nilpotencyClass_le]
 
 
+--       apply nilpotencyClass_le_of_ker_le_center
 
-      calc
-        n + 1 = Group.nilpotencyClass G := hn.symm
-        _ ≤ Group.nilpotencyClass (G) + 1 :=
-          nilpotencyClass_le_of_ker_le_center _ (le_of_eq (ker_mk' _)) _
+
+
+--       calc
+--         n + 1 = Group.nilpotencyClass G := hn.symm
+--         _ ≤ Group.nilpotencyClass (G) + 1 :=
+--           nilpotencyClass_le_of_ker_le_center _ (le_of_eq (ker_mk' _)) _
 
 lemma lowerCentralSeries_nilpotencyClass_succ {G: Type*} [Group G] [Group.IsNilpotent G] [Nontrivial G] :
     (Group.nilpotencyClass G) - 1 = (Group.nilpotencyClass (lowerCentralSeries G 1)) := by

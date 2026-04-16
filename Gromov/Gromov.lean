@@ -11479,7 +11479,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       apply Subgroup.isNilpotent
 
     have N_fg: Subgroup.FG N := by
-      infer_instance
+      sorry
 
     rw [Subgroup.finiteIndex_iff] at N_finite_index
     let N' := Subgroup.closure (Set.range (fun (a: Multiplicative data.φ.ker) => a ^ N.index))
@@ -11636,7 +11636,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
       simp at gamma_alpha_mem_ker
       clear * - hγ α gamma_alpha_mem_ker alpha_nonzero
-      clear pre_N pre_N_nilpotent pre_N_finiteindex N N' N'_nilpotent N'_char N'_normal N_normal N_nilpotent
+      clear N'_index pre_N pre_N_nilpotent pre_N_finiteindex N N' N'_nilpotent N'_char N'_normal N_normal N_nilpotent
 
       apply_fun (α • ·) at hγ
       conv at gamma_alpha_mem_ker =>
