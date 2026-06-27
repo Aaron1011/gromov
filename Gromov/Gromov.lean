@@ -5613,7 +5613,7 @@ lemma norm_conv_mu_le  (f: (Lp ℝ 2 volume (α := G))): ‖conv_mu_lp2 f‖ ≤
             simp [MeasureTheory.volume]
         }
       )]
-      rw [← WithTop.lt_top_iff_ne_top]
+      rw [← lt_top_iff_ne_top]
       apply (MeasureTheory.Lp.memLp f).2
   . intro s hs
     apply AEStronglyMeasurable.of_discrete
@@ -6821,7 +6821,7 @@ noncomputable def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (h_seq:
               simp only [eLpNormEssSup] at bound_by_norm_one
               simp [volume] at bound_by_norm_one
               rw [my_haar_eq_count] at bound_by_norm_one
-              rw [← WithTop.lt_top_iff_ne_top]
+              rw [← lt_top_iff_ne_top]
               grw [bound_by_norm_one]
               simp_rw [Laplace_b]
               simp [volume] at norm_le_two_div
@@ -6860,7 +6860,7 @@ noncomputable def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (h_seq:
         . simp
         . intro n
           -- TODO - deduplicate this. I'm sure there's lots of other versions of it scattered around this file
-          rw [← WithTop.lt_top_iff_ne_top]
+          rw [← lt_top_iff_ne_top]
           grw [conv_laplce_norm]
           rw [H_n_norm]
           simp
@@ -10908,7 +10908,6 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
       simp
 
       by_contra!
-      rw [← Finset.nonempty_iff_ne_empty] at this
       obtain ⟨p, hp⟩ := this
       have orig_h_first := h_first hp
       have orig_h_second := h_second hp
