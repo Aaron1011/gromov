@@ -3356,6 +3356,7 @@ lemma conv_assoc_of_lp2 {f g h: G → ℝ} (hf: MemLp f 2 Measure.count) (hg: Me
 
 
   have h_lp_n (n: ℕ): MemLp h n myHaarAddOpp := by
+    haveI : OpensMeasurableSpace G := BorelSpace.opensMeasurable
     apply Continuous.memLp_of_hasCompactSupport
     . fun_prop
     .
@@ -4959,7 +4960,6 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
       apply sub_le_sub_left
       simp
       gcongr
-      exact sum_le
     _ ≥ 0 := by
       unfold conv_f_delta_lp
       simp_rw [f_conv_delta_helper]
@@ -6545,7 +6545,6 @@ lemma laplace_conv_eq_laplace_right_of_lp2 (f g: G → ℝ) (hfg: ConvExists f g
     intro s hs
     simp [ConvExists, MeasureTheory.ConvolutionExists, MeasureTheory.ConvolutionExistsAt] at hfg
     specialize hfg (s * a)
-    simp only [neg_mul]
     apply MeasureTheory.Integrable.neg
     simp_rw [mul_div]
     exact hfg
@@ -6580,7 +6579,6 @@ lemma laplace_conv_eq_laplace_right (f g: G → ℝ) (hfg: ConvExists f g) (g_no
     intro s hs
     simp [ConvExists, MeasureTheory.ConvolutionExists, MeasureTheory.ConvolutionExistsAt] at hfg
     specialize hfg (s * a)
-    simp only [neg_mul]
     apply MeasureTheory.Integrable.neg
     simp_rw [mul_div]
     exact hfg
@@ -10652,7 +10650,7 @@ lemma finite_virtually_nilpotent {G: Type*} [Group G] [Finite G]: Group.IsVirtua
   rw [Group.IsVirtuallyNilpotent]
   use ⊥
   refine ⟨?_, ?_⟩
-  . exact CommGroup.isNilpotent
+  . apply CommGroup.isNilpotent
     -- TODO - prove that a finite group is nilpotent, and upstream to mathlib
   . infer_instance
 
@@ -11405,7 +11403,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       rw [Group.IsVirtuallyNilpotent]
       use ⊥
       refine ⟨?_, ?_⟩
-      . exact CommGroup.isNilpotent
+      . apply CommGroup.isNilpotent
         -- TODO - prove that a finite group is nilpotent, and upstream to mathlib
       . infer_instance
     .
@@ -11612,6 +11610,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     -- have N'_nilpotent: Group.IsNilpotent ↥N' := by
     --   exact N'_nilpotent
 
+    haveI : Subgroup.Characteristic N' := N'_char
     have alpha_nilpotent := unipotent_commutator_trivial (G := data.G') (H := data.φ.ker.toSubgroup') (N' := N') (N'_nilpotent := by
       exact N'_nilpotent
     ) (γ.toMul^α) (by
@@ -11916,7 +11915,6 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                   rfl
 
               simp_rw [← MonoidHom.map_closure]
-              simp_rw [Set.image_iUnion]
 
               apply Set.iUnion_congr
               intro i
@@ -12213,7 +12211,7 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
       rw [Group.IsVirtuallyNilpotent]
       use ⊥
       refine ⟨?_, ?_⟩
-      . exact CommGroup.isNilpotent
+      . apply CommGroup.isNilpotent
         -- TODO - prove that a finite group is nilpotent, and upstream to mathlib
       . infer_instance
     .
@@ -12234,7 +12232,7 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
       rw [Group.IsVirtuallyNilpotent]
       use ⊥
       refine ⟨?_, ?_⟩
-      . exact CommGroup.isNilpotent
+      . apply CommGroup.isNilpotent
         -- TODO - prove that a finite group is nilpotent, and upstream to mathlib
       . infer_instance
     .
