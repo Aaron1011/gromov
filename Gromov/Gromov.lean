@@ -3683,9 +3683,6 @@ lemma f_conv_mu (f: G → ℝ): (Conv  f (mu )) = fun g => ((1 : ℝ) / (#(S) : 
       by_cases card_zero: #(S) = 0
       .
         simp [card_zero]
-        unfold Summable
-        use 0
-        exact hasSum_zero
       .
         conv =>
           arg 1
@@ -4318,8 +4315,7 @@ theorem f_n_sub_conv (n: ℕ): MeasureTheory.eLpNorm ((f_n  n) - (Conv (f_n  n) 
 
 
 
-          rw [iy]
-          simp
+          simp [iy]
 
     simp
     nth_rw 1 [muConv]
@@ -4962,10 +4958,8 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
 
       apply sub_le_sub_left
       simp
-      rw [mul_le_mul_left]
-      .
-        exact sum_le
-      . simpa using hS
+      gcongr
+      exact sum_le
     _ ≥ 0 := by
       unfold conv_f_delta_lp
       simp_rw [f_conv_delta_helper]
@@ -6105,11 +6099,8 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
       rw [← ENNReal.ofReal_tsum_of_nonneg]
       . apply ENNReal.ofReal_ne_top
       . intro n
-        apply mul_nonneg
-        . simp
-        . simp
+        positivity
       .
-        simp_rw [← abs_mul]
         apply Summable.abs
         simp_rw [mul_comm]
         apply summable_f_mul_translate
@@ -9763,8 +9754,6 @@ lemma e_i_and_gamma_generates_G (φ: (Additive G) →+ ℤ) (γ: G) (hγ: φ γ 
     dsimp [Membership.mem]
     rw [Submonoid.closure_eq_image_prod]
     -- TODO - why do we need any of this?
-    dsimp [Set.Mem]
-    rw [← Set.mem_def (a := s) (s := List.prod '' _)]
     rw [Set.mem_image]
 
 
