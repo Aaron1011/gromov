@@ -5599,7 +5599,7 @@ lemma norm_conv_mu_le  (f: (Lp ℝ 2 volume (α := G))): ‖conv_mu_lp2 f‖ ≤
       rw [Real.enorm_of_nonneg (by simp)]
       apply ENNReal.ofReal_ne_top
     .
-      rw [WithTop.sum_ne_top]
+      rw [ENNReal.sum_ne_top]
       intro s hs
       rw [← Function.comp_def]
       conv =>
