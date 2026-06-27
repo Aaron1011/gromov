@@ -3,14 +3,18 @@ Copyright (c) 2025
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors:
 -/
-import Mathlib.MeasureTheory.Integral.MeanInequalities
-import Mathlib.MeasureTheory.Function.LpSeminorm.Defs
-import Mathlib.Analysis.Convolution
+module
+
+public import Mathlib.MeasureTheory.Integral.MeanInequalities
+public import Mathlib.MeasureTheory.Function.LpSeminorm.Defs
+public import Mathlib.Analysis.Convolution
 
 -- Copied from https://github.com/Aaron1011/carleson/blob/d7fa3e22cb1365ed36c23da4b8928023afc69d3b/Carleson/ToMathlib/MeasureTheory/Integral/MeanInequalities.lean
 -- All of the theorem statements are unchanged, but some proofs are `sorry`'d due to missing dependencies from Carleson
 
 set_option linter.style.header false
+
+@[expose] public section
 
 open NNReal ENNReal MeasureTheory Finset
 
@@ -88,7 +92,8 @@ open scoped Convolution
 private lemma r_sub_p_nonneg {p q r : ℝ} (p0 : 0 < p) (hq : 1 ≤ q) (r0 : 0 < r)
     (hpqr : p⁻¹ + q⁻¹ = r⁻¹ + 1) : 0 ≤ r - p := by
   rw [sub_nonneg, ← inv_le_inv₀ r0 p0, ← add_le_add_iff_right, hpqr]
-  exact add_le_add_left ((inv_le_one₀ (lt_of_lt_of_le one_pos hq)).mpr hq) r⁻¹
+  gcongr
+  exact (inv_le_one₀ (lt_of_lt_of_le one_pos hq)).mpr hq
 
 namespace ENNReal
 

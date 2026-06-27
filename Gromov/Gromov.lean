@@ -801,7 +801,6 @@ def gAct (g: G) (v: LipschitzH ): LipschitzH  := {
     grw [hC]
     simp [dist, WordDist]
     group
-    rfl
   harmonic := by
     unfold Harmonic
     intro x
@@ -844,8 +843,7 @@ def gActW (g: G): W → W := Quotient.lift (fun f => Submodule.Quotient.mk (gAct
   intro f h hfh
   simp
   rw [Submodule.Quotient.eq']
-  dsimp [HasEquiv.Equiv] at hfh
-  rw [ConstF.quotientRel_def] at hfh
+  replace hfh := ConstF.quotientRel_def.mp hfh
   dsimp [gAct]
   simp [HAdd.hAdd]
   dsimp [Add.add]
@@ -873,8 +871,7 @@ noncomputable def LipschitzSemiNorm (f: G → ℂ): NNReal := sInf { k: NNReal |
 -- (adding a constant to a Lipschitz function doesn't change its Lipschitz constant)
 noncomputable def LipschitzSemiNorm_w (w: W) := Quotient.lift ((fun f => LipschitzSemiNorm f.toFun)) (by
   intro f g hfg
-  dsimp [HasEquiv.Equiv] at hfg
-  rw [ConstF.quotientRel_def] at hfg
+  replace hfg := ConstF.quotientRel_def.mp hfg
   simp [ConstF] at hfg
   obtain ⟨k, hk⟩ := hfg
   have f_eq_g_k: f = g + (ConstLipschitzH k) := by
@@ -892,7 +889,6 @@ lemma lipschiz_norm_zero: LipschitzSemiNorm  (0) = 0 := by
   unfold LipschitzSemiNorm
   have zero_mem: 0 ∈ { k: NNReal | LipschitzWith k (0 : LipschitzH) } := by
     simp
-    apply LipschitzWith.const
   have sinf_le: sInf { k: NNReal | LipschitzWith k (0 : LipschitzH) } ≤ 0 := by
     exact csInf_le' zero_mem
   exact nonpos_iff_eq_zero.mp sinf_le
@@ -1000,7 +996,7 @@ lemma lipschitz_attains_norm (f: G → ℂ) (hf: IsLipschitz f): LipschitzWith (
     rw [← ENNReal.coe_div] at d_lt_slope
     .
       norm_cast at d_lt_slope
-      apply not_lt_of_le at lipschitz_d
+      apply not_lt_of_ge at lipschitz_d
       contradiction
     . rw [edist_nndist] at edist_ne_zero
       exact fun a ↦ edist_ne_zero (congrArg ENNReal.ofNNReal a)
@@ -1049,9 +1045,18 @@ lemma lipschitz_norm_triangle (x y z: G → ℂ) (hx: IsLipschitz x) (hy: IsLips
 lemma lipschitzH_norm_triangle (x y z: LipschitzH): LipschitzSemiNorm (x - z) ≤ LipschitzSemiNorm (x - y) + LipschitzSemiNorm (y - z) := by
   apply lipschitz_norm_triangle x y z x.lipschitz y.lipschitz z.lipschitz
 
+lemma lipschitzWith_neg_iff {f : G → ℂ} {K : NNReal} : LipschitzWith K (-f) ↔ LipschitzWith K f :=
+  ⟨fun h => by simpa using h.neg, LipschitzWith.neg⟩
+
+lemma lipschitzSemiNorm_neg (f : G → ℂ) : LipschitzSemiNorm (-f) = LipschitzSemiNorm f := by
+  unfold LipschitzSemiNorm
+  congr 1
+  ext k
+  simp only [Set.mem_setOf_eq, lipschitzWith_neg_iff]
 
 
 --section lipschitz_norm
+set_option maxHeartbeats 1000000 in
 noncomputable local instance LipschitzH_seminorm: SeminormedAddCommGroup (LipschitzH) where
   norm := fun v => LipschitzSemiNorm v
   dist_self := by
@@ -1060,20 +1065,37 @@ noncomputable local instance LipschitzH_seminorm: SeminormedAddCommGroup (Lipsch
     exact lipschiz_norm_zero
   dist_comm := by
     intro x y
-    simp [LipschitzSemiNorm]
-    conv =>
-      lhs
-      pattern ⇑(x - y)
-      equals -⇑((y - x)) =>
-        ext a
-        simp
-
-
-    simp_rw [lipschitzWith_neg_iff]
+    have key : LipschitzSemiNorm (⇑(-x + y)) = LipschitzSemiNorm (⇑(-y + x)) := by
+      rw [← lipschitzSemiNorm_neg (⇑(-y + x))]
+      congr 1
+      ext a
+      simp only [lipschitz_neg_tofun, lipschitz_add_tofun, LipschitzH_apply, Pi.add_apply,
+        Pi.neg_apply]
+      ring
+    simpa using key
   dist_triangle := by
     intro x y z
-    simp
-    apply lipschitzH_norm_triangle
+    have key : LipschitzSemiNorm (⇑(-x + z)) ≤
+        LipschitzSemiNorm (⇑(-x + y)) + LipschitzSemiNorm (⇑(-y + z)) := by
+      have h := lipschitzH_norm_triangle z y x
+      have e1 : (⇑(-x + z) : G → ℂ) = ⇑(z - x) := by
+        ext a
+        simp only [lipschitz_neg_tofun, lipschitz_add_tofun, lipschitz_sub_tofun, LipschitzH_apply,
+          Pi.add_apply, Pi.neg_apply, Pi.sub_apply]
+        ring
+      have e2 : (⇑(-x + y) : G → ℂ) = ⇑(y - x) := by
+        ext a
+        simp only [lipschitz_neg_tofun, lipschitz_add_tofun, lipschitz_sub_tofun, LipschitzH_apply,
+          Pi.add_apply, Pi.neg_apply, Pi.sub_apply]
+        ring
+      have e3 : (⇑(-y + z) : G → ℂ) = ⇑(z - y) := by
+        ext a
+        simp only [lipschitz_neg_tofun, lipschitz_add_tofun, lipschitz_sub_tofun, LipschitzH_apply,
+          Pi.add_apply, Pi.neg_apply, Pi.sub_apply]
+        ring
+      rw [e1, e2, e3, add_comm]
+      exact h
+    simpa using key
 
 -- Note that we only implement SeminormedAddCommGroup for LipschitzH, so this is only
 -- really a seminormed space. The quotient space W := LipschitzH ⧸ ConstF
@@ -2186,7 +2208,7 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
             have seq_mem := seq_in n
             obtain ⟨x, x_mem, seq_eq_x⟩ := seq_mem
             rw [← seq_eq_x]
-            apply ContinousWithinAt.eq_const_of_mem_closure (f := fun (x: ((W) →L[ℂ] (W))ˣ) => ‖x.val v‖) (c := ‖v‖) (x := x) (s := my_new_range)
+            apply ContinuousWithinAt.eq_const_of_mem_closure (f := fun (x: ((W) →L[ℂ] (W))ˣ) => ‖x.val v‖) (c := ‖v‖) (x := x) (s := my_new_range)
             . apply Continuous.continuousWithinAt
               fun_prop
             . exact x_mem
@@ -2503,7 +2525,7 @@ lemma g_hom_abelian {T: Type*} [Group T] (A: Subgroup G) (A_finite_index: A.Fini
 
 
   -- TODO - figure out how to make instance inference work here
-  obtain ⟨i, j, i_fin, j_fin, p, p_prime, e, exists_iso⟩ := @CommGroup.equiv_free_prod_directSum_zmod H (by apply CommGroup.ofIsMulCommutative) (H_FG)
+  obtain ⟨i, j, i_fin, j_fin, p, p_prime, e, exists_iso⟩ := @CommGroup.equiv_free_prod_directSum_zmod H (haveI := H_abeliean; { (inferInstance : Group H) with mul_comm := mul_comm' }) (H_FG)
   have iso := Classical.choice exists_iso
 
   have j_nonempty: Nonempty j := by
@@ -5676,7 +5698,7 @@ lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_
     simp_rw [← laplace_self_adjoint] at inner_laplace_zero
     simp at inner_laplace_zero
 
-    have eq_zero:= Dense.eq_zero_of_inner_right (K := ⊤) (E := (Lp ℝ 2 (volume (α := G)))) (𝕜 := ℝ) (by apply dense_univ) (x := (Laplace g))
+    have eq_zero:= Dense.eq_zero_of_inner_right (E := (Lp ℝ 2 (volume (α := G)))) (𝕜 := ℝ) (by apply dense_univ) (x := (Laplace g))
     simp at eq_zero
     specialize eq_zero inner_laplace_zero
     apply laplace_zero_iff_zero _ eq_zero
@@ -6014,9 +6036,7 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
     have card_nonneg: #(S) ≠ 0 := by
       have foo := S_nonempty
       simp
-      push_neg
-      rw [← Finset.nonempty_iff_ne_empty]
-      apply foo
+      exact foo
     field_simp
   conv =>
     lhs
@@ -6691,7 +6711,7 @@ lemma conv_laplce_norm (n: ℕ) (H_n: ℕ → G → ℝ): eLpNorm ((Laplace_b ((
   . exact f_n_fin_supp n
 
 set_option maxHeartbeats 60000 in
-def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (h_seq: Filter.Tendsto seq Filter.atTop Filter.atTop) (F: G → ℝ) (H_n: ℕ → G → ℝ) (h_conv_lipschitz: ∀ n, LipschitzWith k (Conv (H_n n) (f_n n)))
+noncomputable def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (h_seq: Filter.Tendsto seq Filter.atTop Filter.atTop) (F: G → ℝ) (H_n: ℕ → G → ℝ) (h_conv_lipschitz: ∀ n, LipschitzWith k (Conv (H_n n) (f_n n)))
 (tendsto_F: Filter.Tendsto ((fun n ↦ Conv (H_n (seq n)) (f_n (seq n)))) Filter.atTop (nhds F))
 (H_n_norm: ∀ n: ℕ, MeasureTheory.eLpNorm (H_n n) (p := ⊤) MeasureTheory.volume = 1): LipschitzH := by
 
@@ -8619,7 +8639,7 @@ lemma gamma_m_eq_mulAt (φ: (Additive G) →+ ℤ) (γ: G) (m: ℤ) (s: S): gamm
 
 -- The set {γ_m_i}_{m ≤ n}
 omit hGS in
-def three_two_S_n {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (φ: (Additive G) →+ ℤ) (γ: G) (n: ℕ): Finset G := Finset.image (Function.uncurry (gamma_m_helper φ γ)) ((Finset.Icc (-n : ℤ) n).product S.attach)
+noncomputable def three_two_S_n {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (φ: (Additive G) →+ ℤ) (γ: G) (n: ℕ): Finset G := Finset.image (Function.uncurry (gamma_m_helper φ γ)) ((Finset.Icc (-n : ℤ) n).product S.attach)
 -- The set of words of at length at most n generated by {γ_m_i}_{m ≤ n}
 -- Note - This is based on https://terrytao.wordpress.com/2010/02/18/a-proof-of-gromovs-theorem/, which uses
 -- "length at most n"
@@ -8705,7 +8725,7 @@ lemma new_three_two_poly_growth (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD 
     push_neg at p_not_prod
 
     ext a
-    simp only [Finset.mem_inter, Finset.not_mem_empty, iff_false, not_and]
+    simp only [Finset.mem_inter, Finset.notMem_empty, iff_false, not_and]
     intro ha
     simp only [Finset.smul_finset_def, smul_eq_mul, Finset.mem_image] at ha
     obtain ⟨b, b_mem, s_b_eq⟩ := ha
@@ -10651,7 +10671,7 @@ noncomputable def phi_S (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (�
 
 
 omit hGS in
-def S_n_ker_phi  {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1) (n: ℕ)  : Finset φ.ker := (three_two_S_n S φ γ n).attach.image (fun x => ⟨x.val, (by
+noncomputable def S_n_ker_phi  {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1) (n: ℕ)  : Finset φ.ker := (three_two_S_n S φ γ n).attach.image (fun x => ⟨x.val, (by
 have foo := (three_two_S_n_subset_ker S φ γ hγ n) x.property
 simpa using foo
 )⟩) ∪ {0}
