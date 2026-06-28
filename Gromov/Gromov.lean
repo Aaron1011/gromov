@@ -9775,7 +9775,7 @@ lemma e_i_and_gamma_generates_G (φ: (Additive G) →+ ℤ) (γ: G) (hγ: φ γ 
     dsimp [Membership.mem]
     rw [Submonoid.closure_eq_image_prod]
     -- TODO - why do we need any of this?
-    trace_state
+    show s ∈ List.prod '' _
     rw [Set.mem_image]
 
 
@@ -9806,7 +9806,8 @@ lemma e_i_and_gamma_generates_G (φ: (Additive G) →+ ℤ) (γ: G) (hγ: φ γ 
       intro x hx
       unfold new_list list_with_mem l_attach at hx
       simp at hx
-      obtain ⟨a, ha, x_eq_sum⟩ := hx
+      obtain ⟨⟨a, ha⟩, _, x_eq_sum⟩ := List.mem_map.mp hx
+      simp only [Function.comp_apply] at x_eq_sum
       left
 
       have gamma_phi_in_minus_plus: γ^(φ a) ∈ ({1, γ, γ⁻¹} ∪ Set.range e_i_regular) ^ (max_phi - 1  +1) := by
@@ -9946,8 +9947,8 @@ lemma e_i_and_gamma_generates_G (φ: (Additive G) →+ ℤ) (γ: G) (hγ: φ γ 
       arg 1
       equals id =>
         rfl
-    simp
-    exact l_prod
+    convert l_prod using 2
+    exact List.map_id l
 
 
 #print axioms e_i_and_gamma_generates_G
@@ -9996,9 +9997,8 @@ lemma three_two_gamma_m_generates (φ: (Additive G) →+ ℤ) (γ: G) (hγ: φ �
       obtain ⟨l, ⟨l_mem_s, l_prod⟩⟩ := foo
       rw [← l_prod]
       rw [← MonoidHom.coe_toMultiplicative_ker]
-      trace_state
-      rw [MonoidHom.mem_ker]
-      rw [MonoidHom.map_list_prod]
+      show (AddMonoidHom.toMultiplicative φ) (List.prod (l : List (Multiplicative (Additive G)))) = 1
+      rw [map_list_prod]
       apply List.prod_eq_one
       intro x hx
       simp at hx
@@ -10580,16 +10580,13 @@ lemma three_two_S_n_generates  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S
     have generates_ker := three_two_gamma_m_generates φ γ phi_gamma
     --obtain ⟨γ, hγ, generates_ker⟩ := three_two_gamma_m_generates φ hφ
 
-    have mem_ker_iff: ∀ z, z ∈ (AddSubgroup.toSubgroup φ.ker) ↔ z ∈ φ.ker := by
-      exact fun z ↦ Eq.to_iff rfl
-    trace_state
-    rw [← mem_ker_iff] at hz
-    rw [← generates_ker] at hz
+    have hz' : z ∈ Subgroup.closure (Set.range (Function.uncurry (gamma_m_helper (S := S) φ γ))) := by
+      rw [generates_ker]; exact hz
 
     --have exists_prod_list := Submonoid.exists_list_of_mem_closure (s := S ∪ S⁻¹) (x := x)
-    rw [← mem_toSubmonoid] at hz
-    rw [Subgroup.closure_toSubmonoid _] at hz
-    have exists_prod := Submonoid.exists_list_of_mem_closure hz
+    have hz'' : z ∈ (Subgroup.closure (Set.range (Function.uncurry (gamma_m_helper (S := S) φ γ)))).toSubmonoid := hz'
+    rw [Subgroup.closure_toSubmonoid] at hz''
+    have exists_prod := Submonoid.exists_list_of_mem_closure (M := Multiplicative (Additive G)) hz''
     obtain ⟨l, l_mem, z_eq_prod⟩ := exists_prod
     rw [← z_eq_prod]
     conv =>
@@ -10600,10 +10597,9 @@ lemma three_two_S_n_generates  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S
     intro a ha
     specialize l_mem (ofMul a) ha
     --simp [three_two_S_n]
-    simp at l_mem
-    match l_mem with
-    | .inl l_mem =>
-      obtain ⟨p, s, s_mem, helper_eq_a⟩ := l_mem
+    rcases (Set.mem_union _ _ _).mp l_mem with l_mem | l_mem
+    · obtain ⟨⟨p, s, s_mem⟩, helper_eq_a⟩ := Set.mem_range.mp l_mem
+      simp only [Function.uncurry_apply_pair] at helper_eq_a
       specialize hn p
       simp at hn
       rw [Set.range_subset_iff] at hn
@@ -10614,9 +10610,9 @@ lemma three_two_S_n_generates  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S
       rw [AddSubgroup.toSubgroup'_closure]
       simp
       exact hn
-    | .inr l_mem =>
-      rw [← AddSubgroup.neg_mem_iff]
-      obtain ⟨p, s, s_mem, helper_eq_a⟩ := l_mem
+    · rw [← AddSubgroup.neg_mem_iff]
+      obtain ⟨⟨p, s, s_mem⟩, helper_eq_a⟩ := Set.mem_range.mp (Set.mem_inv.mp l_mem)
+      simp only [Function.uncurry_apply_pair] at helper_eq_a
       conv at helper_eq_a =>
         rhs
         equals -ofMul a => rfl
@@ -10748,9 +10744,7 @@ noncomputable def ker_generates {d: ℕ} {n: ℕ} (hd: 1 ≤ d){G: Type*} [Group
         simp at foo
         unfold S_n_ker_phi
         simp
-        trace_state
-        rw [Set.insert_eq]
-        rw [Set.image_union]
+        rw [Finset.insert_eq, Finset.coe_union, Finset.coe_singleton, Set.image_union]
         rw [Subgroup.closure_union]
         simp
         rw [← Subgroup.mem_map_iff_mem (f := f)]
@@ -10898,7 +10892,6 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
           ext a
           rw [Finset.mem_image]
           simp_rw [Finset.mem_pow]
-          trace_state
           rw [Finset.mem_nsmul]
           refine ⟨?_, ?_⟩
           . intro h
