@@ -6168,33 +6168,13 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
     have foo := S_nonempty
     simp at foo
     exact Finset.nonempty_iff_ne_empty.mp foo
-  field_simp
-
-  simp_rw [add_comm]
-
-  conv =>
-    rhs
-    arg 2
-    intro s
-    rw [norm_sub_sq_real]
-
-
-  rw [Finset.sum_add_distrib]
-  rw [Finset.sum_sub_distrib]
-  simp [MeasureTheory.Lp.norm_def]
-  simp_rw [MeasureTheory.L2.inner_def, conv_finsupp_lp2]
-  field_simp
-  rw [sub_add]
-  rw [← add_sub]
-  rw [sub_sub_eq_add_sub]
-  rw [add_sub_assoc]
-  rw [mul_comm]
-  rw [add_left_cancel_iff]
-
-
+  simp_rw [norm_sub_sq_real]
+  simp only [MeasureTheory.Lp.norm_def]
+  simp_rw [conv_finsupp_lp2]
   simp_rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)]
+  rw [Finset.sum_add_distrib, Finset.sum_sub_distrib, ← Finset.mul_sum]
   eta_reduce
-  rw [Finset.mul_sum]
+  ring
   . apply summable_sum
     intro s hs
     simp_rw [f_conv_delta]
@@ -6995,6 +6975,7 @@ lemma nat_mono_le {f: ℕ → ℕ} (hf: StrictMono f) (n: ℕ): n ≤ f n := by
 
 
 -- DO NOT REMOVE `f_n_limit` - this will be needed by the spectral theorem part of the proof
+set_option maxRecDepth 100000 in
 lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstLipschitzH z := by
 
 
@@ -7073,9 +7054,8 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             equals myHaarAddOpp =>
               exact my_add_haar_eq_count.symm
 
-          grw [ENNReal.eLpNorm_top_convolution_le (μ := myHaarAddOpp) (c := 1) (p := 2) (q := 2)]
+          refine le_trans (ENNReal.eLpNorm_top_convolution_le (μ := myHaarAddOpp) (c := 1) (p := 2) (q := 2) (hpq := inferInstance) (by apply AEMeasurable.of_discrete) (by apply AEMeasurable.of_discrete) (by intro a b; simp)) ?_
           .
-            simp
             simp [norm, volume] at H_n_norm
             simp_rw [my_haar_eq_count] at H_n_norm
             rw [my_add_haar_eq_count]
@@ -7085,10 +7065,9 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             have g_inner_laplace := MeasureTheory.L2.inner_def (Laplace G'_n) G'_n (𝕜 := ℝ) (α := G)
             have g_n_prop := (Classical.choose_spec (laplace_g_n (n + 1) (by simp))).2
             rw [integral_eq_eq_sum] at g_inner_laplace
-            simp at g_inner_laplace
-            rw [sum_norm] at g_inner_laplace
+            replace g_inner_laplace := g_inner_laplace.trans sum_norm
             rw [g_n_conv_norm] at g_inner_laplace
-            field_simp at g_inner_laplace
+            rw [inv_mul_eq_div] at g_inner_laplace
             rw [eq_div_iff_mul_eq] at g_inner_laplace
 
             --simp at g_inner_laplace
@@ -7098,6 +7077,10 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
               simp [-AddSubgroupClass.coe_sub, -AddSubgroup.coe_sub, MeasureTheory.Lp.norm_def, eLpNorm, eLpNorm', conv_finsupp_lp2] at g_inner_laplace
               rw [← ENNReal.ofReal_rpow_of_pos]
               .
+                have hkey : (∫⁻ (a : Additive G), ‖(H_n (seq n) s : Additive G → ℝ) a‖ₑ ^ 2 ∂Measure.count) ^ (2 : ℝ)⁻¹ = 1 := by
+                  have h := H_n_norm n
+                  simpa [eLpNorm, eLpNorm', one_div] using h
+                rw [hkey, one_mul]
                 apply ENNReal.rpow_le_rpow
                 .
                   generalize_proofs p_1 p_2 p_3
@@ -7157,13 +7140,8 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
               simp [G'_n]
               have foo := g_n_conv_norm (seq (n) + 1) (by simp)
               grind
-          . infer_instance
-          . apply AEMeasurable.of_discrete
-          . apply AEMeasurable.of_discrete
-          . intro a b
-            simp
         .
-          positivity
+          exact NNReal.coe_nonneg _
       .
         simp [ConvExists]
         rw [my_add_haar_eq_count]
@@ -7214,33 +7192,12 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             rw [← my_add_haar_eq_count]
             grw [ENNReal.eLpNorm_convolution_le_enorm_mul (p := 2) (q := 1)]
             .
-              rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := Measure.count)]
-              .
-                apply ENNReal.mul_lt_top
-                . apply ENNReal.mul_lt_top
-                  . simp
-                  .
-                    rw [← my_haar_eq_count]
-                    apply MemLp.eLpNorm_lt_top
-                    apply Lp.memLp
-                .
-                  apply MemLp.eLpNorm_lt_top
-                  apply Continuous.memLp_of_hasCompactSupport
-                  . fun_prop
-                  . simp [HasCompactSupport, tsupport]
-                    apply Set.Finite.isCompact
-                    simp [delta]
-                    simp [Function.comp_def]
-                    conv =>
-                      arg 1
-                      arg 1
-                      intro x
-                      arg 3
-                      equals x => rfl
-                    simp
-              . apply AEStronglyMeasurable.of_discrete
-              . rw [my_add_haar_eq_count]
-                apply MeasurePreserving.id
+              refine ENNReal.mul_lt_top (ENNReal.mul_lt_top (by simp) ?_) ?_
+              · exact MeasureTheory.MemLp.eLpNorm_lt_top (MeasureTheory.MemLp.comp_measurePreserving (ν := volume) (Lp.memLp _) measure_preserving_unop_tomul)
+              · refine MeasureTheory.MemLp.eLpNorm_lt_top (MeasureTheory.MemLp.comp_measurePreserving (ν := volume) ?_ measure_preserving_unop_tomul)
+                apply Continuous.memLp_of_hasCompactSupport
+                · fun_prop
+                · simp [HasCompactSupport, tsupport]
             . simp
             . simp
             . simp
@@ -7373,7 +7330,13 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             rfl
 
         rw [pow_two]
-        simp
+        rw [real_inner]
+        have key : ∀ a : ℝ, a⁻¹ * (a * a) = a := by
+          intro a
+          rcases eq_or_ne a 0 with h | h
+          · simp [h]
+          · field_simp
+        exact key _
       .
         simp [ConvExists]
         rw [my_add_haar_eq_count]
@@ -7514,7 +7477,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
       apply LipschitzWith.of_dist_le_mul
       intro x y
       rw [Complex.dist_eq]
-      simp
+      rw [← Complex.ofReal_sub, Complex.norm_real, Real.norm_eq_abs]
 
       have new_tendsto_sub := (abs_tendsto _).comp ((tendsto_arzela_lim x).sub (tendsto_arzela_lim y))
       have sub_le := le_of_tendsto new_tendsto_sub (b := ((↑(#S) * 2) ^ (2 : ℝ)⁻¹) * (dist x y)) ?_
@@ -7585,8 +7548,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
           grw [counting_le_essSup]
           rw [essSup_eq_elpNorm_top]
           simp only [volume]
-          simp_rw [my_haar_eq_count]
-          rw [← my_add_haar_eq_count]
+          simp_rw [haar_eq_haar_add]
           conv =>
             lhs
             arg 1
@@ -7603,21 +7565,29 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             equals (H_n (new_seq (arzela_seq n)) s) ∘ Additive.toMul =>
               rfl
 
-          grw [ENNReal.eLpNorm_convolution_le_enorm_mul (G := Additive G) (p := 2) (q := 2)]
+          refine le_trans (add_le_add_left (ENNReal.eLpNorm_convolution_le_enorm_mul (G := Additive G) (L := ContinuousLinearMap.mul ℝ ℝ) (p := 2) (q := 2) (r := ⊤) (μ := myHaarAddOpp) ?_ ?_ ?_ ?_ ?_ ?_) _) ?_
+          · simp
+          · simp
+          · simp
+          · rw [ENNReal.inv_top, zero_add]; exact ENNReal.inv_two_add_inv_two
+          · apply AEMeasurable.of_discrete
+          · apply AEMeasurable.of_discrete
           .
             conv =>
               lhs
-              pattern _ ∘ Additive.toMul
+              arg 1
+              arg 1
+              arg 2
+              arg 1
               equals ↑↑(H_n (seq (arzela_seq n)) s) => rfl
 
 
-            rw [my_add_haar_eq_count]
-            rw [← my_haar_eq_count]
-            have my_haar_eq : myHaar = volume := rfl
-            simp_rw [my_haar_eq]
-            rw [← MeasureTheory.Lp.enorm_def]
-            simp only [new_seq]
-            rw [H_n_norm]
+            rw [show eLpNorm (↑↑(H_n (seq (arzela_seq n)) s)) 2 myHaarAddOpp = 1 from by
+                  have h := H_n_norm (arzela_seq n)
+                  rw [MeasureTheory.Lp.enorm_def] at h
+                  rw [my_add_haar_eq_count,
+                      show (Measure.count : Measure (Additive G)) = myHaar from my_haar_eq_count.symm]
+                  exact h]
             simp [enorm]
             have g_norm := g_n_laplace_enorm_le (seq (arzela_seq n) + 1) (by simp)
             rw [MeasureTheory.Lp.enorm_def] at g_norm
@@ -7627,11 +7597,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)] at g_norm
             simp only [conv_mu_lp2] at g_norm
             rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)] at g_norm
-            conv =>
-              lhs
-              pattern ⇑Additive.toMul
-              equals id => rfl
-            simp
+            refine le_trans (le_of_eq (eLpNorm_comp_measurePreserving (by apply AEStronglyMeasurable.of_discrete) measure_preserving_unop_tomul)) ?_
             grw [g_norm]
             norm_cast
             simp
@@ -7647,23 +7613,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
               apply nat_mono_le seq_mono
 
             omega
-          . simp
-          . simp
-          . simp
-          . norm_num
-            norm_cast
-            conv =>
-              lhs
-              equals (ENNReal.ofReal ((2: ℝ)⁻¹ + (2: ℝ)⁻¹)) =>
-                rw [ENNReal.ofReal_add]
-                . simp
-                . simp
-                . simp
-
-            simp
-            norm_num
-          . apply AEMeasurable.of_discrete
-          . apply AEMeasurable.of_discrete
 
         .
           -- TODO - deduplicate this
@@ -7938,27 +7887,22 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
 
   have h_conv_f_bounded (n: ℕ): eLpNorm (Conv (H_n n) (f_n n)) ⊤ ≤ 1 := by
     unfold Conv
-    rw [← Function.comp_def]
-    rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := myHaarAddOpp)]
-    .
-      grw [ENNReal.eLpNorm_convolution_le_enorm_mul (p := ⊤) (q := 1)]
-      have norm_one := f_n_norm_one (n )
-      simp [volume] at norm_one
-      rw [haar_eq_haar_add] at norm_one
-      rw [norm_one]
-      simp only  [volume] at H_n_norm
-      rw [haar_eq_haar_add] at H_n_norm
-      rw [H_n_norm]
-      simp
-      simp [enorm]
-      . simp
-      . simp
-      . simp
-      . simp
-      . apply AEMeasurable.of_discrete
-      . apply AEMeasurable.of_discrete
-    . apply AEStronglyMeasurable.of_discrete
-    . exact measure_preserving_op_add
+    eta_reduce
+    simp only [volume]
+    rw [haar_eq_haar_add]
+    have my_norm := ENNReal.eLpNorm_convolution_le_enorm_mul (f := H_n n) (G := (Additive G)) (L := (ContinuousLinearMap.mul ℝ ℝ))
+      (g := f_n n) (r := ⊤) (p := ⊤) (q := 1) (μ := myHaarAddOpp)
+      (by simp) (by simp) (by simp) (by simp)
+      (by apply AEMeasurable.of_discrete)
+      (by apply AEMeasurable.of_discrete)
+    refine le_trans my_norm ?_
+    have norm_one := f_n_norm_one (n )
+    simp [volume] at norm_one
+    rw [haar_eq_haar_add] at norm_one
+    simp only  [volume] at H_n_norm
+    rw [haar_eq_haar_add] at H_n_norm
+    refine le_trans (mul_le_mul' (mul_le_mul' (show ‖ContinuousLinearMap.mul ℝ ℝ‖ₑ ≤ 1 by simp [enorm]) (le_of_eq (H_n_norm n))) (le_of_eq norm_one)) ?_
+    simp
 
   have conv_laplce_norm (n: ℕ): eLpNorm ((Laplace_b ((Conv (H_n n)) (f_n n)))) ⊤ (μ := volume (α := G)) ≤ eLpNorm (H_n n) ⊤ * (eLpNorm (Laplace_b (f_n n)) 1 (μ := volume (α := G))) := by
     rw [laplace_conv_eq_laplace_right]
@@ -7978,8 +7922,11 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
         (by apply AEMeasurable.of_discrete)
 
 
-      grw [my_norm]
-      simp [enorm]
+      refine le_trans my_norm ?_
+      have h1 : ‖ContinuousLinearMap.mul ℝ ℝ‖ₑ ≤ 1 := by simp [enorm]
+      calc ‖ContinuousLinearMap.mul ℝ ℝ‖ₑ * eLpNorm (H_n n) ⊤ myHaarAddOpp * eLpNorm (Laplace_b (f_n n)) 1 myHaarAddOpp
+          ≤ 1 * eLpNorm (H_n n) ⊤ myHaarAddOpp * eLpNorm (Laplace_b (f_n n)) 1 myHaarAddOpp := by gcongr
+        _ = eLpNorm (H_n n) ⊤ myHaarAddOpp * eLpNorm (Laplace_b (f_n n)) 1 myHaarAddOpp := by rw [one_mul]
     .
       apply conv_exists_fin_supp
       right
@@ -10744,8 +10691,8 @@ noncomputable def ker_generates {d: ℕ} {n: ℕ} (hd: 1 ≤ d){G: Type*} [Group
         simp at foo
         unfold S_n_ker_phi
         simp
-        rw [Finset.insert_eq, Finset.coe_union, Finset.coe_singleton, Set.image_union]
-        rw [Subgroup.closure_union]
+        simp only [Finset.insert_eq, Finset.coe_union, Finset.coe_singleton, Set.image_union]
+        rw [Finset.coe_union, Set.image_union, Subgroup.closure_union]
         simp
         rw [← Subgroup.mem_map_iff_mem (f := f)]
         .
@@ -10892,7 +10839,7 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
           ext a
           rw [Finset.mem_image]
           simp_rw [Finset.mem_pow]
-          rw [Finset.mem_nsmul]
+          refine Iff.trans ?_ Finset.mem_nsmul.symm
           refine ⟨?_, ?_⟩
           . intro h
             obtain ⟨b, ⟨f, hf⟩, b_eq_a⟩ := h
@@ -10919,6 +10866,7 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
             )⟩)
             rw [← hf]
             rfl
+      rfl
 
 
 
@@ -11000,9 +10948,9 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
         cases g_mem
         .
           rename_i g_eq_zero
-          simp [g_eq_zero]
-          left
-          rfl
+          apply Finset.mem_union_right
+          rw [Finset.mem_singleton, g_eq_zero]
+          first | rfl | simp
         . rename_i g_eq_nonzero
           cases g_eq_nonzero
           . rename_i left
@@ -11027,10 +10975,14 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
             exact z_mem
       )⟩)
       rw [← hf]
-      simp
-      rw [AddSubgroup.val_list_sum]
-      simp
-      rfl
+      first
+        | rfl
+        | (norm_cast; done)
+        | (push_cast; rfl)
+        | (rw [AddSubgroup.val_list_sum, List.map_ofFn]; rfl)
+        | (simp only [AddSubgroup.val_list_sum, List.map_ofFn, Function.comp_def]; rfl)
+        | (rw [← MonoidHom.map_list_prod (AddMonoidHom.toMultiplicative φ.ker.subtype)]; rfl)
+        | (simp [AddSubgroup.val_list_sum, List.map_ofFn, Function.comp_def]; done)
     .
       have gamma_pow_subset: {γ}^r ⊆ (three_two_S_n S φ γ n ∪ {γ})^r := by
         apply Finset.pow_subset_pow_left
@@ -11080,7 +11032,7 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
             ext a
             rw [Finset.mem_pow]
             -- TODO - why do we need explicit args here
-            rw [Finset.mem_nsmul (a := a) (s := ((S_n_ker_phi S φ γ hγ n) ∪ -(S_n_ker_phi S φ γ hγ n))) (n := r)]
+            refine Iff.trans ?_ Finset.mem_nsmul.symm
             refine ⟨?_, ?_⟩
             .
               intro hf
@@ -11631,7 +11583,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     --   exact N'_nilpotent
 
     haveI : Subgroup.Characteristic N' := N'_char
-    have alpha_nilpotent := unipotent_commutator_trivial (G := data.G') (H := data.φ.ker.toSubgroup') (N' := N') (N'_nilpotent := by
+    have alpha_nilpotent := unipotent_commutator_trivial (G := data.G') (H := data.φ.ker.toSubgroup') (N' := N') (N'_char := N'_char) (N'_nilpotent := by
       exact N'_nilpotent
     ) (γ.toMul^α) (by
       simp
@@ -11646,20 +11598,10 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
       simp at gamma_alpha_mem_ker
       clear * - hγ α gamma_alpha_mem_ker alpha_nonzero
-      clear N'_index pre_N pre_N_nilpotent pre_N_finiteindex N N' N'_nilpotent N'_char N'_normal N_normal N_nilpotent
-
-      apply_fun (α • ·) at hγ
-      conv at gamma_alpha_mem_ker =>
-        lhs
-        equals (data.φ (α • γ)) =>
-          rfl
-
-      rw [AddMonoidHom.map_nsmul] at gamma_alpha_mem_ker
-      rw [gamma_alpha_mem_ker] at hγ
-      simp at hγ
-      norm_cast at hγ
-      rw [eq_comm] at hγ
-      contradiction
+      have gak : data.φ (α • γ) = 0 := gamma_alpha_mem_ker
+      rw [AddMonoidHom.map_nsmul, hγ] at gak
+      simp at gak
+      exact alpha_nonzero gak
     ) m alpha_is_unipotent
 
     have map_N'_invariant_gamma {n: ℕ}: ∀ b ∈ Subgroup.closure {γ.toMul^n}, ∀ a ∈ map new_N'_map N', b * a * b⁻¹ ∈ map new_N'_map N'  := by
@@ -11670,34 +11612,14 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       rw [Subgroup.mem_map]
 
       have conj_mem_ker: gamma_pow * n * gamma_pow⁻¹ ∈ data.φ.ker := by
-        conv =>
-          lhs
-          arg 2
-          equals (Additive.ofMul gamma_pow) + (Additive.ofMul n) + (-(Additive.ofMul gamma_pow)) =>
-            rfl
         rw [Subgroup.mem_map] at hn
         obtain ⟨y, hy, n_eq⟩ := hn
-        simp
-        have y_prop := y.property
-        simp_rw [← n_eq]
-        rw [AddMonoidHom.mem_ker] at y_prop
-        conv =>
-          lhs
-          arg 1
-          arg 2
-          equals 0 =>
-            exact y_prop
-        group
-        conv =>
-          lhs
-          -- TODO - why do we need this explicit equals?
-          equals data.φ (ofMul gamma_pow) -data.φ (ofMul gamma_pow) =>
-            rw [sub_eq_add_neg]
-            congr
-            rw [← AddMonoidHom.map_neg]
-            rfl
-
-        group
+        have hn0 : data.φ (Additive.ofMul n) = 0 := by
+          rw [← n_eq]
+          exact y.2
+        show data.φ (Additive.ofMul gamma_pow + Additive.ofMul n + (-(Additive.ofMul gamma_pow))) = 0
+        rw [map_add, map_add, map_neg, hn0]
+        abel
 
       use ⟨gamma_pow * n * gamma_pow⁻¹, conj_mem_ker⟩
       .
@@ -11923,6 +11845,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                 equals Additive.toMul '' data.φ.ker =>
                   ext a
                   simp
+                  exact ⟨fun ⟨h, _⟩ => h, fun h => ⟨h, Set.mem_univ _⟩⟩
               rw [← s_cosets]
               conv =>
                 arg 1
@@ -11936,6 +11859,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
               simp_rw [← MonoidHom.map_closure]
 
+              simp only [Set.image_image]
+              simp_rw [Set.image_iUnion]
               apply Set.iUnion_congr
               intro i
               apply Set.iUnion_congr
