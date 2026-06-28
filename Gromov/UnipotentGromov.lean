@@ -6,6 +6,8 @@ set_option linter.style.longLine false
 set_option linter.style.commandStart false
 set_option linter.style.cdot false
 
+open scoped commutatorElement IsMulCommutative
+
 
 def iteratedCommutator {T: Type*} [Group T] (base right: T) (n: ℕ) := Nat.iterate (fun x => ⁅x, right⁆) n base
 
@@ -203,7 +205,6 @@ lemma double_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: lowe
   refine ⟨?_, ?_⟩
   .
 
-    simp
     rw [← Subgroup.inv_mem_iff]
     simp
     apply Subgroup.mem_closure_of_mem
@@ -259,7 +260,6 @@ lemma triple_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: lowe
         apply Set.mem_union_left
         simp [iterate_comm_set]
         use g'
-        simp
         refine ⟨g'_prop, ?_⟩
         use l'
       .
@@ -1584,7 +1584,7 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
     apply torsion_characteristic
   )
 
-  let add_gamma_conj := gamma_quot.toAdditive.toIntLinearEquiv
+  let add_gamma_conj := gamma_quot.toAdditive.toIntLinearEquiv (modM := inferInstance) (modM₂ := inferInstance)
   let gamma_int := LinearEquiv.conj center_quot_equiv (add_gamma_conj)
   let gamma_matrix := gamma_int.toMatrix'.map (complexOfIntHom)
 
@@ -2171,7 +2171,7 @@ lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N
               arg 1
               equals LinearMap.toMatrix' ((gamma_int^(n_prod * K)) - 1) =>
                 ext i j
-                simp [Matrix.one_apply]
+                simp [Matrix.one_apply, Pi.single_apply]
 
             rw [← LinearMap.toMatrix_eq_toMatrix']
             rw [LinearMap.toMatrix_pow]
