@@ -10,6 +10,7 @@ set_option linter.style.commandStart false
 
 open Subgroup Pointwise Finset
 open scoped Pointwise Finset
+open scoped commutatorElement IsMulCommutative
 
 -- Like 'mem_closure_prod_list', but without requring that the generating set be symmetric
 lemma weak_mem_closure_prod_list {G: Type*} [Group G] (S: Set G) (x: G) (hx: x ∈ Subgroup.closure S): ∃ l: List (↑(S ∪ S⁻¹)), l.unattach.prod = x := by
