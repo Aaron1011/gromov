@@ -3078,6 +3078,9 @@ lemma map_nilpotent {G H: Type*} [Group G] [Group H] (A: Subgroup G) (f: G →* 
   -- use n
   -- sorry
 
+-- `Subgroup.map_toSubmonoid` is a post-bump simp lemma that rewrites the `.carrier` predicate
+-- of `Subgroup.map`, breaking `unattach`/commutator rewrites below. Disable it for this proof.
+attribute [-simp] Subgroup.map_toSubmonoid in
 lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Subgroup H} [H_normal: H.Normal] [N'_char: N'.Characteristic] [N'_nilpotent: Group.IsNilpotent N'] (gamma_alpha: G) (gamma_not_n: ¬(gamma_alpha ∈ (Subgroup.map (Subgroup.subtype _) N'))) (m: ℕ) (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g.val gamma_alpha m = 1):
   Group.IsNilpotent (Subgroup.closure ((Subgroup.map (Subgroup.subtype _) N') ∪ {gamma_alpha})) := by
 
@@ -3106,36 +3109,22 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
   rw [nilpotent_iff_lowerCentralSeries]
   use ((1 + (Group.nilpotencyClass ↥(Subgroup.map H.subtype N'))) * (m + 1)) + 2
 
-  apply comm_trivial_implies_nilpotent (S := Set.range (fun (a: ↑(((Subgroup.subtype _) '' N'.carrier) ∪ {gamma_alpha})) => ⟨a.val, by apply Subgroup.mem_closure_of_mem; grind⟩))
+  apply comm_trivial_implies_nilpotent (S := Set.range (fun (a: ↑(((Subgroup.subtype _) '' N'.carrier) ∪ {gamma_alpha})) => ⟨a.val, by apply Subgroup.mem_closure_of_mem; exact a.property⟩))
   .
 
 
-    -- TODO - there must be a simpler way to do this
-    ext a
-    simp
-    have foo := a.property
-    rw [← Subgroup.mem_map_iff_mem (f := Subgroup.subtype _) (hf := by apply Subgroup.subtype_injective)]
-    simp [-Subgroup.mem_map]
-
-    conv =>
-      arg 1
-      equals (Subgroup.closure ((Subgroup.map (Subgroup.subtype _) N') ∪ {gamma_alpha})) =>
-        rw [le_antisymm_iff]
-        refine ⟨?_, ?_⟩
-        . intro g hg
-          simp at hg
-          obtain ⟨g_mem_N_union, _⟩ := hg
-          simpa using g_mem_N_union
-        . simp
-          intro g hg
-          simp
-          use ?_
-          . apply Subgroup.mem_closure_of_mem
-            simpa using hg
-          . apply Subgroup.mem_closure_of_mem
-            exact hg
-
-    exact foo
+    apply Subgroup.map_injective
+      (Subgroup.subtype_injective
+        (Subgroup.closure (↑(Subgroup.map H.subtype N') ∪ {gamma_alpha})))
+    rw [MonoidHom.map_closure, ← MonoidHom.range_eq_map, Subgroup.range_subtype]
+    congr 1
+    ext g
+    simp only [Set.mem_image, Set.mem_range]
+    constructor
+    · rintro ⟨_, ⟨y, rfl⟩, rfl⟩
+      exact y.property
+    · intro hg
+      exact ⟨⟨g, by apply Subgroup.mem_closure_of_mem; exact hg⟩, ⟨⟨g, hg⟩, rfl⟩, rfl⟩
   .
     ext a
     rw [iterate_comm_subgroup]
@@ -3152,7 +3141,12 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
         refine ⟨?_, ?_⟩
         .
           intro ha
-          grind
+          rcases ha with ⟨w, h_eq⟩ | ⟨a_1, h_N', x_close, h_eq⟩
+          . left
+            simpa using h_eq.symm
+          . right
+            have ha1 : a_1 = a := by simpa using h_eq
+            rwa [ha1] at h_N'
         . intro a_eq
           cases a_eq
           . rename_i left
@@ -3164,12 +3158,12 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
             . exact id (Eq.symm left)
           . rename_i h_right
             right
-            refine ⟨?_, ?_⟩
-            . exact h_right
+            refine ⟨a, h_right, ?_, ?_⟩
             . apply Subgroup.mem_closure_of_mem
               simp
               right
               exact h_right
+            . rfl
 
     refine ⟨?_, ?_⟩
     .
@@ -3417,16 +3411,7 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
             -- TODO - clean up and upstream to mathlib
             equals l.unattach.countP (fun a => decide (a ∈ (((Subgroup.map (Subgroup.subtype _) N'))))) =>
               clear count_not_gamma l_length a_eq
-              induction l with
-              | nil =>
-                simp
-              | cons head tail ih =>
-                rw [List.countP_cons]
-                rw [List.unattach_cons]
-                rw [List.countP_cons]
-                simp
-                simp at ih
-                exact ih
+              rw [show l.unattach = l.map (·.val) from rfl, List.countP_map]; rfl
 
 
           have foo := count_mem_group_implies_lowercentral (N' := (Subgroup.map H.subtype N')) (by infer_instance) l.unattach s ?_ ?_
