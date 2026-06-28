@@ -14,6 +14,7 @@ set_option linter.style.commandStart false
 open Subgroup
 open scoped Finset
 open scoped Pointwise
+open scoped commutatorElement
 
 -- Based on https://github.com/YaelDillies/LeanCamCombi/blob/b6312bee17293272af6bdcdb47b3ffe98fca46a4/LeanCamCombi/GrowthInGroups/Lecture1.lean#L41
 -- and the Vikman paper
@@ -1375,35 +1376,28 @@ lemma quotient_norm_eq_norm (f: LipschitzH): ‖(Submodule.Quotient.mk f : W)‖
       rfl
   rw [QuotientAddGroup.norm_mk]
   simp [Metric.infDist]
-
-  conv =>
-    lhs
-    arg 1
-    arg 1
-    intro y
-    arg 1
-    intro hy
-    equals (‖f‖₊ : ENNReal) =>
-      simp [ConstF] at hy
-      obtain ⟨a, ha⟩ := hy
-      simp [edist, PseudoMetricSpace.edist]
-      simp [LipschitzSemiNorm]
-      simp [LipschitzWith]
-      simp_rw [← ha]
-      simp [ConstLipschitzH]
-      rfl
-
-  conv =>
-    arg 1
-    arg 1
-    arg 1
-    intro y
-    arg 1
-    intro hy
-
-  rw [biInf_const ?_]
-  . simp
-  . exact Submodule.nonempty ConstF
+  -- goal: (Metric.infEDist f ↑ConstF).toReal = ‖f‖
+  have hzero : (0 : LipschitzH) ∈ (↑ConstF : Set LipschitzH) :=
+    SetLike.mem_coe.mpr (Submodule.zero_mem ConstF)
+  have hconst : ∀ y ∈ (↑ConstF : Set LipschitzH), edist f y = (‖f‖₊ : ENNReal) := by
+    intro y hy
+    simp [ConstF] at hy
+    obtain ⟨a, ha⟩ := hy
+    simp [edist, PseudoMetricSpace.edist]
+    simp [LipschitzSemiNorm]
+    simp [LipschitzWith]
+    simp_rw [← ha]
+    simp [ConstLipschitzH]
+    rfl
+  have hinf : Metric.infEDist f (↑ConstF : Set LipschitzH) = (‖f‖₊ : ENNReal) := by
+    apply le_antisymm
+    · calc Metric.infEDist f (↑ConstF : Set LipschitzH) ≤ edist f 0 :=
+            Metric.infEDist_le_edist_of_mem hzero
+        _ = (‖f‖₊ : ENNReal) := hconst 0 hzero
+    · rw [Metric.le_infEDist]
+      exact fun y hy => (hconst y hy).ge
+  rw [hinf]
+  simp
 
 #synth NormedRing (W →L[ℂ] W)
 #synth TopologicalSpace (W →L[ℂ] W)ˣ
@@ -1863,7 +1857,8 @@ def map_equiv_S_data {A B: Type*} [Group A] [Group B] [DecidableEq A] [Decidable
 
 --#synth NormedAddCommGroup (W)
 open scoped ComplexInnerProductSpace in
-set_option maxHeartbeats 900000 in
+attribute [-simp] Subgroup.map_toSubmonoid in
+set_option maxHeartbeats 2000000 in
 set_option synthInstance.maxHeartbeats 600000 in
 --set_option trace.Meta.synthInstance true in
 lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Subgroup ((rho_g)), IsMulCommutative M ∧ M.FiniteIndex := by
@@ -1880,10 +1875,16 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
     conj_inner_symm := by simp,
     re_inner_nonneg := by
       exact fun x ↦ inner_self_nonneg
-    add_left := by intro x y z; simp [map_add, inner_add_left]
+    add_left := by
+      intro x y z
+      have key : ∀ a b : FreshTopology (W), W_equiv (a + b) = W_equiv a + W_equiv b :=
+        fun a b => map_add W_equiv a b
+      rw [key, inner_add_left]
     smul_left := by
       intro x y r
-      simp [map_smul, inner_smul_left]
+      have key : ∀ (c : ℂ) (a : FreshTopology (W)), W_equiv (c • a) = c • W_equiv a :=
+        fun c a => map_smul W_equiv c a
+      rw [key, inner_smul_left]
     definite := by
       intro x hx
       simpa using hx
@@ -2310,21 +2311,24 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
       )⟩) : GRepW_base.range)
     ),
     map_one' := by
-      simp
+      simp [map_one]
     map_mul' := by
       intro a b
-      simp [map_mul]
+      apply Subtype.ext
+      show (Units.map _) (new_map_hom.symm ↑↑(a * b)) =
+        (Units.map _) (new_map_hom.symm ↑↑a) * (Units.map _) (new_map_hom.symm ↑↑b)
+      rw [← map_mul (Units.map _), ← map_mul new_map_hom.symm]
+      norm_cast
   }
 
   have reverse_hom_ker_bot: reverse_hom.ker = ⊥ := by
-    simp [reverse_hom]
     rw [MonoidHom.ker_eq_bot_iff]
     intro a b hab
-    simp at hab
+    simp only [reverse_hom, MonoidHom.coe_mk, OneHom.coe_mk, Subtype.mk.injEq] at hab
     apply Units.map_injective at hab
     .
-      simp at hab
-      exact hab
+      replace hab := new_map_hom.symm.injective hab
+      exact Subtype.ext (Subtype.ext hab)
     .
       intro a b hab
       simpa using hab
@@ -2338,8 +2342,12 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
     use ?_
     .
       use ?_
-      . ext f
-        simp [new_map_hom, new_map_entry, new_map_entry_inv]
+      . have hrt : ∀ y, new_map_hom.symm (new_map_entry y) = y := new_map_hom.left_inv
+        refine Subtype.ext ?_
+        change (Units.map (ContinuousLinearMap.toLinearMapRingHom (R₁ := ℂ) (M₁ := W)).toMonoidHom)
+            (new_map_hom.symm (new_map_entry (plain_linear_to_clm ↑x))) = x.val
+        rw [hrt]
+        ext f
         rfl
       .
         rw [Subgroup.mem_subgroupOf]
@@ -2349,13 +2357,9 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
           obtain ⟨g, hg⟩ := x_prop
           use g
           simp [new_map_hom, new_map_entry]
-          refine ⟨?_, ?_⟩
-          . ext f
-            rw [← hg]
-            rfl
-          . ext f
-            rw [← hg]
-            rfl
+          ext f
+          rw [← hg]
+          rfl
     .
       simp [mapped_group, my_new_range]
       have x_prop := x.property
@@ -2379,14 +2383,10 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
   refine ⟨?_, ?_⟩
   . simp only [B']
     apply Subgroup.map_isMulCommutative
-  . simp [B']
+  . simp only [B']
     rw [Subgroup.finiteIndex_iff]
     rw [Subgroup.index_map]
-    simp
-    rw [reverse_hom_ker_bot]
-    simp
-    rw [reverse_hom_range_top]
-    simp
+    rw [reverse_hom_ker_bot, reverse_hom_range_top, sup_bot_eq, Subgroup.index_top, mul_one]
     exact B_finite_index.index_ne_zero
   .
     have base_fg: (map new_map_hom.toMonoidHom my_new_range).FG := by
@@ -2698,7 +2698,7 @@ lemma rho_g_case_infinite {d: ℕ} (hd: HasPolynomialGrowthD S d) (hr: Infinite 
     unfold rho_g at card_mul
     nth_rw 2 [Nat.card_eq_zero_of_infinite] at card_mul
     rw [Nat.mul_eq_zero] at card_mul
-    rw [or_iff_left H_finite_index.index_ne_zero] at card_mul
+    replace card_mul := card_mul.resolve_right H_finite_index.index_ne_zero
     rw [Nat.card_eq_zero] at card_mul
     simp at card_mul
     exact card_mul
@@ -3223,13 +3223,25 @@ lemma conv_add_left {f g h: G → ℝ} (h_fh: ConvExists f h) (h_gh : ConvExists
 
 lemma conv_smul {f h: G → ℝ} (k: ℝ): Conv (k • f) h = k • Conv f h := by
   funext g
-  unfold Conv
-  simp [MeasureTheory.convolution_smul]
+  show MeasureTheory.convolution (G := Additive G) (k • f) h (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp g
+     = k • MeasureTheory.convolution (G := Additive G) f h (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp g
+  simp only [MeasureTheory.convolution_def]
+  rw [← MeasureTheory.integral_smul]
+  congr 1
+  funext t
+  simp only [Pi.smul_apply, ContinuousLinearMap.mul_apply', smul_eq_mul]
+  ring
 
 lemma smul_conv (f h: G → ℝ) (k: ℝ): Conv f (k • h) = k • Conv f h := by
   funext g
-  unfold Conv
-  simp [MeasureTheory.smul_convolution]
+  show MeasureTheory.convolution (G := Additive G) f (k • h) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp g
+     = k • MeasureTheory.convolution (G := Additive G) f h (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp g
+  simp only [MeasureTheory.convolution_def]
+  rw [← MeasureTheory.integral_smul]
+  congr 1
+  funext t
+  simp only [Pi.smul_apply, ContinuousLinearMap.mul_apply', smul_eq_mul]
+  ring
 
 
 -- Proving associativity in full generality is very annoying
@@ -3356,9 +3368,8 @@ lemma conv_assoc_of_lp2 {f g h: G → ℝ} (hf: MemLp f 2 Measure.count) (hg: Me
 
 
   have h_lp_n (n: ℕ): MemLp h n myHaarAddOpp := by
-    haveI : OpensMeasurableSpace G := BorelSpace.opensMeasurable
-    apply Continuous.memLp_of_hasCompactSupport
-    . fun_prop
+    apply Continuous.memLp_of_hasCompactSupport (X := Additive G) (μ := myHaarAddOpp)
+    . apply continuous_of_discreteTopology
     .
       simp [HasCompactSupport]
       apply Set.Finite.isCompact
@@ -4395,7 +4406,7 @@ instance volume_finite_compact: IsFiniteMeasureOnCompacts (volume (α := G)) := 
   exact {
     lt_top_of_isCompact := by
       intro k hk
-      have finite := IsCompact.finite hk (by infer_instance)
+      have finite := IsCompact.finite hk DiscreteTopology.isDiscrete
       exact Measure.count_apply_lt_top.mpr finite
   }
 
@@ -4424,7 +4435,7 @@ noncomputable def conv_finsupp_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.vo
   dsimp [volume]
   simp_rw [my_haar_eq_count]
   rw [my_add_haar_eq_count] at norm_bound
-  grw [norm_bound]
+  refine lt_of_le_of_lt norm_bound ?_
   apply WithTop.mul_lt_top
   . apply WithTop.mul_lt_top
     . norm_cast
@@ -4439,7 +4450,12 @@ noncomputable def conv_finsupp_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.vo
       . -- TODO - why can't simp' find this?
         apply ENNReal.ofReal_lt_top
       . simp
-    . simp
+    . intro b hb
+      have hgb : g b = 0 := by
+        by_contra hne
+        exact hb (hg.mem_toFinset.mpr (Function.mem_support.mpr hne))
+      rw [hgb]
+      simp
 )
 
 -- The Vikman paper defines the Laplace operator as a function ' ∆ : ℓ2(G) → ℓ2(G)'
@@ -4613,6 +4629,11 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
 
   -- MeasureTheory.Lp.coeFn_smul
 
+  have inner_real : ∀ a b : ℝ, @inner ℝ ℝ RCLike.toInnerProductSpaceReal.toInner a b = b * a := by
+    intro a b
+    show @inner ℝ ℝ RCLike.innerProductSpace.toInner a b = b * a
+    rw [RCLike.inner_apply, RCLike.conj_to_real]
+  simp only [inner_real]
 
   conv =>
     lhs
@@ -5599,7 +5620,7 @@ lemma norm_conv_mu_le  (f: (Lp ℝ 2 volume (α := G))): ‖conv_mu_lp2 f‖ ≤
       rw [Real.enorm_of_nonneg (by simp)]
       apply ENNReal.ofReal_ne_top
     .
-      rw [ENNReal.sum_ne_top]
+      apply ENNReal.sum_ne_top.mpr
       intro s hs
       rw [← Function.comp_def]
       conv =>
@@ -5982,6 +6003,7 @@ lemma summable_f_mul_translate (f: (Lp ℝ 2 volume (α := G))) (i: G): Summable
 
 -- Note - this is stated incorrectly in Vikman
 -- The RHS should have a squared norm
+set_option maxRecDepth 40000 in
 lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (Laplace f) g) = ((2) * (#(S) : ℝ))⁻¹ * ∑ s ∈ S, ‖(f - (conv_finsupp_lp2 f (delta s) (by simp [delta])))‖^2 := by
   simp_rw [Laplace]
   simp_rw [conv_mu_lp2]
@@ -6081,6 +6103,7 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
   let f_conv := fun (s: G) => conv_finsupp_lp2 f (delta s) (by
     simp [delta]
   )
+  have real_inner : ∀ a b : ℝ, ⟪a, b⟫ = a * b := fun a b => by rw [show (⟪a, b⟫ : ℝ) = b * a from rfl, mul_comm]
   have inner_f_conv := fun (s: G) => MeasureTheory.L2.inner_def (𝕜 := ℝ) (f := f) (g := f_conv s)
   simp [f_conv, conv_finsupp_lp2] at inner_f_conv
   simp_rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)] at inner_f_conv
@@ -6102,10 +6125,12 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
         positivity
       .
         apply Summable.abs
-        simp_rw [mul_comm]
+        have real_inner : ∀ a b : ℝ, ⟪a, b⟫ = a * b := fun a b => by rw [show (⟪a, b⟫ : ℝ) = b * a from rfl, mul_comm]
+        simp_rw [real_inner]
         apply summable_f_mul_translate
     )]
   simp [volume, my_haar_eq_count, f_conv_delta] at inner_f_conv
+  simp_rw [real_inner] at inner_f_conv
   conv =>
     lhs
     rhs
@@ -6249,8 +6274,10 @@ lemma g_sub_norm_gt (n: ℕ): ∃ s ∈ S, ‖(G_n (n + 1) (by simp)) - (conv_fi
   have sum_norm := (proposition_3_18 (G_n (n + 1) (by simp)) )
   have g_inner_laplace := MeasureTheory.L2.inner_def (Laplace (G_n (n + 1) (by simp))) (G_n (n + 1) (by simp)) (𝕜 := ℝ) (α := G)
   have g_n_prop := (Classical.choose_spec (laplace_g_n (n + 1) (by simp))).2
+  have real_inner : ∀ a b : ℝ, ⟪a, b⟫ = b * a := fun a b => rfl
   rw [integral_eq_eq_sum] at g_inner_laplace
   .
+    simp_rw [real_inner] at g_inner_laplace
     simp_rw [← g_inner_laplace] at sum_norm
     nth_rw 1 [G_n] at sum_norm
     nth_rw 1 [G_n] at sum_norm
@@ -6429,8 +6456,7 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
               arg 1
               arg 1
               equals 0 =>
-                ext a
-                simp
+                exact MeasureTheory.zero_convolution (G := Additive G)
             simp
         simp
         conv =>
@@ -6545,7 +6571,6 @@ lemma laplace_conv_eq_laplace_right_of_lp2 (f g: G → ℝ) (hfg: ConvExists f g
     intro s hs
     simp [ConvExists, MeasureTheory.ConvolutionExists, MeasureTheory.ConvolutionExistsAt] at hfg
     specialize hfg (s * a)
-    apply MeasureTheory.Integrable.neg
     simp_rw [mul_div]
     exact hfg
   . exact hf
@@ -6579,7 +6604,6 @@ lemma laplace_conv_eq_laplace_right (f g: G → ℝ) (hfg: ConvExists f g) (g_no
     intro s hs
     simp [ConvExists, MeasureTheory.ConvolutionExists, MeasureTheory.ConvolutionExistsAt] at hfg
     specialize hfg (s * a)
-    apply MeasureTheory.Integrable.neg
     simp_rw [mul_div]
     exact hfg
   . exact hfg
@@ -6671,8 +6695,12 @@ lemma conv_laplce_norm (n: ℕ) (H_n: ℕ → G → ℝ): eLpNorm ((Laplace_b ((
       (by apply AEMeasurable.of_discrete)
 
 
-    grw [my_norm]
-    simp [enorm]
+    refine le_trans my_norm ?_
+    have hmul : ‖ContinuousLinearMap.mul ℝ ℝ‖ₑ ≤ 1 := by
+      rw [← ofReal_norm_eq_enorm, ENNReal.ofReal_le_one]
+      exact ContinuousLinearMap.opNorm_mul_le ℝ ℝ
+    rw [mul_assoc]
+    exact le_trans (mul_le_mul_right' hmul _) (le_of_eq (one_mul _))
   .
     apply conv_exists_fin_supp
     right
@@ -6906,8 +6934,6 @@ noncomputable def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (h_seq:
           rw [Real.enorm_eq_ofReal_abs]
           simp
           norm_cast
-          rw [ENNReal.add_lt_top]
-          refine ⟨by simp, ?_⟩
           apply ENNReal.mul_lt_top
           . simp
           . simp
@@ -7045,7 +7071,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             arg 1
             arg 3
             equals myHaarAddOpp =>
-              rw [← my_add_haar_eq_count]
+              exact my_add_haar_eq_count.symm
 
           grw [ENNReal.eLpNorm_top_convolution_le (μ := myHaarAddOpp) (c := 1) (p := 2) (q := 2)]
           .
@@ -7158,7 +7184,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         . simp
         . apply AEStronglyMeasurable.of_discrete
         . apply AEStronglyMeasurable.of_discrete
-        . rw [← my_haar_eq_count]
+        . rw [← my_add_haar_eq_count]
           apply Lp.memLp
         .
           refine ⟨by apply AEStronglyMeasurable.of_discrete, ?_⟩
@@ -7224,9 +7250,9 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
           . apply AEStronglyMeasurable.of_discrete
           . rw [my_add_haar_eq_count]
             apply MeasurePreserving.id
-    . rw [← my_add_haar_eq_count]
+    . rw [← my_haar_eq_count]
       apply Lp.memLp
-    . rw [← my_add_haar_eq_count]
+    . rw [← my_haar_eq_count]
       simp
       apply MemLp.neg
       apply Lp.memLp
@@ -7316,9 +7342,8 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         )]
         rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_neg _)]
         simp_rw [← Pi.sub_apply]
-        have real_inner: ∀ a b : ℝ, ⟪a, b⟫ = a * b := by
-          intro a b
-          rw [mul_comm]
+        have real_inner: ∀ a b : ℝ, ⟪a, b⟫ = a * b := fun a b => by
+          rw [show (⟪a, b⟫ : ℝ) = b * a from rfl, mul_comm]
         conv =>
           lhs
           rhs
@@ -7344,8 +7369,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             ))‖^2 =>
             rw [← real_inner_self_eq_norm_sq]
             rw [MeasureTheory.L2.inner_def]
-            simp
-            norm_cast
             simp_rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)]
             rfl
 
@@ -9752,6 +9775,7 @@ lemma e_i_and_gamma_generates_G (φ: (Additive G) →+ ℤ) (γ: G) (hγ: φ γ 
     dsimp [Membership.mem]
     rw [Submonoid.closure_eq_image_prod]
     -- TODO - why do we need any of this?
+    trace_state
     rw [Set.mem_image]
 
 
@@ -9972,6 +9996,7 @@ lemma three_two_gamma_m_generates (φ: (Additive G) →+ ℤ) (γ: G) (hγ: φ �
       obtain ⟨l, ⟨l_mem_s, l_prod⟩⟩ := foo
       rw [← l_prod]
       rw [← MonoidHom.coe_toMultiplicative_ker]
+      trace_state
       rw [MonoidHom.mem_ker]
       rw [MonoidHom.map_list_prod]
       apply List.prod_eq_one
@@ -10557,6 +10582,7 @@ lemma three_two_S_n_generates  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S
 
     have mem_ker_iff: ∀ z, z ∈ (AddSubgroup.toSubgroup φ.ker) ↔ z ∈ φ.ker := by
       exact fun z ↦ Eq.to_iff rfl
+    trace_state
     rw [← mem_ker_iff] at hz
     rw [← generates_ker] at hz
 
@@ -10650,7 +10676,7 @@ lemma finite_virtually_nilpotent {G: Type*} [Group G] [Finite G]: Group.IsVirtua
   rw [Group.IsVirtuallyNilpotent]
   use ⊥
   refine ⟨?_, ?_⟩
-  . apply CommGroup.isNilpotent
+  . exact Group.isNilpotent_of_subsingleton
     -- TODO - prove that a finite group is nilpotent, and upstream to mathlib
   . infer_instance
 
@@ -10722,6 +10748,7 @@ noncomputable def ker_generates {d: ℕ} {n: ℕ} (hd: 1 ≤ d){G: Type*} [Group
         simp at foo
         unfold S_n_ker_phi
         simp
+        trace_state
         rw [Set.insert_eq]
         rw [Set.image_union]
         rw [Subgroup.closure_union]
@@ -10871,6 +10898,7 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
           ext a
           rw [Finset.mem_image]
           simp_rw [Finset.mem_pow]
+          trace_state
           rw [Finset.mem_nsmul]
           refine ⟨?_, ?_⟩
           . intro h
@@ -11402,7 +11430,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       rw [Group.IsVirtuallyNilpotent]
       use ⊥
       refine ⟨?_, ?_⟩
-      . apply CommGroup.isNilpotent
+      . exact Group.isNilpotent_of_subsingleton
         -- TODO - prove that a finite group is nilpotent, and upstream to mathlib
       . infer_instance
     .
@@ -12210,7 +12238,7 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
       rw [Group.IsVirtuallyNilpotent]
       use ⊥
       refine ⟨?_, ?_⟩
-      . apply CommGroup.isNilpotent
+      . exact Group.isNilpotent_of_subsingleton
         -- TODO - prove that a finite group is nilpotent, and upstream to mathlib
       . infer_instance
     .
@@ -12231,7 +12259,7 @@ lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtua
       rw [Group.IsVirtuallyNilpotent]
       use ⊥
       refine ⟨?_, ?_⟩
-      . apply CommGroup.isNilpotent
+      . exact Group.isNilpotent_of_subsingleton
         -- TODO - prove that a finite group is nilpotent, and upstream to mathlib
       . infer_instance
     .
