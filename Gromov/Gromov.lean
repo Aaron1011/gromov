@@ -10691,9 +10691,12 @@ noncomputable def ker_generates {d: ℕ} {n: ℕ} (hd: 1 ≤ d){G: Type*} [Group
         simp at foo
         unfold S_n_ker_phi
         simp
-        simp only [Finset.insert_eq, Finset.coe_union, Finset.coe_singleton, Set.image_union]
-        rw [Finset.coe_union, Set.image_union, Subgroup.closure_union]
+        simp only [Finset.insert_eq, Set.image_union]
         simp
+        first
+          | erw [Finset.coe_insert, Set.image_insert_eq, toMul_zero, Subgroup.closure_insert_one]
+          | rw [Finset.coe_insert, Set.image_insert_eq, toMul_zero, Subgroup.closure_insert_one]
+          | simp only [Finset.coe_insert, Set.image_insert_eq, toMul_zero, Subgroup.closure_insert_one]
         rw [← Subgroup.mem_map_iff_mem (f := f)]
         .
           simp only [f, Subgroup.subtype_apply]
@@ -10707,30 +10710,16 @@ noncomputable def ker_generates {d: ℕ} {n: ℕ} (hd: 1 ≤ d){G: Type*} [Group
             arg 1
             equals (three_two_S_n hGS.S data.φ γ n).toSet =>
               ext b
-              rw [Set.mem_image]
-              refine ⟨?_, ?_⟩
-              . intro hb
-                obtain ⟨c, c_mem, b_eq⟩ := hb
-                rw [← b_eq]
-                simp
-                rw [Set.mem_image] at c_mem
-                obtain ⟨d, hd, c_eq⟩ := c_mem
-                rw [← c_eq]
-                simp at hd
-                obtain ⟨x, hx, x_mem, x_eq⟩ := hd
-                rw [← x_eq]
-                exact x_mem
-              . intro hb
-                have b_mem := (three_two_S_n_subset_ker hGS.S data.φ γ hγ n) hb
-                use ⟨b, by simpa using b_mem⟩
-                refine ⟨?_, rfl⟩
-                rw [Set.mem_image]
-                use ⟨b, by simpa using b_mem⟩
-                refine ⟨?_, rfl⟩
-                simp
-                use b.val
-                simp
-                simpa using hb
+              constructor
+              · intro hb
+                obtain ⟨c, hc, rfl⟩ := hb
+                obtain ⟨d, hd, rfl⟩ := hc
+                obtain ⟨y, -, rfl⟩ := Finset.mem_image.mp hd
+                exact y.2
+              · intro hb
+                have hbk : b ∈ three_two_S_n hGS.S data.φ γ n := by simpa using hb
+                exact Set.mem_image_of_mem _ (Set.mem_image_of_mem _
+                  (SetLike.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach _ ⟨b, hbk⟩))))
           exact foo
         . simp [f]
           intro x y hxy
@@ -10974,15 +10963,11 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
             rw [← hz]
             exact z_mem
       )⟩)
-      rw [← hf]
+      rw [← hf, ofMul_list_prod, List.map_ofFn]
       first
-        | rfl
-        | (norm_cast; done)
-        | (push_cast; rfl)
-        | (rw [AddSubgroup.val_list_sum, List.map_ofFn]; rfl)
-        | (simp only [AddSubgroup.val_list_sum, List.map_ofFn, Function.comp_def]; rfl)
-        | (rw [← MonoidHom.map_list_prod (AddMonoidHom.toMultiplicative φ.ker.subtype)]; rfl)
-        | (simp [AddSubgroup.val_list_sum, List.map_ofFn, Function.comp_def]; done)
+        | (erw [AddSubmonoidClass.coe_list_sum, List.map_ofFn]; rfl)
+        | (rw [AddSubmonoidClass.coe_list_sum, List.map_ofFn]; rfl)
+        | (simp only [AddSubmonoidClass.coe_list_sum, List.map_ofFn]; rfl)
     .
       have gamma_pow_subset: {γ}^r ⊆ (three_two_S_n S φ γ n ∪ {γ})^r := by
         apply Finset.pow_subset_pow_left
@@ -11860,7 +11845,10 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               simp_rw [← MonoidHom.map_closure]
 
               simp only [Set.image_image]
-              simp_rw [Set.image_iUnion]
+              first
+                | erw [Set.image_iUnion₂]
+                | rw [Set.image_iUnion₂]
+                | simp only [Set.image_iUnion]
               apply Set.iUnion_congr
               intro i
               apply Set.iUnion_congr
@@ -11873,49 +11861,23 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               .
                 intro hy
                 obtain ⟨a, ha⟩ := hy
-                use (i • a)
-                refine ⟨?_, ha.2⟩
-                simp
                 have foo := ha.1
                 rw [Set.mem_image] at foo
                 obtain ⟨b, b_mem, a_eq_b⟩ := foo
-                use ?_
-                .
-                  use b
-                  refine ⟨b_mem, ?_⟩
-                  rw [Subtype.ext_iff]
-                  simp_rw [← a_eq_b]
-                  rfl
-                .
-                  simp_rw [← a_eq_b]
-                  have b_prop := b.property
-                  simp [new_N'_map]
-                  conv =>
-                    lhs
-                    equals data.φ (i.val.val + b.val) =>
-                      rfl
-                  rw [AddMonoidHom.map_add]
-                  have i_prop := i.val.property
-                  have b_prop := b.property
-                  rw [AddMonoidHom.mem_ker] at i_prop b_prop
-                  simp [i_prop, b_prop]
+                refine ⟨(↑i : Multiplicative ↥data.φ.ker) • b, Set.smul_mem_smul_set b_mem, ?_⟩
+                rw [← ha.2, ← a_eq_b]
+                rfl
               .
                 intro hx
                 obtain ⟨x, hx, x_eq⟩ := hx
-                simp at hx
-                obtain ⟨x_ker, x_eq_smul⟩ := hx
-                rw [Set.mem_smul_set] at x_eq_smul
-                obtain ⟨y, hy, x_eq_y⟩ := x_eq_smul
-                use y.val
-                refine ⟨?_, ?_⟩
+                erw [Set.mem_smul_set] at hx
+                obtain ⟨n, hn, x_eq_n⟩ := hx
+                refine ⟨new_N'_map n, ?_, ?_⟩
                 .
                   rw [Set.mem_image]
-                  use y
-                  refine ⟨hy, rfl⟩
-                . simp_rw [← x_eq]
-                  rw [Subtype.ext_iff] at x_eq_y
-                  simp at x_eq_y
-                  exact x_eq_y
+                  exact ⟨n, hn, rfl⟩
+                . rw [← x_eq, ← x_eq_n]
+                  rfl
 
 
 
