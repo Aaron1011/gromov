@@ -12,6 +12,13 @@ open Subgroup Pointwise Finset
 open scoped Pointwise Finset
 open scoped commutatorElement IsMulCommutative
 
+-- The `open scoped IsMulCommutative` above activates a low-priority
+-- `Group + IsMulCommutative ⇒ CommGroup` instance.  Combined with Mathlib's
+-- build-wide `maxSynthPendingDepth 3`, synthesizing the group structure of
+-- `↥(Matrix.unitaryGroup (Fin n) ℂ)` blows up the instance search.  Reverting
+-- to the historical default depth keeps that synthesis fast.
+set_option maxSynthPendingDepth 1
+
 -- Like 'mem_closure_prod_list', but without requring that the generating set be symmetric
 lemma weak_mem_closure_prod_list {G: Type*} [Group G] (S: Set G) (x: G) (hx: x ∈ Subgroup.closure S): ∃ l: List (↑(S ∪ S⁻¹)), l.unattach.prod = x := by
   -- https://leanprover.zulipchat.com/#narrow/channel/287929-mathlib4/topic/Group.20.28.2FMonoid.2Fetc.29.20closures.20are.20a.20finite.20product.2Fsum/near/477951441
@@ -72,8 +79,9 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
       simp at max_len_zero
       simp [all_lists] at max_len_zero
       have S_nonempty : S.Nonempty := by
-        by_contra!
-        simp at this
+        rcases S.eq_empty_or_nonempty with this | this
+        swap
+        · exact this
         rw [this] at S_generates
         simp at S_generates
 
@@ -432,7 +440,7 @@ instance compact_unitary (n : ℕ) [Nonempty (Fin n)] :
   rw [Metric.compactSpace_iff_isBounded_univ, Metric.isBounded_iff]
   use 2
   intro x _ y _
-  dsimp [dist]
+  rw [Subtype.dist_eq]
   grw [dist_le_norm_add_norm]
   rw [CStarRing.norm_coe_unitary, CStarRing.norm_coe_unitary]
   linarith
@@ -640,6 +648,15 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
   let measure_haar : MeasureTheory.MeasureSpace (Matrix.unitaryGroup (Fin n) ℂ) := {
     volume := MeasureTheory.Measure.haarMeasure compacts_univ
   }
+  haveI hinv : (MeasureTheory.volume : MeasureTheory.Measure ↥(Matrix.unitaryGroup (Fin n) ℂ)).IsMulLeftInvariant := by
+    show (MeasureTheory.Measure.haarMeasure compacts_univ).IsMulLeftInvariant
+    infer_instance
+  haveI hfin : MeasureTheory.IsFiniteMeasure (MeasureTheory.volume : MeasureTheory.Measure ↥(Matrix.unitaryGroup (Fin n) ℂ)) := by
+    show MeasureTheory.IsFiniteMeasure (MeasureTheory.Measure.haarMeasure compacts_univ)
+    infer_instance
+  haveI hopen : (MeasureTheory.volume : MeasureTheory.Measure ↥(Matrix.unitaryGroup (Fin n) ℂ)).IsOpenPosMeasure := by
+    show (MeasureTheory.Measure.haarMeasure compacts_univ).IsOpenPosMeasure
+    infer_instance
 
   use 1 / (MeasureTheory.volume (Metric.ball (1 : (Matrix.unitaryGroup (Fin n) ℂ) ) (ε / 2 / 2))).toReal
 
@@ -688,8 +705,7 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
         rw [Set.mem_iUnion]
         use b
         simp [b_mem]
-        simp [dist]
-        rw [dist_eq_norm_sub]
+        rw [Subtype.dist_eq, dist_eq_norm_sub]
         exact b_dist_le
     -- Note - Vikman uses ε/2, but using ε/4 made things easier (it might actually be false for ε/2)
     have disjoint_balls : I.PairwiseDisjoint (fun g => Metric.ball g ((ε/2)/2)) := by
@@ -705,7 +721,7 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
       specialize X_subset_A hx
       specialize X_subset_B hx
       have triangle := dist_triangle a x b
-      simp [dist, dist_eq_norm_sub] at X_subset_A X_subset_B triangle
+      simp only [Metric.mem_ball, Subtype.dist_eq, dist_eq_norm_sub] at X_subset_A X_subset_B triangle
       rw [norm_sub_rev] at X_subset_A
       grw [X_subset_A, X_subset_B] at triangle
       simp at triangle
@@ -713,15 +729,24 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
 
     have translate_ball (d : ℝ) (hd : 0 < d) (g : (Matrix.unitaryGroup (Fin n) ℂ)): Metric.ball g d = (fun x => g * x) '' (Metric.ball (1 : (Matrix.unitaryGroup (Fin n) ℂ)) d) := by
       ext a
-      simp [dist, dist_eq_norm_sub]
-      conv =>
-        rhs
-        arg 1
-        arg 1
-        equals (star g) * (a.val - g.val) =>
-          rw [mul_sub]
+      rw [Set.mem_image, Metric.mem_ball]
+      constructor
+      · intro h
+        refine ⟨g⁻¹ * a, ?_, by group⟩
+        simp only [Metric.mem_ball, Subtype.dist_eq, dist_eq_norm_sub] at h ⊢
+        have heq : ((g⁻¹ * a : Matrix.unitaryGroup (Fin n) ℂ) : Matrix (Fin n) (Fin n) ℂ) - ((1 : Matrix.unitaryGroup (Fin n) ℂ) : Matrix (Fin n) (Fin n) ℂ)
+            = ((g⁻¹ : Matrix.unitaryGroup (Fin n) ℂ) : Matrix (Fin n) (Fin n) ℂ) * ((a : Matrix (Fin n) (Fin n) ℂ) - (g : Matrix (Fin n) (Fin n) ℂ)) := by
+          rw [mul_sub, ← Matrix.UnitaryGroup.mul_val, ← Matrix.UnitaryGroup.mul_val, inv_mul_cancel]
+        rw [heq, CStarRing.norm_mem_unitary_mul _ (g⁻¹).2]
+        exact h
+      · rintro ⟨b, hb, rfl⟩
+        simp only [Metric.mem_ball, Subtype.dist_eq, dist_eq_norm_sub] at hb ⊢
+        have heq : ((g * b : Matrix.unitaryGroup (Fin n) ℂ) : Matrix (Fin n) (Fin n) ℂ) - (g : Matrix (Fin n) (Fin n) ℂ)
+            = (g : Matrix (Fin n) (Fin n) ℂ) * ((b : Matrix (Fin n) (Fin n) ℂ) - ((1 : Matrix.unitaryGroup (Fin n) ℂ) : Matrix (Fin n) (Fin n) ℂ)) := by
+          rw [mul_sub, ← Matrix.UnitaryGroup.mul_val]
           simp
-      simp [CStarRing.norm_mem_unitary_mul]
+        rw [heq, CStarRing.norm_mem_unitary_mul _ g.2]
+        exact hb
 
     have volume_sum : MeasureTheory.volume (⋃ (g ∈ I), (Metric.ball g ((ε/2)/2))) ≤ 1 := by
       grw [MeasureTheory.measure_mono (t := Set.univ)]
@@ -744,7 +769,8 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
         arg 1
         intro i
         rw [translate_ball _ (by linarith)]
-      simpa [measure_haar] using volume_sum
+      simpa only [Set.image_mul_left, MeasureTheory.measure_preimage_mul,
+        ENNReal.tsum_const, ENat.card_coe_set_eq] using volume_sum
       · apply Set.PairwiseDisjoint.countable_of_isOpen (s := fun g => Metric.ball g ((ε / 2)/2))
         · exact disjoint_balls
         · intro i hi
@@ -800,9 +826,7 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
       exact Metric.isOpen_ball
       simp [hε]
     norm_cast at card_lt_top
-    rw [WithTop.lt_top_iff_ne_top] at card_lt_top
-    simp at card_lt_top
-    rw [Set.encard_eq_top_iff] at card_lt_top
+    rw [lt_top_iff_ne_top] at card_lt_top
     simp at card_lt_top
 
     have fintype_I : Fintype I := by
@@ -883,17 +907,12 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
         simpa using card_i_le
         · apply ENNReal.mul_ne_top
           · simp
-          · simp [measure_haar]
+          · simp
         · simp
         · exact card_lt_top
-      · simp [measure_haar]
-        conv =>
-          lhs
-          equals (0 : ENNReal).toReal => simp
-        rw [ENNReal.toReal_lt_toReal]
-        apply IsOpen.measure_pos _ Metric.isOpen_ball (by simp [hε])
-        · simp
-        · simp
+      · rw [ENNReal.toReal_pos_iff]
+        exact ⟨IsOpen.measure_pos _ Metric.isOpen_ball (by simp [hε]),
+          MeasureTheory.measure_lt_top _ _⟩
       · exact cosets_cover
 
   · intro S S_subset S_chain
@@ -976,8 +995,10 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
     conj_inner_symm := by
       intro x y
       simp only [integrand]
-      rw [← integral_conj]
-      simp_rw [inner_conj_symm]
+      simp_rw [show ∀ h : ↥H, (⟪(h.val.val x : V), (h.val.val y : V)⟫ : ℂ)
+          = (starRingEnd ℂ) ⟪(h.val.val y : V), (h.val.val x : V)⟫
+        from fun h => (inner_conj_symm _ _).symm]
+      exact integral_conj.symm
     re_inner_nonneg := by
       intro x
       simp [integrand]
@@ -1011,15 +1032,21 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
         simp
     add_left := by
       intro a b c
-      simp [integrand]
-      rw [MeasureTheory.integral_add]
-      · exact integrable_on a c
-      · exact integrable_on b c
+      have hpt : (integrand (a + b) c) = (fun h => integrand a c h + integrand b c h) := by
+        funext h
+        simp only [integrand]
+        rw [show (h.val.val (a + b) : V) = h.val.val a + h.val.val b from map_add _ _ _,
+          inner_add_left]
+      rw [hpt]
+      exact MeasureTheory.integral_add (integrable_on a c) (integrable_on b c)
     smul_left := by
       intro x y z
-      simp [integrand]
-      rw [integral_mul_const_of_integrable (integrable_on x y)]
-      rw [mul_comm]
+      have hpt : (integrand (z • x) y) = (fun h => (starRingEnd ℂ) z * integrand x y h) := by
+        funext h
+        simp only [integrand]
+        rw [show (h.val.val (z • x) : V) = z • h.val.val x from map_smul _ _ _, inner_smul_left]
+      rw [hpt]
+      exact MeasureTheory.integral_const_mul _ _
     definite := by
       intro x hx
       simp only [integrand] at hx
@@ -1050,9 +1077,8 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
 
         simp at inner_q_zero
         have map_iff_zero := LinearMap.map_eq_zero_iff (f := q.val.val.toLinearMap) (x := x) ?_
-        · simp at map_iff_zero
-          rw [← map_iff_zero]
-          exact inner_q_zero
+        · simp only [LinearMap.coe_coe] at map_iff_zero
+          exact map_iff_zero.mp inner_q_zero
         · -- TODO - find a better way of doing this
           let my_map := (ContinuousLinearMap.toLinearMapRingHom (R₁ := ℂ) (M₁ := V)).toMonoidHom
           let f_map := (Units.map my_map) q.val
@@ -1087,25 +1113,13 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
 
   have v_preserves_inner : ∀ h : H, ∀ v w : FreshInnerProduct V, ⟪(apply_rep h v), (apply_rep h w)⟫ = ⟪v, w⟫ := by
     intro h v w
-    unfold inner
-    simp [InnerProductSpace.toInner, new_inner]
-    dsimp [inner_product_core]
-    simp [InnerProductSpace.ofCore]
-    simp [apply_rep]
-    simp [integrand]
-    conv =>
-      lhs
-      arg 2
-
-    have mul_right_inv := MeasureTheory.Measure.inv.instIsMulRightInvariant (μ := MeasureTheory.Measure.haar (G := H))
-    have mul_left := MeasureTheory.integral_mul_right_eq_self (f := integrand v w) (μ := (MeasureTheory.Measure.haar.inv (G := H)))
-    simp only [integrand] at mul_left
-    conv at mul_left =>
-      intro g
-      lhs
-      simp
-
-    apply mul_left
+    show MeasureTheory.integral (MeasureTheory.Measure.haar.inv (G := H)) (integrand (apply_rep h v) (apply_rep h w))
+       = MeasureTheory.integral (MeasureTheory.Measure.haar.inv (G := H)) (integrand v w)
+    have hpt : integrand (apply_rep h v) (apply_rep h w) = (fun g : H => integrand v w (g * h)) := by
+      funext g
+      simp only [integrand, apply_rep, Subgroup.coe_mul, Units.val_mul, ContinuousLinearMap.mul_apply]
+    rw [hpt]
+    exact MeasureTheory.integral_mul_right_eq_self (integrand v w) h
   · -- finDimVectorspaceEquiv
     have rank_eq := Module.finrank_eq_rank' ℂ (FreshInnerProduct V)
     have V_equiv := (finDimVectorspaceEquiv (Module.finrank ℂ (FreshInnerProduct V)) rank_eq.symm).toContinuousLinearEquiv
@@ -1136,78 +1150,35 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
       intro h h_mem
       simp [H_matrix, new_H_coe, new_H_matrix] at h_mem
       obtain ⟨a, a_mem, ha⟩ := h_mem
-      rw [Matrix.mem_unitaryGroup_iff']
-
-      -- defeq abuse - we don't actually want to apply our equivalence from V to FreshInnerProduct V here,
-      -- since it might not be the identity, which would break 'mulLeft'
-      -- Instead, first convert to plain LinearMap (which we can use defeq abuse with, due to not having
-      -- the bundled topology with ContinuousLinearMap)
-      let a_fresh : (FreshInnerProduct V) →ₗ[ℂ] (FreshInnerProduct V) := a.val.toLinearMap
-      let to_fresh (v : V): FreshInnerProduct V := v
-
-
-      have preserves_inner : ∀ (x y : V), ⟪a_fresh x, a_fresh y⟫ = ⟪to_fresh x, to_fresh y⟫ := by
-        intro v w
-        unfold inner
-        simp [InnerProductSpace.toInner, new_inner]
-        dsimp [inner_product_core]
-        simp [InnerProductSpace.ofCore]
-        simp [integrand]
-        conv =>
-          lhs
-          arg 2
-
-        have mul_right_inv := MeasureTheory.Measure.inv.instIsMulRightInvariant (μ := MeasureTheory.Measure.haar (G := H))
-        have mul_left := MeasureTheory.integral_mul_right_eq_self (f := integrand v w) (μ := (MeasureTheory.Measure.haar.inv (G := H)))
-        simp only [integrand] at mul_left
-        conv at mul_left =>
-          intro g
-          lhs
-          simp
-
-        have my_mul := mul_left ⟨a, a_mem⟩
-        simp at my_mul
-        simp [a_fresh]
-        exact my_mul
-
-      conv at preserves_inner =>
+      rw [← ha, Matrix.mem_unitaryGroup_iff']
+      -- `a` is the linear map underlying an element of `H`, so it preserves the new inner product.
+      have preserves_inner : ∀ (x y : FreshInnerProduct V), ⟪a x, a y⟫ = ⟪x, y⟫ := by
+        obtain ⟨f, ⟨u, u_mem, rfl⟩, rfl⟩ := a_mem
         intro x y
-        lhs
-        equals ⟪a_fresh.adjoint (a_fresh x), y⟫ =>
-          apply (LinearMap.adjoint_inner_left  _ _ _).symm
-
-      conv at preserves_inner =>
-        intro x y
-        right
-        arg 2
-        equals (LinearMap.id (M := FreshInnerProduct V) (R := ℂ)) x =>
-          rfl
-
-      conv at preserves_inner =>
-        intro x y
-        lhs
-        arg 2
-        rw [← Module.End.mul_apply]
-
-      have inner_specialized (x : FreshInnerProduct V) := preserves_inner x x
-      rw [ext_inner_map] at inner_specialized
-      rw [← ha]
-      simp [a_fresh] at inner_specialized
-      apply_fun (LinearMap.toMatrix V_basis.toBasis V_basis.toBasis) at inner_specialized
-      rw [LinearMap.toMatrix_id] at inner_specialized
-      rw [Matrix.star_eq_conjTranspose]
-      rw [← LinearMap.toMatrix_adjoint]
-      rw [LinearMap.toMatrix_mul] at inner_specialized
-      exact inner_specialized
+        exact v_preserves_inner ⟨u, u_mem⟩ x y
+      -- Preservation of the inner product means `adjoint a ∘ a = id`.
+      have adj : a.adjoint ∘ₗ a = LinearMap.id := by
+        apply LinearMap.ext
+        intro x
+        rw [LinearMap.comp_apply, LinearMap.id_apply]
+        apply ext_inner_right ℂ
+        intro y
+        rw [LinearMap.adjoint_inner_left]
+        exact preserves_inner x y
+      have hmat : star (LinearMap.toMatrix V_basis.toBasis V_basis.toBasis a) *
+          (LinearMap.toMatrix V_basis.toBasis V_basis.toBasis a) = 1 := by
+        rw [Matrix.star_eq_conjTranspose, ← LinearMap.toMatrix_adjoint, ← LinearMap.toMatrix_comp,
+          adj, LinearMap.toMatrix_id]
+      exact hmat
 
 
 
     let H_matrix_subgroup : Subgroup (Matrix.unitaryGroup (Fin (Module.finrank ℂ V)) ℂ) := {
       carrier := Set.range (fun (h : H_matrix) => ⟨h.val, H_mem_unitary h (by simp)⟩),
       mul_mem' := by
-        intro x y hx hy
+        intro X Y hx hy
         simp
-        use (x * y).val
+        use (X * Y).val
         simp
         simp at hx
         simp at hy
@@ -1222,41 +1193,38 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
         obtain ⟨x, x_mem, x_eq_p⟩ := p_mem
         simp [new_H_coe, new_H_matrix]
         refine ⟨?_, rfl⟩
-        · refine ⟨x * y, H.mul_mem x_mem y_mem, ?_⟩
-          · simp
-            conv =>
-              lhs
-              arg 2
-              equals x.val.toLinearMap * y.val.toLinearMap =>
-                rfl
-            rw [LinearMap.toMatrix_mul, y_eq_q, x_eq_p, p_eq_a, q_eq_b, ← a_eq_x, ← b_eq_y]
+        obtain ⟨u, u_mem, hu⟩ := x_mem
+        obtain ⟨u', u'_mem, hu'⟩ := y_mem
+        refine ⟨p * q,
+          ⟨x * y, ⟨u * u', H.mul_mem u_mem u'_mem, by rw [Units.val_mul, hu, hu']⟩,
+            by rw [← x_eq_p, ← y_eq_q]; rfl⟩, ?_⟩
+        rw [LinearMap.toMatrix_mul, p_eq_a, q_eq_b, ← a_eq_x, ← b_eq_y]
+        rfl
       one_mem' := by
         simp [H_matrix, new_H_coe, new_H_matrix]
-        use 1
-        refine ⟨by simp, ?_⟩
-        apply LinearMap.toMatrix_one _
+        refine ⟨1, ⟨1, ⟨1, ⟨1, H.one_mem, rfl⟩, rfl⟩, ?_⟩, rfl⟩
+        exact LinearMap.toMatrix_one _
       inv_mem' := by
         simp
         intro a ha b hb a_eq_b
         refine ⟨a⁻¹, ?_, ?_⟩
         · simp [H_matrix, new_H_coe, new_H_matrix] at ⊢ hb
-          obtain ⟨x, x_mem, x_eq_b⟩ := hb
-          refine ⟨x⁻¹, H.inv_mem x_mem, ?_⟩
-          rw [← a_eq_b]
-          apply_fun Inv.inv at x_eq_b
-          rw [← x_eq_b, eq_comm]
-          apply Matrix.inv_eq_right_inv
+          obtain ⟨z₀, ⟨w, ⟨u, u_mem, hu⟩, hw⟩, hz₀⟩ := hb
+          refine ⟨_, ⟨↑(u⁻¹), ⟨u⁻¹, H.inv_mem u_mem, rfl⟩, rfl⟩, ?_⟩
+          rw [← a_eq_b, ← hz₀]
+          refine (Matrix.inv_eq_left_inv ?_).symm
           rw [← LinearMap.toMatrix_mul]
-          conv =>
-            arg 1
-            arg 2
-            equals (x.val * x⁻¹.val).toLinearMap =>
-              rfl
-          simp
-          apply LinearMap.toMatrix_one
+          convert LinearMap.toMatrix_one (R := ℂ) V_basis.toBasis using 2
+          subst hw hu
+          ext v
+          change (↑(u⁻¹) : V →L[ℂ] V) ((↑u : V →L[ℂ] V) v) = v
+          rw [← ContinuousLinearMap.mul_apply, ← Units.val_mul, inv_mul_cancel, Units.val_one,
+            ContinuousLinearMap.one_apply]
         · rw [Matrix.mem_unitaryGroup_iff] at ha
           apply Matrix.inv_eq_right_inv at ha
-          simp [ha, Subtype.ext_iff]
+          rw [Subtype.ext_iff]
+          show a⁻¹ = star a
+          exact ha
     }
 
     let remove_fresh (h : FreshInnerProduct V →ₗ[ℂ] FreshInnerProduct V): (V →ₗ[ℂ] V) := h
@@ -1275,9 +1243,9 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
               lhs
               equals Matrix.toLin V_basis.toBasis V_basis.toBasis (h.val.val * h.val.val⁻¹) a =>
                 rw [eq_comm]
-                apply Matrix.toLin_mul_apply
+                exact Matrix.toLin_mul_apply (v₁ := V_basis.toBasis) (v₂ := V_basis.toBasis) (v₃ := V_basis.toBasis) _ _ _
             rw [Matrix.mul_nonsing_inv]
-            · simp
+            · exact LinearMap.congr_fun (Matrix.toLin_one (v₁ := V_basis.toBasis)) a
             · apply Matrix.UnitaryGroup.det_isUnit
           inv_val := by
             simp [remove_fresh]
@@ -1287,9 +1255,9 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
               lhs
               equals Matrix.toLin V_basis.toBasis V_basis.toBasis (h.val.val⁻¹ * h.val.val) a =>
                 rw [eq_comm]
-                apply Matrix.toLin_mul_apply
+                exact Matrix.toLin_mul_apply (v₁ := V_basis.toBasis) (v₂ := V_basis.toBasis) (v₃ := V_basis.toBasis) _ _ _
             rw [Matrix.nonsing_inv_mul]
-            · simp
+            · exact LinearMap.congr_fun (Matrix.toLin_one (v₁ := V_basis.toBasis)) a
             · apply Matrix.UnitaryGroup.det_isUnit
         }, by (
           simp [remove_fresh]
@@ -1303,8 +1271,6 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
           simp only [H_matrix, new_H_coe, new_H_matrix] at a_prop
           rw [Set.mem_image] at a_prop
           obtain ⟨b, b_mem, b_eq_a⟩ := a_prop
-          rw [Set.mem_image] at b_mem
-          simp_rw [Set.mem_image] at b_mem
           obtain ⟨c, ⟨d, d_mem, d_eq_c⟩, c_eq_b⟩ := b_mem
           simp_rw [← ha, ← b_eq_a]
           simp
@@ -1321,13 +1287,9 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
         )⟩
         invFun := fun h => ⟨⟨(LinearMap.toMatrix V_basis.toBasis V_basis.toBasis) h.val.val.toLinearMap, by (
           apply H_mem_unitary
-          simp [H_matrix, new_H_coe, new_H_matrix]
-          use h
-          simp
+          exact ⟨h.val.val.toLinearMap, ⟨h.val.val, ⟨h.val, h.property, rfl⟩, rfl⟩, rfl⟩
         )⟩, by (
-          simp [H_matrix_subgroup, H_matrix, new_H_coe, new_H_matrix]
-          use h
-          simp
+          refine ⟨⟨_, ⟨h.val.val.toLinearMap, ⟨h.val.val, ⟨h.val, h.property, rfl⟩, rfl⟩, rfl⟩⟩, rfl⟩
         )⟩,
         left_inv := by
           intro h
@@ -1345,9 +1307,11 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
           simp [remove_fresh]
           ext a
           simp
-          apply Matrix.toLin_mul_apply
+          exact Matrix.toLin_mul_apply (v₁ := V_basis.toBasis) (v₂ := V_basis.toBasis)
+            (v₃ := V_basis.toBasis) _ _ _
       }
     · rfl
+
 
 #print axioms new_weyl_unitarian_trick
 
@@ -1704,7 +1668,7 @@ lemma H_n_pow_le  {a k : ℕ } {m : ℕ} (a_k_lt : a + k ≤ m)  (pows : Fin m �
         rw [Finset.mem_range] at x_lt_m
         have x_lt_m_succ : x.val < k + 1 := by
           omega
-        simp [x_lt_m, x_lt_m_succ]
+        simp [x_lt_m, Nat.le_of_lt_succ x_lt_m_succ]
 
     rw [← Finset.sum_attach]
 
@@ -2445,11 +2409,8 @@ lemma matrix_l2_norm_one {d: ℕ} (hd: 0 < d): ‖(1: Matrix (Fin d) (Fin d) ℂ
   .
     intro x
     simp
-    rw [Matrix.toEuclideanLin_apply]
-    simp
   . intro N hN mat_le
     simp at mat_le
-    simp [Matrix.toEuclideanLin_apply] at mat_le
     by_contra!
     have x_lt (x: EuclideanSpace ℂ (Fin d)) (x_ne: x ≠ 0): N * ‖x‖ < ‖x‖ := by
       apply mul_lt_of_lt_one_left
@@ -2617,6 +2578,7 @@ lemma theorem_3_8_h_n_list_prod_eq (data: HnData) (m: ℕ): (theorem_3_8_h_n_lis
     group
 
 -- Note - this is (2^(m - 1)) in Vikman, since the list in indexed starting at 1 in the paper
+set_option synthInstance.maxHeartbeats 1000000 in
 lemma theorem_3_8_h_n_list_length_initial_upper_bound  (data: HnData) (m: ℕ): (theorem_3_8_h_n_list data (m)).length ≤ (3 * (2 ^ (m))) - 2 := by
   induction m with
   | zero =>
@@ -2638,7 +2600,7 @@ lemma theorem_3_8_h_n_list_length_initial_upper_bound  (data: HnData) (m: ℕ): 
       rw [Nat.cast_sub]
       . push_cast
         ring
-        rfl
+        linarith
       .
         by_cases a_eq_zero: a = 0
         .
@@ -3436,9 +3398,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
           Set.mem_setOf_eq] at y_mem
         obtain ⟨s_mem_S'', s_mem_choose⟩ := y_mem
         simp at s_mem_S''
-        simp [dist] at s_mem_S''
-        rw [dist_eq_norm_sub] at s_mem_S''
-        rw [dist_eq_norm_sub] at s_mem_S''
+        simp only [Subtype.dist_eq, dist_eq_norm_sub] at s_mem_S''
         conv at s_mem_S'' =>
           right
           arg 1
@@ -3477,9 +3437,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
           Set.mem_setOf_eq] at y_mem
         obtain ⟨s_mem_S'', s_mem_choose⟩ := y_mem
         simp at s_mem_S''
-        simp [dist] at s_mem_S''
-        rw [dist_eq_norm_sub] at s_mem_S''
-        rw [dist_eq_norm_sub] at s_mem_S''
+        simp only [Subtype.dist_eq, dist_eq_norm_sub] at s_mem_S''
         rw [or_comm] at s_mem_S''
         conv at s_mem_S'' =>
           right
@@ -3577,8 +3535,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
             . rename_i x_inv_dist
 
               -- TODO - deduplicate this, in particular the 'CStarRing.norm_coe_unitary_mul' code
-              simp [dist] at x_inv_dist
-              rw [dist_eq_norm_sub] at x_inv_dist
+              simp only [Subtype.dist_eq, dist_eq_norm_sub] at x_inv_dist
               conv at x_inv_dist =>
                 lhs
                 arg 1
@@ -3589,8 +3546,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
               rw [← unitary.coe_star] at x_inv_dist
               rw [CStarRing.norm_coe_unitary_mul] at x_inv_dist
               rw [norm_sub_rev] at x_inv_dist
-              simp [dist]
-              rw [dist_eq_norm_sub]
+              simp only [Subtype.dist_eq, dist_eq_norm_sub]
               exact x_inv_dist
           .
             rename_i x_mem_one
@@ -3698,8 +3654,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         simp [G']
         apply Subgroup.mem_closure_of_mem
         simp
-        simp [dist]
-        rw [dist_eq_norm_sub]
+        simp only [Subtype.dist_eq, dist_eq_norm_sub]
         have a_prop := a.property
         rw [Set.Finite.mem_toFinset] at a_prop
         have a_dist := S_dist a a_prop
@@ -4077,8 +4032,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
               simp [G']
               apply Subgroup.mem_closure_of_mem
               simp
-              simp [dist]
-              rw [dist_eq_norm_sub]
+              simp only [Subtype.dist_eq, dist_eq_norm_sub]
               exact h_dist
             . rename_i h_prop
               -- TODo: deduplicate
@@ -4091,8 +4045,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
               simp [G']
               apply Subgroup.mem_closure_of_mem
               simp
-              simp [dist]
-              rw [dist_eq_norm_sub]
+              simp only [Subtype.dist_eq, dist_eq_norm_sub]
               exact h_dist
         . rename_i h_mem
           simp at h_mem
@@ -4265,7 +4218,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           use 1
           refine ⟨?_, ?_⟩
           . apply S_data.S_one
-          . simp [new_A_map]
+          . exact map_one _
         S_inv := by
           rw [← Set.image_inv]
           rw [← S_data.S_inv]
@@ -4302,7 +4255,7 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           use 1
           refine ⟨?_, ?_⟩
           . apply S_data.S_one
-          . simp [new_B_map]
+          . exact map_one _
         S_inv := by
           rw [← Set.image_inv]
           rw [← S_data.S_inv]
@@ -4409,11 +4362,11 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
           . simp
             rw [Subtype.ext_iff]
             simp
-            exact first_comm
+            exact congrArg (fun x : ↥first_subgroup => x.val.val) first_comm
           . simp
             rw [Subtype.ext_iff]
             simp
-            exact second_comm
+            exact congrArg (fun x : ↥second_subgroup => x.val.val) second_comm
         . intro a b hab
           simp [g_to_central] at hab
           simpa using hab
