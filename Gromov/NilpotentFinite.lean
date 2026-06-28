@@ -12,6 +12,7 @@ The following was proved by Aristotle:
 
 import Mathlib
 
+open scoped IsMulCommutative
 
 lemma finite_of_nilpotent_fg_order {G: Type*} [Group G] [Group.FG G] [Group.IsNilpotent G] (hG: Monoid.IsTorsion G): Finite G := by
   induction' n : Group.nilpotencyClass G with n ih generalizing G <;> simp_all +decide [ Group.nilpotencyClass ];
@@ -23,7 +24,7 @@ lemma finite_of_nilpotent_fg_order {G: Type*} [Group G] [Group.FG G] [Group.IsNi
   · -- The quotient group $G/Z(G)$ is finitely generated (as a quotient of a finitely generated group) and nilpotent.
     have h_quot_finite : Finite (G ⧸ Subgroup.center G) := by
       -- By the induction hypothesis, $G/Z(G)$ is finite.
-      apply ih;
+      refine ih inferInstance ?_ ?_
       ·
         intro g
         specialize hG g.out
@@ -35,9 +36,9 @@ lemma finite_of_nilpotent_fg_order {G: Type*} [Group G] [Group.FG G] [Group.IsNi
         rw [← QuotientGroup.out_eq' (a := g)]
         erw [ QuotientGroup.eq_one_iff ]
         simp [hn.2]
-      · convert nilpotencyClass_quotient_center using 1;
-        refine Nat.eq_sub_of_add_eq (id (Eq.symm n));
-        infer_instance;
+      · have e := nilpotencyClass_quotient_center (G := G)
+        have hq : Group.IsNilpotent (G ⧸ Subgroup.center G) := inferInstance
+        simp_all +decide [Group.nilpotencyClass]
     -- Since $Z(G)$ is finitely generated and torsion, it is finite.
     have h_center_finite : Finite (Subgroup.center G) := by
       -- Since $Z(G)$ is finitely generated and torsion, it is finite by the structure theorem for finitely generated abelian groups.

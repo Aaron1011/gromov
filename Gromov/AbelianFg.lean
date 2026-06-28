@@ -1,5 +1,7 @@
 import Mathlib
 
+open scoped commutatorElement
+
 lemma new_group_fg_map {G G': Type*} [Group G] [Group G'] (H: Subgroup G) (h_fg: H.FG) (f: G →* G'): (Subgroup.map f H).FG := by
   obtain ⟨s, hs⟩ := h_fg
   classical

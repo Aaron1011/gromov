@@ -574,9 +574,8 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         .
           simp
           simp_rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
-          simp
           ext a
-          simp
+          rfl
         . intro x y hxy
           simpa using hxy
       map_mul' := by
@@ -732,9 +731,8 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         .
           simp
           simp_rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
-          simp
           ext a
-          simp
+          rfl
         . intro x y hxy
           simpa using hxy
       map_mul' := by
@@ -809,10 +807,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             apply_fun (fun f => f.val) at first_eq
             simp at first_eq
             simp [map_first_hom, map_first_unitary] at first_eq
-            rw [Function.Injective.eq_iff] at first_eq
-            .
-              rw [first_eq]
-            . apply LinearEquiv.injective
+            rw [first_eq]
           . intro z
             simp [y_map]
             simp [map_second_x_new, map_second_y_new]
@@ -832,7 +827,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             rfl
 
         have y_map_eq: y_map = y.val.val.toEuclideanLin := by
-          simp [x_map]
+          simp [y_map]
           apply LinearMap.ofIsCompl_eq
           . intro z
             rfl
@@ -893,8 +888,6 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             simp_rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
             simp
             --rw [← linearmap_comp_eq_mul]
-            nth_rw 1 [Matrix.toLin_mul (M₁ := (EuclideanSpace ℂ (Fin n))) (M₂ := (EuclideanSpace ℂ (Fin n))) (v₂ := (EuclideanSpace.basisFun (Fin n) ℂ).toBasis)]
-            simp
             rw [← LinearMap.toMatrix_adjoint]
             simp
 
@@ -933,14 +926,15 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
               . omega
             .
               apply map_first_x_unitary
-            . simp [map_first_x_new]
+            . intro v
+              exact (map_first x v).2
             .
               apply map_second_y_unitary
-            . simp [map_second_y_new]
+            . intro v
+              exact (map_second y v).2
           . intro x y hxy
             simpa using hxy
         )⟩, (by
-          simp
           rw [Subgroup.mem_centralizer_iff]
           simp
           apply_fun (fun f => Matrix.toEuclideanLin f.val)
@@ -1022,13 +1016,12 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             rw [← hx]
           simp
           simp [map_first_hom, map_first_unitary]
-          apply congrArg
-          simp [map_first]
-          rw [LinearMap.ext_iff]
+          apply LinearMap.ext
           intro z
-          rw [Subtype.ext_iff]
-          simp [new]
-          simp [map_first_x_new, map_first]
+          apply Subtype.ext
+          simp only [LinearMap.restrict_coe_apply, new, LinearEquiv.apply_symm_apply,
+            LinearMap.ofIsCompl_left_apply, map_first_x_new, map_first, LinearMap.coe_mk,
+            AddHom.coe_mk]
         .
           rw [Subtype.ext_iff]
           conv =>
