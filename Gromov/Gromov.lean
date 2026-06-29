@@ -730,6 +730,46 @@ instance lipschitzHVectorSpace : V := {
     simp
 }
 
+noncomputable instance finite_ball (x: G) (r: ℝ): Set.Finite (Metric.ball x r) := Set.Finite.of_finite_image (f := fun a => (word_norm_prod_self a).choose) (by
+  have foo := List.finite_length_le S (WordNorm x + ⌈r⌉₊)
+  rw [← Set.finite_coe_iff, Set.coe_setOf] at foo
+  apply Finite.of_injective (β := {l : List S // l.length ≤ WordNorm x + ⌈r⌉₊}) (fun a => ⟨a.val, by (
+    have ha := a.prop
+    simp [-Subtype.coe_prop] at ha
+    obtain ⟨y, hy, a_prod⟩ := ha
+    have ⟨prod_eq, prod_len⟩ := (word_norm_prod_self y).choose_spec
+    rw [a_prod] at prod_len
+    rw [prod_len]
+    simp [dist] at hy
+    conv =>
+      lhs
+      equals WordDist 1 y =>
+        simp [WordDist]
+
+
+    grw [WordDist_triangle (y := x)]
+    nth_rw 2 [WordDist_comm]
+    simp [WordDist]
+    simp [WordDist] at hy
+    rw [← Nat.lt_ceil] at hy
+    grind
+  )⟩) ?_
+  intro a b hab
+  grind
+) (by
+  intro a ha b hb hab
+  have a_prop := (word_norm_prod_self a).choose_spec.1
+  have b_prop := (word_norm_prod_self b).choose_spec.1
+  rw [← a_prop, ← b_prop]
+  simp [hab]
+)
+
+-- TODO - make this Finite to avoid a non-compuatable Fintype instance
+noncomputable instance fintype_ball (x: G) (r: ℝ): Fintype ↑(Metric.ball x r) := Set.Finite.fintype (finite_ball _ _)
+
+lemma harmonic_stokes_theorem (f: G → ℂ) (hf: Harmonic f) (r: ℝ): ∑ x ∈ Metric.ball 1 (2 * r), ∑ s ∈ S, (f x - f (x * s))^2 = 1 := by
+  sorry
+
 instance V_FiniteDimentional: FiniteDimensional ℂ (LipschitzH) := by
   -- This is a very long part of the proof in Vikman
   sorry
