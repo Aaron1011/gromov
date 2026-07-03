@@ -4975,44 +4975,70 @@ lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.suppor
       rw [← Finset.sum_sub_distrib]
       simp_rw [← Summable.tsum_sub (by sorry) (by sorry)]
       simp_rw [← mul_sub]
-      
+      conv =>
+        lhs
+        rhs
+        lhs
+        arg 2
+        intro s
+        arg 1
+        intro x
+        equals (f (s * x)) * f x * ((φ (s * x) - φ x))^2 =>
+          ring
 
+      have f_prod (x s: G): f (s * x) * (f x) ≤ (f (s * x)^2 + (f x)^2) / 2 := by
+        field_simp
+        rw [mul_comm]
+        rw [← mul_assoc]
+        apply two_mul_le_add_sq
 
+      rw [div_eq_inv_mul]
+      rw [← mul_assoc]
+      nth_rw 2 [mul_comm]
+      rw [mul_le_mul_iff_of_pos_left]
+      calc
+        ∑ s ∈ S, ∑' (x : G), f (s * x) * f x * (φ (s * x) - φ x) ^ 2 ≤ ∑ s ∈ S, ∑' (x : G), (f (s * x)^2 +  (f x)^2) * 2⁻¹ * (φ (s * x) - φ x) ^ 2 := by
 
-
-
-
-      rw [inv_mem_iff]
-      rw [finsum_mem_finset_eq_sum]
+          apply Finset.sum_le_sum
+          intro s hs
+          apply Summable.tsum_le_tsum
+          intro x
+          grw [f_prod]
+          field_simp
+          . simp
+          .
+           apply summable_of_finite_support
+           unfold Function.HasFiniteSupport
+           simp
+           apply Set.Finite.inter_of_right
+           sorry
+          . sorry
+        _ ≤ _ := by
+          simp_rw [add_mul]
+          simp_rw [Summable.tsum_add (by sorry) (by sorry)]
+          rw [Finset.sum_add_distrib]
+          conv =>
+            lhs
+            lhs
+            arg 2
+            intro s
+            rw [← Equiv.tsum_eq (Equiv.mulLeft s⁻¹)]
+            simp
+          nth_rw 1 [S_eq_Sinv]
+          simp
+          rename_bvar c → b
+          simp_rw [sub_sq_comm]
+          field_simp
+          norm_num
+          field_simp
+          simp_rw [tsum_div_const]
+          rw [← Finset.sum_div]
+          field_simp
+          rw [← Summable.tsum_finsetSum]
+          sorry
+      . sorry
     . sorry
-
-
-
-    rw [tsum_sum]
-
-
-    have swap_sum: ∑ i ∈ S, φ x * (f (i * x) * (φ x - φ (i * x))) = ∑ i ∈ S, φ x * (f (i * x) * (φ x - φ (i * x)))
-    sorry
-
   . sorry
-  have foo := laplace_sum_swap_helper (f := f * φ) (g := f * φ) ?_
-  .
-    simp at foo
-    simp
-    conv =>
-      rhs
-      simp [pow_two]
-    rw [← foo]
-    conv =>
-      rhs
-      arg 1
-      intro x
-      rw [laplace_prod_harmonic (hf := hf)]
-
-  .
-    simp
-    apply Set.Finite.inter_of_right
-    apply hφ
 
 lemma measure_preserving_inv: MeasurePreserving Inv.inv ((MeasureTheory.volume (α := G))) (MeasureTheory.volume (α := G)) := {
   measurable := by
