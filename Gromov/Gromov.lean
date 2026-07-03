@@ -4642,7 +4642,7 @@ lemma laplace_prod_harmonic (f φ : G → ℝ)  (hf: Laplace_b  f = 0) (x: G): L
   rw [sub_eq_zero] at hf
   rw [← hf]
 
-lemma laplace_sum_swap_helper (f g: G → ℝ): ∑' (x: G), (f x) * (Laplace_b g) x = 2⁻¹ * ∑' (x: G), ((#(S) : ℝ)⁻¹) * ∑ s ∈ S, (((f x) - (f (s * x))) * ((g x) - (g (s * x)))) := by
+lemma laplace_sum_swap_helper {f g: G → ℝ} (hg: g.support.Finite): ∑' (x: G), (f x) * (Laplace_b g) x = 2⁻¹ * ∑' (x: G), ((#(S) : ℝ)⁻¹) * ∑ s ∈ S, (((f x) - (f (s * x))) * ((g x) - (g (s * x)))) := by
   simp_rw [sub_mul]
   simp_rw [Finset.sum_sub_distrib]
   simp_rw [Laplace_b, f_conv_mu]
@@ -4723,15 +4723,91 @@ lemma laplace_sum_swap_helper (f g: G → ℝ): ∑' (x: G), (f x) * (Laplace_b 
       simp_rw [mul_comm _ (f _), mul_assoc]
       simp_rw [← mul_sub]
       ring
-    . sorry
-  . sorry
-  . sorry
-  . sorry
+    .
+      intro s hs
+      apply Summable.mul_left
+      apply summable_of_finite_support
+      unfold Function.HasFiniteSupport
+      simp
+      apply Set.Finite.inter_of_right
+      apply Set.Finite.subset ?_ (Function.support_sub _ _)
+      simp
+      refine ⟨?_, hg⟩
+      rw [← Function.comp_def]
+      rw [Function.support_comp_eq_preimage]
+      apply Set.Finite.preimage'
+      . apply hg
+      . intro x hx
+        simp
+  .
+  -- TODO - deduplicate this
+      intro s hs
+      apply Summable.mul_left
+      apply summable_of_finite_support
+      unfold Function.HasFiniteSupport
+      simp
+      apply Set.Finite.inter_of_right
+      apply Set.Finite.subset ?_ (Function.support_sub _ _)
+      simp
+      refine ⟨hg, ?_⟩
+      rw [← Function.comp_def]
+      rw [Function.support_comp_eq_preimage]
+      apply Set.Finite.preimage'
+      . apply hg
+      . intro x hx
+        simp
+  .
+    apply Summable.sub
+    apply summable_of_finite_support
+    .
+      unfold Function.HasFiniteSupport
+      simp
+      apply Set.Finite.inter_of_right
+      apply hg
+    .
+      simp_rw [mul_assoc]
+      apply Summable.mul_left
+      simp_rw [Finset.mul_sum]
+      apply summable_sum
+      intro s hs
+      apply summable_of_finite_support
+      unfold Function.HasFiniteSupport
+      simp
+      apply Set.Finite.inter_of_right
+      rw [← Function.comp_def]
+      rw [Function.support_comp_eq_preimage]
+      apply Set.Finite.preimage'
+      . apply hg
+      . intro x hx
+        simp
+  .
+    apply Summable.mul_left
+    apply summable_sum
+    intro s hs
+    simp_rw [mul_sub]
+    apply Summable.sub
+    .
+      apply summable_of_finite_support
+      unfold Function.HasFiniteSupport
+      simp
+      apply Set.Finite.inter_of_right
+      apply hg
+    .
+      apply summable_of_finite_support
+      unfold Function.HasFiniteSupport
+      simp
+      apply Set.Finite.inter_of_right
+      rw [← Function.comp_def]
+      rw [Function.support_comp_eq_preimage]
+      apply Set.Finite.preimage'
+      . apply hg
+      . intro x hx
+        simp
 
 
 -- Proposition 1.5
-lemma laplace_sum_swap (f g: G → ℝ): ∑' (x: G), (f x) * (Laplace_b g) x = ∑' (x: G), ((Laplace_b f ) x) * (g x) := by
-  rw [laplace_sum_swap_helper]
+lemma laplace_sum_swap (f g: G → ℝ) (hg: g.support.Finite): ∑' (x: G), (f x) * (Laplace_b g) x = ∑' (x: G), ((Laplace_b f ) x) * (g x) := by
+  rw [laplace_sum_swap_helper hg]
   simp_rw [mul_comm _ ( g _)]
   rw [laplace_sum_swap_helper]
   simp_rw [mul_comm]
