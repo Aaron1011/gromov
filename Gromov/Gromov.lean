@@ -466,6 +466,20 @@ lemma LipschitzH_apply [Generates ] (f: LipschitzH) (x: G): f x = f.toFun x := r
 
 lemma S_nonempty: S.Nonempty := by exact Finset.nonempty_coe_sort.mp hS
 
+lemma S_card_ne_zero_re: (#(S) : ℝ) ≠ 0 := by
+  norm_cast
+  simp
+  have foo := hS
+  simp only [nonempty_subtype] at foo
+  exact Finset.nonempty_iff_ne_empty.mp foo
+
+lemma S_card_ne_zero: (#(S) : ℂ) ≠ 0 := by
+  norm_cast
+  simp
+  have foo := hS
+  simp only [nonempty_subtype] at foo
+  exact Finset.nonempty_iff_ne_empty.mp foo
+
 def ConstLipschitzH (z: ℂ) : LipschitzH := {
   toFun := fun x => z
   lipschitz := by
@@ -476,12 +490,7 @@ def ConstLipschitzH (z: ℂ) : LipschitzH := {
     intro x
     simp
     field_simp
-    have card_ne_zero: (#(S) : ℂ) ≠ 0 := by
-      norm_cast
-      simp
-      have foo := hS
-      simp only [nonempty_subtype] at foo
-      exact Finset.nonempty_iff_ne_empty.mp foo
+    have foo := S_card_ne_zero
     field_simp
 }
 
@@ -811,6 +820,9 @@ instance fintype_ball_boundary (x: G) (r: ℝ): Fintype ↑{y | dist y x = r} :=
 -- https://www.math.uni-potsdam.de/fileadmin/user_upload/Prof-GraphTh/Keller/KellerLenzWojciechowski_GraphsAndDiscreteDirichletSpaces_wu_version.pdf
 
 
+-- Lemma 12.2 in Keller (Graphs and Discrete Dirichlet Spaces), specialized to harmonic functions: L(u) = 0
+--lemma laplace_harmonic_cutoff (f φ : G → ℝ) (x): ∑ x ∈ Metric.ball 1 (2 * r), ∑ s ∈ S, |(f x) - f (s * x)|^2
+
 
 -- lemma s_sinv_split_one: S = (S \ {1}) ∪ (S⁻¹ \ {1}) ∪ {1} := by
 --   rw [← s_union_sinv]
@@ -843,9 +855,9 @@ instance fintype_ball_boundary (x: G) (r: ℝ): Fintype ↑{y | dist y x = r} :=
 -- = (∑ s_1 ∈ S, ∑ s_2 ∈ S, (f x)^2 - (f x)(f (x * s_1)) - (f x) (f (x * s_2)) + (f (x * s_1))(f (x * s_2)))
 -- = (∑ s_1 ∈ S, ∑ s_2 ∈ S, (f x)^2 - (f x)((f (x * s_1) - (f (x * s_2))) + (f (x * s_1))(f (x * s_2)))
 lemma harmonic_stokes_theorem (f: G → ℂ) (hf: Harmonic f) (r: ℝ): ∑ x ∈ Metric.ball 1 (2 * r), ∑ s ∈ S, (f x - f (x * s))^2 = 0 := by
-
-  rw [s_sinv_split_one]
-  rw []
+  sorry
+  --rw [s_sinv_split_one]
+  --rw []
 
 
   -- Use this if we end up with closedBall in the theorem statement
@@ -868,7 +880,7 @@ lemma harmonic_stokes_theorem (f: G → ℂ) (hf: Harmonic f) (r: ℝ): ∑ x �
   --     sorry
   -- simp_rw [Metric.closedBall]
 
-  sorry
+  --sorry
 
 instance V_FiniteDimentional: FiniteDimensional ℂ (LipschitzH) := by
   -- This is a very long part of the proof in Vikman
@@ -4629,6 +4641,100 @@ lemma laplace_prod_harmonic (f φ : G → ℝ)  (hf: Laplace_b  f = 0) (x: G): L
   rw [← mul_assoc]
   rw [sub_eq_zero] at hf
   rw [← hf]
+
+
+-- Proposition 1.5
+lemma laplace_sum_swap (f g: G → ℝ): ∑' (x: G), (f x) * (Laplace_b g) x = ∑' (x: G), ((Laplace_b f ) x) * (g x) := by
+  calc
+    _ = 2⁻¹ * ∑' (x: G), ((#(S) : ℝ)⁻¹) * ∑ s ∈ S, (((f x) - (f (s * x))) * ((g x) - (g (s * x)))) := by
+      simp_rw [sub_mul]
+      simp_rw [Finset.sum_sub_distrib]
+      simp_rw [Laplace_b, f_conv_mu]
+      simp
+      simp_rw [← Finset.mul_sum]
+      simp_rw [Finset.sum_sub_distrib]
+      simp
+      have foo := S_card_ne_zero_re
+      conv =>
+        rhs
+        rhs
+        arg 1
+        intro x
+        rw [mul_sub (#S : ℝ)⁻¹]
+        lhs
+        rw [← mul_assoc]
+        rw [mul_sub]
+        ring
+        rw [mul_inv_cancel₀ (by apply S_card_ne_zero_re)]
+
+
+      simp
+      rw [Summable.tsum_sub]
+
+      conv =>
+        rhs
+        rhs
+        rhs
+        arg 1
+        intro x
+        rw [Finset.mul_sum]
+      rename_bvar b → x
+      rw [Summable.tsum_finsetSum]
+      .
+        conv =>
+          rhs
+          rhs
+          rhs
+          arg 2
+          intro s
+          rw [← Equiv.tsum_eq (Equiv.mulLeft s⁻¹)]
+          simp
+
+
+        rw [← Summable.tsum_finsetSum]
+        .
+          simp_rw [← mul_assoc]
+          simp_rw [mul_sub ((#S : ℝ)⁻¹ * _)]
+          simp_rw [Finset.sum_sub_distrib]
+          simp
+          simp_rw [← mul_assoc]
+          rw [mul_inv_cancel₀ (by apply S_card_ne_zero_re)]
+          simp
+          rename_bvar b → x
+          conv =>
+            rhs
+            rhs
+            rhs
+            arg 1
+            intro x
+            rw [← neg_sub]
+            rw [← Finset.mul_sum]
+            rw [Finset.sum_equiv (Equiv.inv _) (s := S) (t := S) (g := fun s => g (s * x)) (by
+              intro s
+              simp
+              nth_rw 2 [S_eq_Sinv]
+              simp
+            ) (by
+              intro s
+              simp
+            )]
+
+
+          rw [tsum_neg]
+          simp
+          rename_bvar b → x
+          rw [← mul_two]
+          simp_rw [mul_comm _ (f _), mul_assoc]
+          simp_rw [← mul_sub]
+          ring
+        . sorry
+      . sorry
+      . sorry
+
+
+    _ =  ∑' (x: G), ((Laplace_b f ) x) * (g x) := sorry
+
+
 
 lemma laplace_b_sub (f g: G → ℝ): Laplace_b (f - g) = Laplace_b f - Laplace_b g := by
   simp [Laplace_b]
