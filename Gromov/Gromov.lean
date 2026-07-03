@@ -4878,6 +4878,29 @@ lemma laplace_b_sub (f g: G → ℝ): Laplace_b (f - g) = Laplace_b f - Laplace_
     right
     apply mu_finsupp
 
+-- Lemma 12.2
+lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.support.Finite):
+    ∑' (x: G), ∑ s ∈ S, |(f (s * x) - f x)|^2 ≤ 2⁻¹ * ∑' (x: G), (↑(#S))⁻¹ * ∑ s ∈ S, ((f (x) * φ (x)) - (f (s * x) * φ (s * x)))^2 := by
+
+  have foo := laplace_sum_swap_helper (f := f * φ) (g := f * φ) ?_
+  .
+    simp at foo
+    simp
+    conv =>
+      rhs
+      simp [pow_two]
+    rw [← foo]
+    conv =>
+      rhs
+      arg 1
+      intro x
+      rw [laplace_prod_harmonic (hf := hf)]
+    
+  .
+    simp
+    apply Set.Finite.inter_of_right
+    apply hφ
+
 lemma measure_preserving_inv: MeasurePreserving Inv.inv ((MeasureTheory.volume (α := G))) (MeasureTheory.volume (α := G)) := {
   measurable := by
     exact measurable_inv
