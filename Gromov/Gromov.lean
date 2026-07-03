@@ -4642,98 +4642,99 @@ lemma laplace_prod_harmonic (f φ : G → ℝ)  (hf: Laplace_b  f = 0) (x: G): L
   rw [sub_eq_zero] at hf
   rw [← hf]
 
+lemma laplace_sum_swap_helper (f g: G → ℝ): ∑' (x: G), (f x) * (Laplace_b g) x = 2⁻¹ * ∑' (x: G), ((#(S) : ℝ)⁻¹) * ∑ s ∈ S, (((f x) - (f (s * x))) * ((g x) - (g (s * x)))) := by
+  simp_rw [sub_mul]
+  simp_rw [Finset.sum_sub_distrib]
+  simp_rw [Laplace_b, f_conv_mu]
+  simp
+  simp_rw [← Finset.mul_sum]
+  simp_rw [Finset.sum_sub_distrib]
+  simp
+  have foo := S_card_ne_zero_re
+  conv =>
+    rhs
+    rhs
+    arg 1
+    intro x
+    rw [mul_sub (#S : ℝ)⁻¹]
+    lhs
+    rw [← mul_assoc]
+    rw [mul_sub]
+    ring
+    rw [mul_inv_cancel₀ (by apply S_card_ne_zero_re)]
+
+
+  simp
+  rw [Summable.tsum_sub]
+
+  conv =>
+    rhs
+    rhs
+    rhs
+    arg 1
+    intro x
+    rw [Finset.mul_sum]
+  rename_bvar b → x
+  rw [Summable.tsum_finsetSum]
+  .
+    conv =>
+      rhs
+      rhs
+      rhs
+      arg 2
+      intro s
+      rw [← Equiv.tsum_eq (Equiv.mulLeft s⁻¹)]
+      simp
+
+
+    rw [← Summable.tsum_finsetSum]
+    .
+      simp_rw [← mul_assoc]
+      simp_rw [mul_sub ((#S : ℝ)⁻¹ * _)]
+      simp_rw [Finset.sum_sub_distrib]
+      simp
+      simp_rw [← mul_assoc]
+      rw [mul_inv_cancel₀ (by apply S_card_ne_zero_re)]
+      simp
+      rename_bvar b → x
+      conv =>
+        rhs
+        rhs
+        rhs
+        arg 1
+        intro x
+        rw [← neg_sub]
+        rw [← Finset.mul_sum]
+        rw [Finset.sum_equiv (Equiv.inv _) (s := S) (t := S) (g := fun s => g (s * x)) (by
+          intro s
+          simp
+          nth_rw 2 [S_eq_Sinv]
+          simp
+        ) (by
+          intro s
+          simp
+        )]
+
+
+      rw [tsum_neg]
+      simp
+      rename_bvar b → x
+      rw [← mul_two]
+      simp_rw [mul_comm _ (f _), mul_assoc]
+      simp_rw [← mul_sub]
+      ring
+    . sorry
+  . sorry
+  . sorry
+  . sorry
+
 
 -- Proposition 1.5
 lemma laplace_sum_swap (f g: G → ℝ): ∑' (x: G), (f x) * (Laplace_b g) x = ∑' (x: G), ((Laplace_b f ) x) * (g x) := by
-  calc
-    _ = 2⁻¹ * ∑' (x: G), ((#(S) : ℝ)⁻¹) * ∑ s ∈ S, (((f x) - (f (s * x))) * ((g x) - (g (s * x)))) := by
-      simp_rw [sub_mul]
-      simp_rw [Finset.sum_sub_distrib]
-      simp_rw [Laplace_b, f_conv_mu]
-      simp
-      simp_rw [← Finset.mul_sum]
-      simp_rw [Finset.sum_sub_distrib]
-      simp
-      have foo := S_card_ne_zero_re
-      conv =>
-        rhs
-        rhs
-        arg 1
-        intro x
-        rw [mul_sub (#S : ℝ)⁻¹]
-        lhs
-        rw [← mul_assoc]
-        rw [mul_sub]
-        ring
-        rw [mul_inv_cancel₀ (by apply S_card_ne_zero_re)]
-
-
-      simp
-      rw [Summable.tsum_sub]
-
-      conv =>
-        rhs
-        rhs
-        rhs
-        arg 1
-        intro x
-        rw [Finset.mul_sum]
-      rename_bvar b → x
-      rw [Summable.tsum_finsetSum]
-      .
-        conv =>
-          rhs
-          rhs
-          rhs
-          arg 2
-          intro s
-          rw [← Equiv.tsum_eq (Equiv.mulLeft s⁻¹)]
-          simp
-
-
-        rw [← Summable.tsum_finsetSum]
-        .
-          simp_rw [← mul_assoc]
-          simp_rw [mul_sub ((#S : ℝ)⁻¹ * _)]
-          simp_rw [Finset.sum_sub_distrib]
-          simp
-          simp_rw [← mul_assoc]
-          rw [mul_inv_cancel₀ (by apply S_card_ne_zero_re)]
-          simp
-          rename_bvar b → x
-          conv =>
-            rhs
-            rhs
-            rhs
-            arg 1
-            intro x
-            rw [← neg_sub]
-            rw [← Finset.mul_sum]
-            rw [Finset.sum_equiv (Equiv.inv _) (s := S) (t := S) (g := fun s => g (s * x)) (by
-              intro s
-              simp
-              nth_rw 2 [S_eq_Sinv]
-              simp
-            ) (by
-              intro s
-              simp
-            )]
-
-
-          rw [tsum_neg]
-          simp
-          rename_bvar b → x
-          rw [← mul_two]
-          simp_rw [mul_comm _ (f _), mul_assoc]
-          simp_rw [← mul_sub]
-          ring
-        . sorry
-      . sorry
-      . sorry
-
-
-    _ =  ∑' (x: G), ((Laplace_b f ) x) * (g x) := sorry
-
+  rw [laplace_sum_swap_helper]
+  simp_rw [mul_comm _ ( g _)]
+  rw [laplace_sum_swap_helper]
+  simp_rw [mul_comm]
 
 
 lemma laplace_b_sub (f g: G → ℝ): Laplace_b (f - g) = Laplace_b f - Laplace_b g := by
