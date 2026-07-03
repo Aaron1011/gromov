@@ -4613,7 +4613,7 @@ lemma conv_neg_left (f g: G → ℝ): Conv (-f) g = -(Conv f g) := by
   rw [conv_smul]
   simp
 
-lemma laplace_prod_harmonic (f φ : G → ℝ)  (hf: Laplace_b  f = 0) (x: G): Laplace_b (f * φ) x = - ((1 : ℝ) / (#(S) : ℝ)) * ∑ s ∈ S, f (s * x) * ((φ (s * x) - φ x)) := by
+lemma laplace_prod_harmonic (f φ : G → ℝ)  (hf: Laplace_b  f = 0) (x: G): Laplace_b (f * φ) x = ((1 : ℝ) / (#(S) : ℝ)) * ∑ s ∈ S, f (s * x) * ((φ (x) - φ (s * x))) := by
   simp_rw [Laplace_b]
   simp_rw [f_conv_mu]
   simp
