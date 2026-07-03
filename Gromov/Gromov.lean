@@ -764,10 +764,110 @@ noncomputable instance finite_ball (x: G) (r: ℝ): Set.Finite (Metric.ball x r)
   simp [hab]
 )
 
+-- TODO - deduplicate 99% of this with finite_ball
+noncomputable instance finite_closed_ball (x: G) (r: ℝ): Set.Finite (Metric.closedBall x r) := Set.Finite.of_finite_image (f := fun a => (word_norm_prod_self a).choose) (by
+  have foo := List.finite_length_le S (WordNorm x + ⌈r⌉₊)
+  rw [← Set.finite_coe_iff, Set.coe_setOf] at foo
+  apply Finite.of_injective (β := {l : List S // l.length ≤ WordNorm x + ⌈r⌉₊}) (fun a => ⟨a.val, by (
+    have ha := a.prop
+    simp [-Subtype.coe_prop] at ha
+    obtain ⟨y, hy, a_prod⟩ := ha
+    have ⟨prod_eq, prod_len⟩ := (word_norm_prod_self y).choose_spec
+    rw [a_prod] at prod_len
+    rw [prod_len]
+    simp [dist] at hy
+    conv =>
+      lhs
+      equals WordDist 1 y =>
+        simp [WordDist]
+
+
+    grw [WordDist_triangle (y := x)]
+    nth_rw 2 [WordDist_comm]
+    simp [WordDist]
+    simp [WordDist] at hy
+    -- This is the only part that's different from finite_ball
+    grw [Nat.le_ceil (a := r)] at hy
+    simpa using hy
+  )⟩) ?_
+  intro a b hab
+  grind
+) (by
+  intro a ha b hb hab
+  have a_prop := (word_norm_prod_self a).choose_spec.1
+  have b_prop := (word_norm_prod_self b).choose_spec.1
+  rw [← a_prop, ← b_prop]
+  simp [hab]
+)
+
 -- TODO - make this Finite to avoid a non-compuatable Fintype instance
 noncomputable instance fintype_ball (x: G) (r: ℝ): Fintype ↑(Metric.ball x r) := Set.Finite.fintype (finite_ball _ _)
+noncomputable instance fintype_closedBall (x: G) (r: ℝ): Fintype ↑(Metric.closedBall x r) := Set.Finite.fintype (finite_closed_ball _ _)
 
-lemma harmonic_stokes_theorem (f: G → ℂ) (hf: Harmonic f) (r: ℝ): ∑ x ∈ Metric.ball 1 (2 * r), ∑ s ∈ S, (f x - f (x * s))^2 = 1 := by
+instance fintype_ball_boundary (x: G) (r: ℝ): Fintype ↑{y | dist y x = r} := by
+  sorry
+
+-- Graphs and Discrete Direchlet Spaces
+-- https://www.math.uni-potsdam.de/fileadmin/user_upload/Prof-GraphTh/Keller/KellerLenzWojciechowski_GraphsAndDiscreteDirichletSpaces_wu_version.pdf
+
+
+
+-- lemma s_sinv_split_one: S = (S \ {1}) ∪ (S⁻¹ \ {1}) ∪ {1} := by
+--   rw [← s_union_sinv]
+--   ext a
+--   by_cases a_eq_one: a = 1
+--   .
+--     simp [a_eq_one]
+--     apply hGS.one_mem
+--   .
+--     simp [a_eq_one]
+--     grind
+
+
+
+
+-- New argument:
+-- Write ∑ s ∈ S (f x - f (x * s))^2
+-- = ∑ s ∈ S (f x)^2 - (f x) (f ( x * s)) + (f (x * s))^2
+-- = |S| * (f x)^2 - (f x) * |S| * (f x) + |S| * (f x)^2 -- use harmonicity, and simplify the shift 'f ( x *s)' when summing over all x
+-- = |S| * (f x)^2
+
+-- New approach
+-- (f△f) = f(f - (f ⬝ μ)) = f^2 - f(f ⬝ μ)
+
+--  f^2 - f(f ⬝ μ) +
+
+-- Other stuff:
+--   (∑ s ∈ S, (f x - f (x * s)))^2
+-- = (∑ s_1 ∈ S, ∑ s_2 ∈ S, ((f x) - f(x * s_1))*((f x) - f(x * s_2)
+-- = (∑ s_1 ∈ S, ∑ s_2 ∈ S, (f x)^2 - (f x)(f (x * s_1)) - (f x) (f (x * s_2)) + (f (x * s_1))(f (x * s_2)))
+-- = (∑ s_1 ∈ S, ∑ s_2 ∈ S, (f x)^2 - (f x)((f (x * s_1) - (f (x * s_2))) + (f (x * s_1))(f (x * s_2)))
+lemma harmonic_stokes_theorem (f: G → ℂ) (hf: Harmonic f) (r: ℝ): ∑ x ∈ Metric.ball 1 (2 * r), ∑ s ∈ S, (f x - f (x * s))^2 = 0 := by
+
+  rw [s_sinv_split_one]
+  rw []
+
+
+  -- Use this if we end up with closedBall in the theorem statement
+  -- conv =>
+  --   arg 1
+  --   arg 1
+  --   equals (Metric.ball 1 (2 * r)).toFinset ∪ {x : G | dist x 1 = 2 * r}.toFinset =>
+  --     rw [← Set.toFinset_union]
+  --     simp_rw [Metric.closedBall, Metric.ball]
+  --     simp [le_iff_lt_or_eq]
+  --     rw [Set.setOf_or]
+
+  -- rw [Finset.sum_union]
+  -- conv =>
+  --   lhs
+  --   lhs
+  --   equals 0 =>
+
+
+  --     sorry
+  -- simp_rw [Metric.closedBall]
+
   sorry
 
 instance V_FiniteDimentional: FiniteDimensional ℂ (LipschitzH) := by
@@ -4512,6 +4612,23 @@ lemma conv_neg_left (f g: G → ℝ): Conv (-f) g = -(Conv f g) := by
 
   rw [conv_smul]
   simp
+
+lemma laplace_prod_harmonic (f φ : G → ℝ)  (hf: Laplace_b  f = 0) (x: G): Laplace_b (f * φ) x = - ((1 : ℝ) / (#(S) : ℝ)) * ∑ s ∈ S, f (s * x) * ((φ (s * x) - φ x)) := by
+  simp_rw [Laplace_b]
+  simp_rw [f_conv_mu]
+  simp
+  simp_rw [Laplace_b] at hf
+  conv =>
+    rhs
+    simp [mul_sub]
+    simp [← Finset.sum_mul]
+
+  simp_rw [f_conv_mu] at hf
+  apply_fun (fun f => f x) at hf
+  simp at hf
+  rw [← mul_assoc]
+  rw [sub_eq_zero] at hf
+  rw [← hf]
 
 lemma laplace_b_sub (f g: G → ℝ): Laplace_b (f - g) = Laplace_b f - Laplace_b g := by
   simp [Laplace_b]
