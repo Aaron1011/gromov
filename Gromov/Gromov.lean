@@ -4880,8 +4880,121 @@ lemma laplace_b_sub (f g: G → ℝ): Laplace_b (f - g) = Laplace_b f - Laplace_
 
 -- Lemma 12.2
 lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.support.Finite):
-    ∑' (x: G), ∑ s ∈ S, |(f (s * x) - f x)|^2 ≤ 2⁻¹ * ∑' (x: G), (↑(#S))⁻¹ * ∑ s ∈ S, ((f (x) * φ (x)) - (f (s * x) * φ (s * x)))^2 := by
+    ∑' (x: G), ∑ s ∈ S, ((f x * φ x) - (f (s * x) * φ (s * x)))^2 ≤  ∑' (x: G), ∑ s ∈ S, (f x)^2 * (φ (s * x) - φ x)^2  := by
 
+  -- 2⁻¹ * ∑' (x: G), (↑(#S))⁻¹ * ∑ s ∈ S, ((f (x) * φ (x)) - (f (s * x) * φ (s * x)))^2
+  conv =>
+    lhs
+    arg 1
+    intro x
+    arg 2
+    intro s
+    rw [pow_two]
+  apply le_of_mul_le_mul_left (a := 2⁻¹ * (↑(#S) : ℝ)⁻¹) (a0 := by sorry)
+  rw [mul_assoc]
+  rw [← tsum_mul_left]
+  rw [← laplace_sum_swap_helper]
+  .
+    conv =>
+      lhs
+      arg 1
+      intro x
+      rw [← Pi.mul_def]
+      rw [laplace_prod_harmonic (hf := hf)]
+      rw [← mul_assoc]
+      rw [mul_comm (f x * φ x)]
+      rw [mul_assoc, mul_assoc]
+      rw [Finset.mul_sum]
+
+
+    rw [tsum_mul_left]
+    simp_rw [Finset.mul_sum]
+    simp_rw [mul_comm (f _)]
+    rw [Summable.tsum_finsetSum]
+    .
+      conv =>
+        lhs
+        rhs
+        arg 2
+        intro s
+        rw [← Equiv.tsum_eq (Equiv.mulLeft s⁻¹)]
+        simp
+
+      nth_rw 2 [S_eq_Sinv]
+      simp
+
+      have sum_swap: ∑ x ∈ S, ∑' (c : G), φ (x * c) * ((φ (x * c) - φ c) * f c) * f (x * c) = -∑ x ∈ S, ∑' (c : G), φ (c) * ((φ (x * c) - φ c) * f (x * c)) * f (c) := by
+        conv =>
+          lhs
+          arg 2
+          intro s
+          rw [← Equiv.tsum_eq (Equiv.mulLeft s⁻¹)]
+          simp
+        nth_rw 2 [S_eq_Sinv]
+        simp
+        rw [← Finset.sum_neg_distrib]
+        simp_rw [← tsum_neg]
+        ring
+
+      -- have sum_swap: ∑ x ∈ S, ∑' (c : G), φ (x * c) * ((φ (x * c) - φ c) * f c) * f (x * c) = -∑ x ∈ S, ∑' (c : G), φ (x * c) * ((φ c - (φ (x * c))) * f c) * f (x * c) := by
+      --   rw [← Finset.sum_neg_distrib]
+      --   simp_rw [← tsum_neg]
+      --   ring
+
+
+      have double {a b: ℝ} (hab: a = b): a = (a + b) / 2 := by
+        rw [hab]
+        ring
+
+      rw [double sum_swap]
+      rw [← sub_eq_add_neg]
+      conv =>
+        lhs
+        rhs
+        lhs
+        rhs
+        arg 2
+        intro s
+        arg 1
+        intro x
+        equals (((φ (s * x) - φ x) * f (s * x)) * f x) * (φ x) =>
+          ring
+
+      conv =>
+        lhs
+        rhs
+        lhs
+        lhs
+        arg 2
+        intro s
+        arg 1
+        intro x
+        equals (((φ (s * x) - φ x) * f (s * x)) * f (x)) * φ (s * x)  =>
+          ring
+
+      rw [← Finset.sum_sub_distrib]
+      simp_rw [← Summable.tsum_sub (by sorry) (by sorry)]
+      simp_rw [← mul_sub]
+      
+
+
+
+
+
+
+      rw [inv_mem_iff]
+      rw [finsum_mem_finset_eq_sum]
+    . sorry
+
+
+
+    rw [tsum_sum]
+
+
+    have swap_sum: ∑ i ∈ S, φ x * (f (i * x) * (φ x - φ (i * x))) = ∑ i ∈ S, φ x * (f (i * x) * (φ x - φ (i * x)))
+    sorry
+
+  . sorry
   have foo := laplace_sum_swap_helper (f := f * φ) (g := f * φ) ?_
   .
     simp at foo
@@ -4895,7 +5008,7 @@ lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.suppor
       arg 1
       intro x
       rw [laplace_prod_harmonic (hf := hf)]
-    
+
   .
     simp
     apply Set.Finite.inter_of_right
