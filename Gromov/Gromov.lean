@@ -326,6 +326,64 @@ noncomputable instance WordDist.instMetricSpaceAddOpp: MetricSpace (Additive G) 
     have := MetricSpace.eq_of_dist_eq_zero (x := x.toMul) (y := y.toMul) hxy
     exact this
 
+lemma word_norm_inv_le (x: G): WordNorm x ≤ WordNorm x⁻¹ := by
+  simp [WordNorm]
+  apply csInf_le'
+  simp
+  obtain ⟨lx, x_prod, x_len⟩ := word_norm_prod_self x⁻¹
+  use (lx.map (fun (x: S) => ⟨x.val⁻¹, by (
+      rw [← Finset.mem_inv']
+      rw [← S_eq_Sinv]
+      simp
+    )⟩)).reverse
+  refine ⟨?_, ?_⟩
+  .
+    simp
+    exact x_len
+  .
+    simp [ProdS]
+
+    clear x_len
+
+    induction lx generalizing x with
+    | nil =>
+      simp
+      simp [ProdS] at x_prod
+      grind
+    | cons head tail ih =>
+      simp
+      simp [ProdS] at x_prod
+      simp [ProdS] at ih
+      rw [ih (x := tail.unattach.prod⁻¹)]
+      .
+        rw[← inv_eq_iff_eq_inv] at x_prod
+        simp [← x_prod]
+      . simp
+
+
+lemma word_norm_inv (x: G): WordNorm x = WordNorm x⁻¹ := by
+apply Nat.le_antisymm
+. apply word_norm_inv_le
+.
+  conv =>
+    rhs
+    equals WordNorm x⁻¹⁻¹ => simp
+  apply word_norm_inv_le
+
+
+lemma WordDist_one (x: G): WordDist x 1 = WordNorm x := by
+  simp [WordDist]
+  rw [← word_norm_inv]
+
+
+-- noncomputable instance WordNorm.instSemiNormedGroup: SeminormedGroup G where
+--   norm := fun g => WordNorm g
+--   dist_eq := by
+--     intro x y
+--     simp [dist, WordDist]
+--     sorry
+
+
 
 --def WordMetricSpace := MetricSpace.ofDistTopology ()
 noncomputable instance WordDist.instMeasurableSpace: MeasurableSpace G := borel G
@@ -5141,6 +5199,110 @@ lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.suppor
     apply hφ
 
 #print axioms cutoff_inequality
+
+-- TODO - can we make WordNorm.instSemiNormedGroup and use norm notation
+lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr: r ≠ 0):
+    ∑ x ∈ Metric.ball 1 (2 * r), ∑ s ∈ S, (f x * - f (s * x)) ^ 2 ≤ ∑ x ∈ Metric.ball 1 (4 * r), ∑ s ∈ S, f x ^ 2 := by
+
+  -- m * x + b
+  -- m * (4*r) + b = 0
+  -- b = -4 * r * m
+
+  -- m * (2 *r) - * (4 * r * m) = 1
+  -- 2rm - 4rm = 1
+  -- m = -1/2
+  let φ := fun (x: G) => if WordNorm x ≤ (2 * r) then 1 else if (WordNorm x ≤ 4 * r) then (-(WordNorm x)/(2 * (r: ℝ))) + 2 else 0
+  have phi_support : φ.support ⊆ Metric.ball 1 (4 * r) := by
+    intro s hs
+    simp at hs
+    rw [ite_eq_iff] at hs
+    simp at hs
+    by_cases s_gt: 2 * r < (WordNorm s)
+    .
+      specialize hs s_gt
+      simp [dist]
+      rw [WordDist_one]
+      by_cases eq_four: WordNorm s = 4*r
+      .
+        simp [eq_four] at hs
+        field_simp [hr] at hs
+        norm_num at hs
+      .
+        norm_cast
+        grind
+    .
+      simp at s_gt
+      simp [dist, WordDist_one]
+      norm_cast
+      grind
+
+
+  have foo := cutoff_inequality f φ hf ?_
+  .
+    rw [tsum_eq_sum (s := (finite_closed_ball 1 (4 * r)).toFinset)] at foo
+    rw [tsum_eq_sum (s := (finite_closed_ball 1 (4 * r)).toFinset)] at foo
+    .
+      sorry
+    .
+      intro s hs
+      simp at hs
+      apply Finset.sum_eq_zero
+      intro x hx
+      have phi_s := Set.notMem_subset phi_support (a := s) ?_
+      .
+        simp at phi_s
+        simp [phi_s]
+        have phi_s_x := Set.notMem_subset phi_support (a := x * s)
+        .
+          simp at phi_s_x
+          simp [dist] at hs
+          rw [WordDist_comm] at hs
+          grw [dist_word_le_mul (y := x)] at hs
+          simp at hs
+          simp [dist] at phi_s_x
+          norm_cast at hs
+          norm_cast at phi_s_x
+          rw [Nat.lt_add_one_iff] at hs
+          rw [WordDist_comm] at hs
+          specialize phi_s_x hs
+          simp [phi_s_x]
+          exact hx
+      . simp
+        grind
+    .
+      -- TODO - deduplicate this
+      intro s hs
+      simp at hs
+      apply Finset.sum_eq_zero
+      intro x hx
+      have phi_s := Set.notMem_subset phi_support (a := s) ?_
+      .
+        simp at phi_s
+        simp [phi_s]
+        have phi_s_x := Set.notMem_subset phi_support (a := x * s)
+        .
+          simp at phi_s_x
+          simp [dist] at hs
+          rw [WordDist_comm] at hs
+          grw [dist_word_le_mul (y := x)] at hs
+          simp at hs
+          simp [dist] at phi_s_x
+          norm_cast at hs
+          norm_cast at phi_s_x
+          rw [Nat.lt_add_one_iff] at hs
+          rw [WordDist_comm] at hs
+          specialize phi_s_x hs
+          simp [phi_s_x]
+          exact hx
+      . simp
+        grind
+
+  .
+    simp [φ]
+    apply Set.Finite.subset (s := Metric.ball 1 (4 * r))
+    .
+      apply finite_ball
+    . exact phi_support
 
 lemma measure_preserving_inv: MeasurePreserving Inv.inv ((MeasureTheory.volume (α := G))) (MeasureTheory.volume (α := G)) := {
   measurable := by
