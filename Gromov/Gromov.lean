@@ -302,6 +302,12 @@ lemma dist_word_le_mul {x y z : G} (hy: y ∈ S): WordDist x z ≤ (WordDist x (
     simp [l_prod]
     group
 
+lemma word_dist_mul_eq {x y z : G} (hy: y ∈ S): WordDist x z = (WordDist x (y * z)) + 1 ∨ WordDist x z + 1 = (WordDist x (y * z)) ∨ WordDist x z = (WordDist x (y * z)) := by
+  have first := dist_word_le_mul (x := x) (y := y) (z := z) hy
+  have second := dist_word_le_mul (x := x) (y := y⁻¹) (z := (y * z)) (by rw [S_eq_Sinv]; simp [hy])
+  simp at second
+  grind
+
 noncomputable instance WordDist.instMetricSpace: MetricSpace G where
   eq_of_dist_eq_zero := by
     intro x y hdist
@@ -5202,7 +5208,7 @@ lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.suppor
 
 -- TODO - can we make WordNorm.instSemiNormedGroup and use norm notation
 lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr: r ≠ 0):
-    ∑ x ∈ Metric.ball 1 (2 * r), ∑ s ∈ S, (f x - f (s * x)) ^ 2 ≤ ((1: ℝ) / r^2) * ∑ x ∈ Metric.ball 1 (4 * r), ∑ s ∈ S, f x ^ 2 := by
+    ∑ x ∈ Metric.ball 1 (2 * r), ∑ s ∈ S, (f x - f (s * x)) ^ 2 ≤ ((1: ℝ) / r^2) * ∑ x ∈ Metric.closedBall 1 (4 * r), ∑ s ∈ S, f x ^ 2 := by
 
   -- m * x + b
   -- m * (4*r) + b = 0
@@ -5248,9 +5254,269 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
         .
           simp at foo
           grw [foo]
-          
+          rw [Finset.mul_sum]
+          apply Finset.sum_le_sum
+          intro x hx
+          rw [Finset.mul_sum]
+          apply Finset.sum_le_sum
+          intro s hs
+          simp [φ]
+          have norm_s_x := word_dist_mul_eq (x := 1) (y := s) (z := x) hs
+          simp_rw [WordDist_comm] at norm_s_x
+          simp_rw [WordDist_one] at norm_s_x
+          rw [← or_assoc] at norm_s_x
+          cases norm_s_x
+          .
+            rename_i norm_s_x_eq
+            cases norm_s_x_eq
+            .
+              rename_i s_lt
+              simp [dist] at hx
+              norm_cast at hx
+              rw [WordDist_one] at hx
+              by_cases s_x_le: WordNorm (s * x) ≤ 2 *r
+              .
+                simp [s_x_le]
+                simp [s_lt]
+                split_ifs
+                . simp
+                  positivity
+                .
+                  have s_x_eq: WordNorm (s * x) = 2 *r := by grind
+                  simp [s_x_eq]
+                  field_simp
+                  apply mul_le_mul
+                  . simp
+                  .
+                    norm_num
+                    ring
+                    norm_num
+                  . positivity
+                  . positivity
+                .
+                  grind
+              .
+                have sub_eq: (WordNorm x) - 1 = WordNorm (s * x) := by omega
+                have s_x_le_four: WordNorm (s * x) ≤ 4 * r := by
+                  simp [s_lt] at hx
+                  grind
+                simp [s_x_le, s_x_le_four]
+                split_ifs
+                .
+                  grind
+                .
+                  simp [← sub_eq]
+                  rw [← sub_div]
+                  simp
+                  field_simp
+                  push_cast
+                  conv =>
+                    lhs
+                    rhs
+                    lhs
+                    equals 1 =>
+                      rw [sub_eq]
+                      rw [s_lt]
+                      push_cast
+                      ring
+                  simp
+                  norm_num
+                  -- TODO - surely this can be simplified
+                  by_cases f_x_zero: (f x) ^2 = 0
+                  . simp [f_x_zero]
+
+                  rw [le_mul_iff_one_le_right]
+                  . norm_num
+                  . positivity
+            .
+              rename_i s_lt
+              simp [dist] at hx
+              norm_cast at hx
+              rw [WordDist_one] at hx
+              by_cases s_x_le: WordNorm (s * x) ≤ 2*r
+              .
+                simp [s_x_le]
+                split_ifs
+                . simp
+                  positivity
+                .
+                  have s_x_eq: WordNorm (s * x) = 2 *r := by grind
+                  simp [s_x_eq]
+                  rw [mul_comm]
+                  apply mul_le_mul
+                  .
+                    norm_num
+                    ring
+                    norm_num
+                    field_simp
+                    rw [mul_sub]
+                    rw [← pow_two]
+                    rw [sub_mul]
+                    conv =>
+                      lhs
+                      equals (2 * r) * (2 * r) - (WordNorm x) * 2 * r * 2 + (WordNorm x)^2 =>
+                        ring
+                    rename_i x_gt
+                    simp at x_gt
+                    have x_lt_r_real: 2 * (r: ℝ) < WordNorm x := by
+                      grind
+                    grw [x_lt_r_real]
+                    rw [mul_assoc]
+                    rw [mul_comm (r: ℝ) 2]
+                    rw [← pow_two]
+                    ring
+                    conv =>
+                      lhs
+                      equals 2 * ((WordNorm x)^2 - (WordNorm x) * r * 2) =>
+                        ring
+
+                    grind
+                  . simp
+                  . positivity
+                  . norm_num
+              .
+                by_cases norm_x_eq: WordNorm x = 4 * r
+                .
+                  have s_x_eq: WordNorm (s * x) = 1 + 4 *r := by grind
+                  have not_le: ¬(WordNorm (s * x) ≤ (2 *r)) := by grind
+                  have not_le_four: ¬(WordNorm (s * x) ≤ (4 *r)) := by grind
+                  have x_le: (WordNorm (x) ≤ (4 *r)) := by grind
+                  have not_x_le: ¬(WordNorm (x) ≤ (2 *r)) := by grind
+                  simp [not_le, not_le_four, x_le, not_x_le]
+                  rw [mul_comm]
+                  -- TODO - surely this can be simplified
+                  by_cases f_x_zero: (f x) ^2 = 0
+                  . simp [f_x_zero]
+                  rw [mul_le_mul_iff_left₀]
+                  .
+                    field_simp
+                    grw [x_le]
+                    grind
+                    simp
+                    norm_num
+                    simp [norm_x_eq]
+                  . positivity
+
+                have sub_eq: (WordNorm x) = WordNorm (s * x) - 1 := by omega
+                have s_x_le_four: WordNorm (s * x) ≤ 4 * r := by
+                  rw [← s_lt]
+                  grind
+                simp [s_x_le, s_x_le_four]
+                split_ifs
+                .
+                  field_simp
+                  -- TODO - surely this can be simplified
+                  by_cases f_x_zero: (f x) ^2 = 0
+                  . simp [f_x_zero]
+
+                  rw [mul_le_mul_iff_right₀]
+                  .
+                    norm_num
+                    field_simp
+                    conv =>
+                      lhs
+                      lhs
+                      ring
+                    conv =>
+                      rhs
+                      equals (2^2) =>
+                        norm_num
+                    rw [pow_le_pow_iff_left₀]
+                    .
+                      rename_i x_le
+                      rw [← s_lt]
+                      push_cast
+                      simp
+                      ring
+                      field_simp
+                      conv =>
+                        lhs
+                        equals r*2 - (WordNorm x) - 1 =>
+                          ring
+
+                      norm_num
+                      simp at s_x_le
+                      rw [← s_lt] at s_x_le
+                      have cast_le: 2 * (r: ℝ) ≤ WordNorm x := by
+                        norm_cast
+                        grind
+                      grind
+                    . simp
+                      norm_cast
+                      rw [← s_lt]
+                      simp at s_x_le
+                      rw [← s_lt] at s_x_le
+                      rename_i x_le
+                      have norm_x_eq: WordNorm x = 2 *r := by grind
+                      simp [norm_x_eq]
+
+                      grind
+                    . norm_num
+                    . norm_num
+                  . positivity
+                .
+                  simp [← sub_eq]
+                  rw [← sub_div]
+                  simp
+                  field_simp
+                  push_cast
+                  conv =>
+                    lhs
+                    rhs
+                    lhs
+                    equals -1 =>
+                      rw [sub_eq]
+                      push_cast
+                      rw [Nat.cast_sub (by grind)]
+                      ring
+                  simp
+                  norm_num
+                  -- TODO - surely this can be simplified
+                  by_cases f_x_zero: (f x) ^2 = 0
+                  . simp [f_x_zero]
+
+                  rw [le_mul_iff_one_le_right]
+                  . norm_num
+                  . positivity
+
+          .
+            rename_i norm_eq
+            simp [← norm_eq]
+            positivity
 
 
+          -- by_cases norm_s_x: WordNorm (s * x) ≤ 2 * r
+          -- by_cases norm_x: WordNorm x < 2 * r
+          -- .
+          --   have norm_x_le: WordNorm x ≤ 2 * r := by omega
+          --   have norm_s_x: WordNorm (s * x) ≤ 2*r := by sorry
+          --   simp [norm_x_le, norm_s_x]
+          --   positivity
+          -- .
+          --   by_cases norm_x_eq: WordNorm x = 2 * r
+          --   .
+          --     have norm_x_le: WordNorm x ≤ 2 * r := by omega
+          --     simp [norm_x_le]
+          --     by_cases norm_s_x: WordNorm (s * x) ≤ 2 *r
+          --     . simp [norm_s_x]
+          --       positivity
+          --     .
+          --       simp [norm_s_x]
+          --       by_cases norm_s_x_four: WordNorm (s * x) ≤ 4 * r
+          --       .
+          --         simp [norm_s_x_four]
+
+          --         sorry
+          --       .
+          --         simp [norm_s_x_four]
+          --         sorry
+          --   .
+          --     have not_x_le: ¬(WordNorm x ≤ 2 * r) := by grind
+          --     simp [not_x_le, norm_s_x]
+
+
+          --     sorry
+          -- sorry
         . rfl
         . intro x hx
           apply Finset.sum_congr
