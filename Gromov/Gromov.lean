@@ -4974,7 +4974,30 @@ lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.suppor
           ring
 
       rw [← Finset.sum_sub_distrib]
-      simp_rw [← Summable.tsum_sub (by sorry) (by sorry)]
+      conv =>
+        lhs
+        rhs
+        arg 1
+        arg 2
+        intro s
+        rw [← Summable.tsum_sub (by
+          apply summable_of_hasFiniteSupport
+          unfold Function.HasFiniteSupport
+          simp
+          apply Set.Finite.inter_of_right
+          rw [← Function.comp_def]
+          rw [Function.support_comp_eq_preimage]
+          apply Set.Finite.preimage'
+          . apply hφ
+          . intro x hx
+            simp
+        ) (by
+          apply summable_of_hasFiniteSupport
+          unfold Function.HasFiniteSupport
+          simp
+          apply Set.Finite.inter_of_right
+          apply hφ
+        )]
       simp_rw [← mul_sub]
       conv =>
         lhs
@@ -5037,7 +5060,39 @@ lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.suppor
               simp
         _ ≤ _ := by
           simp_rw [add_mul]
-          simp_rw [Summable.tsum_add (by sorry) (by sorry)]
+          conv =>
+            lhs
+            arg 2
+            intro s
+            rw [Summable.tsum_add (by
+              apply summable_of_finite_support
+              unfold Function.HasFiniteSupport
+              simp
+              apply Set.Finite.inter_of_right
+              apply Set.Finite.subset ?_ (Function.support_sub _ _)
+              simp
+              refine ⟨?_, hφ⟩
+              rw [← Function.comp_def]
+              rw [Function.support_comp_eq_preimage]
+              apply Set.Finite.preimage'
+              . apply hφ
+              . intro x hx
+                simp
+            ) (by
+                apply summable_of_finite_support
+                unfold Function.HasFiniteSupport
+                simp
+                apply Set.Finite.inter_of_right
+                apply Set.Finite.subset ?_ (Function.support_sub _ _)
+                simp
+                refine ⟨?_, hφ⟩
+                rw [← Function.comp_def]
+                rw [Function.support_comp_eq_preimage]
+                apply Set.Finite.preimage'
+                . apply hφ
+                . intro x hx
+                  simp
+            )]
           rw [Finset.sum_add_distrib]
           conv =>
             lhs
@@ -5084,6 +5139,8 @@ lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.suppor
     simp
     apply Set.Finite.inter_of_right
     apply hφ
+
+#print axioms cutoff_inequality
 
 lemma measure_preserving_inv: MeasurePreserving Inv.inv ((MeasureTheory.volume (α := G))) (MeasureTheory.volume (α := G)) := {
   measurable := by
