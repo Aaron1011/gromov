@@ -5202,7 +5202,7 @@ lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.suppor
 
 -- TODO - can we make WordNorm.instSemiNormedGroup and use norm notation
 lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr: r ≠ 0):
-    ∑ x ∈ Metric.ball 1 (2 * r), ∑ s ∈ S, (f x * - f (s * x)) ^ 2 ≤ ∑ x ∈ Metric.ball 1 (4 * r), ∑ s ∈ S, f x ^ 2 := by
+    ∑ x ∈ Metric.ball 1 (2 * r), ∑ s ∈ S, (f x - f (s * x)) ^ 2 ≤ ((1: ℝ) / r^2) * ∑ x ∈ Metric.ball 1 (4 * r), ∑ s ∈ S, f x ^ 2 := by
 
   -- m * x + b
   -- m * (4*r) + b = 0
@@ -5242,7 +5242,42 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
     rw [tsum_eq_sum (s := (finite_closed_ball 1 (4 * r)).toFinset)] at foo
     rw [tsum_eq_sum (s := (finite_closed_ball 1 (4 * r)).toFinset)] at foo
     .
-      sorry
+      grw [← Finset.sum_le_sum_of_subset_of_nonneg (s := (finite_ball 1 (2 * r)).toFinset)] at foo
+      .
+        rw [Finset.sum_congr (g := fun x => ∑ s ∈ S, (f x - f (s * x)) ^ 2) (s₂ := (finite_ball 1 (2 * r)).toFinset)] at foo
+        .
+          simp at foo
+          grw [foo]
+          
+
+
+        . rfl
+        . intro x hx
+          apply Finset.sum_congr
+          . rfl
+          . intro s hs
+            simp [φ]
+            have hx_orig := hx
+            simp [dist, WordDist_one] at hx
+            norm_cast at hx
+            have hx_le : WordNorm x ≤ 2 * r := by grind
+            simp [hx_le]
+
+            have hx_le_sub : WordNorm x ≤ 2 * r - 1 := by grind
+            have foo := dist_word_le_mul (x := 1) (y := s⁻¹) (z := (s * x)) (by rw [S_eq_Sinv]; simp [hs])
+            simp at foo
+            simp [WordDist_comm, WordDist_one] at foo
+            grw [hx_le_sub] at foo
+            rw [Nat.sub_add_cancel (by omega)] at foo
+            simp [foo]
+      . simp
+        intro a ha
+        simp at ha
+        simp
+        grind
+      .
+        intro a ha ha2
+        positivity
     .
       intro s hs
       simp at hs
