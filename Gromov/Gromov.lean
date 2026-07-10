@@ -5208,7 +5208,7 @@ lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.suppor
 
 -- TODO - can we make WordNorm.instSemiNormedGroup and use norm notation
 lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr: r ≠ 0):
-    ∑ x ∈ Metric.ball 1 (2 * r), ∑ s ∈ S, (f x - f (s * x)) ^ 2 ≤ ((1: ℝ) / r^2) * ∑ x ∈ Metric.closedBall 1 (4 * r), ∑ s ∈ S, f x ^ 2 := by
+    ∑ x ∈ Metric.closedBall 1 (2 * r), ∑ s ∈ S, (f x - f (s * x)) ^ 2 ≤ ((1: ℝ) / r^2) * ∑ x ∈ Metric.closedBall 1 (4 * r), ∑ s ∈ S, f x ^ 2 := by
 
   -- m * x + b
   -- m * (4*r) + b = 0
@@ -5217,13 +5217,13 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
   -- m * (2 *r) - * (4 * r * m) = 1
   -- 2rm - 4rm = 1
   -- m = -1/2
-  let φ := fun (x: G) => if WordNorm x ≤ (2 * r) then 1 else if (WordNorm x ≤ 4 * r) then (-(WordNorm x)/(2 * (r: ℝ))) + 2 else 0
+  let φ := fun (x: G) => if WordNorm x ≤ (2 * r) + 1 then 1 else if (WordNorm x ≤ 4 * r) then (-(WordNorm x)/(2 * (r: ℝ))) + 2 else 0
   have phi_support : φ.support ⊆ Metric.ball 1 (4 * r) := by
     intro s hs
     simp at hs
     rw [ite_eq_iff] at hs
     simp at hs
-    by_cases s_gt: 2 * r < (WordNorm s)
+    by_cases s_gt: 2 * r + 1 < (WordNorm s)
     .
       specialize hs s_gt
       simp [dist]
@@ -5248,9 +5248,9 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
     rw [tsum_eq_sum (s := (finite_closed_ball 1 (4 * r)).toFinset)] at foo
     rw [tsum_eq_sum (s := (finite_closed_ball 1 (4 * r)).toFinset)] at foo
     .
-      grw [← Finset.sum_le_sum_of_subset_of_nonneg (s := (finite_ball 1 (2 * r)).toFinset)] at foo
+      grw [← Finset.sum_le_sum_of_subset_of_nonneg (s := (finite_closed_ball 1 (2 * r)).toFinset)] at foo
       .
-        rw [Finset.sum_congr (g := fun x => ∑ s ∈ S, (f x - f (s * x)) ^ 2) (s₂ := (finite_ball 1 (2 * r)).toFinset)] at foo
+        rw [Finset.sum_congr (g := fun x => ∑ s ∈ S, (f x - f (s * x)) ^ 2) (s₂ := (finite_closed_ball 1 (2 * r)).toFinset)] at foo
         .
           simp at foo
           grw [foo]
@@ -5274,7 +5274,7 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
               simp [dist] at hx
               norm_cast at hx
               rw [WordDist_one] at hx
-              by_cases s_x_le: WordNorm (s * x) ≤ 2 *r
+              by_cases s_x_le: WordNorm (s * x) ≤ 2 *r + 1
               .
                 simp [s_x_le]
                 simp [s_lt]
@@ -5282,7 +5282,7 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
                 . simp
                   positivity
                 .
-                  have s_x_eq: WordNorm (s * x) = 2 *r := by grind
+                  have s_x_eq: WordNorm (s * x) = 2 *r + 1 := by grind
                   simp [s_x_eq]
                   field_simp
                   apply mul_le_mul
@@ -5333,7 +5333,7 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
               simp [dist] at hx
               norm_cast at hx
               rw [WordDist_one] at hx
-              by_cases s_x_le: WordNorm (s * x) ≤ 2*r
+              by_cases s_x_le: WordNorm (s * x) ≤ 2*r + 1
               .
                 simp [s_x_le]
                 split_ifs
@@ -5378,10 +5378,10 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
                 by_cases norm_x_eq: WordNorm x = 4 * r
                 .
                   have s_x_eq: WordNorm (s * x) = 1 + 4 *r := by grind
-                  have not_le: ¬(WordNorm (s * x) ≤ (2 *r)) := by grind
+                  have not_le: ¬(WordNorm (s * x) ≤ (2 *r) + 1) := by grind
                   have not_le_four: ¬(WordNorm (s * x) ≤ (4 *r)) := by grind
                   have x_le: (WordNorm (x) ≤ (4 *r)) := by grind
-                  have not_x_le: ¬(WordNorm (x) ≤ (2 *r)) := by grind
+                  have not_x_le: ¬(WordNorm (x) ≤ (2 *r) + 1) := by grind
                   simp [not_le, not_le_four, x_le, not_x_le]
                   rw [mul_comm]
                   -- TODO - surely this can be simplified
@@ -5422,7 +5422,7 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
                       equals (2^2) =>
                         norm_num
 
-                    have norm_x_eq: WordNorm x = 2 *r := by grind
+                    have norm_x_eq: WordNorm x = 2 *r + 1 := by grind
                     rw [← s_lt, norm_x_eq]
                     conv =>
                       lhs
@@ -5462,40 +5462,6 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
             rename_i norm_eq
             simp [← norm_eq]
             positivity
-
-
-          -- by_cases norm_s_x: WordNorm (s * x) ≤ 2 * r
-          -- by_cases norm_x: WordNorm x < 2 * r
-          -- .
-          --   have norm_x_le: WordNorm x ≤ 2 * r := by omega
-          --   have norm_s_x: WordNorm (s * x) ≤ 2*r := by sorry
-          --   simp [norm_x_le, norm_s_x]
-          --   positivity
-          -- .
-          --   by_cases norm_x_eq: WordNorm x = 2 * r
-          --   .
-          --     have norm_x_le: WordNorm x ≤ 2 * r := by omega
-          --     simp [norm_x_le]
-          --     by_cases norm_s_x: WordNorm (s * x) ≤ 2 *r
-          --     . simp [norm_s_x]
-          --       positivity
-          --     .
-          --       simp [norm_s_x]
-          --       by_cases norm_s_x_four: WordNorm (s * x) ≤ 4 * r
-          --       .
-          --         simp [norm_s_x_four]
-
-          --         sorry
-          --       .
-          --         simp [norm_s_x_four]
-          --         sorry
-          --   .
-          --     have not_x_le: ¬(WordNorm x ≤ 2 * r) := by grind
-          --     simp [not_x_le, norm_s_x]
-
-
-          --     sorry
-          -- sorry
         . rfl
         . intro x hx
           apply Finset.sum_congr
@@ -5505,15 +5471,26 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
             have hx_orig := hx
             simp [dist, WordDist_one] at hx
             norm_cast at hx
-            have hx_le : WordNorm x ≤ 2 * r := by grind
+            have hx_le : WordNorm x ≤ 2 * r + 1 := by grind
             simp [hx_le]
 
-            have hx_le_sub : WordNorm x ≤ 2 * r - 1 := by grind
+            have hx_le_sub : WordNorm x ≤ 2 * r := by grind
             have foo := dist_word_le_mul (x := 1) (y := s⁻¹) (z := (s * x)) (by rw [S_eq_Sinv]; simp [hs])
             simp at foo
             simp [WordDist_comm, WordDist_one] at foo
+            -- by_cases s_x_le: WordNorm (s * x) ≤ 2 * r + 1
+            -- . simp [s_x_le]
+            -- .
+            --   simp [s_x_le]
+            --   have le_four: WordNorm (s * x) ≤ 4 * r := by grind
+            --   simp [le_four]
+            --   congr
+            --   apply pow_le_pow_left₀
+            --   rw [pow_le_pow_iff_left₀]
+            --   rw [pow_le_pow_iff_left₀]
+
+
             grw [hx_le_sub] at foo
-            rw [Nat.sub_add_cancel (by omega)] at foo
             simp [foo]
       . simp
         intro a ha
