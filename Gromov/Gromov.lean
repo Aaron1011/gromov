@@ -4890,7 +4890,8 @@ lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.suppor
     arg 2
     intro s
     rw [pow_two]
-  apply le_of_mul_le_mul_left (a := 2⁻¹ * (↑(#S) : ℝ)⁻¹) (a0 := by sorry)
+  have S_card := S_card_ne_zero_re
+  apply le_of_mul_le_mul_left (a := 2⁻¹ * (↑(#S) : ℝ)⁻¹) (a0 := by simp [S_nonempty])
   rw [mul_assoc]
   rw [← tsum_mul_left]
   rw [← laplace_sum_swap_helper]
@@ -5007,12 +5008,33 @@ lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.suppor
           field_simp
           . simp
           .
-           apply summable_of_finite_support
-           unfold Function.HasFiniteSupport
-           simp
-           apply Set.Finite.inter_of_right
-           sorry
-          . sorry
+            apply summable_of_finite_support
+            unfold Function.HasFiniteSupport
+            simp
+            apply Set.Finite.inter_of_right
+            apply Set.Finite.subset ?_ (Function.support_sub _ _)
+            simp
+            refine ⟨?_, hφ⟩
+            rw [← Function.comp_def]
+            rw [Function.support_comp_eq_preimage]
+            apply Set.Finite.preimage'
+            . apply hφ
+            . intro x hx
+              simp
+          .
+            apply summable_of_finite_support
+            unfold Function.HasFiniteSupport
+            simp
+            apply Set.Finite.inter_of_right
+            apply Set.Finite.subset ?_ (Function.support_sub _ _)
+            simp
+            refine ⟨?_, hφ⟩
+            rw [← Function.comp_def]
+            rw [Function.support_comp_eq_preimage]
+            apply Set.Finite.preimage'
+            . apply hφ
+            . intro x hx
+              simp
         _ ≤ _ := by
           simp_rw [add_mul]
           simp_rw [Summable.tsum_add (by sorry) (by sorry)]
@@ -5035,10 +5057,33 @@ lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.suppor
           rw [← Finset.sum_div]
           field_simp
           rw [← Summable.tsum_finsetSum]
-          sorry
-      . sorry
-    . sorry
-  . sorry
+          intro s hs
+          apply summable_of_finite_support
+          unfold Function.HasFiniteSupport
+          simp
+          apply Set.Finite.inter_of_right
+          apply Set.Finite.subset ?_ (Function.support_sub _ _)
+          simp
+          refine ⟨hφ, ?_⟩
+          rw [← Function.comp_def]
+          rw [Function.support_comp_eq_preimage]
+          apply Set.Finite.preimage'
+          . apply hφ
+          . intro x hx
+            simp
+      . simp [S_nonempty]
+    .
+      intro s hs
+      apply summable_of_finite_support
+      unfold Function.HasFiniteSupport
+      simp
+      apply Set.Finite.inter_of_left
+      apply Set.Finite.inter_of_left
+      apply hφ
+  . left
+    simp
+    apply Set.Finite.inter_of_right
+    apply hφ
 
 lemma measure_preserving_inv: MeasurePreserving Inv.inv ((MeasureTheory.volume (α := G))) (MeasureTheory.volume (α := G)) := {
   measurable := by
