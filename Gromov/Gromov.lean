@@ -5421,38 +5421,17 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
                       rhs
                       equals (2^2) =>
                         norm_num
-                    rw [pow_le_pow_iff_left₀]
-                    .
-                      rename_i x_le
-                      rw [← s_lt]
-                      push_cast
+
+                    have norm_x_eq: WordNorm x = 2 *r := by grind
+                    rw [← s_lt, norm_x_eq]
+                    conv =>
+                      lhs
+                      lhs
                       simp
-                      ring
                       field_simp
-                      conv =>
-                        lhs
-                        equals r*2 - (WordNorm x) - 1 =>
-                          ring
+                      ring
+                    norm_num
 
-                      norm_num
-                      simp at s_x_le
-                      rw [← s_lt] at s_x_le
-                      have cast_le: 2 * (r: ℝ) ≤ WordNorm x := by
-                        norm_cast
-                        grind
-                      grind
-                    . simp
-                      norm_cast
-                      rw [← s_lt]
-                      simp at s_x_le
-                      rw [← s_lt] at s_x_le
-                      rename_i x_le
-                      have norm_x_eq: WordNorm x = 2 *r := by grind
-                      simp [norm_x_eq]
-
-                      grind
-                    . norm_num
-                    . norm_num
                   . positivity
                 .
                   simp [← sub_eq]
@@ -5604,6 +5583,8 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
     .
       apply finite_ball
     . exact phi_support
+
+#print axioms harmonic_r2_inequality
 
 lemma measure_preserving_inv: MeasurePreserving Inv.inv ((MeasureTheory.volume (α := G))) (MeasureTheory.volume (α := G)) := {
   measurable := by
