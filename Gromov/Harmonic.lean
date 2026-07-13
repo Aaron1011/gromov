@@ -67,7 +67,7 @@ lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b  f = 0) (a: G
   simpa using path_implies_max
 
 
-variable {V: Submodule ℝ LipschitzH} [Nontrivial V] (V_real: ∀ u ∈ V, ∀ g: G, (u g).im = 0) (hV : Even (Module.finrank V))  [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]
+variable {V: Submodule ℝ LipschitzH} [FiniteDimensional ℝ V] [Nontrivial V] (V_real: ∀ u ∈ V, ∀ g: G, (u g).im = 0) (hV : Even (Module.finrank V))  [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]
 
 
 noncomputable def Q_R (R : ℝ) (u v: G → ℝ): ℝ := ∑ g ∈ Metric.closedBall 1 R, (u g) * (v g)
@@ -317,6 +317,68 @@ open scoped Finset
 open scoped Pointwise
 
 noncomputable def my_expr (d: ℝ) (R : ℕ) := #(S ^ R) * ((Q_R_matrix R (V := V)).det ^ (1 / Module.finrank ℝ V)) / (R ^ d)
+noncomputable def growth_bound (d: ℝ) := Filter.liminf (fun (R: ℕ) => ENNReal.ofReal (my_expr (V := V) d R)) (Filter.atTop) ≠ ⊤
 
-lemma theorem_3_23 (d: ℝ): ∃ C: ℝ, Filter.liminf (fun (R: ℕ) => ENNReal.ofReal (my_expr (V := V) d R)) (Filter.atTop) ≠ ⊤ := by
+def ExistsNontrivialLipschitz := ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstLipschitzH z
+
+lemma theorem_3_23 (d: ℝ): ∃ C: ℝ, growth_bound (V := V) d → (Module.finrank ℝ V) < C := by
   sorry
+
+instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
+  sorry
+
+lemma rank_two (h: ExistsNontrivialLipschitz): ((2: ℕ)) ≤ Module.rank ℝ LipschitzH := by
+  rw [Module.le_rank_iff]
+  use ![h.choose, LipschitzH.const 1]
+  rw [LinearIndependent.pair_iff]
+  intro a b hab
+  by_contra!
+  by_cases a_eq: a = 0
+  .
+    simp [a_eq] at hab
+    simp [this a_eq] at hab
+    rw [DFunLike.ext'_iff, funext_iff] at hab
+    specialize hab 1
+    simp [LipschitzH.const] at hab
+  .
+    rw [add_eq_zero_iff_eq_neg] at hab
+    conv at hab =>
+      rhs
+      equals LipschitzH.const (-b) =>
+        ext g
+        simp [LipschitzH.const, HSMul.hSMul, SMul.smul]
+    have foo := h.choose_spec
+    specialize foo (-b/a)
+    simp at foo
+    rw [DFunLike.ext'_iff, funext_iff] at foo
+    simp at foo
+    obtain ⟨x, hx⟩ := foo
+    rw [DFunLike.ext'_iff, funext_iff] at hab
+    specialize hab x
+    simp [LipschitzH.const, HSMul.hSMul, SMul.smul] at hab
+    rw [mul_comm, ← eq_div_iff] at hab
+    .
+      rw [hab] at hx
+      simp [ConstLipschitzH] at hx
+    . simp [a_eq]
+
+-- This take a parameter (and is not an instance to avoid a circular dependency)
+-- We should refactor things so that this can directly depend on the theorem that proves ExistsNontrivialLipschitz
+theorem lipschitz_finite (h: ExistsNontrivialLipschitz) : Module.Finite ℂ LipschitzH := by
+  apply Module.finite_of_finrank_pos
+  have other := Module.finrank_eq_rank' ℝ LipschitzH
+  have foo := finrank_real_of_complex LipschitzH
+  apply Nat.div_eq_of_eq_mul_right at foo
+  .
+    -- TODO - make this less disgusting
+    rw [← foo]
+    simp
+    rw [← ENat.coe_le_coe]
+    rw [← Cardinal.ofENat_le_ofENat]
+    simp only [Nat.cast_ofNat, Cardinal.ofENat_ofNat, Cardinal.ofENat_nat]
+    rw [Module.finrank_eq_rank]
+    apply rank_two h
+  . simp
+
+
+--#synth FiniteDimensional ℂ LipschitzH

@@ -699,6 +699,17 @@ instance LipschitzH.zero [Generates ] : Zero (LipschitzH) := {
   }
 }
 
+def LipschitzH.const (k: ℂ) : LipschitzH := {
+  toFun := fun x => k
+  lipschitz := by
+    use 0
+    exact LipschitzWith.const _
+  harmonic := by
+    simp [Harmonic]
+    have foo := S_card_ne_zero
+    field_simp [foo]
+}
+
 
 @[simp]
 theorem LipschitzH.add_apply (f g: LipschitzH) (x: G): (f + g).toFun x = f x + g x := by
@@ -1422,9 +1433,9 @@ lemma harmonic_stokes_theorem (f: G → ℂ) (hf: Harmonic f) (r: ℝ): ∑ x �
 
   --sorry
 
-instance V_FiniteDimentional: FiniteDimensional ℂ (LipschitzH) := by
+--instance V_FiniteDimentional: FiniteDimensional ℂ (LipschitzH) := by
   -- This is a very long part of the proof in Vikman
-  sorry
+--  sorry
 
 
 def ConstF: Submodule ℂ (LipschitzH) := {
@@ -1523,12 +1534,6 @@ def gAct_const (g: G) (z: ℂ): gAct g (ConstLipschitzH z) = ConstLipschitzH z :
 #synth AddCommGroup (LipschitzH)
 
 abbrev W := (LipschitzH) ⧸ ConstF
-
-
-instance W_FiniteDimensional: FiniteDimensional ℂ (W) := by
-  -- This is a very long part of the proof in Vikman
-  sorry
-
 
 #synth Module ℂ (W)
 

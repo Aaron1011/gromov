@@ -357,7 +357,7 @@ abbrev GL_W := (W →L[ℂ] W)ˣ
 lemma opnorm_continuous: Continuous fun (f: (W →L[ℂ] W)) => ‖f‖ := by
   apply continuous_norm
 
-#synth FiniteDimensional ℂ (((W →L[ℂ] W)))
+#synth FiniteDimensional ℝ (((W →L[ℝ] W)))
 
 -- Homeomorph.isCompact_preimage
 
