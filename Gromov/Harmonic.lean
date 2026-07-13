@@ -4503,6 +4503,28 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
     have foo := (Finite.exists_max (Q_R_lin_hermetian R (V := V)).eigenvalues).choose_spec
     apply foo i
 
+def lipschitz_toReal (f: LipschitzH): LipschitzH := {
+  toFun := fun g => (f g).re
+  lipschitz := by
+    obtain ⟨C, hC⟩ := f.lipschitz
+    use 1 * (1 * C)
+    rw [← Function.comp_def]
+    apply LipschitzWith.comp
+    . apply RCLike.lipschitzWith_ofReal
+    .
+      rw [← Function.comp_def]
+      apply LipschitzWith.comp
+      apply RCLike.lipschitzWith_re
+      simp [DFunLike.coe, hC]
+
+  harmonic := by
+    simp [Harmonic]
+    have hf := f.harmonic
+    simp [Harmonic] at hf
+    intro x
+    rw [hf x]
+    simp
+}
 
 -- TODO - do we really need the double by_contra here?
 instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
@@ -4522,18 +4544,21 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
   obtain ⟨d, hd⟩ := hGS.g_growth
   obtain ⟨C, V_bound⟩ := theorem_3_23 d
   obtain ⟨fin_basis_idx, card_fin_basis_idx⟩ := B_infinite.exists_subset_card_eq _ (C * 2)
-  let fin_basis := Finset.image B fin_basis_idx
+  let fin_basis := Finset.image (B) fin_basis_idx
   let large_v: V_Data := {
     V := Submodule.span ℝ fin_basis
     hV := by infer_instance
-    V_real := sorry
+    V_real := by
+      sorry
     V_even := by
       rw [finrank_span_finset_eq_card]
       .
         simp [fin_basis]
         rw [Finset.card_image_of_injective]
         . grind
-        . exact Module.Basis.injective B
+        .
+
+          exact Module.Basis.injective B
       .
         simp [fin_basis]
         apply LinearIndepOn.id_image

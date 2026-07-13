@@ -4576,3 +4576,5 @@ def map_S_data {G H: Type*} [Group G] [Group H] [DecidableEq G] [DecidableEq H] 
       apply S_data.S_poly r hr
     . exact S_data.S_finite
 }
+
+#print axioms central_trivial_virtually_abelian
