@@ -475,10 +475,140 @@ lemma singleton_carrier: (addHaarSingleton.carrier) = ({0} : (Set (Additive G)))
 
 noncomputable abbrev myHaarAddOpp := MeasureTheory.Measure.addHaarMeasure (G := Additive G) addHaarSingleton
 
+
+
+
+instance countable_G: Countable G := by
+  apply Function.Surjective.countable (f := fun (x: List S) => x.unattach.prod)
+  intro g
+  obtain ⟨l, hl⟩ := mem_S_prod_list  g
+  use l
+  simp only
+  unfold ProdS at hl
+  rw [hl]
+
+
+-- TODO - use the fact that G is finitely generated
+instance countable_add_G: Countable (Additive G) := by
+  exact inferInstanceAs (Countable G)
+
+
+lemma singleton_pairwise_disjoint {T: Type*} (s: Set (T)) : s.PairwiseDisjoint Set.singleton := by
+  refine Set.pairwiseDisjoint_iff.mpr ?_
+  intro a ha b hb hab
+  unfold Set.singleton at hab
+  simp at hab
+  exact hab.symm
+
+
+
+
+-- Use the fact that we have the discrete topology
+set_option maxHeartbeats 500000 in
+lemma my_add_haar_eq_count: (myHaarAddOpp) = MeasureTheory.Measure.count := by
+  ext s hs
+  by_cases s_finite: Set.Finite s
+  .
+    have eq_singletons := Set.biUnion_of_singleton (s := s)
+    nth_rw 1 [← eq_singletons]
+    rw [MeasureTheory.Measure.count_apply_finite s s_finite]
+    rw [MeasureTheory.measure_biUnion]
+    .
+      -- TODO - extract 'measure {a} = 1' to a lemma
+      simp_rw [MeasureTheory.Measure.addHaar_singleton]
+      unfold myHaarAddOpp
+      simp_rw [← singleton_carrier]
+      simp_rw [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
+      rw [MeasureTheory.Measure.addHaarMeasure_self]
+      rw [ENNReal.tsum_set_const]
+      simp
+      norm_cast
+      rw [Set.Finite.encard_eq_coe_toFinset_card s_finite]
+    . exact Set.Finite.countable s_finite
+    .
+      apply singleton_pairwise_disjoint
+    .
+      intro a ha
+      apply IsOpen.measurableSet
+      simp
+  .
+    have s_infinite: s.Infinite := by
+      exact s_finite
+    rw [MeasureTheory.Measure.count_apply_infinite s_infinite]
+    have eq_singletons := Set.biUnion_of_singleton (s := s)
+    nth_rw 1 [← eq_singletons]
+    rw [MeasureTheory.measure_biUnion]
+    .
+      simp_rw [MeasureTheory.Measure.addHaar_singleton]
+      unfold myHaarAddOpp
+      simp_rw [← singleton_carrier]
+      simp_rw [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
+      rw [MeasureTheory.Measure.addHaarMeasure_self]
+      simp only [ENNReal.tsum_one, ENat.toENNReal_eq_top, ENat.card_eq_top]
+      exact Set.infinite_coe_iff.mpr s_finite
+    . exact Set.to_countable s
+    . apply singleton_pairwise_disjoint
+    .
+      intro a ha
+      apply IsOpen.measurableSet
+      simp
+
+lemma my_haar_eq_count: (myHaar) = MeasureTheory.Measure.count := by
+  ext s hs
+  by_cases s_finite: Set.Finite s
+  .
+    have eq_singletons := Set.biUnion_of_singleton (s := s)
+    nth_rw 1 [← eq_singletons]
+    rw [MeasureTheory.Measure.count_apply_finite s s_finite]
+    rw [MeasureTheory.measure_biUnion]
+    .
+      -- TODO - extract 'measure {a} = 1' to a lemma
+      simp_rw [MeasureTheory.Measure.haar_singleton]
+      unfold myHaar
+      simp_rw [← mul_singleton_carrier]
+      simp_rw [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
+      rw [MeasureTheory.Measure.haarMeasure_self]
+      rw [ENNReal.tsum_set_const]
+      simp
+      norm_cast
+      rw [Set.Finite.encard_eq_coe_toFinset_card s_finite]
+    . exact Set.Finite.countable s_finite
+    .
+      apply singleton_pairwise_disjoint
+    .
+      intro a ha
+      apply IsOpen.measurableSet
+      simp
+  .
+    have s_infinite: s.Infinite := by
+      exact s_finite
+    rw [MeasureTheory.Measure.count_apply_infinite s_infinite]
+    have eq_singletons := Set.biUnion_of_singleton (s := s)
+    nth_rw 1 [← eq_singletons]
+    rw [MeasureTheory.measure_biUnion]
+    .
+      simp_rw [MeasureTheory.Measure.haar_singleton]
+      unfold myHaar
+      simp_rw [← mul_singleton_carrier]
+      simp_rw [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
+      rw [MeasureTheory.Measure.haarMeasure_self]
+      simp only [ENNReal.tsum_one, ENat.toENNReal_eq_top, ENat.card_eq_top]
+      exact Set.infinite_coe_iff.mpr s_finite
+    . exact Set.to_countable s
+    . apply singleton_pairwise_disjoint
+    .
+      intro a ha
+      apply IsOpen.measurableSet
+      simp
+
+
+
 -- Definition 3.5 in Vikman - a harmonic function on G
 -- Note that our multiplication order is swapped: f (s * x) instead of f (x * s)
 -- This is needed to make it match up with the result of MeasureTheory.convolution
+-- TODO - can we combine these
 def Harmonic (f: G → ℂ): Prop := ∀ x: G, f x = ((1 : ℂ) / #(S)) * ∑ s ∈ S, f (s * x)
+def HarmonicR (f: G → ℝ): Prop := ∀ x: G, f x = ((1 : ℝ) / #(S)) * ∑ s ∈ S, f (s * x)
 
 -- A Lipschitz harmonic function from section 3.2 of Vikman
 structure LipschitzH [Generates ] where
@@ -869,6 +999,355 @@ noncomputable instance finite_closed_ball (x: G) (r: ℝ): Set.Finite (Metric.cl
   rw [← a_prop, ← b_prop]
   simp [hab]
 )
+
+
+
+-- TODO - I don't think we can use this, as `MeasureTheory.convolution' would require our group to be commutative
+-- (via `NormedAddCommGroup`)
+open scoped Convolution
+open MeasureTheory
+-- TODO - should we define this using 'Lp'?
+-- NOTE - the Mathlib convolution uses the opposite order of arguments as in the Vikman paper (g(x - t) instead of g(t - x))
+-- I originally used 'MulOpposite' make our usage agree with the paper, but this made it an enormous pain to work with
+-- (since while Additive G is defeq to G, MulOpposite G is not defeq to G)
+-- Nothing in the paper should actually depend on this (since we take a convolution over a symmetric generating set S)
+-- Some of our definitions will have an inverse or order swap compared to the paper, but this is better than
+-- fighting with 'MulOpposite' every time we need to prove something about a convolution
+
+-- Note - there's some defeq abuse going on here, as we're passing in 'f' and 'g' directly (they take in G, not 'Additive G')
+-- However, this makes it much easier to prove properties about this via the `MeasureTheory.ConvolutionExists` API
+noncomputable def Conv (f g: G → ℝ) (x: G) : ℝ :=
+  (MeasureTheory.convolution (G := Additive G) f g (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp x)
+
+
+
+def ConvExists (f g: G → ℝ) := MeasureTheory.ConvolutionExists (G := Additive G) (fun x => f x.toMul) (fun x => g x.toMul) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp
+
+def ConvExistsAt (f g: G → ℝ) (x: G) := MeasureTheory.ConvolutionExistsAt (G := Additive G) (fun x => f x.toMul) (fun x => g x.toMul) x (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp
+
+
+-- Defintion 3.11 in Vikman: The function 'μ',  not to be confused with a measure on a measure space
+noncomputable def mu: G → ℝ := ((1 : ℝ) / (#(S) : ℝ)) • ∑ s ∈ S, Pi.single s (1 : ℝ)
+
+-- Definition 3.11 in Vikman - the m-fold convolution of μ with itself
+noncomputable def muConv (n: ℕ): G → ℝ := (Nat.iterate (fun f => Conv  f (mu )) n) (mu )
+
+
+-- TODO - this is left over from when I used MulOpposite
+-- we should remove all usages of this
+abbrev opAdd (g : G) := Additive.ofMul g
+
+
+lemma conv_eq_sum {f h: G → ℝ} (hconv: ConvExists f h) (g: G): Conv f h g = ∑' (a : Additive G), f (a) * h (g * (Additive.toMul a)⁻¹) := by
+  unfold Conv
+  unfold MeasureTheory.convolution
+  rw [MeasureTheory.integral_countable']
+  .
+    simp_rw [MeasureTheory.measureReal_def]
+    unfold myHaarAddOpp
+    simp_rw [MeasureTheory.Measure.addHaar_singleton]
+    simp [MeasureTheory.Measure.addHaarMeasure_self]
+    simp_rw [← singleton_carrier]
+    simp_rw [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
+    simp [MeasureTheory.Measure.addHaarMeasure_self]
+    field_simp
+
+    -- TODO - avoid defeq abuse here
+    conv =>
+      lhs
+      arg 1
+      intro a
+      rhs
+      equals h (Additive.ofMul g - a) =>
+        rfl
+
+    conv =>
+      rhs
+      arg 1
+      intro a
+      rhs
+      arg 1
+      equals Additive.ofMul g - a =>
+        unfold Additive.toMul
+        unfold Additive.ofMul
+        simp
+        rw [sub_eq_add_neg]
+        rfl
+
+  . exact (hconv (opAdd g))
+
+
+lemma conv_eq_sum'  {f h: G → ℝ} (hconv: ConvExists f h): Conv f h = fun g => ∑' (a : Additive G), f ((Additive.toMul a)) * h (g * (Additive.toMul a)⁻¹) := by
+  funext g
+  exact conv_eq_sum hconv g
+
+
+abbrev delta (s: G): G → ℝ := Pi.single s 1
+
+
+-- A versi on of `conv_exists` where at least one of the functions has finite support
+-- This lets us avoid dealing with 'MemLp' in most cases
+lemma conv_exists_fin_supp (f g: G → ℝ) (hfg: f.support.Finite ∨ g.support.Finite): ConvExists f g := by
+  unfold ConvExists MeasureTheory.ConvolutionExists MeasureTheory.ConvolutionExistsAt
+  intro x
+  apply Continuous.integrable_of_hasCompactSupport
+  . exact continuous_of_discreteTopology
+  .
+    unfold HasCompactSupport
+    rw [isCompact_iff_finite]
+    dsimp [tsupport]
+    rw [closure_discrete]
+    simp only [Function.support_mul]
+    match hfg with
+    | .inl hf =>
+      apply Set.Finite.inter_of_left
+      apply Set.Finite.subset (s := opAdd '' f.support)
+      . unfold opAdd
+        exact Set.Finite.image (fun g ↦ Additive.ofMul g) hf
+      . intro a ha
+        simp at ha
+        simp [opAdd]
+        exact ha
+    | .inr hg =>
+      apply Set.Finite.inter_of_right
+      let myFun := fun a => -(opAdd a) + x
+      have finite_image := Set.finite_image_iff (f := myFun) (s := g.support) ?_
+      .
+        conv =>
+          arg 1
+          equals (myFun '' Function.support g) =>
+            ext a
+            simp
+            refine ⟨?_, ?_⟩
+            . intro ha
+              use (Additive.toMul x) / ((Additive.toMul a))
+              refine ⟨ha, ?_⟩
+              simp [myFun, opAdd]
+            . intro ha
+              simp [myFun, opAdd] at ha
+              obtain ⟨b, b_zero, a_eq⟩ := ha
+              rw [← a_eq]
+              simp [b_zero]
+        rw [finite_image]
+        exact hg
+      .
+        simp [myFun, opAdd]
+
+-- Proposition 3.12, item 1, in Vikman
+lemma f_conv_delta (f: G → ℝ) (g s: G): (Conv  f (delta s)) g = f (s⁻¹ * g) := by
+  unfold delta
+  rw [conv_eq_sum]
+  .
+    rw [tsum_eq_sum (s := {opAdd ((s⁻¹ * g))}) ?_]
+    .
+      simp
+      -- TODO - why does this need 'conv'?
+      conv =>
+        lhs
+        arg 2
+        arg 3
+        simp only [mul_inv_rev, inv_inv, inv_mul_cancel_right]
+      rw [← mul_assoc]
+      -- TODO - why is 'simp' not doing these?
+      rw [mul_inv_cancel]
+      rw [one_mul]
+      simp
+      rfl
+    .
+      intro b hb
+      simp only [Finset.mem_singleton] at hb
+      simp only [mul_eq_zero]
+      right
+      apply Pi.single_eq_of_ne
+      apply_fun (fun x => s⁻¹ * x)
+      simp
+      apply_fun (fun x => (x * (Additive.toMul b)) )
+      simp
+      rw [eq_comm]
+      unfold opAdd at hb
+      apply_fun Additive.ofMul
+      simp
+      apply_fun (fun x => x + b)
+      simp only []
+      rw [add_assoc]
+      simp
+      exact hb
+  .
+    apply conv_exists_fin_supp
+    right
+    simp
+
+
+lemma mu_finsupp: (mu ).support.Finite := by
+  simp [mu]
+  rw [Function.support_const_smul_of_ne_zero]
+  .
+    apply Set.Finite.subset (s := ⋃ i ∈ S, Function.support (Pi.single i (1 : ℝ)))
+    .
+      simp
+      exact Set.toFinite (⋃ i ∈ S, {i})
+    .
+      conv =>
+        lhs
+        arg 1
+        equals fun (x: G) => ∑ s ∈ S, Pi.single (M := fun _ : G => ℝ) s (1 : ℝ) x =>
+          funext a
+          simp
+      apply Finset.support_sum (s := S) (f := fun i => Pi.single i (1: ℝ))
+  . simp
+    have foo := hS
+    simp at foo
+    exact Finset.nonempty_iff_ne_empty.mp foo
+
+#print axioms mu_finsupp
+
+-- Proposition 3.12, item 2, in Vikman
+lemma f_conv_mu (f: G → ℝ): (Conv  f (mu )) = fun g => ((1 : ℝ) / (#(S) : ℝ)) * ∑ s ∈ S, f (s * g) := by
+  funext g
+  rw [conv_eq_sum]
+  .
+
+    dsimp [mu]
+    simp_rw [← mul_assoc]
+    conv =>
+      lhs
+      arg 1
+      intro a
+      rhs
+      equals (∑ s ∈ S, (Pi.single (M := fun _ : G => ℝ) s (1 : ℝ) ((g * (Additive.toMul a)⁻¹)))) =>
+        simp
+
+    simp_rw [Finset.mul_sum]
+    rw [Summable.tsum_finsetSum]
+    .
+      --rw [Finset.sum_comm]
+      have delta_conv := f_conv_delta  f g
+      conv at delta_conv =>
+        intro x
+        rw [conv_eq_sum (by
+          apply conv_exists_fin_supp
+          right
+          simp
+        )]
+
+      simp_rw [mul_comm, mul_assoc]
+      --simp_rw [← mul_tsum]
+      conv =>
+        lhs
+        rhs
+        intro x
+        arg 1
+        intro b
+        rw [mul_comm]
+        rw [mul_assoc]
+      simp [delta] at delta_conv
+      conv at delta_conv =>
+        intro x
+        lhs
+        arg 1
+        intro a
+        rw [mul_comm]
+      conv =>
+        lhs
+        rhs
+        intro x
+        rw [Summable.tsum_mul_left (hf := by (
+          simp [Pi.single_apply]
+          apply summable_of_finite_support
+          apply Set.Finite.subset (s := {(opAdd (   x⁻¹ * g  ))})
+          . simp
+          . intro z hz
+            simp
+            simp at hz
+            rw [← hz.1]
+            simp
+          --apply f_mul_mu_summable
+        ))]
+        rw [delta_conv x]
+
+      simp
+      rw [← Finset.mul_sum]
+      rw [← Finset.sum_mul]
+      rw [mul_comm]
+      simp
+      left
+      conv =>
+        lhs
+        arg 1
+        equals S⁻¹ =>
+          exact S_eq_Sinv
+      simp
+    .
+      intro s hs
+      by_cases card_zero: #(S) = 0
+      .
+        simp [card_zero]
+      .
+        conv =>
+          arg 1
+          intro a
+          rw [mul_assoc, mul_comm, mul_assoc]
+        rw [summable_mul_left_iff]
+        .
+          -- TODO - deduplicate this
+          simp [Pi.single_apply]
+          apply summable_of_finite_support
+          apply Set.Finite.subset (s := {(opAdd (s⁻¹ * g ))})
+          . simp
+          . intro z hz
+            simp
+            simp at hz
+            rw [← hz.1]
+            simp
+          --apply f_mul_mu_summable
+        .
+          simp [card_zero]
+  . apply conv_exists_fin_supp
+    right
+    apply mu_finsupp
+
+
+
+
+noncomputable def conv_mu_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := MeasureTheory.MemLp.toLp (Conv f (mu )) (by
+  rw [MeasureTheory.MemLp]
+  refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
+  simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm']
+  rw [f_conv_mu]
+  --apply ENNReal.rpow_lt_top_of_nonneg
+  --. simp
+  --.
+  simp_rw [Finset.mul_sum]
+  --  (1 : ℝ) / (#(S) : ℝ) * f (a * s)
+  have other := MeasureTheory.memLp_finset_sum (μ := MeasureTheory.volume (α := G)) (s := S) (p := 2) (f := fun s a => ((1 : ℝ) / (#(S) : ℝ)) * f (s * a)) (by
+    intro s hs
+    simp
+    apply MeasureTheory.MemLp.const_mul
+    rw [← Function.comp_def]
+    apply MeasureTheory.MemLp.comp_of_map
+    .
+      simp [MeasureTheory.volume]
+      simp_rw [my_haar_eq_count]
+      rw [MeasureTheory.Measure.IsMulLeftInvariant.map_mul_left_eq_self s]
+      have mem_f := Lp.memLp f
+      simp [volume, my_haar_eq_count] at mem_f
+      exact mem_f
+    . apply AEMeasurable.of_discrete
+  )
+  have sum_norm := other.2
+  simp [eLpNorm, eLpNorm'] at sum_norm
+  field_simp at sum_norm
+  field_simp
+  exact sum_norm
+)
+
+-- The Vikman paper defines the Laplace operator as a function ' ∆ : ℓ2(G) → ℓ2(G)'
+-- However, we later have '∆ H_n', where H_n is only known to be in L∞
+-- We should eventually refactor this, but for we, we just define it twice, once with just plain functions
+-- The 'b' is for 'base' (we should come up with a better name)
+noncomputable def Laplace_b (f: G → ℝ): G → ℝ := f - (Conv f (mu ))
+noncomputable def Laplace (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := f - (conv_mu_lp2 f)
+
 
 -- TODO - make this Finite to avoid a non-compuatable Fintype instance
 noncomputable instance fintype_ball (x: G) (r: ℝ): Fintype ↑(Metric.ball x r) := Set.Finite.fintype (finite_ball _ _)

@@ -1864,30 +1864,6 @@ lemma rho_g_case_infinite {d: ℕ} (hd: HasPolynomialGrowthD S d) (hr: Infinite 
 #print axioms rho_g_case_infinite
 
 
-
-
-instance countable_G: Countable G := by
-  apply Function.Surjective.countable (f := fun (x: List S) => x.unattach.prod)
-  intro g
-  obtain ⟨l, hl⟩ := mem_S_prod_list  g
-  use l
-  simp only
-  unfold ProdS at hl
-  rw [hl]
-
-
--- TODO - use the fact that G is finitely generated
-instance countable_add_G: Countable (Additive G) := by
-  exact inferInstanceAs (Countable G)
-
-lemma singleton_pairwise_disjoint {T: Type*} (s: Set (T)) : s.PairwiseDisjoint Set.singleton := by
-  refine Set.pairwiseDisjoint_iff.mpr ?_
-  intro a ha b hb hab
-  unfold Set.singleton at hab
-  simp at hab
-  exact hab.symm
-
-
 instance G_Add_MeasureableSingleton: MeasurableSingletonClass (Additive G) := {
   measurableSet_singleton := by
     intro x
@@ -1901,105 +1877,6 @@ instance G_MeasureableSingleton: MeasurableSingletonClass (G) := {
     apply IsOpen.measurableSet
     simp
 }
-
--- Use the fact that we have the discrete topology
-set_option maxHeartbeats 500000 in
-lemma my_add_haar_eq_count: (myHaarAddOpp) = MeasureTheory.Measure.count := by
-  ext s hs
-  by_cases s_finite: Set.Finite s
-  .
-    have eq_singletons := Set.biUnion_of_singleton (s := s)
-    nth_rw 1 [← eq_singletons]
-    rw [MeasureTheory.Measure.count_apply_finite s s_finite]
-    rw [MeasureTheory.measure_biUnion]
-    .
-      -- TODO - extract 'measure {a} = 1' to a lemma
-      simp_rw [MeasureTheory.Measure.addHaar_singleton]
-      unfold myHaarAddOpp
-      simp_rw [← singleton_carrier]
-      simp_rw [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
-      rw [MeasureTheory.Measure.addHaarMeasure_self]
-      rw [ENNReal.tsum_set_const]
-      simp
-      norm_cast
-      rw [Set.Finite.encard_eq_coe_toFinset_card s_finite]
-    . exact Set.Finite.countable s_finite
-    .
-      apply singleton_pairwise_disjoint
-    .
-      intro a ha
-      apply IsOpen.measurableSet
-      simp
-  .
-    have s_infinite: s.Infinite := by
-      exact s_finite
-    rw [MeasureTheory.Measure.count_apply_infinite s_infinite]
-    have eq_singletons := Set.biUnion_of_singleton (s := s)
-    nth_rw 1 [← eq_singletons]
-    rw [MeasureTheory.measure_biUnion]
-    .
-      simp_rw [MeasureTheory.Measure.addHaar_singleton]
-      unfold myHaarAddOpp
-      simp_rw [← singleton_carrier]
-      simp_rw [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
-      rw [MeasureTheory.Measure.addHaarMeasure_self]
-      simp only [ENNReal.tsum_one, ENat.toENNReal_eq_top, ENat.card_eq_top]
-      exact Set.infinite_coe_iff.mpr s_finite
-    . exact Set.to_countable s
-    . apply singleton_pairwise_disjoint
-    .
-      intro a ha
-      apply IsOpen.measurableSet
-      simp
-
-lemma my_haar_eq_count: (myHaar) = MeasureTheory.Measure.count := by
-  ext s hs
-  by_cases s_finite: Set.Finite s
-  .
-    have eq_singletons := Set.biUnion_of_singleton (s := s)
-    nth_rw 1 [← eq_singletons]
-    rw [MeasureTheory.Measure.count_apply_finite s s_finite]
-    rw [MeasureTheory.measure_biUnion]
-    .
-      -- TODO - extract 'measure {a} = 1' to a lemma
-      simp_rw [MeasureTheory.Measure.haar_singleton]
-      unfold myHaar
-      simp_rw [← mul_singleton_carrier]
-      simp_rw [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
-      rw [MeasureTheory.Measure.haarMeasure_self]
-      rw [ENNReal.tsum_set_const]
-      simp
-      norm_cast
-      rw [Set.Finite.encard_eq_coe_toFinset_card s_finite]
-    . exact Set.Finite.countable s_finite
-    .
-      apply singleton_pairwise_disjoint
-    .
-      intro a ha
-      apply IsOpen.measurableSet
-      simp
-  .
-    have s_infinite: s.Infinite := by
-      exact s_finite
-    rw [MeasureTheory.Measure.count_apply_infinite s_infinite]
-    have eq_singletons := Set.biUnion_of_singleton (s := s)
-    nth_rw 1 [← eq_singletons]
-    rw [MeasureTheory.measure_biUnion]
-    .
-      simp_rw [MeasureTheory.Measure.haar_singleton]
-      unfold myHaar
-      simp_rw [← mul_singleton_carrier]
-      simp_rw [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
-      rw [MeasureTheory.Measure.haarMeasure_self]
-      simp only [ENNReal.tsum_one, ENat.toENNReal_eq_top, ENat.card_eq_top]
-      exact Set.infinite_coe_iff.mpr s_finite
-    . exact Set.to_countable s
-    . apply singleton_pairwise_disjoint
-    .
-      intro a ha
-      apply IsOpen.measurableSet
-      simp
-
 
 -- With the counting measure, A.E is the same as everywgere
 lemma count_ae_everywhere (p: G → Prop): (∀ᵐ g ∂(MeasureTheory.Measure.count), p g) = ∀ a: G, p a := by
@@ -2056,27 +1933,7 @@ instance myNegInvariant: MeasureTheory.Measure.IsNegInvariant (myHaarAddOpp) := 
     simp only [MeasureTheory.Measure.neg_eq_self]
 }
 
--- TODO - I don't think we can use this, as `MeasureTheory.convolution' would require our group to be commutative
--- (via `NormedAddCommGroup`)
-open scoped Convolution
-open MeasureTheory
--- TODO - should we define this using 'Lp'?
--- NOTE - the Mathlib convolution uses the opposite order of arguments as in the Vikman paper (g(x - t) instead of g(t - x))
--- I originally used 'MulOpposite' make our usage agree with the paper, but this made it an enormous pain to work with
--- (since while Additive G is defeq to G, MulOpposite G is not defeq to G)
--- Nothing in the paper should actually depend on this (since we take a convolution over a symmetric generating set S)
--- Some of our definitions will have an inverse or order swap compared to the paper, but this is better than
--- fighting with 'MulOpposite' every time we need to prove something about a convolution
 
--- Note - there's some defeq abuse going on here, as we're passing in 'f' and 'g' directly (they take in G, not 'Additive G')
--- However, this makes it much easier to prove properties about this via the `MeasureTheory.ConvolutionExists` API
-noncomputable def Conv (f g: G → ℝ) (x: G) : ℝ :=
-  (MeasureTheory.convolution (G := Additive G) f g (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp x)
-
-
-def ConvExists (f g: G → ℝ) := MeasureTheory.ConvolutionExists (G := Additive G) (fun x => f x.toMul) (fun x => g x.toMul) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp
-
-def ConvExistsAt (f g: G → ℝ) (x: G) := MeasureTheory.ConvolutionExistsAt (G := Additive G) (fun x => f x.toMul) (fun x => g x.toMul) x (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp
 
 -- lemma conv_lp2 (f g: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): MemLp (Conv f g) 2 := by
 --   unfold Conv
@@ -2099,58 +1956,7 @@ def ConvExistsAt (f g: G → ℝ) (x: G) := MeasureTheory.ConvolutionExistsAt (G
 
 
 
--- TODO - this is left over from when I used MulOpposite
--- we should remove all usages of this
-abbrev opAdd (g : G) := Additive.ofMul g
 
-
--- A versi on of `conv_exists` where at least one of the functions has finite support
--- This lets us avoid dealing with 'MemLp' in most cases
-lemma conv_exists_fin_supp (f g: G → ℝ) (hfg: f.support.Finite ∨ g.support.Finite): ConvExists f g := by
-  unfold ConvExists MeasureTheory.ConvolutionExists MeasureTheory.ConvolutionExistsAt
-  intro x
-  apply Continuous.integrable_of_hasCompactSupport
-  . exact continuous_of_discreteTopology
-  .
-    unfold HasCompactSupport
-    rw [isCompact_iff_finite]
-    dsimp [tsupport]
-    rw [closure_discrete]
-    simp only [Function.support_mul]
-    match hfg with
-    | .inl hf =>
-      apply Set.Finite.inter_of_left
-      apply Set.Finite.subset (s := opAdd '' f.support)
-      . unfold opAdd
-        exact Set.Finite.image (fun g ↦ Additive.ofMul g) hf
-      . intro a ha
-        simp at ha
-        simp [opAdd]
-        exact ha
-    | .inr hg =>
-      apply Set.Finite.inter_of_right
-      let myFun := fun a => -(opAdd a) + x
-      have finite_image := Set.finite_image_iff (f := myFun) (s := g.support) ?_
-      .
-        conv =>
-          arg 1
-          equals (myFun '' Function.support g) =>
-            ext a
-            simp
-            refine ⟨?_, ?_⟩
-            . intro ha
-              use (Additive.toMul x) / ((Additive.toMul a))
-              refine ⟨ha, ?_⟩
-              simp [myFun, opAdd]
-            . intro ha
-              simp [myFun, opAdd] at ha
-              obtain ⟨b, b_zero, a_eq⟩ := ha
-              rw [← a_eq]
-              simp [b_zero]
-        rw [finite_image]
-        exact hg
-      .
-        simp [myFun, opAdd]
 
 lemma lt_top_mul {a b c : ENNReal} (hab: a ≤ b * c) (hb: b < ⊤) (hc: c < ⊤) : a < ⊤ := by
   have b_c_not_top: b * c < ⊤ := by
@@ -2291,59 +2097,6 @@ lemma conv_exists (p q : ℝ) (hp: 0 < p) (hq: 0 < q) (hpq: p.HolderConjugate q)
         linarith
       .
         exact LT.lt.ne_top foo
-
-
--- Defintion 3.11 in Vikman: The function 'μ',  not to be confused with a measure on a measure space
-noncomputable def mu: G → ℝ := ((1 : ℝ) / (#(S) : ℝ)) • ∑ s ∈ S, Pi.single s (1 : ℝ)
-
--- Definition 3.11 in Vikman - the m-fold convolution of μ with itself
-noncomputable def muConv (n: ℕ): G → ℝ := (Nat.iterate (fun f => Conv  f (mu )) n) (mu )
-
-
-
-abbrev delta (s: G): G → ℝ := Pi.single s 1
-
-lemma conv_eq_sum {f h: G → ℝ} (hconv: ConvExists f h) (g: G): Conv f h g = ∑' (a : Additive G), f (a) * h (g * (Additive.toMul a)⁻¹) := by
-  unfold Conv
-  unfold MeasureTheory.convolution
-  rw [MeasureTheory.integral_countable']
-  .
-    simp_rw [MeasureTheory.measureReal_def]
-    unfold myHaarAddOpp
-    simp_rw [MeasureTheory.Measure.addHaar_singleton]
-    simp [MeasureTheory.Measure.addHaarMeasure_self]
-    simp_rw [← singleton_carrier]
-    simp_rw [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
-    simp [MeasureTheory.Measure.addHaarMeasure_self]
-    field_simp
-
-    -- TODO - avoid defeq abuse here
-    conv =>
-      lhs
-      arg 1
-      intro a
-      rhs
-      equals h (Additive.ofMul g - a) =>
-        rfl
-
-    conv =>
-      rhs
-      arg 1
-      intro a
-      rhs
-      arg 1
-      equals Additive.ofMul g - a =>
-        unfold Additive.toMul
-        unfold Additive.ofMul
-        simp
-        rw [sub_eq_add_neg]
-        rfl
-
-  . exact (hconv (opAdd g))
-
-lemma conv_eq_sum'  {f h: G → ℝ} (hconv: ConvExists f h): Conv f h = fun g => ∑' (a : Additive G), f ((Additive.toMul a)) * h (g * (Additive.toMul a)⁻¹) := by
-  funext g
-  exact conv_eq_sum hconv g
 
 
 -- Linearity lemmas for convolution - this is basically just wrapping the MeasureTheory.ConvolutionExists lemmas,
@@ -2683,49 +2436,6 @@ lemma conv_sum {T: Type*} (H: Finset T) (f: T → G → ℝ) (h: G → ℝ) (h_f
     --     rw [← ha]
     --     simp
 
--- Proposition 3.12, item 1, in Vikman
-lemma f_conv_delta (f: G → ℝ) (g s: G): (Conv  f (delta s)) g = f (s⁻¹ * g) := by
-  unfold delta
-  rw [conv_eq_sum]
-  .
-    rw [tsum_eq_sum (s := {opAdd ((s⁻¹ * g))}) ?_]
-    .
-      simp
-      -- TODO - why does this need 'conv'?
-      conv =>
-        lhs
-        arg 2
-        arg 3
-        simp only [mul_inv_rev, inv_inv, inv_mul_cancel_right]
-      rw [← mul_assoc]
-      -- TODO - why is 'simp' not doing these?
-      rw [mul_inv_cancel]
-      rw [one_mul]
-      simp
-      rfl
-    .
-      intro b hb
-      simp only [Finset.mem_singleton] at hb
-      simp only [mul_eq_zero]
-      right
-      apply Pi.single_eq_of_ne
-      apply_fun (fun x => s⁻¹ * x)
-      simp
-      apply_fun (fun x => (x * (Additive.toMul b)) )
-      simp
-      rw [eq_comm]
-      unfold opAdd at hb
-      apply_fun Additive.ofMul
-      simp
-      apply_fun (fun x => x + b)
-      simp only []
-      rw [add_assoc]
-      simp
-      exact hb
-  .
-    apply conv_exists_fin_supp
-    right
-    simp
 
 lemma f_conv_delta_helper (f: G → ℝ) (s: G): (Conv  f (delta s)) = fun g => f (s⁻¹ * g) := by
   funext g
@@ -2747,132 +2457,6 @@ lemma f_mul_mu_summable (f: G → ℝ) (g: G) (s: G):
     simp
 
 
-lemma mu_finsupp: (mu ).support.Finite := by
-  simp [mu]
-  rw [Function.support_const_smul_of_ne_zero]
-  .
-    apply Set.Finite.subset (s := ⋃ i ∈ S, Function.support (Pi.single i (1 : ℝ)))
-    .
-      simp
-      exact Set.toFinite (⋃ i ∈ S, {i})
-    .
-      conv =>
-        lhs
-        arg 1
-        equals fun (x: G) => ∑ s ∈ S, Pi.single (M := fun _ : G => ℝ) s (1 : ℝ) x =>
-          funext a
-          simp
-      apply Finset.support_sum (s := S) (f := fun i => Pi.single i (1: ℝ))
-  . simp
-    have foo := hS
-    simp at foo
-    exact Finset.nonempty_iff_ne_empty.mp foo
-
-#print axioms mu_finsupp
--- Proposition 3.12, item 2, in Vikman
-lemma f_conv_mu (f: G → ℝ): (Conv  f (mu )) = fun g => ((1 : ℝ) / (#(S) : ℝ)) * ∑ s ∈ S, f (s * g) := by
-  funext g
-  rw [conv_eq_sum]
-  .
-
-    dsimp [mu]
-    simp_rw [← mul_assoc]
-    conv =>
-      lhs
-      arg 1
-      intro a
-      rhs
-      equals (∑ s ∈ S, (Pi.single (M := fun _ : G => ℝ) s (1 : ℝ) ((g * (Additive.toMul a)⁻¹)))) =>
-        simp
-
-    simp_rw [Finset.mul_sum]
-    rw [Summable.tsum_finsetSum]
-    .
-      --rw [Finset.sum_comm]
-      have delta_conv := f_conv_delta  f g
-      conv at delta_conv =>
-        intro x
-        rw [conv_eq_sum (by
-          apply conv_exists_fin_supp
-          right
-          simp
-        )]
-
-      simp_rw [mul_comm, mul_assoc]
-      --simp_rw [← mul_tsum]
-      conv =>
-        lhs
-        rhs
-        intro x
-        arg 1
-        intro b
-        rw [mul_comm]
-        rw [mul_assoc]
-      simp [delta] at delta_conv
-      conv at delta_conv =>
-        intro x
-        lhs
-        arg 1
-        intro a
-        rw [mul_comm]
-      conv =>
-        lhs
-        rhs
-        intro x
-        rw [Summable.tsum_mul_left (hf := by (
-          simp [Pi.single_apply]
-          apply summable_of_finite_support
-          apply Set.Finite.subset (s := {(opAdd (   x⁻¹ * g  ))})
-          . simp
-          . intro z hz
-            simp
-            simp at hz
-            rw [← hz.1]
-            simp
-          --apply f_mul_mu_summable
-        ))]
-        rw [delta_conv x]
-
-      simp
-      rw [← Finset.mul_sum]
-      rw [← Finset.sum_mul]
-      rw [mul_comm]
-      simp
-      left
-      conv =>
-        lhs
-        arg 1
-        equals S⁻¹ =>
-          exact S_eq_Sinv
-      simp
-    .
-      intro s hs
-      by_cases card_zero: #(S) = 0
-      .
-        simp [card_zero]
-      .
-        conv =>
-          arg 1
-          intro a
-          rw [mul_assoc, mul_comm, mul_assoc]
-        rw [summable_mul_left_iff]
-        .
-          -- TODO - deduplicate this
-          simp [Pi.single_apply]
-          apply summable_of_finite_support
-          apply Set.Finite.subset (s := {(opAdd (s⁻¹ * g ))})
-          . simp
-          . intro z hz
-            simp
-            simp at hz
-            rw [← hz.1]
-            simp
-          --apply f_mul_mu_summable
-        .
-          simp [card_zero]
-  . apply conv_exists_fin_supp
-    right
-    apply mu_finsupp
 
 
 -- Copied from https://github.com/leanprover/lean4/blob/6741444a63eec253a7eae7a83f1beb3de015023d/src/Init/Data/List/OfFn.lean#L81
@@ -3523,38 +3107,6 @@ theorem f_n_sub_conv (n: ℕ): MeasureTheory.eLpNorm ((f_n  n) - (Conv (f_n  n) 
 #print axioms f_n_sub_conv
 
 
-noncomputable def conv_mu_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := MeasureTheory.MemLp.toLp (Conv f (mu )) (by
-  rw [MeasureTheory.MemLp]
-  refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
-  simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm']
-  rw [f_conv_mu]
-  --apply ENNReal.rpow_lt_top_of_nonneg
-  --. simp
-  --.
-  simp_rw [Finset.mul_sum]
-  --  (1 : ℝ) / (#(S) : ℝ) * f (a * s)
-  have other := MeasureTheory.memLp_finset_sum (μ := MeasureTheory.volume (α := G)) (s := S) (p := 2) (f := fun s a => ((1 : ℝ) / (#(S) : ℝ)) * f (s * a)) (by
-    intro s hs
-    simp
-    apply MeasureTheory.MemLp.const_mul
-    rw [← Function.comp_def]
-    apply MeasureTheory.MemLp.comp_of_map
-    .
-      simp [MeasureTheory.volume]
-      simp_rw [my_haar_eq_count]
-      rw [MeasureTheory.Measure.IsMulLeftInvariant.map_mul_left_eq_self s]
-      have mem_f := Lp.memLp f
-      simp [volume, my_haar_eq_count] at mem_f
-      exact mem_f
-    . apply AEMeasurable.of_discrete
-  )
-  have sum_norm := other.2
-  simp [eLpNorm, eLpNorm'] at sum_norm
-  field_simp at sum_norm
-  field_simp
-  exact sum_norm
-)
-
 instance volume_finite_compact: IsFiniteMeasureOnCompacts (volume (α := G)) := by
   simp [volume]
   rw [my_haar_eq_count]
@@ -3613,12 +3165,6 @@ noncomputable def conv_finsupp_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.vo
       simp
 )
 
--- The Vikman paper defines the Laplace operator as a function ' ∆ : ℓ2(G) → ℓ2(G)'
--- However, we later have '∆ H_n', where H_n is only known to be in L∞
--- We should eventually refactor this, but for we, we just define it twice, once with just plain functions
--- The 'b' is for 'base' (we should come up with a better name)
-noncomputable def Laplace_b (f: G → ℝ): G → ℝ := f - (Conv f (mu ))
-noncomputable def Laplace (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := f - (conv_mu_lp2 f)
 
 lemma conv_neg_left (f g: G → ℝ): Conv (-f) g = -(Conv f g) := by
   conv =>
@@ -5381,62 +4927,6 @@ noncomputable def laplace_range := LinearMap.range (Laplace_linear )
 
 #synth TopologicalSpace ↥(Lp ℝ 2 volume (α := G))
 
--- If a harmonic function has a maximum value, then it must be a constant function
--- We state 'f is harmonc' as 'Laplace_b f = 0', as this is the hypothesis we have where we need to call this lemma
--- This is true even if it's a local maximum (considered in terms of the  poitns reached by multiply by S), but
--- we don't need that result yet
-lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b  f = 0) (a: G) (h_max: ∀ g: G, f g ≤ f a): f = fun _ => f a := by
-  have path_implies_max (l : List S): f (l.unattach.prod * a) = f a := by
-    induction l with
-    | nil =>
-      simp
-    | cons s l ih =>
-      simp
-      simp [Laplace_b, f_conv_mu] at hf
-      have f_at_l := congrFun hf (l.unattach.prod * a)
-      simp at f_at_l
-      rw [sub_eq_zero] at f_at_l
-      rw [ih] at f_at_l
-      field_simp at f_at_l
-
-      -- TODO - is there a 'Finset.expect' theorem we can use?
-     -- rw [← Finset.expect_eq_sum_div_card] at f_at_l
-     -- TODO - upstream this to mathlib in some form
-      have f_s_eq: ∀ s: S, f a = f (s * (l.unattach.prod * a)) := by
-        by_contra!
-        simp at this
-        obtain ⟨s, s_mem_s, hs⟩ := this
-        by_cases val_le_max: f (s * (l.unattach.prod * a)) ≤ f a
-        .
-          have val_lt_max: f (s * (l.unattach.prod * a)) < f a := by
-            exact lt_of_le_of_ne (h_max (↑s * (l.unattach.prod * a))) (id (Ne.symm hs))
-
-          have sum_strict_lt := Finset.sum_lt_sum (f := fun x => f (x * (l.unattach.prod * a))) (g := fun x => f a) (s := S) ?_ ?_
-          .
-            simp at sum_strict_lt
-            rw [mul_comm] at sum_strict_lt
-            rw [← div_lt_iff₀] at sum_strict_lt
-            .
-              apply ne_of_gt at sum_strict_lt
-              contradiction
-            . simpa using hS
-          . intro s hs
-            apply h_max
-          . use s
-        .
-          have val_gt := h_max (s * (l.unattach.prod * a))
-          simp at val_le_max
-          linarith
-      specialize f_s_eq s
-      rw [f_s_eq]
-      rw [mul_assoc]
-  ext g
-
-  obtain ⟨l, h_l_prod⟩ := mem_S_prod_list (g * a⁻¹)
-  simp [ProdS] at h_l_prod
-  specialize path_implies_max l
-  rw [h_l_prod] at path_implies_max
-  simpa using path_implies_max
 
 
 lemma harmonic_abs_max_implies_const (f: G → ℝ) (hf: Laplace_b  f = 0) (a: G) (h_max: ∀ g: G, |f g| ≤ |f a|): f = fun _ => f a := by
