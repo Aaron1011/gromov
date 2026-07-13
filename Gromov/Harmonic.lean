@@ -1,6 +1,9 @@
 import Mathlib
 import Mathlib.Algebra.Group.Gromov.Defs
 
+set_option linter.style.cdot false
+set_option linter.style.whitespace false
+
 namespace GeneratesNS
 open Generates
 
@@ -4332,53 +4335,65 @@ lemma iterated_lipschitz_bound (f: LipschitzH): ∃ C: ℝ, ∀ g: G, ‖f g‖ 
   --   . grind
   --   . G''_subgroup_finite_index
   intro g
-  obtain ⟨l, l_prod, l_len⟩ := word_norm_prod_self g
-  clear l_len
-  induction l generalizing g with
-  | nil =>
+  --obtain ⟨l, l_prod, l_len⟩ := word_norm_prod_self g
+  --clear l_len
+  induction hg: WordNorm g using Nat.strong_induction_on generalizing g with
+  | h n ih =>
+    obtain ⟨l, l_prod, l_len⟩ := word_norm_prod _ _ hg
     simp [ProdS] at l_prod
-    simp [l_prod.symm]
-    rw [add_mul]
-    rw [add_comm]
-    rw [mul_add]
-    simp
-    rw [add_assoc]
-    apply le_add_of_nonneg_right
-    positivity
-  | cons head tail ih =>
-    have foo := f.lipschitz.choose_spec
-    unfold LipschitzWith at foo
-    simp [ProdS] at l_prod
-    rw [← l_prod]
-
-    have s_dist := foo (head * tail.unattach.prod) tail.unattach.prod
-    simp only [edist_dist] at s_dist
-    conv at s_dist =>
-      rhs
-      equals ENNReal.ofReal (f.lipschitz.choose *  (dist (↑head * tail.unattach.prod) tail.unattach.prod)) =>
-        simp
-        sorry
-    rw [ENNReal.ofReal_le_ofReal_iff] at s_dist
+    by_cases n_eq: n = 0
     .
-      apply norm_le_norm_add_const_of_dist_le at s_dist
-      simp only [DFunLike.coe]
-      grw [s_dist]
-      have tail_bound := ih tail.unattach.prod (by simp [ProdS])
-      simp [DFunLike.coe] at tail_bound
-      grw [tail_bound]
-      -- We may need a larger constant account for the fact that 'head * tail' might decrease the WordNorm
-      -- simp [norm_mul]
-      -- simp [dist]
-      -- rw [mul_assoc]
-      -- rw [mul_comm]
-      -- rw [mul_assoc]
-      -- rw [← mul_add]
-
-
-
-
-      grind
-    . positivity
+      simp [n_eq]
+      simp [n_eq] at l_len
+      simp [l_len] at l_prod
+      simp [← l_prod]
+    .
+      obtain ⟨head, tail, l_eq⟩ := List.exists_cons_of_length_pos (l := l) (by grind)
+      have tail_norm := word_norm_le tail.unattach.prod tail (by simp [ProdS])
+      specialize ih (WordNorm tail.unattach.prod) (by grind) tail.unattach.prod rfl
+      rw [← l_prod, l_eq]
+      simp
+      have foo := f.lipschitz.choose_spec
+      unfold LipschitzWith at foo
+      have s_dist := foo (head * tail.unattach.prod) tail.unattach.prod
+      simp only [edist_dist] at s_dist
+      conv at s_dist =>
+        rhs
+        equals ENNReal.ofReal (f.lipschitz.choose *  (dist (↑head * tail.unattach.prod) tail.unattach.prod)) =>
+          simp
+          sorry
+      rw [ENNReal.ofReal_le_ofReal_iff] at s_dist
+      .
+        apply norm_le_norm_add_const_of_dist_le at s_dist
+        grw [s_dist]
+        simp [DFunLike.coe] at ih
+        grw [ih]
+        rw [dist_comm]
+        grw [dist_word_mul_le]
+        .
+          simp [dist, WordDist, word_norm_one]
+          grw [tail_norm]
+          have tail_len_le: tail.length ≤ n - 1 := by
+            grind
+          grw [tail_len_le]
+          norm_cast
+          rw [Nat.add_sub_of_le (by grind)]
+          ring
+          norm_cast
+          conv =>
+            lhs
+            lhs
+            arg 1
+            equals f.lipschitz.choose * (n + 1) =>
+              ring
+          rw [add_comm 1]
+          simp
+          norm_cast
+          simp
+          rw [mul_add]
+          simp
+        . simp
+      . positivity
 
 include V_real in
 lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: ℝ, ((Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V)) ≤ C * #(S ^ R) := by
