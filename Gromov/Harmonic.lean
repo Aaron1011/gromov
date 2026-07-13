@@ -4270,8 +4270,7 @@ noncomputable def growth_bound (d: ℝ) := Filter.liminf (fun (R: ℕ) => ENNRea
 lemma theorem_3_23 (d: ℝ): ∃ C: ℝ, growth_bound (V := V) d → (Module.finrank ℝ V) < C := by
   sorry
 
-instance nonempty_basis: Nonempty ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V) := by
-  sorry
+instance nonempty_basis: Nonempty ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V) := Module.Basis.index_nonempty (Module.Basis.ofVectorSpace _ _)
 
 lemma card_closed_ball_eq (R: ℕ): #((finite_closed_ball 1 R).toFinset) = #(S ^ R) := by
   rw [Finset.card_bij (i := fun a b => a)]
