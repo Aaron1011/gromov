@@ -313,32 +313,10 @@ lemma Q_R_matrix_pos_def (R: ℝ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R):
 
 #print sorries Q_R_matrix_pos_def
 
-lemma exists_Q_R_positive_definite: ∃ R: ℝ, ∀ u : G → ℝ, HarmonicR u → u ≠ 0 → (Q_R R u u) > 0 := by
-  use 1
-  intro u u_harmonic u_ne_zero
-  by_contra!
-  unfold Q_R at this
-  have nonneg := Finset.sum_nonneg' (s := (finite_closed_ball 1 1).toFinset) (f := fun g => u g * u g) ?_
-  .
-    simp at nonneg
-    have eq_zero: ∑ g ∈ (Metric.closedBall 1 1).toFinset, u g * u g = 0 := by grind
-    rw [Finset.sum_eq_zero_iff_of_nonneg] at eq_zero
-    .
-      have laplace_u: Laplace_b u = 0 := by
-        unfold Laplace_b
-        rw [f_conv_mu]
-        unfold HarmonicR at u_harmonic
-        ext g
-        simp
-        specialize u_harmonic g
-        simp [u_harmonic]
+open scoped Finset
+open scoped Pointwise
 
-      have eq_const := harmonic_maximum_implies_const u laplace_u
-      sorry
-    . intro i hi
-      rw [← pow_two]
-      positivity
-  . intro i
-    simp
-    rw [← pow_two]
-    positivity
+noncomputable def my_expr (d: ℝ) (R : ℕ) := #(S ^ R) * ((Q_R_matrix R (V := V)).det ^ (1 / Module.finrank ℝ V)) / (R ^ d)
+
+lemma theorem_3_23 (d: ℝ): ∃ C: ℝ, Filter.liminf (fun (R: ℕ) => ENNReal.ofReal (my_expr (V := V) d R)) (Filter.atTop) ≠ ⊤ := by
+  sorry
