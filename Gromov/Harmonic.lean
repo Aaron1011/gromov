@@ -66,9 +66,188 @@ lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b  f = 0) (a: G
   rw [h_l_prod] at path_implies_max
   simpa using path_implies_max
 
-variable {V: Submodule ℝ LipschitzH} (hV : Even (Module.finrank V))
+
+variable {V: Submodule ℝ LipschitzH} [Nontrivial V] (hV : Even (Module.finrank V)) [FiniteDimensional ℝ V] [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]
 
 noncomputable def Q_R (R : ℝ) (u v: G → ℝ): ℝ := ∑ g ∈ Metric.closedBall 1 R, (u g) * (v g)
+
+noncomputable def Q_R_lin (R: ℝ): V →ₗ⋆[ℝ] V →ₗ[ℝ] ℝ := {
+  toFun := fun u => {
+    toFun := fun v => Q_R R (fun g => (u.val g).re) (fun g => (v.val g).re)
+    map_add' := by
+      intro a b
+      simp [Q_R]
+      simp_rw [mul_add]
+      rw [Finset.sum_add_distrib]
+    map_smul' := by
+      intro x a
+      simp [Q_R]
+      rw [Finset.mul_sum]
+      simp [HSMul.hSMul, SMul.smul]
+      simp_rw [← mul_assoc]
+      simp_rw [mul_comm]
+  }
+  map_add' := by
+    intro a b
+    ext y
+    simp [Q_R]
+    simp_rw [add_mul]
+    rw [Finset.sum_add_distrib]
+  map_smul' := by
+    intro x a
+    ext y
+    simp [Q_R]
+    rw [Finset.mul_sum]
+    simp [HSMul.hSMul, SMul.smul]
+    simp_rw [← mul_assoc]
+}
+
+lemma Q_R_lin_symm (R: ℝ): (Q_R_lin R (V := V)).IsSymm := {
+  eq := by
+    intro u v
+    simp [Q_R_lin, Q_R]
+    simp_rw [mul_comm]
+}
+
+noncomputable def V_basis := Module.Basis.ofVectorSpace ℝ V
+
+noncomputable def Q_R_matrix (R: ℝ) := ((Q_R_lin R (V := V)).toMatrix₂ V_basis V_basis)
+
+lemma Q_R_lin_hermetian (R: ℝ): (Q_R_matrix R (V := V)).IsHermitian := by
+  rw [Q_R_matrix, ← LinearMap.isSymm_iff_isHermitian_toMatrix]
+  apply Q_R_lin_symm
+
+lemma Q_lin_pos_semi_def (R: ℝ): (Q_R_matrix R (V := V)).PosSemidef := by
+  apply Matrix.PosSemidef.of_dotProduct_mulVec_nonneg (Q_R_lin_hermetian _)
+  intro x
+  rw [Q_R_matrix]
+  rw [star_dotProduct_toMatrix₂_mulVec, Q_R_lin]
+  simp only [Q_R, DFunLike.coe]
+  apply Finset.sum_nonneg
+  intro g _
+  rw [← pow_two]
+  positivity
+
+lemma v_basis_app_nonzero (k: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)): ∃ g: G, (V_basis k).val g ≠ 0 := by
+  by_contra!
+  rw [← funext_iff] at this
+  have nonzero := Module.Basis.ne_zero V_basis k
+  conv at this =>
+    rhs
+    equals 0 =>
+      ext a
+      simp
+  simp at nonzero
+  have k_zero: V_basis k = 0 := by
+    apply_fun Subtype.val
+    .
+      apply_fun DFunLike.coe
+      .
+        exact this
+      . intro a b hab
+        ext g
+        rw [funext_iff] at hab
+        specialize hab g
+        simp at hab
+        exact hab
+    . simp
+  contradiction
+
+lemma v_basis_r: ∃ R: ℝ, ∀ k: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V), ∃ g ∈ Metric.closedBall 1 R, (V_basis k).val g ≠ 0 := by
+  use ((Finset.image ((fun (k: (Module.Basis.ofVectorSpaceIndex ℝ ↥V)) => (WordNorm (v_basis_app_nonzero k).choose : ℝ))) Finset.univ)).max' ?_
+  .
+    intro k
+    use (v_basis_app_nonzero k).choose
+    refine ⟨?_, ?_⟩
+    .
+      simp
+      apply Finset.le_max'
+      simp only [Finset.mem_image, Finset.mem_univ, true_and]
+      use k
+      simp [dist, WordDist_one]
+    . apply (v_basis_app_nonzero k).choose_spec
+  .
+    simp
+    rw [Finset.univ_nonempty_iff]
+    have foo := Module.Basis.ofVectorSpace ℝ V
+    have bar := Module.Basis.index_nonempty foo
+    exact bar
+
+lemma Q_R_matrix_pos_def (R: ℝ) (hR: (v_basis_r (V := V)).choose ≤ R): (Q_R_matrix R (V := V)).PosDef := by
+  apply Matrix.PosDef.of_dotProduct_mulVec_pos (Q_R_lin_hermetian _)
+  intro x hx
+  simp [Q_R_matrix]
+  conv =>
+    rhs
+    lhs
+    equals (star x) => simp
+  rw [star_dotProduct_toMatrix₂_mulVec]
+  simp only [Q_R_lin, Q_R, DFunLike.coe]
+  rw [Finset.sum_pos_iff_of_nonneg]
+  .
+    by_contra!
+    simp_rw [← pow_two] at this
+    simp only [sq_nonpos_iff] at this
+    simp at this
+
+    simp at hx
+    rw [funext_iff] at hx
+    simp at hx
+    -- We need to pick R so that all of the basis elements have at least 1 nonzero coord
+
+    --rw [← Module.Basis.forall_coord_eq_zero_iff] at hx
+    sorry
+  .
+    intro g _
+    rw [← pow_two]
+    positivity
+
+  -- simp [Q_R_lin, Q_R]
+  -- rw [Finset.sum_pos_iff_of_nonneg]
+  -- . sorry
+  -- .
+  --   intro i _
+  --   apply mul_nonneg
+  --   . sorry
+  --   .
+  --     apply Finset.sum_nonneg
+  --     intro j _
+  --     apply mul_nonneg
+  --     . sorry
+  --     .
+  --       apply Finset.sum_nonneg
+  --       intro g hg
+
+  --       rw [← ]
+  -- apply Finset.sum_pos_iff_of_nonneg
+  -- intro i hi
+
+
+  -- -- simp [Q_R_lin_R]
+  -- -- rw [Matrix.dotProduct_mulVec]
+  -- -- simp
+
+
+  -- -- rw [Matrix.IsHermitian.posDef_iff_eigenvalues_pos (Q_R_lin_hermetian _)]
+  -- -- intro x
+  -- -- by_contra!
+  -- -- -- Matrix.toLinearMap₂_toMatrix₂
+
+  -- -- have spec := Matrix.IsHermitian.eigenvalues_mem_spectrum_real (A := Q_R_matrix R (V := V)) (Q_R_lin_hermetian R) x
+  -- -- simp at spec
+
+
+  -- -- have eigen_mul := Matrix.IsHermitian.mulVec_eigenvectorBasis (A := Q_R_matrix R (V := V)) (Q_R_lin_hermetian R) x
+  -- -- simp [Q_R_matrix] at eigen_mul
+  -- -- rw [Matrix.mulVec_eq_sum] at eigen_mul
+  -- -- rw [funext_iff] at eigen_mul
+  -- -- simp only [Q_R_lin, Q_R, LipschitzH_apply, Finset.sum_apply, Pi.smul_apply,
+  -- --   Matrix.transpose_apply, LinearMap.toMatrix₂_apply, LinearMap.coe_mk, AddHom.coe_mk, smul_eq_mul,
+  -- --   ] at eigen_mul
+
+
+
+  -- -- simp at this
 
 lemma exists_Q_R_positive_definite: ∃ R: ℝ, ∀ u : G → ℝ, HarmonicR u → u ≠ 0 → (Q_R R u u) > 0 := by
   use 1
@@ -81,7 +260,17 @@ lemma exists_Q_R_positive_definite: ∃ R: ℝ, ∀ u : G → ℝ, HarmonicR u �
     have eq_zero: ∑ g ∈ (Metric.closedBall 1 1).toFinset, u g * u g = 0 := by grind
     rw [Finset.sum_eq_zero_iff_of_nonneg] at eq_zero
     .
+      have laplace_u: Laplace_b u = 0 := by
+        unfold Laplace_b
+        rw [f_conv_mu]
+        unfold HarmonicR at u_harmonic
+        ext g
+        simp
+        specialize u_harmonic g
+        simp [u_harmonic]
 
+      have eq_const := harmonic_maximum_implies_const u laplace_u
+      sorry
     . intro i hi
       rw [← pow_two]
       positivity

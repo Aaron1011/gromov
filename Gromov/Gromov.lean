@@ -1,5 +1,6 @@
 import Mathlib
 import Mathlib.Algebra.Group.Gromov.Defs
+import Mathlib.Algebra.Group.Gromov.Harmonic
 import Mathlib.Algebra.Group.Gromov.UnitaryGromov
 import Mathlib.Algebra.Group.Gromov.UnipotentGromov
 import Mathlib.Algebra.Group.Gromov.NilpotentFinite
@@ -2268,6 +2269,7 @@ lemma conv_assoc {f g h: G → ℝ} (h_fg: ConvExists f g) (h_gh: ConvExists g h
 --     simp [f_g_exists]
 --     simp
 
+open MeasureTheory
 
 -- TODO - can we replace 'conv_assoc' with this?
 lemma conv_assoc_of_lp2 {f g h: G → ℝ} (hf: MemLp f 2 Measure.count) (hg: MemLp g 2 Measure.count) (h_finsupp: h.support.Finite): Conv (Conv f g) h = Conv f (Conv g h) := by
