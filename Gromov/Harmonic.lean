@@ -4356,12 +4356,15 @@ lemma iterated_lipschitz_bound (f: LipschitzH): ∃ C: ℝ, ∀ g: G, ‖f g‖ 
       have foo := f.lipschitz.choose_spec
       unfold LipschitzWith at foo
       have s_dist := foo (head * tail.unattach.prod) tail.unattach.prod
-      simp only [edist_dist] at s_dist
+      rw [edist_dist] at s_dist
       conv at s_dist =>
         rhs
         equals ENNReal.ofReal (f.lipschitz.choose *  (dist (↑head * tail.unattach.prod) tail.unattach.prod)) =>
-          simp
-          sorry
+          rw [ENNReal.ofReal_mul, ENNReal.ofReal_coe_nnreal]
+          rw [edist_dist]
+          .
+            rfl
+          . simp
       rw [ENNReal.ofReal_le_ofReal_iff] at s_dist
       .
         apply norm_le_norm_add_const_of_dist_le at s_dist
