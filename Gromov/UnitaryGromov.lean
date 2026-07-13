@@ -4577,4 +4577,4 @@ def map_S_data {G H: Type*} [Group G] [Group H] [DecidableEq G] [DecidableEq H] 
     . exact S_data.S_finite
 }
 
-#print axioms central_trivial_virtually_abelian
+#print axioms HnEpsData.central_trivial_virtually_abelian
