@@ -256,7 +256,7 @@ lemma v_r_all_nonzero: ∃ R: ℝ, ∀ u ∈ V, u ≠ 0 → ∃ g ∈ Metric.clo
     exact hg
 
 
-lemma Q_R_matrix_pos_def (R: ℝ) (hR: (v_basis_r (V := V)).choose ≤ R): (Q_R_matrix R (V := V)).PosDef := by
+lemma Q_R_matrix_pos_def (R: ℝ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): (Q_R_matrix R (V := V)).PosDef := by
   apply Matrix.PosDef.of_dotProduct_mulVec_pos (Q_R_lin_hermetian _)
   intro x hx
   simp [Q_R_matrix]
@@ -271,66 +271,32 @@ lemma Q_R_matrix_pos_def (R: ℝ) (hR: (v_basis_r (V := V)).choose ≤ R): (Q_R_
     by_contra!
     simp_rw [← pow_two] at this
     simp only [sq_nonpos_iff] at this
-    simp at this
 
-    simp at hx
-    rw [funext_iff] at hx
-    simp at hx
-    -- We need to pick R so that all of the basis elements have at least 1 nonzero coord
+    have foo := (v_r_all_nonzero (V := V)).choose_spec (V_basis.equivFun.symm x) (by apply Submodule.coe_mem) ?_
+    .
+      obtain ⟨g, g_mem, x_g_nonzero⟩ := foo
+      specialize this g ?_
+      .
+        simp
+        grw [hR] at g_mem
+        simpa using g_mem
+      . simp at this
+        simp at x_g_nonzero
+        sorry
 
-    --rw [← Module.Basis.forall_coord_eq_zero_iff] at hx
-    sorry
-  .
-    intro g _
+    .
+      conv =>
+        rhs
+        equals (0: V) =>
+          simp
+
+      rw [ne_eq, ← Subtype.ext_iff]
+      rw [← ne_eq]
+      rw [LinearEquiv.map_ne_zero_iff]
+      exact hx
+  . intro y hy
     rw [← pow_two]
     positivity
-
-  -- simp [Q_R_lin, Q_R]
-  -- rw [Finset.sum_pos_iff_of_nonneg]
-  -- . sorry
-  -- .
-  --   intro i _
-  --   apply mul_nonneg
-  --   . sorry
-  --   .
-  --     apply Finset.sum_nonneg
-  --     intro j _
-  --     apply mul_nonneg
-  --     . sorry
-  --     .
-  --       apply Finset.sum_nonneg
-  --       intro g hg
-
-  --       rw [← ]
-  -- apply Finset.sum_pos_iff_of_nonneg
-  -- intro i hi
-
-
-  -- -- simp [Q_R_lin_R]
-  -- -- rw [Matrix.dotProduct_mulVec]
-  -- -- simp
-
-
-  -- -- rw [Matrix.IsHermitian.posDef_iff_eigenvalues_pos (Q_R_lin_hermetian _)]
-  -- -- intro x
-  -- -- by_contra!
-  -- -- -- Matrix.toLinearMap₂_toMatrix₂
-
-  -- -- have spec := Matrix.IsHermitian.eigenvalues_mem_spectrum_real (A := Q_R_matrix R (V := V)) (Q_R_lin_hermetian R) x
-  -- -- simp at spec
-
-
-  -- -- have eigen_mul := Matrix.IsHermitian.mulVec_eigenvectorBasis (A := Q_R_matrix R (V := V)) (Q_R_lin_hermetian R) x
-  -- -- simp [Q_R_matrix] at eigen_mul
-  -- -- rw [Matrix.mulVec_eq_sum] at eigen_mul
-  -- -- rw [funext_iff] at eigen_mul
-  -- -- simp only [Q_R_lin, Q_R, LipschitzH_apply, Finset.sum_apply, Pi.smul_apply,
-  -- --   Matrix.transpose_apply, LinearMap.toMatrix₂_apply, LinearMap.coe_mk, AddHom.coe_mk, smul_eq_mul,
-  -- --   ] at eigen_mul
-
-
-
-  -- -- simp at this
 
 lemma exists_Q_R_positive_definite: ∃ R: ℝ, ∀ u : G → ℝ, HarmonicR u → u ≠ 0 → (Q_R R u u) > 0 := by
   use 1
