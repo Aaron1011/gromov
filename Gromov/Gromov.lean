@@ -2809,6 +2809,7 @@ lemma laplace_bounded' (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := 
 
 
 
+open scoped RealInnerProductSpace
 -- Proposition 3.17.2: "∆ is positive semidefinite" from Vikman
 set_option maxHeartbeats 200000 in
 lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))): 0 ≤ ⟪f, (Laplace  f)⟫ := by
