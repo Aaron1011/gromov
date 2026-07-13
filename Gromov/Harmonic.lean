@@ -4248,7 +4248,6 @@ theorem exists_nontrivial_harmonic: ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstL
     )
 
 
-def ExistsNontrivialLipschitz := ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstLipschitzH z
 
 lemma theorem_3_23 (d: ℝ): ∃ C: ℝ, growth_bound (V := V) d → (Module.finrank ℝ V) < C := by
   sorry
@@ -4256,9 +4255,9 @@ lemma theorem_3_23 (d: ℝ): ∃ C: ℝ, growth_bound (V := V) d → (Module.fin
 instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
   sorry
 
-lemma rank_two (h: ExistsNontrivialLipschitz): ((2: ℕ)) ≤ Module.rank ℝ LipschitzH := by
+lemma rank_two : ((2: ℕ)) ≤ Module.rank ℝ LipschitzH := by
   rw [Module.le_rank_iff]
-  use ![h.choose, LipschitzH.const 1]
+  use ![exists_nontrivial_harmonic.choose, LipschitzH.const 1]
   rw [LinearIndependent.pair_iff]
   intro a b hab
   by_contra!
@@ -4276,7 +4275,7 @@ lemma rank_two (h: ExistsNontrivialLipschitz): ((2: ℕ)) ≤ Module.rank ℝ Li
       equals LipschitzH.const (-b) =>
         ext g
         simp [LipschitzH.const, HSMul.hSMul, SMul.smul]
-    have foo := h.choose_spec
+    have foo := exists_nontrivial_harmonic.choose_spec
     specialize foo (-b/a)
     simp at foo
     rw [DFunLike.ext'_iff, funext_iff] at foo
@@ -4291,9 +4290,7 @@ lemma rank_two (h: ExistsNontrivialLipschitz): ((2: ℕ)) ≤ Module.rank ℝ Li
       simp [ConstLipschitzH] at hx
     . simp [a_eq]
 
--- This take a parameter (and is not an instance to avoid a circular dependency)
--- We should refactor things so that this can directly depend on the theorem that proves ExistsNontrivialLipschitz
-theorem lipschitz_finite (h: ExistsNontrivialLipschitz) : Module.Finite ℂ LipschitzH := by
+instance lipschitz_finite : Module.Finite ℂ LipschitzH := by
   apply Module.finite_of_finrank_pos
   have other := Module.finrank_eq_rank' ℝ LipschitzH
   have foo := finrank_real_of_complex LipschitzH
@@ -4306,8 +4303,8 @@ theorem lipschitz_finite (h: ExistsNontrivialLipschitz) : Module.Finite ℂ Lips
     rw [← Cardinal.ofENat_le_ofENat]
     simp only [Nat.cast_ofNat, Cardinal.ofENat_ofNat, Cardinal.ofENat_nat]
     rw [Module.finrank_eq_rank]
-    apply rank_two h
+    apply rank_two
   . simp
 
 
---#synth FiniteDimensional ℂ LipschitzH
+#synth FiniteDimensional ℂ LipschitzH
