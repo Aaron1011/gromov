@@ -4400,10 +4400,19 @@ lemma iterated_lipschitz_bound (f: LipschitzH): ∃ C: ℝ, ∀ g: G, ‖f g‖ 
 
 include V_real in
 lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: ℝ, ((Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V)) ≤ C * #(S ^ R) := by
-  have B: ℝ := sorry
-  use B
+  let argmax_eigen := (Finite.exists_max (Q_R_lin_hermetian R (V := V)).eigenvalues).choose
+  let m :=  (Q_R_lin_hermetian R (V := V)).eigenvalues (argmax_eigen)
+  let m_vec := (Q_R_lin_hermetian R (V := V)).eigenvectorBasis argmax_eigen
+  let m_vec_V := V_basis (V := V).equivFun.symm (m_vec.ofLp)
+  obtain ⟨B, hB⟩ := iterated_lipschitz_bound m_vec_V.val
+  have B_nonneg: 0 ≤ B := by
+    specialize hB 1
+    simp at hB
+    have foo := norm_nonneg ((m_vec_V).val.toFun 1)
+    grw [hB] at foo
+    apply nonneg_of_mul_nonneg_left foo (by grind)
+  use ((B * (1 + R)) ^ 2)
   rw [(Q_R_lin_hermetian R (V := V)).det_eq_prod_eigenvalues]
-  let m :=  (Q_R_lin_hermetian R (V := V)).eigenvalues (Finite.exists_max (Q_R_lin_hermetian R (V := V)).eigenvalues).choose
   grw [Finset.prod_le_prod (g := fun _ => m)]
   .
     simp
@@ -4438,15 +4447,31 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
         map_smul, LinearMap.coe_mk, AddHom.coe_mk, LinearMap.coe_sum, LinearMap.coe_smul,
         Finset.sum_apply, Pi.smul_apply, smul_eq_mul, ge_iff_le]
       simp_rw [← pow_two]
-      grw [Finset.sum_le_card_nsmul (n := B)]
+      grw [Finset.sum_le_card_nsmul (n := ((B * (1 + R)) ^ 2))]
       .
         rw [← card_closed_ball_eq]
         simp
         rw [mul_comm]
+        field_simp
+        simp
       .
         intro x hx
-
-        sorry
+        specialize hB x
+        simp
+        simp [m_vec_V, m_vec] at hB
+        rw [Complex.norm_eq_sqrt_sq_add_sq] at hB
+        simp [DFunLike.coe] at V_real
+        rw [V_real] at hB
+        simp at hB
+        rw [Real.sqrt_le_iff] at hB
+        have foo := hB.2
+        .
+          simp at foo
+          simp [dist, WordDist_one] at hx
+          grw [hx] at foo
+          exact foo
+        . apply Submodule.sum_smul_mem
+          simp
     . unfold m
       apply Matrix.PosSemidef.eigenvalues_nonneg
       apply (Q_R_matrix_pos_def V_real R hR (V := V)).posSemidef
@@ -4464,6 +4489,7 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
     have foo := (Finite.exists_max (Q_R_lin_hermetian R (V := V)).eigenvalues).choose_spec
     apply foo i
 
+#print sorries det_bound
 
 instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
 
