@@ -115,6 +115,10 @@ lemma word_norm_prod (g: G) (n: ℕ) (hgn: WordNorm g = n): ∃ l: List S, ProdS
   rw [← hgn]
   exact ⟨l, ⟨hl_prod, hl⟩⟩
 
+-- TODO - we might want to adjust our definition to avoid this annoying case
+lemma word_norm_one: WordNorm 1 = 0 := by
+  simp [WordNorm, ProdS]
+
 lemma word_norm_prod_self (g: G): ∃ l: List S, ProdS g l ∧ l.length = WordNorm  g := by
   exact word_norm_prod  g (WordNorm  g) rfl
 

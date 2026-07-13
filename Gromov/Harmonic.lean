@@ -4321,9 +4321,69 @@ lemma card_closed_ball_eq (R: ℕ): #((finite_closed_ball 1 R).toFinset) = #(S ^
     apply word_norm_le
     simp [ProdS, hf]
 
+lemma iterated_lipschitz_bound (f: LipschitzH): ∃ C: ℝ, ∀ g: G, ‖f g‖ ≤ C * (1 + WordNorm g) := by
+  use f.lipschitz.choose + ‖f 1‖
+  -- intro g
+  -- by_cases g = 1
+  -- . rename_i g_eq
+  --   simp [g_eq]
+  --   simp [word_norm_one]
+  --   apply le_mul_of_le_of_one_le
+  --   . grind
+  --   . G''_subgroup_finite_index
+  intro g
+  obtain ⟨l, l_prod, l_len⟩ := word_norm_prod_self g
+  clear l_len
+  induction l generalizing g with
+  | nil =>
+    simp [ProdS] at l_prod
+    simp [l_prod.symm]
+    rw [add_mul]
+    rw [add_comm]
+    rw [mul_add]
+    simp
+    rw [add_assoc]
+    apply le_add_of_nonneg_right
+    positivity
+  | cons head tail ih =>
+    have foo := f.lipschitz.choose_spec
+    unfold LipschitzWith at foo
+    simp [ProdS] at l_prod
+    rw [← l_prod]
+
+    have s_dist := foo (head * tail.unattach.prod) tail.unattach.prod
+    simp only [edist_dist] at s_dist
+    conv at s_dist =>
+      rhs
+      equals ENNReal.ofReal (f.lipschitz.choose *  (dist (↑head * tail.unattach.prod) tail.unattach.prod)) =>
+        simp
+        sorry
+    rw [ENNReal.ofReal_le_ofReal_iff] at s_dist
+    .
+      apply norm_le_norm_add_const_of_dist_le at s_dist
+      simp only [DFunLike.coe]
+      grw [s_dist]
+      have tail_bound := ih tail.unattach.prod (by simp [ProdS])
+      simp [DFunLike.coe] at tail_bound
+      grw [tail_bound]
+      -- We may need a larger constant account for the fact that 'head * tail' might decrease the WordNorm
+      -- simp [norm_mul]
+      -- simp [dist]
+      -- rw [mul_assoc]
+      -- rw [mul_comm]
+      -- rw [mul_assoc]
+      -- rw [← mul_add]
+
+
+
+
+      grind
+    . positivity
+
 include V_real in
 lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: ℝ, ((Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V)) ≤ C * #(S ^ R) := by
-  use R
+  have B: ℝ := sorry
+  use B
   rw [(Q_R_lin_hermetian R (V := V)).det_eq_prod_eigenvalues]
   let m :=  (Q_R_lin_hermetian R (V := V)).eigenvalues (Finite.exists_max (Q_R_lin_hermetian R (V := V)).eigenvalues).choose
   grw [Finset.prod_le_prod (g := fun _ => m)]
@@ -4360,11 +4420,15 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
         map_smul, LinearMap.coe_mk, AddHom.coe_mk, LinearMap.coe_sum, LinearMap.coe_smul,
         Finset.sum_apply, Pi.smul_apply, smul_eq_mul, ge_iff_le]
       simp_rw [← pow_two]
-      grw [Finset.sum_le_card_nsmul (n := sorry)]
+      grw [Finset.sum_le_card_nsmul (n := B)]
       .
+        rw [← card_closed_ball_eq]
+        simp
+        rw [mul_comm]
+      .
+        intro x hx
 
         sorry
-      . sorry
     . unfold m
       apply Matrix.PosSemidef.eigenvalues_nonneg
       apply (Q_R_matrix_pos_def V_real R hR (V := V)).posSemidef
