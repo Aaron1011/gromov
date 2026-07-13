@@ -476,8 +476,6 @@ lemma singleton_carrier: (addHaarSingleton.carrier) = ({0} : (Set (Additive G)))
 noncomputable abbrev myHaarAddOpp := MeasureTheory.Measure.addHaarMeasure (G := Additive G) addHaarSingleton
 
 
-
-
 instance countable_G: Countable G := by
   apply Function.Surjective.countable (f := fun (x: List S) => x.unattach.prod)
   intro g
@@ -499,6 +497,7 @@ lemma singleton_pairwise_disjoint {T: Type*} (s: Set (T)) : s.PairwiseDisjoint S
   unfold Set.singleton at hab
   simp at hab
   exact hab.symm
+
 
 
 
@@ -600,6 +599,75 @@ lemma my_haar_eq_count: (myHaar) = MeasureTheory.Measure.count := by
       intro a ha
       apply IsOpen.measurableSet
       simp
+
+
+instance my_add_haar_left_invariant: (myHaarAddOpp.IsAddLeftInvariant (G := Additive (G))) := by
+  rw [my_add_haar_eq_count]
+  infer_instance
+
+instance my_add_haar_right_invariant: (myHaarAddOpp.IsAddRightInvariant (G := Additive (G))) := by
+  rw [my_add_haar_eq_count]
+  infer_instance
+
+
+
+
+-- With the counting measure, A.E is the same as everywgere
+lemma count_ae_everywhere (p: G → Prop): (∀ᵐ g ∂(MeasureTheory.Measure.count), p g) = ∀ a: G, p a := by
+  rw [MeasureTheory.ae_iff]
+  simp [MeasureTheory.Measure.count_eq_zero_iff]
+  -- TODO - there has to be a much simpler way of proving this
+  refine ⟨?_, ?_⟩
+  . intro h
+    intro a
+    by_contra this
+    have a_in: a ∈ {a | ¬ p a} := by
+      simp [this]
+    have foo := Set.nonempty_of_mem a_in
+    rw [← Set.not_nonempty_iff_eq_empty] at h
+    contradiction
+  . intro h
+    by_contra this
+    simp at this
+    rw [← ne_eq] at this
+    rw [← Set.nonempty_iff_ne_empty'] at this
+    obtain ⟨a, ha⟩ := this
+    specialize h a
+    simp at ha
+    contradiction
+
+lemma ae_eventually_everywhere {f g: G → ℝ}: ((∀ᵐ (x : G), f x = g x)) ↔ (f = g) := by
+  simp [MeasureTheory.volume]
+  simp_rw [my_haar_eq_count]
+  have foo := count_ae_everywhere (p := fun a => f a = g a)
+  conv at foo =>
+    rhs
+    equals f = g =>
+      have my_ext := funext_iff (f := f) (g := g)
+      simp at my_ext
+      simp
+      exact id (Iff.symm my_ext)
+
+  simp
+  simp at foo
+  exact foo
+
+
+@[simp]
+lemma ae_eq_everywhere {f g: G → ℝ}: (f =ᶠ[MeasureTheory.ae MeasureTheory.volume (α := G)] g) ↔ (f = g) := by
+  simp [Filter.EventuallyEq]
+  apply ae_eventually_everywhere
+
+
+-- Use the fact that our measure is the counting measure (since we have the discrete topology),
+-- and negating a finite set of points in an additive group leaves the cardinality unchanged
+instance myNegInvariant: MeasureTheory.Measure.IsNegInvariant (myHaarAddOpp) := {
+  neg_eq_self := by
+    rw [my_add_haar_eq_count]
+    simp only [MeasureTheory.Measure.neg_eq_self]
+}
+
+
 
 
 
@@ -1562,6 +1630,10 @@ def gActW (g: G): W → W := Quotient.lift (fun f => Submodule.Quotient.mk (gAct
 )
 
 
+
+-- Defintion 3.14 from Vikman
+-- We offset by one to avoid the need to carry around a '0 < n' hypothesis everywgere
+noncomputable def f_n (n: ℕ) (g: G): ℝ := ((1: ℝ) / ((n + 1): ℝ)) * ∑ m: Fin (n + 1), muConv  (m.val) g
 
 
 end GeneratesNS
