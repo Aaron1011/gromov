@@ -67,7 +67,7 @@ lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b  f = 0) (a: G
   simpa using path_implies_max
 
 
-variable {V: Submodule ℝ LipschitzH} [Nontrivial V] (V_real: ∀ u ∈ V, ∀ g: G, (u g).im = 0) (hV : Even (Module.finrank V)) [FiniteDimensional ℝ V] [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]
+variable {V: Submodule ℝ LipschitzH} [Nontrivial V] (V_real: ∀ u ∈ V, ∀ g: G, (u g).im = 0) (hV : Even (Module.finrank V))  [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]
 
 
 noncomputable def Q_R (R : ℝ) (u v: G → ℝ): ℝ := ∑ g ∈ Metric.closedBall 1 R, (u g) * (v g)
@@ -311,7 +311,7 @@ lemma Q_R_matrix_pos_def (R: ℝ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R):
     rw [← pow_two]
     positivity
 
-#print axioms Q_R_matrix_pos_def
+#print sorries Q_R_matrix_pos_def
 
 lemma exists_Q_R_positive_definite: ∃ R: ℝ, ∀ u : G → ℝ, HarmonicR u → u ≠ 0 → (Q_R R u u) > 0 := by
   use 1
