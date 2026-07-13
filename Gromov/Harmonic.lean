@@ -109,14 +109,32 @@ lemma Q_R_lin_symm (R: ℝ): (Q_R_lin R (V := V)).IsSymm := {
     simp [Q_R_lin, Q_R]
     simp_rw [mul_comm]
 }
+noncomputable def Q_R_single (R : ℝ) (u: G → ℝ): ℝ := ∑ g ∈ Metric.closedBall 1 R, (u g)^2
+
+lemma Q_R_single_eq (R: ℝ) (u : G → ℝ): Q_R_single R u = Q_R R u u := by
+  unfold Q_R_single Q_R
+  simp_rw [pow_two]
+
+
+-- noncomputable def V_basis := Module.Basis.ofVectorSpace ℝ V
+-- noncomputable def Q_R_matrix (R: ℝ) := ((Q_R_lin R (V := V)).toMatrix₂ V_basis V_basis)
+-- lemma Q_R_lin_hermetian (R: ℝ): (Q_R_matrix R (V := V)).IsHermitian := by
+--   rw [Q_R_matrix, ← LinearMap.isSymm_iff_isHermitian_toMatrix]
+--   apply Q_R_lin_symm
 
 noncomputable def V_basis := Module.Basis.ofVectorSpace ℝ V
-
 noncomputable def Q_R_matrix (R: ℝ) := ((Q_R_lin R (V := V)).toMatrix₂ V_basis V_basis)
-
 lemma Q_R_lin_hermetian (R: ℝ): (Q_R_matrix R (V := V)).IsHermitian := by
   rw [Q_R_matrix, ← LinearMap.isSymm_iff_isHermitian_toMatrix]
   apply Q_R_lin_symm
+
+
+-- noncomputable def V_basis (R : ℝ) := LinearMap.IsSymmetric.eigenvectorBasis (Q_R_lin_symm R)
+-- noncomputable def temp_Q_R_matrix (R: ℝ) := ((Q_R_lin R (V := V)).toMatrix₂ temp_V_basis temp_V_basis)
+-- lemma temp_Q_R_lin_hermetian (R: ℝ): (temp_Q_R_matrix R (V := V)).IsHermitian := by
+--   rw [temp_Q_R_matrix, ← LinearMap.isSymm_iff_isHermitian_toMatrix]
+--   apply Q_R_lin_symm
+
 
 lemma Q_lin_pos_semi_def (R: ℝ): (Q_R_matrix R (V := V)).PosSemidef := by
   apply Matrix.PosSemidef.of_dotProduct_mulVec_nonneg (Q_R_lin_hermetian _)
@@ -315,15 +333,6 @@ lemma Q_R_matrix_pos_def (R: ℝ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R):
 
 open scoped Finset
 open scoped Pointwise
-
-noncomputable def my_expr (d: ℝ) (R : ℕ) := #(S ^ R) * ((Q_R_matrix R (V := V)).det ^ (1 / Module.finrank ℝ V)) / (R ^ d)
-noncomputable def growth_bound (d: ℝ) := Filter.liminf (fun (R: ℕ) => ENNReal.ofReal (my_expr (V := V) d R)) (Filter.atTop) ≠ ⊤
-
-
-
-
-
-
 
 
 lemma haar_eq_haar_add : myHaar = myHaarAddOpp := by
@@ -4231,8 +4240,8 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
   simp [nontrivial_harmonic_common] at app_s_inv_eq
   contradiction
 
-#print sorries nontrivial_harmonic_case_one
-#print sorries nontrivial_harmonic_case_two
+--#print sorries nontrivial_harmonic_case_one
+--#print sorries nontrivial_harmonic_case_two
 
 #synth OrderTopology ENNReal
 
@@ -4248,11 +4257,134 @@ theorem exists_nontrivial_harmonic: ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstL
     )
 
 
+noncomputable def my_expr (d: ℝ) (R : ℕ) := #(S ^ R) * ((Q_R_matrix R (V := V)).det ^ (1 / Module.finrank ℝ V)) / (R ^ d)
+noncomputable def growth_bound (d: ℝ) := Filter.liminf (fun (R: ℕ) => ENNReal.ofReal (my_expr (V := V) d R)) (Filter.atTop) ≠ ⊤
+
+
+
+
 
 lemma theorem_3_23 (d: ℝ): ∃ C: ℝ, growth_bound (V := V) d → (Module.finrank ℝ V) < C := by
   sorry
 
+instance nonempty_basis: Nonempty ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V) := by
+  sorry
+
+lemma card_closed_ball_eq (R: ℕ): #((finite_closed_ball 1 R).toFinset) = #(S ^ R) := by
+  rw [Finset.card_bij (i := fun a b => a)]
+  . intro a ha
+    simp [dist, WordDist_one] at ha
+    rw [Finset.mem_pow]
+    obtain ⟨l, l_prod, l_len⟩ := word_norm_prod_self a
+    let padded := l ++ List.replicate (R - WordNorm a) ⟨1, one_mem⟩
+    simp_rw [← Function.comp_def]
+    simp_rw [← List.map_ofFn]
+    conv =>
+      arg 1
+      intro f
+      lhs
+      arg 1
+      equals (List.ofFn f).unattach =>
+        rfl
+
+    have padded_len: padded.length = R := by
+      unfold padded
+      simp [l_len]
+      grind
+    use fun n => padded.get ⟨n, by (
+      grind
+    )⟩
+    rw [List.ofFn_congr padded_len.symm]
+    simp
+    unfold padded
+    simp
+    simp [ProdS] at l_prod
+    rw [← l_prod]
+  . simp
+  . intro b hb
+    rw [Finset.mem_pow] at hb
+    use b
+    use ?_
+    simp [dist, WordDist_one]
+    obtain ⟨f, hf⟩ := hb
+    conv at hf =>
+      lhs
+      arg 1
+      equals (List.ofFn f).unattach =>
+        simp_rw [← Function.comp_def]
+        simp_rw [← List.map_ofFn]
+        rfl
+
+    have r_eq: R = (List.ofFn f).length := by
+      simp
+    rw [r_eq]
+    apply word_norm_le
+    simp [ProdS, hf]
+
+include V_real in
+lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: ℝ, ((Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V)) ≤ C * #(S ^ R) := by
+  use R
+  rw [(Q_R_lin_hermetian R (V := V)).det_eq_prod_eigenvalues]
+  let m :=  (Q_R_lin_hermetian R (V := V)).eigenvalues (Finite.exists_max (Q_R_lin_hermetian R (V := V)).eigenvalues).choose
+  grw [Finset.prod_le_prod (g := fun _ => m)]
+  .
+    simp
+    rw [← Module.finrank_eq_card_basis (Module.Basis.ofVectorSpace ℝ V)]
+    rw [←  Real.rpow_natCast]
+    rw [← Real.rpow_mul]
+    .
+      have finrank_pos := Module.finrank_pos (R := ℝ) (M := V)
+      field_simp [finrank_pos]
+      simp
+      unfold m
+      rw [Matrix.IsHermitian.eigenvalues_eq]
+      simp [Q_R_matrix]
+      have foo := dotProduct_toMatrix₂_mulVec (V_basis (V := V)) (V_basis (V := V)) (Q_R_lin R (V := V))
+      conv at foo =>
+        intro x y
+        lhs
+        lhs
+        equals x =>
+          ext a
+          simp
+      conv at foo =>
+        intro x y
+        lhs
+        rhs
+        rhs
+        equals y =>
+          ext a
+          simp
+      rw [foo]
+      simp only [Q_R_lin, Q_R, LipschitzH_apply,  map_sum,
+        map_smul, LinearMap.coe_mk, AddHom.coe_mk, LinearMap.coe_sum, LinearMap.coe_smul,
+        Finset.sum_apply, Pi.smul_apply, smul_eq_mul, ge_iff_le]
+      simp_rw [← pow_two]
+      grw [Finset.sum_le_card_nsmul (n := sorry)]
+      .
+
+        sorry
+      . sorry
+    . unfold m
+      apply Matrix.PosSemidef.eigenvalues_nonneg
+      apply (Q_R_matrix_pos_def V_real R hR (V := V)).posSemidef
+  .
+    apply Finset.prod_nonneg
+    intro i _
+    apply Matrix.PosSemidef.eigenvalues_nonneg
+    apply (Q_R_matrix_pos_def V_real R hR (V := V)).posSemidef
+  .
+    intro i _
+    apply Matrix.PosSemidef.eigenvalues_nonneg
+    apply (Q_R_matrix_pos_def V_real R hR (V := V)).posSemidef
+  . intro i _
+    unfold m
+    have foo := (Finite.exists_max (Q_R_lin_hermetian R (V := V)).eigenvalues).choose_spec
+    apply foo i
+
+
 instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
+
   sorry
 
 lemma rank_two : ((2: ℕ)) ≤ Module.rank ℝ LipschitzH := by

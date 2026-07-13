@@ -2,3 +2,7 @@
 
 Just before Propositon 3.18, also missing a square on ||f|| when proving that '<Laplace f, f> != 0'
 Proposition 3.18: The right-hand side should have a squared norm
+
+In Theorem 3.23 on page 39, the |S| turns into a 2, and we have phi_G (G) instead of phi_G (R). The |S| should stay |S| all the way through (it's a fixed constant that factors out of the liminf); the next line correctly writes |S| again. The stray 2 was probably borrowed from the doubling bound phi_G(2R) <= 2|B(2R)| on page 38.
+
+Also page 39, the bound Q_R(u,u) = int u^2 <= R^(2d')|B(R)| drops the polynomial-growth constant. Polynomial growth of order d' means |u(x)| <= C(1 + d(e,x))^d', so really u^2 <= C^2 R^(2d'). The constant C is what accounts for u at the origin (|u(e)| <= C); it's harmless since it only enters as a multiplicative factor in a finiteness-of-liminf statement.
