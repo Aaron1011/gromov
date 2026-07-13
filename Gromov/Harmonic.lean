@@ -173,6 +173,89 @@ lemma v_basis_r: ∃ R: ℝ, ∀ k: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V
     have bar := Module.Basis.index_nonempty foo
     exact bar
 
+
+lemma v_r_all_nonzero: ∃ R: ℝ, ∀ u ∈ V, u ≠ 0 → ∃ g ∈ Metric.closedBall 1 R, u g ≠ 0 := by
+  let zero_ball (n: ℕ): Submodule ℝ V := {
+      carrier := {v: V | ∀ g ∈ Metric.closedBall 1 n, v.val g = 0}
+      add_mem' := by
+        intro a b ha hb
+        simp at ha hb
+        simp
+        grind
+      zero_mem' := by
+        simp
+      smul_mem' := by
+        intro c x hx
+        simp at hx
+        simp
+        intro g hg
+        simp [HSMul.hSMul, SMul.smul]
+        grind
+  }
+
+  let f: ℕ →o (Submodule ℝ V)ᵒᵈ := {
+    toFun := zero_ball
+    monotone' := by
+      intro a b hab x hx
+      simp [zero_ball] at hx
+      simp [zero_ball]
+      intro g hg
+      apply hx g
+      grw [hab] at hg
+      exact hg
+  }
+  have artintian: IsArtinian ℝ V := by infer_instance
+  rw [← monotone_stabilizes_iff_artinian] at artintian
+  specialize artintian f
+  obtain ⟨n, hn⟩ := artintian
+
+  have inter_zero: ⨅ n: ℕ, zero_ball n = 0 := by
+    ext a
+    simp only [Submodule.mem_iInf, Submodule.zero_eq_bot, Submodule.mem_bot]
+    refine ⟨?_, ?_⟩
+    .
+      intro hi
+      ext g
+      specialize hi (WordNorm g)
+      simp [zero_ball] at hi
+      specialize hi g
+      simp [dist, WordDist_one] at hi
+      simp [hi]
+    . intro hi
+      simp [hi]
+
+  rw [← Antitone.iInf_nat_add (k := n)] at inter_zero
+  .
+    conv at inter_zero =>
+      lhs
+      arg 1
+      intro k
+      equals zero_ball n =>
+        specialize hn (k + n) (by simp)
+        simp [f] at hn
+        exact hn.symm
+
+    simp at inter_zero
+    simp [zero_ball] at inter_zero
+    use n
+    intro u hu
+    rw [Set.ext_iff] at inter_zero
+    specialize inter_zero ⟨u, hu⟩
+    simp at inter_zero
+    intro u_ne_zero
+    simp [u_ne_zero] at inter_zero
+    simp
+    exact inter_zero
+  . intro a b hab
+    simp [zero_ball]
+    intro u hu hg
+    intro g g_dist
+    specialize hg g
+    grw [hab] at g_dist
+    specialize hg g_dist
+    exact hg
+
+
 lemma Q_R_matrix_pos_def (R: ℝ) (hR: (v_basis_r (V := V)).choose ≤ R): (Q_R_matrix R (V := V)).PosDef := by
   apply Matrix.PosDef.of_dotProduct_mulVec_pos (Q_R_lin_hermetian _)
   intro x hx
