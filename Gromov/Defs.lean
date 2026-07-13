@@ -34,6 +34,8 @@ class Generates where
   one_mem: (1 : G) ∈ S
   has_inv: ∀ g ∈ S, g⁻¹ ∈ S
   g_infinite: Infinite G
+  -- TODO - should this carry data and the actual value 'd'?
+  g_growth: HasPolynomialGrowth S
 
 namespace GeneratesNS
 open Generates

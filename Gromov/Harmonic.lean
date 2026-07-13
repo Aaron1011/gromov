@@ -70,7 +70,7 @@ lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b  f = 0) (a: G
   simpa using path_implies_max
 
 
-variable {V: Submodule ℝ LipschitzH} [FiniteDimensional ℝ V] [Nontrivial V] (V_real: ∀ u ∈ V, ∀ g: G, (u g).im = 0) (hV : Even (Module.finrank V))  [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]
+variable {V: Submodule ℝ LipschitzH} [V_finite: FiniteDimensional ℝ V] [Nontrivial V] (V_real: ∀ u ∈ V, ∀ g: G, (u g).im = 0) (hV : Even (Module.finrank V))  [V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]
 
 
 noncomputable def Q_R (R : ℝ) (u v: G → ℝ): ℝ := ∑ g ∈ Metric.closedBall 1 R, (u g) * (v g)
@@ -4260,14 +4260,29 @@ theorem exists_nontrivial_harmonic: ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstL
     )
 
 
+omit V_decidable in
 noncomputable def my_expr (d: ℝ) (R : ℕ) := #(S ^ R) * ((Q_R_matrix R (V := V)).det ^ (1 / Module.finrank ℝ V)) / (R ^ d)
+
+omit V_decidable in
 noncomputable def growth_bound (d: ℝ) := Filter.liminf (fun (R: ℕ) => ENNReal.ofReal (my_expr (V := V) d R)) (Filter.atTop) ≠ ⊤
 
 
+-- Todo - is the better way to declare theorem_3_23 so that the constant is not allowed to depend on V?
+omit V in
+structure V_Data where
+  V: Submodule ℝ LipschitzH
+  hV: FiniteDimensional ℝ V
+  (V_real: ∀ u ∈ V, ∀ g: G, (u g).im = 0)
+  (V_even : Even (Module.finrank ℝ V))
+  V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)
 
 
+omit V in
+lemma theorem_3_23 (d: ℝ): ∃ C: ℕ, ∀ data: V_Data, growth_bound (V := data.V) (V_finite := data.hV) (V_decidable := data.V_decidable) d → (Module.finrank ℝ data.V) < C := by
+  have C: ℕ := sorry
+  use C
+  intro data h_growth
 
-lemma theorem_3_23 (d: ℝ): ∃ C: ℝ, growth_bound (V := V) d → (Module.finrank ℝ V) < C := by
   sorry
 
 instance nonempty_basis: Nonempty ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V) := Module.Basis.index_nonempty (Module.Basis.ofVectorSpace _ _)
@@ -4488,11 +4503,61 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
     have foo := (Finite.exists_max (Q_R_lin_hermetian R (V := V)).eigenvalues).choose_spec
     apply foo i
 
-#print sorries det_bound
 
+-- TODO - do we really need the double by_contra here?
 instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
+  classical
+  by_contra!
+  have B := Module.Basis.ofVectorSpace ℝ LipschitzH
 
-  sorry
+  have B_infinite: Infinite ((Module.Basis.ofVectorSpaceIndex ℝ LipschitzH)) := by
+    by_contra fin_basis
+    simp at fin_basis
+    have finite_module := Module.Finite.of_basis B
+    have finite_dim: FiniteDimensional ℝ LipschitzH := by
+      infer_instance
+    contradiction
+
+
+  obtain ⟨d, hd⟩ := hGS.g_growth
+  obtain ⟨C, V_bound⟩ := theorem_3_23 d
+  obtain ⟨fin_basis_idx, card_fin_basis_idx⟩ := B_infinite.exists_subset_card_eq _ (C * 2)
+  let fin_basis := Finset.image B fin_basis_idx
+  let large_v: V_Data := {
+    V := Submodule.span ℝ fin_basis
+    hV := by infer_instance
+    V_real := sorry
+    V_even := by
+      rw [finrank_span_finset_eq_card]
+      .
+        simp [fin_basis]
+        rw [Finset.card_image_of_injective]
+        . grind
+        . exact Module.Basis.injective B
+      .
+        simp [fin_basis]
+        apply LinearIndepOn.id_image
+        exact Module.Basis.linearIndepOn B ↑fin_basis_idx
+    V_decidable := by
+      infer_instance
+  }
+  specialize V_bound large_v ?_
+  . sorry
+  .
+    -- TODO - deduplicate
+    rw [finrank_span_finset_eq_card] at V_bound
+    .
+      simp [fin_basis] at V_bound
+      rw [Finset.card_image_of_injective] at V_bound
+      .
+        simp [card_fin_basis_idx] at V_bound
+        grind
+      . exact Module.Basis.injective B
+    .
+      simp [fin_basis]
+      apply LinearIndepOn.id_image
+      exact Module.Basis.linearIndepOn B ↑fin_basis_idx
+
 
 lemma rank_two : ((2: ℕ)) ≤ Module.rank ℝ LipschitzH := by
   rw [Module.le_rank_iff]
