@@ -5010,30 +5010,7 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
             sorry
         . simp [det_bound_const, max_lipschitz]
           sorry
-      .
-        conv =>
-          pattern (nhds 0)
-          equals nhds (det_bound_const (V := large_v.V) * 0) => simp
-        simp_rw [mul_div_assoc]
-        simp_rw [mul_assoc]
-        apply Filter.Tendsto.const_mul
-
-        simp_rw [add_pow_two]
-        norm_num
-        rw [← Filter.tendsto_add_atTop_iff_nat 1]
-        conv =>
-          arg 1
-          intro R
-          rw [← zpow_natCast_sub_natCast₀ (by norm_cast)]
-        norm_num
-        field_simp
-        simp_rw [mul_comm]
-        simp_rw [mul_div_assoc]
-        conv =>
-          pattern nhds 0
-          equals nhds (a * 0) => simp
-        apply Filter.Tendsto.const_mul
-        poly_tendsto
+      . poly_tendsto
     .
       --apply Asymptotics.IsLittleO.tendsto_div_nhds_zero
       unfold HasPolynomialGrowthD at hd
@@ -5049,16 +5026,7 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
           grw [s_growth n (by grind)]
           norm_cast
           simp
-      .
-        rw [← Filter.tendsto_map'_iff]
-        apply Asymptotics.IsLittleO.tendsto_div_nhds_zero
-        apply Asymptotics.IsLittleO.const_mul_left
-        simp
-        apply Asymptotics.IsLittleO.comp_tendsto (l' := Filter.atTop) (l := Filter.atTop)
-        . exact tendsto_natCast_atTop_atTop
-        .
-          apply Asymptotics.isLittleO_pow_pow_atTop_of_lt
-          simp
+      . poly_tendsto
 
     --     rw [Filter.map_val_Ici_atTop]
     --     rw [Nat.map_cast_int_atTop]
