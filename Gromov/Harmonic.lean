@@ -372,8 +372,9 @@ lemma v_r_all_nonzero: ∃ R: ℝ, ∀ u ∈ V, u ≠ 0 → ∃ g ∈ Metric.clo
     specialize hg g_dist
     exact hg
 
+noncomputable def R' : ℝ := (v_r_all_nonzero (V := V)).choose
 
-lemma Q_R_matrix_pos_def (R: ℝ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): (Q_R_matrix R (V := V)).PosDef := by
+lemma Q_R_matrix_pos_def (R: ℝ) (hR: (R' (V := V)) ≤ R): (Q_R_matrix R (V := V)).PosDef := by
   apply Matrix.PosDef.of_dotProduct_mulVec_pos (Q_R_lin_hermetian _)
   intro x hx
   simp [Q_R_matrix]
@@ -395,6 +396,7 @@ lemma Q_R_matrix_pos_def (R: ℝ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R):
       specialize this g ?_
       .
         simp
+        unfold R' at hR
         grw [hR] at g_mem
         simpa using g_mem
       . simp at this
@@ -4712,7 +4714,7 @@ lemma det_bound_const_nonneg: 0 ≤ det_bound_const (V := V) := by
   simp [det_bound_const]
   positivity
 
-lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R):
+lemma det_bound (R: ℕ) (hR: (R' (V := V)) ≤ R):
     ((Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V))
       ≤ det_bound_const (V := V) * (1 + R) ^ 2 * #(S ^ R) := by
   classical
@@ -4855,13 +4857,6 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R):
             . exact add_nonneg (mul_nonneg (by positivity) (max_lipschitz_nonneg (V := V)))
                 (mul_nonneg (by positivity) (max_origin_nonneg (V := V)))
             . simp
-            -- simp
-            -- simp [m_vec_V, m_vec]
-            -- grw [h_max_lipschitz]
-
-
-            -- grw [Finset.sum_le_card_nsmul]
-            -- exact foo
           . positivity
 
     . unfold m
@@ -4884,25 +4879,6 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R):
 #print axioms det_bound
 
 def lipschitz_toReal (f: LipschitzH): LipschitzH := f
-
--- lemma filter_map_nat_real_cast_attop: Filter.map ((↑): ℕ → ℝ) Filter.atTop = Filter.atTop := by
---   apply Filter.map_atTop_eq_of_gc (fun x => ⌈x⌉₊) 0
---   . exact Nat.mono_cast
---   . intro a b hb
---     refine ⟨?_, ?_⟩
---     . intro hab
---       sorry
---     . intro ha
-
---       apply Nat.le_
-
-
---   have foo := OrderIso.map_atTop (e := Nat.castOrderEmbedding)
---   apply Filter.map_val_atTop_of_Ici_subset
---   refine Filter.map_atTop_eq_of_gc_preorder (fun _ _ ↦ by simp) 0 fun n hn ↦ ?_
-
---   lift n to ℕ using hn
---   exact ⟨n, rfl, fun _ ↦ Int.ofNat_le⟩
 
 -- TODO - do we really need the double by_contra here?
 instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
@@ -4984,14 +4960,34 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       unfold HasPolynomialGrowthD at hd
       obtain ⟨a, s_growth⟩ := hd
       simp
-      apply squeeze_zero (g := (fun (R: ℕ) => (det_bound_const (V := large_v.V) * (1 + R) ^ 2 * ((a * R^d : ℝ))) / (R ^ (↑d + 3) : ℝ)))
+      -- (R' (V := V))
+      let R'' := ⌈R' (V := large_v.V)⌉₊
+      rw [← Filter.tendsto_add_atTop_iff_nat R'']
+      --  Filter.tendsto_add_atTop_iff_nat
+      apply squeeze_zero (g := (fun (R: ℕ) => (det_bound_const (V := large_v.V) * (1 + (R + R'')) ^ 2 * ((a * (R + R'')^d : ℝ))) / ((R + R'') ^ (↑d + 3) : ℝ)))
       .
         intro R
-        have det_pos := (Q_R_matrix_pos_def R (V := large_v.V) sorry).det_pos
+        have det_pos := (Q_R_matrix_pos_def (R + R'') (V := large_v.V) (by
+          -- TODO - why is this so messy?
+          simp [R'']
+          norm_cast
+          have foo := Nat.le_ceil (a := R' (V := large_v.V))
+          rw [add_comm]
+          simp
+          grind
+        )).det_pos
+        norm_cast at det_pos
         positivity
       .
         intro R
-        have foo := det_bound (V := large_v.V) (R := R) sorry
+        have foo := det_bound (V := large_v.V) (R := R + R'') (by
+          simp [R'']
+          norm_cast
+          have foo := Nat.le_ceil (a := R' (V := large_v.V))
+          rw [add_comm]
+          simp
+          grind
+        )
         simp
         simp at foo
         grw [foo]
@@ -5005,10 +5001,12 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
         rw [mul_assoc]
         rw [mul_le_mul_iff_right₀]
         .
-          by_cases r_zero: R = 0
-          . simp [r_zero]
+          by_cases r_zero: (R + R'') = 0
           .
-            grw [s_growth R (by grind)]
+            norm_cast
+            simp [r_zero]
+          .
+            grw [s_growth (R + R'') (by grind)]
             norm_cast
             simp
             rw [mul_div_assoc]
