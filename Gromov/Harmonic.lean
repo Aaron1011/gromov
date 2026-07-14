@@ -11,6 +11,100 @@ open Generates
 variable [hGS: Generates]
 include hGS
 
+noncomputable def LipschitzSemiNorm (f: G → ℝ): NNReal := sInf { k: NNReal | LipschitzWith k f }
+
+lemma lipschiz_norm_zero: LipschitzSemiNorm  (0) = 0 := by
+  unfold LipschitzSemiNorm
+  have zero_mem: 0 ∈ { k: NNReal | LipschitzWith k (0 : LipschitzH) } := by
+    simp
+  have sinf_le: sInf { k: NNReal | LipschitzWith k (0 : LipschitzH) } ≤ 0 := by
+    exact csInf_le' zero_mem
+  exact nonpos_iff_eq_zero.mp sinf_le
+
+
+
+#synth IsStrictOrderedRing NNReal
+
+-- TODO - upstream to mathlib
+lemma lipschitz_attains_norm (f: G → ℝ) (hf: IsLipschitz f): LipschitzWith (LipschitzSemiNorm f) f := by
+  by_contra!
+  have orig_this := this
+  simp [LipschitzWith] at this
+  obtain ⟨x, y, hdist⟩ := this
+  have edist_ne_zero: edist x y ≠ 0 := by
+    by_contra!
+    rw [this] at hdist
+    simp at this
+    rw [this] at hdist
+    simp at hdist
+
+  have edist_not_top: edist x y ≠ ⊤ := by
+    rw [edist_nndist]
+    exact ENNReal.coe_ne_top
+
+  rw [← ENNReal.lt_div_iff_mul_lt (by simp) (Or.inl edist_not_top)] at hdist
+  simp [LipschitzSemiNorm] at hdist
+  have isglb_sinf := isGLB_csInf (s := { k: NNReal | LipschitzWith k f }) (by
+    obtain ⟨K, hK⟩ := hf
+    use K
+    simp
+    exact hK
+  ) (by simp)
+
+
+
+  have between := IsGLB.exists_between (b := (edist (f x) (f y) / edist x y).toNNReal) isglb_sinf (by
+    rw [edist_nndist]
+    rw [edist_nndist]
+    conv =>
+      rhs
+      equals (nndist (f x) (f y)) / (nndist x y) =>
+        rw [← ENNReal.coe_div]
+        simp
+        exact ENNReal.coe_ne_zero.mp edist_ne_zero
+
+    rw [edist_nndist] at hdist
+    rw [edist_nndist] at hdist
+    have edist_gt_zero: edist x y > 0 := by
+      exact pos_of_ne_zero edist_ne_zero
+
+    have x_ne_y := edist_pos.mp edist_gt_zero
+
+    conv at hdist =>
+      rhs
+      equals ENNReal.ofNNReal ((nndist (f x) (f y)) / (nndist x y)) =>
+        rw [ENNReal.coe_div]
+        simp [x_ne_y]
+
+
+    norm_cast at hdist
+  )
+  obtain ⟨D, lipschitz_d, sinf_le_d, d_lt_slope⟩ := between
+  simp [LipschitzWith] at lipschitz_d
+  specialize lipschitz_d x y
+  rw [mul_comm] at lipschitz_d
+  apply ENNReal.div_le_of_le_mul' at lipschitz_d
+  repeat rw [edist_nndist] at lipschitz_d
+  repeat rw [edist_nndist] at d_lt_slope
+  rw [← ENNReal.coe_div] at lipschitz_d
+  .
+    norm_cast at lipschitz_d
+    rw [← ENNReal.coe_div] at d_lt_slope
+    .
+      norm_cast at d_lt_slope
+      apply not_lt_of_ge at lipschitz_d
+      contradiction
+    . rw [edist_nndist] at edist_ne_zero
+      exact fun a ↦ edist_ne_zero (congrArg ENNReal.ofNNReal a)
+  . rw [edist_nndist] at edist_ne_zero
+    exact fun a ↦ edist_ne_zero (congrArg ENNReal.ofNNReal a)
+
+
+lemma lipschitz_k_le_norm (f: G → ℝ) (k: NNReal) (hf: LipschitzWith k f): (LipschitzSemiNorm f) ≤ k := by
+  simp [LipschitzSemiNorm]
+  apply csInf_le
+  . simp
+  . simp [hf]
 
 -- If a harmonic function has a maximum value, then it must be a constant function
 -- We state 'f is harmonc' as 'Laplace_b f = 0', as this is the hypothesis we have where we need to call this lemma
@@ -4313,7 +4407,7 @@ lemma card_closed_ball_eq (R: ℕ): #((finite_closed_ball 1 R).toFinset) = #(S ^
     apply word_norm_le
     simp [ProdS, hf]
 
-lemma iterated_lipschitz_bound (f: LipschitzH): ∀ g: G, ‖f g‖ ≤ (f.lipschitz.choose + ‖f 1‖) * (1 + WordNorm g) := by
+lemma iterated_lipschitz_bound (f: LipschitzH): ∀ g: G, ‖f g‖ ≤ (LipschitzSemiNorm f + ‖f 1‖) * (1 + WordNorm g) := by
   -- intro g
   -- by_cases g = 1
   -- . rename_i g_eq
@@ -4341,13 +4435,13 @@ lemma iterated_lipschitz_bound (f: LipschitzH): ∀ g: G, ‖f g‖ ≤ (f.lipsc
       specialize ih (WordNorm tail.unattach.prod) (by grind) tail.unattach.prod rfl
       rw [← l_prod, l_eq]
       simp
-      have foo := f.lipschitz.choose_spec
+      have foo := lipschitz_attains_norm f.toFun f.lipschitz
       unfold LipschitzWith at foo
       have s_dist := foo (head * tail.unattach.prod) tail.unattach.prod
       rw [edist_dist] at s_dist
       conv at s_dist =>
         rhs
-        equals ENNReal.ofReal (f.lipschitz.choose *  (dist (↑head * tail.unattach.prod) tail.unattach.prod)) =>
+        equals ENNReal.ofReal (LipschitzSemiNorm f *  (dist (↑head * tail.unattach.prod) tail.unattach.prod)) =>
           rw [ENNReal.ofReal_mul, ENNReal.ofReal_coe_nnreal]
           rw [edist_dist]
           .
@@ -4370,15 +4464,16 @@ lemma iterated_lipschitz_bound (f: LipschitzH): ∀ g: G, ‖f g‖ ≤ (f.lipsc
           grw [tail_len_le]
           norm_cast
           rw [Nat.add_sub_of_le (by grind)]
+          simp [DFunLike.coe]
           ring
           norm_cast
           conv =>
             lhs
             lhs
             arg 1
-            equals f.lipschitz.choose * (n + 1) =>
+            equals (LipschitzSemiNorm f.toFun) * (n + 1) =>
               ring
-          rw [add_comm 1]
+          nth_rw 2 [add_comm]
           simp
           norm_cast
           simp
@@ -4417,6 +4512,20 @@ lemma hermitian_det_pow_le (R: ℝ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R
     infer_instance
 
 -- TODO - generalize and upstream
+theorem LipschitzWith.sum {ι : Type*} {α : Type*} {E : Type*}
+    [PseudoEMetricSpace α] [SeminormedAddCommGroup E]
+    {s : Finset ι} {f : ι → α → E} {K : ι → NNReal}
+    (hf : ∀ i ∈ s, LipschitzWith (K i) (f i)) :
+    LipschitzWith (∑ i ∈ s, K i) (fun x ↦ ∑ i ∈ s, f i x) := by
+  classical
+  induction s using Finset.induction with
+  | empty => simpa using LipschitzWith.const (α := α) (0 : E)
+  | insert a s ha ih =>
+    simp only [Finset.sum_insert ha]
+    exact (hf a (Finset.mem_insert_self a s)).add
+      (ih (fun i hi => hf i (Finset.mem_insert_of_mem hi)))
+
+-- TODO - generalize and upstream
 lemma euclidean_of_lp_le (x: EuclideanSpace ℝ ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)) (i: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)):
     |x.ofLp i| ≤ ‖x‖ := by
 
@@ -4431,6 +4540,139 @@ lemma euclidean_of_lp_le (x: EuclideanSpace ℝ ↑(Module.Basis.ofVectorSpaceIn
   . simp
   . positivity
 
+-- BEGIN MOVE
+
+lemma lipschitz_norm_triangle (x y z: G → ℝ) (hx: IsLipschitz x) (hy: IsLipschitz y) (hz: IsLipschitz z): LipschitzSemiNorm (x - z) ≤ LipschitzSemiNorm (x - y) + LipschitzSemiNorm (y - z) := by
+  simp [LipschitzSemiNorm]
+  conv =>
+    pattern x - z
+    equals (x - y) + (y - z) =>
+      simp
+
+
+  have sum_norm_mem: (LipschitzSemiNorm (x - y)) + (LipschitzSemiNorm (y - z)) ∈ { k: NNReal | LipschitzWith k ((x - y) + (y - z)) } := by
+    simp only [LipschitzSemiNorm]
+    apply LipschitzWith.add
+    .
+      apply lipschitz_attains_norm
+      simp [IsLipschitz]
+      simp [IsLipschitz] at hx
+      simp [IsLipschitz] at hy
+      obtain ⟨X, hX⟩ := hx
+      obtain ⟨Y, hY⟩ := hy
+      use X + Y
+      apply LipschitzWith.sub hX hY
+    .
+      apply lipschitz_attains_norm
+      simp [IsLipschitz]
+      simp [IsLipschitz] at hy
+      simp [IsLipschitz] at hz
+      obtain ⟨Y, hY⟩ := hy
+      obtain ⟨Z, hZ⟩ := hz
+      use Y + Z
+      apply LipschitzWith.sub hY hZ
+
+  have sinf_le_sum := csInf_le (by simp) sum_norm_mem
+  simp [LipschitzSemiNorm] at sinf_le_sum
+  conv at sinf_le_sum =>
+    pattern x - z
+    equals (x - y) + (y - z) =>
+      simp
+  exact sinf_le_sum
+
+
+lemma lipschitzH_norm_triangle (x y z: LipschitzH): LipschitzSemiNorm (x - z) ≤ LipschitzSemiNorm (x - y) + LipschitzSemiNorm (y - z) := by
+  apply lipschitz_norm_triangle x y z x.lipschitz y.lipschitz z.lipschitz
+
+lemma lipschitzWith_neg_iff {f : G → ℝ} {K : NNReal} : LipschitzWith K (-f) ↔ LipschitzWith K f :=
+  ⟨fun h => by simpa using h.neg, LipschitzWith.neg⟩
+
+lemma lipschitzSemiNorm_neg (f : G → ℝ) : LipschitzSemiNorm (-f) = LipschitzSemiNorm f := by
+  unfold LipschitzSemiNorm
+  congr 1
+  ext k
+  simp only [Set.mem_setOf_eq, lipschitzWith_neg_iff]
+
+
+--section lipschitz_norm
+set_option maxHeartbeats 1000000 in
+noncomputable local instance LipschitzH_seminorm: SeminormedAddCommGroup (LipschitzH) where
+  norm := fun v => LipschitzSemiNorm v
+  dist_self := by
+    intro v
+    simp [LipschitzSemiNorm]
+    exact lipschiz_norm_zero
+  dist_comm := by
+    intro x y
+    have key : LipschitzSemiNorm (⇑(-x + y)) = LipschitzSemiNorm (⇑(-y + x)) := by
+      rw [← lipschitzSemiNorm_neg (⇑(-y + x))]
+      congr 1
+      ext a
+      simp only [lipschitz_neg_tofun, lipschitz_add_tofun, LipschitzH_apply, Pi.add_apply,
+        Pi.neg_apply]
+      ring
+    simpa using key
+  dist_triangle := by
+    intro x y z
+    have key : LipschitzSemiNorm (⇑(-x + z)) ≤
+        LipschitzSemiNorm (⇑(-x + y)) + LipschitzSemiNorm (⇑(-y + z)) := by
+      have h := lipschitzH_norm_triangle z y x
+      have e1 : (⇑(-x + z) : G → ℝ) = ⇑(z - x) := by
+        ext a
+        simp only [lipschitz_neg_tofun, lipschitz_add_tofun, lipschitz_sub_tofun, LipschitzH_apply,
+          Pi.add_apply, Pi.neg_apply, Pi.sub_apply]
+        ring
+      have e2 : (⇑(-x + y) : G → ℝ) = ⇑(y - x) := by
+        ext a
+        simp only [lipschitz_neg_tofun, lipschitz_add_tofun, lipschitz_sub_tofun, LipschitzH_apply,
+          Pi.add_apply, Pi.neg_apply, Pi.sub_apply]
+        ring
+      have e3 : (⇑(-y + z) : G → ℝ) = ⇑(z - y) := by
+        ext a
+        simp only [lipschitz_neg_tofun, lipschitz_add_tofun, lipschitz_sub_tofun, LipschitzH_apply,
+          Pi.add_apply, Pi.neg_apply, Pi.sub_apply]
+        ring
+      rw [e1, e2, e3, add_comm]
+      exact h
+    simpa using key
+
+-- Note that we only implement SeminormedAddCommGroup for LipschitzH, so this is only
+-- really a seminormed space. The quotient space W := LipschitzH ⧸ ConstF
+-- is an actual normed space.
+noncomputable local instance LipschitzH_normed: NormedSpace ℝ (LipschitzH) where
+  norm_smul_le := by
+    intro c f
+    simp [HSMul.hSMul, SMul.smul]
+    simp [norm]
+    conv =>
+      lhs
+      simp [LipschitzSemiNorm]
+    norm_cast
+    apply csInf_le (by
+      simp [BddBelow]
+      apply Set.nonempty_of_mem (x := 0)
+      rw [mem_lowerBounds]
+      simp
+    )
+    simp
+    let K := LipschitzSemiNorm f
+    have hK := lipschitz_attains_norm f (f.lipschitz)
+    use ‖ (c * K) ‖₊
+    simp
+    have comp_mul_const := LipschitzWith.comp (Kf := ‖c‖₊) (Kg := K) (f := fun x => c • x) (g := f.toFun) (by apply lipschitzWith_smul) hK
+    simp at comp_mul_const
+    conv =>
+      lhs
+      arg 2
+      simp [DFunLike.coe]
+      equals (fun x ↦ c • x) ∘ f.toFun => rfl
+
+
+    refine ⟨comp_mul_const, ?_⟩
+    left
+    simp [K]
+-- END MOVE
+
 -- This is too weak - we need the constant to be independent of R
 lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: ℝ, ((Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V)) ≤ C * #(S ^ R) := by
   classical
@@ -4439,7 +4681,7 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
   let m_vec := (Q_R_lin_hermetian R (V := V)).eigenvectorBasis argmax_eigen
   let m_vec_V := V_basis (V := V).equivFun.symm (m_vec.ofLp)
 
-  let v_lipschitz_constant := fun (i: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)) => (V_basis (V := V) i).val.lipschitz.choose
+  let v_lipschitz_constant := fun (i: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)) => ‖(V_basis (V := V) i).val‖
   let v_origin_norm := (fun i => ‖(V_basis (V := V) i).val 1‖)
   obtain ⟨i_max_lipschitz, h_max_lipschitz⟩ := Finite.exists_max v_lipschitz_constant
   obtain ⟨i_max_origin, h_max_origin⟩ := Finite.exists_max v_origin_norm
@@ -4453,7 +4695,7 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
   --   have foo := abs_nonneg ((m_vec_V).val.toFun 1)
   --   grw [hB] at foo
   --   apply nonneg_of_mul_nonneg_left foo (by grind)
-  use (((max_lipschitz + ((Module.finrank ℝ ↥V) * max_origin)) * (1 + R)) ^ 2)
+  use (((((Module.finrank ℝ ↥V) * max_lipschitz) + ((Module.finrank ℝ ↥V) * max_origin)) * (1 + R)) ^ 2)
   rw [(Q_R_lin_hermetian R (V := V)).det_eq_prod_eigenvalues]
   grw [Finset.prod_le_prod (g := fun _ => m)]
   .
@@ -4489,7 +4731,7 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
         map_smul, LinearMap.coe_mk, AddHom.coe_mk, LinearMap.coe_sum, LinearMap.coe_smul,
         Finset.sum_apply, Pi.smul_apply, smul_eq_mul, ge_iff_le]
       simp_rw [← pow_two]
-      grw [Finset.sum_le_card_nsmul (n := (((max_lipschitz + ((Module.finrank ℝ ↥V) * max_origin)) * (1 + R)) ^ 2))]
+      grw [Finset.sum_le_card_nsmul (n := (((((Module.finrank ℝ ↥V)) * max_lipschitz + ((Module.finrank ℝ ↥V) * max_origin)) * (1 + R)) ^ 2))]
       .
         rw [← card_closed_ball_eq]
         simp
@@ -4530,7 +4772,28 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
             . apply add_le_add
               .
                 simp [max_lipschitz]
-                sorry
+                have foo := (m_vec_V).val.lipschitz.choose_spec
+                conv at foo =>
+                  arg 2
+                  simp [m_vec_V]
+
+                conv =>
+                  lhs
+                  equals ‖m_vec_V.val‖₊ =>
+                    rfl
+                simp [m_vec_V]
+                --grw [norm_sum_l]
+                grw [norm_sum_le]
+                grw [Finset.sum_le_card_nsmul (n := ↑max_lipschitz)]
+                .
+                  simp
+                  rw [← Module.finrank_eq_card_basis (Module.Basis.ofVectorSpace ℝ V)]
+                .
+                  intro i _
+                  simp [norm_smul]
+                  grw [euclidean_of_lp_le]
+                  simp [m_vec]
+                  apply h_max_lipschitz
               .
                 simp [m_vec_V, m_vec]
                 rw [← LipschitzH_apply]
@@ -4573,6 +4836,8 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
     unfold m
     have foo := (Finite.exists_max (Q_R_lin_hermetian R (V := V)).eigenvalues).choose_spec
     apply foo i
+
+#print axioms det_bound
 
 def lipschitz_toReal (f: LipschitzH): LipschitzH := f
 
