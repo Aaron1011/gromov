@@ -171,7 +171,7 @@ variable {V: Submodule ℝ LipschitzH} [V_finite: FiniteDimensional ℝ V] [Nont
 
 
 lemma Q_lin_pos_semi_def (R: ℝ): (Q_R_matrix R (V := V)).PosSemidef := by
-  apply Matrix.PosSemidef.of_dotProduct_mulVec_nonneg (Q_R_lin_hermetian _)
+  apply Matrix.PosSemidef.of_dotProduct_mulVec_nonneg (Q_R_lin_hermetian V _)
   intro x
   rw [Q_R_matrix]
   rw [star_dotProduct_toMatrix₂_mulVec, Q_R_lin]
@@ -181,17 +181,17 @@ lemma Q_lin_pos_semi_def (R: ℝ): (Q_R_matrix R (V := V)).PosSemidef := by
   rw [← pow_two]
   positivity
 
-lemma v_basis_app_nonzero (k: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)): ∃ g: G, (V_basis k).val g ≠ 0 := by
+lemma v_basis_app_nonzero (k: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)): ∃ g: G, (V_basis V k).val g ≠ 0 := by
   by_contra!
   rw [← funext_iff] at this
-  have nonzero := Module.Basis.ne_zero V_basis k
+  have nonzero := Module.Basis.ne_zero (V_basis V) k
   conv at this =>
     rhs
     equals 0 =>
       ext a
       simp
   simp at nonzero
-  have k_zero: V_basis k = 0 := by
+  have k_zero: V_basis V k = 0 := by
     apply_fun Subtype.val
     .
       apply_fun DFunLike.coe
@@ -206,7 +206,7 @@ lemma v_basis_app_nonzero (k: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)): �
     . simp
   contradiction
 
-lemma v_basis_r: ∃ R: ℝ, ∀ k: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V), ∃ g ∈ Metric.closedBall 1 R, (V_basis k).val g ≠ 0 := by
+lemma v_basis_r: ∃ R: ℝ, ∀ k: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V), ∃ g ∈ Metric.closedBall 1 R, (V_basis V k).val g ≠ 0 := by
   use ((Finset.image ((fun (k: (Module.Basis.ofVectorSpaceIndex ℝ ↥V)) => (WordNorm (v_basis_app_nonzero k).choose : ℝ))) Finset.univ)).max' ?_
   .
     intro k
@@ -4269,11 +4269,11 @@ lemma iterated_lipschitz_bound (f: LipschitzH): ∀ g: G, ‖f g‖ ≤ (Lipschi
         . simp
       . positivity
 
-lemma hermitian_det_pow_le (R: ℝ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): (Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V) ≤ (Q_R_matrix R (V := V)).trace := by
-  rw [(Q_R_lin_hermetian R).det_eq_prod_eigenvalues, (Q_R_lin_hermetian R).trace_eq_sum_eigenvalues]
+lemma hermitian_det_pow_le (R: ℝ) (hR: (v_r_all_nonzero V).choose ≤ R): (Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V) ≤ (Q_R_matrix R (V := V)).trace := by
+  rw [(Q_R_lin_hermetian V R).det_eq_prod_eigenvalues, (Q_R_lin_hermetian V R).trace_eq_sum_eigenvalues]
   have am_gm :=  Real.geom_mean_le_arith_mean (ι := ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)) (s := Finset.univ)
     (w := fun i => 1)
-    (z := fun i => (Q_R_lin_hermetian R).eigenvalues i)
+    (z := fun i => (Q_R_lin_hermetian V R).eigenvalues i)
     (by intro i hi; positivity)
     (by
       simp
@@ -4283,7 +4283,7 @@ lemma hermitian_det_pow_le (R: ℝ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R
     )
     (by
       intro i _
-      apply (Q_R_matrix_pos_def R hR).posSemidef.eigenvalues_nonneg
+      apply (Q_R_matrix_pos_def V R hR).posSemidef.eigenvalues_nonneg
     )
   simp at am_gm
   simp
@@ -4293,7 +4293,7 @@ lemma hermitian_det_pow_le (R: ℝ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R
   .
     apply Finset.sum_nonneg
     intro i _
-    apply (Q_R_matrix_pos_def R hR).posSemidef.eigenvalues_nonneg
+    apply (Q_R_matrix_pos_def V R hR).posSemidef.eigenvalues_nonneg
   . simp
     apply Submodule.nontrivial_iff_ne_bot.mp
     infer_instance
@@ -4497,7 +4497,7 @@ lemma det_bound_const_nonneg: 0 ≤ det_bound_const (V := V) := by
   simp [det_bound_const]
   positivity
 
-lemma det_bound (R: ℕ) (hR: (R' (V := V)) ≤ R):
+lemma det_bound (R: ℕ) (hR: (R'_ V) ≤ R):
     ((Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V))
       ≤ det_bound_const (V := V) * (1 + R) ^ 2 * #(S ^ R) := by
   classical
@@ -4587,7 +4587,7 @@ lemma det_bound (R: ℕ) (hR: (R' (V := V)) ≤ R):
             arg 1
             arg 1
             arg 1
-            equals (Q_R_lin_hermetian ↑R).eigenvectorBasis =>
+            equals (Q_R_lin_hermetian V ↑R).eigenvectorBasis =>
               rfl
           conv at foo =>
             lhs
@@ -4644,19 +4644,19 @@ lemma det_bound (R: ℕ) (hR: (R' (V := V)) ≤ R):
 
     . unfold m
       apply Matrix.PosSemidef.eigenvalues_nonneg
-      apply (Q_R_matrix_pos_def R hR (V := V)).posSemidef
+      apply (Q_R_matrix_pos_def V R hR).posSemidef
   .
     apply Finset.prod_nonneg
     intro i _
     apply Matrix.PosSemidef.eigenvalues_nonneg
-    apply (Q_R_matrix_pos_def R hR (V := V)).posSemidef
+    apply (Q_R_matrix_pos_def V R hR).posSemidef
   .
     intro i _
     apply Matrix.PosSemidef.eigenvalues_nonneg
-    apply (Q_R_matrix_pos_def R hR (V := V)).posSemidef
+    apply (Q_R_matrix_pos_def V R hR).posSemidef
   . intro i _
     unfold m
-    have foo := (Finite.exists_max (Q_R_lin_hermetian R (V := V)).eigenvalues).choose_spec
+    have foo := (Finite.exists_max (Q_R_lin_hermetian V R).eigenvalues).choose_spec
     apply foo i
 
 #print axioms det_bound
@@ -4756,7 +4756,7 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       obtain ⟨a, s_growth⟩ := hd
       simp
       -- (R' (V := V))
-      let R'' := ⌈R' (V := large_v.V)⌉₊
+      let R'' := ⌈R'_ large_v.V⌉₊
       rw [← Filter.tendsto_add_atTop_iff_nat R'']
       --  Filter.tendsto_add_atTop_iff_nat
       apply squeeze_zero (g := (fun (R: ℕ) => (det_bound_const (V := large_v.V) * (1 + (R + R'')) ^ 2 * ((a * (R + R'')^d : ℝ))) / ((R + R'') ^ (↑d + 3) : ℝ)))
@@ -4766,7 +4766,7 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
           -- TODO - why is this so messy?
           simp [R'']
           norm_cast
-          have foo := Nat.le_ceil (a := R' (V := large_v.V))
+          have foo := Nat.le_ceil (a := R'_ large_v.V)
           rw [add_comm]
           simp
           grind
@@ -4778,7 +4778,7 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
         have foo := det_bound (V := large_v.V) (R := R + R'') (by
           simp [R'']
           norm_cast
-          have foo := Nat.le_ceil (a := R' (V := large_v.V))
+          have foo := Nat.le_ceil (a := R'_ (V := large_v.V))
           rw [add_comm]
           simp
           grind

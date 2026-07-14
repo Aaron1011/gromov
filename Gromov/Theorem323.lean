@@ -57,54 +57,19 @@ noncomputable def Q_R_matrix (V: Submodule ℝ LipschitzH) (R: ℝ) [FiniteDimen
 noncomputable def my_expr (V: Submodule ℝ LipschitzH) (d: ℝ) (R : ℕ) [FiniteDimensional ℝ V] [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)] := #(S ^ R) * ((Q_R_matrix V R).det ^ ((1 : ℝ) / Module.finrank ℝ V)) / (R ^ d)
 noncomputable def growth_bound (V: Submodule ℝ LipschitzH) (d: ℝ) [finite_V : FiniteDimensional ℝ V] [decidable_V : DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]  := Filter.liminf (fun (R: ℕ) => ENNReal.ofReal (my_expr V d R)) (Filter.atTop) ≠ ⊤
 
--- Everything in this section freely references fields from V_Wrapper
-section V_Wrapper_Section
-
-class V_Wrapper where
-  V: Submodule ℝ LipschitzH
-  V_finite: FiniteDimensional ℝ V
-  V_nontrivial: Nontrivial V
-  V_even: Even (Module.finrank ℝ V)
-  V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ V)
-
-open V_Wrapper
-
-variable [v_wrapper_inst: V_Wrapper]
-include v_wrapper_inst
-
-local instance v_finite_dim_inst: FiniteDimensional ℝ V := v_wrapper_inst.V_finite
-local instance v_nontrivial_inst: Nontrivial V := v_wrapper_inst.V_nontrivial
-local instance V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ V) := v_wrapper_inst.V_decidable
-
-
-
--- Todo - is the better way to declare theorem_3_23 so that the constant is not allowed to depend on V?
-
-structure V_Data where
-  V: Submodule ℝ LipschitzH
-  hV: FiniteDimensional ℝ V
-  (V_even : Even (Module.finrank ℝ V))
-  V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)
-
-
-lemma Q_R_lin_symm (R: ℝ): (Q_R_lin V R).IsSymm := {
+lemma Q_R_lin_symm (V: Submodule ℝ LipschitzH) (R: ℝ): (Q_R_lin V R).IsSymm := {
   eq := by
     intro u v
     simp [Q_R_lin, Q_R]
     simp_rw [mul_comm]
 }
-noncomputable def Q_R_single (R : ℝ) (u: G → ℝ): ℝ := ∑ g ∈ Metric.closedBall 1 R, (u g)^2
 
-lemma Q_R_single_eq (R: ℝ) (u : G → ℝ): Q_R_single R u = Q_R R u u := by
-  unfold Q_R_single Q_R
-  simp_rw [pow_two]
-
-lemma Q_R_lin_hermetian (R: ℝ): (Q_R_matrix V R).IsHermitian := by
+lemma Q_R_lin_hermetian (V: Submodule ℝ LipschitzH) (R: ℝ) [FiniteDimensional ℝ V] [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]: (Q_R_matrix V R).IsHermitian := by
   rw [Q_R_matrix, ← LinearMap.isSymm_iff_isHermitian_toMatrix]
   apply Q_R_lin_symm
 
 
-lemma v_r_all_nonzero: ∃ R: ℝ, ∀ u ∈ V, u ≠ 0 → ∃ g ∈ Metric.closedBall 1 R, u g ≠ 0 := by
+lemma v_r_all_nonzero (V: Submodule ℝ LipschitzH) [FiniteDimensional ℝ V]: ∃ R: ℝ, ∀ u ∈ V, u ≠ 0 → ∃ g ∈ Metric.closedBall 1 R, u g ≠ 0 := by
   let zero_ball (n: ℕ): Submodule ℝ V := {
       carrier := {v: V | ∀ g ∈ Metric.closedBall 1 n, v.val g = 0}
       add_mem' := by
@@ -184,11 +149,13 @@ lemma v_r_all_nonzero: ∃ R: ℝ, ∀ u ∈ V, u ≠ 0 → ∃ g ∈ Metric.clo
     specialize hg g_dist
     exact hg
 
-noncomputable def R' : ℝ := (v_r_all_nonzero).choose
 
 
-lemma Q_R_matrix_pos_def (R: ℝ) (hR: (R') ≤ R): (Q_R_matrix V R).PosDef := by
-  apply Matrix.PosDef.of_dotProduct_mulVec_pos (Q_R_lin_hermetian _)
+noncomputable def R'_ (V: Submodule ℝ LipschitzH) [FiniteDimensional ℝ V] : ℝ := (v_r_all_nonzero V).choose
+
+
+lemma Q_R_matrix_pos_def (V: Submodule ℝ LipschitzH) [FiniteDimensional ℝ V] [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)] (R: ℝ) (hR: (R'_ V) ≤ R): (Q_R_matrix V R).PosDef := by
+  apply Matrix.PosDef.of_dotProduct_mulVec_pos (Q_R_lin_hermetian V _)
   intro x hx
   simp [Q_R_matrix]
   conv =>
@@ -203,13 +170,13 @@ lemma Q_R_matrix_pos_def (R: ℝ) (hR: (R') ≤ R): (Q_R_matrix V R).PosDef := b
     simp_rw [← pow_two] at this
     simp only [sq_nonpos_iff] at this
 
-    have foo := (v_r_all_nonzero).choose_spec ((V_basis V).equivFun.symm x) (by apply Submodule.coe_mem) ?_
+    have foo := (v_r_all_nonzero V).choose_spec ((V_basis V).equivFun.symm x) (by apply Submodule.coe_mem) ?_
     .
       obtain ⟨g, g_mem, x_g_nonzero⟩ := foo
       specialize this g ?_
       .
         simp
-        unfold R' at hR
+        unfold R'_ at hR
         grw [hR] at g_mem
         simpa using g_mem
       . simp at this
@@ -231,6 +198,47 @@ lemma Q_R_matrix_pos_def (R: ℝ) (hR: (R') ≤ R): (Q_R_matrix V R).PosDef := b
 
 #print sorries Q_R_matrix_pos_def
 
+-- Everything in this section freely references fields from V_Wrapper
+section V_Wrapper_Section
+
+class V_Wrapper where
+  V: Submodule ℝ LipschitzH
+  V_finite: FiniteDimensional ℝ V
+  V_nontrivial: Nontrivial V
+  V_even: Even (Module.finrank ℝ V)
+  V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ V)
+
+open V_Wrapper
+
+variable [v_wrapper_inst: V_Wrapper]
+include v_wrapper_inst
+
+local instance v_finite_dim_inst: FiniteDimensional ℝ V := v_wrapper_inst.V_finite
+local instance v_nontrivial_inst: Nontrivial V := v_wrapper_inst.V_nontrivial
+local instance V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ V) := v_wrapper_inst.V_decidable
+
+private noncomputable def R' := R'_ V
+
+
+-- Todo - is the better way to declare theorem_3_23 so that the constant is not allowed to depend on V?
+-- TODO - can this somehow be merged with V_wrapper?
+structure V_Data where
+  V: Submodule ℝ LipschitzH
+  hV: FiniteDimensional ℝ V
+  (V_even : Even (Module.finrank ℝ V))
+  V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)
+
+
+noncomputable def Q_R_single (R : ℝ) (u: G → ℝ): ℝ := ∑ g ∈ Metric.closedBall 1 R, (u g)^2
+
+lemma Q_R_single_eq (R: ℝ) (u : G → ℝ): Q_R_single R u = Q_R R u u := by
+  unfold Q_R_single Q_R
+  simp_rw [pow_two]
+
+
+
+
+
 -- Finding good scales:
 
 private noncomputable def dim (V: Type*) [AddCommMonoid V] [Module ℝ V] : ℝ := Module.finrank ℝ V
@@ -240,11 +248,13 @@ private noncomputable def i₀ : ℕ := Nat.clog 16 ⌈R'⌉₊
 lemma Q_R_matrix_pos_def_i₀ (R: ℝ) (hR: 16 ^ (i₀) ≤ R): (Q_R_matrix V R).PosDef := by
   apply Q_R_matrix_pos_def
   simp [i₀] at hR
-  have foo := Nat.le_pow_clog (b := 16) (x := ⌈R'⌉₊) (by simp)
+  have foo := Nat.le_pow_clog (b := 16) (x := ⌈R'_ V⌉₊) (by simp)
   have r_ceil := Nat.le_ceil (R')
+  unfold R' at r_ceil
   grw [r_ceil]
   grw [foo]
   simp
+  unfold R' at hR
   grw [hR]
 
 private noncomputable def f (R: ℕ): ℝ := #(S ^ R) * (Q_R_matrix V R).det ^ (dim V)⁻¹
@@ -254,6 +264,8 @@ lemma growth_implies_lim_h (d: ℕ) (growth: growth_bound V d): Filter.liminf (f
 
   sorry
 
+end V_Wrapper_Section
+
 lemma theorem_3_23 (d: ℝ): ∃ C: ℕ, ∀ data: V_Data, (growth_bound data.V d (finite_V := data.hV) (decidable_V := data.V_decidable)) → (Module.finrank ℝ data.V) < C := by
   have C: ℕ := sorry
   use C
@@ -261,5 +273,3 @@ lemma theorem_3_23 (d: ℝ): ∃ C: ℕ, ∀ data: V_Data, (growth_bound data.V 
 
 
   sorry
-
-end V_Wrapper_Section
