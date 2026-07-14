@@ -4331,7 +4331,7 @@ theorem exists_nontrivial_harmonic: ∃ F: LipschitzH , ∀ z: ℝ, F ≠ ConstL
 
 
 omit V_decidable in
-noncomputable def my_expr (d: ℝ) (R : ℕ) := #(S ^ R) * ((Q_R_matrix R (V := V)).det ^ (1 / Module.finrank ℝ V)) / (R ^ d)
+noncomputable def my_expr (d: ℝ) (R : ℕ) := #(S ^ R) * ((Q_R_matrix R (V := V)).det ^ ((1 : ℝ) / Module.finrank ℝ V)) / (R ^ d)
 
 omit V_decidable in
 noncomputable def growth_bound (d: ℝ) := Filter.liminf (fun (R: ℕ) => ENNReal.ofReal (my_expr (V := V) d R)) (Filter.atTop) ≠ ⊤
@@ -4342,6 +4342,7 @@ omit V in
 structure V_Data where
   V: Submodule ℝ LipschitzH
   hV: FiniteDimensional ℝ V
+  V_nontrivial: Nontrivial V
   (V_even : Even (Module.finrank ℝ V))
   V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)
 
@@ -4935,6 +4936,8 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
         exact Module.Basis.linearIndepOn B ↑fin_basis_idx
     V_decidable := by
       infer_instance
+    V_nontrivial := by
+      sorry
   }
   specialize V_bound large_v ?_
   .
@@ -4969,22 +4972,52 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       rw [mul_comm _ (1 / _)]
       rw [← mul_assoc]
 
-
+    have nontrivial_v := large_v.V_nontrivial
     conv =>
       pattern nhds 0
       equals nhds (0 * 0) => simp
+
     apply Filter.Tendsto.mul
     .
+      unfold HasPolynomialGrowthD at hd
+      obtain ⟨a, s_growth⟩ := hd
       simp
-
-      -- have det := det_bound (V := large_v.V) ⌈((v_r_all_nonzero (V := V)).choose)⌉₊ (by
-      --   sorry
-      -- )
-    -- obtain ⟨K, hK⟩ := det
-
-    -- simp at hK
-
-      sorry
+      apply squeeze_zero (g := (fun (R: ℕ) => (det_bound_const (V := large_v.V) * (1 + R) ^ 2 * ((a * R^d : ℝ))) / (R ^ (↑d + 1) : ℝ)))
+      .
+        intro R
+        have det_pos := (Q_R_matrix_pos_def R (V := large_v.V) sorry).det_pos
+        positivity
+      .
+        intro R
+        have foo := det_bound (V := large_v.V) (R := R) sorry
+        simp
+        simp at foo
+        grw [foo]
+        field_simp
+        rw [mul_div_assoc]
+        rw [mul_div_assoc]
+        rw [mul_assoc]
+        rw [mul_le_mul_iff_right₀]
+        .
+          by_cases r_zero: R = 0
+          . simp [r_zero]
+          .
+            grw [s_growth R (by grind)]
+            norm_cast
+            simp
+            rw [mul_div_assoc]
+        . simp [det_bound_const, max_lipschitz]
+          sorry
+      .
+        conv =>
+          pattern (nhds 0)
+          equals nhds (det_bound_const (V := large_v.V) * 0) => simp
+        simp_rw [mul_div_assoc]
+        simp_rw [mul_assoc]
+        apply Filter.Tendsto.const_mul
+        simp_rw [add_pow_two]
+        norm_num
+        sorry
     .
       --apply Asymptotics.IsLittleO.tendsto_div_nhds_zero
       unfold HasPolynomialGrowthD at hd
