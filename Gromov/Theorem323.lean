@@ -260,7 +260,10 @@ lemma Q_R_matrix_pos_def_i₀ (R: ℝ) (hR: 16 ^ (i₀) ≤ R): (Q_R_matrix V R)
 private noncomputable def f (R: ℕ): ℝ := #(S ^ R) * (Q_R_matrix V R).det ^ (dim V)⁻¹
 private noncomputable def h (i: ℕ): ℝ := Real.log (f (16 ^ i))
 
-lemma growth_implies_lim_h (d: ℕ) (growth: growth_bound V d): Filter.liminf (fun (i: ℕ) => ENNReal.ofReal (h i - d * i * Real.log 16)) Filter.atTop < ⊤ := by
+lemma growth_implies_lim_h (d: ℕ) (h_growth: growth_bound V d): Filter.liminf (fun (i: ℕ) => ENNReal.ofReal (h i - d * i * Real.log 16)) Filter.atTop < ⊤ := by
+  unfold growth_bound at h_growth
+  rw [← lt_top_iff_ne_top] at h_growth
+  have frequent_bounded := Filter.frequently_lt_of_liminf_lt (h := h_growth)
 
   sorry
 
