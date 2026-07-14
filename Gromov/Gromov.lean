@@ -6231,21 +6231,35 @@ lemma finset_union_neg {α : Type*}  [DecidableEq α] [InvolutiveNeg α] {s t : 
 
 
 
+-- The generating set of `ker φ` used below, shared between the `new_g_growth`
+-- hypothesis and the `S` field so that `g_growth := new_g_growth` is definitionally
+-- trivial (avoids an expensive `whnf` on the two separately-elaborated `Finset`s).
+omit hGS in
+noncomputable def ker_S {G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G)
+    (hGS: GeneratesWithParam data.G') (γ: data.G') (hγ: data.φ γ = 1) (n: ℕ) :
+    Finset (Multiplicative data.φ.ker) :=
+  (Finset.image Additive.toMul (S_n_ker_phi hGS.S data.φ γ hγ n)) ∪
+    (Finset.image Additive.toMul ((S_n_ker_phi hGS.S data.φ γ hγ n)))⁻¹
+
 -- TODO - figure out how to make this a 'let' without adding it to typeclass search
 omit hGS in
 noncomputable def ker_generates {d: ℕ} {n: ℕ} (hd: 1 ≤ d){G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G) (hGS: GeneratesWithParam data.G') (γ: data.G') (hγ: data.φ γ = 1)
   (ker_infinite: Infinite (Multiplicative data.φ.ker))
   (ker_generates: AddSubgroup.closure (Additive.ofMul '' (three_two_S_n hGS.S data.φ γ (n))) = data.φ.ker)
+  --(g_growth: HasPolynomialGrowth (Finset.image Additive.toMul (S_n_ker_phi hGS.S data.φ γ hγ n)) ∪ (Finset.image Additive.toMul ((S_n_ker_phi hGS.S data.φ γ hγ n)))⁻¹)
+  ( new_g_growth: HasPolynomialGrowth (ker_S data hGS γ hγ n))
   : Generates := {
   G := (Multiplicative data.φ.ker)
   g_group := by infer_instance
   g_eq := by infer_instance
-  S := (Finset.image Additive.toMul (S_n_ker_phi hGS.S data.φ γ hγ n)) ∪ (Finset.image Additive.toMul ((S_n_ker_phi hGS.S data.φ γ hγ n)))⁻¹
+  S := ker_S data hGS γ hγ n
   hS := by
     use 1
+    simp only [ker_S]
     simp
     exact one_mem_S data hGS γ hγ
   generates := by
+    simp only [ker_S]
     simp
     rw [Subgroup.closure_union]
     conv =>
@@ -6316,12 +6330,14 @@ noncomputable def ker_generates {d: ℕ} {n: ℕ} (hd: 1 ≤ d){G: Type*} [Group
 
   has_inv := by
     intro g hg
+    simp only [ker_S] at hg ⊢
     simp at hg
     simp
     rw [or_comm]
     exact hg
   g_infinite := by
     exact ker_infinite
+  g_growth := by convert new_g_growth using 2
 }
 
 omit hGS in
@@ -6877,6 +6893,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       have G_infinite := hGS.g_infinite
       rw [← not_finite_iff_infinite] at G_infinite
       contradiction
+    g_growth := by
+      use d
   }
 
 
@@ -6908,6 +6926,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     g_infinite := by
       have foo := Infinite.of_surjective _ data.hφ
       exact foo
+    g_growth := by
+      use d
   }
   -- TODO - why can't this be an inline instance for hGS
   obtain ⟨n, generates_with_n⟩ := three_two_S_n_generates  (hGS := bad_instance) d hd G'_poly data.φ γ hγ
@@ -6990,6 +7010,10 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
       let foo := ker_generates hd data new_generate_data γ hγ kernel_finite (by
         exact generates_with_n
+      ) (by
+        use (d - 1)
+        simp only [ker_S]
+        exact new_kernel_poly
       )
       let bar := inductive_gromov foo new_kernel_poly
       apply inductive_gromov foo
