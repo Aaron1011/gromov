@@ -4388,6 +4388,7 @@ lemma iterated_lipschitz_bound (f: LipschitzH): ∃ C: ℝ, ∀ g: G, ‖f g‖ 
         . simp
       . positivity
 
+-- This is too weak - we need the constant to be independent of R
 lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: ℝ, ((Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V)) ≤ C * #(S ^ R) := by
   let argmax_eigen := (Finite.exists_max (Q_R_lin_hermetian R (V := V)).eigenvalues).choose
   let m :=  (Q_R_lin_hermetian R (V := V)).eigenvalues (argmax_eigen)
@@ -4475,6 +4476,25 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
 
 def lipschitz_toReal (f: LipschitzH): LipschitzH := f
 
+-- lemma filter_map_nat_real_cast_attop: Filter.map ((↑): ℕ → ℝ) Filter.atTop = Filter.atTop := by
+--   apply Filter.map_atTop_eq_of_gc (fun x => ⌈x⌉₊) 0
+--   . exact Nat.mono_cast
+--   . intro a b hb
+--     refine ⟨?_, ?_⟩
+--     . intro hab
+--       sorry
+--     . intro ha
+
+--       apply Nat.le_
+
+
+--   have foo := OrderIso.map_atTop (e := Nat.castOrderEmbedding)
+--   apply Filter.map_val_atTop_of_Ici_subset
+--   refine Filter.map_atTop_eq_of_gc_preorder (fun _ _ ↦ by simp) 0 fun n hn ↦ ?_
+
+--   lift n to ℕ using hn
+--   exact ⟨n, rfl, fun _ ↦ Int.ofNat_le⟩
+
 -- TODO - do we really need the double by_contra here?
 instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
   classical
@@ -4491,7 +4511,7 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
 
 
   obtain ⟨d, hd⟩ := hGS.g_growth
-  obtain ⟨C, V_bound⟩ := theorem_3_23 d
+  obtain ⟨C, V_bound⟩ := theorem_3_23 ((d + 1) + (d + 1))
   obtain ⟨fin_basis_idx, card_fin_basis_idx⟩ := B_infinite.exists_subset_card_eq _ (C * 2)
   let fin_basis := Finset.image (B) fin_basis_idx
   let large_v: V_Data := {
@@ -4514,7 +4534,103 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       infer_instance
   }
   specialize V_bound large_v ?_
-  . sorry
+  .
+    simp [growth_bound, my_expr]
+    have ne_top_of_zero (a: ENNReal) (ha: a ≤ 0): a ≠ ⊤ := by
+      simp at ha
+      simp [ha]
+    apply ne_top_of_zero
+    simp
+    apply Filter.Tendsto.liminf_eq
+    conv =>
+      pattern nhds 0
+      equals nhds ((ENNReal.ofReal (0 * 0))) =>
+        simp
+
+    -- have V_nontrivial: Nontrivial large_v.V := by
+    --   sorry
+
+    apply ENNReal.tendsto_ofReal
+    norm_cast
+    conv =>
+      arg 1
+      intro a
+      rw [mul_comm]
+      rw [mul_div_assoc]
+      rw [Nat.pow_add]
+    push_cast
+    conv =>
+      arg 1
+      intro a
+      rw [div_mul_eq_div_mul_one_div]
+      rw [mul_comm _ (1 / _)]
+      rw [← mul_assoc]
+
+
+    conv =>
+      pattern nhds 0
+      equals nhds (0 * 0) => simp
+    apply Filter.Tendsto.mul
+    .
+      simp
+
+      -- have det := det_bound (V := large_v.V) ⌈((v_r_all_nonzero (V := V)).choose)⌉₊ (by
+      --   sorry
+      -- )
+    -- obtain ⟨K, hK⟩ := det
+
+    -- simp at hK
+
+      sorry
+    .
+      --apply Asymptotics.IsLittleO.tendsto_div_nhds_zero
+      unfold HasPolynomialGrowthD at hd
+      obtain ⟨a, s_growth⟩ := hd
+      apply squeeze_zero (g := (fun (n: ℝ) => (a * n^d : ℝ) / (n ^ (↑d + 1))) ∘ (fun (n: ℕ) => (n: ℝ)))
+      . intro n
+        positivity
+      . intro n
+        by_cases hn: n = 0
+        .
+          simp [hn]
+        .
+          grw [s_growth n (by grind)]
+          norm_cast
+          simp
+      .
+        rw [← Filter.tendsto_map'_iff]
+        apply Asymptotics.IsLittleO.tendsto_div_nhds_zero
+        apply Asymptotics.IsLittleO.const_mul_left
+        simp
+        apply Asymptotics.IsLittleO.comp_tendsto (l' := Filter.atTop) (l := Filter.atTop)
+        . exact tendsto_natCast_atTop_atTop
+        .
+          apply Asymptotics.isLittleO_pow_pow_atTop_of_lt
+          simp
+
+    --     rw [Filter.map_val_Ici_atTop]
+    --     rw [Nat.map_cast_int_atTop]
+
+    --     simp_rw [← Function.comp_def]
+    --     apply Filter.Tendsto.comp
+    --     apply Asymptotics.isLittleO_pow_pow_atTop_of_lt (p := d) (q := d + 1)
+
+    --     apply Filter.tendsto_atTop_lit
+    --   apply Asymptotics.IsLittleO.trans_le (g := fun (n: ℕ) => (a * n^d : ℝ))
+    --   . sorry
+    --   . sorry
+    --   -- Asymptotics.isLittleO_pow_pow_atTop_of_lt
+
+
+
+    -- apply Filter.liminf_le_of_frequently_le
+    -- .
+    --   apply Filter.Frequently.of_forall
+    --   intro R
+    --   sorry
+    -- .
+    --   apply Filter.isBoundedUnder_of_eventually_ge (a := 0)
+    --   simp
   .
     -- TODO - deduplicate
     rw [finrank_span_finset_eq_card] at V_bound
@@ -4531,46 +4647,46 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       exact Module.Basis.linearIndepOn B ↑fin_basis_idx
 
 
-lemma rank_two : ((2: ℕ)) ≤ Module.rank ℝ LipschitzH := by
-  rw [Module.le_rank_iff]
-  use ![exists_nontrivial_harmonic.choose, LipschitzH.const 1]
-  rw [LinearIndependent.pair_iff]
-  intro a b hab
-  by_contra!
-  by_cases a_eq: a = 0
-  .
-    simp [a_eq] at hab
-    simp [this a_eq] at hab
-    rw [DFunLike.ext'_iff, funext_iff] at hab
-    specialize hab 1
-    simp [LipschitzH.const] at hab
-  .
-    rw [add_eq_zero_iff_eq_neg] at hab
-    conv at hab =>
-      rhs
-      equals LipschitzH.const (-b) =>
-        ext g
-        simp [LipschitzH.const, HSMul.hSMul, SMul.smul]
-    have foo := exists_nontrivial_harmonic.choose_spec
-    specialize foo (-b/a)
-    simp at foo
-    rw [DFunLike.ext'_iff, funext_iff] at foo
-    simp at foo
-    obtain ⟨x, hx⟩ := foo
-    rw [DFunLike.ext'_iff, funext_iff] at hab
-    specialize hab x
-    simp [LipschitzH.const, HSMul.hSMul, SMul.smul] at hab
-    rw [mul_comm, ← eq_div_iff] at hab
-    .
-      rw [hab] at hx
-      simp [ConstLipschitzH] at hx
-    . simp [a_eq]
+-- lemma rank_two : ((2: ℕ)) ≤ Module.rank ℝ LipschitzH := by
+--   rw [Module.le_rank_iff]
+--   use ![exists_nontrivial_harmonic.choose, LipschitzH.const 1]
+--   rw [LinearIndependent.pair_iff]
+--   intro a b hab
+--   by_contra!
+--   by_cases a_eq: a = 0
+--   .
+--     simp [a_eq] at hab
+--     simp [this a_eq] at hab
+--     rw [DFunLike.ext'_iff, funext_iff] at hab
+--     specialize hab 1
+--     simp [LipschitzH.const] at hab
+--   .
+--     rw [add_eq_zero_iff_eq_neg] at hab
+--     conv at hab =>
+--       rhs
+--       equals LipschitzH.const (-b) =>
+--         ext g
+--         simp [LipschitzH.const, HSMul.hSMul, SMul.smul]
+--     have foo := exists_nontrivial_harmonic.choose_spec
+--     specialize foo (-b/a)
+--     simp at foo
+--     rw [DFunLike.ext'_iff, funext_iff] at foo
+--     simp at foo
+--     obtain ⟨x, hx⟩ := foo
+--     rw [DFunLike.ext'_iff, funext_iff] at hab
+--     specialize hab x
+--     simp [LipschitzH.const, HSMul.hSMul, SMul.smul] at hab
+--     rw [mul_comm, ← eq_div_iff] at hab
+--     .
+--       rw [hab] at hx
+--       simp [ConstLipschitzH] at hx
+--     . simp [a_eq]
 
-instance lipschitz_finite : Module.Finite ℝ LipschitzH := by
-  apply Module.finite_of_finrank_pos
-  -- TODO(realification): the old ℂ proof went through `finrank_real_of_complex`; over ℝ we need
-  -- `0 < finrank ℝ LipschitzH` directly. `rank_two` gives `2 ≤ rank ℝ` but not finiteness.
-  sorry
+-- instance lipschitz_finite : Module.Finite ℝ LipschitzH := by
+--   apply Module.finite_of_finrank_pos
+--   -- TODO(realification): the old ℂ proof went through `finrank_real_of_complex`; over ℝ we need
+--   -- `0 < finrank ℝ LipschitzH` directly. `rank_two` gives `2 ≤ rank ℝ` but not finiteness.
+--   sorry
 
 
 #synth FiniteDimensional ℝ LipschitzH
