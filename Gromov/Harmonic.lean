@@ -4708,6 +4708,10 @@ separate, in the statement of `det_bound`). -/
 noncomputable def det_bound_const : ℝ :=
   ((Module.finrank ℝ ↥V) * max_lipschitz (V := V) + (Module.finrank ℝ ↥V) * max_origin (V := V)) ^ 2
 
+lemma det_bound_const_nonneg: 0 ≤ det_bound_const (V := V) := by
+  simp [det_bound_const]
+  positivity
+
 lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R):
     ((Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V))
       ≤ det_bound_const (V := V) * (1 + R) ^ 2 * #(S ^ R) := by
@@ -4954,9 +4958,6 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       equals nhds ((ENNReal.ofReal (0 * 0))) =>
         simp
 
-    -- have V_nontrivial: Nontrivial large_v.V := by
-    --   sorry
-
     apply ENNReal.tendsto_ofReal
     norm_cast
     conv =>
@@ -4994,6 +4995,10 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
         simp
         simp at foo
         grw [foo]
+        by_cases const_zero: det_bound_const (V := large_v.V) = 0
+        .
+          simp [const_zero]
+
         field_simp
         rw [mul_div_assoc]
         rw [mul_div_assoc]
@@ -5007,8 +5012,9 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
             norm_cast
             simp
             rw [mul_div_assoc]
-        . simp [det_bound_const, max_lipschitz]
-          sorry
+        .
+          have nonneg := det_bound_const_nonneg (V := large_v.V)
+          grind
       . poly_tendsto
     .
       --apply Asymptotics.IsLittleO.tendsto_div_nhds_zero
