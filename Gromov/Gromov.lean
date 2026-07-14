@@ -1,4 +1,5 @@
 import Mathlib
+import Mathlib.Algebra.Group.Gromov.Complexification
 import Mathlib.Algebra.Group.Gromov.Defs
 import Mathlib.Algebra.Group.Gromov.Harmonic
 import Mathlib.Algebra.Group.Gromov.UnitaryGromov
@@ -982,6 +983,38 @@ def map_equiv_S_data {A B: Type*} [Group A] [Group B] [DecidableEq A] [Decidable
 
 
 --#synth NormedAddCommGroup (W)
+
+/-- The real-inner-product-space version of `theorem_3_8`: a finitely generated, polynomial-growth
+subgroup of the units of a compact linear group over `ℝ` is virtually abelian.  We reduce to the
+complex `theorem_3_8` by complexifying (`Cx.unitsMapHom`) just before the unitary machinery. -/
+lemma theorem_3_8_real {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
+    [FiniteDimensional ℝ V] (H : Subgroup (V →L[ℝ] V)ˣ) [DecidableEq H]
+    (h_compact : CompactSpace H) (G : Subgroup H) (G_fg : G.FG) (S_data : SPolyData G) :
+    ∃ A : Subgroup G, IsMulCommutative A ∧ A.FiniteIndex := by
+  classical
+  have φ_inj : Function.Injective (Cx.unitsMapHom (V := V)) := Cx.unitsMapHom_injective
+  have φ_cont : Continuous (Cx.unitsMapHom (V := V)) := Cx.unitsMapHom_continuous
+  let Hc : Subgroup ((Cx V →L[ℂ] Cx V)ˣ) := Subgroup.map Cx.unitsMapHom H
+  let e : H ≃* Hc := Subgroup.equivMapOfInjective H Cx.unitsMapHom φ_inj
+  let Gc : Subgroup Hc := Subgroup.map e.toMonoidHom G
+  let eG : G ≃* Gc := MulEquiv.subgroupMap e G
+  have Gc_fg : Gc.FG := group_fg_map G G_fg e.toMonoidHom
+  have Sc : SPolyData Gc := map_equiv_S_data eG S_data
+  have hc : CompactSpace Hc := by
+    have hH : IsCompact ((H : Set (V →L[ℝ] V)ˣ)) := by
+      have h1 := (isCompact_univ (X := ↥H)).image continuous_subtype_val
+      rwa [Set.image_univ, Subtype.range_coe] at h1
+    have h2 : IsCompact ((Hc : Set (Cx V →L[ℂ] Cx V)ˣ)) := by
+      have := hH.image φ_cont
+      rwa [← Subgroup.coe_map] at this
+    exact isCompact_iff_compactSpace.mp h2
+  obtain ⟨A, A_comm, A_fi⟩ := theorem_3_8 (V := Cx V) Hc hc Gc Gc_fg Sc
+  refine ⟨Subgroup.map eG.symm.toMonoidHom A, ?_, ?_⟩
+  · exact Subgroup.map_isMulCommutative A eG.symm.toMonoidHom
+  · rw [Subgroup.finiteIndex_iff, Subgroup.index_map_of_injective A eG.symm.injective,
+      eG.symm.toMonoidHom.range_eq_top.mpr eG.symm.surjective, Subgroup.index_top, mul_one]
+    exact A_fi.index_ne_zero
+
 open scoped ComplexInnerProductSpace in
 attribute [-simp] Subgroup.map_toSubmonoid in
 set_option maxHeartbeats 2000000 in
