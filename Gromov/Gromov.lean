@@ -23,7 +23,7 @@ open Generates
 variable [hGS: Generates]
 include hGS
 
-noncomputable def LipschitzSemiNorm (f: G → ℂ): NNReal := sInf { k: NNReal | LipschitzWith k f }
+noncomputable def LipschitzSemiNorm (f: G → ℝ): NNReal := sInf { k: NNReal | LipschitzWith k f }
 
 -- The lift of LipschitzSemiNorm to W, using a proof that LipschitzSemiNorm doesn't depend on the choice representative
 -- (adding a constant to a Lipschitz function doesn't change its Lipschitz constant)
@@ -58,7 +58,7 @@ lemma lipschiz_norm_zero: LipschitzSemiNorm  (0) = 0 := by
 
 
 -- TODO - upstream to mathlib
-lemma lipschitz_attains_norm (f: G → ℂ) (hf: IsLipschitz f): LipschitzWith (LipschitzSemiNorm f) f := by
+lemma lipschitz_attains_norm (f: G → ℝ) (hf: IsLipschitz f): LipschitzWith (LipschitzSemiNorm f) f := by
   by_contra!
   have orig_this := this
   simp [LipschitzWith] at this
@@ -131,7 +131,7 @@ lemma lipschitz_attains_norm (f: G → ℂ) (hf: IsLipschitz f): LipschitzWith (
   . rw [edist_nndist] at edist_ne_zero
     exact fun a ↦ edist_ne_zero (congrArg ENNReal.ofNNReal a)
 
-lemma lipschitz_norm_triangle (x y z: G → ℂ) (hx: IsLipschitz x) (hy: IsLipschitz y) (hz: IsLipschitz z): LipschitzSemiNorm (x - z) ≤ LipschitzSemiNorm (x - y) + LipschitzSemiNorm (y - z) := by
+lemma lipschitz_norm_triangle (x y z: G → ℝ) (hx: IsLipschitz x) (hy: IsLipschitz y) (hz: IsLipschitz z): LipschitzSemiNorm (x - z) ≤ LipschitzSemiNorm (x - y) + LipschitzSemiNorm (y - z) := by
   simp [LipschitzSemiNorm]
   conv =>
     pattern x - z
@@ -173,10 +173,10 @@ lemma lipschitz_norm_triangle (x y z: G → ℂ) (hx: IsLipschitz x) (hy: IsLips
 lemma lipschitzH_norm_triangle (x y z: LipschitzH): LipschitzSemiNorm (x - z) ≤ LipschitzSemiNorm (x - y) + LipschitzSemiNorm (y - z) := by
   apply lipschitz_norm_triangle x y z x.lipschitz y.lipschitz z.lipschitz
 
-lemma lipschitzWith_neg_iff {f : G → ℂ} {K : NNReal} : LipschitzWith K (-f) ↔ LipschitzWith K f :=
+lemma lipschitzWith_neg_iff {f : G → ℝ} {K : NNReal} : LipschitzWith K (-f) ↔ LipschitzWith K f :=
   ⟨fun h => by simpa using h.neg, LipschitzWith.neg⟩
 
-lemma lipschitzSemiNorm_neg (f : G → ℂ) : LipschitzSemiNorm (-f) = LipschitzSemiNorm f := by
+lemma lipschitzSemiNorm_neg (f : G → ℝ) : LipschitzSemiNorm (-f) = LipschitzSemiNorm f := by
   unfold LipschitzSemiNorm
   congr 1
   ext k
@@ -206,17 +206,17 @@ noncomputable local instance LipschitzH_seminorm: SeminormedAddCommGroup (Lipsch
     have key : LipschitzSemiNorm (⇑(-x + z)) ≤
         LipschitzSemiNorm (⇑(-x + y)) + LipschitzSemiNorm (⇑(-y + z)) := by
       have h := lipschitzH_norm_triangle z y x
-      have e1 : (⇑(-x + z) : G → ℂ) = ⇑(z - x) := by
+      have e1 : (⇑(-x + z) : G → ℝ) = ⇑(z - x) := by
         ext a
         simp only [lipschitz_neg_tofun, lipschitz_add_tofun, lipschitz_sub_tofun, LipschitzH_apply,
           Pi.add_apply, Pi.neg_apply, Pi.sub_apply]
         ring
-      have e2 : (⇑(-x + y) : G → ℂ) = ⇑(y - x) := by
+      have e2 : (⇑(-x + y) : G → ℝ) = ⇑(y - x) := by
         ext a
         simp only [lipschitz_neg_tofun, lipschitz_add_tofun, lipschitz_sub_tofun, LipschitzH_apply,
           Pi.add_apply, Pi.neg_apply, Pi.sub_apply]
         ring
-      have e3 : (⇑(-y + z) : G → ℂ) = ⇑(z - y) := by
+      have e3 : (⇑(-y + z) : G → ℝ) = ⇑(z - y) := by
         ext a
         simp only [lipschitz_neg_tofun, lipschitz_add_tofun, lipschitz_sub_tofun, LipschitzH_apply,
           Pi.add_apply, Pi.neg_apply, Pi.sub_apply]
@@ -228,7 +228,7 @@ noncomputable local instance LipschitzH_seminorm: SeminormedAddCommGroup (Lipsch
 -- Note that we only implement SeminormedAddCommGroup for LipschitzH, so this is only
 -- really a seminormed space. The quotient space W := LipschitzH ⧸ ConstF
 -- is an actual normed space.
-noncomputable local instance LipschitzH_normed: NormedSpace ℂ (LipschitzH) where
+noncomputable local instance LipschitzH_normed: NormedSpace ℝ (LipschitzH) where
   norm_smul_le := by
     intro c f
     simp [HSMul.hSMul, SMul.smul]
@@ -258,7 +258,6 @@ noncomputable local instance LipschitzH_normed: NormedSpace ℂ (LipschitzH) whe
 
 
     refine ⟨comp_mul_const, ?_⟩
-    simp [norm]
     left
     simp [K]
 
@@ -266,7 +265,7 @@ noncomputable local instance LipschitzH_normed: NormedSpace ℂ (LipschitzH) whe
 #synth TopologicalSpace (LipschitzH)
 --def myInst := Submodule.Quotient.normedAddCommGroup (S := ConstF)
 
-lemma lipschitz_norm_const (z: ℂ): LipschitzSemiNorm (ConstLipschitzH z) = 0 := by
+lemma lipschitz_norm_const (z: ℝ): LipschitzSemiNorm (ConstLipschitzH z) = 0 := by
   unfold LipschitzSemiNorm
   have zero_mem: 0 ∈ { k: NNReal | LipschitzWith k (ConstLipschitzH z).toFun } := by
     simp [ConstLipschitzH]
@@ -304,7 +303,7 @@ instance const_isClosed: IsClosed (ConstF : Set (LipschitzH)) := by
   exact isClosed_nullAddSubgroup
 
 
-#synth NormedSpace ℂ (W )
+#synth NormedSpace ℝ (W )
 #synth NormedAddCommGroup (W )
 
 #synth TopologicalSpace (W)
@@ -314,40 +313,40 @@ set_option synthInstance.maxHeartbeats 400000
 set_option maxHeartbeats 9000000
 
 -- The space 'GL(W)' of invertible continuous linear functions from W to W
-abbrev GL_W := (W →L[ℂ] W)ˣ
+abbrev GL_W := (W →L[ℝ] W)ˣ
 
---#synth LieGroup (modelWithCornersSelf ℂ ((W →L[ℂ] W))) 1 (GL_W)
---#synth TopologicalSpace ((W →L[ℂ] W))
---#synth TopologicalSpace ((W →L[ℂ] W))ˣ
+--#synth LieGroup (modelWithCornersSelf ℂ ((W →L[ℝ] W))) 1 (GL_W)
+--#synth TopologicalSpace ((W →L[ℝ] W))
+--#synth TopologicalSpace ((W →L[ℝ] W))ˣ
 
 
-#synth NormedRing (((W →L[ℂ] W)))
+#synth NormedRing (((W →L[ℝ] W)))
 
-#synth NormedAddCommGroup (((W →L[ℂ] W)))
+#synth NormedAddCommGroup (((W →L[ℝ] W)))
 
-lemma opnorm_continuous: Continuous fun (f: (W →L[ℂ] W)) => ‖f‖ := by
+lemma opnorm_continuous: Continuous fun (f: (W →L[ℝ] W)) => ‖f‖ := by
   apply continuous_norm
 
 #synth FiniteDimensional ℝ (((W →L[ℝ] W)))
 
 -- Homeomorph.isCompact_preimage
 
-instance proper_linear_w: ProperSpace (((W →L[ℂ] W))) := FiniteDimensional.proper_rclike ℂ (((W →L[ℂ] W)))
+instance proper_linear_w: ProperSpace (((W →L[ℝ] W))) := FiniteDimensional.proper_rclike ℝ (((W →L[ℝ] W)))
 
 
 --#synth NormedSpace ℂ (GL_W)
 --#synth MetricSpace (GL_W)
 
 
-#synth FiniteDimensional ℂ (LipschitzH)
+#synth FiniteDimensional ℝ (LipschitzH)
 #synth TopologicalSpace (LipschitzH)
-#synth BorelSpace (((W →L[ℂ] W)))
+#synth BorelSpace (((W →L[ℝ] W)))
 
-#synth ProperSpace (((W →L[ℂ] W)))
+#synth ProperSpace (((W →L[ℝ] W)))
 
 
 
-def GRep: Representation ℂ G (LipschitzH)  := {
+def GRep: Representation ℝ G (LipschitzH)  := {
   toFun := fun g => {
     toFun := gAct g
     map_add' := by
@@ -373,7 +372,7 @@ def GRep: Representation ℂ G (LipschitzH)  := {
 --attribute [-instance] QuotientModule.Quotient.topologicalSpace
 
 -- We start with a map from G into the space of (not necessarily invertible) linear maps from W to W
-def GRepW_non_invertible: Representation ℂ G (W) := Representation.quotient (GRep) ConstF (by
+def GRepW_non_invertible: Representation ℝ G (W) := Representation.quotient (GRep) ConstF (by
   intro g
   intro f hf
   simp
@@ -453,7 +452,7 @@ lemma GRep_preserves_norm (g: G) (f: LipschitzH): ‖(GRep g) f‖ = ‖f‖ := 
 
 -- Takes in an invertible linear map from W to W, and produces a *continuous* linear map from W to W
 set_option trace.profiler true in
-noncomputable def GRepW: (W →ₗ[ℂ] W)ˣ →* (W →L[ℂ] W)ˣ := {
+noncomputable def GRepW: (W →ₗ[ℝ] W)ˣ →* (W →L[ℝ] W)ˣ := {
   toFun := fun f => {
     val := LinearMap.toContinuousLinearMap f.val
     inv := LinearMap.toContinuousLinearMap f.inv
@@ -481,7 +480,7 @@ noncomputable def GRepW: (W →ₗ[ℂ] W)ˣ →* (W →L[ℂ] W)ˣ := {
     simp
 }
 
--- noncomputable def GRepW_Multiplicative: (W →ₗ[ℂ] W) →* (Multiplicative (GL_W)) := {
+-- noncomputable def GRepW_Multiplicative: (W →ₗ[ℝ] W) →* (Multiplicative (GL_W)) := {
 --   toFun := fun f => Multiplicative.ofAdd (GRepW f)
 --   map_one' := by
 --     simp
@@ -526,8 +525,8 @@ lemma quotient_norm_eq_norm (f: LipschitzH): ‖(Submodule.Quotient.mk f : W)‖
   rw [hinf]
   simp
 
-#synth NormedRing (W →L[ℂ] W)
-#synth TopologicalSpace (W →L[ℂ] W)ˣ
+#synth NormedRing (W →L[ℝ] W)
+#synth TopologicalSpace (W →L[ℝ] W)ˣ
 
 
 lemma GLW_preseves_norm (g: G) (w: W): ‖(GRepW (GRepW_base g)).val w‖ = ‖w‖ := by
@@ -577,8 +576,8 @@ lemma continuous_GRepW : Continuous (fun g => GRepW (GRepW_base g)) := by
 
 set_option synthInstance.maxHeartbeats 500000
 
-lemma continous_of_map (v: W): Continuous (fun (r: (W →L[ℂ] W)ˣ) => r.val v) := by
-  apply Continuous.comp (g := (fun r => r v)) (f := (fun (r : (W →L[ℂ] W)ˣ) => r.val))
+lemma continous_of_map (v: W): Continuous (fun (r: (W →L[ℝ] W)ˣ) => r.val v) := by
+  apply Continuous.comp (g := (fun r => r v)) (f := (fun (r : (W →L[ℝ] W)ˣ) => r.val))
   -- TODO - how does this work???
   . exact Continuous.clm_apply continuous_id' continuous_const
   . apply Units.continuous_val
@@ -601,7 +600,7 @@ noncomputable def rho_g := (GRepW_base).range
 --   unfold GL_W
 --   apply FiniteDimensional.proper
 
-def isembedding_units_val := Units.isEmbedding_val_mk' (M := (W →L[ℂ] W)) (f := ContinuousLinearMap.inverse) (by
+def isembedding_units_val := Units.isEmbedding_val_mk' (M := (W →L[ℝ] W)) (f := ContinuousLinearMap.inverse) (by
   intro x hx
   have foo := ContDiffAt.continuousAt (ContinuousLinearMap.IsInvertible.contDiffAt_map_inverse (e := x) (n := 0) (by
     simp at hx
@@ -631,8 +630,8 @@ def isembedding_units_val := Units.isEmbedding_val_mk' (M := (W →L[ℂ] W)) (f
   . exact u.inv_val
 )
 
-#synth NormedSpace ℂ (W →L[ℂ] W)
-#synth MetricSpace (W →L[ℂ] W)
+#synth NormedSpace ℝ (W →L[ℝ] W)
+#synth MetricSpace (W →L[ℝ] W)
 
 
 
@@ -644,23 +643,23 @@ def isembedding_units_val := Units.isEmbedding_val_mk' (M := (W →L[ℂ] W)) (f
 -- This is a combination of Cartan's Theorem and Theorem 3.6, giving us the conclusion that
 -- ρ(G) contains an abelian subgroup of finite index
 
---#synth MeasurableSpace (W →L[ℂ] W)ˣ
---#synth TopologicalSpace (W →L[ℂ] W)ˣ
---#synth BorelSpace (W →L[ℂ] W)
+--#synth MeasurableSpace (W →L[ℝ] W)ˣ
+--#synth TopologicalSpace (W →L[ℝ] W)ˣ
+--#synth BorelSpace (W →L[ℝ] W)
 
 
 
 
---borelize (W →L[ℂ] W)ˣ
+--borelize (W →L[ℝ] W)ˣ
 
 --#synth BorelSpace (Units.val '' (rho_g).carrier)
 
-#synth ContinuousMul (W →L[ℂ] W)
+#synth ContinuousMul (W →L[ℝ] W)
 
 
 #synth NormedAddCommGroup (W)
 
-#synth FiniteDimensional ℂ (W)
+#synth FiniteDimensional ℝ (W)
 
 --#synth CompleteSpace (W)
 
@@ -687,13 +686,13 @@ def isembedding_units_val := Units.isEmbedding_val_mk' (M := (W →L[ℂ] W)) (f
 def FreshTopology (V: Type*) := V
 instance (V: Type*) [base_group: Group V]: Group (FreshTopology V) := base_group
 instance (V: Type*) [base_comm: AddCommGroup V]: AddCommGroup (FreshTopology V) := base_comm
-instance (V: Type*) [AddCommGroup V] [base_module: Module ℂ V]: Module ℂ (FreshTopology V) := base_module
-instance (V: Type*) [AddCommGroup V] [Module ℂ V]  [base_finite: FiniteDimensional ℂ V]: FiniteDimensional ℂ (FreshTopology V) := base_finite
+instance (V: Type*) [AddCommGroup V] [base_module: Module ℝ V]: Module ℝ (FreshTopology V) := base_module
+instance (V: Type*) [AddCommGroup V] [Module ℝ V]  [base_finite: FiniteDimensional ℝ V]: FiniteDimensional ℝ (FreshTopology V) := base_finite
 -- instance (V: Type*) [base_topology: TopologicalSpace V]: TopologicalSpace (FreshTopology V) := base_topology
 -- instance (V: Type*) [TopologicalSpace V] [AddCommGroup V] [base_add: IsTopologicalAddGroup V]: IsTopologicalAddGroup (FreshTopology V) := base_add
--- #synth Group (FreshTopology (W →L[ℂ] W)ˣ)
+-- #synth Group (FreshTopology (W →L[ℝ] W)ˣ)
 
---instance proper_fresh_topology [TopologicalSpace (FreshTopology (W))]: ProperSpace ((((FreshTopology (W)) →L[ℂ] (FreshTopology (W))))) := FiniteDimensional.proper_rclike ℂ (((W →L[ℂ] W)))
+--instance proper_fresh_topology [TopologicalSpace (FreshTopology (W))]: ProperSpace ((((FreshTopology (W)) →L[ℂ] (FreshTopology (W))))) := FiniteDimensional.proper_rclike ℝ (((W →L[ℝ] W)))
 
 #synth CStarAlgebra ((ℂ →L[ℂ] ℂ))
 
@@ -704,8 +703,8 @@ instance T2_W: T2Space (W) := TopologicalSpace.t2Space_of_metrizableSpace
 #synth T2Space (W)
 
 
-#synth TopologicalSpace (W →L[ℂ] W)
-#synth FiniteDimensional ℂ (W →L[ℂ] W)
+#synth TopologicalSpace (W →L[ℝ] W)
+#synth FiniteDimensional ℝ (W →L[ℝ] W)
 
 noncomputable def G_SPolyData {d: ℕ} (h_poly: HasPolynomialGrowthD hGS.S d): SPolyData (T := G) ⊤ := {
   S := Subgroup.topEquiv.symm.toMonoidHom '' hGS.S
@@ -1015,7 +1014,7 @@ lemma theorem_3_8_real {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ
       eG.symm.toMonoidHom.range_eq_top.mpr eG.symm.surjective, Subgroup.index_top, mul_one]
     exact A_fi.index_ne_zero
 
-open scoped ComplexInnerProductSpace in
+open scoped RealInnerProductSpace in
 attribute [-simp] Subgroup.map_toSubmonoid in
 set_option maxHeartbeats 2000000 in
 set_option synthInstance.maxHeartbeats 600000 in
@@ -1023,15 +1022,15 @@ set_option synthInstance.maxHeartbeats 600000 in
 lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Subgroup ((rho_g)), IsMulCommutative M ∧ M.FiniteIndex := by
   classical
   let my_map := Subgroup.subtype (rho_g)
-  have W_equiv: (W) ≃ₗ[ℂ] EuclideanSpace ℂ (Fin <| Module.finrank ℂ W) := LinearEquiv.ofFinrankEq _ _ finrank_euclideanSpace_fin.symm
+  have W_equiv: (W) ≃ₗ[ℝ] EuclideanSpace ℝ (Fin <| Module.finrank ℝ W) := LinearEquiv.ofFinrankEq _ _ finrank_euclideanSpace_fin.symm
 
 
 
   unfold GL_W at my_map
   -- TODO - is there a simpler way to get an arbitrary inner product space?
-  let inner_prod_core: InnerProductSpace.Core ℂ (FreshTopology (W)) := {
+  let inner_prod_core: InnerProductSpace.Core ℝ (FreshTopology (W)) := {
     inner := fun v w => ⟪W_equiv v, W_equiv w⟫,
-    conj_inner_symm := by simp,
+    conj_inner_symm := by intro x y; simp [real_inner_comm],
     re_inner_nonneg := by
       exact fun x ↦ inner_self_nonneg
     add_left := by
@@ -1041,7 +1040,7 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
       rw [key, inner_add_left]
     smul_left := by
       intro x y r
-      have key : ∀ (c : ℂ) (a : FreshTopology (W)), W_equiv (c • a) = c • W_equiv a :=
+      have key : ∀ (c : ℝ) (a : FreshTopology (W)), W_equiv (c • a) = c • W_equiv a :=
         fun c a => map_smul W_equiv c a
       rw [key, inner_smul_left]
     definite := by
@@ -1050,16 +1049,16 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
   }
 
   let temp_inner := InnerProductSpace.ofCore inner_prod_core.toCore
-  let add_comm := InnerProductSpace.Core.toNormedAddCommGroup (𝕜 := ℂ) (F := (FreshTopology (W)))
+  let add_comm := InnerProductSpace.Core.toNormedAddCommGroup (𝕜 := ℝ) (F := (FreshTopology (W)))
 
-  let normed_space := InnerProductSpace.Core.toNormedSpace (𝕜 := ℂ) (F := (FreshTopology (W)))
+  let normed_space := InnerProductSpace.Core.toNormedSpace (𝕜 := ℝ) (F := (FreshTopology (W)))
 
-  have proper_space: ProperSpace (FreshTopology (W)) := FiniteDimensional.proper_rclike ℂ _
+  have proper_space: ProperSpace (FreshTopology (W)) := FiniteDimensional.proper_rclike ℝ _
 
   have fresh_t2: T2Space (FreshTopology (W)) := TopologicalSpace.t2Space_of_metrizableSpace
 
 
-  let plain_linear_to_clm: (((W)) →ₗ[ℂ] ((W)))ˣ →* (((W)) →L[ℂ] ((W)))ˣ := {
+  let plain_linear_to_clm: (((W)) →ₗ[ℝ] ((W)))ˣ →* (((W)) →L[ℝ] ((W)))ˣ := {
     toFun := fun f => {
       val := LinearMap.toContinuousLinearMap f.val
       inv := LinearMap.toContinuousLinearMap f.inv
@@ -1088,7 +1087,7 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
       rfl
   }
 
-  let linear_to_clm: ((FreshTopology (W)) →ₗ[ℂ] (FreshTopology (W)))ˣ →* ((FreshTopology (W)) →L[ℂ] (FreshTopology (W)))ˣ := {
+  let linear_to_clm: ((FreshTopology (W)) →ₗ[ℝ] (FreshTopology (W)))ˣ →* ((FreshTopology (W)) →L[ℝ] (FreshTopology (W)))ˣ := {
     toFun := fun f => {
       val := LinearMap.toContinuousLinearMap f.val
       inv := LinearMap.toContinuousLinearMap f.inv
@@ -1138,14 +1137,14 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
 
   have fresh_complete: CompleteSpace (FreshTopology (W)) := by apply complete_of_proper (α := FreshTopology (W))
 
-  have locally_compact_map: LocallyCompactSpace ((FreshTopology (W)) →L[ℂ] (FreshTopology (W))) := locallyCompact_of_proper
-  have units_locally:  LocallyCompactSpace ((FreshTopology (W)) →L[ℂ] (FreshTopology (W)))ˣ := by
+  have locally_compact_map: LocallyCompactSpace ((FreshTopology (W)) →L[ℝ] (FreshTopology (W))) := locallyCompact_of_proper
+  have units_locally:  LocallyCompactSpace ((FreshTopology (W)) →L[ℝ] (FreshTopology (W)))ˣ := by
     exact Units.isOpenEmbedding_val.locallyCompactSpace
 
 
 
   -- TODO - generalize to LinearMap/ContinuousLinearMap
-  have units_val_embedding: Topology.IsEmbedding (Units.val (α := ((FreshTopology (W)) →L[ℂ] (FreshTopology (W))))) := by
+  have units_val_embedding: Topology.IsEmbedding (Units.val (α := ((FreshTopology (W)) →L[ℝ] (FreshTopology (W))))) := by
     apply Units.isEmbedding_val_mk' (f := fun g => g.inverse)
     . intro a ha
       apply (ContinuousLinearMap.IsInvertible.contDiffAt_map_inverse (n := 1) ?_).continuousAt.continuousWithinAt
@@ -1181,26 +1180,26 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
   unfold rho_g
 
 
-  have continuous_mul: ContinuousMul ((W) →L[ℂ] (W)) := by
+  have continuous_mul: ContinuousMul ((W) →L[ℝ] (W)) := by
     infer_instance
 
-  have is_topological: IsTopologicalGroup ((W) →L[ℂ] (W))ˣ := by
+  have is_topological: IsTopologicalGroup ((W) →L[ℝ] (W))ˣ := by
     infer_instance
 
-  let plain_units_metric: MetricSpace (((W)) →L[ℂ] ((W)))ˣ := by
+  let plain_units_metric: MetricSpace (((W)) →L[ℝ] ((W)))ˣ := by
     apply Topology.IsEmbedding.comapMetricSpace (f := Units.val)
     exact isembedding_units_val
 
-  let units_metric: MetricSpace ((FreshTopology (W)) →L[ℂ] (FreshTopology (W)))ˣ := by
+  let units_metric: MetricSpace ((FreshTopology (W)) →L[ℝ] (FreshTopology (W)))ˣ := by
     apply Topology.IsEmbedding.comapMetricSpace (f := Units.val)
     apply units_val_embedding
 
 
 
-  have fresh_equiv: W ≃L[ℂ] FreshTopology (W) := ContinuousLinearEquiv.ofFinrankEq (rfl)
+  have fresh_equiv: W ≃L[ℝ] FreshTopology (W) := ContinuousLinearEquiv.ofFinrankEq (rfl)
 
-  let to_fresh (f: (W) ≃ₗ[ℂ] (W)): (FreshTopology (W)) ≃ₗ[ℂ] (FreshTopology (W)) := f
-  let new_map_entry (f: (W →L[ℂ] W)ˣ): ((FreshTopology W) →L[ℂ] (FreshTopology W))ˣ := {
+  let to_fresh (f: (W) ≃ₗ[ℝ] (W)): (FreshTopology (W)) ≃ₗ[ℝ] (FreshTopology (W)) := f
+  let new_map_entry (f: (W →L[ℝ] W)ˣ): ((FreshTopology W) →L[ℝ] (FreshTopology W))ˣ := {
     val := ContinuousLinearEquiv.arrowCongr fresh_equiv fresh_equiv f.val,
     inv := ContinuousLinearEquiv.arrowCongr fresh_equiv fresh_equiv f.inv
     val_inv := by
@@ -1221,7 +1220,7 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
       simp
   }
 
-  let new_map_entry_inv (f: ((FreshTopology W) →L[ℂ] (FreshTopology W))ˣ ): (W →L[ℂ] W)ˣ  := {
+  let new_map_entry_inv (f: ((FreshTopology W) →L[ℝ] (FreshTopology W))ˣ ): (W →L[ℝ] W)ˣ  := {
     val := (ContinuousLinearEquiv.arrowCongr fresh_equiv fresh_equiv).symm f.val,
     inv := (ContinuousLinearEquiv.arrowCongr fresh_equiv fresh_equiv).symm f.inv
     val_inv := by
@@ -1242,7 +1241,7 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
       simp
   }
 
-  let to_continuous_hom: (FreshTopology (W) →ₗ[ℂ] FreshTopology (W)) →* (FreshTopology (W) →L[ℂ] FreshTopology (W)) := {
+  let to_continuous_hom: (FreshTopology (W) →ₗ[ℝ] FreshTopology (W)) →* (FreshTopology (W) →L[ℝ] FreshTopology (W)) := {
     toFun := fun f => f.toContinuousLinearMap,
     map_one' := by
       ext a
@@ -1252,7 +1251,7 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
       rfl
     }
 
-  let new_map_hom: (W →L[ℂ] W)ˣ ≃* ((FreshTopology W) →L[ℂ] (FreshTopology W))ˣ := {
+  let new_map_hom: (W →L[ℝ] W)ˣ ≃* ((FreshTopology W) →L[ℝ] (FreshTopology W))ˣ := {
     toFun := new_map_entry,
     invFun := new_map_entry_inv,
     left_inv := by
@@ -1366,7 +1365,7 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
             have seq_mem := seq_in n
             obtain ⟨x, x_mem, seq_eq_x⟩ := seq_mem
             rw [← seq_eq_x]
-            apply ContinuousWithinAt.eq_const_of_mem_closure (f := fun (x: ((W) →L[ℂ] (W))ˣ) => ‖x.val v‖) (c := ‖v‖) (x := x) (s := my_new_range)
+            apply ContinuousWithinAt.eq_const_of_mem_closure (f := fun (x: ((W) →L[ℝ] (W))ˣ) => ‖x.val v‖) (c := ‖v‖) (x := x) (s := my_new_range)
             . apply Continuous.continuousWithinAt
               fun_prop
             . exact x_mem
@@ -1423,7 +1422,7 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
   --have compact_map := IsCompact.image my_range_compact.isCompact_univ (f := new_map_hom)
 
   have compact_mapped_group: CompactSpace mapped_group := by
-    have h1 : IsCompact (my_new_range.topologicalClosure : Set (W →L[ℂ] W)ˣ) :=
+    have h1 : IsCompact (my_new_range.topologicalClosure : Set (W →L[ℝ] W)ˣ) :=
       isCompact_iff_compactSpace.mpr my_new_range_compact
     have hcont : Continuous (⇑new_map_hom.toMonoidHom) := by
       simp [new_map_hom]
@@ -1445,7 +1444,7 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
   have final_data := map_equiv_S_data map_sub_equiv mapped_S_data
 
 
-  let data := theorem_3_8 (H := mapped_group) compact_mapped_group ((Subgroup.map new_map_hom.toMonoidHom my_new_range).subgroupOf mapped_group) ?_ (final_data)
+  let data := theorem_3_8_real (H := mapped_group) compact_mapped_group ((Subgroup.map new_map_hom.toMonoidHom my_new_range).subgroupOf mapped_group) ?_ (final_data)
   obtain ⟨B, B_abelian, B_finite_index⟩ := data
 
   let reverse_hom: ((map new_map_hom.toMonoidHom my_new_range).subgroupOf mapped_group) →* (GRepW_base).range := {
@@ -1503,7 +1502,7 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
       use ?_
       . have hrt : ∀ y, new_map_hom.symm (new_map_entry y) = y := new_map_hom.left_inv
         refine Subtype.ext ?_
-        change (Units.map (ContinuousLinearMap.toLinearMapRingHom (R₁ := ℂ) (M₁ := W)).toMonoidHom)
+        change (Units.map (ContinuousLinearMap.toLinearMapRingHom (R₁ := ℝ) (M₁ := W)).toMonoidHom)
             (new_map_hom.symm (new_map_entry (plain_linear_to_clm ↑x))) = x.val
         rw [hrt]
         ext f
@@ -1633,7 +1632,7 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
 noncomputable instance GL_W_DecidableEq: DecidableEq (GL_W) := by
   apply Classical.typeDecidableEq
 
-noncomputable instance w_map_DecidableEq: DecidableEq (W →ₗ[ℂ] W) := by
+noncomputable instance w_map_DecidableEq: DecidableEq (W →ₗ[ℝ] W) := by
   apply Classical.typeDecidableEq
 
 
@@ -3750,7 +3749,7 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g))): Nonempty (Theorem3_1_Input G)
   -- As proved in 'act_v', we have  '(GRep g f) - f' is a constant function. We can therefore evaluate
   -- it any poitn in G (here, 1) to get the constant
   let lambda_g := fun (g: G') (f: LipschitzH ) => ((GRep g.val) f - f) 1
-  let lambda_g_dual (g: G'): Module.Dual ℂ (LipschitzH) := {
+  let lambda_g_dual (g: G'): Module.Dual ℝ (LipschitzH) := {
     toFun := fun w => lambda_g g w
     map_add' := by
       intro x y
@@ -3785,12 +3784,12 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g))): Nonempty (Theorem3_1_Input G)
     rw [← other_app]
     simp [ConstLipschitzH]
 
-  have lambda_const (g: (GRepW_base).ker) (f: LipschitzH ) (k: ℂ): (lambda_g g (f + (ConstLipschitzH k))) = (lambda_g g f) := by
+  have lambda_const (g: (GRepW_base).ker) (f: LipschitzH ) (k: ℝ): (lambda_g g (f + (ConstLipschitzH k))) = (lambda_g g f) := by
     simp [lambda_g, GRep, gAct]
     simp [ConstLipschitzH]
 
 
-  let lambda_g_hom: G' →* Multiplicative (Module.Dual ℂ (LipschitzH)) := {
+  let lambda_g_hom: G' →* Multiplicative (Module.Dual ℝ (LipschitzH)) := {
     toFun := fun g => Multiplicative.ofAdd (lambda_g_dual g)
     map_one' := by
       simp [lambda_g_dual]
@@ -3940,19 +3939,19 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g))): Nonempty (Theorem3_1_Input G)
         use y.out
 
 
-    have all_f_const (f: LipschitzH ): ∃ z: ℂ, f = ConstLipschitzH z := by
-      have f_max_re := Set.Finite.exists_maximalFor (fun y => ‖y.re‖) (Set.range f) ?_ ?_
-      obtain ⟨z_re, z_re_mem, hz_re⟩ := f_max_re
+    have all_f_const (f: LipschitzH ): ∃ z: ℝ, f = ConstLipschitzH z := by
+      have f_max := Set.Finite.exists_maximalFor (fun y => ‖y‖) (Set.range f) ?_ ?_
+      obtain ⟨z, z_mem, hz⟩ := f_max
 
-      have z_re_max: ∀ p ∈ Set.range f, ‖p.re‖ ≤ ‖z_re.re‖ := by
+      have z_max: ∀ p ∈ Set.range f, ‖p‖ ≤ ‖z‖ := by
         intro p hp
         simp at hp
         obtain ⟨y, hy⟩ := hp
-        by_cases p_le_z: ‖p.re‖ ≤ ‖z_re.re‖
+        by_cases p_le_z: ‖p‖ ≤ ‖z‖
         . exact p_le_z
         . simp at p_le_z
 
-          have f_le := hz_re (j := f.toFun y) ?_ ?_
+          have f_le := hz (j := f.toFun y) ?_ ?_
           .
             simp at f_le
             rw [← hy]
@@ -3962,101 +3961,32 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g))): Nonempty (Theorem3_1_Input G)
             rw [← hy] at p_le_z
             linarith
 
-      simp at z_re_mem
-      obtain ⟨g_re, f_g_re_eq⟩ := z_re_mem
+      simp at z_mem
+      obtain ⟨g_max, f_g_max_eq⟩ := z_mem
 
-
-      have f_max_im := Set.Finite.exists_maximalFor (fun y => ‖y.im‖) (Set.range f) ?_ ?_
-      obtain ⟨z_im, z_im_mem, hz_im⟩ := f_max_im
-
-      have z_im_max: ∀ p ∈ Set.range f, ‖p.im‖ ≤ ‖z_im.im‖ := by
-        intro p hp
-        simp at hp
-        obtain ⟨y, hy⟩ := hp
-        by_cases p_le_z: ‖p.im‖ ≤ ‖z_im.im‖
-        . exact p_le_z
-        . simp at p_le_z
-
-          have f_le := hz_im (j := f.toFun y) ?_ ?_
-          .
-            simp at f_le
-            rw [← hy]
-            exact f_le
-          . simp
-          . simp
-            rw [← hy] at p_le_z
-            linarith
-
-      simp at z_im_mem
-      obtain ⟨g_im, f_g_im_eq⟩ := z_im_mem
-
-      have f_re_const := harmonic_abs_max_implies_const  (Complex.re ∘ f.toFun) (by
+      have f_const_fn := harmonic_abs_max_implies_const  f.toFun (by
         have f_harmonic := f.harmonic
         simp [Harmonic] at f_harmonic
         simp [Laplace_b, f_conv_mu]
         ext x
         simp
         have f_harmonic_real := f_harmonic x
-        apply_fun Complex.re at f_harmonic_real
-        simp at f_harmonic_real
         rw [sub_eq_zero]
         exact f_harmonic_real
-      ) g_re (by
+      ) g_max (by
         intro a
-        specialize z_re_max ((f.toFun a)) (by (
+        specialize z_max ((f.toFun a)) (by (
           simp
         ))
-        rw [← f_g_re_eq] at z_re_max
-        simpa using z_re_max
+        rw [← f_g_max_eq] at z_max
+        simpa using z_max
       )
 
-      have f_im_const := harmonic_abs_max_implies_const  (Complex.im ∘ f.toFun) (by
-        have f_harmonic := f.harmonic
-        simp [Harmonic] at f_harmonic
-        simp [Laplace_b, f_conv_mu]
-        ext x
-        simp
-        have f_harmonic_real := f_harmonic x
-        apply_fun Complex.im at f_harmonic_real
-        simp at f_harmonic_real
-        rw [sub_eq_zero]
-        exact f_harmonic_real
-      ) g_im (by
-        intro a
-        specialize z_im_max ((f.toFun a)) (by (
-          simp
-        ))
-        rw [← f_g_im_eq] at z_im_max
-        simpa using z_im_max
-      )
-
-      let const_val: ℂ := {
-        re := (f g_re).re,
-        im := (f g_im).im
-      }
-
-      have f_const: f.toFun = fun x ↦ const_val  := by
-        ext g
-        apply Complex.ext
-        .
-          have app_re := congrFun f_re_const g
-          simpa using app_re
-        . have app_im := congrFun f_im_const g
-          simpa using app_im
-
-
-
-
-
-      --have f_const := harmonic_extreme_val_implies_const  f.toFun ?_ g ?_
-      use const_val
+      use (f g_max)
       ext a
-      rw [f_const]
+      have app := congrFun f_const_fn a
+      rw [app]
       simp [ConstLipschitzH]
-      .
-        rw [f_range_eq]
-        apply Set.finite_range
-      . apply Set.range_nonempty
       .
         rw [f_range_eq]
         apply Set.finite_range
