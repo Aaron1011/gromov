@@ -1,5 +1,6 @@
 import Mathlib
 import Mathlib.Algebra.Group.Gromov.Defs
+import Mathlib.Algebra.Group.Gromov.TendstoTactic
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
@@ -5032,9 +5033,7 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
           pattern nhds 0
           equals nhds (a * 0) => simp
         apply Filter.Tendsto.const_mul
-        
-        simp_rw []
-        sorry
+        poly_tendsto
     .
       --apply Asymptotics.IsLittleO.tendsto_div_nhds_zero
       unfold HasPolynomialGrowthD at hd
