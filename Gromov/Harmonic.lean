@@ -4313,8 +4313,7 @@ lemma card_closed_ball_eq (R: ℕ): #((finite_closed_ball 1 R).toFinset) = #(S ^
     apply word_norm_le
     simp [ProdS, hf]
 
-lemma iterated_lipschitz_bound (f: LipschitzH): ∃ C: ℝ, ∀ g: G, ‖f g‖ ≤ C * (1 + WordNorm g) := by
-  use f.lipschitz.choose + ‖f 1‖
+lemma iterated_lipschitz_bound (f: LipschitzH): ∀ g: G, ‖f g‖ ≤ (f.lipschitz.choose + ‖f 1‖) * (1 + WordNorm g) := by
   -- intro g
   -- by_cases g = 1
   -- . rename_i g_eq
@@ -4388,20 +4387,73 @@ lemma iterated_lipschitz_bound (f: LipschitzH): ∃ C: ℝ, ∀ g: G, ‖f g‖ 
         . simp
       . positivity
 
+lemma hermitian_det_pow_le (R: ℝ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): (Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V) ≤ (Q_R_matrix R (V := V)).trace := by
+  rw [(Q_R_lin_hermetian R).det_eq_prod_eigenvalues, (Q_R_lin_hermetian R).trace_eq_sum_eigenvalues]
+  have am_gm :=  Real.geom_mean_le_arith_mean (ι := ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)) (s := Finset.univ)
+    (w := fun i => 1)
+    (z := fun i => (Q_R_lin_hermetian R).eigenvalues i)
+    (by intro i hi; positivity)
+    (by
+      simp
+      rw [← Module.finrank_eq_card_basis (Module.Basis.ofVectorSpace ℝ V)]
+      rw [Module.finrank_pos_iff_of_free]
+      infer_instance
+    )
+    (by
+      intro i _
+      apply (Q_R_matrix_pos_def R hR).posSemidef.eigenvalues_nonneg
+    )
+  simp at am_gm
+  simp
+  rw [← Module.finrank_eq_card_basis (Module.Basis.ofVectorSpace ℝ V)] at am_gm
+  grw [am_gm]
+  apply div_le_self
+  .
+    apply Finset.sum_nonneg
+    intro i _
+    apply (Q_R_matrix_pos_def R hR).posSemidef.eigenvalues_nonneg
+  . simp
+    apply Submodule.nontrivial_iff_ne_bot.mp
+    infer_instance
+
+-- TODO - generalize and upstream
+lemma euclidean_of_lp_le (x: EuclideanSpace ℝ ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)) (i: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)):
+    |x.ofLp i| ≤ ‖x‖ := by
+
+  rw [EuclideanSpace.norm_eq]
+  rw [Real.le_sqrt]
+  .
+    simp
+    apply Finset.single_le_sum (a := i)
+    . intro i _
+      positivity
+    . simp
+  . simp
+  . positivity
+
 -- This is too weak - we need the constant to be independent of R
 lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: ℝ, ((Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V)) ≤ C * #(S ^ R) := by
+  classical
   let argmax_eigen := (Finite.exists_max (Q_R_lin_hermetian R (V := V)).eigenvalues).choose
   let m :=  (Q_R_lin_hermetian R (V := V)).eigenvalues (argmax_eigen)
   let m_vec := (Q_R_lin_hermetian R (V := V)).eigenvectorBasis argmax_eigen
   let m_vec_V := V_basis (V := V).equivFun.symm (m_vec.ofLp)
-  obtain ⟨B, hB⟩ := iterated_lipschitz_bound m_vec_V.val
-  have B_nonneg: 0 ≤ B := by
-    specialize hB 1
-    simp at hB
-    have foo := abs_nonneg ((m_vec_V).val.toFun 1)
-    grw [hB] at foo
-    apply nonneg_of_mul_nonneg_left foo (by grind)
-  use ((B * (1 + R)) ^ 2)
+
+  let v_lipschitz_constant := fun (i: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)) => (V_basis (V := V) i).val.lipschitz.choose
+  let v_origin_norm := (fun i => ‖(V_basis (V := V) i).val 1‖)
+  obtain ⟨i_max_lipschitz, h_max_lipschitz⟩ := Finite.exists_max v_lipschitz_constant
+  obtain ⟨i_max_origin, h_max_origin⟩ := Finite.exists_max v_origin_norm
+  let max_lipschitz := v_lipschitz_constant i_max_lipschitz
+  let max_origin := v_origin_norm i_max_origin
+  obtain hB := iterated_lipschitz_bound m_vec_V.val
+
+  -- have B_nonneg: 0 ≤ B := by
+  --   specialize hB 1
+  --   simp at hB
+  --   have foo := abs_nonneg ((m_vec_V).val.toFun 1)
+  --   grw [hB] at foo
+  --   apply nonneg_of_mul_nonneg_left foo (by grind)
+  use (((max_lipschitz + ((Module.finrank ℝ ↥V) * max_origin)) * (1 + R)) ^ 2)
   rw [(Q_R_lin_hermetian R (V := V)).det_eq_prod_eigenvalues]
   grw [Finset.prod_le_prod (g := fun _ => m)]
   .
@@ -4437,7 +4489,7 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
         map_smul, LinearMap.coe_mk, AddHom.coe_mk, LinearMap.coe_sum, LinearMap.coe_smul,
         Finset.sum_apply, Pi.smul_apply, smul_eq_mul, ge_iff_le]
       simp_rw [← pow_two]
-      grw [Finset.sum_le_card_nsmul (n := ((B * (1 + R)) ^ 2))]
+      grw [Finset.sum_le_card_nsmul (n := (((max_lipschitz + ((Module.finrank ℝ ↥V) * max_origin)) * (1 + R)) ^ 2))]
       .
         rw [← card_closed_ball_eq]
         simp
@@ -4448,7 +4500,7 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
         intro x hx
         specialize hB x
         simp
-        simp [m_vec_V, m_vec] at hB
+        simp at hB
         rw [← Real.sqrt_sq_eq_abs] at hB
         rw [Real.sqrt_le_iff] at hB
         have foo := hB.2
@@ -4456,7 +4508,55 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
           simp at foo
           simp [dist, WordDist_one] at hx
           grw [hx] at foo
-          exact foo
+          conv =>
+            lhs
+            arg 1
+            arg 1
+            arg 2
+            intro x
+            arg 1
+            arg 1
+            arg 1
+            equals (Q_R_lin_hermetian ↑R).eigenvectorBasis =>
+              rfl
+          conv at foo =>
+            lhs
+            simp [m_vec_V, m_vec]
+          grw [foo]
+          rw [mul_pow, mul_pow]
+          rw [mul_le_mul_iff_left₀]
+          .
+            rw [pow_le_pow_iff_left₀]
+            . apply add_le_add
+              .
+                simp [max_lipschitz]
+                sorry
+              .
+                simp [m_vec_V, m_vec]
+                rw [← LipschitzH_apply]
+                rw [LipschitzH.finset_sum_apply]
+                grw [Finset.abs_sum_le_sum_abs]
+                grw [Finset.sum_le_card_nsmul (n := max_origin)]
+                . simp
+                  rw [← Module.finrank_eq_card_basis (Module.Basis.ofVectorSpace ℝ V)]
+                .
+                  intro i hi
+                  simp
+                  grw [euclidean_of_lp_le]
+                  simp
+                  apply h_max_origin
+            . positivity
+            . positivity
+            . simp
+            -- simp
+            -- simp [m_vec_V, m_vec]
+            -- grw [h_max_lipschitz]
+
+
+            -- grw [Finset.sum_le_card_nsmul]
+            -- exact foo
+          . positivity
+
     . unfold m
       apply Matrix.PosSemidef.eigenvalues_nonneg
       apply (Q_R_matrix_pos_def R hR (V := V)).posSemidef

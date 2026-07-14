@@ -790,6 +790,7 @@ theorem LipschitzH.add_apply (f g: LipschitzH) (x: G): (f + g).toFun x = f x + g
   unfold LipschitzH.add
   rfl
 
+
 instance lipschitzSMul: SMul ℝ (LipschitzH) := {
   smul := fun c f => {
     toFun := fun x => c * f.toFun x
@@ -889,6 +890,7 @@ instance LipschitzH.addMonoid [Generates ] : AddMonoid (LipschitzH) := {
 }
 
 
+
 -- -- See https://github.com/leanprover-community/mathlib4/blob/6c6e0180f0d3dc9f47f85532f48d268d8656789a/Mathlib/Topology/ContinuousMap/Bounded/Normed.lean#L194-L196
 -- instance lipschitzHAddCommGroup: AddCommGroup (LipschitzH) := by
 --   apply DFunLike.coe_injective.addCommGroup
@@ -974,6 +976,19 @@ abbrev V := Module ℝ (LipschitzH)
 lemma zero_apply (x: G): (0: LipschitzH ).toFun x = 0 := by
   unfold LipschitzH.zero
   rfl
+
+
+@[simp]
+theorem LipschitzH.finset_sum_apply {ι: Type*} [Fintype ι] [DecidableEq ι] (s: Finset ι) (f: ι → LipschitzH) (x: G): (∑ i ∈ s, f i) x = (∑ i ∈ s, f i x) := by
+  induction s using Finset.induction with
+  | empty =>
+    simp
+  | insert a s a_not_mem ih =>
+    rw [Finset.sum_insert a_not_mem]
+    rw [LipschitzH_apply, add_apply]
+    rw [ih]
+    rw [Finset.sum_insert a_not_mem]
+
 
 --set_option pp.all true
 
