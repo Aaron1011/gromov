@@ -59,3 +59,20 @@ example (d : ℕ) : Filter.Tendsto (fun x : ℝ ↦ x ^ d / (2 * x ^ (d + 2)))
 example (a : ℝ) (d : ℕ) : Filter.Tendsto (fun x : ℝ ↦ a * (x ^ d / x ^ (d + 1)))
     Filter.atTop (nhds 0) := by
   poly_tendsto
+
+-- Shifted variable with symbolic exponents (the `R + R''` case from Harmonic.lean)
+example (dbc : ℝ) (a d c : ℕ) : Filter.Tendsto
+    (fun R : ℕ ↦ dbc * (1 + (↑R + ↑c)) ^ 2 * (↑a * (↑R + ↑c) ^ d) / (↑R + ↑c) ^ (d + 3))
+    Filter.atTop (nhds 0) := by
+  poly_tendsto
+
+-- shift with the constant on the left
+example (d : ℕ) : Filter.Tendsto (fun x : ℝ ↦ (3 + x) ^ d / (3 + x) ^ (d + 1))
+    Filter.atTop (nhds 0) := by
+  poly_tendsto
+
+-- real-domain shift, mixed shifted monomials
+example (a : ℝ) (d : ℕ) : Filter.Tendsto
+    (fun x : ℝ ↦ (a * (x + 5) ^ d + (x + 5) ^ (d + 1)) / (x + 5) ^ (d + 2))
+    Filter.atTop (nhds 0) := by
+  poly_tendsto

@@ -37,6 +37,11 @@ Two proof strategies are tried in order:
 A goal over `ℕ` is first reduced to one over `ℝ` by abstracting `(↑x : ℝ)` and
 composing with `tendsto_natCast_atTop_atTop`. `Function.comp` in the goal is
 unfolded and casts are normalized with `push_cast` beforehand.
+
+If both strategies fail and every occurrence of the variable `x` lives inside a
+common shifted subterm `x + c` (or `c + x`) with `c` constant — e.g.
+`(x + c) ^ d / (x + c) ^ (d + 3)` — the limit is reduced to one in the shifted
+variable via `tendsto_atTop_add_const_right` and the strategies are retried.
 -/
 
 open Filter Polynomial Asymptotics
@@ -60,6 +65,16 @@ theorem tendsto_div_const_zero {f : ℝ → ℝ} (c : ℝ)
     (h : Tendsto f atTop (nhds 0)) :
     Tendsto (fun x => f x / c) atTop (nhds 0) := by
   simpa using h.div_const c
+
+theorem tendsto_shift_comp {g : ℝ → ℝ} (c : ℝ)
+    (h : Tendsto g atTop (nhds 0)) :
+    Tendsto (fun x : ℝ => g (x + c)) atTop (nhds 0) :=
+  h.comp (tendsto_atTop_add_const_right atTop c tendsto_id)
+
+theorem tendsto_shift_comp' {g : ℝ → ℝ} (c : ℝ)
+    (h : Tendsto g atTop (nhds 0)) :
+    Tendsto (fun x : ℝ => g (c + x)) atTop (nhds 0) :=
+  h.comp (tendsto_atTop_add_const_left atTop c tendsto_id)
 
 open Lean Elab Term Tactic Meta
 
@@ -215,41 +230,100 @@ def buildLittleO (numMons : List Mon) (eDen : Syntax.Term) : TermElabM Syntax.Te
       acc ← `(Asymptotics.IsLittleO.add $acc $(← mkMonTerm m'))
     return acc
 
+/-- Collect subterms of `e` of the form `x + c` or `c + x` with `c` free of `x`.
+Used to detect a "shifted variable" that all occurrences of `x` live inside. -/
+partial def shiftCandidates (xv : Expr) (e : Expr) : Array Expr :=
+  let sub := match e with
+    | .app f a => shiftCandidates xv f ++ shiftCandidates xv a
+    | .lam _ t b _ => shiftCandidates xv t ++ shiftCandidates xv b
+    | .forallE _ t b _ => shiftCandidates xv t ++ shiftCandidates xv b
+    | .letE _ t v b _ => shiftCandidates xv t ++ shiftCandidates xv v ++ shiftCandidates xv b
+    | .mdata _ b => shiftCandidates xv b
+    | .proj _ _ b => shiftCandidates xv b
+    | _ => #[]
+  match e.getAppFnArgs with
+  | (``HAdd.hAdd, #[_, _, _, _, l, r]) =>
+    if (l == xv && !r.containsFVar xv.fvarId!) ||
+        (r == xv && !l.containsFVar xv.fvarId!) then
+      sub.push e
+    else sub
+  | _ => sub
+
 /-! ## The tactic -/
 
-/-- Handle a goal `Tendsto f atTop (nhds 0)` with `f : ℝ → ℝ` a lambda. -/
-def realCase (f : Expr) : TacticM Unit := do
-  let .lam nm dom _ _ := f |
-    throwError "poly_tendsto: expected the function to be a lambda, got {f}"
-  withLocalDeclD nm dom fun xv => do
-    let body := (f.beta #[xv]).headBeta
-    -- Path 1: structural polynomial reflection (literal exponents, top-level `/`).
-    let pathA? : TermElabM (Option (Syntax.Term × ℕ × Syntax.Term × ℕ)) := do
-      try
-        match body.getAppFnArgs with
-        | (``HDiv.hDiv, #[_, _, _, _, N, D]) =>
-          let (P, dP) ← reifyPoly xv N
-          let (Q, dQ) ← reifyPoly xv D
-          if dP < dQ then return some (P, dP, Q, dQ) else return none
-        | _ => return none
-      catch _ => return none
-    match ← pathA? with
-    | some (P, dP, Q, dQ) =>
-      let s ← saveState
-      try
-        evalTactic (← `(tactic|
-          (refine Filter.Tendsto.congr ?_
-            (PolyTendsto.tendsto_eval_div_zero $P $Q $(quote dP) $(quote dQ)
-              (by compute_degree!) (by compute_degree!) (by norm_num))
-           intro y
-           simp only [Polynomial.eval_add, Polynomial.eval_sub, Polynomial.eval_neg,
-             Polynomial.eval_mul, Polynomial.eval_pow, Polynomial.eval_X, Polynomial.eval_C])))
-      catch e =>
-        -- e.g. the denominator's exact degree could not be certified; fall back to path 2.
-        s.restore
-        realCasePathB xv body <|> throw e
-    | none => realCasePathB xv body
+/-- Handle a goal `Tendsto f atTop (nhds 0)` with `f : ℝ → ℝ` a lambda.
+If the direct proof paths fail, look for a shifted variable `x + c` covering all
+occurrences of `x`, reduce to a limit in the shifted variable, and retry
+(at most `fuel` times). -/
+partial def realCase (f : Expr) (fuel : Nat := 2) : TacticM Unit := do
+  let s ← saveState
+  try
+    realCaseDirect f
+  catch e =>
+    s.restore
+    if fuel == 0 then throw e
+    let .lam nm dom _ _ := f | throw e
+    -- Find a shift `x + c` (or `c + x`) that all occurrences of `x` live inside.
+    let shifted? ← withLocalDeclD nm dom fun xv => do
+      let body := (f.beta #[xv]).headBeta
+      let mut result : Option (Syntax.Term × Syntax.Term × Bool) := none
+      for cand in shiftCandidates xv body do
+        if result.isNone then
+          let bodyAbs ← kabstract body cand
+          unless bodyAbs.containsFVar xv.fvarId! do
+            let gStx ← Term.exprToSyntax (Expr.lam `z (mkConst ``Real) bodyAbs .default)
+            let (``HAdd.hAdd, #[_, _, _, _, l, r]) := cand.getAppFnArgs |
+              throwError "poly_tendsto: internal error in shift detection"
+            if l == xv then
+              result := some (gStx, ← Term.exprToSyntax r, true)
+            else
+              result := some (gStx, ← Term.exprToSyntax l, false)
+      pure result
+    match shifted? with
+    | none => throw e
+    | some (gStx, cStx, xLeft) =>
+      if xLeft then
+        evalTactic (← `(tactic| refine PolyTendsto.tendsto_shift_comp ($cStx : ℝ) (g := $gStx) ?_))
+      else
+        evalTactic (← `(tactic| refine PolyTendsto.tendsto_shift_comp' ($cStx : ℝ) (g := $gStx) ?_))
+      withMainContext do
+        let tgt ← instantiateMVars (← (← getMainGoal).getType)
+        let (``Filter.Tendsto, #[_, _, f', _, _]) := tgt.getAppFnArgs |
+          throwError "poly_tendsto: internal error after shift reduction"
+        realCase (← instantiateMVars f') (fuel - 1)
 where
+  /-- The two direct proof paths, with no shift reduction. -/
+  realCaseDirect (f : Expr) : TacticM Unit := do
+    let .lam nm dom _ _ := f |
+      throwError "poly_tendsto: expected the function to be a lambda, got {f}"
+    withLocalDeclD nm dom fun xv => do
+      let body := (f.beta #[xv]).headBeta
+      -- Path 1: structural polynomial reflection (literal exponents, top-level `/`).
+      let pathA? : TermElabM (Option (Syntax.Term × ℕ × Syntax.Term × ℕ)) := do
+        try
+          match body.getAppFnArgs with
+          | (``HDiv.hDiv, #[_, _, _, _, N, D]) =>
+            let (P, dP) ← reifyPoly xv N
+            let (Q, dQ) ← reifyPoly xv D
+            if dP < dQ then return some (P, dP, Q, dQ) else return none
+          | _ => return none
+        catch _ => return none
+      match ← pathA? with
+      | some (P, dP, Q, dQ) =>
+        let s ← saveState
+        try
+          evalTactic (← `(tactic|
+            (refine Filter.Tendsto.congr ?_
+              (PolyTendsto.tendsto_eval_div_zero $P $Q $(quote dP) $(quote dQ)
+                (by compute_degree!) (by compute_degree!) (by norm_num))
+             intro y
+             simp only [Polynomial.eval_add, Polynomial.eval_sub, Polynomial.eval_neg,
+               Polynomial.eval_mul, Polynomial.eval_pow, Polynomial.eval_X, Polynomial.eval_C])))
+        catch e =>
+          -- e.g. the denominator's exact degree could not be certified; fall back to path 2.
+          s.restore
+          realCasePathB xv body <|> throw e
+      | none => realCasePathB xv body
   /-- Path 2: normalize to monomials over a single-monomial denominator and
   prove via `IsLittleO`. -/
   realCasePathB (xv body : Expr) : TacticM Unit := do

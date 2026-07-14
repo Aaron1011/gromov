@@ -4897,6 +4897,7 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
 
   obtain ⟨d, hd⟩ := hGS.g_growth
   obtain ⟨C, V_bound⟩ := theorem_3_23 ((d + 3) + (d + 3))
+
   obtain ⟨fin_basis_idx, card_fin_basis_idx⟩ := B_infinite.exists_subset_card_eq _ (C * 2)
   let fin_basis := Finset.image (B) fin_basis_idx
   let large_v: V_Data := {
@@ -4919,6 +4920,7 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       infer_instance
     V_nontrivial := by
       sorry
+
   }
   specialize V_bound large_v ?_
   .
