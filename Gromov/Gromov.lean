@@ -23,6 +23,10 @@ open Generates
 variable [hGS: Generates]
 include hGS
 
+-- These are `local instance`s in Harmonic.lean (LipschitzH is only *semi*normed, so we don't
+-- want them escaping globally), so re-activate them for this file.
+attribute [local instance] LipschitzH_seminorm LipschitzH_normed
+
 -- The lift of LipschitzSemiNorm to W, using a proof that LipschitzSemiNorm doesn't depend on the choice representative
 -- (adding a constant to a Lipschitz function doesn't change its Lipschitz constant)
 noncomputable def LipschitzSemiNorm_w (w: W) := Quotient.lift ((fun f => LipschitzSemiNorm f.toFun)) (by
@@ -41,7 +45,7 @@ noncomputable def LipschitzSemiNorm_w (w: W) := Quotient.lift ((fun f => Lipschi
 
 
 
-#synth TopologicalSpace (LipschitzH)
+--#synth TopologicalSpace (LipschitzH)
 --def myInst := Submodule.Quotient.normedAddCommGroup (S := ConstF)
 
 lemma lipschitz_norm_const (z: ℝ): LipschitzSemiNorm (ConstLipschitzH z) = 0 := by
