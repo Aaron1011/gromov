@@ -681,21 +681,21 @@ instance myNegInvariant: MeasureTheory.Measure.IsNegInvariant (myHaarAddOpp) := 
 -- Note that our multiplication order is swapped: f (s * x) instead of f (x * s)
 -- This is needed to make it match up with the result of MeasureTheory.convolution
 -- TODO - can we combine these
-def Harmonic (f: G → ℂ): Prop := ∀ x: G, f x = ((1 : ℂ) / #(S)) * ∑ s ∈ S, f (s * x)
+def Harmonic (f: G → ℝ): Prop := ∀ x: G, f x = ((1 : ℝ) / #(S)) * ∑ s ∈ S, f (s * x)
 def HarmonicR (f: G → ℝ): Prop := ∀ x: G, f x = ((1 : ℝ) / #(S)) * ∑ s ∈ S, f (s * x)
 
 -- A Lipschitz harmonic function from section 3.2 of Vikman
 structure LipschitzH [Generates ] where
   -- The underlying function
-  toFun: G → ℂ
+  toFun: G → ℝ
   -- The function is Lipschitz for some constant C
   lipschitz: ∃ C, LipschitzWith C toFun
   -- The function is harmonic
   harmonic: Harmonic  toFun
 
-def IsLipschitz (f: G → ℂ) := ∃ C, LipschitzWith C f
+def IsLipschitz (f: G → ℝ) := ∃ C, LipschitzWith C f
 
-instance: FunLike (LipschitzH) G ℂ where
+instance: FunLike (LipschitzH) G ℝ where
   coe := LipschitzH.toFun
   -- TODO - why does this work? I blindly copied it from `OneHom.funLike`
   coe_injective' f g h := by cases f; cases g; congr
@@ -745,7 +745,7 @@ lemma S_card_ne_zero: (#(S) : ℂ) ≠ 0 := by
   simp only [nonempty_subtype] at foo
   exact Finset.nonempty_iff_ne_empty.mp foo
 
-def ConstLipschitzH (z: ℂ) : LipschitzH := {
+def ConstLipschitzH (z: ℝ) : LipschitzH := {
   toFun := fun x => z
   lipschitz := by
     use 0
@@ -755,11 +755,11 @@ def ConstLipschitzH (z: ℂ) : LipschitzH := {
     intro x
     simp
     field_simp
-    have foo := S_card_ne_zero
+    have foo := S_card_ne_zero_re
     field_simp
 }
 
-lemma ConstLipschitzH_apply (z : ℂ) (g: G): (ConstLipschitzH z) g = z := by
+lemma ConstLipschitzH_apply (z : ℝ) (g: G): (ConstLipschitzH z) g = z := by
   unfold ConstLipschitzH
   rfl
 
@@ -773,14 +773,14 @@ instance LipschitzH.zero [Generates ] : Zero (LipschitzH) := {
   }
 }
 
-def LipschitzH.const (k: ℂ) : LipschitzH := {
+def LipschitzH.const (k: ℝ) : LipschitzH := {
   toFun := fun x => k
   lipschitz := by
     use 0
     exact LipschitzWith.const _
   harmonic := by
     simp [Harmonic]
-    have foo := S_card_ne_zero
+    have foo := S_card_ne_zero_re
     field_simp [foo]
 }
 
@@ -790,7 +790,7 @@ theorem LipschitzH.add_apply (f g: LipschitzH) (x: G): (f + g).toFun x = f x + g
   unfold LipschitzH.add
   rfl
 
-instance lipschitzSMul: SMul ℂ (LipschitzH) := {
+instance lipschitzSMul: SMul ℝ (LipschitzH) := {
   smul := fun c f => {
     toFun := fun x => c * f.toFun x
     lipschitz := by
@@ -798,7 +798,7 @@ instance lipschitzSMul: SMul ℂ (LipschitzH) := {
         rhs
         intro C
         rhs
-        equals (fun (x: ℂ) => c * x) ∘ f.toFun =>
+        equals (fun (x: ℝ) => c * x) ∘ f.toFun =>
           unfold Function.comp
           simp
       obtain ⟨C, hC⟩ := f.lipschitz
@@ -845,7 +845,7 @@ instance subLipschithZ: Sub (LipschitzH) := {
 }
 
 instance lipschitzSmulZ: SMul ℤ (LipschitzH) := {
-  smul := fun n f => (n : ℂ) • f
+  smul := fun n f => (n : ℝ) • f
 }
 
 
@@ -864,7 +864,7 @@ lemma lipschitz_sub_tofun (f g: LipschitzH): (f - g).toFun = f.toFun - g.toFun :
   rfl
 
 @[simp]
-lemma lipschitz_smul_tofun (c: ℂ) (f: LipschitzH): (c • f).toFun = c • f.toFun := by
+lemma lipschitz_smul_tofun (c: ℝ) (f: LipschitzH): (c • f).toFun = c • f.toFun := by
   rfl
 
 instance LipschitzH.addMonoid [Generates ] : AddMonoid (LipschitzH) := {
@@ -873,7 +873,7 @@ instance LipschitzH.addMonoid [Generates ] : AddMonoid (LipschitzH) := {
   add_assoc := fun _ _ _ => ext fun _ => add_assoc _ _ _
   zero_add := fun _ => ext fun _ => zero_add _
   add_zero := fun _ => ext fun _ => add_zero _
-  nsmul := fun n f => (n : ℂ) • f
+  nsmul := fun n f => (n : ℝ) • f
   nsmul_zero := by
     intro f
     dsimp [HSMul.hSMul, SMul.smul]
@@ -938,22 +938,17 @@ instance LipschitzH.instAddCommGroup: AddCommGroup (LipschitzH) := {
     ext g
     simp [lipschitz_sub_tofun, lipschitz_add_tofun, lipschitz_neg_tofun]
     rfl
-  zsmul := fun n f => (n : ℂ) • f
+  zsmul := fun n f => (n : ℝ) • f
   zsmul_zero' := by
     intro f
-    dsimp [HSMul.hSMul, SMul.smul]
     ext g
-    simp [DFunLike.coe]
-    unfold Zero.toOfNat0
-    unfold OfNat.ofNat
-    simp [Zero.zero]
+    simp only [HSMul.hSMul, SMul.smul, DFunLike.coe, Int.cast_zero, zero_mul]
+    rfl
   neg_add_cancel := by
     intro f
     ext g
     simp [negLipschitzH]
-    unfold Zero.toOfNat0
-    unfold OfNat.ofNat
-    simp [Zero.zero]
+    rfl
   zsmul_succ' := by
     intro n f
     simp
@@ -971,7 +966,7 @@ instance LipschitzH.instAddCommGroup: AddCommGroup (LipschitzH) := {
 
 
 -- V is the vector space
-abbrev V := Module ℂ (LipschitzH)
+abbrev V := Module ℝ (LipschitzH)
 
 
 
@@ -1009,10 +1004,8 @@ instance lipschitzHVectorSpace : V := {
     simp [DFunLike.coe]
   zero_smul := by
     intro a
-    dsimp [HSMul.hSMul, SMul.smul]
-    dsimp [OfNat.ofNat]
-    dsimp [Zero.zero]
-    simp
+    ext g
+    simp [HSMul.hSMul, SMul.smul, DFunLike.coe]
 }
 
 noncomputable instance finite_ball (x: G) (r: ℝ): Set.Finite (Metric.ball x r) := Set.Finite.of_finite_image (f := fun a => (word_norm_prod_self a).choose) (by
@@ -1479,7 +1472,7 @@ instance fintype_ball_boundary (x: G) (r: ℝ): Fintype ↑{y | dist y x = r} :=
 -- = (∑ s_1 ∈ S, ∑ s_2 ∈ S, ((f x) - f(x * s_1))*((f x) - f(x * s_2)
 -- = (∑ s_1 ∈ S, ∑ s_2 ∈ S, (f x)^2 - (f x)(f (x * s_1)) - (f x) (f (x * s_2)) + (f (x * s_1))(f (x * s_2)))
 -- = (∑ s_1 ∈ S, ∑ s_2 ∈ S, (f x)^2 - (f x)((f (x * s_1) - (f (x * s_2))) + (f (x * s_1))(f (x * s_2)))
-lemma harmonic_stokes_theorem (f: G → ℂ) (hf: Harmonic f) (r: ℝ): ∑ x ∈ Metric.ball 1 (2 * r), ∑ s ∈ S, (f x - f (x * s))^2 = 0 := by
+lemma harmonic_stokes_theorem (f: G → ℝ) (hf: Harmonic f) (r: ℝ): ∑ x ∈ Metric.ball 1 (2 * r), ∑ s ∈ S, (f x - f (x * s))^2 = 0 := by
   sorry
   --rw [s_sinv_split_one]
   --rw []
@@ -1512,7 +1505,7 @@ lemma harmonic_stokes_theorem (f: G → ℂ) (hf: Harmonic f) (r: ℝ): ∑ x �
 --  sorry
 
 
-def ConstF: Submodule ℂ (LipschitzH) := {
+def ConstF: Submodule ℝ (LipschitzH) := {
   carrier := Set.range ConstLipschitzH
   add_mem' := by
     intro a b ha hb
@@ -1527,7 +1520,7 @@ def ConstF: Submodule ℂ (LipschitzH) := {
     rw [← hx, ← hy]
     dsimp [ConstLipschitzH]
   zero_mem' := by
-    use (0 : ℂ)
+    use (0 : ℝ)
     simp [ConstLipschitzH]
     ext g
     simp
@@ -1598,18 +1591,18 @@ lemma gAct_mul (g h : G) (f: LipschitzH ): gAct (g * h) f = gAct g (gAct h f) :=
 
 
 
-def gAct_const (g: G) (z: ℂ): gAct g (ConstLipschitzH z) = ConstLipschitzH z := by
+def gAct_const (g: G) (z: ℝ): gAct g (ConstLipschitzH z) = ConstLipschitzH z := by
   unfold gAct
   unfold ConstLipschitzH
   ext x
   simp [DFunLike.coe]
 
-#synth Module ℂ (LipschitzH)
+#synth Module ℝ (LipschitzH)
 #synth AddCommGroup (LipschitzH)
 
 abbrev W := (LipschitzH) ⧸ ConstF
 
-#synth Module ℂ (W)
+#synth Module ℝ (W)
 
 def gActW (g: G): W → W := Quotient.lift (fun f => Submodule.Quotient.mk (gAct g f)) (by
   intro f h hfh

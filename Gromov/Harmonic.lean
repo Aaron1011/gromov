@@ -70,14 +70,14 @@ lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b  f = 0) (a: G
   simpa using path_implies_max
 
 
-variable {V: Submodule ℝ LipschitzH} [V_finite: FiniteDimensional ℝ V] [Nontrivial V] (V_real: ∀ u ∈ V, ∀ g: G, (u g).im = 0) (hV : Even (Module.finrank V))  [V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]
+variable {V: Submodule ℝ LipschitzH} [V_finite: FiniteDimensional ℝ V] [Nontrivial V] (hV : Even (Module.finrank V))  [V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]
 
 
 noncomputable def Q_R (R : ℝ) (u v: G → ℝ): ℝ := ∑ g ∈ Metric.closedBall 1 R, (u g) * (v g)
 
 noncomputable def Q_R_lin (R: ℝ): V →ₗ⋆[ℝ] V →ₗ[ℝ] ℝ := {
   toFun := fun u => {
-    toFun := fun v => Q_R R (fun g => (u.val g).re) (fun g => (v.val g).re)
+    toFun := fun v => Q_R R (fun g => u.val g) (fun g => v.val g)
     map_add' := by
       intro a b
       simp [Q_R]
@@ -87,9 +87,9 @@ noncomputable def Q_R_lin (R: ℝ): V →ₗ⋆[ℝ] V →ₗ[ℝ] ℝ := {
       intro x a
       simp [Q_R]
       rw [Finset.mul_sum]
-      simp [HSMul.hSMul, SMul.smul]
-      simp_rw [← mul_assoc]
-      simp_rw [mul_comm]
+      apply Finset.sum_congr rfl
+      intro i _
+      ring
   }
   map_add' := by
     intro a b
@@ -102,8 +102,9 @@ noncomputable def Q_R_lin (R: ℝ): V →ₗ⋆[ℝ] V →ₗ[ℝ] ℝ := {
     ext y
     simp [Q_R]
     rw [Finset.mul_sum]
-    simp [HSMul.hSMul, SMul.smul]
-    simp_rw [← mul_assoc]
+    apply Finset.sum_congr rfl
+    intro i _
+    ring
 }
 
 lemma Q_R_lin_symm (R: ℝ): (Q_R_lin R (V := V)).IsSymm := {
@@ -211,7 +212,6 @@ lemma v_r_all_nonzero: ∃ R: ℝ, ∀ u ∈ V, u ≠ 0 → ∃ g ∈ Metric.clo
         simp at hx
         simp
         intro g hg
-        simp [HSMul.hSMul, SMul.smul]
         grind
   }
 
@@ -278,7 +278,6 @@ lemma v_r_all_nonzero: ∃ R: ℝ, ∀ u ∈ V, u ≠ 0 → ∃ g ∈ Metric.clo
     exact hg
 
 
-include V_real in
 lemma Q_R_matrix_pos_def (R: ℝ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): (Q_R_matrix R (V := V)).PosDef := by
   apply Matrix.PosDef.of_dotProduct_mulVec_pos (Q_R_lin_hermetian _)
   intro x hx
@@ -304,18 +303,6 @@ lemma Q_R_matrix_pos_def (R: ℝ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R):
         grw [hR] at g_mem
         simpa using g_mem
       . simp at this
-        simp at x_g_nonzero
-        rw [Complex.ext_iff] at x_g_nonzero
-        --simp [DFunLike.coe] at V_real
-        conv at x_g_nonzero =>
-          arg 1
-          rhs
-          rw [← LipschitzH_apply]
-          rw [V_real _ (by
-            apply Submodule.sum_smul_mem
-            simp
-          )]
-
         simp at x_g_nonzero
         contradiction
     .
@@ -1447,27 +1434,18 @@ noncomputable def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (h_seq:
   }
 
   let F_lipschitzh: LipschitzH := {
-    toFun := (fun (g: G) => Complex.ofReal (F g)),
+    toFun := (fun (g: G) => F g),
     lipschitz := by
       use k
-      rw [← Function.comp_def]
-      conv =>
-        arg 1
-        equals ((1 * k) : NNReal) =>
-          simp
-      apply LipschitzWith.comp (Kf := 1) (Kg := k)
-      .
-        exact Isometry.lipschitz (Complex.isometry_ofReal)
-      .
-        have closed_lipschitz := isClosed_setOf_lipschitzWith (α := G) (β := ℝ) k
-        apply IsClosed.isSeqClosed at closed_lipschitz
-        simp [IsSeqClosed] at closed_lipschitz
-        have F_lipschitz := closed_lipschitz (p := F) (x := (fun n ↦ Conv (H_n (seq n)) (f_n (seq n)))) (by
-          intro n
-          simp
-          apply h_conv_lipschitz
-        ) tendsto_F
-        exact F_lipschitz
+      have closed_lipschitz := isClosed_setOf_lipschitzWith (α := G) (β := ℝ) k
+      apply IsClosed.isSeqClosed at closed_lipschitz
+      simp [IsSeqClosed] at closed_lipschitz
+      have F_lipschitz := closed_lipschitz (p := F) (x := (fun n ↦ Conv (H_n (seq n)) (f_n (seq n)))) (by
+        intro n
+        simp
+        apply h_conv_lipschitz
+      ) tendsto_F
+      exact F_lipschitz
     harmonic := by
       simp [Harmonic]
       intro g
@@ -1613,7 +1591,6 @@ noncomputable def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (h_seq:
         norm_cast
         rw [← Finset.sum_subtype (s := S) (f := fun i => (F (i * g)))]
         simp
-        . simp
         . intro n
           -- TODO - deduplicate this. I'm sure there's lots of other versions of it scattered around this file
           rw [← lt_top_iff_ne_top]
@@ -2652,7 +2629,7 @@ lemma harmonic_abs_max_implies_const (f: G → ℝ) (hf: Laplace_b  f = 0) (a: G
 
 set_option maxHeartbeats 500000 in
 lemma laplace_zero_iff_zero (g: (Lp ℝ 2 volume (α := G))) (eq_zero: Laplace g = 0): g = 0 := by
-  by_cases g_has_maximum: ∃ a: G, ∀ b: G, ‖Complex.ofReal (g b)‖ ≤ ‖g a‖
+  by_cases g_has_maximum: ∃ a: G, ∀ b: G, ‖g b‖ ≤ ‖g a‖
   .
     obtain ⟨a, ha⟩ := g_has_maximum
     have laplace_b_zero: Laplace_b  g = 0 := by
@@ -3140,7 +3117,7 @@ lemma laplace_b_sub (f g: G → ℝ): Laplace_b (f - g) = Laplace_b f - Laplace_
 -- DO NOT REMOVE `f_n_limit` - this will be needed by the spectral theorem part of the proof
 set_option maxRecDepth 100000 in
 set_option maxHeartbeats 1000000 in
-lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstLipschitzH z := by
+lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH , ∀ z: ℝ, F ≠ ConstLipschitzH z := by
 
 
 
@@ -3640,8 +3617,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
       use ⟨(((↑(#S) * 2) ^ (2 : ℝ)⁻¹)), by positivity⟩
       apply LipschitzWith.of_dist_le_mul
       intro x y
-      rw [Complex.dist_eq]
-      rw [← Complex.ofReal_sub, Complex.norm_real, Real.norm_eq_abs]
+      rw [Real.dist_eq]
 
       have new_tendsto_sub := (abs_tendsto _).comp ((tendsto_arzela_lim x).sub (tendsto_arzela_lim y))
       have sub_le := le_of_tendsto new_tendsto_sub (b := ((↑(#S) * 2) ^ (2 : ℝ)⁻¹) * (dist x y)) ?_
@@ -3830,7 +3806,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
 -- Case two of Theorem 3.6
 set_option maxHeartbeats 2000000 in
-lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstLipschitzH z := by
+lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH , ∀ z: ℝ, F ≠ ConstLipschitzH z := by
   obtain ⟨s, hs⟩ := f_n_limit
   let H_n := fun n g => if  ((f_n n g⁻¹) - (Conv (f_n n) (delta s.val)) g⁻¹) ≠ 0 then ((f_n n g⁻¹) - (Conv (f_n n) (delta s.val)) g⁻¹) / |((f_n n g⁻¹) - (Conv (f_n n) (delta s.val)) g⁻¹)| else 1
 
@@ -4249,7 +4225,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
 #synth OrderTopology ENNReal
 
 -- Theorem 3.6 - a non-constant harmonic function exists on G
-theorem exists_nontrivial_harmonic: ∃ F: LipschitzH , ∀ z: ℂ, F ≠ ConstLipschitzH z := by
+theorem exists_nontrivial_harmonic: ∃ F: LipschitzH , ∀ z: ℝ, F ≠ ConstLipschitzH z := by
   by_cases f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))
   . exact nontrivial_harmonic_case_two f_n_limit
   .
@@ -4272,7 +4248,6 @@ omit V in
 structure V_Data where
   V: Submodule ℝ LipschitzH
   hV: FiniteDimensional ℝ V
-  (V_real: ∀ u ∈ V, ∀ g: G, (u g).im = 0)
   (V_even : Even (Module.finrank ℝ V))
   V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)
 
@@ -4382,6 +4357,7 @@ lemma iterated_lipschitz_bound (f: LipschitzH): ∃ C: ℝ, ∀ g: G, ‖f g‖ 
       rw [ENNReal.ofReal_le_ofReal_iff] at s_dist
       .
         apply norm_le_norm_add_const_of_dist_le at s_dist
+        simp only [Real.norm_eq_abs] at s_dist
         grw [s_dist]
         simp [DFunLike.coe] at ih
         grw [ih]
@@ -4412,7 +4388,6 @@ lemma iterated_lipschitz_bound (f: LipschitzH): ∃ C: ℝ, ∀ g: G, ‖f g‖ 
         . simp
       . positivity
 
-include V_real in
 lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: ℝ, ((Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V)) ≤ C * #(S ^ R) := by
   let argmax_eigen := (Finite.exists_max (Q_R_lin_hermetian R (V := V)).eigenvalues).choose
   let m :=  (Q_R_lin_hermetian R (V := V)).eigenvalues (argmax_eigen)
@@ -4422,7 +4397,7 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
   have B_nonneg: 0 ≤ B := by
     specialize hB 1
     simp at hB
-    have foo := norm_nonneg ((m_vec_V).val.toFun 1)
+    have foo := abs_nonneg ((m_vec_V).val.toFun 1)
     grw [hB] at foo
     apply nonneg_of_mul_nonneg_left foo (by grind)
   use ((B * (1 + R)) ^ 2)
@@ -4473,10 +4448,7 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
         specialize hB x
         simp
         simp [m_vec_V, m_vec] at hB
-        rw [Complex.norm_eq_sqrt_sq_add_sq] at hB
-        simp [DFunLike.coe] at V_real
-        rw [V_real] at hB
-        simp at hB
+        rw [← Real.sqrt_sq_eq_abs] at hB
         rw [Real.sqrt_le_iff] at hB
         have foo := hB.2
         .
@@ -4484,47 +4456,24 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
           simp [dist, WordDist_one] at hx
           grw [hx] at foo
           exact foo
-        . apply Submodule.sum_smul_mem
-          simp
     . unfold m
       apply Matrix.PosSemidef.eigenvalues_nonneg
-      apply (Q_R_matrix_pos_def V_real R hR (V := V)).posSemidef
+      apply (Q_R_matrix_pos_def R hR (V := V)).posSemidef
   .
     apply Finset.prod_nonneg
     intro i _
     apply Matrix.PosSemidef.eigenvalues_nonneg
-    apply (Q_R_matrix_pos_def V_real R hR (V := V)).posSemidef
+    apply (Q_R_matrix_pos_def R hR (V := V)).posSemidef
   .
     intro i _
     apply Matrix.PosSemidef.eigenvalues_nonneg
-    apply (Q_R_matrix_pos_def V_real R hR (V := V)).posSemidef
+    apply (Q_R_matrix_pos_def R hR (V := V)).posSemidef
   . intro i _
     unfold m
     have foo := (Finite.exists_max (Q_R_lin_hermetian R (V := V)).eigenvalues).choose_spec
     apply foo i
 
-def lipschitz_toReal (f: LipschitzH): LipschitzH := {
-  toFun := fun g => (f g).re
-  lipschitz := by
-    obtain ⟨C, hC⟩ := f.lipschitz
-    use 1 * (1 * C)
-    rw [← Function.comp_def]
-    apply LipschitzWith.comp
-    . apply RCLike.lipschitzWith_ofReal
-    .
-      rw [← Function.comp_def]
-      apply LipschitzWith.comp
-      apply RCLike.lipschitzWith_re
-      simp [DFunLike.coe, hC]
-
-  harmonic := by
-    simp [Harmonic]
-    have hf := f.harmonic
-    simp [Harmonic] at hf
-    intro x
-    rw [hf x]
-    simp
-}
+def lipschitz_toReal (f: LipschitzH): LipschitzH := f
 
 -- TODO - do we really need the double by_contra here?
 instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
@@ -4548,8 +4497,6 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
   let large_v: V_Data := {
     V := Submodule.span ℝ fin_basis
     hV := by infer_instance
-    V_real := by
-      sorry
     V_even := by
       rw [finrank_span_finset_eq_card]
       .
@@ -4619,21 +4566,11 @@ lemma rank_two : ((2: ℕ)) ≤ Module.rank ℝ LipschitzH := by
       simp [ConstLipschitzH] at hx
     . simp [a_eq]
 
-instance lipschitz_finite : Module.Finite ℂ LipschitzH := by
+instance lipschitz_finite : Module.Finite ℝ LipschitzH := by
   apply Module.finite_of_finrank_pos
-  have other := Module.finrank_eq_rank' ℝ LipschitzH
-  have foo := finrank_real_of_complex LipschitzH
-  apply Nat.div_eq_of_eq_mul_right at foo
-  .
-    -- TODO - make this less disgusting
-    rw [← foo]
-    simp
-    rw [← ENat.coe_le_coe]
-    rw [← Cardinal.ofENat_le_ofENat]
-    simp only [Nat.cast_ofNat, Cardinal.ofENat_ofNat, Cardinal.ofENat_nat]
-    rw [Module.finrank_eq_rank]
-    apply rank_two
-  . simp
+  -- TODO(realification): the old ℂ proof went through `finrank_real_of_complex`; over ℝ we need
+  -- `0 < finrank ℝ LipschitzH` directly. `rank_two` gives `2 ≤ rank ℝ` but not finiteness.
+  sorry
 
 
-#synth FiniteDimensional ℂ LipschitzH
+#synth FiniteDimensional ℝ LipschitzH
