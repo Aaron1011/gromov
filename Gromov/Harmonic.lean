@@ -4673,20 +4673,54 @@ noncomputable local instance LipschitzH_normed: NormedSpace ℝ (LipschitzH) whe
     simp [K]
 -- END MOVE
 
--- This is too weak - we need the constant to be independent of R
-lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: ℝ, ((Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V)) ≤ C * #(S ^ R) := by
+/-- The Lipschitz constant `‖(V_basis i).val‖` of the `i`-th basis vector of `V`. -/
+noncomputable def v_lipschitz_constant (i : ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)) : ℝ :=
+  ‖(V_basis (V := V) i).val‖
+
+/-- The value at the origin `‖(V_basis i).val 1‖` of the `i`-th basis vector of `V`. -/
+noncomputable def v_origin_norm (i : ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)) : ℝ :=
+  ‖(V_basis (V := V) i).val 1‖
+
+/-- The maximum, over basis vectors of `V`, of the Lipschitz constant `v_lipschitz_constant`. -/
+noncomputable def max_lipschitz : ℝ :=
+  v_lipschitz_constant (V := V) (Finite.exists_max (v_lipschitz_constant (V := V))).choose
+
+/-- The maximum, over basis vectors of `V`, of the value at the origin `v_origin_norm`. -/
+noncomputable def max_origin : ℝ :=
+  v_origin_norm (V := V) (Finite.exists_max (v_origin_norm (V := V))).choose
+
+lemma le_max_lipschitz (i) : v_lipschitz_constant (V := V) i ≤ max_lipschitz (V := V) :=
+  (Finite.exists_max (v_lipschitz_constant (V := V))).choose_spec i
+
+lemma le_max_origin (i) : v_origin_norm (V := V) i ≤ max_origin (V := V) :=
+  (Finite.exists_max (v_origin_norm (V := V))).choose_spec i
+
+lemma max_lipschitz_nonneg : 0 ≤ max_lipschitz (V := V) := by
+  unfold max_lipschitz v_lipschitz_constant; positivity
+
+lemma max_origin_nonneg : 0 ≤ max_origin (V := V) := by
+  unfold max_origin v_origin_norm; positivity
+
+/-- The `R`-independent constant appearing in `det_bound` (the `(1 + R) ^ 2` factor is kept
+separate, in the statement of `det_bound`). -/
+noncomputable def det_bound_const : ℝ :=
+  ((Module.finrank ℝ ↥V) * max_lipschitz (V := V) + (Module.finrank ℝ ↥V) * max_origin (V := V)) ^ 2
+
+lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R):
+    ((Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V))
+      ≤ det_bound_const (V := V) * (1 + R) ^ 2 * #(S ^ R) := by
   classical
   let argmax_eigen := (Finite.exists_max (Q_R_lin_hermetian R (V := V)).eigenvalues).choose
   let m :=  (Q_R_lin_hermetian R (V := V)).eigenvalues (argmax_eigen)
   let m_vec := (Q_R_lin_hermetian R (V := V)).eigenvectorBasis argmax_eigen
   let m_vec_V := V_basis (V := V).equivFun.symm (m_vec.ofLp)
 
-  let v_lipschitz_constant := fun (i: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)) => ‖(V_basis (V := V) i).val‖
-  let v_origin_norm := (fun i => ‖(V_basis (V := V) i).val 1‖)
-  obtain ⟨i_max_lipschitz, h_max_lipschitz⟩ := Finite.exists_max v_lipschitz_constant
-  obtain ⟨i_max_origin, h_max_origin⟩ := Finite.exists_max v_origin_norm
-  let max_lipschitz := v_lipschitz_constant i_max_lipschitz
-  let max_origin := v_origin_norm i_max_origin
+  let v_lipschitz_constant := v_lipschitz_constant (V := V)
+  let v_origin_norm := v_origin_norm (V := V)
+  let max_lipschitz := max_lipschitz (V := V)
+  let max_origin := max_origin (V := V)
+  have h_max_lipschitz : ∀ i, v_lipschitz_constant i ≤ max_lipschitz := le_max_lipschitz (V := V)
+  have h_max_origin : ∀ i, v_origin_norm i ≤ max_origin := le_max_origin (V := V)
   obtain hB := iterated_lipschitz_bound m_vec_V.val
 
   -- have B_nonneg: 0 ≤ B := by
@@ -4695,7 +4729,10 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
   --   have foo := abs_nonneg ((m_vec_V).val.toFun 1)
   --   grw [hB] at foo
   --   apply nonneg_of_mul_nonneg_left foo (by grind)
-  use (((((Module.finrank ℝ ↥V) * max_lipschitz) + ((Module.finrank ℝ ↥V) * max_origin)) * (1 + R)) ^ 2)
+  rw [show det_bound_const (V := V) * (1 + R) ^ 2
+        = (((Module.finrank ℝ ↥V) * max_lipschitz
+            + (Module.finrank ℝ ↥V) * max_origin) * (1 + R)) ^ 2 from by
+      simp only [max_lipschitz, max_origin, det_bound_const]; ring]
   rw [(Q_R_lin_hermetian R (V := V)).det_eq_prod_eigenvalues]
   grw [Finset.prod_le_prod (g := fun _ => m)]
   .
@@ -4809,7 +4846,8 @@ lemma det_bound (R: ℕ) (hR: (v_r_all_nonzero (V := V)).choose ≤ R): ∃ C: �
                   simp
                   apply h_max_origin
             . positivity
-            . positivity
+            . exact add_nonneg (mul_nonneg (by positivity) (max_lipschitz_nonneg (V := V)))
+                (mul_nonneg (by positivity) (max_origin_nonneg (V := V)))
             . simp
             -- simp
             -- simp [m_vec_V, m_vec]
