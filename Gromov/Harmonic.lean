@@ -4982,7 +4982,7 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       unfold HasPolynomialGrowthD at hd
       obtain ⟨a, s_growth⟩ := hd
       simp
-      apply squeeze_zero (g := (fun (R: ℕ) => (det_bound_const (V := large_v.V) * (1 + R) ^ 2 * ((a * R^d : ℝ))) / (R ^ (↑d + 1) : ℝ)))
+      apply squeeze_zero (g := (fun (R: ℕ) => (det_bound_const (V := large_v.V) * (1 + R) ^ 2 * ((a * R^d : ℝ))) / (R ^ (↑d + 3) : ℝ)))
       .
         intro R
         have det_pos := (Q_R_matrix_pos_def R (V := large_v.V) sorry).det_pos
@@ -5006,6 +5006,7 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
             norm_cast
             simp
             rw [mul_div_assoc]
+            sorry
         . simp [det_bound_const, max_lipschitz]
           sorry
       .
@@ -5015,8 +5016,24 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
         simp_rw [mul_div_assoc]
         simp_rw [mul_assoc]
         apply Filter.Tendsto.const_mul
+
         simp_rw [add_pow_two]
         norm_num
+        rw [← Filter.tendsto_add_atTop_iff_nat 1]
+        conv =>
+          arg 1
+          intro R
+          rw [← zpow_natCast_sub_natCast₀ (by norm_cast)]
+        norm_num
+        field_simp
+        simp_rw [mul_comm]
+        simp_rw [mul_div_assoc]
+        conv =>
+          pattern nhds 0
+          equals nhds (a * 0) => simp
+        apply Filter.Tendsto.const_mul
+        
+        simp_rw []
         sorry
     .
       --apply Asymptotics.IsLittleO.tendsto_div_nhds_zero
