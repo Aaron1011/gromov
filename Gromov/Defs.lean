@@ -968,7 +968,7 @@ instance LipschitzH.instAddCommGroup: AddCommGroup (LipschitzH) := {
 
 
 -- V is the vector space
-abbrev V := Module ℝ (LipschitzH)
+-- abbrev V := Module ℝ (LipschitzH)
 
 
 
@@ -992,7 +992,7 @@ theorem LipschitzH.finset_sum_apply {ι: Type*} [Fintype ι] [DecidableEq ι] (s
 
 --set_option pp.all true
 
-instance lipschitzHVectorSpace : V := {
+instance lipschitzHVectorSpace : Module ℝ (LipschitzH) := {
   smul := lipschitzSMul.smul
   one_smul := by simp [HSMul.hSMul, SMul.smul]
   mul_smul := by

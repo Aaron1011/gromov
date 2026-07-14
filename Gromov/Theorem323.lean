@@ -14,12 +14,10 @@ open Generates
 variable [hGS: Generates]
 include hGS
 
-variable {V: Submodule ℝ LipschitzH} [V_finite: FiniteDimensional ℝ V] [Nontrivial V] (hV : Even (Module.finrank V))  [V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]
-
+--variable {V: Submodule ℝ LipschitzH} [V_finite: FiniteDimensional ℝ V] [Nontrivial V] (hV : Even (Module.finrank V))  [V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]
 
 noncomputable def Q_R (R : ℝ) (u v: G → ℝ): ℝ := ∑ g ∈ Metric.closedBall 1 R, (u g) * (v g)
-
-noncomputable def Q_R_lin (R: ℝ): V →ₗ⋆[ℝ] V →ₗ[ℝ] ℝ := {
+noncomputable def Q_R_lin (V: Submodule ℝ LipschitzH) (R: ℝ): V →ₗ⋆[ℝ] V →ₗ[ℝ] ℝ := {
   toFun := fun u => {
     toFun := fun v => Q_R R (fun g => u.val g) (fun g => v.val g)
     map_add' := by
@@ -51,18 +49,37 @@ noncomputable def Q_R_lin (R: ℝ): V →ₗ⋆[ℝ] V →ₗ[ℝ] ℝ := {
     ring
 }
 
-noncomputable def V_basis := Module.Basis.ofVectorSpace ℝ V
-noncomputable def Q_R_matrix (R: ℝ) := ((Q_R_lin R (V := V)).toMatrix₂ V_basis V_basis)
 
-omit V_decidable in
-noncomputable def my_expr (d: ℝ) (R : ℕ) := #(S ^ R) * ((Q_R_matrix R (V := V)).det ^ ((1 : ℝ) / Module.finrank ℝ V)) / (R ^ d)
 
-omit V_decidable in
-noncomputable def growth_bound (d: ℝ) := Filter.liminf (fun (R: ℕ) => ENNReal.ofReal (my_expr (V := V) d R)) (Filter.atTop) ≠ ⊤
+-- These definitions go outside, since we need to explicitly vary the V that we pass in for the theorem statement
+noncomputable def V_basis (V: Submodule ℝ LipschitzH) := Module.Basis.ofVectorSpace ℝ V
+noncomputable def Q_R_matrix (V: Submodule ℝ LipschitzH) (R: ℝ) [FiniteDimensional ℝ V] [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)] := ((Q_R_lin V R).toMatrix₂ (V_basis V) (V_basis V))
+noncomputable def my_expr (V: Submodule ℝ LipschitzH) (d: ℝ) (R : ℕ) [FiniteDimensional ℝ V] [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)] := #(S ^ R) * ((Q_R_matrix V R).det ^ ((1 : ℝ) / Module.finrank ℝ V)) / (R ^ d)
+noncomputable def growth_bound (V: Submodule ℝ LipschitzH) (d: ℝ) [finite_V : FiniteDimensional ℝ V] [decidable_V : DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]  := Filter.liminf (fun (R: ℕ) => ENNReal.ofReal (my_expr V d R)) (Filter.atTop) ≠ ⊤
+
+-- Everything in this section freely references fields from V_Wrapper
+section V_Wrapper_Section
+
+class V_Wrapper where
+  V: Submodule ℝ LipschitzH
+  V_finite: FiniteDimensional ℝ V
+  V_nontrivial: Nontrivial V
+  V_even: Even (Module.finrank ℝ V)
+  V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ V)
+
+open V_Wrapper
+
+variable [v_wrapper_inst: V_Wrapper]
+include v_wrapper_inst
+
+local instance v_finite_dim_inst: FiniteDimensional ℝ V := v_wrapper_inst.V_finite
+local instance v_nontrivial_inst: Nontrivial V := v_wrapper_inst.V_nontrivial
+local instance V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ V) := v_wrapper_inst.V_decidable
+
 
 
 -- Todo - is the better way to declare theorem_3_23 so that the constant is not allowed to depend on V?
-omit V in
+
 structure V_Data where
   V: Submodule ℝ LipschitzH
   hV: FiniteDimensional ℝ V
@@ -70,7 +87,7 @@ structure V_Data where
   V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)
 
 
-lemma Q_R_lin_symm (R: ℝ): (Q_R_lin R (V := V)).IsSymm := {
+lemma Q_R_lin_symm (R: ℝ): (Q_R_lin V R).IsSymm := {
   eq := by
     intro u v
     simp [Q_R_lin, Q_R]
@@ -82,7 +99,7 @@ lemma Q_R_single_eq (R: ℝ) (u : G → ℝ): Q_R_single R u = Q_R R u u := by
   unfold Q_R_single Q_R
   simp_rw [pow_two]
 
-lemma Q_R_lin_hermetian (R: ℝ): (Q_R_matrix R (V := V)).IsHermitian := by
+lemma Q_R_lin_hermetian (R: ℝ): (Q_R_matrix V R).IsHermitian := by
   rw [Q_R_matrix, ← LinearMap.isSymm_iff_isHermitian_toMatrix]
   apply Q_R_lin_symm
 
@@ -167,11 +184,10 @@ lemma v_r_all_nonzero: ∃ R: ℝ, ∀ u ∈ V, u ≠ 0 → ∃ g ∈ Metric.clo
     specialize hg g_dist
     exact hg
 
-noncomputable def R' : ℝ := (v_r_all_nonzero (V := V)).choose
+noncomputable def R' : ℝ := (v_r_all_nonzero).choose
 
 
-
-lemma Q_R_matrix_pos_def (R: ℝ) (hR: (R' (V := V)) ≤ R): (Q_R_matrix R (V := V)).PosDef := by
+lemma Q_R_matrix_pos_def (R: ℝ) (hR: (R') ≤ R): (Q_R_matrix V R).PosDef := by
   apply Matrix.PosDef.of_dotProduct_mulVec_pos (Q_R_lin_hermetian _)
   intro x hx
   simp [Q_R_matrix]
@@ -187,7 +203,7 @@ lemma Q_R_matrix_pos_def (R: ℝ) (hR: (R' (V := V)) ≤ R): (Q_R_matrix R (V :=
     simp_rw [← pow_two] at this
     simp only [sq_nonpos_iff] at this
 
-    have foo := (v_r_all_nonzero (V := V)).choose_spec (V_basis.equivFun.symm x) (by apply Submodule.coe_mem) ?_
+    have foo := (v_r_all_nonzero).choose_spec ((V_basis V).equivFun.symm x) (by apply Submodule.coe_mem) ?_
     .
       obtain ⟨g, g_mem, x_g_nonzero⟩ := foo
       specialize this g ?_
@@ -215,12 +231,35 @@ lemma Q_R_matrix_pos_def (R: ℝ) (hR: (R' (V := V)) ≤ R): (Q_R_matrix R (V :=
 
 #print sorries Q_R_matrix_pos_def
 
+-- Finding good scales:
 
+private noncomputable def dim (V: Type*) [AddCommMonoid V] [Module ℝ V] : ℝ := Module.finrank ℝ V
 
-omit V in
-lemma theorem_3_23 (d: ℝ): ∃ C: ℕ, ∀ data: V_Data, growth_bound (V := data.V) (V_finite := data.hV) (V_decidable := data.V_decidable) d → (Module.finrank ℝ data.V) < C := by
+private noncomputable def i₀ : ℕ := Nat.clog 16 ⌈R'⌉₊
+
+lemma Q_R_matrix_pos_def_i₀ (R: ℝ) (hR: 16 ^ (i₀) ≤ R): (Q_R_matrix V R).PosDef := by
+  apply Q_R_matrix_pos_def
+  simp [i₀] at hR
+  have foo := Nat.le_pow_clog (b := 16) (x := ⌈R'⌉₊) (by simp)
+  have r_ceil := Nat.le_ceil (R')
+  grw [r_ceil]
+  grw [foo]
+  simp
+  grw [hR]
+
+private noncomputable def f (R: ℕ): ℝ := #(S ^ R) * (Q_R_matrix V R).det ^ (dim V)⁻¹
+private noncomputable def h (i: ℕ): ℝ := Real.log (f (16 ^ i))
+
+lemma growth_implies_lim_h (d: ℕ) (growth: growth_bound V d): Filter.liminf (fun (i: ℕ) => ENNReal.ofReal (h i - d * i * Real.log 16)) Filter.atTop < ⊤ := by
+
+  sorry
+
+lemma theorem_3_23 (d: ℝ): ∃ C: ℕ, ∀ data: V_Data, (growth_bound data.V d (finite_V := data.hV) (decidable_V := data.V_decidable)) → (Module.finrank ℝ data.V) < C := by
   have C: ℕ := sorry
   use C
   intro data h_growth
 
+
   sorry
+
+end V_Wrapper_Section
