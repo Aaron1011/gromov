@@ -4345,7 +4345,6 @@ omit V in
 structure V_Data where
   V: Submodule ℝ LipschitzH
   hV: FiniteDimensional ℝ V
-  V_nontrivial: Nontrivial V
   (V_even : Even (Module.finrank ℝ V))
   V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)
 
@@ -4881,6 +4880,7 @@ lemma det_bound (R: ℕ) (hR: (R' (V := V)) ≤ R):
 def lipschitz_toReal (f: LipschitzH): LipschitzH := f
 
 -- TODO - do we really need the double by_contra here?
+set_option maxHeartbeats 2500000 in
 instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
   classical
   by_contra!
@@ -4898,7 +4898,7 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
   obtain ⟨d, hd⟩ := hGS.g_growth
   obtain ⟨C, V_bound⟩ := theorem_3_23 ((d + 3) + (d + 3))
 
-  obtain ⟨fin_basis_idx, card_fin_basis_idx⟩ := B_infinite.exists_subset_card_eq _ (C * 2)
+  obtain ⟨fin_basis_idx, card_fin_basis_idx⟩ := B_infinite.exists_subset_card_eq _ (2 + C * 2)
   let fin_basis := Finset.image (B) fin_basis_idx
   let large_v: V_Data := {
     V := Submodule.span ℝ fin_basis
@@ -4918,9 +4918,6 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
         exact Module.Basis.linearIndepOn B ↑fin_basis_idx
     V_decidable := by
       infer_instance
-    V_nontrivial := by
-      sorry
-
   }
   specialize V_bound large_v ?_
   .
@@ -4952,7 +4949,19 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       rw [mul_comm _ (1 / _)]
       rw [← mul_assoc]
 
-    have nontrivial_v := large_v.V_nontrivial
+    have nontrivial_v : Nontrivial large_v.V := by
+      apply Module.nontrivial_of_finrank_pos (R := ℝ)
+      rw [finrank_span_finset_eq_card]
+      .
+        simp [fin_basis]
+        rw [← Finset.card_ne_zero]
+        grind
+      .
+        simp [fin_basis]
+        apply LinearIndepOn.id_image
+        exact Module.Basis.linearIndepOn B ↑fin_basis_idx
+
+
     conv =>
       pattern nhds 0
       equals nhds (0 * 0) => simp
