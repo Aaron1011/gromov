@@ -10,6 +10,91 @@ set_option linter.style.whitespace false
 open scoped Finset
 open scoped Pointwise
 
+
+
+-- TODO - generalize and upstream
+-- Based on https://math.stackexchange.com/questions/1101184/show-that-if-x-succeq-y-then-detx-ge-dety
+lemma matrix_psd_det_one {n: Type*} [Fintype n] [DecidableEq n] (A: Matrix n n ℝ) (ha: A.PosSemidef): 1 ≤ (A + 1).det := by
+  have foo := ha.isHermitian.spectral_theorem
+  have H := ha.isHermitian
+  simp at foo
+  rw [foo]
+  conv =>
+    rhs
+    arg 1
+    equals H.eigenvectorUnitary * ((Matrix.diagonal H.eigenvalues) + 1) * (star H.eigenvectorUnitary) =>
+      rw [mul_add, add_mul]
+      simp
+
+  rw [Matrix.det_conj_of_mul_eq_one]
+  .
+    rw [← Matrix.diagonal_one']
+    rw [Matrix.diagonal_add]
+    simp
+    apply Finset.one_le_prod
+    intro i _
+    have foo := ha.eigenvalues_nonneg
+    grind
+  . simp
+  . simp
+
+
+open MatrixOrder in
+lemma matrix_det_montone {n: Type*} [Fintype n] [DecidableEq n] (A B: Matrix n n ℝ) (hb: B.PosDef) (hab: (A - B).PosSemidef): B.det ≤ A.det := by
+
+  have invert_sqrt: Invertible (CFC.sqrt B) := by
+    apply Matrix.invertibleOfIsUnitDet
+    rw [Matrix.PosSemidef.det_sqrt hb.posSemidef]
+    simp
+    rw [← ne_eq, Real.sqrt_ne_zero]
+    . grind [hb.det_pos]
+    . grind [hb.det_pos]
+
+
+  have det_prod_eq: A.det = B.det * ((CFC.sqrt B)⁻¹ * (A - B) * (CFC.sqrt B)⁻¹ + 1).det := by
+    conv =>
+      lhs
+      arg 1
+      equals (CFC.sqrt B) * (CFC.sqrt B)⁻¹ * A * (CFC.sqrt B)⁻¹ * (CFC.sqrt B) =>
+        simp
+
+
+    rw [mul_assoc, mul_assoc, mul_assoc]
+    rw [Matrix.det_mul]
+    rw [← mul_assoc, ← mul_assoc]
+    rw [Matrix.det_mul]
+    ring
+    rw [hb.posSemidef.det_sqrt]
+    simp only [RCLike.sqrt_real]
+    rw [Real.sq_sqrt (by grind [hb.det_pos])]
+    rw [mul_sub]
+    rw [sub_mul]
+    conv =>
+      rhs
+      rhs
+      rhs
+      lhs
+      rhs
+      arg 1
+      arg 2
+      rw [← CFC.sqrt_mul_sqrt_self (a := B)]
+
+    simp
+
+  rw [det_prod_eq]
+  rw [le_mul_iff_one_le_right]
+  .
+    apply matrix_psd_det_one
+    rw [hb.posSemidef.inv_sqrt]
+    have foo := (CFC.sqrt_nonneg B⁻¹)
+    rw [Matrix.le_iff] at foo
+    simp at foo
+    nth_rw 2 [← foo.isHermitian.eq]
+    apply Matrix.PosSemidef.mul_mul_conjTranspose_same
+    exact hab
+  . apply hb.det_pos
+
+
 namespace GeneratesNS
 open Generates
 
@@ -506,6 +591,18 @@ lemma Q_R_matrix_pos_def_i₀ (R: ℝ) (hR: 16 ^ (i₀) ≤ R): (Q_R_matrix V R)
 
 private noncomputable def f (R: ℕ): ℝ := #(S ^ R) * (Q_R_matrix V R).det ^ (dim V)⁻¹
 private noncomputable def h (i: ℕ): ℝ := Real.log (f (16 ^ i))
+
+-- Matrix.le_iff
+
+
+-- lemma f_antitone: Antitone f := by
+--   intro a b hab
+--   unfold f
+--   have foo := det_bound (V := V)
+--   simp at foo
+--   specialize foo b
+--   grw [foo]
+--   grw [det_bound]
 
 lemma growth_implies_lim_h (d: ℕ) (h_growth: growth_bound V d): Filter.Tendsto (fun (i: ℕ) => (h i - d * i * Real.log 16)) Filter.atTop Filter.atBot := by
   unfold growth_bound my_expr at h_growth
