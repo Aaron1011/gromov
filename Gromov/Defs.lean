@@ -1649,5 +1649,56 @@ def gActW (g: G): W → W := Quotient.lift (fun f => Submodule.Quotient.mk (gAct
 -- We offset by one to avoid the need to carry around a '0 < n' hypothesis everywgere
 noncomputable def f_n (n: ℕ) (g: G): ℝ := ((1: ℝ) / ((n + 1): ℝ)) * ∑ m: Fin (n + 1), muConv  (m.val) g
 
+lemma card_closed_ball_eq (R: ℕ): #((finite_closed_ball 1 R).toFinset) = #(S ^ R) := by
+  rw [Finset.card_bij (i := fun a b => a)]
+  . intro a ha
+    simp [dist, WordDist_one] at ha
+    rw [Finset.mem_pow]
+    obtain ⟨l, l_prod, l_len⟩ := word_norm_prod_self a
+    let padded := l ++ List.replicate (R - WordNorm a) ⟨1, one_mem⟩
+    simp_rw [← Function.comp_def]
+    simp_rw [← List.map_ofFn]
+    conv =>
+      arg 1
+      intro f
+      lhs
+      arg 1
+      equals (List.ofFn f).unattach =>
+        rfl
+
+    have padded_len: padded.length = R := by
+      unfold padded
+      simp [l_len]
+      grind
+    use fun n => padded.get ⟨n, by (
+      grind
+    )⟩
+    rw [List.ofFn_congr padded_len.symm]
+    simp
+    unfold padded
+    simp
+    simp [ProdS] at l_prod
+    rw [← l_prod]
+  . simp
+  . intro b hb
+    rw [Finset.mem_pow] at hb
+    use b
+    use ?_
+    simp [dist, WordDist_one]
+    obtain ⟨f, hf⟩ := hb
+    conv at hf =>
+      lhs
+      arg 1
+      equals (List.ofFn f).unattach =>
+        simp_rw [← Function.comp_def]
+        simp_rw [← List.map_ofFn]
+        rfl
+
+    have r_eq: R = (List.ofFn f).length := by
+      simp
+    rw [r_eq]
+    apply word_norm_le
+    simp [ProdS, hf]
+
 
 end GeneratesNS

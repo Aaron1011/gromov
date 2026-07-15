@@ -254,4 +254,79 @@ noncomputable instance LipschitzH_normed: NormedSpace ℝ (LipschitzH) where
     left
     simp [K]
 
+lemma iterated_lipschitz_bound (f: LipschitzH): ∀ g: G, ‖f g‖ ≤ (LipschitzSemiNorm f + ‖f 1‖) * (1 + WordNorm g) := by
+  -- intro g
+  -- by_cases g = 1
+  -- . rename_i g_eq
+  --   simp [g_eq]
+  --   simp [word_norm_one]
+  --   apply le_mul_of_le_of_one_le
+  --   . grind
+  --   . G''_subgroup_finite_index
+  intro g
+  --obtain ⟨l, l_prod, l_len⟩ := word_norm_prod_self g
+  --clear l_len
+  induction hg: WordNorm g using Nat.strong_induction_on generalizing g with
+  | h n ih =>
+    obtain ⟨l, l_prod, l_len⟩ := word_norm_prod _ _ hg
+    simp [ProdS] at l_prod
+    by_cases n_eq: n = 0
+    .
+      simp [n_eq]
+      simp [n_eq] at l_len
+      simp [l_len] at l_prod
+      simp [← l_prod]
+    .
+      obtain ⟨head, tail, l_eq⟩ := List.exists_cons_of_length_pos (l := l) (by grind)
+      have tail_norm := word_norm_le tail.unattach.prod tail (by simp [ProdS])
+      specialize ih (WordNorm tail.unattach.prod) (by grind) tail.unattach.prod rfl
+      rw [← l_prod, l_eq]
+      simp
+      have foo := lipschitz_attains_norm f.toFun f.lipschitz
+      unfold LipschitzWith at foo
+      have s_dist := foo (head * tail.unattach.prod) tail.unattach.prod
+      rw [edist_dist] at s_dist
+      conv at s_dist =>
+        rhs
+        equals ENNReal.ofReal (LipschitzSemiNorm f *  (dist (↑head * tail.unattach.prod) tail.unattach.prod)) =>
+          rw [ENNReal.ofReal_mul, ENNReal.ofReal_coe_nnreal]
+          rw [edist_dist]
+          .
+            rfl
+          . simp
+      rw [ENNReal.ofReal_le_ofReal_iff] at s_dist
+      .
+        apply norm_le_norm_add_const_of_dist_le at s_dist
+        simp only [Real.norm_eq_abs] at s_dist
+        grw [s_dist]
+        simp [DFunLike.coe] at ih
+        grw [ih]
+        rw [dist_comm]
+        grw [dist_word_mul_le]
+        .
+          simp [dist, WordDist, word_norm_one]
+          grw [tail_norm]
+          have tail_len_le: tail.length ≤ n - 1 := by
+            grind
+          grw [tail_len_le]
+          norm_cast
+          rw [Nat.add_sub_of_le (by grind)]
+          simp [DFunLike.coe]
+          ring
+          norm_cast
+          conv =>
+            lhs
+            lhs
+            arg 1
+            equals (LipschitzSemiNorm f.toFun) * (n + 1) =>
+              ring
+          nth_rw 2 [add_comm]
+          simp
+          norm_cast
+          simp
+          rw [mul_add]
+          simp
+        . simp
+      . positivity
+        
 end GeneratesNS
