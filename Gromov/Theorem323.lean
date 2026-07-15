@@ -262,7 +262,7 @@ lemma Q_R_matrix_pos_def_i₀ (R: ℝ) (hR: 16 ^ (i₀) ≤ R): (Q_R_matrix V R)
 private noncomputable def f (R: ℕ): ℝ := #(S ^ R) * (Q_R_matrix V R).det ^ (dim V)⁻¹
 private noncomputable def h (i: ℕ): ℝ := Real.log (f (16 ^ i))
 
-lemma growth_implies_lim_h (d: ℕ) (h_growth: growth_bound V d): Filter.liminf (fun (i: ℕ) => ENNReal.ofReal (h i - d * i * Real.log 16)) Filter.atTop < ⊤ := by
+lemma growth_implies_lim_h (d: ℕ) (h_growth: growth_bound V d): Filter.Tendsto (fun (i: ℕ) => (h i - d * i * Real.log 16)) Filter.atTop Filter.atBot := by
   unfold growth_bound my_expr at h_growth
   have pow_tendsto: Filter.Tendsto (fun n => 16 ^ n) Filter.atTop Filter.atTop := by
     apply StrictMono.tendsto_atTop
@@ -277,16 +277,30 @@ lemma growth_implies_lim_h (d: ℕ) (h_growth: growth_bound V d): Filter.liminf 
   conv at comp_log =>
     arg 1
     intro x
-    rw [Real.log_div (by sorry) (by simp)]
+    rw [Real.log_div (by
+      rw [mul_ne_zero_iff]
+      refine ⟨?_, ?_⟩
+      . simp
+        grind [S_nonempty]
+      .
+        have det_pos := (Q_R_matrix_pos_def (16 ^ x) (V := V) (by
+          sorry
+        )).det_pos
+
+        rw [Real.rpow_ne_zero]
+        . grind
+        . grind
+        .
+          norm_cast
+          rw [inv_eq_zero]
+          norm_cast
+          rw [← ne_eq, Nat.ne_zero_iff_zero_lt]
+          apply Module.finrank_pos
+    ) (by simp)]
     simp
-  simp [h, f]
-
-  --simp_rw [Real.log_div (by simp) (by simp)] at comp_log
-  --apply tendsto_nhdsWithin_of_tendsto_nhds at comp_pow
-
-  --have frequent_bounded := Filter.frequently_lt_of_liminf_lt (h := h_growth)
-
-  sorry
+  simp [h, f, dim]
+  simp_rw [← mul_assoc] at comp_log
+  exact comp_log
 
 end V_Wrapper_Section
 
