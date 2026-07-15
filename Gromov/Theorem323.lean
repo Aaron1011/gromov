@@ -49,13 +49,15 @@ noncomputable def Q_R_lin (V: Submodule ℝ LipschitzH) (R: ℝ): V →ₗ⋆[�
     ring
 }
 
+open scoped Topology
 
 
 -- These definitions go outside, since we need to explicitly vary the V that we pass in for the theorem statement
 noncomputable def V_basis (V: Submodule ℝ LipschitzH) := Module.Basis.ofVectorSpace ℝ V
 noncomputable def Q_R_matrix (V: Submodule ℝ LipschitzH) (R: ℝ) [FiniteDimensional ℝ V] [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)] := ((Q_R_lin V R).toMatrix₂ (V_basis V) (V_basis V))
 noncomputable def my_expr (V: Submodule ℝ LipschitzH) (d: ℝ) (R : ℕ) [FiniteDimensional ℝ V] [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)] := #(S ^ R) * ((Q_R_matrix V R).det ^ ((1 : ℝ) / Module.finrank ℝ V)) / (R ^ d)
-noncomputable def growth_bound (V: Submodule ℝ LipschitzH) (d: ℝ) [finite_V : FiniteDimensional ℝ V] [decidable_V : DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]  := Filter.liminf (fun (R: ℕ) => ENNReal.ofReal (my_expr V d R)) (Filter.atTop) ≠ ⊤
+-- This is a liminf < ∞ in Vikman, but we can actually prove that it goes to 0, which makes things much easier to work with
+noncomputable def growth_bound (V: Submodule ℝ LipschitzH) (d: ℝ) [finite_V : FiniteDimensional ℝ V] [decidable_V : DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]  := Filter.Tendsto (fun (R: ℕ) => my_expr V d R) (Filter.atTop) ((𝓝[>] 0))
 
 lemma Q_R_lin_symm (V: Submodule ℝ LipschitzH) (R: ℝ): (Q_R_lin V R).IsSymm := {
   eq := by
@@ -261,9 +263,28 @@ private noncomputable def f (R: ℕ): ℝ := #(S ^ R) * (Q_R_matrix V R).det ^ (
 private noncomputable def h (i: ℕ): ℝ := Real.log (f (16 ^ i))
 
 lemma growth_implies_lim_h (d: ℕ) (h_growth: growth_bound V d): Filter.liminf (fun (i: ℕ) => ENNReal.ofReal (h i - d * i * Real.log 16)) Filter.atTop < ⊤ := by
-  unfold growth_bound at h_growth
-  rw [← lt_top_iff_ne_top] at h_growth
-  have frequent_bounded := Filter.frequently_lt_of_liminf_lt (h := h_growth)
+  unfold growth_bound my_expr at h_growth
+  have pow_tendsto: Filter.Tendsto (fun n => 16 ^ n) Filter.atTop Filter.atTop := by
+    apply StrictMono.tendsto_atTop
+    apply pow_right_strictMono₀
+    simp
+
+  have log_tendsto := Real.tendsto_log_nhdsGT_zero
+  -- Real.tendsto_log_nhdsNE_zero
+  have comp_pow := Filter.Tendsto.comp h_growth pow_tendsto
+  have comp_log := log_tendsto.comp comp_pow
+  simp [Function.comp_def] at comp_log
+  conv at comp_log =>
+    arg 1
+    intro x
+    rw [Real.log_div (by sorry) (by simp)]
+    simp
+  simp [h, f]
+
+  --simp_rw [Real.log_div (by simp) (by simp)] at comp_log
+  --apply tendsto_nhdsWithin_of_tendsto_nhds at comp_pow
+
+  --have frequent_bounded := Filter.frequently_lt_of_liminf_lt (h := h_growth)
 
   sorry
 

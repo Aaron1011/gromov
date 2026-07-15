@@ -2,6 +2,7 @@ import Mathlib
 import Mathlib.Algebra.Group.Gromov.Defs
 import Mathlib.Algebra.Group.Gromov.Theorem323
 import Mathlib.Algebra.Group.Gromov.TendstoTactic
+import Mathlib.Algebra.Group.Gromov.TendstoNhdsMul
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
@@ -4661,6 +4662,7 @@ lemma det_bound (R: ℕ) (hR: (R'_ V) ≤ R):
 
 #print axioms det_bound
 
+open scoped Topology
 def lipschitz_toReal (f: LipschitzH): LipschitzH := f
 
 -- TODO - do we really need the double by_contra here?
@@ -4706,18 +4708,18 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
   specialize V_bound large_v ?_
   .
     simp [growth_bound, my_expr]
-    have ne_top_of_zero (a: ENNReal) (ha: a ≤ 0): a ≠ ⊤ := by
-      simp at ha
-      simp [ha]
-    apply ne_top_of_zero
-    simp
-    apply Filter.Tendsto.liminf_eq
-    conv =>
-      pattern nhds 0
-      equals nhds ((ENNReal.ofReal (0 * 0))) =>
-        simp
+    -- have ne_top_of_zero (a: ENNReal) (ha: a ≤ 0): a ≠ ⊤ := by
+    --   simp at ha
+    --   simp [ha]
+    -- apply ne_top_of_zero
+    -- simp
+    -- apply Filter.Tendsto.liminf_eq
+    -- conv =>
+    --   pattern nhds 0
+    --   equals nhds ((ENNReal.ofReal (0 * 0))) =>
+    --     simp
 
-    apply ENNReal.tendsto_ofReal
+    -- apply ENNReal.tendsto_ofReal
     norm_cast
     conv =>
       arg 1
@@ -4747,10 +4749,10 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
 
 
     conv =>
-      pattern nhds 0
-      equals nhds (0 * 0) => simp
+      pattern (𝓝[>] 0)
+      equals (𝓝[>] (0 * 0)) => simp
 
-    apply Filter.Tendsto.mul
+    apply Filter.TendstoNhdsWithinIoi.mul (by simp) (by simp)
     .
       unfold HasPolynomialGrowthD at hd
       obtain ⟨a, s_growth⟩ := hd
@@ -4759,8 +4761,9 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       let R'' := ⌈R'_ large_v.V⌉₊
       rw [← Filter.tendsto_add_atTop_iff_nat R'']
       --  Filter.tendsto_add_atTop_iff_nat
-      apply squeeze_zero (g := (fun (R: ℕ) => (det_bound_const (V := large_v.V) * (1 + (R + R'')) ^ 2 * ((a * (R + R'')^d : ℝ))) / ((R + R'') ^ (↑d + 3) : ℝ)))
+      apply squeeze_zero_nhdsGT (g := (fun (R: ℕ) => (det_bound_const (V := large_v.V) * (1 + (R + R'')) ^ 2 * ((a * (R + R'')^d : ℝ))) / ((R + R'') ^ (↑d + 3) : ℝ)))
       .
+        apply Filter.Eventually.of_forall
         intro R
         have det_pos := (Q_R_matrix_pos_def (R + R'') (V := large_v.V) (by
           -- TODO - why is this so messy?
@@ -4774,6 +4777,7 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
         norm_cast at det_pos
         positivity
       .
+        apply Filter.Eventually.of_forall
         intro R
         have foo := det_bound (V := large_v.V) (R := R + R'') (by
           simp [R'']
@@ -4813,10 +4817,14 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       --apply Asymptotics.IsLittleO.tendsto_div_nhds_zero
       unfold HasPolynomialGrowthD at hd
       obtain ⟨a, s_growth⟩ := hd
-      apply squeeze_zero (g := (fun (n: ℝ) => (a * n^d : ℝ) / (n ^ (↑d + 3))) ∘ (fun (n: ℕ) => (n: ℝ)))
-      . intro n
+      apply squeeze_zero_nhdsGT (g := (fun (n: ℝ) => (a * n^d : ℝ) / (n ^ (↑d + 3))) ∘ (fun (n: ℕ) => (n: ℝ)))
+      .
+        apply Filter.Eventually.of_forall
+        intro n
         positivity
-      . intro n
+      .
+        apply Filter.Eventually.of_forall
+        intro n
         by_cases hn: n = 0
         .
           simp [hn]
