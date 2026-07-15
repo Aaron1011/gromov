@@ -4763,8 +4763,9 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       --  Filter.tendsto_add_atTop_iff_nat
       apply squeeze_zero_nhdsGT (g := (fun (R: ℕ) => (det_bound_const (V := large_v.V) * (1 + (R + R'')) ^ 2 * ((a * (R + R'')^d : ℝ))) / ((R + R'') ^ (↑d + 3) : ℝ)))
       .
-        apply Filter.Eventually.of_forall
-        intro R
+        rw [Filter.eventually_atTop]
+        use 1
+        intro R R_pos
         have det_pos := (Q_R_matrix_pos_def (R + R'') (V := large_v.V) (by
           -- TODO - why is this so messy?
           simp [R'']
@@ -4819,8 +4820,15 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       obtain ⟨a, s_growth⟩ := hd
       apply squeeze_zero_nhdsGT (g := (fun (n: ℝ) => (a * n^d : ℝ) / (n ^ (↑d + 3))) ∘ (fun (n: ℕ) => (n: ℝ)))
       .
-        apply Filter.Eventually.of_forall
-        intro n
+        rw [Filter.eventually_atTop]
+        use 1
+        intro n hn
+        have card_nonzero: (0: ℝ) < #(S ^ n) := by
+          simp
+          apply Finset.Nonempty.pow
+          apply S_nonempty
+
+        norm_cast
         positivity
       .
         apply Filter.Eventually.of_forall
