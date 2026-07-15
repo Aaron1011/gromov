@@ -1,5 +1,6 @@
 import Mathlib
 import Mathlib.Algebra.Group.Gromov.Defs
+import Mathlib.Algebra.Group.Gromov.TendstoTactic
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
@@ -311,6 +312,89 @@ lemma growth_implies_lim_h (d: ℕ) (h_growth: growth_bound V d): Filter.Tendsto
   exact comp_log
 
 #print axioms growth_implies_lim_h
+
+noncomputable def a (d: ℕ) := 4 * d * Real.log 16
+
+structure Lemma3_24_data (d: ℕ) where
+  i_1 : ℕ
+  i_2 : ℕ
+  w: ℕ
+  i_1_ge: i₀ ≤ i_1
+  i_2_ge: i₀ ≤ i_2
+  i_diff_mem: i_2 - i_1 ∈ Set.Ioo w (3 * w)
+  h_diff_lt_w: h (i_2 + 1) - h i_1 < w * (a d)
+  first_h_i: h (i_1 + 1) - h i_1 < (a d)
+  second_h_i : h (i_2 + 1) - h i_2 < (a d)
+
+lemma exists_j_0_for_h (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_bound V d): ∃ j_0: ℕ, h (i₀ + 3 * w * (j_0 + 1)) - h (i₀ + 3 * w * j_0) < w * (a d) := by
+  by_contra!
+
+  have h_sum (N: ℕ) := Finset.sum_Ico_sub (f := fun n => h (i₀ + 3 * w * n)) (m := 0) (n := N) (by simp)
+  simp_rw [eq_comm, sub_eq_iff_eq_add] at h_sum
+
+  have h_gt (N: ℕ): h (i₀ + (3 * w * N)) ≥ 4 * d * w * N * (Real.log 16) + h i₀ := by
+    rw [h_sum]
+    grw [← Finset.card_nsmul_le_sum (n := w * (a d))]
+    .
+      simp
+      simp [a]
+      grind
+    . intro n hn
+      apply this
+
+  have h_diff_ge (N: ℕ): h (i₀ + (3 * w * N)) - d * (i₀ + 3 * w * N) * Real.log 16 ≥ d * (w * N - i₀) * (Real.log 16) + h i₀ := by
+    grw [h_gt]
+    simp
+    grind
+
+  have rhs_diverges: Filter.Tendsto (fun N => d * (w * N - i₀) * (Real.log 16) + h i₀) Filter.atTop Filter.atTop := by
+    apply Filter.tendsto_atTop_add_const_right
+    rw [Filter.tendsto_mul_const_atTop_of_pos (by positivity)]
+    rw [Filter.tendsto_const_mul_atTop_of_pos (by positivity)]
+    simp_rw [sub_eq_add_neg]
+    apply Filter.tendsto_atTop_add_const_right
+    conv =>
+      arg 1
+      equals fun x => w * x =>
+        simp
+    rw [Filter.tendsto_const_mul_atTop_of_pos (by positivity)]
+    apply Filter.tendsto_id
+
+  apply growth_implies_lim_h at h_growth
+  rw [Filter.tendsto_atTop_atBot] at h_growth
+  rw [Filter.tendsto_atTop_atTop] at rhs_diverges
+
+  obtain ⟨positive_start, h_positive_start⟩ := rhs_diverges 1
+  obtain ⟨negative_start, h_negative_start⟩ := h_growth 0
+
+  specialize h_positive_start (max ⌈positive_start⌉₊ negative_start) (by
+    apply le_max_of_le_left
+    apply Nat.le_ceil
+  )
+  -- TODO - why can't grind just solve this?
+  specialize h_negative_start (i₀ + 3 * w * max ⌈positive_start⌉₊ negative_start) (by
+    have le_max: negative_start ≤ max ⌈positive_start⌉₊ negative_start := by
+      simp
+    conv =>
+      lhs
+      equals 0 + negative_start => simp
+    apply Nat.add_le_add
+    . simp
+    .
+      conv =>
+        lhs
+        equals 1 * negative_start => simp
+      apply Nat.mul_le_mul
+      . grind
+      . simp
+  )
+
+  have h_ge_one := h_diff_ge (max ⌈positive_start⌉₊ negative_start)
+  norm_cast at h_ge_one
+  norm_cast at h_positive_start
+  grw [← h_positive_start] at h_ge_one
+  grind
+
 
 end V_Wrapper_Section
 
