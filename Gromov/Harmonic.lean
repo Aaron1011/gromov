@@ -129,10 +129,6 @@ lemma v_basis_r: ∃ R: ℝ, ∀ k: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V
     . apply (v_basis_app_nonzero k).choose_spec
   .
     simp
-    rw [Finset.univ_nonempty_iff]
-    have foo := Module.Basis.ofVectorSpace ℝ V
-    have bar := Module.Basis.index_nonempty foo
-    exact bar
 
 open scoped Finset
 open scoped Pointwise
@@ -4049,7 +4045,7 @@ theorem exists_nontrivial_harmonic: ∃ F: LipschitzH , ∀ z: ℝ, F ≠ ConstL
     )
 
 
-instance nonempty_basis: Nonempty ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V) := Module.Basis.index_nonempty (Module.Basis.ofVectorSpace _ _)
+instance new_nonempty_basis: Nonempty ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V) := Module.Basis.index_nonempty (Module.Basis.ofVectorSpace _ _)
 
 
 lemma hermitian_det_pow_le (R: ℝ) (hR: (v_r_all_nonzero V).choose ≤ R): (Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V) ≤ (Q_R_matrix R (V := V)).trace := by
