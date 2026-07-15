@@ -23,9 +23,8 @@ open Generates
 variable [hGS: Generates]
 include hGS
 
--- These are `local instance`s in Harmonic.lean (LipschitzH is only *semi*normed, so we don't
--- want them escaping globally), so re-activate them for this file.
-attribute [local instance] LipschitzH_seminorm LipschitzH_normed
+-- `LipschitzH_seminorm` and `LipschitzH_normed` are public instances in
+-- `Mathlib.Algebra.Group.Gromov.LipschitzNorm`, so they are already available here.
 
 -- The lift of LipschitzSemiNorm to W, using a proof that LipschitzSemiNorm doesn't depend on the choice representative
 -- (adding a constant to a Lipschitz function doesn't change its Lipschitz constant)

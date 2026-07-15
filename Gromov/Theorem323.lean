@@ -1,5 +1,6 @@
 import Mathlib
 import Mathlib.Algebra.Group.Gromov.Defs
+import Mathlib.Algebra.Group.Gromov.LipschitzNorm
 import Mathlib.Algebra.Group.Gromov.TendstoTactic
 
 set_option linter.style.cdot false
