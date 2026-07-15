@@ -50,6 +50,9 @@ noncomputable def Q_R_lin (V: Submodule ℝ LipschitzH) (R: ℝ): V →ₗ⋆[�
     ring
 }
 
+
+
+
 open scoped Topology
 
 
@@ -201,6 +204,7 @@ lemma Q_R_matrix_pos_def (V: Submodule ℝ LipschitzH) [FiniteDimensional ℝ V]
 
 #print sorries Q_R_matrix_pos_def
 
+
 -- Everything in this section freely references fields from V_Wrapper
 section V_Wrapper_Section
 
@@ -315,16 +319,6 @@ lemma growth_implies_lim_h (d: ℕ) (h_growth: growth_bound V d): Filter.Tendsto
 
 noncomputable def a (d: ℕ) := 4 * d * Real.log 16
 
-structure Lemma3_24_data (d: ℕ) where
-  i_1 : ℕ
-  i_2 : ℕ
-  w: ℕ
-  i_1_ge: i₀ ≤ i_1
-  i_2_ge: i₀ ≤ i_2
-  i_diff_mem: i_2 - i_1 ∈ Set.Ioo w (3 * w)
-  h_diff_lt_w: h (i_2 + 1) - h i_1 < w * (a d)
-  first_h_i: h (i_1 + 1) - h i_1 < (a d)
-  second_h_i : h (i_2 + 1) - h i_2 < (a d)
 
 lemma exists_j_0_for_h (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_bound V d): ∃ j_0: ℕ, h (i₀ + 3 * w * (j_0 + 1)) - h (i₀ + 3 * w * j_0) < w * (a d) := by
   by_contra!
@@ -395,6 +389,23 @@ lemma exists_j_0_for_h (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_boun
   grw [← h_positive_start] at h_ge_one
   grind
 
+
+
+structure Lemma3_24_data (d w: ℕ) where
+  i_1 : ℕ
+  i_2 : ℕ
+  i_1_ge: i₀ ≤ i_1
+  i_2_ge: i₀ ≤ i_2
+  i_diff_mem: i_2 - i_1 ∈ Set.Ioo w (3 * w)
+  h_diff_lt_w: h (i_2 + 1) - h i_1 < w * (a d)
+  first_h_i: h (i_1 + 1) - h i_1 < (a d)
+  second_h_i : h (i_2 + 1) - h i_2 < (a d)
+
+lemma lemma_3_24 (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_bound V d): Nonempty (Lemma3_24_data d w) := by
+  obtain ⟨j_0, h_j_0⟩ := exists_j_0_for_h w d hw hd h_growth
+  let m := i₀ + 3 * w * j_0
+
+  sorry
 
 end V_Wrapper_Section
 
