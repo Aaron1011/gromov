@@ -274,6 +274,7 @@ lemma growth_implies_lim_h (d: ℕ) (h_growth: growth_bound V d): Filter.Tendsto
   have comp_pow := Filter.Tendsto.comp h_growth pow_tendsto
   have comp_log := log_tendsto.comp comp_pow
   simp [Function.comp_def] at comp_log
+  rw [← Filter.tendsto_add_atTop_iff_nat i₀] at comp_log
   conv at comp_log =>
     arg 1
     intro x
@@ -283,8 +284,13 @@ lemma growth_implies_lim_h (d: ℕ) (h_growth: growth_bound V d): Filter.Tendsto
       . simp
         grind [S_nonempty]
       .
-        have det_pos := (Q_R_matrix_pos_def (16 ^ x) (V := V) (by
-          sorry
+        have det_pos := (Q_R_matrix_pos_def_i₀ (16 ^ (x + i₀)) (by
+          rw [add_comm]
+          rw [pow_add]
+          simp
+          norm_cast
+          apply Nat.one_le_pow
+          simp
         )).det_pos
 
         rw [Real.rpow_ne_zero]
@@ -300,7 +306,11 @@ lemma growth_implies_lim_h (d: ℕ) (h_growth: growth_bound V d): Filter.Tendsto
     simp
   simp [h, f, dim]
   simp_rw [← mul_assoc] at comp_log
+  rw [← Filter.tendsto_add_atTop_iff_nat i₀]
+  simp
   exact comp_log
+
+#print axioms growth_implies_lim_h
 
 end V_Wrapper_Section
 
