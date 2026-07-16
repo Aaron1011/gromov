@@ -844,50 +844,37 @@ lemma lemma_3_24 (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_bound V d)
 
     have h_sum (N: ℕ) := Finset.sum_Ico_sub (f := fun n => h (m + n)) (m := 0) (n := w) (by simp)
     simp only [Nat.Ico_zero_eq_range, add_zero, forall_const] at h_sum
-    have h_gt : h (m  + w) - h m ≤ w * w *(a d) := by
+
+    have h_m_diff_le: h (m + w) - h (m) ≤ h (i₀ + 3 * w * (j_0 + 1)) - h (i₀ + 3 * w * (j_0)) := by
+      apply sub_le_sub
+      .
+        apply h_montone_on
+        . simp [m]
+          grind
+        . simp
+        . simp [m]
+          grind
+      . apply h_montone_on
+        . simp [m]
+        . simp [m]
+        . simp [m]
+
+
+    have h_le_w_a_d : h (m  + w) - h m ≤ w * (a d) := by
+      grw [h_m_diff_le]
+      grw [h_j_0]
+
+    have w_a_le_h : w * (a d) ≤ h (m + w) - h m := by
       rw [h_sum.symm]
-      grw [Finset.sum_le_card_nsmul (n := (w * a d))]
-      .
-        simp
-        rw [mul_assoc]
-      .
-        intro x hx
-
-        have diff_le: h (m + (x + 1)) - h (m + x) ≤ h (i₀ + 3 * w * (j_0 + 1)) - h (i₀ + 3 * w * (j_0)) := by
-          apply sub_le_sub
-          .
-            apply h_montone_on
-            . simp [m]
-              grind
-            . simp
-            . simp at hx
-              simp [m]
-              grind
-          . apply h_montone_on
-            . simp [m]
-            . simp [m]
-              grind
-            . simp [m]
+      grw [← Finset.card_nsmul_le_sum (n := (a d))]
+      . simp
+      . intro x hx
+        apply this
+        simpa using hx
+    grind
 
 
-        grw [h_j_0] at diff_le
-        grw [diff_le]
-
-    
-    sorry
-
-        -- grw [← diff_le]
-        -- unfold m
-        -- grw [← h_montone_on (a := i₀ + 3 * w * (j_0 + 1))  _ _]
-        -- . sorry
-        -- . simp at hx
-        --   rw [mul_add]
-        --   rw [add_assoc]
-        --   apply add_le_add_right
-        --   apply add_le_add_right
-
-        --   ring
-
+  
   sorry
 
 end V_Wrapper_Section
