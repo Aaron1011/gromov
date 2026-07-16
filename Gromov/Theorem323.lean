@@ -1185,7 +1185,41 @@ lemma inter_mult_helper (data: GoodScalesData): InterMult (B data) * #(S ^ ((R_1
             --   intro a _ b _ hab
             --   simp
             --   sorry
-          . sorry
+          .
+            rw [Finset.pairwiseDisjoint_iff]
+            intro a _ b _ hab
+            rw [Subtype.ext_iff]
+
+            have from_b := B_half_disjoint data
+            have a_prop := a.prop
+            have b_prop := b.prop
+            simp [-SetLike.coe_mem] at a_prop
+            simp [-SetLike.coe_mem] at b_prop
+            simp [B_half] at from_b
+
+            let a_center := (X_inner_nonempty _ a_prop).choose
+            let b_center := (X_inner_nonempty _ b_prop).choose
+            obtain ⟨a_center_mem, a_eq⟩ := (X_inner_nonempty _ a_prop).choose_spec
+            obtain ⟨b_center_mem, b_eq⟩ := (X_inner_nonempty _ b_prop).choose_spec
+            --obtain ⟨a_center, a_center_mem, a_eq⟩ := a_mem
+            --obtain ⟨b_center, b_center_mem, b_eq⟩ := b_mem
+
+            rw [Set.pairwiseDisjoint_iff] at from_b
+            simp only [Set.mem_image, id_eq, forall_exists_index, and_imp] at from_b
+            simp at hab
+            have inter_eq := from_b a_center a_center_mem (i := (Metric.closedBall a_center (↑(R_1 data) / 2) )) (?_) b_center b_center_mem (j := (Metric.closedBall b_center (↑(R_1 data) / 2) )) (?_) ?_
+            .
+
+              rw [← a_eq, ← b_eq]
+              simp [a_center, b_center] at inter_eq
+              exact inter_eq
+              sorry
+            . rfl
+            . rfl
+            . simp [a_center, b_center]
+              exact hab
+
+              exact hab
 
 
           -- rw [Finset.sum_attach_eq_sum_dite]
@@ -1255,7 +1289,7 @@ lemma inter_mult_helper (data: GoodScalesData): InterMult (B data) * #(S ^ ((R_1
     . sorry
     . sorry
 
-      
+
     -- simp [InterMult_f] at h_s
     -- rw [← ne_eq, ← Set.nonempty_iff_ne_empty] at h_s
     -- obtain ⟨X, hX⟩ := h_s
