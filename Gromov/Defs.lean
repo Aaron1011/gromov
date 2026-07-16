@@ -5,6 +5,7 @@ set_option linter.style.cdot false
 -- TODO - vscode stops reporting underlines if there are too many total underlines / gutter messages
 -- I've disabled some failing lints for now so that error underlines still sho up
 set_option linter.style.commandStart false
+set_option linter.style.whitespace false
 --set_option linter.unusedVariables true
 --set_option linter.unusedVariables.analyzeTactics true
 
@@ -1649,9 +1650,10 @@ def gActW (g: G): W → W := Quotient.lift (fun f => Submodule.Quotient.mk (gAct
 -- We offset by one to avoid the need to carry around a '0 < n' hypothesis everywgere
 noncomputable def f_n (n: ℕ) (g: G): ℝ := ((1: ℝ) / ((n + 1): ℝ)) * ∑ m: Fin (n + 1), muConv  (m.val) g
 
-lemma card_closed_ball_eq (R: ℕ): #((finite_closed_ball 1 R).toFinset) = #(S ^ R) := by
-  rw [Finset.card_bij (i := fun a b => a)]
-  . intro a ha
+lemma closed_ball_eq_S_pow (R: ℕ): (finite_closed_ball 1 R).toFinset = S ^ R := by
+  ext a
+  refine ⟨?_, ?_⟩
+  . intro ha
     simp [dist, WordDist_one] at ha
     rw [Finset.mem_pow]
     obtain ⟨l, l_prod, l_len⟩ := word_norm_prod_self a
@@ -1679,11 +1681,8 @@ lemma card_closed_ball_eq (R: ℕ): #((finite_closed_ball 1 R).toFinset) = #(S ^
     simp
     simp [ProdS] at l_prod
     rw [← l_prod]
-  . simp
-  . intro b hb
+  . intro hb
     rw [Finset.mem_pow] at hb
-    use b
-    use ?_
     simp [dist, WordDist_one]
     obtain ⟨f, hf⟩ := hb
     conv at hf =>
@@ -1699,6 +1698,9 @@ lemma card_closed_ball_eq (R: ℕ): #((finite_closed_ball 1 R).toFinset) = #(S ^
     rw [r_eq]
     apply word_norm_le
     simp [ProdS, hf]
+
+lemma card_closed_ball_eq (R: ℕ): #((finite_closed_ball 1 R).toFinset) = #(S ^ R) := by
+  rw [closed_ball_eq_S_pow]
 
 
 end GeneratesNS
