@@ -160,6 +160,32 @@ lemma Q_R_lin_hermetian (V: Submodule ℝ LipschitzH) (R: ℝ) [FiniteDimensiona
   rw [Q_R_matrix, ← LinearMap.isSymm_iff_isHermitian_toMatrix]
   apply Q_R_lin_symm
 
+lemma Q_R_lin_sub_pos_semi_def (V : Submodule ℝ LipschitzH) (R_1 R_2: ℝ) (hr: R_1 ≤ R_2): ((Q_R_lin V R_2) - Q_R_lin V R_1).IsPosSemidef := by
+  rw [LinearMap.isPosSemidef_def]
+  refine ⟨?_, ?_⟩
+  .
+    rw [sub_eq_add_neg]
+    apply LinearMap.IsSymm.add
+    . apply Q_R_lin_symm
+    .
+      -- TODO - add smul/neg lemmas so that we don't need to inline the proof here
+      exact {
+        eq := by
+          intro u v
+          simp [Q_R_lin, Q_R]
+          simp_rw [mul_comm]
+    }
+  .
+    rw [LinearMap.isNonneg_def]
+    intro x
+    simp [Q_R_lin, Q_R]
+    apply Finset.sum_le_sum_of_subset_of_nonneg
+    .
+      simp [Metric.closedBall]
+      grind
+    . intro a ha a_not
+      rw [← pow_two]
+      positivity
 
 lemma v_r_all_nonzero (V: Submodule ℝ LipschitzH) [FiniteDimensional ℝ V]: ∃ R: ℝ, ∀ u ∈ V, u ≠ 0 → ∃ g ∈ Metric.closedBall 1 R, u g ≠ 0 := by
   let zero_ball (n: ℕ): Submodule ℝ V := {
@@ -595,14 +621,43 @@ private noncomputable def h (i: ℕ): ℝ := Real.log (f (16 ^ i))
 -- Matrix.le_iff
 
 
--- lemma f_antitone: Antitone f := by
---   intro a b hab
---   unfold f
---   have foo := det_bound (V := V)
---   simp at foo
---   specialize foo b
---   grw [foo]
---   grw [det_bound]
+lemma f_antitone_on: MonotoneOn f (Set.Ici ⌈R'⌉₊) := by
+  intro a ha b hb hab
+  unfold f
+  grw [Finset.pow_subset_pow_right (n := b)]
+  .
+    rw [mul_le_mul_iff_right₀]
+    .
+      rw [Real.rpow_le_rpow_iff]
+      .
+        apply matrix_det_montone
+        .
+          apply Q_R_matrix_pos_def V a (by simp [R'] at ha; exact ha)
+        .
+          unfold Q_R_matrix
+          rw [← map_sub]
+          rw [← LinearMap.isPosSemidef_iff_posSemidef_toMatrix]
+          apply Q_R_lin_sub_pos_semi_def
+          simpa using hab
+      .
+        have foo := Q_R_matrix_pos_def V a (by simp [R'] at ha; exact ha)
+        grind [foo.det_pos]
+      .
+        have foo := Q_R_matrix_pos_def V b (by simp [R'] at hb; exact hb)
+        grind [foo.det_pos]
+      . simp [dim]
+        exact Module.finrank_pos
+    .
+      simp
+      apply Finset.Nonempty.pow
+      apply S_nonempty
+
+  . apply Real.rpow_nonneg
+    have foo := Q_R_matrix_pos_def V a (by simp [R'] at ha; exact ha)
+    grind [foo.det_pos]
+  . apply hGS.one_mem
+  . exact hab
+
 
 lemma growth_implies_lim_h (d: ℕ) (h_growth: growth_bound V d): Filter.Tendsto (fun (i: ℕ) => (h i - d * i * Real.log 16)) Filter.atTop Filter.atBot := by
   unfold growth_bound my_expr at h_growth
