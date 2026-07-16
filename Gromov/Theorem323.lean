@@ -6,6 +6,7 @@ import Mathlib.Algebra.Group.Gromov.TendstoNhdsMul
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
+set_option linter.style.longLine false
 
 open scoped Finset
 open scoped Pointwise
@@ -964,6 +965,7 @@ def X_j (data: GoodScalesData) := Metric.maximalSeparatedSet (R_1 data) ((Metric
 -- A collection of disjoint balls that cover the ball R_2
 def B (data: GoodScalesData) := (fun a => Metric.closedBall a (R_1 data)) '' (X_j data)
 def B_half (data: GoodScalesData) := (fun a => Metric.closedBall a (R_1 data / 2)) '' (X_j data)
+def B_3 (data: GoodScalesData) := (fun a => Metric.closedBall a (3 * R_1 data)) '' (X_j data)
 
 lemma B_covers_R2 (data: GoodScalesData): Metric.ball 1 (R_2 data) ⊆ ⋃₀ (B data) := by
   by_contra!
@@ -1046,6 +1048,90 @@ lemma B_half_disjoint (data: GoodScalesData): (B_half data).PairwiseDisjoint id 
   simp [edist, PseudoMetricSpace.edist] at x_sep
   simp [dist] at x_y_dist_bad
   grind
+
+
+-- Intersection multiplicity
+noncomputable def InterMult_f  (S: Set (Set G)) := (fun A => (Set.encard A).toNat) '' { A: Set (Set G) | A ⊆ S ∧ ⋂₀ A ≠ ∅ }
+noncomputable def InterMult (S: Set (Set G)) := sSup (InterMult_f S)
+
+lemma B_finite (data: GoodScalesData): (B data).Finite := by
+  simp [B]
+  apply Set.Finite.image
+  simp [X_j]
+  apply Set.Finite.subset ?_ (Metric.maximalSeparatedSet_subset)
+  apply finite_ball
+
+lemma inter_mult_B_3 (data: GoodScalesData): InterMult (B data) ≤ Real.exp (a data.d) := by
+  rw [← Nat.le_floor_iff (by apply Real.exp_nonneg)]
+  unfold InterMult
+  by_cases h_s: InterMult_f (B data) = ∅
+  . simp [h_s]
+  .
+    rw [csSup_le_iff]
+    .
+      intro s hs
+      simp [InterMult_f] at hs
+      obtain ⟨S, ⟨S_subset, S_inter⟩, S_card⟩ := hs
+      rw [← ne_eq, ← Set.nonempty_iff_ne_empty] at S_inter
+      obtain ⟨x, hx⟩ := S_inter
+      simp at hx
+      rw [← S_card]
+      have S_finite : S.Finite := by
+        apply Set.Finite.subset (B_finite data)
+        exact S_subset
+
+      rw [Set.Finite.encard_eq_coe_toFinset_card S_finite]
+      simp only [ENat.toNat_coe, ge_iff_le]
+      have S_mem_finite: ∀ t ∈ S, t.Finite := by
+        intro t ht
+        specialize S_subset ht
+        simp [B] at S_subset
+        obtain ⟨x, hx, t_eq⟩ := S_subset
+        rw [← t_eq]
+        apply finite_closed_ball
+
+      rw [← Finset.card_attach]
+      --have bar := Finset.card_le_card_biUnion (f := fun (a: Finset ↥S_finite.toFinset) => (S_mem_finite (a.image (fun b => b.val)).toSet (by sorry)).toFinset)
+      grw [Finset.card_le_card_biUnion (s := S_finite.toFinset.attach)  (f := fun (a: ↥S_finite.toFinset) => (S_mem_finite a.val (by
+        have a_prop := a.property
+        simp [-SetLike.coe_mem] at a_prop
+        exact a_prop
+      )).toFinset)]
+      .
+        grw [Finset.card_biUnion_le]
+        grw [Finset.sum_le_card_nsmul (n := (InterMult (B data)))]
+        . sorry
+        . sorry
+      .
+
+        sorry
+      .
+        intro a ha
+        simp
+        have a_prop := a.prop
+        simp [-SetLike.coe_mem] at a_prop
+        specialize S_subset a_prop
+        simp [B] at S_subset
+        obtain ⟨x, _, a_eq_ball⟩ := S_subset
+        rw [← a_eq_ball]
+        simp
+    .
+      unfold BddAbove
+      use (Set.encard (B data)).toNat
+      rw [mem_upperBounds]
+      intro x hx
+      simp [InterMult_f] at hx
+      obtain ⟨k, ⟨k_subset, _⟩, hk⟩ := hx
+      rw [← hk]
+
+      have card_le := Set.encard_le_encard k_subset
+      apply ENat.toNat_le_toNat
+      . apply Set.encard_le_encard
+        exact k_subset
+      . simp [B_finite]
+    . rw [Set.nonempty_iff_empty_ne]
+      grind
+
 
 end V_Wrapper_Section
 
