@@ -621,7 +621,7 @@ private noncomputable def h (i: ℕ): ℝ := Real.log (f (16 ^ i))
 -- Matrix.le_iff
 
 
-lemma f_antitone_on: MonotoneOn f (Set.Ici ⌈R'⌉₊) := by
+lemma f_monotone_on: MonotoneOn f (Set.Ici ⌈R'⌉₊) := by
   intro a ha b hb hab
   unfold f
   grw [Finset.pow_subset_pow_right (n := b)]
@@ -657,6 +657,47 @@ lemma f_antitone_on: MonotoneOn f (Set.Ici ⌈R'⌉₊) := by
     grind [foo.det_pos]
   . apply hGS.one_mem
   . exact hab
+
+lemma h_montone_on: MonotoneOn h (Set.Ici i₀) := by
+  unfold h
+  rw [← Function.comp_def]
+  apply MonotoneOn.comp
+  . apply Real.strictMonoOn_log.monotoneOn
+  .
+    rw [← Function.comp_def]
+    apply MonotoneOn.comp
+    . apply f_monotone_on
+    .
+      conv =>
+        arg 1
+        equals fun n => 16 ^ n =>
+          simp
+      apply (pow_right_monotone (by simp)).monotoneOn
+    . intro a ha
+      simp [i₀] at ha
+      simp
+      rw [Nat.clog_le_iff_le_pow] at ha
+      .
+        rify at ha
+        grw [Nat.le_ceil (a := R')]
+        exact ha
+      . simp
+  .
+    intro a ha
+    simp
+    simp at ha
+    simp [f]
+    apply mul_pos
+    . simp
+      apply Finset.Nonempty.pow
+      apply S_nonempty
+    .
+      apply Real.rpow_pos_of_pos
+      apply (Q_R_matrix_pos_def_i₀ _ ?_).det_pos
+      rw [pow_le_pow_iff_right₀]
+      . exact ha
+      . simp
+
 
 
 lemma growth_implies_lim_h (d: ℕ) (h_growth: growth_bound V d): Filter.Tendsto (fun (i: ℕ) => (h i - d * i * Real.log 16)) Filter.atTop Filter.atBot := by
@@ -797,6 +838,55 @@ structure Lemma3_24_data (d w: ℕ) where
 lemma lemma_3_24 (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_bound V d): Nonempty (Lemma3_24_data d w) := by
   obtain ⟨j_0, h_j_0⟩ := exists_j_0_for_h w d hw hd h_growth
   let m := i₀ + 3 * w * j_0
+
+  have exists_i1: ∃ i_1: ℕ, i_1 ∈ Set.Ico m (m + w) ∧ h (i_1 + 1) - h i_1 < (a d) := by
+    by_contra!
+
+    have h_sum (N: ℕ) := Finset.sum_Ico_sub (f := fun n => h (m + n)) (m := 0) (n := w) (by simp)
+    simp only [Nat.Ico_zero_eq_range, add_zero, forall_const] at h_sum
+    have h_gt : h (m  + w) - h m ≤ w * w *(a d) := by
+      rw [h_sum.symm]
+      grw [Finset.sum_le_card_nsmul (n := (w * a d))]
+      .
+        simp
+        rw [mul_assoc]
+      .
+        intro x hx
+
+        have diff_le: h (m + (x + 1)) - h (m + x) ≤ h (i₀ + 3 * w * (j_0 + 1)) - h (i₀ + 3 * w * (j_0)) := by
+          apply sub_le_sub
+          .
+            apply h_montone_on
+            . simp [m]
+              grind
+            . simp
+            . simp at hx
+              simp [m]
+              grind
+          . apply h_montone_on
+            . simp [m]
+            . simp [m]
+              grind
+            . simp [m]
+
+
+        grw [h_j_0] at diff_le
+        grw [diff_le]
+
+    
+    sorry
+
+        -- grw [← diff_le]
+        -- unfold m
+        -- grw [← h_montone_on (a := i₀ + 3 * w * (j_0 + 1))  _ _]
+        -- . sorry
+        -- . simp at hx
+        --   rw [mul_add]
+        --   rw [add_assoc]
+        --   apply add_le_add_right
+        --   apply add_le_add_right
+
+        --   ring
 
   sorry
 
