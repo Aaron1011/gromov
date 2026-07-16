@@ -963,6 +963,7 @@ noncomputable def R_2 (data: GoodScalesData) := 2 * 16^(GoodScales data).i_2
 def X_j (data: GoodScalesData) := Metric.maximalSeparatedSet (R_1 data) ((Metric.ball (1: G) (R_2 data)))
 -- A collection of disjoint balls that cover the ball R_2
 def B (data: GoodScalesData) := (fun a => Metric.closedBall a (R_1 data)) '' (X_j data)
+def B_half (data: GoodScalesData) := (fun a => Metric.closedBall a (R_1 data / 2)) '' (X_j data)
 
 lemma B_covers_R2 (data: GoodScalesData): Metric.ball 1 (R_2 data) ⊆ ⋃₀ (B data) := by
   by_contra!
@@ -1011,6 +1012,40 @@ lemma B_covers_R2 (data: GoodScalesData): Metric.ball 1 (R_2 data) ⊆ ⋃₀ (B
     simp
     apply finite_ball
 
+lemma B_half_disjoint (data: GoodScalesData): (B_half data).PairwiseDisjoint id := by
+  simp [Set.pairwiseDisjoint_iff]
+  intro X hX Y hY hXY
+  obtain ⟨a, ha⟩ := hXY
+  simp [B_half] at hX hY
+  obtain ⟨x, x_mem, hx⟩ := hX
+  obtain ⟨y, y_mem, hy⟩ := hY
+
+  by_cases x_eq_y : x = y
+  .
+    rw [x_eq_y] at hx
+    rw [← hx, ← hy]
+
+
+  rw [← hx, ← hy] at ha
+  simp at ha
+  obtain ⟨a_dist_x, a_dist_y⟩ := ha
+
+  simp [X_j] at x_mem
+  have is_sep := Metric.isSeparated_maximalSeparatedSet (ε := ((R_1 data))) (A := Metric.ball (1: G) (R_2 data))
+
+  unfold Metric.IsSeparated Set.Pairwise at is_sep
+  have x_sep := is_sep x_mem y_mem x_eq_y
+  simp at x_sep
+
+
+  have x_y_dist_bad := dist_triangle x a y
+  rw [dist_comm x a] at x_y_dist_bad
+  grw [a_dist_x, a_dist_y] at x_y_dist_bad
+  simp at x_y_dist_bad
+  -- TODO - we need a lemma that edist = ↑dist
+  simp [edist, PseudoMetricSpace.edist] at x_sep
+  simp [dist] at x_y_dist_bad
+  grind
 
 end V_Wrapper_Section
 
