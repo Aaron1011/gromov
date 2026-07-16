@@ -873,9 +873,77 @@ lemma lemma_3_24 (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_bound V d)
         simpa using hx
     grind
 
+  -- TODO - can this be deduplicated with exists_i1 ?
+  have exists_i2: ∃ i_2: ℕ, i_2 ∈ Set.Ico (m + 2*w) (m + 3 * w) ∧ h (i_2 + 1) - h i_2 < (a d) := by
+    by_contra!
 
-  
-  sorry
+    have h_sum (N: ℕ) := Finset.sum_Ico_sub (f := fun n => h (m + n)) (m := (2 * w)) (n := (3 * w)) (by grind)
+    simp only [Nat.Ico_zero_eq_range, add_zero, forall_const] at h_sum
+
+    have h_m_diff_le: h (m + 3 * w) - h (m + 2 * w) ≤ h (i₀ + 3 * w * (j_0 + 1)) - h (i₀ + 3 * w * (j_0)) := by
+      apply sub_le_sub
+      .
+        apply h_montone_on
+        . simp [m]
+          grind
+        . simp
+        . simp [m]
+          grind
+      . apply h_montone_on
+        . simp [m]
+        . simp [m]
+          grind
+        . simp [m]
+
+
+    have h_le_w_a_d : h (m  + 3 * w) - h (m + 2 * w) ≤ w * (a d) := by
+      grw [h_m_diff_le]
+      grw [h_j_0]
+
+    have w_a_le_h : w * (a d) ≤ h (m + 3 * w) - h (m + 2* w) := by
+
+      rw [h_sum.symm]
+      grw [← Finset.card_nsmul_le_sum (n := (a d))]
+      . simp
+        rw [← Nat.sub_mul]
+        simp
+      . intro x hx
+        apply this
+        simp
+        simp at hx
+        exact hx
+    grind
+
+  obtain ⟨i_1, h_i_1⟩ := exists_i1
+  obtain ⟨i_2, h_i_2⟩ := exists_i2
+  have diff_i_lt: h (i_2 + 1) - h i_1 < w * (a d) := by
+    grw [h_montone_on _ _ (b := i₀ + 3 * w * (j_0 + 1))]
+    .
+      apply LE.le.trans_lt ?_ h_j_0
+      apply sub_le_sub_left
+      apply h_montone_on
+      . simp
+      . simp
+        grind
+      . grind
+    . simp at h_i_2
+      grind
+    . simp
+      simp at h_i_2
+      grind
+    . simp [m]
+
+  apply Nonempty.intro
+  exact {
+    i_1 := i_1
+    i_2 := i_2
+    i_1_ge := by grind
+    i_2_ge := by grind
+    i_diff_mem := by grind
+    h_diff_lt_w := diff_i_lt
+    first_h_i := h_i_1.2
+    second_h_i := h_i_2.2
+  }
 
 end V_Wrapper_Section
 
