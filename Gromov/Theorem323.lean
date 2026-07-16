@@ -945,6 +945,73 @@ lemma lemma_3_24 (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_bound V d)
     second_h_i := h_i_2.2
   }
 
+-- Controlled cover
+
+structure GoodScalesData where
+  w: ℕ
+  d: ℕ
+  hw: 0 < w
+  hd: 0 < d
+  h_growth: growth_bound V d
+
+noncomputable def GoodScales (data: GoodScalesData) := Classical.choice (lemma_3_24 data.w data.d data.hw data.hd data.h_growth)
+
+noncomputable def R_1 (data: GoodScalesData) := 2 * 16^(GoodScales data).i_1
+noncomputable def R_2 (data: GoodScalesData) := 2 * 16^(GoodScales data).i_2
+
+-- TODO - does it matter than 'Metric.maximalSeparatedSet' uses 'R_1 < dist' instead of 'R_1 <= dist' ?
+def X_j (data: GoodScalesData) := Metric.maximalSeparatedSet (R_1 data) ((Metric.ball (1: G) (R_2 data)))
+-- A collection of disjoint balls that cover the ball R_2
+def B (data: GoodScalesData) := (fun a => Metric.closedBall a (R_1 data)) '' (X_j data)
+
+lemma B_covers_R2 (data: GoodScalesData): Metric.ball 1 (R_2 data) ⊆ ⋃₀ (B data) := by
+  by_contra!
+  rw [Set.not_subset] at this
+  obtain ⟨x, x_mem, x_not_mem⟩ := this
+
+  -- Metric.maximalSeparatedSet_subset
+  have card_le := Metric.encard_le_of_isSeparated (C := (X_j data) ∪ {x}) (ε := (R_1 data)) (A := ( (Metric.ball 1 (R_2 data)))) ?_ ?_ ?_
+  .
+    simp [X_j] at card_le
+    rw [Set.encard_insert_of_notMem] at card_le
+    rw [Set.Finite.encard_eq_coe_toFinset_card] at card_le
+    . norm_cast at card_le
+      grind
+    .
+      apply Set.Finite.subset (s := Metric.ball 1 (R_2 data))
+      . apply finite_ball
+      . apply Metric.maximalSeparatedSet_subset
+    .
+      simp at x_not_mem
+      simp only [B, Set.mem_image, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂,
+        not_lt, X_j] at x_not_mem
+
+      by_contra!
+      specialize x_not_mem x this
+      simp [R_1] at x_not_mem
+  .
+    apply Set.union_subset
+    . simp [X_j]
+      grw [Metric.maximalSeparatedSet_subset]
+    . simpa using x_mem
+  .
+    simp
+    apply Metric.IsSeparated.insert
+    . simp [X_j]
+      apply Metric.isSeparated_maximalSeparatedSet
+    . intro y hy hxy
+      simp [B] at x_not_mem
+      specialize x_not_mem y hy
+      simp [edist, PseudoMetricSpace.edist]
+      simp [dist] at x_not_mem
+      exact x_not_mem
+  .
+    rw [← lt_top_iff_ne_top]
+    grw [Metric.packingNumber_le_encard_self]
+    simp
+    apply finite_ball
+
+
 end V_Wrapper_Section
 
 lemma theorem_3_23 (d: ℝ): ∃ C: ℕ, ∀ data: V_Data, (growth_bound data.V d (finite_V := data.hV) (decidable_V := data.V_decidable)) → (Module.finrank ℝ data.V) < C := by
