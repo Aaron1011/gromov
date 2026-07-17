@@ -266,6 +266,34 @@ lemma dist_word_mul_le {x y z : G} (hy: y ∈ S): dist x (y * z) ≤ 1 + dist x 
       simp
       use l
 
+lemma word_norm_mul_le (x y: G): WordNorm (x * y) ≤ WordNorm x + WordNorm y := by
+  nth_rw 1 [WordNorm]
+  rw [csInf_le_iff]
+  .
+
+    intro n hn
+    rw [mem_lowerBounds] at hn
+    simp at hn
+
+    obtain ⟨x_l, x_l_prod, x_l_len⟩ := word_norm_prod_self x
+    obtain ⟨y_l, y_l_prod, y_l_len⟩ := word_norm_prod_self y
+
+    have concat_prod: (x_l ++ y_l).unattach.prod = x*y := by
+      simp [ProdS] at x_l_prod y_l_prod
+      simp [x_l_prod, y_l_prod]
+
+    have prod_len := word_norm_le (x * y) (x_l ++ y_l) concat_prod
+    grw [hn (x_l ++ y_l).length (x_l ++ y_l) rfl concat_prod]
+    simp
+    grind
+  . simp
+  .
+    obtain ⟨l, l_prod, l_len⟩ := word_norm_prod_self (x * y)
+    use l.length
+    simp
+    use l
+
+
 lemma dist_word_le_mul {x y z : G} (hy: y ∈ S): WordDist x z ≤ (WordDist x (y * z)) + 1 := by
   by_cases x_eq: x = y * z
   . simp [x_eq]

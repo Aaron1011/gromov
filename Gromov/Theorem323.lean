@@ -1436,20 +1436,37 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
       simp
 
 
-  let γ (z: G) (i: ℕ) := (word_norm_prod_self z).choose[i]?.getD ⟨1, one_mem⟩
+  let γ (z: G) (i: ℕ) := ((word_norm_prod_self z).choose.take i).unattach.prod
+  have gamma_zero (z: G): γ z 0 = 1 := by simp [γ]
+  have gamma_norm (z: G): γ z (WordNorm z) = z := by
+    simp [γ]
+    obtain ⟨prod, len_eq⟩ := (word_norm_prod_self z).choose_spec
+    simp [ProdS] at prod
+    conv =>
+      arg 1
+      pattern (WordNorm z)
+      rw [← len_eq]
+
+    simp
+    exact prod
+
+  have gamma_i_norm_le (z: G) (i: ℕ): WordNorm (γ z i) ≤ i := by
+    simp [γ]
+
+    have i_le := word_norm_le ((word_norm_prod_self z).choose.take i).unattach.prod ((word_norm_prod_self z).choose.take i) (by simp [ProdS])
+    grw [List.length_take_le] at i_le
+    exact i_le
+
+
 
   let B_r (r: ℕ) := (finite_closed_ball 1 r).toFinset
 
-  have gamma_sum (z: G): ∑ x ∈ B_r (R - 1), ∑ i ∈ Finset.range (WordNorm z), δ_f (x * (γ z i)) ≤ 2 * R * ∑ x ∈ B_r (3*R - 1), δ_f x := by
 
-    -- Finset.card_le_mul_card_image
-    sorry
-
-  have two_r_to_one (y: G) (hy: y ∈ B_r (2*R - 2)) := Finset.card_le_mul_card_image (s := (B_r (R - 1) ×ˢ (Finset.range (WordNorm y)))) (f := fun a => a.1 * (γ y a.2).val) (2 * R) (by
+  have two_r_to_one (y: G) (hy: y ∈ B_r (2*R - 2)) := Finset.card_le_mul_card_image (s := (B_r (R - 1) ×ˢ (Finset.range (WordNorm y)))) (f := fun a => a.1 * (γ y a.2)) (2 * R) (by
     intro b hb
     simp at hb
     obtain ⟨x, n, ⟨x_mem, n_lt⟩, b_eq⟩ := hb
-    grw [Finset.card_le_card (t := (Finset.range (2 * R)).image (fun n => (b * ((γ y n).val⁻¹), n)))]
+    grw [Finset.card_le_card (t := (Finset.range (2 * R)).image (fun n => (b * ((γ y n)⁻¹), n)))]
     .
       grw [Finset.card_image_le]
       simp
@@ -1470,6 +1487,76 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
         . simp [← hp.2]
         . simp
   )
+
+  have gamma_sum (z: G) (hz: z ∈ B_r (2*R - 2)): ∑ x ∈ B_r (R - 1), ∑ i ∈ Finset.range (WordNorm z), δ_f (x * (γ z i)) ≤ 2 * R * ∑ x ∈ B_r (3*R - 1), δ_f x := by
+
+    rw [← Finset.sum_product']
+    grw [Finset.sum_le_card_nsmul (n := ∑ x ∈ B_r (3 * R - 1), δ_f x)]
+    .
+      grw [two_r_to_one]
+      .
+        grw [Finset.card_image_le]
+        .
+          simp
+          simp [B_r, dist, WordDist_one] at hz
+          grw [hz]
+          .
+            sorry
+          .
+            simp [δ_f, deriv_sq]
+            positivity
+        . simp [δ_f, deriv_sq]
+          positivity
+      . simp [δ_f, deriv_sq]
+        positivity
+      . exact hz
+    . intro x hx
+      apply Finset.single_le_sum
+      .
+        simp [δ_f, deriv_sq]
+        intro p hp
+        apply Finset.sum_nonneg
+        intro v hv
+        positivity
+      .
+        simp [B_r, dist, WordDist_one]
+        grw [word_norm_mul_le]
+        rw [Finset.mem_product] at hx
+        simp [B_r, dist, WordDist_one] at hx
+        grw [hx.1]
+        grw [gamma_i_norm_le]
+        grw [hx.2]
+        simp [B_r, dist, WordDist_one] at hz
+        grw [hz]
+        grind
+
+
+
+  have diff_le_delta_sum (x y: G) (hx: x ∈ B_r R) (hy: y ∈ B_r R): |f x - f y| ≤ (2 * R)^(1/2 : ℝ) * (∑ i ∈ Finset.range (WordNorm (x⁻¹ * y)), δ_f (x * γ (x⁻¹ * y) i))^(1/2 : ℝ) := by
+
+    conv =>
+      lhs
+      equals |(f x - f y) + (-(f (x * γ (x⁻¹ * y) (WordNorm (x⁻¹ * y))) - f (x * γ (x⁻¹ * y) 0))) + (f y - f x)| =>
+        simp [gamma_zero, gamma_norm]
+        ring
+
+    rw [← Finset.sum_range_sub (n := WordNorm (x⁻¹ * y)) (f := fun i => f (x * γ (x⁻¹ * y) i))]
+    grw [abs_add_le]
+    grw [abs_add_le]
+
+
+
+
+
+
+
+
+
+
+
+
+
+    sorry
 
 
 
