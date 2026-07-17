@@ -1298,8 +1298,22 @@ lemma inter_mult_helper (data: GoodScalesData): InterMult (B data) * #(S ^ ((R_1
       . simp
         apply Finset.Nonempty.pow
         simp [S_nonempty]
-    . sorry
-    . sorry
+    .
+      unfold BddAbove
+      use (B data).encard.toNat
+      rw [mem_upperBounds]
+      intro x hx
+      simp [InterMult_f] at hx
+      obtain ⟨a, b, x_eq⟩ := hx
+      rw [← x_eq]
+      apply ENat.toNat_le_toNat
+      .
+        apply Set.encard_le_encard
+        grind
+      . simp
+        apply B_finite
+    . rw [Set.nonempty_iff_ne_empty]
+      grind
 
 
     -- simp [InterMult_f] at h_s
@@ -1402,6 +1416,7 @@ lemma inter_mult_helper (data: GoodScalesData): InterMult (B data) * #(S ^ ((R_1
     -- . rw [Set.nonempty_iff_empty_ne]
     --   grind
 
+#print axioms inter_mult_helper
 
 end V_Wrapper_Section
 
