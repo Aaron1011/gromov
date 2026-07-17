@@ -1461,74 +1461,61 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
 
   let B_r (r: ℕ) := (finite_closed_ball 1 r).toFinset
 
-
-  have two_r_to_one (y: G) (hy: y ∈ B_r (2*R - 2)) := Finset.card_le_mul_card_image (s := (B_r (R - 1) ×ˢ (Finset.range (WordNorm y)))) (f := fun a => a.1 * (γ y a.2)) (2 * R) (by
-    intro b hb
-    simp at hb
-    obtain ⟨x, n, ⟨x_mem, n_lt⟩, b_eq⟩ := hb
-    grw [Finset.card_le_card (t := (Finset.range (2 * R)).image (fun n => (b * ((γ y n)⁻¹), n)))]
-    .
-      grw [Finset.card_image_le]
-      simp
-    .
-      intro p hp
-      simp at hp
-      simp
-      use p.2
-      refine ⟨?_, ?_⟩
-      .
-
-        by_contra!
-        grw [hp.1.2] at this
-        simp [B_r, dist, WordDist_one] at hy
-        grind
-      .
-        ext
-        . simp [← hp.2]
-        . simp
-  )
-
   have gamma_sum (z: G) (hz: z ∈ B_r (2*R - 2)): ∑ x ∈ B_r (R - 1), ∑ i ∈ Finset.range (WordNorm z), δ_f (x * (γ z i)) ≤ 2 * R * ∑ x ∈ B_r (3*R - 1), δ_f x := by
 
     rw [← Finset.sum_product']
-    grw [Finset.sum_le_card_nsmul (n := ∑ x ∈ B_r (3 * R - 1), δ_f x)]
+    rw [Finset.sum_comp]
+    simp
+    grw [Finset.sum_le_sum (g := fun a => (((2 * R) : ℝ) * (δ_f a)))]
     .
-      grw [two_r_to_one]
+      rw [← Finset.mul_sum]
+      grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (3*R - 1))]
       .
-        grw [Finset.card_image_le]
-        .
-          simp
-          simp [B_r, dist, WordDist_one] at hz
-          grw [hz]
-          .
-            sorry
-          .
-            simp [δ_f, deriv_sq]
-            positivity
-        . simp [δ_f, deriv_sq]
-          positivity
-      . simp [δ_f, deriv_sq]
-        positivity
-      . exact hz
-    . intro x hx
-      apply Finset.single_le_sum
-      .
-        simp [δ_f, deriv_sq]
         intro p hp
-        apply Finset.sum_nonneg
-        intro v hv
-        positivity
-      .
+        simp at hp
+        obtain ⟨a, b, ⟨a_mem, b_lt⟩, p_eq⟩ := hp
+        rw [← p_eq]
         simp [B_r, dist, WordDist_one]
         grw [word_norm_mul_le]
-        rw [Finset.mem_product] at hx
-        simp [B_r, dist, WordDist_one] at hx
-        grw [hx.1]
-        grw [gamma_i_norm_le]
-        grw [hx.2]
+        simp [B_r, dist, WordDist_one] at a_mem
         simp [B_r, dist, WordDist_one] at hz
+        grw [a_mem]
+        grw [gamma_i_norm_le]
+        grw [b_lt]
         grw [hz]
         grind
+      . intro p hp _
+        simp [δ_f, deriv_sq]
+        positivity
+    .
+      intro b hb
+      simp at hb
+      obtain ⟨x, n, ⟨x_mem, n_lt⟩, b_eq⟩ := hb
+      grw [Finset.card_le_card (t := (Finset.range (2 * R)).image (fun n => (b * ((γ z n)⁻¹), n)))]
+      .
+        grw [Finset.card_image_le]
+        . simp
+        . simp [δ_f, deriv_sq]
+          positivity
+      .
+        simp [δ_f, deriv_sq]
+        positivity
+      .
+        intro p hp
+        simp at hp
+        simp
+        use p.2
+        refine ⟨?_, ?_⟩
+        .
+
+          by_contra!
+          grw [hp.1.2] at this
+          simp [B_r, dist, WordDist_one] at hz
+          grind
+        .
+          ext
+          . simp [← hp.2]
+          . simp
 
 
 
