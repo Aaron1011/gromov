@@ -1284,6 +1284,20 @@ lemma log_inter_mult_b3 (data: GoodScalesData): InterMult (B_3 data) ≤ Real.ex
       rw [Real.log_div]
       .
         have bound := (GoodScales data).first_h_i
+        -- `Q_R` is positive definite past scale `16 ^ i₀`, and `i₀ ≤ i_1`, so its
+        -- determinant is strictly positive at every scale appearing below.
+        have i₀_le_1 : ((16:ℝ) ^ i₀) ≤ (16:ℝ) ^ (GoodScales data).i_1 :=
+          pow_le_pow_right₀ (by norm_num) (GoodScales data).i_1_ge
+        have i₀_le_succ : ((16:ℝ) ^ i₀) ≤ (16:ℝ) ^ ((GoodScales data).i_1 + 1) :=
+          pow_le_pow_right₀ (by norm_num) (le_trans (GoodScales data).i_1_ge (Nat.le_succ _))
+        have pd_1 : (Q_R_matrix V ((16:ℝ) ^ (GoodScales data).i_1)).PosDef :=
+          Q_R_matrix_pos_def_i₀ _ i₀_le_1
+        have pd_succ : (Q_R_matrix V ((16:ℝ) ^ ((GoodScales data).i_1 + 1))).PosDef :=
+          Q_R_matrix_pos_def_i₀ _ i₀_le_succ
+        have pd_mul : (Q_R_matrix V ((16:ℝ) ^ (GoodScales data).i_1 * 16)).PosDef := by
+          apply Q_R_matrix_pos_def_i₀
+          rw [← pow_succ]
+          exact i₀_le_succ
         grw [← bound]
         simp [h, f]
         rw [Real.log_mul]
@@ -1324,21 +1338,26 @@ lemma log_inter_mult_b3 (data: GoodScalesData): InterMult (B_3 data) ≤ Real.ex
                   apply pow_le_pow_right₀
                   . simp
                   . exact foo
-                . sorry
+                . -- `Q_{16^(i_1+1)} - Q_{16^i_1}` is PSD: this is Proposition 3.22.
+                  unfold Q_R_matrix
+                  rw [← map_sub]
+                  rw [← LinearMap.isPosSemidef_iff_posSemidef_toMatrix]
+                  apply Q_R_lin_sub_pos_semi_def
+                  nlinarith [pow_pos (by norm_num : (0:ℝ) < 16) (GoodScales data).i_1]
                 .
-                  sorry
-                . sorry
+                  exact pd_1.det_pos.le
+                . exact pd_mul.det_pos.le
                 . simp [dim]
                   exact Module.finrank_pos
-              . sorry
-            . sorry
-            . sorry
+              . exact Real.rpow_pos_of_pos pd_1.det_pos _
+            . exact ne_of_gt (Real.rpow_pos_of_pos pd_mul.det_pos _)
+            . exact ne_of_gt (Real.rpow_pos_of_pos pd_1.det_pos _)
           . simp
             grind [S_nonempty]
-          . sorry
+          . exact ne_of_gt (Real.rpow_pos_of_pos pd_1.det_pos _)
         . simp
           grind [S_nonempty]
-        . sorry
+        . exact ne_of_gt (Real.rpow_pos_of_pos pd_succ.det_pos _)
       . norm_cast
         rw [Finset.card_eq_zero]
         rw [← ne_eq, ← Finset.nonempty_iff_ne_empty]
@@ -1365,6 +1384,7 @@ lemma log_inter_mult_b3 (data: GoodScalesData): InterMult (B_3 data) ≤ Real.ex
     grind
 
 #print axioms inter_mult_helper
+#print axioms log_inter_mult_b3
 
 end V_Wrapper_Section
 
