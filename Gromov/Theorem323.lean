@@ -1106,12 +1106,20 @@ lemma B_finite (data: GoodScalesData): (B data).Finite := by
   apply Set.Finite.subset ?_ (Metric.maximalSeparatedSet_subset)
   apply finite_ball
 
-lemma inter_mult_helper (data: GoodScalesData): InterMult (B data) * #(S ^ ((R_1 data) / 2)) ≤ #(S ^ (8 * (R_1 data))) := by
-  --rw [← Nat.le_floor_iff (by apply Real.exp_nonneg)]
+lemma B_3_finite (data: GoodScalesData): (B_3 data).Finite := by
+  simp [B_3]
+  apply Set.Finite.image
+  simp [X_j]
+  apply Set.Finite.subset ?_ (Metric.maximalSeparatedSet_subset)
+  apply finite_ball
+
+-- TODO - the actual proof is supicious, as it actually proves something stronger than in the paper
+-- (we didn't get a <= 6R bound). Is the definition of InterMult correct?
+lemma inter_mult_helper (data: GoodScalesData): InterMult (B_3 data) * #(S ^ ((R_1 data) / 2)) ≤ #(S ^ (4 * (R_1 data))) := by
   classical
   apply Nat.mul_le_of_le_div
   unfold InterMult
-  by_cases h_s: InterMult_f (B data) = ∅
+  by_cases h_s: InterMult_f (B_3 data) = ∅
   . simp [h_s]
   .
     rw [csSup_le_iff]
@@ -1120,15 +1128,15 @@ lemma inter_mult_helper (data: GoodScalesData): InterMult (B data) * #(S ^ ((R_1
       simp [InterMult_f] at hn
       obtain ⟨X, ⟨X_subset, X_inter⟩, X_card⟩ := hn
       rw [← X_card]
-      have X_finite := Set.Finite.subset (B_finite data) X_subset
+      have X_finite := Set.Finite.subset (B_3_finite data) X_subset
       rw [Set.Finite.encard_eq_coe_toFinset_card X_finite]
       simp
       rw [Nat.le_div_iff_mul_le]
       .
-        have X_inner_nonempty: ∀ t ∈ X, ∃ a, a ∈ (X_j data) ∧ Metric.closedBall a (R_1 data) = t := by
+        have X_inner_nonempty: ∀ t ∈ X, ∃ a, a ∈ (X_j data) ∧ Metric.closedBall a (3 * R_1 data) = t := by
           intro t ht
           specialize X_subset ht
-          simp [B] at X_subset
+          simp [B_3] at X_subset
           exact X_subset
 
         rw [← closed_ball_eq_S_pow]
@@ -1163,10 +1171,6 @@ lemma inter_mult_helper (data: GoodScalesData): InterMult (B data) * #(S ^ ((R_1
             .
               let q := (X_inner_nonempty c hc).choose
               grw [dist_triangle _ q]
-              -- rw [dist_edist]
-              -- rw [← edist_smul_left (c := MulOpposite.op (q))]
-              -- rw [← dist_edist]
-              -- grw [dist_triangle _ a _]
               conv at a_dist =>
                 arg 1
                 arg 2
@@ -1185,29 +1189,6 @@ lemma inter_mult_helper (data: GoodScalesData): InterMult (B data) * #(S ^ ((R_1
               simp [q]
               grw [h_base]
               grind
-
-              -- have c_dist := X_subset hc
-              -- simp [B] at c_dist
-              -- obtain ⟨c_center, h_c_center, c_ball⟩ := c_dist
-              -- rw [← c_ball] at h_base
-              -- simp at h_base
-
-
-
-              -- simp [dist, WordDist]
-              -- sorry
-
-
-
-
-
-            --   simp [dist, WordDist]
-            --   simp [dist] at a_dist
-            --   sorry
-            -- .
-            --   intro a _ b _ hab
-            --   simp
-            --   sorry
           .
             rw [Finset.pairwiseDisjoint_iff]
             intro a _ b _ hab
@@ -1224,8 +1205,7 @@ lemma inter_mult_helper (data: GoodScalesData): InterMult (B data) * #(S ^ ((R_1
             let b_center := (X_inner_nonempty _ b_prop).choose
             obtain ⟨a_center_mem, a_eq⟩ := (X_inner_nonempty _ a_prop).choose_spec
             obtain ⟨b_center_mem, b_eq⟩ := (X_inner_nonempty _ b_prop).choose_spec
-            --obtain ⟨a_center, a_center_mem, a_eq⟩ := a_mem
-            --obtain ⟨b_center, b_center_mem, b_eq⟩ := b_mem
+
 
             rw [Set.pairwiseDisjoint_iff] at from_b
             simp only [Set.mem_image, id_eq, forall_exists_index, and_imp] at from_b
@@ -1268,39 +1248,12 @@ lemma inter_mult_helper (data: GoodScalesData): InterMult (B data) * #(S ^ ((R_1
           grw [Nat.cast_div_le]
           simp
 
-        -- conv =>
-        --   lhs
-        --   arg 2
-        --   intro g
-        -- rw [← Finset.card_biUnion]
-        -- .
-        --   apply Finset.card_le_card
-        --   intro g hg
-        --   simp at hg
-        --   obtain ⟨⟨x, hx⟩, g_mem⟩ := hg
-        --   rw [← closed_ball_eq_S_pow]
-        --   simp
-        --   simp [B] at X_subset
-        --   specialize X_subset hx
-        --   simp at X_subset
-        --   obtain ⟨y, y_mem, x_eq⟩ := X_subset
-        --   rw [← closed_ball_eq_S_pow] at g_mem
-        --   simp at g_mem
-        --   grw [g_mem]
-        --   norm_cast
-        --   grind
-        -- .
-        --   have foo := B_half_disjoint data
-        --   simp [B_half] at foo
-        --   rw [← closed_ball_eq_S_pow]
-        --   simp
-        --   sorry
       . simp
         apply Finset.Nonempty.pow
         simp [S_nonempty]
     .
       unfold BddAbove
-      use (B data).encard.toNat
+      use (B_3 data).encard.toNat
       rw [mem_upperBounds]
       intro x hx
       simp [InterMult_f] at hx
@@ -1311,110 +1264,10 @@ lemma inter_mult_helper (data: GoodScalesData): InterMult (B data) * #(S ^ ((R_1
         apply Set.encard_le_encard
         grind
       . simp
-        apply B_finite
+        apply B_3_finite
     . rw [Set.nonempty_iff_ne_empty]
       grind
 
-
-    -- simp [InterMult_f] at h_s
-    -- rw [← ne_eq, ← Set.nonempty_iff_ne_empty] at h_s
-    -- obtain ⟨X, hX⟩ := h_s
-    -- simp at hX
-    -- obtain ⟨X_subset, X_inter⟩ := hX
-    -- rw [← ne_eq, ← Set.nonempty_iff_ne_empty] at X_inter
-    -- obtain ⟨x, hx⟩ := X_inter
-    -- --obtain ⟨x, hx⟩ := h_s
-    -- have sup_le_ball: sSup (InterMult_f (B data)) ≤ #((finite_ball x (6 * (R_1 data))).toFinset) := by
-    --   sorry
-
-    -- grw [sup_le_ball]
-    -- rw [← card_closed_ball_eq, ← card_closed_ball_eq]
-    -- rw [← Finset.card_mul_iff.mpr]
-    -- .
-    --   apply Finset.card_le_card
-    --   intro a ha
-    --   simp at ha
-    --   rw [Finset.mem_mul] at ha
-    --   obtain ⟨y, hy, z, hz, a_eq⟩ := ha
-    --   rw [← a_eq]
-    --   simp at hy
-    --   simp
-
-    --   simp [dist, WordDist_one]
-    --   simp [dist, WordDist_one] at hy hz
-    --   simp [WordDist] at hy
-
-
-
-
-
-    -- . sorry
-
-    -- -- Set.disjoint_smul_set
-    -- rw [csSup_le_iff]
-    -- .
-    --   intro s hs
-    --   simp [InterMult_f] at hs
-    --   obtain ⟨S, ⟨S_subset, S_inter⟩, S_card⟩ := hs
-    --   rw [← ne_eq, ← Set.nonempty_iff_ne_empty] at S_inter
-    --   obtain ⟨x, hx⟩ := S_inter
-    --   simp at hx
-    --   rw [← S_card]
-    --   have S_finite : S.Finite := by
-    --     apply Set.Finite.subset (B_finite data)
-    --     exact S_subset
-
-    --   rw [Set.Finite.encard_eq_coe_toFinset_card S_finite]
-    --   simp only [ENat.toNat_coe, ge_iff_le]
-    --   have S_mem_finite: ∀ t ∈ S, t.Finite := by
-    --     intro t ht
-    --     specialize S_subset ht
-    --     simp [B] at S_subset
-    --     obtain ⟨x, hx, t_eq⟩ := S_subset
-    --     rw [← t_eq]
-    --     apply finite_closed_ball
-
-    --   rw [← Finset.card_attach]
-    --   --have bar := Finset.card_le_card_biUnion (f := fun (a: Finset ↥S_finite.toFinset) => (S_mem_finite (a.image (fun b => b.val)).toSet (by sorry)).toFinset)
-    --   grw [Finset.card_le_card_biUnion (s := S_finite.toFinset.attach)  (f := fun (a: ↥S_finite.toFinset) => (S_mem_finite a.val (by
-    --     have a_prop := a.property
-    --     simp [-SetLike.coe_mem] at a_prop
-    --     exact a_prop
-    --   )).toFinset)]
-    --   .
-    --     grw [Finset.card_biUnion_le]
-    --     grw [Finset.sum_le_card_nsmul (n := (InterMult (B data)))]
-    --     . sorry
-    --     . sorry
-    --   .
-
-    --     sorry
-    --   .
-    --     intro a ha
-    --     simp
-    --     have a_prop := a.prop
-    --     simp [-SetLike.coe_mem] at a_prop
-    --     specialize S_subset a_prop
-    --     simp [B] at S_subset
-    --     obtain ⟨x, _, a_eq_ball⟩ := S_subset
-    --     rw [← a_eq_ball]
-    --     simp
-    -- .
-    --   unfold BddAbove
-    --   use (Set.encard (B data)).toNat
-    --   rw [mem_upperBounds]
-    --   intro x hx
-    --   simp [InterMult_f] at hx
-    --   obtain ⟨k, ⟨k_subset, _⟩, hk⟩ := hx
-    --   rw [← hk]
-
-    --   have card_le := Set.encard_le_encard k_subset
-    --   apply ENat.toNat_le_toNat
-    --   . apply Set.encard_le_encard
-    --     exact k_subset
-    --   . simp [B_finite]
-    -- . rw [Set.nonempty_iff_empty_ne]
-    --   grind
 
 #print axioms inter_mult_helper
 
