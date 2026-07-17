@@ -1391,10 +1391,28 @@ lemma log_inter_mult_b3 (data: GoodScalesData): InterMult (B_3 data) ≤ Real.ex
 
 noncomputable def f_avg (R: ℕ) (f : G → ℝ) := (#((finite_closed_ball 1 R).toFinset) : ℝ)⁻¹ * ∑ y ∈ (finite_closed_ball 1 R).toFinset, f y
 
-noncomputable def deriv_sq (f: G → ℝ) (x: G) := (#S : ℝ)⁻¹ * ∑ s ∈ S, (f (x * s) - f x)^2
+-- (#S : ℝ)⁻¹ *
+noncomputable def deriv_sq (f: G → ℝ) (x: G) := ∑ s ∈ S, (f (x * s) - f x)^2
+
+lemma three_term_cs (a b: ℝ) (n: Type*) {s: Finset n} (f: n → ℝ): a + (∑ x ∈ s, f x) + b ≤ √(a^2 + (∑ x ∈ s, (f x)^2) + b^2) * √(2 + #(s)) := by
+  conv =>
+    lhs
+    equals ∑ x ∈ (s.disjSum {a}).disjSum {b}, (x.elim (fun y => y.elim f id) id) * 1 =>
+      simp
+      rw [add_comm]
+
+  grw [Real.sum_mul_le_sqrt_mul_sqrt]
+  simp
+  grind
 
 lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball 1 R).toFinset, |f x - (f_avg R f)|^2 ≤
     16 * (#S)^2 * R^2 * (#((finite_closed_ball 1 (2 * R)).toFinset) / #(finite_closed_ball 1 R).toFinset) * ∑ x ∈ (finite_closed_ball 1 (3 * R)).toFinset, deriv_sq f x := by
+
+  wlog R_pos: 0 < R
+  . simp at R_pos
+    simp [R_pos, f_avg]
+    rw [← Finset.singleton_one]
+    simp
 
   let δ_f (x: G) := ∑ x ∈ (finite_closed_ball x 1).toFinset, deriv_sq f x
 
@@ -1519,7 +1537,25 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
 
 
 
-  have diff_le_delta_sum (x y: G) (hx: x ∈ B_r R) (hy: y ∈ B_r R): |f x - f y| ≤ (2 * R)^(1/2 : ℝ) * (∑ i ∈ Finset.range (WordNorm (x⁻¹ * y)), δ_f (x * γ (x⁻¹ * y) i))^(1/2 : ℝ) := by
+  have diff_le_delta_sum (x y: G) (hx: x ∈ B_r (R - 1)) (hy: y ∈ B_r (R - 1)): |f x - f y| ≤ (2 * R)^(1/2 : ℝ) * (∑ i ∈ Finset.range (WordNorm (x⁻¹ * y)), δ_f (x * γ (x⁻¹ * y) i))^(1/2 : ℝ) := by
+
+
+
+    have inv_prod_le: WordNorm (x⁻¹ * y) ≤ 2*R - 2 := by
+      grw [word_norm_mul_le]
+      rw [← word_norm_inv]
+      simp [B_r, dist, WordDist_one] at hx hy
+      grw [hx, hy]
+      grind
+
+    have root_sum_le: √(2 + ↑(WordNorm (x⁻¹ * y))) ≤ √(2*R) := by
+      rw [Real.sqrt_le_sqrt_iff]
+      . norm_cast
+        grw [inv_prod_le]
+        rw [Nat.add_sub_cancel']
+        simp
+        grind
+      . simp
 
     conv =>
       lhs
@@ -1530,24 +1566,65 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
     rw [← Finset.sum_range_sub (n := WordNorm (x⁻¹ * y)) (f := fun i => f (x * γ (x⁻¹ * y) i))]
     grw [abs_add_le]
     grw [abs_add_le]
+    rw [← Finset.sum_neg_distrib]
+    grw [Finset.abs_sum_le_sum_abs]
+    grw [three_term_cs]
+    simp
+    grw [root_sum_le]
+
+    have sum_le_delta: ∑ x_1 ∈ Finset.range (WordNorm (x⁻¹ * y)), (f (x * γ (x⁻¹ * y) x_1) - f (x * γ (x⁻¹ * y) (x_1 + 1))) ^ 2 ≤ ∑ n ∈ Finset.range (WordNorm (x⁻¹ * y)), δ_f (x * (γ (x⁻¹ * y) n)) := by
+      apply Finset.sum_le_sum
+      intro n hn
+      simp [δ_f, deriv_sq]
+      rw [← Finset.add_sum_erase (a := (x * γ (x⁻¹ * y) n))]
+      .
+        apply le_add_of_le_of_nonneg
+        .
+          let s := (word_norm_prod_self (x⁻¹ * y)).choose[n]?.getD ⟨1, one_mem⟩
+          rw [← Finset.add_sum_erase (a := s.val) (h := by simp)]
+          apply le_add_of_le_of_nonneg
+          .
+            rw [sub_sq_comm]
+            conv =>
+              rhs
+              lhs
+              arg 1
+              arg 1
+              equals x * γ (x⁻¹ * y) (n + 1) =>
+                rw [mul_assoc, mul_left_cancel_iff]
+                simp [γ, s]
+                -- TODO - we can probably use hn instead of this case split
+                by_cases n_add_lt: (n) < (word_norm_prod_self (x⁻¹ * y)).choose.length
+                .
+                  simp [n_add_lt]
+                  rw [List.take_add_one]
+                  simp
+                  rw [getElem?_pos]
+                  . simp
+                  . grind
+                .
+                  simp [n_add_lt]
+                  rw [List.take_add_one]
+                  simp
+                  rw [getElem?_neg]
+                  . simp
+                  . grind
+          . positivity
+        . positivity
+      . simp [dist, WordDist, word_norm_one]
+
+      -- apply Finset.single_le_sum (a := x)
+      -- grw [Finset.single_le_sum]
+
+      -- sorry
+
+    grw [sum_le_delta]
+    rename_bvar i → n
+    
 
 
-
-
-
-
-
-
-
-
-
-
-
+    --grw [Finset.neg_smul]
     sorry
-
-
-
-
 
   sorry
 
