@@ -1537,7 +1537,7 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
 
 
 
-  have diff_le_delta_sum (x y: G) (hx: x ∈ B_r (R - 1)) (hy: y ∈ B_r (R - 1)): |f x - f y| ≤ (2 * R)^(1/2 : ℝ) * (∑ i ∈ Finset.range (WordNorm (x⁻¹ * y)), δ_f (x * γ (x⁻¹ * y) i))^(1/2 : ℝ) := by
+  have diff_le_delta_sum (x y: G) (hx: x ∈ B_r (R - 1)) (hy: y ∈ B_r (R - 1)): |f x - f y| ≤ (6 * R)^(1/2 : ℝ) * (∑ i ∈ Finset.range (WordNorm (x⁻¹ * y)), δ_f (x * γ (x⁻¹ * y) i))^(1/2 : ℝ) := by
 
 
 
@@ -1564,6 +1564,7 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
         ring
 
     rw [← Finset.sum_range_sub (n := WordNorm (x⁻¹ * y)) (f := fun i => f (x * γ (x⁻¹ * y) i))]
+
     grw [abs_add_le]
     grw [abs_add_le]
     rw [← Finset.sum_neg_distrib]
@@ -1571,6 +1572,7 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
     grw [three_term_cs]
     simp
     grw [root_sum_le]
+
 
     have sum_le_delta: ∑ x_1 ∈ Finset.range (WordNorm (x⁻¹ * y)), (f (x * γ (x⁻¹ * y) x_1) - f (x * γ (x⁻¹ * y) (x_1 + 1))) ^ 2 ≤ ∑ n ∈ Finset.range (WordNorm (x⁻¹ * y)), δ_f (x * (γ (x⁻¹ * y) n)) := by
       apply Finset.sum_le_sum
@@ -1620,11 +1622,28 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
 
     grw [sum_le_delta]
     rename_bvar i → n
-    
+
+    have f_diff_le: ((f x - f y) ^ 2) ≤ ∑ n ∈ Finset.range (WordNorm (x⁻¹ * y)), δ_f (x * γ (x⁻¹ * y) n) := by
+      sorry
+
+    rw [sub_sq_comm (f y)]
+    grw [f_diff_le]
+    ring
+    rw [Real.sqrt_mul]
+    .
+      rw [mul_assoc]
+      rw [mul_comm]
+      simp [Real.sqrt_eq_rpow]
+      rw [← Real.mul_rpow]
+      .
+        ring
+        simp
+      . simp
+      . simp
+    . simp [δ_f, deriv_sq]
+      positivity
 
 
-    --grw [Finset.neg_smul]
-    sorry
 
   sorry
 
