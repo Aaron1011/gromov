@@ -7,6 +7,9 @@ import Mathlib.Algebra.Group.Gromov.TendstoNhdsMul
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
 set_option linter.style.longLine false
+set_option linter.flexible false
+set_option linter.style.emptyLine false
+
 
 open scoped Finset
 open scoped Pointwise
@@ -1385,6 +1388,94 @@ lemma log_inter_mult_b3 (data: GoodScalesData): InterMult (B_3 data) ≤ Real.ex
 
 #print axioms inter_mult_helper
 #print axioms log_inter_mult_b3
+
+noncomputable def f_avg (R: ℕ) (f : G → ℝ) := (#((finite_closed_ball 1 R).toFinset) : ℝ)⁻¹ * ∑ y ∈ (finite_closed_ball 1 R).toFinset, f y
+
+noncomputable def deriv_sq (f: G → ℝ) (x: G) := (#S : ℝ)⁻¹ * ∑ s ∈ S, (f (x * s) - f x)^2
+
+lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball 1 R).toFinset, |f x - (f_avg R f)|^2 ≤
+    16 * (#S)^2 * R^2 * (#((finite_closed_ball 1 (2 * R)).toFinset) / #(finite_closed_ball 1 R).toFinset) * ∑ x ∈ (finite_closed_ball 1 (3 * R)).toFinset, deriv_sq f x := by
+
+  let δ_f (x: G) := ∑ x ∈ (finite_closed_ball x 1).toFinset, deriv_sq f x
+
+  have f_sub_le (x: G): |f x - f_avg R f| ≤ #(finite_closed_ball 1 R).toFinset^(-1/2 : ℝ) * (∑ y ∈ (finite_closed_ball 1 R).toFinset, (f x - f y)^2) ^ (1/2 : ℝ) := by
+    rw [f_avg]
+    conv =>
+      lhs
+      arg 1
+      arg 1
+      equals (#((finite_closed_ball 1 R).toFinset) : ℝ)⁻¹ * ∑ y ∈ (finite_closed_ball 1 R).toFinset, f x =>
+        simp
+        rw [inv_mul_cancel_left₀]
+        simp
+        rw [Fintype.card_eq_zero_iff]
+        simp
+    rw [← mul_sub]
+    rw [abs_mul]
+    rw [← Finset.sum_sub_distrib]
+    grw [Finset.abs_sum_le_sum_abs]
+    conv =>
+      lhs
+      rhs
+      arg 2
+      intro i
+      equals |f x - f i| * 1 => simp
+    grw [Real.sum_mul_le_sqrt_mul_sqrt]
+    simp [Real.sqrt_eq_rpow]
+    rw [← Real.rpow_neg_one]
+    rw [mul_comm]
+    rw [mul_assoc]
+    rw [← Real.rpow_add]
+    .
+      norm_num
+      rw [mul_comm]
+    . simp
+      rw [Fintype.card_pos_iff]
+      simp
+      use 1
+      simp
+
+
+  let γ (z: G) (i: ℕ) := (word_norm_prod_self z).choose[i]?.getD ⟨1, one_mem⟩
+
+  let B_r (r: ℕ) := (finite_closed_ball 1 r).toFinset
+
+  have gamma_sum (z: G): ∑ x ∈ B_r (R - 1), ∑ i ∈ Finset.range (WordNorm z), δ_f (x * (γ z i)) ≤ 2 * R * ∑ x ∈ B_r (3*R - 1), δ_f x := by
+
+    -- Finset.card_le_mul_card_image
+    sorry
+
+  have two_r_to_one (y: G) (hy: y ∈ B_r (2*R - 2)) := Finset.card_le_mul_card_image (s := (B_r (R - 1) ×ˢ (Finset.range (WordNorm y)))) (f := fun a => a.1 * (γ y a.2).val) (2 * R) (by
+    intro b hb
+    simp at hb
+    obtain ⟨x, n, ⟨x_mem, n_lt⟩, b_eq⟩ := hb
+    grw [Finset.card_le_card (t := (Finset.range (2 * R)).image (fun n => (b * ((γ y n).val⁻¹), n)))]
+    .
+      grw [Finset.card_image_le]
+      simp
+    .
+      intro p hp
+      simp at hp
+      simp
+      use p.2
+      refine ⟨?_, ?_⟩
+      .
+
+        by_contra!
+        grw [hp.1.2] at this
+        simp [B_r, dist, WordDist_one] at hy
+        grind
+      .
+        ext
+        . simp [← hp.2]
+        . simp
+  )
+
+
+
+
+
+  sorry
 
 end V_Wrapper_Section
 
