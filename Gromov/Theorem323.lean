@@ -958,7 +958,7 @@ structure GoodScalesData where
 noncomputable def GoodScales (data: GoodScalesData) := Classical.choice (lemma_3_24 data.w data.d data.hw data.hd data.h_growth)
 
 noncomputable def R_1 (data: GoodScalesData) := 2 * 16^(GoodScales data).i_1
-noncomputable def R_2 (data: GoodScalesData) := 2 * 16^(GoodScales data).i_2
+noncomputable def R_2 (data: GoodScalesData) := 16^(GoodScales data).i_2
 
 -- TODO - does it matter than 'Metric.maximalSeparatedSet' uses 'R_1 < dist' instead of 'R_1 <= dist' ?
 def X_j (data: GoodScalesData) := Metric.maximalSeparatedSet (R_1 data) ((Metric.ball (1: G) (R_2 data)))
@@ -1073,7 +1073,8 @@ lemma B_half_disjoint (data: GoodScalesData): (B_half data).PairwiseDisjoint id 
   grind
 
 
--- Intersection multiplicity
+-- Intersection multiplicity. See https://www.math.ucdavis.edu/~kapovich/EPR/kapovich_drutu.pdf page 24 for the definition
+-- (search for 'multiplicity')
 noncomputable def InterMult_f  (S: Set (Set G)) := (fun A => (Set.encard A).toNat) '' { A: Set (Set G) | A ⊆ S ∧ ⋂₀ A ≠ ∅ }
 noncomputable def InterMult (S: Set (Set G)) := sSup (InterMult_f S)
 
@@ -1113,8 +1114,7 @@ lemma B_3_finite (data: GoodScalesData): (B_3 data).Finite := by
   apply Set.Finite.subset ?_ (Metric.maximalSeparatedSet_subset)
   apply finite_ball
 
--- TODO - the actual proof is supicious, as it actually proves something stronger than in the paper
--- (we didn't get a <= 6R bound). Is the definition of InterMult correct?
+-- Suprisingly, we can prove an upper bound with 4*R_1, rather than the 8*R_1 from the paper
 lemma inter_mult_helper (data: GoodScalesData): InterMult (B_3 data) * #(S ^ ((R_1 data) / 2)) ≤ #(S ^ (4 * (R_1 data))) := by
   classical
   apply Nat.mul_le_of_le_div
@@ -1268,6 +1268,101 @@ lemma inter_mult_helper (data: GoodScalesData): InterMult (B_3 data) * #(S ^ ((R
     . rw [Set.nonempty_iff_ne_empty]
       grind
 
+
+lemma log_inter_mult_b3 (data: GoodScalesData): InterMult (B_3 data) ≤ Real.exp (a data.d) := by
+  by_cases mult_zero: InterMult (B_3 data) = 0
+  . simp [mult_zero]
+    positivity
+
+  rw [← Real.log_le_iff_le_exp]
+  have foo := inter_mult_helper data
+  rw [← Nat.le_div_iff_mul_le] at foo
+  grw [foo]
+  .
+    grw [Nat.cast_div_le]
+    .
+      rw [Real.log_div]
+      .
+        have bound := (GoodScales data).first_h_i
+        grw [← bound]
+        simp [h, f]
+        rw [Real.log_mul]
+        .
+          rw [Real.log_mul]
+          .
+            ring_nf
+            rw [sub_right_comm]
+            rw [add_sub_assoc]
+            rw [← Real.log_div]
+            grw [← Real.log_nonneg (x := _ / _)]
+            .
+              simp
+              rw [← sub_le_iff_le_add]
+              apply sub_le_sub
+              . apply Real.log_le_log
+                . simp
+                  apply Finset.Nonempty.pow
+                  apply S_nonempty
+                . simp
+                  apply Finset.card_pow_mono
+                  . simp [R_1]
+                  .
+                    simp [R_1]
+                    grind
+              . apply Real.log_le_log
+                . simp
+                  apply Finset.Nonempty.pow
+                  simp [S_nonempty]
+                . simp [R_1]
+            .
+              rw [one_le_div₀]
+              .
+                rw [Real.rpow_le_rpow_iff]
+                apply matrix_det_montone
+                . apply Q_R_matrix_pos_def_i₀
+                  have foo := (GoodScales data).i_1_ge
+                  apply pow_le_pow_right₀
+                  . simp
+                  . exact foo
+                . sorry
+                .
+                  sorry
+                . sorry
+                . simp [dim]
+                  exact Module.finrank_pos
+              . sorry
+            . sorry
+            . sorry
+          . simp
+            grind [S_nonempty]
+          . sorry
+        . simp
+          grind [S_nonempty]
+        . sorry
+      . norm_cast
+        rw [Finset.card_eq_zero]
+        rw [← ne_eq, ← Finset.nonempty_iff_ne_empty]
+        apply Finset.Nonempty.pow
+        simp [S_nonempty]
+      . norm_cast
+        rw [Finset.card_eq_zero]
+        rw [← ne_eq, ← Finset.nonempty_iff_ne_empty]
+        apply Finset.Nonempty.pow
+        simp [S_nonempty]
+    . simp
+      refine ⟨?_, ?_⟩
+      . apply Finset.Nonempty.pow
+        simp [S_nonempty]
+      .
+        apply Finset.card_pow_mono
+        . simp [R_1]
+        . grind
+  .
+    simp
+    apply Finset.Nonempty.pow
+    simp [S_nonempty]
+  . simp
+    grind
 
 #print axioms inter_mult_helper
 
