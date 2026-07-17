@@ -1417,7 +1417,7 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
 
   let δ_f (x: G) := ∑ x ∈ (finite_closed_ball x 1).toFinset, deriv_sq f x
 
-  have f_sub_le (x: G): |f x - f_avg R f| ≤ #(finite_closed_ball 1 R).toFinset^(-1/2 : ℝ) * (∑ y ∈ (finite_closed_ball 1 R).toFinset, (f x - f y)^2) ^ (1/2 : ℝ) := by
+  have f_sub_le (x: G): |f x - f_avg R f| ≤ √((#((finite_closed_ball 1 R).toFinset) : ℝ)⁻¹ * (∑ y ∈ (finite_closed_ball 1 R).toFinset, (f x - f y)^2)) := by
     rw [f_avg]
     conv =>
       lhs
@@ -1447,7 +1447,17 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
     rw [← Real.rpow_add]
     .
       norm_num
-      rw [mul_comm]
+      simp
+      rw [Real.mul_rpow]
+      .
+        field_simp
+        rw [← Real.rpow_mul]
+        .
+          simp
+        . positivity
+      . positivity
+      . positivity
+
     . simp
       rw [Fintype.card_pos_iff]
       simp
@@ -1538,7 +1548,7 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
 
 
 
-  have diff_le_delta_sum (x y: G) (hx: x ∈ B_r (R - 1)) (hy: y ∈ B_r (R - 1)): |f y - f x| ≤ (2 * R)^(1/2 : ℝ) * (∑ i ∈ Finset.range (WordNorm (x⁻¹ * y)), δ_f (x * γ (x⁻¹ * y) i))^(1/2 : ℝ) := by
+  have diff_le_delta_sum (x y: G) (hx: x ∈ B_r (R - 1)) (hy: y ∈ B_r (R - 1)): |f y - f x| ≤ √((2 * R) * (∑ i ∈ Finset.range (WordNorm (x⁻¹ * y)), δ_f (x * γ (x⁻¹ * y) i))) := by
 
 
 
@@ -1625,7 +1635,25 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
     simp_rw [sub_sq_comm]
     grw [sum_le_delta]
     rw [mul_comm]
-    simp [Real.sqrt_eq_rpow]
+    simp
+
+  --simp_rw [← Real.sqrt_eq_rpow] at f_sub_le
+  simp_rw [Real.le_sqrt (by sorry) (by sorry)] at f_sub_le
+  --have foo := Finset.sum_le_sum (h := fun x hx => f_sub_le x) (s := (finite_closed_ball 1 ↑R).toFinset)
+  grw [Finset.sum_le_sum (h := fun x hx => f_sub_le x)]
+  rw [Finset.mul_sum]
+  simp_rw [Finset.mul_sum]
+  rw [← Finset.sum_product']
+  rw [← Finset.mul_sum]
+  rw [inv_mul_le_iff₀ (by norm_cast; simp; sorry)]
+  simp_rw [Real.le_sqrt (by sorry) (by sorry)] at diff_le_delta_sum
+  simp_rw [sq_abs] at diff_le_delta_sum
+  grw [Finset.sum_le_sum (h := fun a ha => diff_le_delta_sum a.2 a.1 (by simp at ha; simp [B_r];) sorry)]
+
+  rw [← le_div_iff_mul_le]
+  rw [inv_mul_le_iff_le_mul]
+  apply Finset.sum_le_sum
+  grw [f_sub_le]
 
   sorry
 
