@@ -1405,8 +1405,9 @@ lemma three_term_cs (a b: ℝ) (n: Type*) {s: Finset n} (f: n → ℝ): a + (∑
   simp
   grind
 
+set_option maxHeartbeats 2500000 in
 lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball 1 R).toFinset, |f x - (f_avg R f)|^2 ≤
-    16 * (#S)^2 * R^2 * (#((finite_closed_ball 1 (2 * R)).toFinset) / #(finite_closed_ball 1 R).toFinset) * ∑ x ∈ (finite_closed_ball 1 (3 * R)).toFinset, deriv_sq f x := by
+    16 * R^2 * (#((finite_closed_ball 1 (2 * R)).toFinset) / #(finite_closed_ball 1 R).toFinset) * ∑ x ∈ (finite_closed_ball 1 (3 * R)).toFinset, deriv_sq f x := by
 
   wlog R_pos: 0 < R
   . simp at R_pos
@@ -1537,7 +1538,7 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
 
 
 
-  have diff_le_delta_sum (x y: G) (hx: x ∈ B_r (R - 1)) (hy: y ∈ B_r (R - 1)): |f x - f y| ≤ (6 * R)^(1/2 : ℝ) * (∑ i ∈ Finset.range (WordNorm (x⁻¹ * y)), δ_f (x * γ (x⁻¹ * y) i))^(1/2 : ℝ) := by
+  have diff_le_delta_sum (x y: G) (hx: x ∈ B_r (R - 1)) (hy: y ∈ B_r (R - 1)): |f y - f x| ≤ (2 * R)^(1/2 : ℝ) * (∑ i ∈ Finset.range (WordNorm (x⁻¹ * y)), δ_f (x * γ (x⁻¹ * y) i))^(1/2 : ℝ) := by
 
 
 
@@ -1548,30 +1549,31 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
       grw [hx, hy]
       grind
 
-    have root_sum_le: √(2 + ↑(WordNorm (x⁻¹ * y))) ≤ √(2*R) := by
+    have root_le_R: √(WordNorm (x⁻¹ * y)) ≤ √(2*R) := by
       rw [Real.sqrt_le_sqrt_iff]
       . norm_cast
         grw [inv_prod_le]
-        rw [Nat.add_sub_cancel']
         simp
-        grind
       . simp
+
 
     conv =>
       lhs
-      equals |(f x - f y) + (-(f (x * γ (x⁻¹ * y) (WordNorm (x⁻¹ * y))) - f (x * γ (x⁻¹ * y) 0))) + (f y - f x)| =>
+      equals |(f (x * γ (x⁻¹ * y) (WordNorm (x⁻¹ * y)))) - f (x * γ (x⁻¹ * y) 0)| =>
         simp [gamma_zero, gamma_norm]
-        ring
 
     rw [← Finset.sum_range_sub (n := WordNorm (x⁻¹ * y)) (f := fun i => f (x * γ (x⁻¹ * y) i))]
-
-    grw [abs_add_le]
-    grw [abs_add_le]
-    rw [← Finset.sum_neg_distrib]
     grw [Finset.abs_sum_le_sum_abs]
-    grw [three_term_cs]
+    conv =>
+      lhs
+      arg 2
+      intro i
+      rw [← mul_one (a := |_|)]
+
+
+    grw [Real.sum_mul_le_sqrt_mul_sqrt]
     simp
-    grw [root_sum_le]
+    grw [root_le_R]
 
 
     have sum_le_delta: ∑ x_1 ∈ Finset.range (WordNorm (x⁻¹ * y)), (f (x * γ (x⁻¹ * y) x_1) - f (x * γ (x⁻¹ * y) (x_1 + 1))) ^ 2 ≤ ∑ n ∈ Finset.range (WordNorm (x⁻¹ * y)), δ_f (x * (γ (x⁻¹ * y) n)) := by
@@ -1620,30 +1622,10 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
 
       -- sorry
 
+    simp_rw [sub_sq_comm]
     grw [sum_le_delta]
-    rename_bvar i → n
-
-    have f_diff_le: ((f x - f y) ^ 2) ≤ ∑ n ∈ Finset.range (WordNorm (x⁻¹ * y)), δ_f (x * γ (x⁻¹ * y) n) := by
-      sorry
-
-    rw [sub_sq_comm (f y)]
-    grw [f_diff_le]
-    ring
-    rw [Real.sqrt_mul]
-    .
-      rw [mul_assoc]
-      rw [mul_comm]
-      simp [Real.sqrt_eq_rpow]
-      rw [← Real.mul_rpow]
-      .
-        ring
-        simp
-      . simp
-      . simp
-    . simp [δ_f, deriv_sq]
-      positivity
-
-
+    rw [mul_comm]
+    simp [Real.sqrt_eq_rpow]
 
   sorry
 
