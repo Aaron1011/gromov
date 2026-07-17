@@ -967,6 +967,29 @@ def B (data: GoodScalesData) := (fun a => Metric.closedBall a (R_1 data)) '' (X_
 def B_half (data: GoodScalesData) := (fun a => Metric.closedBall a (R_1 data / 2)) '' (X_j data)
 def B_3 (data: GoodScalesData) := (fun a => Metric.closedBall a (3 * R_1 data)) '' (X_j data)
 
+lemma B_half_injective_on (data: GoodScalesData): Set.InjOn (fun a => Metric.closedBall a (R_1 data / 2)) (X_j data) := by
+  intro a ha b hb hab
+  by_contra!
+  simp at hab
+  simp [X_j] at ha hb
+
+  have sep := Metric.isSeparated_maximalSeparatedSet (ε := (R_1 data)) (A := (Metric.ball (1 : G) ↑(R_2 data)))
+  specialize sep ha hb this
+
+  have b_mem: b ∈ Metric.closedBall a ((R_1 data / 2)) := by
+    rw [hab]
+    simp
+    grind
+
+  simp at b_mem
+  simp [edist, PseudoMetricSpace.edist] at sep
+  rw [dist_comm] at b_mem
+  simp [dist] at b_mem
+  norm_cast at b_mem
+  rify at sep
+  grw [b_mem] at sep
+  grind
+
 lemma B_covers_R2 (data: GoodScalesData): Metric.ball 1 (R_2 data) ⊆ ⋃₀ (B data) := by
   by_contra!
   rw [Set.not_subset] at this
@@ -1212,28 +1235,17 @@ lemma inter_mult_helper (data: GoodScalesData): InterMult (B data) * #(S ^ ((R_1
 
               rw [← a_eq, ← b_eq]
               simp [a_center, b_center] at inter_eq
-              exact inter_eq
-              sorry
+              apply B_half_injective_on at inter_eq
+              .
+                simp [inter_eq]
+              . grind
+              . grind
             . rfl
             . rfl
             . simp [a_center, b_center]
+              rw [← Finset.coe_nonempty] at hab
+              simp at hab
               exact hab
-
-              exact hab
-
-
-          -- rw [Finset.sum_attach_eq_sum_dite]
-
-
-          -- rw [← finsum_mem_eq_finite_toFinset_sum]
-          -- rw [finsum_mem_eq_toFinset_sum]
-          -- rw [← Finset.sum_attach_eq_sum_dite]
-
-          -- rw [← Finset.sum_set_coe]
-          -- rw [Finset.sum_congr_set]
-          -- rw [Finset.sum_univ]
-          -- rw [← Finset.sum_attach_eq_sum_dite (f := fun (a: X_finite.toFinset.attach) => #(finite_closed_ball (X_inner_nonempty a.val (by sorry)).choose ((R_1 data) / 2)).toFinset )]
-          -- rw [← Finset.card_biUnion]
 
         . intro y hy
           simp at hy
