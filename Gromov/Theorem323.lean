@@ -1405,33 +1405,35 @@ lemma three_term_cs (a b: ℝ) (n: Type*) {s: Finset n} (f: n → ℝ): a + (∑
   simp
   grind
 
+noncomputable def B_r (r: ℝ) := (finite_closed_ball 1 r).toFinset
+
 set_option maxHeartbeats 2500000 in
-lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball 1 (R - 1)).toFinset, |f x - (f_avg (R - 1) f)|^2 ≤
-    16 * R^2 * (#((finite_closed_ball 1 (2 * R)).toFinset) / #(finite_closed_ball 1 R).toFinset) * ∑ x ∈ (finite_closed_ball 1 (3 * R)).toFinset, deriv_sq f x := by
+lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x - (f_avg (R - 1) f)|^2 ≤
+    16 * R^2 * (#(B_r (2 * R))) / #(B_r R) * ∑ x ∈ (B_r (3 * R)), deriv_sq f x := by
 
   wlog R_pos: 0 < R
-  . simp at R_pos
-    simp [R_pos, f_avg]
+  . simp [B_r] at R_pos
+    simp [R_pos, f_avg, B_r]
     --rw [← Finset.singleton_one]
     --simp
 
   let δ_f (x: G) := ∑ x ∈ (finite_closed_ball x 1).toFinset, deriv_sq f x
 
-  have f_sub_le (x: G): |f x - f_avg (R - 1) f| ≤ √((#((finite_closed_ball 1 (R - 1)).toFinset) : ℝ)⁻¹ * (∑ y ∈ (finite_closed_ball 1 (R - 1)).toFinset, (f x - f y)^2)) := by
+  have f_sub_le (x: G): |f x - f_avg (R - 1) f| ≤ √((#((B_r (R - 1))) : ℝ)⁻¹ * (∑ y ∈ (B_r (R - 1)), (f x - f y)^2)) := by
     rw [f_avg]
     conv =>
       lhs
       arg 1
       arg 1
-      equals (#((finite_closed_ball 1 (↑R - 1)).toFinset) : ℝ)⁻¹ * ∑ y ∈ (finite_closed_ball 1 (↑R - 1)).toFinset, f x =>
+      equals (#((B_r (↑R - 1))) : ℝ)⁻¹ * ∑ y ∈ (B_r (↑R - 1)), f x =>
         simp
         rw [inv_mul_cancel_left₀]
-        simp
+        simp [B_r]
         rw [Fintype.card_eq_zero_iff]
         simp
         grind
 
-
+    rw [B_r]
     rw [← mul_sub]
     rw [abs_mul]
     rw [← Finset.sum_sub_distrib]
@@ -1492,8 +1494,6 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
 
 
 
-  let B_r (r: ℕ) := (finite_closed_ball 1 r).toFinset
-
   have gamma_sum (z: G) (hz: z ∈ B_r (2*R - 2)): ∑ x ∈ B_r (R - 1), ∑ i ∈ Finset.range (WordNorm z), δ_f (x * (γ z i)) ≤ 2 * R * ∑ x ∈ B_r (3*R - 1), δ_f x := by
 
     rw [← Finset.sum_product']
@@ -1512,6 +1512,7 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
         grw [word_norm_mul_le]
         simp [B_r, dist, WordDist_one] at a_mem
         simp [B_r, dist, WordDist_one] at hz
+        simp
         grw [a_mem]
         grw [gamma_i_norm_le]
         grw [b_lt]
@@ -1544,6 +1545,14 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
           by_contra!
           grw [hp.1.2] at this
           simp [B_r, dist, WordDist_one] at hz
+          conv at hz =>
+            rhs
+            equals ↑(2*R - 2) =>
+              rw [Nat.cast_sub]
+              simp
+              grind
+
+          norm_cast at hz
           grind
         .
           ext
@@ -1560,6 +1569,19 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
       grw [word_norm_mul_le]
       rw [← word_norm_inv]
       simp [B_r, dist, WordDist_one] at hx hy
+      conv at hx =>
+        rhs
+        equals ↑(R - 1) =>
+          rw [Nat.cast_sub]
+          simp
+          grind
+      conv at hy =>
+        rhs
+        equals ↑(R - 1) =>
+          rw [Nat.cast_sub]
+          simp
+          grind
+      norm_cast at hx hy
       grw [hx, hy]
       grind
 
@@ -1656,13 +1678,205 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (finite_closed_ball
   simp_rw [← Finset.mul_sum]
   rw [mul_comm]
   rw [← le_div_iff₀ (by simp; grind)]
+  rw [Finset.sum_product]
+  simp only []
+  --rw [Finset.sum_comm]
+  --simp_rw [Finset.sum_comp]
+  rw [Finset.sum_comm]
+  -- TODO - use gcongr here
+  grw [Finset.sum_le_sum (g := fun z => ∑ x ∈ B_r (2*R - 2), ∑ i ∈ Finset.range (WordNorm x), δ_f (z * γ x i))]
+  .
+    rw [Finset.sum_comm]
+    grw [Finset.sum_le_sum (h := gamma_sum)]
+    sorry
+  . intro a ha
+    rw [Finset.sum_comp (g := fun y => a⁻¹ * y) (f := fun x => ∑ x_1 ∈ Finset.range (WordNorm (x)), δ_f (a * γ (x) x_1))]
+    grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (2*R - 2))]
+    .
+      conv =>
+        lhs
+        arg 2
+        intro i
+        lhs
+        arg 1
+        arg 1
+        intro k
+        rw [inv_mul_eq_iff_eq_mul]
+
+
+      simp_rw [Finset.card_filter]
+      simp
+      apply Finset.sum_le_sum
+      intro x hx
+      split_ifs
+      . simp
+      . simp [δ_f, deriv_sq]
+        positivity
+    .
+      rw [Finset.image_subset_iff]
+      intro x hx
+      sorry
+    . sorry
+
+    rw [← Finset.sum_finset_product' (r := {p ∈ B_r (↑R - 1) ×ˢ (Finset.range (2*R - 2)) | p.2 < WordNorm (a⁻¹ * p.1) })]
+    .
+
+      rw [Finset.sum_comp]
+      grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (↑R - 1) ×ˢ Finset.range (2 * R - 2))]
+      .
+        rw [Finset.sum_comp]
+        sorry
+      . simp
+      . intros
+        simp [δ_f, deriv_sq]
+        positivity
+    .
+      intro p
+      simp
+      intro p_2_le p_1_mem
+      grw [word_norm_mul_le] at p_2_le
+      rw [← word_norm_inv] at p_2_le
+      have r_sub_eq: (R: ℝ) - 1 = ↑(R - 1) := by
+        rw [Nat.cast_sub]
+        simp
+        grind
+      rw [r_sub_eq] at ha p_1_mem
+      simp [B_r, dist, WordDist_one] at ha p_1_mem
+      grw [ha, p_1_mem] at p_2_le
+      grind
+
+
+
+  grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (2*R - 2))]
+  .
+    --grw [Finset.sum_le_sum_of_subset_of_nonneg]
+    grw [Finset.sum_le_sum (g := fun z => ∑ x ∈ B_r (R - 1), ∑ i ∈ Finset.range (WordNorm z), δ_f (x * γ z i))]
+    .
+      grw [Finset.sum_le_sum (h := gamma_sum)]
+      simp [B_r, δ_f]
+      sorry
+    .
+      intro z hz
+      apply Finset.sum_le_sum
+      intro x hx
+      grw [Finset.sum_subset (t :)]
+      rw [Finset.sum_image]
+
+      conv =>
+        lhs
+        arg 2
+        intro b
+        simp [γ]
+        arg 1
+        arg 1
+        arg 1
+        arg 1
+        intro z
+        rw [← eq_inv_mul_iff_mul_eq]
+      rw [Finset.filter_eq']
+
+
+
+
+      grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (3*R))]
+      .
+
+        sorry
+      .
+        rw [Finset.image_subset_iff]
+        intro a ha
+        simp at ha
+        simp [B_r, dist, WordDist_one] at hx hz
+        simp [B_r, dist, WordDist_one]
+        grw [word_norm_mul_le]
+        simp
+        grw [hz]
+        grw [gamma_i_norm_le]
+        grw [ha]
+        grw [word_norm_mul_le]
+        rw [← word_norm_inv]
+        simp
+        grw [hz, hx]
+        ring
+        grind
+      .
+        intros
+        simp [δ_f, deriv_sq]
+        positivity
+  . intro a ha
+    simp [B_r] at ha
+    simp [B_r]
+    grw [ha]
+    rw [← mul_sub_one]
+    -- TODO - this should be much simpler
+    by_cases R_sub_eq: 1 < R
+    .
+      rw [le_mul_iff_one_le_left]
+      . simp
+      . simp
+        grind
+    .
+      simp at R_sub_eq
+      by_cases R_eq: R = 1
+      . simp [R_eq]
+      . grind
+  . intros
+    simp only [δ_f, deriv_sq]
+    sorry
+  --   rw [Finset.sum_product]
+  --   simp_rw [← Finset.mul_sum]
+  --   grw [Finset.sum_le_sum (h := gamma_sum)]
+  --   sorry
+  -- . sorry
+  --rw [← Finset.sum_product']
+
+
+
+
+    -- rw [Finset.comp_def (g := fun x => y⁻¹ * x)]
+    -- rw [← Function.comp_def]
+
+  rw [← Function.comp_def]
+  grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (2*R - 2))]
+  .
+
+    grw [Finset.sum_le_sum (g := fun z => ∑ x ∈ B_r (R - 1), ∑ x_1 ∈ Finset.range (WordNorm (z)), δ_f (x * γ (z) x_1))]
+    .
+      grw [Finset.sum_le_sum (h := gamma_sum)]
+
+      sorry
+    .
+      intro z hz
+
+      sorry
+  . simp [B_r]
+    apply Metric.closedBall_subset_closedBall
+    rw [Nat.cast_sub (by grind)]
+    push_cast
+    rw [← mul_sub_one]
+    apply le_mul_of_one_le_left
+    . simp
+      grind
+    . simp
+  . intro q hp _
+    simp [δ_f, deriv_sq]
+    positivity
+
+
   grw [Finset.sum_le_sum (g := fun (a: G × G) => ∑ z ∈ B_r (2 * R - 2), ∑ x ∈ B_r (R - 1), ∑ i ∈ Finset.range (WordNorm z), δ_f (x * γ z i))]
-  . sorry
+  .
+
+
+    grw [Finset.sum_le_card_nsmul]
+
+    grw [Finset.sum_le_sum (h := fun a ha => gamma_sum a.1 sorry)]
+    grw [gamma_sum]
+    sorry
   .
     intro p hp
     rw [Finset.sum_comm]
     rw [← Finset.sum_product']
-    have bar := Finset.single_le_sum (f := fun (p: G × G) => ∑ i ∈ Finset.range (WordNorm p.2), δ_f (p.1 * γ p.2 i)) (s := (finite_closed_ball 1 ↑(R - 1)).toFinset ×ˢ (finite_closed_ball 1 ↑(2*R - 2)).toFinset) (a := (p.2, p.2⁻¹ * p.1))
+    have bar := Finset.single_le_sum (f := fun (p: G × G) => ∑ i ∈ Finset.range (WordNorm p.2), δ_f (p.1 * γ p.2 i)) (s := (B_r ↑(R - 1)).toFinset ×ˢ (B_r ↑(2*R - 2)).toFinset) (a := (p.2, p.2⁻¹ * p.1))
     simp only [] at bar
     grw [bar]
     .
