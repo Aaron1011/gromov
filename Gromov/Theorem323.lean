@@ -1411,12 +1411,9 @@ set_option maxHeartbeats 3500000 in
 lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x - (f_avg (R - 1) f)|^2 ≤
     16 * R^2 * (#(B_r (2 * R))) / #(B_r R) * ∑ x ∈ (B_r (3 * R)), deriv_sq f x := by
 
-  have R_pos: 0 < R := by sorry
-  -- by_cases R_nonpos: R = 0
-  -- .
-  --   simp [R_nonpos, f_avg, B_r]
-    --rw [← Finset.singleton_one]
-    --simp
+  by_cases R_nonpos: R = 0
+  .
+    simp [R_nonpos, f_avg, B_r]
 
   let δ_f (x: G) := ∑ x ∈ (finite_closed_ball x 1).toFinset, deriv_sq f x
 
