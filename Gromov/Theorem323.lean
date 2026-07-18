@@ -1710,17 +1710,7 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
     rw [Finset.sum_comp (g := fun y => a⁻¹ * y) (f := fun x => ∑ x_1 ∈ Finset.range (WordNorm (x)), δ_f (a * γ (x) x_1))]
     grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (2*R - 2))]
     .
-      conv =>
-        lhs
-        arg 2
-        intro i
-        lhs
-        arg 1
-        arg 1
-        intro k
-        rw [inv_mul_eq_iff_eq_mul]
-
-
+      simp_rw [inv_mul_eq_iff_eq_mul]
       simp_rw [Finset.card_filter]
       simp
       apply Finset.sum_le_sum
