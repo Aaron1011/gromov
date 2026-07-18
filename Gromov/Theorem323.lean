@@ -1407,9 +1407,12 @@ lemma three_term_cs (a b: ℝ) (n: Type*) {s: Finset n} (f: n → ℝ): a + (∑
 
 noncomputable def B_r (r: ℝ) := (finite_closed_ball 1 r).toFinset
 
+lemma double_ball_sum (R: ℕ) (f: G → ℝ): ∑ x ∈ B_r (↑(R - 1)), ∑ y ∈ (Metric.closedBall x 1), f y = ∑ x ∈ B_r R, f x := by
+  sorry
+
 set_option maxHeartbeats 3500000 in
 lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x - (f_avg (R - 1) f)|^2 ≤
-    16 * R^2 * (#(B_r (2 * R))) / #(B_r R) * ∑ x ∈ (B_r (3 * R)), deriv_sq f x := by
+    16 * R^2 * (#(B_r (2 * R - 2))) / #(B_r (R - 1)) * ∑ x ∈ (B_r (3 * R)), deriv_sq f x := by
 
   by_cases R_nonpos: R = 0
   .
@@ -1700,9 +1703,37 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
   .
     rw [Finset.sum_comm]
     grw [Finset.sum_le_sum (h := gamma_sum)]
-    simp
+    simp [δ_f]
+    have b_card_ne : #(B_r (↑R - 1)) ≠ 0 := by
+      simp [B_r]
+      rw [Fintype.card_eq_zero_iff]
+      simp
+      grind
+    have b_card_two_ne: #(B_r (2 * (↑R - 1))) ≠ 0 := by
+      simp [B_r]
+      rw [Fintype.card_eq_zero_iff]
+      simp
+      grind
+    field_simp
+    norm_num
+    conv =>
+      lhs
+      rhs
+      arg 1
+      arg 1
+      equals ↑(R*3 - 1) =>
+        rw [Nat.cast_sub]
+        simp
+        grind
+    rw [double_ball_sum]
+    norm_cast
 
-    sorry
+
+    have four_le: (4: ℝ) ≤ 16 := by
+      grind
+    grw [four_le]
+    simp [deriv_sq]
+    positivity
   . intro a ha
     rw [Finset.sum_comp (g := fun y => a⁻¹ * y) (f := fun x => ∑ x_1 ∈ Finset.range (WordNorm (x)), δ_f (a * γ (x) x_1))]
     grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (2*R - 2))]
