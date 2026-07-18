@@ -1407,13 +1407,14 @@ lemma three_term_cs (a b: ℝ) (n: Type*) {s: Finset n} (f: n → ℝ): a + (∑
 
 noncomputable def B_r (r: ℝ) := (finite_closed_ball 1 r).toFinset
 
-set_option maxHeartbeats 2500000 in
+set_option maxHeartbeats 3500000 in
 lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x - (f_avg (R - 1) f)|^2 ≤
     16 * R^2 * (#(B_r (2 * R))) / #(B_r R) * ∑ x ∈ (B_r (3 * R)), deriv_sq f x := by
 
-  wlog R_pos: 0 < R
-  . simp [B_r] at R_pos
-    simp [R_pos, f_avg, B_r]
+  have R_pos: 0 < R := by sorry
+  -- by_cases R_nonpos: R = 0
+  -- .
+  --   simp [R_nonpos, f_avg, B_r]
     --rw [← Finset.singleton_one]
     --simp
 
@@ -1653,28 +1654,42 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
         . positivity
       . simp [dist, WordDist, word_norm_one]
 
-      -- apply Finset.single_le_sum (a := x)
-      -- grw [Finset.single_le_sum]
 
-      -- sorry
 
     simp_rw [sub_sq_comm]
     grw [sum_le_delta]
     rw [mul_comm]
     simp
 
-  --simp_rw [← Real.sqrt_eq_rpow] at f_sub_le
-  simp_rw [Real.le_sqrt (by sorry) (by sorry)] at f_sub_le
-  --have foo := Finset.sum_le_sum (h := fun x hx => f_sub_le x) (s := (finite_closed_ball 1 ↑R).toFinset)
+  conv at f_sub_le =>
+    intro x
+    rw [Real.le_sqrt (by
+      simp
+    ) (by
+      positivity
+    )]
   grw [Finset.sum_le_sum (h := fun x hx => f_sub_le x)]
   rw [Finset.mul_sum]
   simp_rw [Finset.mul_sum]
   rw [← Finset.sum_product']
   rw [← Finset.mul_sum]
-  rw [inv_mul_le_iff₀ (by norm_cast; simp; sorry)]
-  simp_rw [Real.le_sqrt (by sorry) (by sorry)] at diff_le_delta_sum
+  rw [inv_mul_le_iff₀ (by norm_cast; simp; simp [B_r]; grind)]
+  conv at diff_le_delta_sum =>
+    intro x y hx hy
+    rw [Real.le_sqrt (by simp) (by
+      simp [δ_f, deriv_sq];
+      positivity
+    )]
   simp_rw [sq_abs] at diff_le_delta_sum
-  grw [Finset.sum_le_sum (h := fun a ha => diff_le_delta_sum a.2 a.1 (by simp at ha; simp [B_r]; sorry) sorry)]
+  grw [Finset.sum_le_sum (h := fun a ha => diff_le_delta_sum a.2 a.1 (by
+    simp at ha
+    simp [B_r]
+    simp [B_r] at ha
+    grind
+  )
+  (by
+    grind
+  ))]
   simp_rw [← Finset.mul_sum]
   rw [mul_comm]
   rw [← le_div_iff₀ (by simp; grind)]
@@ -1688,6 +1703,8 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
   .
     rw [Finset.sum_comm]
     grw [Finset.sum_le_sum (h := gamma_sum)]
+    simp
+
     sorry
   . intro a ha
     rw [Finset.sum_comp (g := fun y => a⁻¹ * y) (f := fun x => ∑ x_1 ∈ Finset.range (WordNorm (x)), δ_f (a * γ (x) x_1))]
@@ -1715,114 +1732,123 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
     .
       rw [Finset.image_subset_iff]
       intro x hx
-      sorry
-    . sorry
-
-    rw [← Finset.sum_finset_product' (r := {p ∈ B_r (↑R - 1) ×ˢ (Finset.range (2*R - 2)) | p.2 < WordNorm (a⁻¹ * p.1) })]
-    .
-
-      rw [Finset.sum_comp]
-      grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (↑R - 1) ×ˢ Finset.range (2 * R - 2))]
-      .
-        rw [Finset.sum_comp]
-        sorry
-      . simp
-      . intros
-        simp [δ_f, deriv_sq]
-        positivity
-    .
-      intro p
+      simp [B_r, dist, WordDist_one]
+      simp [B_r, dist, WordDist_one] at ha hx
+      grw [word_norm_mul_le]
+      rw [← word_norm_inv]
       simp
-      intro p_2_le p_1_mem
-      grw [word_norm_mul_le] at p_2_le
-      rw [← word_norm_inv] at p_2_le
-      have r_sub_eq: (R: ℝ) - 1 = ↑(R - 1) := by
-        rw [Nat.cast_sub]
-        simp
-        grind
-      rw [r_sub_eq] at ha p_1_mem
-      simp [B_r, dist, WordDist_one] at ha p_1_mem
-      grw [ha, p_1_mem] at p_2_le
+      grw [ha, hx]
       grind
-
-
-
-  grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (2*R - 2))]
-  .
-    --grw [Finset.sum_le_sum_of_subset_of_nonneg]
-    grw [Finset.sum_le_sum (g := fun z => ∑ x ∈ B_r (R - 1), ∑ i ∈ Finset.range (WordNorm z), δ_f (x * γ z i))]
     .
-      grw [Finset.sum_le_sum (h := gamma_sum)]
-      simp [B_r, δ_f]
-      sorry
-    .
-      intro z hz
-      apply Finset.sum_le_sum
-      intro x hx
-      grw [Finset.sum_subset (t :)]
-      rw [Finset.sum_image]
+      intros
+      simp [δ_f, deriv_sq]
+      positivity
 
-      conv =>
-        lhs
-        arg 2
-        intro b
-        simp [γ]
-        arg 1
-        arg 1
-        arg 1
-        arg 1
-        intro z
-        rw [← eq_inv_mul_iff_mul_eq]
-      rw [Finset.filter_eq']
+    -- rw [← Finset.sum_finset_product' (r := {p ∈ B_r (↑R - 1) ×ˢ (Finset.range (2*R - 2)) | p.2 < WordNorm (a⁻¹ * p.1) })]
+    -- .
+
+    --   rw [Finset.sum_comp]
+    --   grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (↑R - 1) ×ˢ Finset.range (2 * R - 2))]
+    --   .
+    --     rw [Finset.sum_comp]
+    --     sorry
+    --   . simp
+    --   . intros
+    --     simp [δ_f, deriv_sq]
+    --     positivity
+    -- .
+    --   intro p
+    --   simp
+    --   intro p_2_le p_1_mem
+    --   grw [word_norm_mul_le] at p_2_le
+    --   rw [← word_norm_inv] at p_2_le
+    --   have r_sub_eq: (R: ℝ) - 1 = ↑(R - 1) := by
+    --     rw [Nat.cast_sub]
+    --     simp
+    --     grind
+    --   rw [r_sub_eq] at ha p_1_mem
+    --   simp [B_r, dist, WordDist_one] at ha p_1_mem
+    --   grw [ha, p_1_mem] at p_2_le
+    --   grind
+
+
+
+  -- grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (2*R - 2))]
+  -- .
+  --   --grw [Finset.sum_le_sum_of_subset_of_nonneg]
+  --   grw [Finset.sum_le_sum (g := fun z => ∑ x ∈ B_r (R - 1), ∑ i ∈ Finset.range (WordNorm z), δ_f (x * γ z i))]
+  --   .
+  --     grw [Finset.sum_le_sum (h := gamma_sum)]
+  --     simp [B_r, δ_f]
+  --     sorry
+  --   .
+  --     intro z hz
+  --     apply Finset.sum_le_sum
+  --     intro x hx
+  --     grw [Finset.sum_subset (t :)]
+  --     rw [Finset.sum_image]
+
+  --     conv =>
+  --       lhs
+  --       arg 2
+  --       intro b
+  --       simp [γ]
+  --       arg 1
+  --       arg 1
+  --       arg 1
+  --       arg 1
+  --       intro z
+  --       rw [← eq_inv_mul_iff_mul_eq]
+  --     rw [Finset.filter_eq']
 
 
 
 
-      grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (3*R))]
-      .
+  --     grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (3*R))]
+  --     .
 
-        sorry
-      .
-        rw [Finset.image_subset_iff]
-        intro a ha
-        simp at ha
-        simp [B_r, dist, WordDist_one] at hx hz
-        simp [B_r, dist, WordDist_one]
-        grw [word_norm_mul_le]
-        simp
-        grw [hz]
-        grw [gamma_i_norm_le]
-        grw [ha]
-        grw [word_norm_mul_le]
-        rw [← word_norm_inv]
-        simp
-        grw [hz, hx]
-        ring
-        grind
-      .
-        intros
-        simp [δ_f, deriv_sq]
-        positivity
-  . intro a ha
-    simp [B_r] at ha
-    simp [B_r]
-    grw [ha]
-    rw [← mul_sub_one]
-    -- TODO - this should be much simpler
-    by_cases R_sub_eq: 1 < R
-    .
-      rw [le_mul_iff_one_le_left]
-      . simp
-      . simp
-        grind
-    .
-      simp at R_sub_eq
-      by_cases R_eq: R = 1
-      . simp [R_eq]
-      . grind
-  . intros
-    simp only [δ_f, deriv_sq]
-    sorry
+  --       sorry
+  --     .
+  --       rw [Finset.image_subset_iff]
+  --       intro a ha
+  --       simp at ha
+  --       simp [B_r, dist, WordDist_one] at hx hz
+  --       simp [B_r, dist, WordDist_one]
+  --       grw [word_norm_mul_le]
+  --       simp
+  --       grw [hz]
+  --       grw [gamma_i_norm_le]
+  --       grw [ha]
+  --       grw [word_norm_mul_le]
+  --       rw [← word_norm_inv]
+  --       simp
+  --       grw [hz, hx]
+  --       ring
+  --       grind
+  --     .
+  --       intros
+  --       simp [δ_f, deriv_sq]
+  --       positivity
+  -- . intro a ha
+  --   simp [B_r] at ha
+  --   simp [B_r]
+  --   grw [ha]
+  --   rw [← mul_sub_one]
+  --   -- TODO - this should be much simpler
+  --   by_cases R_sub_eq: 1 < R
+  --   .
+  --     rw [le_mul_iff_one_le_left]
+  --     . simp
+  --     . simp
+  --       grind
+  --   .
+  --     simp at R_sub_eq
+  --     by_cases R_eq: R = 1
+  --     . simp [R_eq]
+  --     . grind
+  -- . intros
+  --   simp only [δ_f, deriv_sq]
+  --   sorry
   --   rw [Finset.sum_product]
   --   simp_rw [← Finset.mul_sum]
   --   grw [Finset.sum_le_sum (h := gamma_sum)]
@@ -1836,75 +1862,75 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
     -- rw [Finset.comp_def (g := fun x => y⁻¹ * x)]
     -- rw [← Function.comp_def]
 
-  rw [← Function.comp_def]
-  grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (2*R - 2))]
-  .
+  -- rw [← Function.comp_def]
+  -- grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (2*R - 2))]
+  -- .
 
-    grw [Finset.sum_le_sum (g := fun z => ∑ x ∈ B_r (R - 1), ∑ x_1 ∈ Finset.range (WordNorm (z)), δ_f (x * γ (z) x_1))]
-    .
-      grw [Finset.sum_le_sum (h := gamma_sum)]
+  --   grw [Finset.sum_le_sum (g := fun z => ∑ x ∈ B_r (R - 1), ∑ x_1 ∈ Finset.range (WordNorm (z)), δ_f (x * γ (z) x_1))]
+  --   .
+  --     grw [Finset.sum_le_sum (h := gamma_sum)]
 
-      sorry
-    .
-      intro z hz
+  --     sorry
+  --   .
+  --     intro z hz
 
-      sorry
-  . simp [B_r]
-    apply Metric.closedBall_subset_closedBall
-    rw [Nat.cast_sub (by grind)]
-    push_cast
-    rw [← mul_sub_one]
-    apply le_mul_of_one_le_left
-    . simp
-      grind
-    . simp
-  . intro q hp _
-    simp [δ_f, deriv_sq]
-    positivity
-
-
-  grw [Finset.sum_le_sum (g := fun (a: G × G) => ∑ z ∈ B_r (2 * R - 2), ∑ x ∈ B_r (R - 1), ∑ i ∈ Finset.range (WordNorm z), δ_f (x * γ z i))]
-  .
+  --     sorry
+  -- . simp [B_r]
+  --   apply Metric.closedBall_subset_closedBall
+  --   rw [Nat.cast_sub (by grind)]
+  --   push_cast
+  --   rw [← mul_sub_one]
+  --   apply le_mul_of_one_le_left
+  --   . simp
+  --     grind
+  --   . simp
+  -- . intro q hp _
+  --   simp [δ_f, deriv_sq]
+  --   positivity
 
 
-    grw [Finset.sum_le_card_nsmul]
+  -- grw [Finset.sum_le_sum (g := fun (a: G × G) => ∑ z ∈ B_r (2 * R - 2), ∑ x ∈ B_r (R - 1), ∑ i ∈ Finset.range (WordNorm z), δ_f (x * γ z i))]
+  -- .
 
-    grw [Finset.sum_le_sum (h := fun a ha => gamma_sum a.1 sorry)]
-    grw [gamma_sum]
-    sorry
-  .
-    intro p hp
-    rw [Finset.sum_comm]
-    rw [← Finset.sum_product']
-    have bar := Finset.single_le_sum (f := fun (p: G × G) => ∑ i ∈ Finset.range (WordNorm p.2), δ_f (p.1 * γ p.2 i)) (s := (B_r ↑(R - 1)).toFinset ×ˢ (B_r ↑(2*R - 2)).toFinset) (a := (p.2, p.2⁻¹ * p.1))
-    simp only [] at bar
-    grw [bar]
-    .
-      intro i hi
-      apply Finset.sum_nonneg
-      intro k hk
-      simp [δ_f, deriv_sq]
-      positivity
-    .
-      simp
-      simp at hp
-      refine ⟨?_, ?_⟩
-      . rw [Nat.cast_sub (by grind)]
-        grind
-      .
-        simp [dist, WordDist_one]
-        grw [word_norm_mul_le]
-        rw [← word_norm_inv]
-        simp [dist, WordDist_one] at hp
-        have R_sub_eq: (R: ℝ) - 1 = ↑(R - 1) := by
-          rw [Nat.cast_sub (by grind)]
-          simp
-        rw [R_sub_eq] at hp
-        norm_cast at hp
-        grw [hp.1, hp.2]
-        ring
-        rw [Nat.sub_mul]
-        norm_num
+
+  --   grw [Finset.sum_le_card_nsmul]
+
+  --   grw [Finset.sum_le_sum (h := fun a ha => gamma_sum a.1 sorry)]
+  --   grw [gamma_sum]
+  --   sorry
+  -- .
+  --   intro p hp
+  --   rw [Finset.sum_comm]
+  --   rw [← Finset.sum_product']
+  --   have bar := Finset.single_le_sum (f := fun (p: G × G) => ∑ i ∈ Finset.range (WordNorm p.2), δ_f (p.1 * γ p.2 i)) (s := (B_r ↑(R - 1)).toFinset ×ˢ (B_r ↑(2*R - 2)).toFinset) (a := (p.2, p.2⁻¹ * p.1))
+  --   simp only [] at bar
+  --   grw [bar]
+  --   .
+  --     intro i hi
+  --     apply Finset.sum_nonneg
+  --     intro k hk
+  --     simp [δ_f, deriv_sq]
+  --     positivity
+  --   .
+  --     simp
+  --     simp at hp
+  --     refine ⟨?_, ?_⟩
+  --     . rw [Nat.cast_sub (by grind)]
+  --       grind
+  --     .
+  --       simp [dist, WordDist_one]
+  --       grw [word_norm_mul_le]
+  --       rw [← word_norm_inv]
+  --       simp [dist, WordDist_one] at hp
+  --       have R_sub_eq: (R: ℝ) - 1 = ↑(R - 1) := by
+  --         rw [Nat.cast_sub (by grind)]
+  --         simp
+  --       rw [R_sub_eq] at hp
+  --       norm_cast at hp
+  --       grw [hp.1, hp.2]
+  --       ring
+  --       rw [Nat.sub_mul]
+  --       norm_num
 
   --   have bar := Finset.single_le_sum (f := fun (p: G × G) => ∑ i ∈ Finset.range (WordNorm x.2), δ_f (p.2 * γ x.2 i))
   --   apply Finset.single_le_sum
