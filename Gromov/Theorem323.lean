@@ -2187,23 +2187,23 @@ lemma card_B_r_eq (R: ℕ): #(B_r R) = #(S ^ R) := by
   rw [← card_closed_ball_eq]
   simp [B_r]
 
-lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_c_r j (R - 1)), |f x - (f_avg_c j (R - 1) f)|^2 ≤
-    16 * R^2 * #S * (Real.exp (a data.d)) * (#(B_r (2 * R - 2))) / #(B_r (R - 1)) * ∑ x ∈ (B_c_r j (3 * R)), deriv_sq f x := by
+lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (f: G → ℝ): ∑ x ∈ (B_c_r j (R_1 data - 1)), |f x - (f_avg_c j (R_1 data - 1) f)|^2 ≤
+    16 * (R_1 data)^2 * #S * (Real.exp (a data.d)) * (#(B_r (2 * R_1 data - 2))) / #(B_r (R_1 data - 1)) * ∑ x ∈ (B_c_r j (3 * R_1 data)), deriv_sq f x := by
 
-  by_cases R_pos: R = 0
-  . simp [R_pos, B_c_r]
+  have R_1_pos: 0 < R_1 data := by
+    simp [R_1]
 
 
   -- `deriv_sq` is invariant under right translation, and `B_c_r j r` is the right translate
   -- `B_r r * j`, so the left-handed Poincaré inequality is the one that transfers here.
-  have poincare := poincare_inequality_left R (f ∘ (fun g => g * j.val))
+  have poincare := poincare_inequality_left (R_1 data) (f ∘ (fun g => g * j.val))
 
   simp at poincare
-  rw [← Finset.sum_image (f := fun x => ((f (x)) - f_avg (↑R - 1) (f ∘ fun g ↦ g * j)) ^ 2) (by simp)] at poincare
+  rw [← Finset.sum_image (f := fun x => ((f (x)) - f_avg (↑(R_1 data) - 1) (f ∘ fun g ↦ g * j)) ^ 2) (by simp)] at poincare
   conv at poincare =>
     lhs
     arg 1
-    equals B_c_r j (R - 1) =>
+    equals B_c_r j ((R_1 data) - 1) =>
       rw [B_c_r_eq_smul]
       rw [← Finset.image_smul]
       simp
@@ -2215,7 +2215,7 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (R: ℕ) (f: G 
     intro x
     arg 1
     rhs
-    equals f_avg_c j (R - 1) f =>
+    equals f_avg_c j ((R_1 data) - 1) f =>
       simp [f_avg_c, f_avg]
       rw [B_c_r_eq_smul]
       rw [← Finset.image_smul]
@@ -2230,8 +2230,8 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (R: ℕ) (f: G 
   grw [poincare]
   clear poincare
 
-  have vol_frac_le: #(B_r (2 * ↑R - 2)) / ↑(#(B_r (↑R - 1))) ≤ Real.exp (a data.d) := by
-    by_cases R_one: R = 1
+  have vol_frac_le: #(B_r (2 * ↑(R_1 data) - 2)) / ↑(#(B_r (↑(R_1 data) - 1))) ≤ Real.exp (a data.d) := by
+    by_cases R_one: (R_1 data) = 1
     . simp [B_r, R_one]
       simp [a]
       norm_cast
@@ -2242,13 +2242,13 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (R: ℕ) (f: G 
     rw [← Real.log_le_iff_le_exp]
     . rw [Real.log_div]
       .
-        have sub_eq: 2 * (R: ℝ) - 2 = ↑(2*R - 2) := by
+        have sub_eq: 2 * (R_1 data: ℝ) - 2 = ↑(2*(R_1 data) - 2) := by
           rw [Nat.cast_sub]
           .
             simp
           . grind
 
-        have sub_one_eq: (R: ℝ) - 1 = ↑(R - 1) := by
+        have sub_one_eq: (R_1 data: ℝ) - 1 = ↑(R_1 data - 1) := by
           rw [Nat.cast_sub]
           . simp
           . grind
@@ -2266,11 +2266,36 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (R: ℕ) (f: G 
         . simp
           grind
         . simp
-          sorry
-        . sorry
-      . sorry
-      . sorry
-    . sorry
+          have h_i_1 := (GoodScales data).i_1_ge
+          simp [i₀, R'] at h_i_1
+          simp [R_1]
+          ring
+          grind
+        .
+          simp [R_1]
+          norm_num
+          ring
+          grind
+      . simp only [B_r, Set.toFinite_toFinset, ne_eq, Nat.cast_eq_zero]
+        apply Finset.card_ne_zero_of_mem (a := 1)
+        simp [R_1]
+        norm_cast
+      . simp only [B_r, Set.toFinite_toFinset, ne_eq, Nat.cast_eq_zero]
+        apply Finset.card_ne_zero_of_mem (a := 1)
+        simp [R_1]
+        norm_cast
+    . apply mul_pos
+      . simp only [B_r, Set.toFinite_toFinset]
+        norm_cast
+        rw [Finset.card_pos]
+        use 1
+        simp [R_1]
+        norm_cast
+      .
+        simp [-Set.toFinset_card]
+        use 1
+        simp [B_r, R_1]
+        norm_cast
   .
     rw [mul_div_assoc]
     grw [vol_frac_le]
@@ -2279,7 +2304,7 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (R: ℕ) (f: G 
       conv =>
         lhs
         rhs
-        equals  ∑ x ∈ B_c_r j (3 * ↑R), deriv_sq f x =>
+        equals  ∑ x ∈ B_c_r j (3 * ↑(R_1 data)), deriv_sq f x =>
           --simp [deriv_sq]
 
           --simp_rw [← Finset.sum_comp]
@@ -2304,7 +2329,7 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (R: ℕ) (f: G 
             simp
             apply Metric.closedBall_subset_closedBall
             simp
-            by_cases R_one: R = 1
+            by_cases R_one: R_1 data = 1
             . simp [R_one]
             .
               sorry
