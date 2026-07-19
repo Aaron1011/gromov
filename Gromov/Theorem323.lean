@@ -975,7 +975,7 @@ lemma X_j_finite (data: GoodScalesData): (X_j data).Finite := by
   simp [X_j]
   apply Metric.maximalSeparatedSet_subset
 
-lemma B_half_injective_on (data: GoodScalesData): Set.InjOn (fun a => Metric.closedBall a (R_1 data / 2)) (X_j data) := by
+lemma B_ball_injective_on (data: GoodScalesData) (R: ℝ) (R_pos: 0 ≤ R) (hR: R ≤ R_1 data): Set.InjOn (fun a => Metric.closedBall a (R)) (X_j data) := by
   intro a ha b hb hab
   by_contra!
   simp at hab
@@ -984,7 +984,7 @@ lemma B_half_injective_on (data: GoodScalesData): Set.InjOn (fun a => Metric.clo
   have sep := Metric.isSeparated_maximalSeparatedSet (ε := (R_1 data)) (A := (Metric.closedBall (1 : G) ↑(R_2 data)))
   specialize sep ha hb this
 
-  have b_mem: b ∈ Metric.closedBall a ((R_1 data / 2)) := by
+  have b_mem: b ∈ Metric.closedBall a ((R)) := by
     rw [hab]
     simp
     grind
@@ -996,6 +996,7 @@ lemma B_half_injective_on (data: GoodScalesData): Set.InjOn (fun a => Metric.clo
   norm_cast at b_mem
   rify at sep
   grw [b_mem] at sep
+  norm_cast at sep
   grind
 
 lemma B_covers_R2 (data: GoodScalesData): Metric.closedBall 1 (R_2 data) ⊆ ⋃₀ (B data) := by
@@ -1024,6 +1025,8 @@ lemma B_covers_R2 (data: GoodScalesData): Metric.closedBall 1 (R_2 data) ⊆ ⋃
       by_contra!
       specialize x_not_mem x this
       simp [R_1] at x_not_mem
+      --norm_cast at x_not_mem
+      --grind
   .
     apply Set.union_subset
     . simp [X_j]
@@ -1126,7 +1129,7 @@ lemma B_half_finite (data: GoodScalesData): (B_half data).Finite := by
   apply Set.Finite.subset ?_ (Metric.maximalSeparatedSet_subset)
   apply finite_closed_ball
 
-noncomputable def B_finsets (data: GoodScalesData): Finset (Finset G) := Finset.image ((fun a => (finite_closed_ball a (R_1 data)).toFinset)) (X_j_finite data).toFinset
+noncomputable def B_finsets (data: GoodScalesData): Finset (Finset G) := Finset.image ((fun a => (finite_closed_ball a (R_1 data )).toFinset)) (X_j_finite data).toFinset
 
 
 -- TODO - combine this with 'B_half'
@@ -1240,7 +1243,7 @@ lemma inter_mult_helper (data: GoodScalesData): InterMult (B_3 data) * #(S ^ ((R
 
               rw [← a_eq, ← b_eq]
               simp [a_center, b_center] at inter_eq
-              apply B_half_injective_on at inter_eq
+              apply B_ball_injective_on data (R_1 data / 2) (by grind) (by simp [R_1]) at inter_eq
               .
                 simp [inter_eq]
               . grind
@@ -1423,7 +1426,7 @@ lemma card_B_le_exp_wa (data: GoodScalesData): #(B_finite data).toFinset < Real.
         lhs
         simp [B_half_finsets]
         rw [Finset.card_image_iff.mpr (by
-          have foo := B_half_injective_on data
+          have foo := B_ball_injective_on data (R_1 data / 2) (by grind) (by simp [R_1])
           conv =>
             rhs
             equals (X_j data) =>
@@ -2193,8 +2196,8 @@ lemma card_B_r_eq (R: ℕ): #(B_r R) = #(S ^ R) := by
   rw [← card_closed_ball_eq]
   simp [B_r]
 
-lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (f: G → ℝ): ∑ x ∈ (B_c_r j (R_1 data - 1)), |f x - (f_avg_c j (R_1 data - 1) f)|^2 ≤
-    16 * (R_1 data)^2 * #S * (Real.exp (a data.d)) * ∑ x ∈ (B_c_r j (3 * R_1 data)), deriv_sq f x := by
+lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (f: G → ℝ): ∑ x ∈ (B_c_r j (R_1 data )), |f x - (f_avg_c j (R_1 data ) f)|^2 ≤
+    16 * (R_1 data + 1)^2 * #S * (Real.exp (a data.d)) * ∑ x ∈ (B_c_r j (3 * (R_1 data + 1))), deriv_sq f x := by
 
   have R_1_pos: 0 < R_1 data := by
     simp [R_1]
@@ -2202,14 +2205,14 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (f: G → ℝ):
 
   -- `deriv_sq` is invariant under right translation, and `B_c_r j r` is the right translate
   -- `B_r r * j`, so the left-handed Poincaré inequality is the one that transfers here.
-  have poincare := poincare_inequality_left (R_1 data) (f ∘ (fun g => g * j.val))
+  have poincare := poincare_inequality_left (R_1 data + 1) (f ∘ (fun g => g * j.val))
 
   simp at poincare
-  rw [← Finset.sum_image (f := fun x => ((f (x)) - f_avg (↑(R_1 data) - 1) (f ∘ fun g ↦ g * j)) ^ 2) (by simp)] at poincare
+  rw [← Finset.sum_image (f := fun x => ((f (x)) - f_avg (↑(R_1 data)) (f ∘ fun g ↦ g * j)) ^ 2) (by simp)] at poincare
   conv at poincare =>
     lhs
     arg 1
-    equals B_c_r j ((R_1 data) - 1) =>
+    equals B_c_r j ((R_1 data) ) =>
       rw [B_c_r_eq_smul]
       rw [← Finset.image_smul]
       simp
@@ -2221,7 +2224,7 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (f: G → ℝ):
     intro x
     arg 1
     rhs
-    equals f_avg_c j ((R_1 data) - 1) f =>
+    equals f_avg_c j ((R_1 data) ) f =>
       simp [f_avg_c, f_avg]
       rw [B_c_r_eq_smul]
       rw [← Finset.image_smul]
@@ -2236,12 +2239,13 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (f: G → ℝ):
   grw [poincare]
   clear poincare
 
-  have vol_frac_le: #(B_r (2 * ↑(R_1 data) - 2)) / ↑(#(B_r (↑(R_1 data) - 1))) ≤ Real.exp (a data.d) := by
-    by_cases R_one: (R_1 data) = 1
-    . simp [B_r, R_one]
-      simp [a]
-      norm_cast
-      positivity
+  have vol_frac_le: ↑(#(B_r (2 * (↑(R_1 data) + 1) - 2))) / ↑(#(B_r ↑(R_1 data))) ≤ Real.exp (a data.d) := by
+    -- by_cases R_one: (R_1 data) = 1
+    -- . simp [B_r, R_one]
+    --   simp [a]
+    --   norm_cast
+
+    --   positivity
 
 
 
@@ -2260,8 +2264,17 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (f: G → ℝ):
           . grind
 
 
-        rw [sub_eq, sub_one_eq,card_B_r_eq]
-
+        --rw [sub_eq, sub_one_eq,card_B_r_eq]
+        rw [card_B_r_eq]
+        conv =>
+          lhs
+          arg 1
+          arg 1
+          arg 1
+          arg 1
+          arg 1
+          equals ↑(2 * ((R_1 data) + 1) - 2) =>
+            simp
         rw [card_B_r_eq]
         grw [log_card_pow_sub_le (k := (GoodScales data).i_1 + 1) (j := (GoodScales data).i_1)]
         .
@@ -2279,48 +2292,51 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (f: G → ℝ):
           grind
         .
           simp [R_1]
-          norm_num
-          ring
-          grind
+          -- norm_num
+          -- ring
+          -- grind
       . simp only [B_r, Set.toFinite_toFinset, ne_eq, Nat.cast_eq_zero]
         apply Finset.card_ne_zero_of_mem (a := 1)
         simp [R_1]
-        norm_cast
+        --norm_cast
       . simp only [B_r, Set.toFinite_toFinset, ne_eq, Nat.cast_eq_zero]
         apply Finset.card_ne_zero_of_mem (a := 1)
         simp [R_1]
-        norm_cast
+        --norm_cast
     . apply mul_pos
       . simp only [B_r, Set.toFinite_toFinset]
         norm_cast
         rw [Finset.card_pos]
         use 1
         simp [R_1]
-        norm_cast
+        --norm_cast
       .
         simp [-Set.toFinset_card]
         use 1
         simp [B_r, R_1]
-        norm_cast
+        --norm_cast
   .
     rw [mul_div_assoc]
+    norm_num
     grw [vol_frac_le]
     . simp
 
       conv =>
         lhs
         rhs
-        equals  ∑ x ∈ B_c_r j (3 * ↑(R_1 data)), deriv_sq f x =>
+        equals  ∑ x ∈ B_c_r j (3 * ↑(R_1 data + 1)), deriv_sq f x =>
           --simp [deriv_sq]
 
           --simp_rw [← Finset.sum_comp]
           rw [B_c_r_eq_smul]
           rw [← Finset.image_smul]
           rw [Finset.sum_image (by simp)]
+          norm_cast
           apply congrArg
           ext x
           simp [deriv_sq]
           group
+      simp
     . simp [deriv_sq]
       positivity
 
@@ -2344,22 +2360,301 @@ noncomputable def phi (data: GoodScalesData): V →ₗ[ℝ] EuclideanSpace ℝ (
     ring
 }
 
-def C: ℝ := sorry
+def C: ℝ := 32 * (#S)
 
-lemma lemma_3_26_a (data: GoodScalesData) (u: V): Q_R (R_2 data) u u ≤ C * (#(S^(R_1 data))) * ‖(phi data u)‖^2 + C * (Real.exp (2 * (a data.d))) * (R_1 data)^2 * (∑ x ∈ B_r (2 * R_2 data), deriv_sq u x)  := by
+lemma lemma_3_26_a (data: GoodScalesData) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(S^(R_1 data ))) * ‖(phi data u)‖^2 + C * (Real.exp ((a data.d))) * Real.exp (↑data.w * a data.d) * (R_1 data + 1)^2 * (∑ x ∈ B_r (2 * R_2 data), deriv_sq u x)  := by
 
   rw [Q_R]
   let a := ⋃₀ (B data)
   grw [Finset.sum_le_sum_of_subset_of_nonneg (t := (B_finsets data).biUnion id)]
-  . sorry
+  .
+    rw [Finset.sum_biUnion]
+    .
+      have u_bound (x: G) (j: B_finsets data): (u.val x)^2 ≤ 2 * ((u.val x - (phi data u).ofLp j)^2 + ((phi data u).ofLp j)^2) := by
+        calc
+          _ = |u.val x - ((phi data u).ofLp j) + (phi data u).ofLp j|^2 := by
+            simp
+          _ ≤ (|u.val x - (phi data u).ofLp j| + |(phi data u).ofLp j|)^2 := by
+            grw [abs_add_le]
+          _ = _ := by
+            rw [add_sq]
+          _ ≤ _ := by
+            grw [two_mul_le_add_sq]
+            simp [sq_abs]
+            grind
+
+      rw [← Finset.sum_finset_coe]
+      simp_rw [← pow_two]
+      simp
+      grw [Finset.sum_le_sum (g := fun (j: B_finsets data) => ∑ x ∈ j, 2 * ((u.val x - (phi data u).ofLp j)^2 + ((phi data u).ofLp j)^2))]
+      .
+
+        simp_rw [← Finset.mul_sum]
+        simp_rw [Finset.sum_add_distrib]
+        simp
+        have card_j_eq (j: B_finsets data): #j.val = #(S^(R_1 data)) := by
+          have hj := j.prop
+          simp only [B_finsets] at hj
+          simp [-SetLike.coe_mem] at hj
+          obtain ⟨x, hx, x_eq⟩ := hj
+          rw [← x_eq]
+          have foo := B_c_r_eq_smul x (R_1 data )
+          simp [B_c_r] at foo
+          rw [foo]
+          simp
+          -- conv =>
+          --   lhs
+          --   arg 1
+          --   arg 1
+          --   equals ↑((R_1 data) ) =>
+          --     rw [Nat.cast_sub]
+          --     .
+          --       simp [R_1]
+          --     . simp [R_1]
+          --       grind
+
+          rw [card_B_r_eq]
+
+        simp [card_j_eq]
+        simp_rw [← Finset.mul_sum]
+        conv =>
+          lhs
+          rhs
+          rhs
+          rhs
+          rw [← Finset.univ_eq_attach]
+          rw [← EuclideanSpace.real_norm_sq_eq]
+
+
+        -- The summand only depends on `↑j`, so we can drop the `.attach` and only then
+        -- unfold `B_finsets` into a `Finset.image` and push the function call inwards.
+        have phi_eq (j : B_finsets data) :
+            ((phi data) u).ofLp j = (#(j : Finset G) : ℝ)⁻¹ * ∑ x ∈ (j : Finset G), (u : G → ℝ) x :=
+          rfl
+        simp_rw [phi_eq]
+        have attach_eq := Finset.sum_attach (B_finsets data)
+          (fun j => ∑ x ∈ j, ((u : G → ℝ) x - (#j : ℝ)⁻¹ * ∑ y ∈ j, (u : G → ℝ) y) ^ 2)
+        beta_reduce at attach_eq
+        simp only [show (↑u : LipschitzH).toFun = ⇑(↑u : LipschitzH) from rfl, attach_eq]
+        simp only [B_finsets]
+        rw [Finset.sum_image]
+        .
+          rw [mul_add]
+
+
+          rw [add_comm]
+          apply add_le_add
+          .
+            ring
+            simp
+
+
+          .
+
+            conv =>
+              lhs
+              rhs
+              arg 2
+              intro x
+              equals ∑ x_1 ∈ B_c_r x (R_1 data ), (u.val.toFun x_1 - (f_avg_c x (R_1 data ) u.val.toFun)) ^ 2 =>
+                apply Finset.sum_congr
+                . simp [B_c_r]
+                . intro y hy
+                  simp [f_avg_c, B_c_r, -Set.toFinset_card]
+                  conv =>
+                    lhs
+                    lhs
+                    pattern #(Metric.closedBall x (↑(R_1 data) )).toFinset
+                    equals #(B_c_r x (R_1 data)) =>
+                      simp [B_c_r]
+                  rw [B_c_r_eq_smul]
+                  simp [B_r]
+
+            conv =>
+              lhs
+              rhs
+              arg 2
+              intro x
+              arg 2
+              intro y
+              rw [← sq_abs]
+            rw [← Finset.sum_finset_coe]
+            simp only [SetLike.coe_sort_coe, Finset.univ_eq_attach]
+            grw [Finset.sum_le_sum (h := fun (a : {x // x ∈ (X_j_finite data).toFinset}) _ =>
+              lemma_3_25_poincare data ⟨a.val, (X_j_finite data).mem_toFinset.mp a.prop⟩
+                (f := u.val.toFun))]
+
+
+            simp_rw [← Finset.mul_sum]
+            grw [Finset.sum_le_sum (g := fun (i: (X_j_finite data).toFinset) => ∑ x ∈ B_r (2 * (R_2 data)), deriv_sq (u.val).toFun x)]
+            .
+
+              have b_card := card_B_le_exp_wa data
+              rw [← Set.ncard_eq_toFinset_card (hs := by apply B_finite)] at b_card
+              simp [B] at b_card
+              simp
+              rw [← Set.ncard_eq_toFinset_card (hs := by apply X_j_finite)]
+
+              rw [(Set.ncard_image_iff (by apply X_j_finite)).mpr] at b_card
+              . grw [b_card]
+                .
+                  simp [C]
+                  field_simp
+                  norm_num
+                  norm_cast
+                  simp
+                  rw [mul_comm 32]
+                  apply le_refl
+                . simp [deriv_sq]
+                  positivity
+              . apply B_ball_injective_on
+                . simp
+                . simp
+            . intro i hi
+              apply Finset.sum_le_sum_of_subset_of_nonneg
+              .
+                simp [-Finset.mem_attach] at hi
+                have i_prop := i.prop
+                simp [-SetLike.coe_mem, X_j] at i_prop
+                intro p hp
+                simp [B_r]
+                grw [dist_triangle _ i.val]
+                simp [B_c_r] at hp
+                grw [hp]
+                have i_mem := Metric.maximalSeparatedSet_subset i_prop
+                simp at i_mem
+                grw [i_mem]
+                rw [two_mul]
+                apply add_le_add
+                . simp [R_1, R_2]
+                  sorry
+                . simp
+                -- simp [B_r, dist, WordDist_one]
+                -- simp [B_c_r, dist, WordDist] at hp
+
+
+                -- sorry
+              . intros
+                simp [deriv_sq]
+                positivity
+
+            -- simp_rw [B_c_r_eq_smul]
+            -- simp_rw [← Finset.image_smul]
+            -- conv =>
+            --   lhs
+            --   rhs
+            --   rhs
+            --   arg 2
+            --   intro j
+            --   rw [Finset.sum_image (by simp)]
+
+
+            rw [← Finset.sum_product']
+            rw [Finset.sum_comp]
+            grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (2 * R_2 data))]
+            .
+              clear a
+              grw [Finset.sum_le_sum (g := fun i => (Real.exp (a data.d)) * deriv_sq (u.val).toFun i)]
+              . simp_rw [← Finset.mul_sum]
+                simp [C]
+                field_simp
+                norm_num
+                norm_cast
+                rw [← Real.exp_nat_mul]
+                simp
+                rw [mul_comm 32]
+                apply le_refl
+              .
+                intro x hx
+                have mult_le := log_inter_mult_b3 data
+                simp
+                apply mul_le_mul
+                .
+                  simp [InterMult, InterMult_f, B_3] at mult_le
+                  sorry
+
+                . simp
+                . simp [deriv_sq]
+                  positivity
+                . positivity
+            .
+              rw [Finset.image_subset_iff]
+              intro x hx
+              simp at hx
+              simp [B_r, dist, WordDist_one]
+              simp [B_r] at hx
+              grw [word_norm_mul_le]
+              simp [dist, WordDist_one] at hx
+              simp
+              grw [hx]
+              have x_prop := x.1.prop
+              simp [-SetLike.coe_mem] at x_prop
+              simp [X_j] at x_prop
+              have x_mem := Metric.maximalSeparatedSet_subset x_prop
+              simp [dist, WordDist_one] at x_mem
+              grw [x_mem]
+              rw [two_mul]
+              apply add_le_add
+              .
+                simp [R_1, R_2]
+                have i_sub := (GoodScales data).i_diff_mem
+                simp at i_sub
+                have i_2_gt: (GoodScales data).i_1 < (GoodScales data).i_2 := by
+                  grind
+
+                rw [mul_add]
+                norm_cast
+                norm_num
+
+                sorry
+              . simp
+            --  ∑ x ∈ B_c_r (↑i) (↑(R_1 data) - 1), |(↑u).toFun x - f_avg_c (↑i) (↑(R_1 data) - 1) (↑u).toFun| ^ 2
+            -- ∑ i ∈ ⋯.toFinset.attach, ∑ y ∈ B_c_r (↑i) (↑(R_1 data) - 1), |(↑u).toFun y - f_avg_c (↑i) (↑(R_1 data) - 1) (↑u).toFun| ^ 2
+            simp
+            intros
+            simp [deriv_sq]
+            positivity
+        .
+          simp
+          have foo := B_ball_injective_on data (R_1 data ) (by simp [R_1]) (by simp)
+          intro a ha b hb hab
+          specialize foo ha hb (by
+            simp
+            simp at hab
+            exact hab
+          )
+          exact foo
+
+
+
+        -- rw [Finset.sum_attach]
+        -- simp [Finset.sum_image]
+        -- grw [Finset.sum_le_sum]
+
+
+
+      . intro j hj
+        apply Finset.sum_le_sum
+        intro x hx
+        apply u_bound
+
+
+
+    .
+      -- TODO - this is false. We need simething like sum_biUnion_le above
+      sorry
   .
     have cover := B_covers_R2 data
     simp
     intro a ha
+    specialize cover ha
     simp [B_finsets]
+    simp [B] at cover
 
-
-  sorry
+    exact cover
+  . intros
+    rw [← pow_two]
+    positivity
 
 
 end V_Wrapper_Section
