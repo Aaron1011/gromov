@@ -1915,14 +1915,24 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
         simp
         grind
     grw [double_ball_sum]
-    norm_cast
+    .
+      norm_cast
 
 
-    have four_le: (4: ℝ) ≤ 16 := by
+      have four_le: (4: ℝ) ≤ 8 := by
+        grind
+      grw [four_le]
+      simp [deriv_sq]
+      ring
+      simp
+      simp [deriv_sq]
+      positivity
+    . simp
       grind
-    grw [four_le]
-    simp [deriv_sq]
-    positivity
+    . intro g
+      simp [deriv_sq]
+      positivity
+
   . intro a ha
     rw [Finset.sum_comp (g := fun y => a⁻¹ * y) (f := fun x => ∑ x_1 ∈ Finset.range (WordNorm (x)), δ_f (a * γ (x) x_1))]
     grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (2*R - 2))]
@@ -2154,6 +2164,8 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
   --grw [f_sub_le]
 
   --sorry
+
+#print axioms poincare_inequality
 
 end V_Wrapper_Section
 
