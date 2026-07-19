@@ -2332,7 +2332,18 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (f: G → ℝ):
             by_cases R_one: R_1 data = 1
             . simp [R_one]
             .
-              sorry
+              conv =>
+                rhs
+                equals ↑(2* (R_1 data) - 1) =>
+                  rw [Nat.cast_sub]
+                  simp
+                  grind
+                  simp [R_1]
+                  norm_cast
+                  grind
+
+              norm_cast
+              grind
 
           norm_cast
           rw [Finset.card_pos]
