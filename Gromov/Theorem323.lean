@@ -1407,8 +1407,64 @@ lemma three_term_cs (a b: ℝ) (n: Type*) {s: Finset n} (f: n → ℝ): a + (∑
 
 noncomputable def B_r (r: ℝ) := (finite_closed_ball 1 r).toFinset
 
-lemma double_ball_sum (R: ℕ) (f: G → ℝ): ∑ x ∈ B_r (↑(R - 1)), ∑ y ∈ (Metric.closedBall x 1), f y = ∑ x ∈ B_r R, f x := by
-  sorry
+
+
+lemma double_ball_sum (R: ℕ) (hR: 0 < R) (f: G → ℝ) (hf: ∀ g, 0 ≤ f g): ∑ x ∈ B_r (↑(R - 1)), ∑ y ∈ (Metric.closedBall x 1), f y ≤ #(B_r (R)) * ∑ x ∈ B_r R, f x := by
+  classical
+  rw [← Finset.sum_finset_product' (r := {p ∈ (B_r R) ×ˢ (B_r R) | p.1 ∈ B_r ↑(R - 1) ∧ p.2 ∈ Metric.closedBall p.1 1})]
+  .
+    grw [Finset.sum_le_sum_of_subset_of_nonneg (t := (B_r R) ×ˢ (B_r R))]
+    .
+      rw [Finset.sum_product]
+      simp
+    . simp
+    . intros
+      grind
+  . intro p
+    simp
+    intro hp p_dist
+    refine ⟨?_, ?_⟩
+    . simp [B_r]
+      simp [B_r] at hp
+      rw [Nat.cast_sub] at hp
+      . grind
+      . grind
+    .
+      simp [B_r]
+      grw [dist_triangle _ p.1]
+      grw [p_dist]
+      simp [dist, WordDist_one]
+      simp [B_r, dist, WordDist_one] at hp
+      grw [hp]
+      rw [Nat.cast_sub]
+      . simp
+      . grind
+
+
+
+  -- induction R with
+  -- | zero =>
+  --   sorry
+  -- | succ n ih =>
+  --   simp
+
+  -- rw [← Finset.sum_finset_product' (r := {1} ×ˢ B_r R)]
+  -- .
+  --   simp
+  -- . intro p
+  --   simp
+  --   refine ⟨?_, ?_⟩
+  --   . intro hp
+  --     obtain ⟨a, a_mem, ha⟩ := hp
+  --     rw [Prod.ext_iff] at ha
+  --     rw [← ha.1]
+  --     simp
+  --     refine ⟨?_, ?_⟩
+  --     . simp [B_r]
+  --     . rw [← ha.2]
+  --       simp
+
+  --   . sorry
 
 set_option maxHeartbeats 3500000 in
 lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x - (f_avg (R - 1) f)|^2 ≤
@@ -1725,7 +1781,7 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
         rw [Nat.cast_sub]
         simp
         grind
-    rw [double_ball_sum]
+    grw [double_ball_sum]
     norm_cast
 
 
