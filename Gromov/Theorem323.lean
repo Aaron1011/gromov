@@ -2137,7 +2137,7 @@ lemma card_B_r_eq (R: ℕ): #(B_r R) = #(S ^ R) := by
   simp [B_r]
 
 lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_c_r j (R - 1)), |f x - (f_avg_c j (R - 1) f)|^2 ≤
-    16 * R^2 * #S * (Real.exp (a data.d)) * (#(B_r (2 * R - 2))) / #(B_r (R - 1)) * ∑ x ∈ (B_c_r j (3 * R)), (∑ s ∈ S, (f (s * x) - f x) ^ 2) := by
+    16 * R^2 * #S * (Real.exp (a data.d)) * (#(B_r (2 * R - 2))) / #(B_r (R - 1)) * ∑ x ∈ (B_c_r j (3 * R)), deriv_sq f x := by
 
   by_cases R_pos: R = 0
   . simp [R_pos, B_c_r]
@@ -2226,7 +2226,7 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (R: ℕ) (f: G 
       conv =>
         lhs
         rhs
-        equals  ∑ x ∈ B_c_r j (3 * ↑R), ∑ s ∈ S, (f (x * s) - f x) ^ 2 =>
+        equals  ∑ x ∈ B_c_r j (3 * ↑R), deriv_sq f x =>
           --simp [deriv_sq]
 
           --simp_rw [← Finset.sum_comp]
