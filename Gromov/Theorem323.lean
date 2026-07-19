@@ -1407,38 +1407,192 @@ lemma three_term_cs (a b: ℝ) (n: Type*) {s: Finset n} (f: n → ℝ): a + (∑
 
 noncomputable def B_r (r: ℝ) := (finite_closed_ball 1 r).toFinset
 
-
-
-lemma double_ball_sum (R: ℕ) (hR: 0 < R) (f: G → ℝ) (hf: ∀ g, 0 ≤ f g): ∑ x ∈ B_r (↑(R - 1)), ∑ y ∈ (Metric.closedBall x 1), f y ≤ #(B_r (R)) * ∑ x ∈ B_r R, f x := by
-  classical
-  rw [← Finset.sum_finset_product' (r := {p ∈ (B_r R) ×ˢ (B_r R) | p.1 ∈ B_r ↑(R - 1) ∧ p.2 ∈ Metric.closedBall p.1 1})]
+lemma ball_x_one_subset (x: G): (Metric.closedBall x 1) ⊆ ((x) • S) ∪ ((MulOpposite.op x • S))  := by
+  intro a ha
+  simp
+  simp at ha
+  rw [Set.mem_smul_set]
+  simp [dist, WordDist] at ha
+  obtain ⟨l, l_prod, l_len⟩ := word_norm_prod_self (x * a⁻¹)
+  simp [ProdS] at l_prod
+  by_cases l_len_eq: l.length = 0
   .
-    grw [Finset.sum_le_sum_of_subset_of_nonneg (t := (B_r R) ×ˢ (B_r R))]
-    .
-      rw [Finset.sum_product]
-      simp
-    . simp
-    . intros
-      grind
-  . intro p
+    have l_eq: l = [] := by grind
+    simp [l_eq] at l_prod
+    rw [eq_comm, mul_inv_eq_one] at l_prod
+    left
+    use 1
+    simp [one_mem]
+    grind
+  .
+    rw [← l_len] at ha
+    have l_len_one: l.length = 1 := by grind
+    rw [List.length_eq_one_iff] at l_len_one
+    obtain ⟨s, hs⟩ := l_len_one
+    simp [hs] at l_prod
+    right
+    use s⁻¹
     simp
-    intro hp p_dist
+    rw [eq_comm, mul_inv_eq_iff_eq_mul] at l_prod
+
+    rw [l_prod]
     refine ⟨?_, ?_⟩
-    . simp [B_r]
-      simp [B_r] at hp
-      rw [Nat.cast_sub] at hp
-      . grind
-      . grind
     .
-      simp [B_r]
-      grw [dist_triangle _ p.1]
-      grw [p_dist]
-      simp [dist, WordDist_one]
-      simp [B_r, dist, WordDist_one] at hp
-      grw [hp]
-      rw [Nat.cast_sub]
+      rw [← Finset.mem_inv']
+      rw [← S_eq_Sinv]
+      simp
+    .
+      simp [l_prod]
+
+  -- . intro ha
+  --   simp at ha
+  --   simp
+  --   cases ha
+  --   .
+  --     rename_i ha
+  --     rw [Set.mem_smul_set] at ha
+  --     obtain ⟨s, s_mem, hs⟩ := ha
+  --     rw [← hs]
+  --     rw [dist_comm]
+  --     simp [dist, WordDist]
+  --     grw [dist_word_mul_le]
+  --     .
+  --     simp [dist, WordDist]
+  --     simp
+  --     -- TODO make this a lemma in Defs.lean
+  --     have s_norm := word_norm_le s [⟨s, s_mem⟩] (by simp [ProdS])
+  --     simpa using s_norm
+
+lemma le_of_sub_eq (a b c: ℝ) (ha: a = b - c) (hc: 0 ≤ c): a ≤ b := by
+  grind
+
+lemma double_ball_sum (R: ℕ) (hR: 0 < R) (f: G → ℝ) (hf: ∀ g, 0 ≤ f g): ∑ x ∈ B_r (↑(R - 1)), ∑ y ∈ (Metric.closedBall x 1), f y ≤ R * ∑ x ∈ B_r R, f x := by
+  classical
+
+
+  grw [Finset.sum_le_sum (g := fun x =>  ∑ y ∈ ((x) • S) ∪ ((MulOpposite.op x • S)), f y)]
+  .
+    have union_sub (x: G) := Finset.sum_union_inter (f := f) (s₁ := x • S) (s₂ := (MulOpposite.op x • S))
+    simp_rw [← eq_sub_iff_add_eq] at union_sub
+    have foo (x) := le_of_sub_eq _ _ _ (union_sub x) (by
+      apply Finset.sum_nonneg
+      simp [hf]
+    )
+    grw [Finset.sum_le_sum (h := fun x hx => foo x)]
+
+    simp_rw [Finset.sum_add_distrib]
+
+    simp_rw [← Finset.image_smul]
+    conv =>
+      lhs
+      lhs
+      arg 2
+      intro x
+      rw [Finset.sum_image (by simp)]
+      --rw [Finset.sum_comp]
+
+
+
+    rw [← Finset.sum_product']
+    rw [Finset.sum_comp]
+    grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r R)]
+    .
+      have card_le (i: G) : #({a ∈ B_r ↑(R - 1) ×ˢ S | a.1 • a.2 = i}) ≤ #S := by
+        apply Finset.card_le_card_of_injOn (f := fun p => p.1⁻¹ * i)
+        . intro a ha
+          simp at ha
+          simp
+          simp [← ha.2]
+          grind
+        . intro a ha b hb hab
+          simp at hab
+          simp at ha
+          simp at hb
+          have ha_2 := ha.2
+          have hb_2 := hb.2
+          rw [Prod.ext_iff]
+          rw [← ha_2] at hb_2
+          simp [hab] at hb_2
+          grind
+
+      grw [Finset.sum_le_sum (g := fun i => #S • f i)]
+      .
+        simp
+        rw [← Finset.mul_sum]
+        sorry
+      . intro i hi
+        grw [card_le]
+        apply hf
+
+
+    . rw [Finset.image_subset_iff]
+      intro x hx
+      simp at hx
+      simp [B_r, dist, WordDist_one]
+      grw [word_norm_mul_le]
+      simp [B_r, dist, WordDist_one] at hx
+      grw [hx.1]
+      have norm_s := word_norm_le x.2 [⟨x.2, hx.2⟩] (by simp [ProdS])
+      grw [norm_s]
+      simp [hR]
+    . intros
+      simp
+      apply mul_nonneg
       . simp
-      . grind
+      . apply hf
+  . intro i hi
+    grw [Finset.sum_le_sum_of_subset_of_nonneg]
+    .
+      simp
+      apply ball_x_one_subset
+    . intros
+      apply hf
+  --   simp_rw [Finset.sum_image (s := S) (by
+  --     sorry
+  --   )]
+  --   have inner_le (y: G): ∑ x ∈ Finset.image (fun x_1 ↦ y • x_1) S, f x ≤
+  --   grw [Finset.sum_le_sum (h := fun a ha => Finset.sum_image_le_of_nonneg _ _)]
+  --   simp_rw [Finset.sum_image]
+
+  --   sorry
+  -- . intro x hx
+  --   grw [Finset.sum_le_sum_of_subset_of_nonneg]
+  --   . simp
+  --     apply ball_x_one_subset
+  --   . intros
+  --     apply hf
+
+
+
+  -- rw [← Finset.sum_finset_product' (r := {p ∈ (B_r R) ×ˢ (B_r R) | p.1 ∈ B_r ↑(R - 1) ∧ p.2 ∈ Metric.closedBall p.1 1})]
+  -- .
+
+  --   grw [Finset.sum_le_sum_of_subset_of_nonneg (t := (B_r R) ×ˢ (B_r R))]
+  --   .
+  --     rw [Finset.sum_product]
+  --     simp
+  --   . simp
+  --   . intros
+  --     grind
+  -- . intro p
+  --   simp
+  --   intro hp p_dist
+  --   refine ⟨?_, ?_⟩
+  --   . simp [B_r]
+  --     simp [B_r] at hp
+  --     rw [Nat.cast_sub] at hp
+  --     . grind
+  --     . grind
+  --   .
+  --     simp [B_r]
+  --     grw [dist_triangle _ p.1]
+  --     grw [p_dist]
+  --     simp [dist, WordDist_one]
+  --     simp [B_r, dist, WordDist_one] at hp
+  --     grw [hp]
+  --     rw [Nat.cast_sub]
+  --     . simp
+  --     . grind
 
 
 
