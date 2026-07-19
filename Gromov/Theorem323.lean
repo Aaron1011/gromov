@@ -964,14 +964,14 @@ noncomputable def R_1 (data: GoodScalesData) := 2 * 16^(GoodScales data).i_1
 noncomputable def R_2 (data: GoodScalesData) := 16^(GoodScales data).i_2
 
 -- TODO - does it matter than 'Metric.maximalSeparatedSet' uses 'R_1 < dist' instead of 'R_1 <= dist' ?
-def X_j (data: GoodScalesData) := Metric.maximalSeparatedSet (R_1 data) ((Metric.ball (1: G) (R_2 data)))
+def X_j (data: GoodScalesData) := Metric.maximalSeparatedSet (R_1 data) ((Metric.closedBall (1: G) (R_2 data)))
 -- A collection of disjoint balls that cover the ball R_2
 def B (data: GoodScalesData) := (fun a => Metric.closedBall a (R_1 data)) '' (X_j data)
 def B_half (data: GoodScalesData) := (fun a => Metric.closedBall a (R_1 data / 2)) '' (X_j data)
 def B_3 (data: GoodScalesData) := (fun a => Metric.closedBall a (3 * R_1 data)) '' (X_j data)
 
 lemma X_j_finite (data: GoodScalesData): (X_j data).Finite := by
-  apply Set.Finite.subset (finite_ball (1 : G) (R_2 data))
+  apply Set.Finite.subset (finite_closed_ball (1 : G) (R_2 data))
   simp [X_j]
   apply Metric.maximalSeparatedSet_subset
 
@@ -981,7 +981,7 @@ lemma B_half_injective_on (data: GoodScalesData): Set.InjOn (fun a => Metric.clo
   simp at hab
   simp [X_j] at ha hb
 
-  have sep := Metric.isSeparated_maximalSeparatedSet (ε := (R_1 data)) (A := (Metric.ball (1 : G) ↑(R_2 data)))
+  have sep := Metric.isSeparated_maximalSeparatedSet (ε := (R_1 data)) (A := (Metric.closedBall (1 : G) ↑(R_2 data)))
   specialize sep ha hb this
 
   have b_mem: b ∈ Metric.closedBall a ((R_1 data / 2)) := by
@@ -998,22 +998,23 @@ lemma B_half_injective_on (data: GoodScalesData): Set.InjOn (fun a => Metric.clo
   grw [b_mem] at sep
   grind
 
-lemma B_covers_R2 (data: GoodScalesData): Metric.ball 1 (R_2 data) ⊆ ⋃₀ (B data) := by
+lemma B_covers_R2 (data: GoodScalesData): Metric.closedBall 1 (R_2 data) ⊆ ⋃₀ (B data) := by
   by_contra!
   rw [Set.not_subset] at this
   obtain ⟨x, x_mem, x_not_mem⟩ := this
 
   -- Metric.maximalSeparatedSet_subset
-  have card_le := Metric.encard_le_of_isSeparated (C := (X_j data) ∪ {x}) (ε := (R_1 data)) (A := ( (Metric.ball 1 (R_2 data)))) ?_ ?_ ?_
+  have card_le := Metric.encard_le_of_isSeparated (C := (X_j data) ∪ {x}) (ε := (R_1 data)) (A := ( (Metric.closedBall 1 (R_2 data)))) ?_ ?_ ?_
   .
     simp [X_j] at card_le
     rw [Set.encard_insert_of_notMem] at card_le
     rw [Set.Finite.encard_eq_coe_toFinset_card] at card_le
     . norm_cast at card_le
+
       grind
     .
-      apply Set.Finite.subset (s := Metric.ball 1 (R_2 data))
-      . apply finite_ball
+      apply Set.Finite.subset (s := Metric.closedBall 1 (R_2 data))
+      . apply finite_closed_ball
       . apply Metric.maximalSeparatedSet_subset
     .
       simp at x_not_mem
@@ -1027,7 +1028,9 @@ lemma B_covers_R2 (data: GoodScalesData): Metric.ball 1 (R_2 data) ⊆ ⋃₀ (B
     apply Set.union_subset
     . simp [X_j]
       grw [Metric.maximalSeparatedSet_subset]
-    . simpa using x_mem
+    .
+      simp at x_mem
+      simpa using x_mem
   .
     simp
     apply Metric.IsSeparated.insert
@@ -1043,7 +1046,7 @@ lemma B_covers_R2 (data: GoodScalesData): Metric.ball 1 (R_2 data) ⊆ ⋃₀ (B
     rw [← lt_top_iff_ne_top]
     grw [Metric.packingNumber_le_encard_self]
     simp
-    apply finite_ball
+    apply finite_closed_ball
 
 lemma B_half_disjoint (data: GoodScalesData): (B_half data).PairwiseDisjoint id := by
   simp [Set.pairwiseDisjoint_iff]
@@ -1064,7 +1067,7 @@ lemma B_half_disjoint (data: GoodScalesData): (B_half data).PairwiseDisjoint id 
   obtain ⟨a_dist_x, a_dist_y⟩ := ha
 
   simp [X_j] at x_mem
-  have is_sep := Metric.isSeparated_maximalSeparatedSet (ε := ((R_1 data))) (A := Metric.ball (1: G) (R_2 data))
+  have is_sep := Metric.isSeparated_maximalSeparatedSet (ε := ((R_1 data))) (A := Metric.closedBall (1: G) (R_2 data))
 
   unfold Metric.IsSeparated Set.Pairwise at is_sep
   have x_sep := is_sep x_mem y_mem x_eq_y
@@ -1114,14 +1117,17 @@ lemma B_finite (data: GoodScalesData): (B data).Finite := by
   apply Set.Finite.image
   simp [X_j]
   apply Set.Finite.subset ?_ (Metric.maximalSeparatedSet_subset)
-  apply finite_ball
+  apply finite_closed_ball
 
 lemma B_half_finite (data: GoodScalesData): (B_half data).Finite := by
   simp [B_half]
   apply Set.Finite.image
   simp [X_j]
   apply Set.Finite.subset ?_ (Metric.maximalSeparatedSet_subset)
-  apply finite_ball
+  apply finite_closed_ball
+
+noncomputable def B_finsets (data: GoodScalesData): Finset (Finset G) := Finset.image ((fun a => (finite_closed_ball a (R_1 data)).toFinset)) (X_j_finite data).toFinset
+
 
 -- TODO - combine this with 'B_half'
 noncomputable def B_half_finsets (data: GoodScalesData): Finset (Finset G) := Finset.image ((fun a => (finite_closed_ball a (R_1 data / 2)).toFinset)) (X_j_finite data).toFinset
@@ -1131,7 +1137,7 @@ lemma B_3_finite (data: GoodScalesData): (B_3 data).Finite := by
   apply Set.Finite.image
   simp [X_j]
   apply Set.Finite.subset ?_ (Metric.maximalSeparatedSet_subset)
-  apply finite_ball
+  apply finite_closed_ball
 
 -- Suprisingly, we can prove an upper bound with 4*R_1, rather than the 8*R_1 from the paper
 lemma inter_mult_helper (data: GoodScalesData): InterMult (B_3 data) * #(S ^ ((R_1 data) / 2)) ≤ #(S ^ (4 * (R_1 data))) := by
@@ -2317,6 +2323,44 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (f: G → ℝ):
           group
     . simp [deriv_sq]
       positivity
+
+-- Estimating functions relative to cover
+
+noncomputable def J (data: GoodScalesData) := #((X_j_finite data).toFinset)
+noncomputable def phi (data: GoodScalesData): V →ₗ[ℝ] EuclideanSpace ℝ (B_finsets data) := {
+  toFun := fun u => WithLp.toLp 2 (fun (j: B_finsets data) => ((#j.val : ℝ)⁻¹) * ∑ x ∈ j.val, u.val x)
+  map_add' := by
+    intro x y
+    simp
+    simp_rw [Finset.sum_add_distrib]
+    simp_rw [mul_add]
+    ext a
+    simp
+  map_smul' := by
+    intro k V
+    ext a
+    simp
+    simp_rw [← Finset.mul_sum]
+    ring
+}
+
+def C: ℝ := sorry
+
+lemma lemma_3_26_a (data: GoodScalesData) (u: V): Q_R (R_2 data) u u ≤ C * (#(S^(R_1 data))) * ‖(phi data u)‖^2 + C * (Real.exp (2 * (a data.d))) * (R_1 data)^2 * (∑ x ∈ B_r (2 * R_2 data), deriv_sq u x)  := by
+
+  rw [Q_R]
+  let a := ⋃₀ (B data)
+  grw [Finset.sum_le_sum_of_subset_of_nonneg (t := (B_finsets data).biUnion id)]
+  . sorry
+  .
+    have cover := B_covers_R2 data
+    simp
+    intro a ha
+    simp [B_finsets]
+
+
+  sorry
+
 
 end V_Wrapper_Section
 
