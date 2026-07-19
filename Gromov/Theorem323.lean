@@ -970,6 +970,11 @@ def B (data: GoodScalesData) := (fun a => Metric.closedBall a (R_1 data)) '' (X_
 def B_half (data: GoodScalesData) := (fun a => Metric.closedBall a (R_1 data / 2)) '' (X_j data)
 def B_3 (data: GoodScalesData) := (fun a => Metric.closedBall a (3 * R_1 data)) '' (X_j data)
 
+lemma X_j_finite (data: GoodScalesData): (X_j data).Finite := by
+  apply Set.Finite.subset (finite_ball (1 : G) (R_2 data))
+  simp [X_j]
+  apply Metric.maximalSeparatedSet_subset
+
 lemma B_half_injective_on (data: GoodScalesData): Set.InjOn (fun a => Metric.closedBall a (R_1 data / 2)) (X_j data) := by
   intro a ha b hb hab
   by_contra!
@@ -1109,6 +1114,16 @@ lemma B_finite (data: GoodScalesData): (B data).Finite := by
   simp [X_j]
   apply Set.Finite.subset ?_ (Metric.maximalSeparatedSet_subset)
   apply finite_ball
+
+lemma B_half_finite (data: GoodScalesData): (B_half data).Finite := by
+  simp [B_half]
+  apply Set.Finite.image
+  simp [X_j]
+  apply Set.Finite.subset ?_ (Metric.maximalSeparatedSet_subset)
+  apply finite_ball
+
+-- TODO - combine this with 'B_half'
+noncomputable def B_half_finsets (data: GoodScalesData): Finset (Finset G) := Finset.image ((fun a => (finite_closed_ball a (R_1 data / 2)).toFinset)) (X_j_finite data).toFinset
 
 lemma B_3_finite (data: GoodScalesData): (B_3 data).Finite := by
   simp [B_3]
@@ -1271,6 +1286,7 @@ lemma inter_mult_helper (data: GoodScalesData): InterMult (B_3 data) * #(S ^ ((R
     . rw [Set.nonempty_iff_ne_empty]
       grind
 
+-- Lemma 3.25 (a)
 
 lemma log_inter_mult_b3 (data: GoodScalesData): InterMult (B_3 data) ≤ Real.exp (a data.d) := by
   by_cases mult_zero: InterMult (B_3 data) = 0
@@ -1301,6 +1317,7 @@ lemma log_inter_mult_b3 (data: GoodScalesData): InterMult (B_3 data) ≤ Real.ex
           apply Q_R_matrix_pos_def_i₀
           rw [← pow_succ]
           exact i₀_le_succ
+        -- DEDUPLICATE log_sub here
         grw [← bound]
         simp [h, f]
         rw [Real.log_mul]
@@ -1389,6 +1406,147 @@ lemma log_inter_mult_b3 (data: GoodScalesData): InterMult (B_3 data) ≤ Real.ex
 #print axioms inter_mult_helper
 #print axioms log_inter_mult_b3
 
+
+noncomputable def B_r (r: ℝ) := (finite_closed_ball 1 r).toFinset
+
+-- Lemma 3.25 (b)
+lemma card_B_le_exp_wa (data: GoodScalesData): #(B_finite data).toFinset < Real.exp (data.w * (a data.d)) := by
+  --rw [← Nat.card_eq_card_finite_toFinset]
+  have B_union := Finset.card_biUnion (s := (B_half_finsets data)) (t := id) ?_
+  .
+    simp at B_union
+    have sum_le := Finset.sum_eq_card_nsmul (f := fun (u: Finset G) => #u) (s := B_half_finsets data) (b := #(S ^ (R_1 data / 2))) ?_
+    .
+      rw [← Nat.card_eq_card_finite_toFinset]
+      simp [B]
+      grw [Set.ncard_image_le (hs := by apply X_j_finite)]
+      conv at sum_le =>
+        rhs
+        lhs
+        simp [B_half_finsets]
+        rw [Finset.card_image_iff.mpr (by
+          have disj := B_half_disjoint data
+          intro a ha b hb hab
+          simp at ha hb hab
+          unfold Set.PairwiseDisjoint Set.Pairwise at disj
+          simp [B_half] at disj
+          specialize disj a ha b hb
+          
+          sorry
+        )]
+      simp at sum_le
+      rw [eq_comm] at sum_le
+      apply le_of_eq at sum_le
+      rw [← Nat.le_div_iff_mul_le (by simp; apply Finset.Nonempty.pow; simp [S_nonempty])] at sum_le
+      conv at sum_le =>
+        lhs
+        equals (X_j data).ncard =>
+          rw [Set.ncard_eq_toFinset_card (hs := by apply X_j_finite)]
+
+      grw [sum_le]
+      rw [← B_union]
+      grw [Finset.card_le_card (t := (finite_closed_ball (1: G) ↑(2 * (R_2 data))).toFinset)]
+      .
+        rw [Nat.cast_div]
+        rw [card_closed_ball_eq]
+        .
+          rw [← Real.log_lt_iff_lt_exp]
+          .
+            apply lt_of_le_of_lt ?_  ((GoodScales data).h_diff_lt_w)
+            -- DEDUPLICATE log_sub here - destination
+            sorry
+          . sorry
+
+
+
+            -- rw [← ((GoodScales data).h_diff_lt_w)]
+            -- have other := ((GoodScales data).h_diff_lt_w)
+            -- have term_le: Real.log (↑(#(S ^ (2 * R_2 data))) / ↑(#(S ^ (R_1 data / 2))))  ≤ h ((GoodScales data).i_2 + 1) - h (GoodScales data).i_1 := by
+            --   sorry
+            -- grw [term_le]
+            -- grw [other]
+            -- rw [mul_comm]
+
+            -- --rw [mul_comm _ (a data.d)] at other
+            -- grw [← other]
+
+          -- . sorry
+          -- grw [h ((GoodScales data).i_2 + 1) - ]
+          -- have two_r_le: 2 * (R_2 data) ≤ f ((GoodScales data).i_2 + 1):= by
+          --   simp [f]
+          --   have foo := (GoodScales data).i_2_ge
+          --   simp [i₀] at foo
+          --   rw [Nat.clog_le_iff_le_pow] at foo
+          --   .
+          --     simp [R_2]
+          --     grind
+          --   . simp
+
+          -- grw [Finset.card_le_card (Finset.pow_subset_pow_right (by apply hGS.one_mem) two_r_le)]
+          -- have card_s_le_h: #(S ^ 16 ^ ((GoodScales data).i_2 + 1)) ≤ h ((GoodScales data).i_2 + 1) := by
+          --   simp [h, f]
+        . sorry
+        . sorry
+      . sorry
+      -- rw [Set.ncard_eq_toFinset_card]
+      -- conv =>
+      --   lhs
+      --   arg 1
+      --   equals  #(B_half_finsets data) =>
+      --     rw [← Nat.card_eq_card_finite_toFinset]
+      --     simp [B, B_half_finsets]
+
+      -- rw [← Nat.card_image_of_injective]
+      -- rw [← Set.Finite.encard_eq_coe_toFinset_card]
+      -- rw [← Set.ncard_eq_toFinset_card]
+      -- rw [← B_union] at sum_le
+
+    .
+      intro b hb
+      simp
+      simp [B_half_finsets] at hb
+      obtain ⟨c, c_mem, b_eq⟩ := hb
+      rw [← b_eq]
+      rw [← Set.toFinite_toFinset]
+      rw [← Nat.card_eq_card_finite_toFinset]
+      rw [ball_smul_eq_origin]
+
+      -- TODO - make the various finite/fintype/card conversion less awful
+      conv =>
+        lhs
+        equals (MulOpposite.op c • (Metric.closedBall (1: G) (↑(R_1 data) / 2))).ncard =>
+          simp
+          have b_finite := finite_closed_ball c ↑((R_1 data) / 2)
+          rw [Set.ncard_eq_toFinset_card']
+          simp
+
+
+      simp [-Metric.smul_closedBall]
+      conv =>
+        lhs
+        equals #(finite_closed_ball 1 ↑((R_1 data) / 2)).toFinset =>
+          simp
+          have b_finite := finite_closed_ball 1 ↑((R_1 data) / 2)
+          rw [Set.ncard_eq_toFinset_card']
+          simp [R_1]
+      rw [card_closed_ball_eq]
+
+
+  .
+    -- TODO - there must be a less horrendous way of dealing with Finset here
+    simp [B_half_finsets]
+    have foo := B_half_disjoint data
+    simp [B_half] at foo
+    unfold Set.PairwiseDisjoint Set.Pairwise
+    unfold Set.PairwiseDisjoint Set.Pairwise at foo
+    simp
+    simp at foo
+    intro a ha b hb hab p hp_a hp_b
+    simp at hp_a hp_b
+    specialize foo a ha b hb hab hp_a hp_b
+    simpa using foo
+
+
 noncomputable def f_avg (R: ℝ) (f : G → ℝ) := (#((finite_closed_ball 1 R).toFinset) : ℝ)⁻¹ * ∑ y ∈ (finite_closed_ball 1 R).toFinset, f y
 
 -- (#S : ℝ)⁻¹ *
@@ -1405,7 +1563,6 @@ lemma three_term_cs (a b: ℝ) (n: Type*) {s: Finset n} (f: n → ℝ): a + (∑
   simp
   grind
 
-noncomputable def B_r (r: ℝ) := (finite_closed_ball 1 r).toFinset
 
 lemma ball_x_one_subset (x: G): (Metric.closedBall x 1) ⊆ ((x) • S) ∪ ((MulOpposite.op x • S))  := by
   intro a ha
