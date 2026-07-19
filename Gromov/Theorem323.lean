@@ -1108,6 +1108,7 @@ lemma ball_smul_eq_origin (a: G) (r: ℝ): Metric.closedBall a r = (MulOpposite.
   have bar := ball_subset_smul_origin a r
   grind
 
+
 lemma B_finite (data: GoodScalesData): (B data).Finite := by
   simp [B]
   apply Set.Finite.image
@@ -1398,6 +1399,7 @@ lemma log_inter_mult_b3 (data: GoodScalesData): InterMult (B_3 data) ≤ Real.ex
 
 
 noncomputable def B_r (r: ℝ) := (finite_closed_ball 1 r).toFinset
+noncomputable def B_c_r (g: G) (r: ℝ) := (finite_closed_ball g r).toFinset
 
 -- Lemma 3.25 (b)
 lemma card_B_le_exp_wa (data: GoodScalesData): #(B_finite data).toFinset < Real.exp (data.w * (a data.d)) := by
@@ -1535,6 +1537,7 @@ lemma card_B_le_exp_wa (data: GoodScalesData): #(B_finite data).toFinset < Real.
 
 
 noncomputable def f_avg (R: ℝ) (f : G → ℝ) := (#((finite_closed_ball 1 R).toFinset) : ℝ)⁻¹ * ∑ y ∈ (finite_closed_ball 1 R).toFinset, f y
+noncomputable def f_avg_c (g: G) (R: ℝ) (f : G → ℝ) := (#((finite_closed_ball 1 R).toFinset) : ℝ)⁻¹ * ∑ y ∈ B_c_r g R, f y
 
 -- (#S : ℝ)⁻¹ *
 noncomputable def deriv_sq (f: G → ℝ) (x: G) := ∑ s ∈ S, (f (x * s) - f x)^2
@@ -1743,6 +1746,8 @@ lemma double_ball_sum (R: ℕ) (hR: 0 < R) (f: G → ℝ) (hf: ∀ g, 0 ≤ f g)
     . intros
       apply hf
 
+
+-- Theorem 3.20
 set_option maxHeartbeats 3500000 in
 lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x - (f_avg (R - 1) f)|^2 ≤
     16 * R^2 * #S * (#(B_r (2 * R - 2))) / #(B_r (R - 1)) * ∑ x ∈ (B_r (3 * R)), deriv_sq f x := by
@@ -2108,6 +2113,70 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
 
 #print axioms poincare_inequality
 
+
+-- TODO - get rid of some lemmas, since mathlib already has Metric.smul_closedBall defined
+lemma B_c_r_eq_smul (a: G) (r: ℝ): B_c_r a r = (MulOpposite.op a) • B_r r := by
+  rw [B_c_r, B_r]
+  rw [← Finset.coe_inj]
+  simp
+
+lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_c_r j (R - 1)), |f x - (f_avg_c j (R - 1) f)|^2 ≤
+    16 * R^2 * #S * (Real.exp (a data.d)) * (#(B_r (2 * R - 2))) / #(B_r (R - 1)) * ∑ x ∈ (B_c_r j (3 * R)), deriv_sq f x := by
+
+  simp_rw [B_c_r_eq_smul]
+  have poincare := poincare_inequality R f
+  rw [← Finset.image_smul]
+  rw [Finset.sum_image]
+  . sorry
+  . sorry
+
+
+  -- conv =>
+  --   lhs
+  --   arg 2
+  --   intro x
+  --   arg 1
+  --   arg 1
+  --   rhs
+  --   equals f_avg (↑R - 1) (f ∘ (fun a => a * j.val)) =>
+  --     simp [f_avg, f_avg_c]
+  --     rw [B_c_r_eq_smul]
+  --     left
+  --     rw [← Finset.image_smul]
+  --     rw [Finset.sum_image]
+  --     .
+  --       simp
+  --       rfl
+  --     . simp
+
+  -- simp only [B_r] at poincare
+  -- conv =>
+  --   lhs
+  --   arg 2
+  --   intro x
+  --   arg 1
+  --   arg 1
+  --   lhs
+  --   equals (f (x * j.val)) =>
+  --     simp
+
+  -- simp
+  -- rw [Finset.sum_comp (f := fun x => (f (x) - f_avg (↑R - 1) (f ∘ fun a ↦ a * ↑j)) ^ 2) (g := fun x => x * j.val)]
+  -- .
+  --   grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r R)]
+  --   . sorry
+  --   . rw [Finset.image_subset_iff]
+  --     intro x hx
+  --     simp [B_r] at hx
+  --     simp [B_r]
+
+  --     simp at hx
+  --   grw [Finset.sum_image_le_of_nonneg]
+  --   simp
+
+  --   grw [Finset.sum_preimage]
+  --   sorry
+  -- . simp
 end V_Wrapper_Section
 
 lemma theorem_3_23 (d: ℝ): ∃ C: ℕ, ∀ data: V_Data, (growth_bound data.V d (finite_V := data.hV) (decidable_V := data.V_decidable)) → (Module.finrank ℝ data.V) < C := by
