@@ -1425,14 +1425,16 @@ lemma card_B_le_exp_wa (data: GoodScalesData): #(B_finite data).toFinset < Real.
         lhs
         simp [B_half_finsets]
         rw [Finset.card_image_iff.mpr (by
-          have disj := B_half_disjoint data
+          have foo := B_half_injective_on data
+          conv =>
+            rhs
+            equals (X_j data) =>
+              simp
+
           intro a ha b hb hab
-          simp at ha hb hab
-          unfold Set.PairwiseDisjoint Set.Pairwise at disj
-          simp [B_half] at disj
-          specialize disj a ha b hb
-          
-          sorry
+          specialize foo ha hb
+          specialize foo (by simpa using hab)
+          exact foo
         )]
       simp at sum_le
       rw [eq_comm] at sum_le
