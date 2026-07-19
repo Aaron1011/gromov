@@ -1540,7 +1540,28 @@ noncomputable def f_avg (R: ℝ) (f : G → ℝ) := (#((finite_closed_ball 1 R).
 noncomputable def f_avg_c (g: G) (R: ℝ) (f : G → ℝ) := (#((finite_closed_ball 1 R).toFinset) : ℝ)⁻¹ * ∑ y ∈ B_c_r g R, f y
 
 -- (#S : ℝ)⁻¹ *
-noncomputable def deriv_sq (f: G → ℝ) (x: G) := ∑ s ∈ S, (f (x * s) - f x)^2
+-- The gradient-squared for the *right* Cayley graph (edges `{x, x * s}`), as in Vikman Def 2.12.
+-- This is the orientation used internally by `poincare_inequality`, whose proof translates
+-- geodesics on the left (`x * γ z i`). It is invariant under left translation, and so is NOT
+-- the orientation compatible with our right-invariant `WordDist x y = WordNorm (y * x⁻¹)`.
+noncomputable def deriv_sq_R (f: G → ℝ) (x: G) := ∑ s ∈ S, (f (x * s) - f x)^2
+
+-- The gradient-squared for the *left* Cayley graph (edges `{x, s * x}`).
+-- Note that, as with `Harmonic`, our multiplication order is swapped relative to the paper:
+-- `f (s * x)` instead of `f (x * s)`. This is what makes it agree with `MeasureTheory.convolution`
+-- (see the note above `Conv` in `Defs.lean`) and with the right-invariant `WordDist`, so that
+-- the balls `B_c_r j r = B_r r * j` are right translates and no `MulOpposite` leaks into the
+-- convolution terms. `deriv_sq` is invariant under right translation:
+-- `deriv_sq (f ∘ (· * j)) x = deriv_sq f (x * j)`, which is what Lemma 3.25 (c) needs.
+noncomputable def deriv_sq (f: G → ℝ) (x: G) := ∑ s ∈ S, (f (s * x) - f x)^2
+
+-- Reindexing `s ↦ s⁻¹` over the symmetric generating set `S` turns a right-gradient of
+-- `f ∘ (·⁻¹)` into a left-gradient of `f` at the inverted point.
+lemma deriv_sq_R_inv_comp (f: G → ℝ) (x: G):
+    deriv_sq_R (fun y => f y⁻¹) x = deriv_sq f x⁻¹ := by
+  unfold deriv_sq_R deriv_sq
+  apply Finset.sum_nbij' (i := fun s => s⁻¹) (j := fun s => s⁻¹) <;>
+    simp +contextual [hGS.has_inv, mul_inv_rev]
 
 lemma three_term_cs (a b: ℝ) (n: Type*) {s: Finset n} (f: n → ℝ): a + (∑ x ∈ s, f x) + b ≤ √(a^2 + (∑ x ∈ s, (f x)^2) + b^2) * √(2 + #(s)) := by
   conv =>
@@ -1768,13 +1789,13 @@ lemma B_c_r_eq_smul (a: G) (r: ℝ): B_c_r a r = (MulOpposite.op a) • B_r r :=
 -- Theorem 3.20
 set_option maxHeartbeats 3500000 in
 lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x - (f_avg (R - 1) f)|^2 ≤
-    16 * R^2 * #S * (#(B_r (2 * R - 2))) / #(B_r (R - 1)) * ∑ x ∈ (B_r (3 * R)), deriv_sq f x := by
+    16 * R^2 * #S * (#(B_r (2 * R - 2))) / #(B_r (R - 1)) * ∑ x ∈ (B_r (3 * R)), deriv_sq_R f x := by
 
   by_cases R_nonpos: R = 0
   .
     simp [R_nonpos, f_avg, B_r]
 
-  let δ_f (x: G) := ∑ x ∈ (finite_closed_ball x 1).toFinset, deriv_sq f x
+  let δ_f (x: G) := ∑ x ∈ (finite_closed_ball x 1).toFinset, deriv_sq_R f x
 
   have f_sub_le (x: G): |f x - f_avg (R - 1) f| ≤ √((#((B_r (R - 1))) : ℝ)⁻¹ * (∑ y ∈ (B_r (R - 1)), (f x - f y)^2)) := by
     rw [f_avg]
@@ -1876,7 +1897,7 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
         grw [hz]
         grind
       . intro p hp _
-        simp [δ_f, deriv_sq]
+        simp [δ_f, deriv_sq_R]
         positivity
     .
       intro b hb
@@ -1886,10 +1907,10 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
       .
         grw [Finset.card_image_le]
         . simp
-        . simp [δ_f, deriv_sq]
+        . simp [δ_f, deriv_sq_R]
           positivity
       .
-        simp [δ_f, deriv_sq]
+        simp [δ_f, deriv_sq_R]
         positivity
       .
         intro p hp
@@ -1972,7 +1993,7 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
     have sum_le_delta: ∑ x_1 ∈ Finset.range (WordNorm (x⁻¹ * y)), (f (x * γ (x⁻¹ * y) x_1) - f (x * γ (x⁻¹ * y) (x_1 + 1))) ^ 2 ≤ ∑ n ∈ Finset.range (WordNorm (x⁻¹ * y)), δ_f (x * (γ (x⁻¹ * y) n)) := by
       apply Finset.sum_le_sum
       intro n hn
-      simp [δ_f, deriv_sq]
+      simp [δ_f, deriv_sq_R]
       rw [← Finset.add_sum_erase (a := (x * γ (x⁻¹ * y) n))]
       .
         apply le_add_of_le_of_nonneg
@@ -2034,7 +2055,7 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
   conv at diff_le_delta_sum =>
     intro x y hx hy
     rw [Real.le_sqrt (by simp) (by
-      simp [δ_f, deriv_sq];
+      simp [δ_f, deriv_sq_R];
       positivity
     )]
   simp_rw [sq_abs] at diff_le_delta_sum
@@ -2090,15 +2111,15 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
       have four_le: (4: ℝ) ≤ 8 := by
         grind
       grw [four_le]
-      simp [deriv_sq]
+      simp [deriv_sq_R]
       ring
       simp
-      simp [deriv_sq]
+      simp [deriv_sq_R]
       positivity
     . simp
       grind
     . intro g
-      simp [deriv_sq]
+      simp [deriv_sq_R]
       positivity
 
   . intro a ha
@@ -2112,7 +2133,7 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
       intro x hx
       split_ifs
       . simp
-      . simp [δ_f, deriv_sq]
+      . simp [δ_f, deriv_sq_R]
         positivity
     .
       rw [Finset.image_subset_iff]
@@ -2126,11 +2147,41 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
       grind
     .
       intros
-      simp [δ_f, deriv_sq]
+      simp [δ_f, deriv_sq_R]
       positivity
 
 
 #print axioms poincare_inequality
+
+-- `B_r` is centred at `1`, so it is closed under inversion (`word_norm_inv`).
+lemma mem_B_r_inv (r: ℝ) (x: G): x⁻¹ ∈ B_r r ↔ x ∈ B_r r := by
+  simp [B_r, dist, WordDist_one, ← word_norm_inv]
+
+lemma sum_B_r_inv (r: ℝ) (g: G → ℝ): ∑ x ∈ B_r r, g x⁻¹ = ∑ x ∈ B_r r, g x := by
+  apply Finset.sum_nbij' (i := fun x => x⁻¹) (j := fun x => x⁻¹) <;>
+    simp +contextual [mem_B_r_inv]
+
+lemma f_avg_inv (r: ℝ) (f: G → ℝ): f_avg r (fun y => f y⁻¹) = f_avg r f := by
+  unfold f_avg
+  rw [show (finite_closed_ball (1: G) r).toFinset = B_r r from rfl, sum_B_r_inv]
+
+-- Theorem 3.20, restated for the *left* Cayley graph. Rather than mirroring the (long) proof of
+-- `poincare_inequality`, we conjugate it by the inversion `x ↦ x⁻¹`: this is a bijection of every
+-- `B_r r` (`mem_B_r_inv`) and carries `deriv_sq_R` to `deriv_sq` (`deriv_sq_R_inv_comp`).
+lemma poincare_inequality_left (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x - (f_avg (R - 1) f)|^2 ≤
+    16 * R^2 * #S * (#(B_r (2 * R - 2))) / #(B_r (R - 1)) * ∑ x ∈ (B_r (3 * R)), deriv_sq f x := by
+  have poincare := poincare_inequality R (fun y => f y⁻¹)
+  rw [f_avg_inv] at poincare
+  rw [show (∑ x ∈ B_r ((R: ℝ) - 1), |f x⁻¹ - f_avg ((R: ℝ) - 1) f| ^ 2)
+      = ∑ x ∈ B_r ((R: ℝ) - 1), |f x - f_avg ((R: ℝ) - 1) f| ^ 2 from
+    sum_B_r_inv _ (fun x => |f x - f_avg ((R: ℝ) - 1) f| ^ 2)] at poincare
+  rw [show (∑ x ∈ B_r (3 * (R: ℝ)), deriv_sq_R (fun y => f y⁻¹) x)
+      = ∑ x ∈ B_r (3 * (R: ℝ)), deriv_sq f x from by
+    rw [← sum_B_r_inv (3 * (R: ℝ)) (fun x => deriv_sq f x)]
+    exact Finset.sum_congr rfl (fun x _ => deriv_sq_R_inv_comp f x)] at poincare
+  exact poincare
+
+#print axioms poincare_inequality_left
 
 lemma card_B_r_eq (R: ℕ): #(B_r R) = #(S ^ R) := by
   rw [← card_closed_ball_eq]
@@ -2143,7 +2194,9 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (R: ℕ) (f: G 
   . simp [R_pos, B_c_r]
 
 
-  have poincare := poincare_inequality R (f ∘ (fun g => g * j.val))
+  -- `deriv_sq` is invariant under right translation, and `B_c_r j r` is the right translate
+  -- `B_r r * j`, so the left-handed Poincaré inequality is the one that transfers here.
+  have poincare := poincare_inequality_left R (f ∘ (fun g => g * j.val))
 
   simp at poincare
   rw [← Finset.sum_image (f := fun x => ((f (x)) - f_avg (↑R - 1) (f ∘ fun g ↦ g * j)) ^ 2) (by simp)] at poincare
