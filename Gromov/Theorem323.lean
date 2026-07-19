@@ -1449,7 +1449,7 @@ lemma card_B_le_exp_wa (data: GoodScalesData): #(B_finite data).toFinset < Real.
       rw [← B_union]
       grw [Finset.card_le_card (t := (finite_closed_ball (1: G) ↑(2 * (R_2 data))).toFinset)]
       .
-        rw [Nat.cast_div]
+        grw [Nat.cast_div_le]
         rw [card_closed_ball_eq]
         .
           rw [← Real.log_lt_iff_lt_exp]
@@ -1487,22 +1487,30 @@ lemma card_B_le_exp_wa (data: GoodScalesData): #(B_finite data).toFinset < Real.
           -- grw [Finset.card_le_card (Finset.pow_subset_pow_right (by apply hGS.one_mem) two_r_le)]
           -- have card_s_le_h: #(S ^ 16 ^ ((GoodScales data).i_2 + 1)) ≤ h ((GoodScales data).i_2 + 1) := by
           --   simp [h, f]
-        . sorry
-        . sorry
-      . sorry
-      -- rw [Set.ncard_eq_toFinset_card]
-      -- conv =>
-      --   lhs
-      --   arg 1
-      --   equals  #(B_half_finsets data) =>
-      --     rw [← Nat.card_eq_card_finite_toFinset]
-      --     simp [B, B_half_finsets]
-
-      -- rw [← Nat.card_image_of_injective]
-      -- rw [← Set.Finite.encard_eq_coe_toFinset_card]
-      -- rw [← Set.ncard_eq_toFinset_card]
-      -- rw [← B_union] at sum_le
-
+      .
+        intro a ha
+        simp at ha
+        obtain ⟨x, x_mem, hx⟩ := ha
+        simp [B_half_finsets] at x_mem
+        simp
+        obtain ⟨c, hc, x_eq⟩ := x_mem
+        grw [dist_triangle _ c]
+        rw [← x_eq] at hx
+        simp at hx
+        grw [hx]
+        simp [X_j] at hc
+        grw [Metric.maximalSeparatedSet_subset] at hc
+        simp at hc
+        grw [hc]
+        simp [R_1, R_2]
+        have i_1_le:  (GoodScales data).i_1 ≤  (GoodScales data).i_2 := by
+          have foo :=  (GoodScales data).i_diff_mem
+          simp at foo
+          grind
+        grw [i_1_le]
+        .
+          grind
+        . simp
     .
       intro b hb
       simp
