@@ -1286,6 +1286,64 @@ lemma inter_mult_helper (data: GoodScalesData): InterMult (B_3 data) * #(S ^ ((R
     . rw [Set.nonempty_iff_ne_empty]
       grind
 
+/-- Common step for Lemma 3.25 (a) and (b).
+
+`h i = log (#(S ^ 16 ^ i) * det (Q_{16 ^ i}) ^ (dim V)⁻¹)` splits into a log-cardinality term
+plus a determinant term. The determinant term is monotone in the scale (Proposition 3.22, via
+`Q_R_lin_sub_pos_semi_def` and `matrix_det_montone`), so it is non-negative and can be dropped,
+leaving a comparison of ball cardinalities that follows from `Finset.card_pow_mono`. -/
+lemma log_card_pow_sub_le {j k m n : ℕ} (hj : i₀ ≤ j) (hjk : j ≤ k) (hm0 : m ≠ 0)
+    (hm : m ≤ 16 ^ k) (hn : 16 ^ j ≤ n) :
+    Real.log (#(S ^ m)) - Real.log (#(S ^ n)) ≤ h k - h j := by
+  have card_pos : ∀ p : ℕ, (0:ℝ) < #(S ^ p) := by
+    intro p
+    simp
+    apply Finset.Nonempty.pow
+    exact S_nonempty
+  have i₀_le_j : ((16:ℝ) ^ i₀) ≤ ((16 ^ j : ℕ) : ℝ) := by
+    push_cast
+    exact pow_le_pow_right₀ (by norm_num) hj
+  have i₀_le_k : ((16:ℝ) ^ i₀) ≤ ((16 ^ k : ℕ) : ℝ) := by
+    push_cast
+    exact pow_le_pow_right₀ (by norm_num) (hj.trans hjk)
+  have pd_j : (Q_R_matrix V ((16 ^ j : ℕ) : ℝ)).PosDef := Q_R_matrix_pos_def_i₀ _ i₀_le_j
+  -- Proposition 3.22: the determinant is monotone in the scale, so the determinant part of
+  -- `h k - h j` is non-negative and may be discarded.
+  have det_le : (Q_R_matrix V ((16 ^ j : ℕ) : ℝ)).det ≤ (Q_R_matrix V ((16 ^ k : ℕ) : ℝ)).det := by
+    apply matrix_det_montone
+    . exact pd_j
+    . unfold Q_R_matrix
+      rw [← map_sub]
+      rw [← LinearMap.isPosSemidef_iff_posSemidef_toMatrix]
+      apply Q_R_lin_sub_pos_semi_def
+      push_cast
+      exact pow_le_pow_right₀ (by norm_num) hjk
+  have dim_nonneg : (0:ℝ) ≤ (dim V)⁻¹ := by
+    simp [dim]
+  have log_det_le :
+      Real.log ((Q_R_matrix V ((16 ^ j : ℕ) : ℝ)).det ^ (dim V)⁻¹) ≤
+        Real.log ((Q_R_matrix V ((16 ^ k : ℕ) : ℝ)).det ^ (dim V)⁻¹) :=
+    Real.log_le_log (Real.rpow_pos_of_pos pd_j.det_pos _)
+      (Real.rpow_le_rpow pd_j.det_pos.le det_le dim_nonneg)
+  have card_le :
+      Real.log ((#(S ^ m) : ℝ)) - Real.log ((#(S ^ n) : ℝ)) ≤
+        Real.log ((#(S ^ 16 ^ k) : ℝ)) - Real.log ((#(S ^ 16 ^ j) : ℝ)) := by
+    apply sub_le_sub
+    . apply Real.log_le_log (card_pos m)
+      norm_cast
+      exact Finset.card_pow_mono hm0 hm
+    . apply Real.log_le_log (card_pos (16 ^ j))
+      norm_cast
+      exact Finset.card_pow_mono (by positivity) hn
+  simp only [h, f]
+  rw [Real.log_mul, Real.log_mul]
+  . linarith
+  . exact ne_of_gt (card_pos (16 ^ j))
+  . exact ne_of_gt (Real.rpow_pos_of_pos pd_j.det_pos _)
+  . exact ne_of_gt (card_pos (16 ^ k))
+  . exact ne_of_gt (Real.rpow_pos_of_pos
+      (Q_R_matrix_pos_def_i₀ _ i₀_le_k).det_pos _)
+
 -- Lemma 3.25 (a)
 
 lemma log_inter_mult_b3 (data: GoodScalesData): InterMult (B_3 data) ≤ Real.exp (a data.d) := by
@@ -1303,81 +1361,13 @@ lemma log_inter_mult_b3 (data: GoodScalesData): InterMult (B_3 data) ≤ Real.ex
       rw [Real.log_div]
       .
         have bound := (GoodScales data).first_h_i
-        -- `Q_R` is positive definite past scale `16 ^ i₀`, and `i₀ ≤ i_1`, so its
-        -- determinant is strictly positive at every scale appearing below.
-        have i₀_le_1 : ((16:ℝ) ^ i₀) ≤ (16:ℝ) ^ (GoodScales data).i_1 :=
-          pow_le_pow_right₀ (by norm_num) (GoodScales data).i_1_ge
-        have i₀_le_succ : ((16:ℝ) ^ i₀) ≤ (16:ℝ) ^ ((GoodScales data).i_1 + 1) :=
-          pow_le_pow_right₀ (by norm_num) (le_trans (GoodScales data).i_1_ge (Nat.le_succ _))
-        have pd_1 : (Q_R_matrix V ((16:ℝ) ^ (GoodScales data).i_1)).PosDef :=
-          Q_R_matrix_pos_def_i₀ _ i₀_le_1
-        have pd_succ : (Q_R_matrix V ((16:ℝ) ^ ((GoodScales data).i_1 + 1))).PosDef :=
-          Q_R_matrix_pos_def_i₀ _ i₀_le_succ
-        have pd_mul : (Q_R_matrix V ((16:ℝ) ^ (GoodScales data).i_1 * 16)).PosDef := by
-          apply Q_R_matrix_pos_def_i₀
-          rw [← pow_succ]
-          exact i₀_le_succ
-        -- DEDUPLICATE log_sub here
         grw [← bound]
-        simp [h, f]
-        rw [Real.log_mul]
-        .
-          rw [Real.log_mul]
-          .
-            ring_nf
-            rw [sub_right_comm]
-            rw [add_sub_assoc]
-            rw [← Real.log_div]
-            grw [← Real.log_nonneg (x := _ / _)]
-            .
-              simp
-              rw [← sub_le_iff_le_add]
-              apply sub_le_sub
-              . apply Real.log_le_log
-                . simp
-                  apply Finset.Nonempty.pow
-                  apply S_nonempty
-                . simp
-                  apply Finset.card_pow_mono
-                  . simp [R_1]
-                  .
-                    simp [R_1]
-                    grind
-              . apply Real.log_le_log
-                . simp
-                  apply Finset.Nonempty.pow
-                  simp [S_nonempty]
-                . simp [R_1]
-            .
-              rw [one_le_div₀]
-              .
-                rw [Real.rpow_le_rpow_iff]
-                apply matrix_det_montone
-                . apply Q_R_matrix_pos_def_i₀
-                  have foo := (GoodScales data).i_1_ge
-                  apply pow_le_pow_right₀
-                  . simp
-                  . exact foo
-                . -- `Q_{16^(i_1+1)} - Q_{16^i_1}` is PSD: this is Proposition 3.22.
-                  unfold Q_R_matrix
-                  rw [← map_sub]
-                  rw [← LinearMap.isPosSemidef_iff_posSemidef_toMatrix]
-                  apply Q_R_lin_sub_pos_semi_def
-                  nlinarith [pow_pos (by norm_num : (0:ℝ) < 16) (GoodScales data).i_1]
-                .
-                  exact pd_1.det_pos.le
-                . exact pd_mul.det_pos.le
-                . simp [dim]
-                  exact Module.finrank_pos
-              . exact Real.rpow_pos_of_pos pd_1.det_pos _
-            . exact ne_of_gt (Real.rpow_pos_of_pos pd_mul.det_pos _)
-            . exact ne_of_gt (Real.rpow_pos_of_pos pd_1.det_pos _)
-          . simp
-            grind [S_nonempty]
-          . exact ne_of_gt (Real.rpow_pos_of_pos pd_1.det_pos _)
-        . simp
-          grind [S_nonempty]
-        . exact ne_of_gt (Real.rpow_pos_of_pos pd_succ.det_pos _)
+        apply log_card_pow_sub_le (GoodScales data).i_1_ge (Nat.le_succ _)
+        . simp [R_1]
+        . rw [pow_succ]
+          simp [R_1]
+          omega
+        . simp [R_1]
       . norm_cast
         rw [Finset.card_eq_zero]
         rw [← ne_eq, ← Finset.nonempty_iff_ne_empty]
@@ -1455,8 +1445,17 @@ lemma card_B_le_exp_wa (data: GoodScalesData): #(B_finite data).toFinset < Real.
           rw [← Real.log_lt_iff_lt_exp]
           .
             apply lt_of_le_of_lt ?_  ((GoodScales data).h_diff_lt_w)
-            -- DEDUPLICATE log_sub here - destination
-            sorry
+            rw [Real.log_div (by simp; grind [S_nonempty]) (by simp; grind [S_nonempty])]
+            apply log_card_pow_sub_le (GoodScales data).i_1_ge
+            . -- `i_2 - i_1 > w ≥ 0` forces `i_1 < i_2`
+              have hdiff := (GoodScales data).i_diff_mem
+              simp [Set.mem_Ioo] at hdiff
+              omega
+            . simp [R_2]
+            . rw [pow_succ]
+              simp [R_2]
+              omega
+            . simp [R_1]
           .
             apply div_pos
             . simp
