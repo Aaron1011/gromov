@@ -1466,7 +1466,7 @@ lemma ball_x_one_subset (x: G): (Metric.closedBall x 1) ⊆ ((x) • S) ∪ ((Mu
 lemma le_of_sub_eq (a b c: ℝ) (ha: a = b - c) (hc: 0 ≤ c): a ≤ b := by
   grind
 
-lemma double_ball_sum (R: ℕ) (hR: 0 < R) (f: G → ℝ) (hf: ∀ g, 0 ≤ f g): ∑ x ∈ B_r (↑(R - 1)), ∑ y ∈ (Metric.closedBall x 1), f y ≤ R * ∑ x ∈ B_r R, f x := by
+lemma double_ball_sum (R: ℕ) (hR: 0 < R) (f: G → ℝ) (hf: ∀ g, 0 ≤ f g): ∑ x ∈ B_r (↑(R - 1)), ∑ y ∈ (Metric.closedBall x 1), f y ≤ 2 * #S * ∑ x ∈ B_r R, f x := by
   classical
 
 
@@ -1480,46 +1480,97 @@ lemma double_ball_sum (R: ℕ) (hR: 0 < R) (f: G → ℝ) (hf: ∀ g, 0 ≤ f g)
     )
     grw [Finset.sum_le_sum (h := fun x hx => foo x)]
 
-    simp_rw [Finset.sum_add_distrib]
 
     simp_rw [← Finset.image_smul]
     conv =>
       lhs
-      lhs
       arg 2
       intro x
       rw [Finset.sum_image (by simp)]
-      --rw [Finset.sum_comp]
+      rw [Finset.sum_image (by simp)]
 
+    have card_le (i: G) : #({a ∈ B_r ↑(R - 1) ×ˢ S | a.1 • a.2 = i}) ≤ #S := by
+      apply Finset.card_le_card_of_injOn (f := fun p => p.1⁻¹ * i)
+      . intro a ha
+        simp at ha
+        simp
+        simp [← ha.2]
+        grind
+      . intro a ha b hb hab
+        simp at hab
+        simp at ha
+        simp at hb
+        have ha_2 := ha.2
+        have hb_2 := hb.2
+        rw [Prod.ext_iff]
+        rw [← ha_2] at hb_2
+        simp [hab] at hb_2
+        grind
 
+    have card_le_rev (i: G) : #({a ∈ B_r ↑(R - 1) ×ˢ S | a.2 * a.1 = i}) ≤ #S := by
+      apply Finset.card_le_card_of_injOn (f := fun p => i * p.1⁻¹)
+      . intro a ha
+        simp at ha
+        simp
+        simp [← ha.2]
+        grind
+      . intro a ha b hb hab
+        simp at hab
+        simp at ha
+        simp at hb
+        have ha_2 := ha.2
+        have hb_2 := hb.2
+        rw [Prod.ext_iff]
+        rw [← ha_2] at hb_2
+        simp [hab] at hb_2
+        grind
 
+    simp_rw [Finset.sum_add_distrib]
     rw [← Finset.sum_product']
-    rw [Finset.sum_comp]
+    rw [← Finset.sum_product']
+    simp_rw [Finset.sum_comp]
     grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r R)]
     .
-      have card_le (i: G) : #({a ∈ B_r ↑(R - 1) ×ˢ S | a.1 • a.2 = i}) ≤ #S := by
-        apply Finset.card_le_card_of_injOn (f := fun p => p.1⁻¹ * i)
-        . intro a ha
-          simp at ha
-          simp
-          simp [← ha.2]
-          grind
-        . intro a ha b hb hab
-          simp at hab
-          simp at ha
-          simp at hb
-          have ha_2 := ha.2
-          have hb_2 := hb.2
-          rw [Prod.ext_iff]
-          rw [← ha_2] at hb_2
-          simp [hab] at hb_2
-          grind
-
       grw [Finset.sum_le_sum (g := fun i => #S • f i)]
       .
         simp
         rw [← Finset.mul_sum]
-        sorry
+        rw [add_comm]
+        grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r R)]
+        .
+          grw [Finset.sum_le_sum (g := fun i => #S • f i)]
+          .
+            simp
+            rw [← Finset.mul_sum]
+            rw [← mul_add]
+            grind
+          .
+            intro i hi
+            simp
+            simp at card_le_rev
+            -- TODO - why doesn't grw work here
+            apply mul_le_mul
+            . simp
+              apply card_le_rev
+            . simp
+            . apply hf
+            . simp
+        .
+          rw [Finset.image_subset_iff]
+          intro x hx
+          simp at hx
+          simp [B_r, dist, WordDist_one]
+          grw [word_norm_mul_le]
+          simp [B_r, dist, WordDist_one] at hx
+          grw [hx.1]
+          have norm_s := word_norm_le x.2 [⟨x.2, hx.2⟩] (by simp [ProdS])
+          grw [norm_s]
+          simp [hR]
+          grind
+        . intros
+          apply mul_nonneg
+          . simp
+          . apply hf
       . intro i hi
         grw [card_le]
         apply hf
@@ -1547,82 +1598,10 @@ lemma double_ball_sum (R: ℕ) (hR: 0 < R) (f: G → ℝ) (hf: ∀ g, 0 ≤ f g)
       apply ball_x_one_subset
     . intros
       apply hf
-  --   simp_rw [Finset.sum_image (s := S) (by
-  --     sorry
-  --   )]
-  --   have inner_le (y: G): ∑ x ∈ Finset.image (fun x_1 ↦ y • x_1) S, f x ≤
-  --   grw [Finset.sum_le_sum (h := fun a ha => Finset.sum_image_le_of_nonneg _ _)]
-  --   simp_rw [Finset.sum_image]
-
-  --   sorry
-  -- . intro x hx
-  --   grw [Finset.sum_le_sum_of_subset_of_nonneg]
-  --   . simp
-  --     apply ball_x_one_subset
-  --   . intros
-  --     apply hf
-
-
-
-  -- rw [← Finset.sum_finset_product' (r := {p ∈ (B_r R) ×ˢ (B_r R) | p.1 ∈ B_r ↑(R - 1) ∧ p.2 ∈ Metric.closedBall p.1 1})]
-  -- .
-
-  --   grw [Finset.sum_le_sum_of_subset_of_nonneg (t := (B_r R) ×ˢ (B_r R))]
-  --   .
-  --     rw [Finset.sum_product]
-  --     simp
-  --   . simp
-  --   . intros
-  --     grind
-  -- . intro p
-  --   simp
-  --   intro hp p_dist
-  --   refine ⟨?_, ?_⟩
-  --   . simp [B_r]
-  --     simp [B_r] at hp
-  --     rw [Nat.cast_sub] at hp
-  --     . grind
-  --     . grind
-  --   .
-  --     simp [B_r]
-  --     grw [dist_triangle _ p.1]
-  --     grw [p_dist]
-  --     simp [dist, WordDist_one]
-  --     simp [B_r, dist, WordDist_one] at hp
-  --     grw [hp]
-  --     rw [Nat.cast_sub]
-  --     . simp
-  --     . grind
-
-
-
-  -- induction R with
-  -- | zero =>
-  --   sorry
-  -- | succ n ih =>
-  --   simp
-
-  -- rw [← Finset.sum_finset_product' (r := {1} ×ˢ B_r R)]
-  -- .
-  --   simp
-  -- . intro p
-  --   simp
-  --   refine ⟨?_, ?_⟩
-  --   . intro hp
-  --     obtain ⟨a, a_mem, ha⟩ := hp
-  --     rw [Prod.ext_iff] at ha
-  --     rw [← ha.1]
-  --     simp
-  --     refine ⟨?_, ?_⟩
-  --     . simp [B_r]
-  --     . rw [← ha.2]
-  --       simp
-
-  --   . sorry
 
 set_option maxHeartbeats 3500000 in
 lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x - (f_avg (R - 1) f)|^2 ≤
-    16 * R^2 * (#(B_r (2 * R - 2))) / #(B_r (R - 1)) * ∑ x ∈ (B_r (3 * R)), deriv_sq f x := by
+    16 * R^2 * #S * (#(B_r (2 * R - 2))) / #(B_r (R - 1)) * ∑ x ∈ (B_r (3 * R)), deriv_sq f x := by
 
   by_cases R_nonpos: R = 0
   .
