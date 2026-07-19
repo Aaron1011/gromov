@@ -1457,36 +1457,14 @@ lemma card_B_le_exp_wa (data: GoodScalesData): #(B_finite data).toFinset < Real.
             apply lt_of_le_of_lt ?_  ((GoodScales data).h_diff_lt_w)
             -- DEDUPLICATE log_sub here - destination
             sorry
-          . sorry
-
-
-
-            -- rw [← ((GoodScales data).h_diff_lt_w)]
-            -- have other := ((GoodScales data).h_diff_lt_w)
-            -- have term_le: Real.log (↑(#(S ^ (2 * R_2 data))) / ↑(#(S ^ (R_1 data / 2))))  ≤ h ((GoodScales data).i_2 + 1) - h (GoodScales data).i_1 := by
-            --   sorry
-            -- grw [term_le]
-            -- grw [other]
-            -- rw [mul_comm]
-
-            -- --rw [mul_comm _ (a data.d)] at other
-            -- grw [← other]
-
-          -- . sorry
-          -- grw [h ((GoodScales data).i_2 + 1) - ]
-          -- have two_r_le: 2 * (R_2 data) ≤ f ((GoodScales data).i_2 + 1):= by
-          --   simp [f]
-          --   have foo := (GoodScales data).i_2_ge
-          --   simp [i₀] at foo
-          --   rw [Nat.clog_le_iff_le_pow] at foo
-          --   .
-          --     simp [R_2]
-          --     grind
-          --   . simp
-
-          -- grw [Finset.card_le_card (Finset.pow_subset_pow_right (by apply hGS.one_mem) two_r_le)]
-          -- have card_s_le_h: #(S ^ 16 ^ ((GoodScales data).i_2 + 1)) ≤ h ((GoodScales data).i_2 + 1) := by
-          --   simp [h, f]
+          .
+            apply div_pos
+            . simp
+              apply Finset.Nonempty.pow
+              simp [S_nonempty]
+            . simp
+              apply Finset.Nonempty.pow
+              simp [S_nonempty]
       .
         intro a ha
         simp at ha
