@@ -2362,59 +2362,6 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (f: G → ℝ):
     . simp [deriv_sq]
       positivity
 
-  -- rw [← Finset.image_smul]
-  -- rw [Finset.sum_image]
-  -- rw [Finset.sum_comp (f := fun x => |f (x) - f_avg_c (↑j) (↑R - 1) f| ^ 2)]
-  -- . sorry
-  -- . sorry
-
-
-  -- conv =>
-  --   lhs
-  --   arg 2
-  --   intro x
-  --   arg 1
-  --   arg 1
-  --   rhs
-  --   equals f_avg (↑R - 1) (f ∘ (fun a => a * j.val)) =>
-  --     simp [f_avg, f_avg_c]
-  --     rw [B_c_r_eq_smul]
-  --     left
-  --     rw [← Finset.image_smul]
-  --     rw [Finset.sum_image]
-  --     .
-  --       simp
-  --       rfl
-  --     . simp
-
-  -- simp only [B_r] at poincare
-  -- conv =>
-  --   lhs
-  --   arg 2
-  --   intro x
-  --   arg 1
-  --   arg 1
-  --   lhs
-  --   equals (f (x * j.val)) =>
-  --     simp
-
-  -- simp
-  -- rw [Finset.sum_comp (f := fun x => (f (x) - f_avg (↑R - 1) (f ∘ fun a ↦ a * ↑j)) ^ 2) (g := fun x => x * j.val)]
-  -- .
-  --   grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r R)]
-  --   . sorry
-  --   . rw [Finset.image_subset_iff]
-  --     intro x hx
-  --     simp [B_r] at hx
-  --     simp [B_r]
-
-  --     simp at hx
-  --   grw [Finset.sum_image_le_of_nonneg]
-  --   simp
-
-  --   grw [Finset.sum_preimage]
-  --   sorry
-  -- . simp
 end V_Wrapper_Section
 
 lemma theorem_3_23 (d: ℝ): ∃ C: ℕ, ∀ data: V_Data, (growth_bound data.V d (finite_V := data.hV) (decidable_V := data.V_decidable)) → (Module.finrank ℝ data.V) < C := by
