@@ -2188,7 +2188,7 @@ lemma card_B_r_eq (R: ℕ): #(B_r R) = #(S ^ R) := by
   simp [B_r]
 
 lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (f: G → ℝ): ∑ x ∈ (B_c_r j (R_1 data - 1)), |f x - (f_avg_c j (R_1 data - 1) f)|^2 ≤
-    16 * (R_1 data)^2 * #S * (Real.exp (a data.d)) * (#(B_r (2 * R_1 data - 2))) / #(B_r (R_1 data - 1)) * ∑ x ∈ (B_c_r j (3 * R_1 data)), deriv_sq f x := by
+    16 * (R_1 data)^2 * #S * (Real.exp (a data.d)) * ∑ x ∈ (B_c_r j (3 * R_1 data)), deriv_sq f x := by
 
   have R_1_pos: 0 < R_1 data := by
     simp [R_1]
@@ -2315,50 +2315,6 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (f: G → ℝ):
           ext x
           simp [deriv_sq]
           group
-
-
-      apply mul_le_mul
-      .
-        rw [mul_div_assoc]
-        rw [le_mul_iff_one_le_right]
-        . simp only [B_r, Set.toFinite_toFinset]
-          rw [one_le_div₀]
-          .
-            norm_cast
-            apply Finset.card_le_card
-            simp
-            apply Metric.closedBall_subset_closedBall
-            simp
-            by_cases R_one: R_1 data = 1
-            . simp [R_one]
-            .
-              conv =>
-                rhs
-                equals ↑(2* (R_1 data) - 1) =>
-                  rw [Nat.cast_sub]
-                  simp
-                  grind
-                  simp [R_1]
-                  norm_cast
-                  grind
-
-              norm_cast
-              grind
-
-          norm_cast
-          rw [Finset.card_pos]
-          simp
-          grind
-        .
-          have S_ne: #(S) ≠ 0 := by
-            have foo := S_nonempty
-            grind
-
-          positivity
-      . simp
-      . simp [deriv_sq]
-        positivity
-      . positivity
     . simp [deriv_sq]
       positivity
 
