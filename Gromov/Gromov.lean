@@ -1912,6 +1912,7 @@ lemma laplace_prod_harmonic (f φ : G → ℝ)  (hf: Laplace_b  f = 0) (x: G): L
   rw [← hf]
 
 
+-- Reverse poincare inequality
 -- Lemma 12.2
 lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.support.Finite):
     ∑' (x: G), ∑ s ∈ S, ((f x * φ x) - (f (s * x) * φ (s * x)))^2 ≤  ∑' (x: G), ∑ s ∈ S, (f x)^2 * (φ (s * x) - φ x)^2  := by

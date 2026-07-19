@@ -1747,6 +1747,24 @@ lemma double_ball_sum (R: ℕ) (hR: 0 < R) (f: G → ℝ) (hf: ∀ g, 0 ≤ f g)
       apply hf
 
 
+-- TODO - get rid of some lemmas, since mathlib already has Metric.smul_closedBall defined
+lemma B_c_r_eq_smul (a: G) (r: ℝ): B_c_r a r = (MulOpposite.op a) • B_r r := by
+  rw [B_c_r, B_r]
+  rw [← Finset.coe_inj]
+  simp?
+
+-- lemma B_c_r_eq_smul_normal (a: G) (r: ℝ): a • B_r r ⊆ B_c_r a r := by
+--   rw [B_c_r, B_r]
+--   intro x hx
+--   simp
+--   simp at hx
+--   rw [Finset.mem_smul_finset] at hx
+--   obtain ⟨k, k_mem, k_eq⟩ := hx
+--   rw [← k_eq]
+--   simp [dist, WordDist]
+--   rw [← Finset.coe_inj]
+--   simp
+
 -- Theorem 3.20
 set_option maxHeartbeats 3500000 in
 lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x - (f_avg (R - 1) f)|^2 ≤
@@ -1970,6 +1988,7 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
               arg 1
               arg 1
               equals x * γ (x⁻¹ * y) (n + 1) =>
+
                 rw [mul_assoc, mul_left_cancel_iff]
                 simp [γ, s]
                 -- TODO - we can probably use hn instead of this case split
@@ -2113,22 +2132,152 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
 
 #print axioms poincare_inequality
 
-
--- TODO - get rid of some lemmas, since mathlib already has Metric.smul_closedBall defined
-lemma B_c_r_eq_smul (a: G) (r: ℝ): B_c_r a r = (MulOpposite.op a) • B_r r := by
-  rw [B_c_r, B_r]
-  rw [← Finset.coe_inj]
-  simp
+lemma card_B_r_eq (R: ℕ): #(B_r R) = #(S ^ R) := by
+  rw [← card_closed_ball_eq]
+  simp [B_r]
 
 lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_c_r j (R - 1)), |f x - (f_avg_c j (R - 1) f)|^2 ≤
-    16 * R^2 * #S * (Real.exp (a data.d)) * (#(B_r (2 * R - 2))) / #(B_r (R - 1)) * ∑ x ∈ (B_c_r j (3 * R)), deriv_sq f x := by
+    16 * R^2 * #S * (Real.exp (a data.d)) * (#(B_r (2 * R - 2))) / #(B_r (R - 1)) * ∑ x ∈ (B_c_r j (3 * R)), (∑ s ∈ S, (f (s * x) - f x) ^ 2) := by
 
-  simp_rw [B_c_r_eq_smul]
-  have poincare := poincare_inequality R f
-  rw [← Finset.image_smul]
-  rw [Finset.sum_image]
-  . sorry
-  . sorry
+  by_cases R_pos: R = 0
+  . simp [R_pos, B_c_r]
+
+
+  have poincare := poincare_inequality R (f ∘ (fun g => g * j.val))
+
+  simp at poincare
+  rw [← Finset.sum_image (f := fun x => ((f (x)) - f_avg (↑R - 1) (f ∘ fun g ↦ g * j)) ^ 2) (by simp)] at poincare
+  conv at poincare =>
+    lhs
+    arg 1
+    equals B_c_r j (R - 1) =>
+      rw [B_c_r_eq_smul]
+      rw [← Finset.image_smul]
+      simp
+
+
+  conv at poincare =>
+    lhs
+    arg 2
+    intro x
+    arg 1
+    rhs
+    equals f_avg_c j (R - 1) f =>
+      simp [f_avg_c, f_avg]
+      rw [B_c_r_eq_smul]
+      rw [← Finset.image_smul]
+      rw [Finset.sum_image]
+      .
+        simp
+        left
+        simp [B_r]
+      . simp
+
+  simp_rw [sq_abs]
+  grw [poincare]
+  clear poincare
+
+  have vol_frac_le: #(B_r (2 * ↑R - 2)) / ↑(#(B_r (↑R - 1))) ≤ Real.exp (a data.d) := by
+    by_cases R_one: R = 1
+    . simp [B_r, R_one]
+      simp [a]
+      norm_cast
+      positivity
+
+
+
+    rw [← Real.log_le_iff_le_exp]
+    . rw [Real.log_div]
+      .
+        have sub_eq: 2 * (R: ℝ) - 2 = ↑(2*R - 2) := by
+          rw [Nat.cast_sub]
+          .
+            simp
+          . grind
+
+        have sub_one_eq: (R: ℝ) - 1 = ↑(R - 1) := by
+          rw [Nat.cast_sub]
+          . simp
+          . grind
+
+
+        rw [sub_eq, sub_one_eq,card_B_r_eq]
+
+        rw [card_B_r_eq]
+        grw [log_card_pow_sub_le (k := (GoodScales data).i_1 + 1) (j := (GoodScales data).i_1)]
+        .
+          grw [(GoodScales data).first_h_i]
+        .
+          apply (GoodScales data).i_1_ge
+        . simp
+        . simp
+          grind
+        . simp
+          sorry
+        . sorry
+      . sorry
+      . sorry
+    . sorry
+  .
+    rw [mul_div_assoc]
+    grw [vol_frac_le]
+    . simp
+
+      conv =>
+        lhs
+        rhs
+        equals  ∑ x ∈ B_c_r j (3 * ↑R), ∑ s ∈ S, (f (x * s) - f x) ^ 2 =>
+          --simp [deriv_sq]
+
+          --simp_rw [← Finset.sum_comp]
+          rw [B_c_r_eq_smul]
+          rw [← Finset.image_smul]
+          rw [Finset.sum_image (by simp)]
+          apply congrArg
+          ext x
+          simp [deriv_sq]
+          group
+
+
+      apply mul_le_mul
+      .
+        rw [mul_div_assoc]
+        rw [le_mul_iff_one_le_right]
+        . simp only [B_r, Set.toFinite_toFinset]
+          rw [one_le_div₀]
+          .
+            norm_cast
+            apply Finset.card_le_card
+            simp
+            apply Metric.closedBall_subset_closedBall
+            simp
+            by_cases R_one: R = 1
+            . simp [R_one]
+            .
+              sorry
+
+          norm_cast
+          rw [Finset.card_pos]
+          simp
+          grind
+        .
+          have S_ne: #(S) ≠ 0 := by
+            have foo := S_nonempty
+            grind
+
+          positivity
+      . simp
+      . simp [deriv_sq]
+        positivity
+      . positivity
+    . simp [deriv_sq]
+      positivity
+
+  -- rw [← Finset.image_smul]
+  -- rw [Finset.sum_image]
+  -- rw [Finset.sum_comp (f := fun x => |f (x) - f_avg_c (↑j) (↑R - 1) f| ^ 2)]
+  -- . sorry
+  -- . sorry
 
 
   -- conv =>
