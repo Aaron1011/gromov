@@ -2527,13 +2527,74 @@ lemma lemma_3_26_a (data: GoodScalesData) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(
                 rw [two_mul]
                 apply add_le_add
                 . simp [R_1, R_2]
-                  sorry
+                  field_simp
+                  rw [mul_add]
+                  simp
+                  ring
+
+                  have i_sub := (GoodScales data).i_diff_mem
+                  simp at i_sub
+                  have first := i_sub.1
+                  have i1_lt : (GoodScales data).i_1 < (GoodScales data).i_2 - data.w := by
+                    grind
+
+
+                  have i_1_lt_const: (GoodScales data).i_1 < (GoodScales data).i_2 - 4 := by
+                    sorry
+
+                  grw [i_1_lt_const]
+                  rw [← Real.rpow_natCast]
+                  rw [Nat.cast_sub (by grind)]
+                  rw [Real.rpow_sub]
+                  norm_num
+                  ring
+                  have three_le: (3: ℝ) < (16 ^ (GoodScales data).i_2) / 2 := by
+                    sorry
+                  nth_grw 1 [three_le]
+                  .
+                    simp
+                    field_simp
+                    norm_num
+                  . simp
+                  . simp
+
+
+
+
+
+
+                  -- grw [i1_lt]
+                  -- rw [mul_add]
+                  -- norm_num
+                  -- .
+
+
+                  --   conv =>
+                  --     pattern 16 ^ _
+                  --     rw [← Real.rpow_natCast]
+                  --     rw [Nat.cast_sub (by grind)]
+                  --     rw [sub_eq_add_neg]
+                  --     rw [Real.rpow_add (by simp)]
+
+                  --   norm_cast
+                  --   norm_num
+                  --   field_simp
+                  --   rw [mul_add]
+                  --   norm_num
+                  --   rw [← mul_assoc]
+                  --   ring
+                  --   field_simp
+                  --   rw [← pow_add]
+
+                  --   rw [Nat.pow_sub]
+                  --   rw [Real.pow]
+                  --   s orry
+                  -- . simp
                 . simp
                 -- simp [B_r, dist, WordDist_one]
                 -- simp [B_c_r, dist, WordDist] at hp
 
 
-                -- sorry
               . intros
                 simp [deriv_sq]
                 positivity
@@ -2549,71 +2610,71 @@ lemma lemma_3_26_a (data: GoodScalesData) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(
             --   rw [Finset.sum_image (by simp)]
 
 
-            rw [← Finset.sum_product']
-            rw [Finset.sum_comp]
-            grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (2 * R_2 data))]
-            .
-              clear a
-              grw [Finset.sum_le_sum (g := fun i => (Real.exp (a data.d)) * deriv_sq (u.val).toFun i)]
-              . simp_rw [← Finset.mul_sum]
-                simp [C]
-                field_simp
-                norm_num
-                norm_cast
-                rw [← Real.exp_nat_mul]
-                simp
-                rw [mul_comm 32]
-                apply le_refl
-              .
-                intro x hx
-                have mult_le := log_inter_mult_b3 data
-                simp
-                apply mul_le_mul
-                .
-                  simp [InterMult, InterMult_f, B_3] at mult_le
-                  sorry
+            -- rw [← Finset.sum_product']
+            -- rw [Finset.sum_comp]
+            -- grw [Finset.sum_le_sum_of_subset_of_nonneg (t := B_r (2 * R_2 data))]
+            -- .
+            --   clear a
+            --   grw [Finset.sum_le_sum (g := fun i => (Real.exp (a data.d)) * deriv_sq (u.val).toFun i)]
+            --   . simp_rw [← Finset.mul_sum]
+            --     simp [C]
+            --     field_simp
+            --     norm_num
+            --     norm_cast
+            --     rw [← Real.exp_nat_mul]
+            --     simp
+            --     rw [mul_comm 32]
+            --     apply le_refl
+            --   .
+            --     intro x hx
+            --     have mult_le := log_inter_mult_b3 data
+            --     simp
+            --     apply mul_le_mul
+            --     .
+            --       simp [InterMult, InterMult_f, B_3] at mult_le
+            --       s orry
 
-                . simp
-                . simp [deriv_sq]
-                  positivity
-                . positivity
-            .
-              rw [Finset.image_subset_iff]
-              intro x hx
-              simp at hx
-              simp [B_r, dist, WordDist_one]
-              simp [B_r] at hx
-              grw [word_norm_mul_le]
-              simp [dist, WordDist_one] at hx
-              simp
-              grw [hx]
-              have x_prop := x.1.prop
-              simp [-SetLike.coe_mem] at x_prop
-              simp [X_j] at x_prop
-              have x_mem := Metric.maximalSeparatedSet_subset x_prop
-              simp [dist, WordDist_one] at x_mem
-              grw [x_mem]
-              rw [two_mul]
-              apply add_le_add
-              .
-                simp [R_1, R_2]
-                have i_sub := (GoodScales data).i_diff_mem
-                simp at i_sub
-                have i_2_gt: (GoodScales data).i_1 < (GoodScales data).i_2 := by
-                  grind
+            --     . simp
+            --     . simp [deriv_sq]
+            --       positivity
+            --     . positivity
+            -- .
+            --   rw [Finset.image_subset_iff]
+            --   intro x hx
+            --   simp at hx
+            --   simp [B_r, dist, WordDist_one]
+            --   simp [B_r] at hx
+            --   grw [word_norm_mul_le]
+            --   simp [dist, WordDist_one] at hx
+            --   simp
+            --   grw [hx]
+            --   have x_prop := x.1.prop
+            --   simp [-SetLike.coe_mem] at x_prop
+            --   simp [X_j] at x_prop
+            --   have x_mem := Metric.maximalSeparatedSet_subset x_prop
+            --   simp [dist, WordDist_one] at x_mem
+            --   grw [x_mem]
+            --   rw [two_mul]
+            --   apply add_le_add
+            --   .
+            --     simp [R_1, R_2]
+            --     have i_sub := (GoodScales data).i_diff_mem
+            --     simp at i_sub
+            --     have i_2_gt: (GoodScales data).i_1 < (GoodScales data).i_2 := by
+            --       grind
 
-                rw [mul_add]
-                norm_cast
-                norm_num
+            --     rw [mul_add]
+            --     norm_cast
+            --     norm_num
 
-                sorry
-              . simp
+
+            --   . simp
             --  ∑ x ∈ B_c_r (↑i) (↑(R_1 data) - 1), |(↑u).toFun x - f_avg_c (↑i) (↑(R_1 data) - 1) (↑u).toFun| ^ 2
             -- ∑ i ∈ ⋯.toFinset.attach, ∑ y ∈ B_c_r (↑i) (↑(R_1 data) - 1), |(↑u).toFun y - f_avg_c (↑i) (↑(R_1 data) - 1) (↑u).toFun| ^ 2
-            simp
-            intros
-            simp [deriv_sq]
-            positivity
+            -- simp
+            -- intros
+            -- simp [deriv_sq]
+            -- positivity
         .
           simp
           have foo := B_ball_injective_on data (R_1 data ) (by simp [R_1]) (by simp)
