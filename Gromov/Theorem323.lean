@@ -2742,6 +2742,97 @@ lemma lemma_3_26_a (data: GoodScalesData) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(
     rw [← pow_two]
     positivity
 
+#print axioms lemma_3_26_a
+
+-- Controlled grwoth
+
+-- Lemma 3.27
+
+lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule ℝ LipschitzH, U ≤ V ∧ dim V ≤ 2 * dim U ∧ ∀ f ∈ U, Q_R (16 * (R_2 data)) f f ≤ Real.exp (2 * (a data.w)) * Q_R ((R_2 data)) f f := by
+  by_contra!
+
+  have a_gt := (GoodScales data).second_h_i
+  simp [h, f] at a_gt
+
+  rw [Real.log_mul] at a_gt
+  .
+    have log_pos_first: 0 ≤ Real.log ↑(#(S ^ 16 ^ ((GoodScales data).i_2 + 1))) := by
+      apply Real.log_nonneg
+      simp
+      apply Finset.Nonempty.pow
+      simp [S_nonempty]
+
+    have log_second: Real.log ↑(#(S ^ 16 ^ (GoodScales data).i_2)) ≤ Real.log ↑(#(S ^ 16 ^ ((GoodScales data).i_2 + 1))) := by
+      apply Real.log_le_log
+      . simp
+        apply Finset.Nonempty.pow
+        simp [S_nonempty]
+      . simp
+        apply Finset.card_le_card
+        apply Finset.pow_subset_pow_right
+        . simp [one_mem]
+        . grind
+
+    grw [← log_second] at a_gt
+    rw [Real.log_mul] at a_gt
+    .
+      simp at a_gt
+      rw [Real.log_rpow] at a_gt
+      rw [Real.log_rpow] at a_gt
+      rw [← mul_sub] at a_gt
+      rw [← Real.log_div] at a_gt
+      .
+
+        have q_r_base_pos_def := (Q_R_matrix_pos_def_i₀ (16 ^ ((GoodScales data).i_2)) (by
+          simp [i₀]
+          rw [pow_le_pow_iff_right₀]
+          . sorry
+          . simp
+        ))
+
+        let basis := q_r_base_pos_def.isHermitian.eigenvectorBasis
+
+        let q_r_16 := (Q_R_matrix V (16 ^ ((GoodScales data).i_2 + 1)))
+
+        have q_r_16_eval (i: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)): 1 ≤ ((basis i)) ⬝ᵥ (q_r_16.mulVec (basis i)) := by
+          have base_eval := Matrix.IsHermitian.mulVec_eigenvectorBasis q_r_base_pos_def.isHermitian i
+          --have r_16_eval_pos :=
+          have eval := star_dotProduct_toMatrix₂_mulVec (b := basis.toBasis) (B := Q_R_lin V (16 ^ ((GoodScales data).i_2 + 1)))
+          sorry
+
+
+        rw [pos_def.isHermitian.det_eq_prod_eigenvalues] at a_gt
+
+
+
+        rw [Q_R_matrix_pos_def]
+        sorry
+      . sorry
+      . sorry
+      . sorry
+      . sorry
+    . simp
+      have foo := S_nonempty
+      grind
+    . sorry
+
+
+    -- grw [← log_pos_first] at a_gt
+    -- rw [Real.log_mul] at a_gt
+    -- .
+    --   simp at a_gt
+    --   rw [sub_add_eq_sub_sub] at a_gt
+    --   grw [log_second] at a_gt
+
+    -- . sorry
+    -- . sorry
+  . sorry
+  . sorry
+
+
+
+
+
 
 end V_Wrapper_Section
 
