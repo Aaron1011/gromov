@@ -99,6 +99,20 @@ lemma matrix_det_montone {n: Type*} [Fintype n] [DecidableEq n] (A B: Matrix n n
   . apply hb.det_pos
 
 
+-- TODO - upstream. Mathlib only has `Finset.sum_biUnion` (which needs `PairwiseDisjoint`)
+-- and the `ENNReal` `tsum` versions.
+theorem Finset.sum_biUnion_le {κ α : Type*} [DecidableEq α] {s: Finset κ} {t: κ → Finset α}
+    {f: α → ℝ} (hf: ∀ x, 0 ≤ f x): ∑ x ∈ s.biUnion t, f x ≤ ∑ i ∈ s, ∑ x ∈ t i, f x := by
+  classical
+  induction s using Finset.induction with
+  | empty => simp
+  | insert a s ha ih =>
+    rw [Finset.biUnion_insert, Finset.sum_insert ha]
+    have hunion := Finset.sum_union_inter (s₁ := t a) (s₂ := s.biUnion t) (f := f)
+    have hnn: 0 ≤ ∑ x ∈ t a ∩ s.biUnion t, f x := Finset.sum_nonneg fun x _ => hf x
+    linarith
+
+
 namespace GeneratesNS
 open Generates
 
@@ -2372,7 +2386,7 @@ lemma lemma_3_26_a (data: GoodScalesData) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(
   let a := ⋃₀ (B data)
   grw [Finset.sum_le_sum_of_subset_of_nonneg (t := (B_finsets data).biUnion id)]
   .
-    rw [Finset.sum_biUnion]
+    grw [Finset.sum_biUnion_le (fun x => mul_self_nonneg ((↑u : LipschitzH) x))]
     .
       have u_bound (x: G) (j: B_finsets data): (u.val x)^2 ≤ 2 * ((u.val x - (phi data u).ofLp j)^2 + ((phi data u).ofLp j)^2) := by
         calc
@@ -2715,9 +2729,6 @@ lemma lemma_3_26_a (data: GoodScalesData) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(
 
 
 
-    .
-      -- TODO - this is false. We need simething like sum_biUnion_le above
-      sorry
   .
     have cover := B_covers_R2 data
     simp
