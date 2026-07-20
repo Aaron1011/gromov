@@ -834,6 +834,7 @@ structure Lemma3_24_data (d w: ℕ) where
   i_2 : ℕ
   i_1_ge: i₀ ≤ i_1
   i_2_ge: i₀ ≤ i_2
+  i_2_pos: 0 < i_2
   i_diff_mem: i_2 - i_1 ∈ Set.Ioo w (3 * w)
   h_diff_lt_w: h (i_2 + 1) - h i_1 < w * (a d)
   first_h_i: h (i_1 + 1) - h i_1 < (a d)
@@ -943,6 +944,7 @@ lemma lemma_3_24 (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_bound V d)
     i_2 := i_2
     i_1_ge := by grind
     i_2_ge := by grind
+    i_2_pos := by grind
     i_diff_mem := by grind
     h_diff_lt_w := diff_i_lt
     first_h_i := h_i_1.2
@@ -956,6 +958,7 @@ structure GoodScalesData where
   d: ℕ
   hw: 0 < w
   hd: 0 < d
+  w_gt: 4 < w
   h_growth: growth_bound V d
 
 noncomputable def GoodScales (data: GoodScalesData) := Classical.choice (lemma_3_24 data.w data.d data.hw data.hd data.h_growth)
@@ -2362,6 +2365,7 @@ noncomputable def phi (data: GoodScalesData): V →ₗ[ℝ] EuclideanSpace ℝ (
 
 def C: ℝ := 32 * (#S)
 
+set_option maxHeartbeats 2500000 in
 lemma lemma_3_26_a (data: GoodScalesData) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(S^(R_1 data ))) * ‖(phi data u)‖^2 + C * (Real.exp ((a data.d))) * Real.exp (↑data.w * a data.d) * (R_1 data + 1)^2 * (∑ x ∈ B_r (2 * R_2 data), deriv_sq u x)  := by
 
   rw [Q_R]
@@ -2538,9 +2542,9 @@ lemma lemma_3_26_a (data: GoodScalesData) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(
                   have i1_lt : (GoodScales data).i_1 < (GoodScales data).i_2 - data.w := by
                     grind
 
-
+                  have explicit_w := data.w_gt
                   have i_1_lt_const: (GoodScales data).i_1 < (GoodScales data).i_2 - 4 := by
-                    sorry
+                    grind
 
                   grw [i_1_lt_const]
                   rw [← Real.rpow_natCast]
@@ -2548,8 +2552,18 @@ lemma lemma_3_26_a (data: GoodScalesData) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(
                   rw [Real.rpow_sub]
                   norm_num
                   ring
+                  have i_2_pos := (GoodScales data).i_2_pos
+                  have i_2_ge : 1 ≤ (GoodScales data).i_2 := by grind
+
                   have three_le: (3: ℝ) < (16 ^ (GoodScales data).i_2) / 2 := by
-                    sorry
+                    field_simp
+                    norm_num
+
+                    grw [← i_2_ge]
+                    .
+                      simp
+                      norm_num
+                    . simp
                   nth_grw 1 [three_le]
                   .
                     simp
