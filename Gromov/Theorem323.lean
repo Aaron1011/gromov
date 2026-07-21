@@ -2873,12 +2873,7 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
         -- ambient LipschitzH norm on `↥V` is shadowed and `Q_R_inner` is over the
         -- same `SeminormedAddCommGroup` instance that instance search will pick.
         letI Q_R_seminorm : SeminormedAddCommGroup ↥V :=
-          InnerProductSpace.Core.toSeminormedAddCommGroup (c := Q_R_pre_inner_core) (𝕜 := ℝ)
-        letI Q_R_norm : NormedAddCommGroup ↥V :=
-          InnerProductSpace.Core.toNormedAddCommGroup (cd := {
-            Q_R_pre_inner_core with
-            definite := sorry
-          })
+          InnerProductSpace.Core.toSeminormedAddCommGroup (c := Q_R_pre_inner_core)
         letI Q_R_inner : InnerProductSpace ℝ ↥V := InnerProductSpace.ofCore Q_R_pre_inner_core
 
         have norm_eq_q_r : ∀ x : ↥V, ‖x‖ = Real.sqrt (Q_R R x x) := fun _ => rfl
@@ -2903,9 +2898,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
           apply Q_R_lin_symm
 
         let q_r_16_eigen := q_r_16_m_hermitian.eigenvectorBasis.toBasis
-        let orig_ortho := InnerProductSpace.gramSchmidtOrthonormalBasis (by sorry) v_orthogonal (𝕜 := ℝ)
-        let equiv_ortho := OrthonormalBasis.equiv q_r_16_m_hermitian.eigenvectorBasis orig_ortho (Equiv.refl _)
-        
         let eigen_basis_V := (v_orthogonal.repr.trans q_r_16_eigen.repr.symm).symm
         let norm_eigen_q_r (i: Fin (Module.finrank ℝ ↥V)) := ‖eigen_basis_V (q_r_16_eigen i)‖
 
@@ -2978,110 +2970,8 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
           .
             rw [LinearMap.isOrthoᵢ_def] at v_orthonormal_isortho
             apply v_orthonormal_isortho
-            rename_i i_ne
-            exact i_ne
+            grind
 
-        -- We deliberately use the same basis here
-        let Q_R_16_ortho := (Q_R_lin V (16 * R)).toMatrix₂ remapped_ortho remapped_ortho
-        have Q_R_16_ortho_m_hermitian: Q_R_16_ortho.IsHermitian := by
-          simp [Q_R_16_ortho]
-          apply (LinearMap.isSymm_iff_isHermitian_toMatrix _).mp
-          apply Q_R_lin_symm
-
-        have Q_R_16_ortho_diag: Q_R_16_ortho.IsDiag := by
-          intro i j hij
-          rw [LinearMap.isOrthoᵢ_def] at v_orthonormal_isortho
-          simp [Q_R_16_ortho, remapped_ortho]
-          simp [v_orthonormal, v_map_normalize_equiv, v_map_normalize, q_r_16_eigen]
-          right
-          right
-          simp [eigen_basis_V]
-
-
-          simp [eigen_basis_V]
-          simp_rw [Finsupp.linearCombination_apply, Finsupp.sum, map_sum]
-
-
-          simp [eigen_basis_V, q_r_16_eigen, q_r_16_m]
-          simp [v_orthonormal, v_map_normalize_equiv, v_map_normalize, q_r_16_eigen]
-          right
-          right
-
-          simp_rw [Finsupp.linearCombination_apply, Finsupp.sum, map_sum]
-          apply Finset.sum_eq_zero
-          intro x hx
-          rw [LinearMap.sum_apply]
-          apply Finset.sum_eq_zero
-          intro y hy
-          simp at hx
-          simp at hy
-
-
-          have eq_single: ∀ k,  q_r_16_m_hermitian.eigenvectorBasis.toBasis.repr (q_r_16_m_hermitian.eigenvectorBasis k) = Finsupp.single k 1 := by
-            intro k
-            ext a
-            simp [Finsupp.single_apply]
-            simp_rw [eq_comm (a := a)]
-
-          simp_rw [eq_single]
-          simp
-
-
-          rw [Finsupp.linearCombination_apply]
-          --simp [v_orthonormal, v_map_normalize_equiv, v_map_normalize]
-          --rw [LinearMap.map_finsupp_linearCombination]
-          --simp [Function.comp_def]
-
-          rw [Finsupp.linearCombination_apply, Finsupp.sum, map_sum]
-          simp_rw [Finsupp.linearCombination_apply, Finsupp.sum, map_sum]
-          apply Finset.sum_eq_zero
-          intro x hx
-          rw [LinearMap.sum_apply]
-          apply Finset.sum_eq_zero
-          intro y hy
-          simp at hy
-          simp [v_orthonormal, v_map_normalize_equiv, v_map_normalize, q_r_16_eigen]
-          split_ifs
-          .
-            simp [norm_eigen_q_r]
-            simp at hx
-
-
-
-          . simp [Q_R_lin, Q_R]
-          . simp [Q_R_lin, Q_R]
-          . simp [Q_R_lin, Q_R]
-
-
-          rw [LinearMap.map_smul]
-          simp
-          rw [LinearMap.map_smul]
-          rw [Finsupp.linearCombination_apply, Finsupp.sum, map_sum]
-
-
-
-          rw [Finset.sumFinset.sum_apply]
-          apply Finset.sum_eq_zero
-          intro y hy
-
-          simp [v_orthonormal, v_map_normalize_equiv, v_map_normalize]
-
-
-          --rw [LinearMap.map_finsupp_linearCombination]
-          rw [Function.comp_def]
-          conv =>
-            lhs
-            arg 1
-            arg 2
-            intro x
-            rw [LinearMap.map_finsupp_linearCombination]
-
-
-          --simp [LinearMap.map_finsupp_linearCombination]
-
-          right
-          right
-          --apply v_orthonormal_isortho
 
 
         -- have v_orthonormal_isortho : (Q_R_lin V ↑R).IsOrthoᵢ eigen_basis_V := by
