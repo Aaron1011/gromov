@@ -2967,76 +2967,42 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
             apply Q_R_pos_on_R'
             . apply Module.Basis.ne_zero
             . sorry
-
-            -- conv =>
-            --   pattern q_r_16_m_hermitian.eigenvectorBasis.toBasis.repr (q_r_16_m_hermitian.eigenvectorBasis j)
-            --   equals Finsupp.single j 1 =>
-            --     ext a
-            --     simp [Finsupp.single_apply]
-            --     nth_rw 1 [eq_comm]
-
-            --     sorry
-            -- rw [OrthonormalBasis.repr_self]
-
-
-            simp only [v_orthonormal]
-            simp only [Module.Basis.map_apply]
-            simp only [v_map_normalize_equiv]
-            simp only [ LinearEquiv.ofLinear_apply]
-            simp only [v_map_normalize]
-            simp
-            simp [Q_R_lin]
-            have q_i_nonzero: 0 < (Q_R ↑R) (v_orthogonal j) (v_orthogonal j) := by
-              apply Q_R_pos_on_R'
-              . apply Module.Basis.ne_zero
-              . simp [R, R'_]
-                sorry
-
-
-            rw [Real.sq_sqrt]
-            .
-              field_simp
-              rfl
-            . simp [Q_R]
-              simp_rw [← pow_two]
-              positivity
           .
-            simp [Q_R_lin]
             rw [LinearMap.isOrthoᵢ_def] at v_orthonormal_isortho
-            specialize v_orthonormal_isortho i j (by grind)
-            simp [Q_R_lin] at v_orthonormal_isortho
-            exact v_orthonormal_isortho
-
-
-        have v_orthonormal_isortho : (Q_R_lin V ↑R).IsOrthoᵢ eigen_basis_V := by
-          rw [LinearMap.isOrthoᵢ_def]
-          rw [LinearMap.isOrthoᵢ_def] at v_orthogonal_eval
-          intro x y hxy
-          simp only [eigen_basis_V]
-          simp [v_orthonormal]
+            apply v_orthonormal_isortho
+            grind
 
 
 
-          have new := v_orthogonal_eval
-          specialize v_orthogonal_eval x y hxy
-          simp [v_map_normalize_equiv, v_map_normalize]
-          right
-          right
-          exact v_orthogonal_eval
+        -- have v_orthonormal_isortho : (Q_R_lin V ↑R).IsOrthoᵢ eigen_basis_V := by
+        --   rw [LinearMap.isOrthoᵢ_def]
+        --   rw [LinearMap.isOrthoᵢ_def] at v_orthogonal_eval
+        --   intro x y hxy
+        --   simp only [eigen_basis_V]
+        --   simp [v_orthonormal]
 
 
-        have v_orthonormal_isortho : (Q_R_lin V ↑R).IsOrthoᵢ v_orthonormal := by
-          simp [v_orthonormal]
-          rw [LinearMap.isOrthoᵢ_def]
-          rw [LinearMap.isOrthoᵢ_def] at v_orthogonal_eval
-          intro x y hxy
-          have x_mem := x.prop
-          simp [-Subtype.coe_prop] at x_mem
-          specialize v_orthogonal_eval x y hxy
-          simp [v_map_normalize_equiv, v_map_normalize]
-          right
-          right
-          exact v_orthogonal_eval
+
+        --   have new := v_orthogonal_eval
+        --   specialize v_orthogonal_eval x y hxy
+        --   simp [v_map_normalize_equiv, v_map_normalize]
+        --   right
+        --   right
+        --   exact v_orthogonal_eval
+
+
+        -- have v_orthonormal_isortho : (Q_R_lin V ↑R).IsOrthoᵢ v_orthonormal := by
+        --   simp [v_orthonormal]
+        --   rw [LinearMap.isOrthoᵢ_def]
+        --   rw [LinearMap.isOrthoᵢ_def] at v_orthogonal_eval
+        --   intro x y hxy
+        --   have x_mem := x.prop
+        --   simp [-Subtype.coe_prop] at x_mem
+        --   specialize v_orthogonal_eval x y hxy
+        --   simp [v_map_normalize_equiv, v_map_normalize]
+        --   right
+        --   right
+        --   exact v_orthogonal_eval
 
 
         -- let Q_R_ortho := (Q_R_lin V R).toMatrix₂ v_orthonormal v_orthonormal
