@@ -2970,7 +2970,7 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
           simp [Q_R_ortho_eq_1]
 
 
-        
+
 
 
 
@@ -3004,10 +3004,11 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
             simp [remapped_Q_r, base_spectral, combined] at foo
 
             have eigen_repr: (hermitian_remap.eigenvectorBasis k) = hermitian_remap.eigenvectorBasis.repr ((hermitian_remap.eigenvectorBasis k)) := by
-              simp?
+              sorry
 
             sorry
           rw [hermitian_remap.det_eq_prod_eigenvalues]
+          sorry
 
 
 
@@ -3021,28 +3022,28 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
 
 
 
-        have foo := combined.symm (q_r_base_pos_def.isHermitian.eigenvectorBasis sorry)
+        -- have foo := combined.symm (q_r_base_pos_def.isHermitian.eigenvectorBasis sorry)
 
 
-        let base_spectral_v := (base_spectral.toBasis.map (base_spectral.repr))
-        let q_r_eigenbasis := (Q_R_lin V R).toMatrix₂ base_spectral_v base_spectral_v
+        -- let base_spectral_v := (base_spectral.toBasis.map (base_spectral.repr))
+        -- let q_r_eigenbasis := (Q_R_lin V R).toMatrix₂ base_spectral_v base_spectral_v
 
-        let basis := q_r_base_pos_def.isHermitian.eigenvectorBasis.toBasis.det
+        -- let basis := q_r_base_pos_def.isHermitian.eigenvectorBasis.toBasis.det
 
-        let q_r_16 := (Q_R_matrix V (16 ^ ((GoodScales data).i_2 + 1)))
+        -- let q_r_16 := (Q_R_matrix V (16 ^ ((GoodScales data).i_2 + 1)))
 
-        have q_r_16_eval (i: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)): 1 ≤ ((basis i)) ⬝ᵥ (q_r_16.mulVec (basis i)) := by
-          have base_eval := Matrix.IsHermitian.mulVec_eigenvectorBasis q_r_base_pos_def.isHermitian i
-          --have r_16_eval_pos :=
-          have eval := star_dotProduct_toMatrix₂_mulVec (b := basis.toBasis) (B := Q_R_lin V (16 ^ ((GoodScales data).i_2 + 1)))
-          sorry
-
-
-        rw [pos_def.isHermitian.det_eq_prod_eigenvalues] at a_gt
+        -- have q_r_16_eval (i: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)): 1 ≤ ((basis i)) ⬝ᵥ (q_r_16.mulVec (basis i)) := by
+        --   have base_eval := Matrix.IsHermitian.mulVec_eigenvectorBasis q_r_base_pos_def.isHermitian i
+        --   --have r_16_eval_pos :=
+        --   have eval := star_dotProduct_toMatrix₂_mulVec (b := basis.toBasis) (B := Q_R_lin V (16 ^ ((GoodScales data).i_2 + 1)))
+        --   sorry
 
 
+        -- rw [pos_def.isHermitian.det_eq_prod_eigenvalues] at a_gt
 
-        rw [Q_R_matrix_pos_def]
+
+
+        --rw [Q_R_matrix_pos_def]
         sorry
       . sorry
       . sorry
