@@ -3032,7 +3032,12 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
             grind
 
 
-        
+
+
+        simp [Q_R_matrix] at a_gt
+
+        -- OLD - BAD
+
         have h_Q_R_16_remapped: (Q_R_lin V (16 * ↑R)).IsOrthoᵢ ⇑remapped_ortho := by
           rw [LinearMap.isOrthoᵢ_def]
           intro i h hij
