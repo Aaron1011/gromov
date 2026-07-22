@@ -2835,6 +2835,19 @@ lemma growth_bound_basis_change (d: ℕ) {index: Type*} [Fintype index] [Decidab
     ext i j
     simp [Q_R_lin, Q_R_lin_plain]
 
+  -- The two change-of-basis determinant factors are transposes of each other, hence equal,
+  -- and their common value is nonzero since it is the determinant of an (invertible) basis-change
+  -- matrix (`(b_1.reindex equiv).toMatrix b_2`).
+  have heq_det : ((b_1.toMatrix ⇑b_2).transpose.submatrix id ⇑equiv.symm).det
+               = ((b_1.toMatrix ⇑b_2).submatrix (⇑equiv.symm) id).det := by
+    rw [← Matrix.transpose_submatrix, Matrix.det_transpose]
+  have hne_det : ((b_1.toMatrix ⇑b_2).submatrix (⇑equiv.symm) id).det ≠ 0 := by
+    rw [← Module.Basis.toMatrix_reindex]
+    have hmul : ((b_1.reindex equiv).toMatrix ⇑b_2).det
+              * (b_2.toMatrix ⇑(b_1.reindex equiv)).det = 1 := by
+      rw [← Matrix.det_mul, Module.Basis.toMatrix_mul_toMatrix_flip, Matrix.det_one]
+    exact left_ne_zero_of_mul_eq_one hmul
+
   simp_rw [conv_plain]
   conv =>
     arg 1
@@ -2845,7 +2858,7 @@ lemma growth_bound_basis_change (d: ℕ) {index: Type*} [Fintype index] [Decidab
     rw [mul_assoc]
     rw [mul_comm _ (((b_1.toMatrix ⇑b_2).submatrix (⇑equiv.symm) id).det)]
     rw [← mul_assoc]
-    rw [Real.mul_rpow (by sorry) (by
+    rw [Real.mul_rpow (by rw [heq_det]; exact mul_self_nonneg _) (by
       apply Matrix.PosSemidef.det_nonneg
       conv =>
         arg 1
@@ -2884,8 +2897,8 @@ lemma growth_bound_basis_change (d: ℕ) {index: Type*} [Fintype index] [Decidab
   apply Filter.TendstoNhdsWithinIoi.const_mul
   .
     apply Real.rpow_pos_of_pos
-
-    sorry
+    rw [heq_det]
+    exact mul_self_pos.mpr hne_det
   .
     simp_rw [LinearMap.toMatrix₂_reindex_det]
     simp_rw [conv_plain_b_1] at h_growth
