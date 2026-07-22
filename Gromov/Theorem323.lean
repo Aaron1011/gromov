@@ -3021,6 +3021,49 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
           --apply Finset.single_le_sum
 
 
+          rw [← Finset.sum_product']
+          rw [← Finset.sum_sdiff (s₁ := {x | x.1 = x.2}) (by simp)]
+          have one_eq: (1: ℝ ) = 0 + 1 := by
+            simp
+          rw [one_eq]
+          apply add_le_add
+          . sorry
+          .
+            rw [Finset.sum_congr (s₂ := { x | x.1 = x.2}) (g := fun x => ((Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp x.1) ^2 * ((Q_R_lin V (16 * ↑R)) (remapped_ortho x.1)) (remapped_ortho x.1))]
+            .
+
+              grw [← Finset.sum_le_sum (f := fun x => (Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp x.1 ^ 2)]
+              .
+                simp
+                rw [Finset.sum_finset_product_right (s := Finset.univ) (t := fun a => {a})]
+                . simp
+                  rw [← EuclideanSpace.real_norm_sq_eq]
+                  simp
+                . intro p
+                  simp
+              . intro x hx
+                apply le_mul_of_one_le_right
+                . positivity
+                .
+                  apply one_le_q_r_16_diag
+
+              -- rw [Finset.sum_product]
+              -- sorry
+              --rw [Finset.sum_product']
+            . simp
+            . intro p hp
+              simp at hp
+              simp [hp]
+              ring
+
+            -- grw [← Finset.card_nsmul_le_sum (n := 1)]
+            -- . simp
+            --   sorry
+            -- .
+            --   intro p hp
+            --   rw [Finset.sum_congr (s₂ := { x | x.1 = x.2}) ]
+
+
           simp [remapped_ortho, eigen_basis_V, q_r_16_eigen]
           simp_rw [Finset.mul_sum]
           rw [← Finset.sum_product']
