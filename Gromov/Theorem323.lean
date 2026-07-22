@@ -1031,6 +1031,9 @@ structure GoodScalesData (b : Module.Basis ι ℝ V) where
   w_gt: 4 < w
   h_growth: growth_bound b d
 
+lemma growth_bound_basis_change (d: ℕ) (b_1 b_2: Module.Basis ι ℝ V): growth_bound b_1 d = growth_bound b_2 d := by
+  sorry
+
 noncomputable def GoodScales (data: GoodScalesData b) := Classical.choice (lemma_3_24 b data.w data.d data.hw data.hd data.h_growth)
 
 noncomputable def R_1 (data: GoodScalesData b) := 2 * 16^(GoodScales data).i_1
@@ -3040,242 +3043,243 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
 
         simp [Q_R_matrix] at a_gt
+        sorry
 
         -- OLD - BAD
 
-        have h_Q_R_16_remapped: (Q_R_lin V (16 * ↑R)).IsOrthoᵢ ⇑remapped_ortho := by
-          rw [LinearMap.isOrthoᵢ_def]
-          intro i h hij
-          simp [remapped_ortho, eigen_basis_V]
+        -- have h_Q_R_16_remapped: (Q_R_lin V (16 * ↑R)).IsOrthoᵢ ⇑remapped_ortho := by
+        --   rw [LinearMap.isOrthoᵢ_def]
+        --   intro i h hij
+        --   simp [remapped_ortho, eigen_basis_V]
 
-          sorry
-
-
-        have eigen_ge_one: ∀ i, 1 ≤ Q_R_16_new_ortho_hermitian.eigenvalues i := by
-          intro i
-          rw [Matrix.IsHermitian.eigenvalues_eq]
-          rw [star_dotProduct_toMatrix₂_mulVec]
-          simp [Q_R_16_new_ortho]
-          simp_rw [Finset.mul_sum]
-          have one_le_q_r_16_diag: ∀ k, 1 ≤ (Q_R_lin V (16 * ↑R)) (remapped_ortho k) (remapped_ortho k) := by
-            intro k
-            simp [Q_R_lin, Q_R]
-            grw [← Finset.sum_le_sum_of_subset_of_nonneg (s := B_r R)]
-            .
-              have Q_r_one_app: Q_R_ortho k k = 1 := by
-                simp [Q_R_ortho_eq_1]
-
-              simp [Q_R_ortho, Q_R_lin, Q_R] at Q_r_one_app
-              simp [B_r]
-              rw [Q_r_one_app]
-
-            . simp [B_r]
-              apply Metric.closedBall_subset_closedBall
-              norm_cast
-              grind
-            . intro k hk k_not
-              rw [← pow_two]
-              positivity
-
-          --grw [← Finset.single_le_sum (a := ⟨0, by exact Module.finrank_pos⟩)]
+        --   sorry
 
 
-          --rw [← Finset.sum_attach]
-          --apply Finset.single_le_sum
+        -- have eigen_ge_one: ∀ i, 1 ≤ Q_R_16_new_ortho_hermitian.eigenvalues i := by
+        --   intro i
+        --   rw [Matrix.IsHermitian.eigenvalues_eq]
+        --   rw [star_dotProduct_toMatrix₂_mulVec]
+        --   simp [Q_R_16_new_ortho]
+        --   simp_rw [Finset.mul_sum]
+        --   have one_le_q_r_16_diag: ∀ k, 1 ≤ (Q_R_lin V (16 * ↑R)) (remapped_ortho k) (remapped_ortho k) := by
+        --     intro k
+        --     simp [Q_R_lin, Q_R]
+        --     grw [← Finset.sum_le_sum_of_subset_of_nonneg (s := B_r R)]
+        --     .
+        --       have Q_r_one_app: Q_R_ortho k k = 1 := by
+        --         simp [Q_R_ortho_eq_1]
+
+        --       simp [Q_R_ortho, Q_R_lin, Q_R] at Q_r_one_app
+        --       simp [B_r]
+        --       rw [Q_r_one_app]
+
+        --     . simp [B_r]
+        --       apply Metric.closedBall_subset_closedBall
+        --       norm_cast
+        --       grind
+        --     . intro k hk k_not
+        --       rw [← pow_two]
+        --       positivity
+
+        --   --grw [← Finset.single_le_sum (a := ⟨0, by exact Module.finrank_pos⟩)]
 
 
-          -- Q_R_16_remapped
-          --simp_rw [← LinearMap.toMatrix₂_apply]
-          rw [LinearMap.isOrthoᵢ_def] at h_Q_R_16_remapped
+        --   --rw [← Finset.sum_attach]
+        --   --apply Finset.single_le_sum
 
 
-          conv =>
-            rhs
-            arg 2
-            intro p
-            arg 2
-            intro y
-
-          --simp_rw [← Finset.mul_sum]
-
-          rw [← Finset.sum_product']
-          rw [← Finset.sum_sdiff (s₁ := {x | x.1 = x.2}) (by simp)]
-          have one_eq: (1: ℝ ) = 0 + 1 := by
-            simp
-          rw [one_eq]
-          apply add_le_add
-          .
+        --   -- Q_R_16_remapped
+        --   --simp_rw [← LinearMap.toMatrix₂_apply]
+        --   rw [LinearMap.isOrthoᵢ_def] at h_Q_R_16_remapped
 
 
+        --   conv =>
+        --     rhs
+        --     arg 2
+        --     intro p
+        --     arg 2
+        --     intro y
 
-            apply Finset.sum_nonneg
-            intro p hp
-            rw [h_Q_R_16_remapped]
-            .
-              simp
-            . simp at hp
-              grind
+        --   --simp_rw [← Finset.mul_sum]
 
-            -- --grw [← Finset.sum_le_sum_of_subset_of_nonneg]
-            -- have mul_eigen := Matrix.IsHermitian.mulVec_eigenvectorBasis (Q_R_16_new_ortho_hermitian)
-            -- simp [Q_R_16_new_ortho] at mul_eigen
-            -- simp_rw [Matrix.mulVec_eq_sum] at mul_eigen
-            -- simp at mul_eigen
-
-            -- --simp? [-Finset.sum_sdiff_eq_sub, remapped_ortho, v_orthonormal, v_map_normalize_equiv, v_map_normalize, eigen_basis_V]
-            -- --simp_rw [← LinearMap.toMatrix₂_apply]
-            -- --simp [eigen_basis_V]
-            -- conv =>
-            --   rhs
-            --   arg 2
-            --   intro x
-            --   rhs
-            --   rhs
-            --   simp [remapped_ortho, v_orthonormal, v_map_normalize_equiv, v_map_normalize, eigen_basis_V, norm_eigen_q_r]
-            --   rw [← LinearMap.toMatrix₂_apply]
+        --   rw [← Finset.sum_product']
+        --   rw [← Finset.sum_sdiff (s₁ := {x | x.1 = x.2}) (by simp)]
+        --   have one_eq: (1: ℝ ) = 0 + 1 := by
+        --     simp
+        --   rw [one_eq]
+        --   apply add_le_add
+        --   .
 
 
-            -- have transpose_eq: ((LinearMap.toMatrix₂ remapped_ortho remapped_ortho) (Q_R_lin V (16 * ↑R))).IsSymm := by
-            --   exact
-            --     Matrix.isSymm_conjTranspose_iff.mp
-            --       (congrArg Matrix.transpose Q_R_16_new_ortho_hermitian)
 
-            -- simp_rw [transpose_eq.eq] at mul_eigen
-            -- rw [Finset.sum_finset_product_right (s := Finset.univ) (t := fun p => Finset.univ \ {p})]
-            -- .
-            --   simp [-Finset.sum_sdiff_eq_sub]
+        --     apply Finset.sum_nonneg
+        --     intro p hp
+        --     rw [h_Q_R_16_remapped]
+        --     .
+        --       simp
+        --     . simp at hp
+        --       grind
 
-            --   conv =>
-            --     rhs
-            --     arg 2
-            --     intro p
-            --     arg 2
-            --     intro q
-            --     rw [← mul_assoc, mul_comm ((Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp q), mul_assoc]
+        --     -- --grw [← Finset.sum_le_sum_of_subset_of_nonneg]
+        --     -- have mul_eigen := Matrix.IsHermitian.mulVec_eigenvectorBasis (Q_R_16_new_ortho_hermitian)
+        --     -- simp [Q_R_16_new_ortho] at mul_eigen
+        --     -- simp_rw [Matrix.mulVec_eq_sum] at mul_eigen
+        --     -- simp at mul_eigen
 
-
-            --   simp_rw [← Finset.mul_sum]
-            --   simp_rw [mul_comm]
-
-            --   sorry
-            -- . intro p
-            --   simp
-
-          .
-            rw [Finset.sum_congr (s₂ := { x | x.1 = x.2}) (g := fun x => ((Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp x.1) ^2 * ((Q_R_lin V (16 * ↑R)) (remapped_ortho x.1)) (remapped_ortho x.1))]
-            .
-
-              grw [← Finset.sum_le_sum (f := fun x => (Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp x.1 ^ 2)]
-              .
-                simp
-                rw [Finset.sum_finset_product_right (s := Finset.univ) (t := fun a => {a})]
-                . simp
-                  rw [← EuclideanSpace.real_norm_sq_eq]
-                  simp
-                . intro p
-                  simp
-              . intro x hx
-                apply le_mul_of_one_le_right
-                . positivity
-                .
-                  apply one_le_q_r_16_diag
-
-              -- rw [Finset.sum_product]
-              -- sorry
-              --rw [Finset.sum_product']
-            . simp
-            . intro p hp
-              simp at hp
-              simp [hp]
-              ring
-
-            -- grw [← Finset.card_nsmul_le_sum (n := 1)]
-            -- . simp
-            --   sorry
-            -- .
-            --   intro p hp
-            --   rw [Finset.sum_congr (s₂ := { x | x.1 = x.2}) ]
+        --     -- --simp? [-Finset.sum_sdiff_eq_sub, remapped_ortho, v_orthonormal, v_map_normalize_equiv, v_map_normalize, eigen_basis_V]
+        --     -- --simp_rw [← LinearMap.toMatrix₂_apply]
+        --     -- --simp [eigen_basis_V]
+        --     -- conv =>
+        --     --   rhs
+        --     --   arg 2
+        --     --   intro x
+        --     --   rhs
+        --     --   rhs
+        --     --   simp [remapped_ortho, v_orthonormal, v_map_normalize_equiv, v_map_normalize, eigen_basis_V, norm_eigen_q_r]
+        --     --   rw [← LinearMap.toMatrix₂_apply]
 
 
-          simp [remapped_ortho, eigen_basis_V, q_r_16_eigen]
-          simp_rw [Finset.mul_sum]
-          rw [← Finset.sum_product']
-          grw [← Finset.sum_le_sum_of_subset_of_nonneg (s := {x ∈ Finset.univ ×ˢ Finset.univ | x.1 = x.2})]
-          .
-            simp_rw [Finsupp.linearCombination_apply, Finsupp.sum, map_sum]
-            simp
-            simp_rw [Finset.mul_sum]
-            simp_rw [← Finset.sum_product']
-            grw [← Finset.card_nsmul_le_sum (n := 1)]
-            . simp
-              sorry
-            .
-              intro p hp
+        --     -- have transpose_eq: ((LinearMap.toMatrix₂ remapped_ortho remapped_ortho) (Q_R_lin V (16 * ↑R))).IsSymm := by
+        --     --   exact
+        --     --     Matrix.isSymm_conjTranspose_iff.mp
+        --     --       (congrArg Matrix.transpose Q_R_16_new_ortho_hermitian)
 
-              grw [← Finset.sum_le_sum_of_subset_of_nonneg (s := {y ∈ Finset.univ ×ˢ Finset.univ | y.1 = y.2})]
-              .
-                grw [← Finset.card_nsmul_le_sum (n := 1)]
-                . simp
-                  sorry
-                . intro y hy
-                  simp at hy
-                  simp at hp
-                  simp [hp, hy]
+        --     -- simp_rw [transpose_eq.eq] at mul_eigen
+        --     -- rw [Finset.sum_finset_product_right (s := Finset.univ) (t := fun p => Finset.univ \ {p})]
+        --     -- .
+        --     --   simp [-Finset.sum_sdiff_eq_sub]
 
-              . sorry
-              . sorry
-            grw [← Finset.nsmu]
-
-          . simp
-          . intro p hp p_not_mem
-            --apply Finset.sum_nonneg
-            --intro x hx
-            --rw [← mul_assoc, ← mul_assoc]
-            simp at p_not_mem
-            simp [v_orthonormal, v_map_normalize_equiv, v_map_normalize, q_r_16_eigen]
-            simp_rw [Finsupp.linearCombination_apply, Finsupp.sum, map_sum]
-            simp
-            split_ifs
-            .
-
-              sorry
-            all_goals { simp }
-
-            -- apply mul_nonneg
-            -- . sorry
-            -- . sorry
-
-          grw [← Finset.card_nsmul_le_sum (n := 1)]
-          . simp
-            norm_cast
-            have rank_pos := Module.finrank_pos (R := ℝ) (M := V)
-            apply one_le_mul
-            . grind
-            . grind
-          .
-            intro q hq
-
-            sorry
-
-          simp_rw [← Finset.sum_product']
-          simp_rw [Finset.sum_apply]
+        --     --   conv =>
+        --     --     rhs
+        --     --     arg 2
+        --     --     intro p
+        --     --     arg 2
+        --     --     intro q
+        --     --     rw [← mul_assoc, mul_comm ((Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp q), mul_assoc]
 
 
-          rw [star_dotProduct_toMatrix₂_mulVec]
-          have eval_eq := dotProduct_toMatrix₂_mulVec (Q_R_16_new_ortho_hermitian.eigenvectorBasis.toBasis) (Q_R_16_new_ortho_hermitian.eigenvectorBasis.toBasis) (σ₁ := RingHom.id _) (σ₂ := RingHom.id _)
+        --     --   simp_rw [← Finset.mul_sum]
+        --     --   simp_rw [mul_comm]
 
-          simp at eval_eq
-          specialize eval_eq
-          rw [eval_eq]
-          simp only [Q_R_16_new_ortho]
-          rw [dotProduct_toMatrix₂_mulVec]
-          rw [Matrix.dot_mulVec_eq_sum_sum]
-          simp
-          simp_rw [← Finset.sum_attach_univ]
-          apply Finset.single_le_sum
-          simp [remapped_ortho, eigen_basis_V, v_orthonormal, q_r_16_eigen, v_map_normalize_equiv, v_map_normalize, norm_eigen_q_r]
-          simp_rw [Finsupp.linearCombination_apply, Finsupp.sum, map_sum]
-          simp_rw [Finsupp.linearCombination_apply, Finsupp.sum, map_sum]
+        --     --   sorry
+        --     -- . intro p
+        --     --   simp
+
+        --   .
+        --     rw [Finset.sum_congr (s₂ := { x | x.1 = x.2}) (g := fun x => ((Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp x.1) ^2 * ((Q_R_lin V (16 * ↑R)) (remapped_ortho x.1)) (remapped_ortho x.1))]
+        --     .
+
+        --       grw [← Finset.sum_le_sum (f := fun x => (Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp x.1 ^ 2)]
+        --       .
+        --         simp
+        --         rw [Finset.sum_finset_product_right (s := Finset.univ) (t := fun a => {a})]
+        --         . simp
+        --           rw [← EuclideanSpace.real_norm_sq_eq]
+        --           simp
+        --         . intro p
+        --           simp
+        --       . intro x hx
+        --         apply le_mul_of_one_le_right
+        --         . positivity
+        --         .
+        --           apply one_le_q_r_16_diag
+
+        --       -- rw [Finset.sum_product]
+        --       -- sorry
+        --       --rw [Finset.sum_product']
+        --     . simp
+        --     . intro p hp
+        --       simp at hp
+        --       simp [hp]
+        --       ring
+
+        --     -- grw [← Finset.card_nsmul_le_sum (n := 1)]
+        --     -- . simp
+        --     --   sorry
+        --     -- .
+        --     --   intro p hp
+        --     --   rw [Finset.sum_congr (s₂ := { x | x.1 = x.2}) ]
+
+
+        --   simp [remapped_ortho, eigen_basis_V, q_r_16_eigen]
+        --   simp_rw [Finset.mul_sum]
+        --   rw [← Finset.sum_product']
+        --   grw [← Finset.sum_le_sum_of_subset_of_nonneg (s := {x ∈ Finset.univ ×ˢ Finset.univ | x.1 = x.2})]
+        --   .
+        --     simp_rw [Finsupp.linearCombination_apply, Finsupp.sum, map_sum]
+        --     simp
+        --     simp_rw [Finset.mul_sum]
+        --     simp_rw [← Finset.sum_product']
+        --     grw [← Finset.card_nsmul_le_sum (n := 1)]
+        --     . simp
+        --       sorry
+        --     .
+        --       intro p hp
+
+        --       grw [← Finset.sum_le_sum_of_subset_of_nonneg (s := {y ∈ Finset.univ ×ˢ Finset.univ | y.1 = y.2})]
+        --       .
+        --         grw [← Finset.card_nsmul_le_sum (n := 1)]
+        --         . simp
+        --           sorry
+        --         . intro y hy
+        --           simp at hy
+        --           simp at hp
+        --           simp [hp, hy]
+
+        --       . sorry
+        --       . sorry
+        --     grw [← Finset.nsmu]
+
+        --   . simp
+        --   . intro p hp p_not_mem
+        --     --apply Finset.sum_nonneg
+        --     --intro x hx
+        --     --rw [← mul_assoc, ← mul_assoc]
+        --     simp at p_not_mem
+        --     simp [v_orthonormal, v_map_normalize_equiv, v_map_normalize, q_r_16_eigen]
+        --     simp_rw [Finsupp.linearCombination_apply, Finsupp.sum, map_sum]
+        --     simp
+        --     split_ifs
+        --     .
+
+        --       sorry
+        --     all_goals { simp }
+
+        --     -- apply mul_nonneg
+        --     -- . sorry
+        --     -- . sorry
+
+        --   grw [← Finset.card_nsmul_le_sum (n := 1)]
+        --   . simp
+        --     norm_cast
+        --     have rank_pos := Module.finrank_pos (R := ℝ) (M := V)
+        --     apply one_le_mul
+        --     . grind
+        --     . grind
+        --   .
+        --     intro q hq
+
+        --     sorry
+
+        --   simp_rw [← Finset.sum_product']
+        --   simp_rw [Finset.sum_apply]
+
+
+        --   rw [star_dotProduct_toMatrix₂_mulVec]
+        --   have eval_eq := dotProduct_toMatrix₂_mulVec (Q_R_16_new_ortho_hermitian.eigenvectorBasis.toBasis) (Q_R_16_new_ortho_hermitian.eigenvectorBasis.toBasis) (σ₁ := RingHom.id _) (σ₂ := RingHom.id _)
+
+        --   simp at eval_eq
+        --   specialize eval_eq
+        --   rw [eval_eq]
+        --   simp only [Q_R_16_new_ortho]
+        --   rw [dotProduct_toMatrix₂_mulVec]
+        --   rw [Matrix.dot_mulVec_eq_sum_sum]
+        --   simp
+        --   simp_rw [← Finset.sum_attach_univ]
+        --   apply Finset.single_le_sum
+        --   simp [remapped_ortho, eigen_basis_V, v_orthonormal, q_r_16_eigen, v_map_normalize_equiv, v_map_normalize, norm_eigen_q_r]
+        --   simp_rw [Finsupp.linearCombination_apply, Finsupp.sum, map_sum]
+        --   simp_rw [Finsupp.linearCombination_apply, Finsupp.sum, map_sum]
 
 
 
@@ -3361,39 +3365,39 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
 
 
-        let base_spectral := q_r_base_pos_def.isHermitian.eigenvectorBasis
-        let Q_r_change := LinearMap.toMatrix₂ (base_spectral.toBasis) (base_spectral.toBasis) (N₂ := ℝ) (σ₁ := RingHom.id _) (σ₂ := RingHom.id _)
-        let base_repr := LinearMap.toMatrix₂ (V_basis V) (V_basis V)  (N₂ := ℝ) (σ₁ := RingHom.id _) (σ₂ := RingHom.id _)
-        let combined := base_repr.trans Q_r_change.symm
+        -- let base_spectral := q_r_base_pos_def.isHermitian.eigenvectorBasis
+        -- let Q_r_change := LinearMap.toMatrix₂ (base_spectral.toBasis) (base_spectral.toBasis) (N₂ := ℝ) (σ₁ := RingHom.id _) (σ₂ := RingHom.id _)
+        -- let base_repr := LinearMap.toMatrix₂ (V_basis V) (V_basis V)  (N₂ := ℝ) (σ₁ := RingHom.id _) (σ₂ := RingHom.id _)
+        -- let combined := base_repr.trans Q_r_change.symm
 
-        let remapped_Q_r := (combined (Q_R_lin V R)).toMatrix₂ base_spectral.toBasis base_spectral.toBasis
-        let remapped_Q_r_16 :=  (combined (Q_R_lin V (16*R))).toMatrix₂ base_spectral.toBasis base_spectral.toBasis
+        -- let remapped_Q_r := (combined (Q_R_lin V R)).toMatrix₂ base_spectral.toBasis base_spectral.toBasis
+        -- let remapped_Q_r_16 :=  (combined (Q_R_lin V (16*R))).toMatrix₂ base_spectral.toBasis base_spectral.toBasis
 
-        have Q_r_det : remapped_Q_r.det = 1 := by
-          have hermitian_remap: remapped_Q_r.IsHermitian := by
-            simp [remapped_Q_r]
-            apply (LinearMap.isSymm_iff_isHermitian_toMatrix base_spectral.toBasis).mp
-            simp [combined, Q_r_change, base_repr, base_spectral]
+        -- have Q_r_det : remapped_Q_r.det = 1 := by
+        --   have hermitian_remap: remapped_Q_r.IsHermitian := by
+        --     simp [remapped_Q_r]
+        --     apply (LinearMap.isSymm_iff_isHermitian_toMatrix base_spectral.toBasis).mp
+        --     simp [combined, Q_r_change, base_repr, base_spectral]
 
 
-            rw [LinearMap.isSymm_def]
-            simp [Q_r_change]
-            intro x y
-            sorry
+        --     rw [LinearMap.isSymm_def]
+        --     simp [Q_r_change]
+        --     intro x y
+        --     sorry
 
-          have eigen_one: ∀ a ∈ Set.range hermitian_remap.eigenvalues, a = 1 := by
-            intro a ha
-            rw [Set.mem_range] at ha
-            obtain ⟨k, kh⟩ := ha
-            have foo := hermitian_remap.mulVec_eigenvectorBasis k
-            simp [remapped_Q_r, base_spectral, combined] at foo
+        --   have eigen_one: ∀ a ∈ Set.range hermitian_remap.eigenvalues, a = 1 := by
+        --     intro a ha
+        --     rw [Set.mem_range] at ha
+        --     obtain ⟨k, kh⟩ := ha
+        --     have foo := hermitian_remap.mulVec_eigenvectorBasis k
+        --     simp [remapped_Q_r, base_spectral, combined] at foo
 
-            have eigen_repr: (hermitian_remap.eigenvectorBasis k) = hermitian_remap.eigenvectorBasis.repr ((hermitian_remap.eigenvectorBasis k)) := by
-              sorry
+        --     have eigen_repr: (hermitian_remap.eigenvectorBasis k) = hermitian_remap.eigenvectorBasis.repr ((hermitian_remap.eigenvectorBasis k)) := by
+        --       sorry
 
-            sorry
-          rw [hermitian_remap.det_eq_prod_eigenvalues]
-          sorry
+        --     sorry
+        --   rw [hermitian_remap.det_eq_prod_eigenvalues]
+        --   sorry
 
 
 
@@ -3429,7 +3433,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
 
         --rw [Q_R_matrix_pos_def]
-        sorry
       . sorry
       . sorry
       . sorry
