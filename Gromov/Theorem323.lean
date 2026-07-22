@@ -16,6 +16,15 @@ open scoped Pointwise
 
 
 
+-- Ported from Mathlib.Data.Matrix.Mul (not present in this mathlib version).
+-- Remove once this file is bumped to a mathlib that includes it.
+open Matrix in
+theorem Matrix.dot_mulVec_eq_sum_sum {m n R : Type*} [Fintype n] [Fintype m] [NonUnitalSemiring R]
+    (v : m → R) (A : Matrix m n R) (w : n → R) :
+    v ⬝ᵥ (A *ᵥ w) = ∑ j, ∑ i, v i * A i j * w j := by
+  simp_rw [dotProduct_mulVec, dotProduct, vecMul_eq_sum, Finset.sum_apply, Pi.smul_apply,
+    smul_eq_mul, Finset.sum_mul]
+
 -- TODO - generalize and upstream
 -- Based on https://math.stackexchange.com/questions/1101184/show-that-if-x-succeq-y-then-detx-ge-dety
 lemma matrix_psd_det_one {n: Type*} [Fintype n] [DecidableEq n] (A: Matrix n n ℝ) (ha: A.PosSemidef): 1 ≤ (A + 1).det := by
@@ -2971,6 +2980,107 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
             rw [LinearMap.isOrthoᵢ_def] at v_orthonormal_isortho
             apply v_orthonormal_isortho
             grind
+
+        let Q_R_16_new_ortho := (Q_R_lin V (16 *R)).toMatrix₂ remapped_ortho remapped_ortho
+        have Q_R_16_new_ortho_hermitian: Q_R_16_new_ortho.IsHermitian := by
+          simp [Q_R_16_new_ortho]
+          apply (LinearMap.isSymm_iff_isHermitian_toMatrix _).mp
+          apply Q_R_lin_symm
+
+
+        have eigen_ge_one: ∀ i, 1 ≤ Q_R_16_new_ortho_hermitian.eigenvalues i := by
+          intro i
+          rw [Matrix.IsHermitian.eigenvalues_eq]
+          rw [star_dotProduct_toMatrix₂_mulVec]
+          simp [Q_R_16_new_ortho]
+          --grw [← Finset.single_le_sum (a := ⟨0, by exact Module.finrank_pos⟩)]
+
+
+          --rw [← Finset.sum_attach]
+          --apply Finset.single_le_sum
+
+
+          simp [remapped_ortho, eigen_basis_V, q_r_16_eigen]
+          simp_rw [Finset.mul_sum]
+          rw [← Finset.sum_product']
+          grw [← Finset.sum_le_sum_of_subset_of_nonneg (s := {x ∈ Finset.univ ×ˢ Finset.univ | x.1 = x.2})]
+          .
+            simp_rw [Finsupp.linearCombination_apply, Finsupp.sum, map_sum]
+            simp
+            simp_rw [Finset.mul_sum]
+            simp_rw [← Finset.sum_product']
+            grw [← Finset.card_nsmul_le_sum (n := 1)]
+            . simp
+              sorry
+            .
+              intro p hp
+              
+              grw [← Finset.sum_le_sum_of_subset_of_nonneg (s := {y ∈ Finset.univ ×ˢ Finset.univ | y.1 = y.2})]
+              .
+                grw [← Finset.card_nsmul_le_sum (n := 1)]
+                . simp
+                  sorry
+                . intro y hy
+                  simp at hy
+                  simp at hp
+                  simp [hp, hy]
+
+              . sorry
+              . sorry
+            grw [← Finset.nsmu]
+
+          . simp
+          . intro p hp p_not_mem
+            --apply Finset.sum_nonneg
+            --intro x hx
+            --rw [← mul_assoc, ← mul_assoc]
+            simp at p_not_mem
+            simp [v_orthonormal, v_map_normalize_equiv, v_map_normalize, q_r_16_eigen]
+            simp_rw [Finsupp.linearCombination_apply, Finsupp.sum, map_sum]
+            simp
+            split_ifs
+            .
+
+              sorry
+            all_goals { simp }
+
+            -- apply mul_nonneg
+            -- . sorry
+            -- . sorry
+
+          grw [← Finset.card_nsmul_le_sum (n := 1)]
+          . simp
+            norm_cast
+            have rank_pos := Module.finrank_pos (R := ℝ) (M := V)
+            apply one_le_mul
+            . grind
+            . grind
+          .
+            intro q hq
+
+            sorry
+
+          simp_rw [← Finset.sum_product']
+          simp_rw [Finset.sum_apply]
+
+
+          rw [star_dotProduct_toMatrix₂_mulVec]
+          have eval_eq := dotProduct_toMatrix₂_mulVec (Q_R_16_new_ortho_hermitian.eigenvectorBasis.toBasis) (Q_R_16_new_ortho_hermitian.eigenvectorBasis.toBasis) (σ₁ := RingHom.id _) (σ₂ := RingHom.id _)
+
+          simp at eval_eq
+          specialize eval_eq
+          rw [eval_eq]
+          simp only [Q_R_16_new_ortho]
+          rw [dotProduct_toMatrix₂_mulVec]
+          rw [Matrix.dot_mulVec_eq_sum_sum]
+          simp
+          simp_rw [← Finset.sum_attach_univ]
+          apply Finset.single_le_sum
+          simp [remapped_ortho, eigen_basis_V, v_orthonormal, q_r_16_eigen, v_map_normalize_equiv, v_map_normalize, norm_eigen_q_r]
+          simp_rw [Finsupp.linearCombination_apply, Finsupp.sum, map_sum]
+          simp_rw [Finsupp.linearCombination_apply, Finsupp.sum, map_sum]
+
+
 
 
 
