@@ -3021,13 +3021,71 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
           --apply Finset.single_le_sum
 
 
+          conv =>
+            rhs
+            arg 2
+            intro p
+            arg 2
+            intro y
+
+          --simp_rw [← Finset.mul_sum]
+
           rw [← Finset.sum_product']
           rw [← Finset.sum_sdiff (s₁ := {x | x.1 = x.2}) (by simp)]
           have one_eq: (1: ℝ ) = 0 + 1 := by
             simp
           rw [one_eq]
           apply add_le_add
-          . sorry
+          .
+
+
+
+            --grw [← Finset.sum_le_sum_of_subset_of_nonneg]
+            have mul_eigen := Matrix.IsHermitian.mulVec_eigenvectorBasis (Q_R_16_new_ortho_hermitian)
+            simp [Q_R_16_new_ortho] at mul_eigen
+            simp_rw [Matrix.mulVec_eq_sum] at mul_eigen
+            simp at mul_eigen
+
+            --simp? [-Finset.sum_sdiff_eq_sub, remapped_ortho, v_orthonormal, v_map_normalize_equiv, v_map_normalize, eigen_basis_V]
+            --simp_rw [← LinearMap.toMatrix₂_apply]
+            --simp [eigen_basis_V]
+            conv =>
+              rhs
+              arg 2
+              intro x
+              rhs
+              rhs
+              simp [remapped_ortho, v_orthonormal, v_map_normalize_equiv, v_map_normalize, eigen_basis_V, norm_eigen_q_r]
+              rw [← LinearMap.toMatrix₂_apply]
+
+
+            have transpose_eq: ((LinearMap.toMatrix₂ remapped_ortho remapped_ortho) (Q_R_lin V (16 * ↑R))).IsSymm := by
+              exact
+                Matrix.isSymm_conjTranspose_iff.mp
+                  (congrArg Matrix.transpose Q_R_16_new_ortho_hermitian)
+
+            simp_rw [transpose_eq.eq] at mul_eigen
+            rw [Finset.sum_finset_product_right (s := Finset.univ) (t := fun p => Finset.univ \ {p})]
+            .
+              simp [-Finset.sum_sdiff_eq_sub]
+
+              conv =>
+                rhs
+                arg 2
+                intro p
+                arg 2
+                intro q
+                rw [← mul_assoc, mul_comm ((Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp q), mul_assoc]
+
+
+              simp_rw [← Finset.mul_sum]
+              simp_rw [mul_comm]
+
+              sorry
+            . intro p
+              simp
+              sorry
+
           .
             rw [Finset.sum_congr (s₂ := { x | x.1 = x.2}) (g := fun x => ((Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp x.1) ^2 * ((Q_R_lin V (16 * ↑R)) (remapped_ortho x.1)) (remapped_ortho x.1))]
             .
