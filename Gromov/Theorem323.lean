@@ -150,7 +150,7 @@ include hGS
 noncomputable def Q_R (R : ℝ) (u v: G → ℝ): ℝ := ∑ g ∈ Metric.closedBall 1 R, (u g) * (v g)
 noncomputable def Q_R_lin (V: Submodule ℝ LipschitzH) (R: ℝ): V →ₗ⋆[ℝ] V →ₗ[ℝ] ℝ := {
   toFun := fun u => {
-    toFun := fun v => Q_R R (fun g => u.val g) (fun g => v.val g)
+    toFun := fun v => Q_R R u.val v.val
     map_add' := by
       intro a b
       simp [Q_R]
@@ -185,7 +185,7 @@ lemma Q_R_lin_apply (V: Submodule ℝ LipschitzH) (R: ℝ) (u v: V): Q_R_lin V R
 
 noncomputable def Q_R_lin_plain (V: Submodule ℝ LipschitzH) (R: ℝ): V →ₗ[ℝ] V →ₗ[ℝ] ℝ := {
   toFun := fun u => {
-    toFun := fun v => Q_R R (fun g => u.val g) (fun g => v.val g)
+    toFun := fun v => Q_R R u.val v.val
     map_add' := by
       intro a b
       simp [Q_R]
@@ -3056,12 +3056,11 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
       simp [eigen_repr_eq]
       simp [Q_R_lin]
       conv =>
-        lhs
-        lhs
+        arg 1
+        arg 1
         equals  Q_R ↑R ⇑(v_orthogonal j).val ⇑(v_orthogonal j).val =>
           rfl
 
-      simp
       apply ne_of_gt
       apply Q_R_pos_on_R'
       . apply Module.Basis.ne_zero
@@ -3182,6 +3181,34 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
                 simp [Q_R]
               | add x y hx hy ihx ihy =>
                 simp_rw [map_add]
+                simp
+                grw [ihx, ihy]
+                have q_symm := Q_R_lin_symm V (16 * R_2 data)
+                rw [LinearMap.isSymm_def] at q_symm
+                simp only [Real.ringHom_apply] at q_symm
+                simp_rw [q_symm y x]
+                simp [Q_R_lin]
+                ring
+                -- TODO - we need orthogonality with respect to Q_R_16 for this
+                -- rw [mul_comm (Q_R (↑(R_2 data) * 16) x y) 2]
+
+                -- -- TODO - factor this out, and/or re-use caucy schwartz from the norm definition
+                -- have x_y_le: Q_R ((R_2 data) * 16) x y ≤ √(Q_R (16 * ↑(R_2 data)) x x ) * √(Q_R (16 * ↑(R_2 data)) y y) := by
+                --   sorry
+
+                -- grw [x_y_le]
+                -- simp [Q_R_lin] at ihx ihy
+                -- grw [ihx, ihy]
+                -- ring
+                -- field_simp
+
+                -- unfold R at inner_eq_q_r
+                -- simp [R_2]
+
+                --rw [← inner_eq_q_r]
+
+                --simp at hx
+
                 sorry
               | smul a x hx ihx =>
                 simp
