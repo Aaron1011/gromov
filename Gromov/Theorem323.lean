@@ -2807,6 +2807,20 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
   have a_gt := (GoodScales data).second_h_i
   simp [h, f] at a_gt
 
+  let R := 16 ^ ((GoodScales data).i_2)
+  have h_R: R'_ V ≤ ↑R := by
+    have foo := (GoodScales data).i_2_ge
+    simp [i₀] at foo
+    have pow_le := Nat.le_pow_clog (b := 16) (x := ⌈R'_ V⌉₊) (by simp)
+    have r_ceil := Nat.le_ceil (R')
+    unfold R' at r_ceil
+    grw [r_ceil]
+    grw [pow_le]
+    simp [R]
+    rw [pow_le_pow_iff_right₀]
+    . exact foo
+    . simp
+
   rw [Real.log_mul] at a_gt
   .
     have log_pos_first: 0 ≤ Real.log ↑(#(S ^ 16 ^ ((GoodScales data).i_2 + 1))) := by
@@ -2836,7 +2850,7 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
       rw [← Real.log_div] at a_gt
       .
 
-        let R := 16 ^ ((GoodScales data).i_2)
+
         have q_r_base_pos_def := (Q_R_matrix_pos_def_i₀ (16 ^ ((GoodScales data).i_2)) (by
           simp [i₀]
           rw [pow_le_pow_iff_right₀]
@@ -2975,7 +2989,7 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
             apply ne_of_gt
             apply Q_R_pos_on_R'
             . apply Module.Basis.ne_zero
-            . sorry
+            . grind
           .
             rw [LinearMap.isOrthoᵢ_def] at v_orthonormal_isortho
             apply v_orthonormal_isortho
@@ -2986,6 +3000,45 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
           simp [Q_R_16_new_ortho]
           apply (LinearMap.isSymm_iff_isHermitian_toMatrix _).mp
           apply Q_R_lin_symm
+
+        have det_Q_R_one: Q_R_ortho.det = 1 := by
+          simp [Q_R_ortho_eq_1]
+
+        have det_Q_R_16_ge: 1 ≤ Q_R_16_new_ortho.det := by
+          rw [← det_Q_R_one]
+          apply matrix_det_montone
+          .
+            simp [Q_R_ortho]
+            apply Matrix.PosDef.of_dotProduct_mulVec_pos (?_)
+            .
+              intro x hx
+              simp [Q_R_matrix]
+              conv =>
+                rhs
+                lhs
+                equals (star x) => simp
+              rw [star_dotProduct_toMatrix₂_mulVec]
+              apply Q_R_pos_on_R'
+              . rw [LinearEquiv.map_ne_zero_iff]
+                exact hx
+              . exact h_R
+            . apply Q_R_ortho_m_hermitian
+          .
+            simp [Q_R_16_new_ortho, Q_R_ortho]
+            rw [← map_sub]
+            rw [← LinearMap.isPosSemidef_iff_posSemidef_toMatrix]
+            apply Q_R_lin_sub_pos_semi_def
+            norm_cast
+            grind
+
+
+        
+        have h_Q_R_16_remapped: (Q_R_lin V (16 * ↑R)).IsOrthoᵢ ⇑remapped_ortho := by
+          rw [LinearMap.isOrthoᵢ_def]
+          intro i h hij
+          simp [remapped_ortho, eigen_basis_V]
+
+          sorry
 
 
         have eigen_ge_one: ∀ i, 1 ≤ Q_R_16_new_ortho_hermitian.eigenvalues i := by
@@ -3021,6 +3074,11 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
           --apply Finset.single_le_sum
 
 
+          -- Q_R_16_remapped
+          --simp_rw [← LinearMap.toMatrix₂_apply]
+          rw [LinearMap.isOrthoᵢ_def] at h_Q_R_16_remapped
+
+
           conv =>
             rhs
             arg 2
@@ -3040,51 +3098,58 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
 
 
 
-            --grw [← Finset.sum_le_sum_of_subset_of_nonneg]
-            have mul_eigen := Matrix.IsHermitian.mulVec_eigenvectorBasis (Q_R_16_new_ortho_hermitian)
-            simp [Q_R_16_new_ortho] at mul_eigen
-            simp_rw [Matrix.mulVec_eq_sum] at mul_eigen
-            simp at mul_eigen
-
-            --simp? [-Finset.sum_sdiff_eq_sub, remapped_ortho, v_orthonormal, v_map_normalize_equiv, v_map_normalize, eigen_basis_V]
-            --simp_rw [← LinearMap.toMatrix₂_apply]
-            --simp [eigen_basis_V]
-            conv =>
-              rhs
-              arg 2
-              intro x
-              rhs
-              rhs
-              simp [remapped_ortho, v_orthonormal, v_map_normalize_equiv, v_map_normalize, eigen_basis_V, norm_eigen_q_r]
-              rw [← LinearMap.toMatrix₂_apply]
-
-
-            have transpose_eq: ((LinearMap.toMatrix₂ remapped_ortho remapped_ortho) (Q_R_lin V (16 * ↑R))).IsSymm := by
-              exact
-                Matrix.isSymm_conjTranspose_iff.mp
-                  (congrArg Matrix.transpose Q_R_16_new_ortho_hermitian)
-
-            simp_rw [transpose_eq.eq] at mul_eigen
-            rw [Finset.sum_finset_product_right (s := Finset.univ) (t := fun p => Finset.univ \ {p})]
+            apply Finset.sum_nonneg
+            intro p hp
+            rw [h_Q_R_16_remapped]
             .
-              simp [-Finset.sum_sdiff_eq_sub]
-
-              conv =>
-                rhs
-                arg 2
-                intro p
-                arg 2
-                intro q
-                rw [← mul_assoc, mul_comm ((Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp q), mul_assoc]
-
-
-              simp_rw [← Finset.mul_sum]
-              simp_rw [mul_comm]
-
-              sorry
-            . intro p
               simp
-              sorry
+            . simp at hp
+              grind
+
+            -- --grw [← Finset.sum_le_sum_of_subset_of_nonneg]
+            -- have mul_eigen := Matrix.IsHermitian.mulVec_eigenvectorBasis (Q_R_16_new_ortho_hermitian)
+            -- simp [Q_R_16_new_ortho] at mul_eigen
+            -- simp_rw [Matrix.mulVec_eq_sum] at mul_eigen
+            -- simp at mul_eigen
+
+            -- --simp? [-Finset.sum_sdiff_eq_sub, remapped_ortho, v_orthonormal, v_map_normalize_equiv, v_map_normalize, eigen_basis_V]
+            -- --simp_rw [← LinearMap.toMatrix₂_apply]
+            -- --simp [eigen_basis_V]
+            -- conv =>
+            --   rhs
+            --   arg 2
+            --   intro x
+            --   rhs
+            --   rhs
+            --   simp [remapped_ortho, v_orthonormal, v_map_normalize_equiv, v_map_normalize, eigen_basis_V, norm_eigen_q_r]
+            --   rw [← LinearMap.toMatrix₂_apply]
+
+
+            -- have transpose_eq: ((LinearMap.toMatrix₂ remapped_ortho remapped_ortho) (Q_R_lin V (16 * ↑R))).IsSymm := by
+            --   exact
+            --     Matrix.isSymm_conjTranspose_iff.mp
+            --       (congrArg Matrix.transpose Q_R_16_new_ortho_hermitian)
+
+            -- simp_rw [transpose_eq.eq] at mul_eigen
+            -- rw [Finset.sum_finset_product_right (s := Finset.univ) (t := fun p => Finset.univ \ {p})]
+            -- .
+            --   simp [-Finset.sum_sdiff_eq_sub]
+
+            --   conv =>
+            --     rhs
+            --     arg 2
+            --     intro p
+            --     arg 2
+            --     intro q
+            --     rw [← mul_assoc, mul_comm ((Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp q), mul_assoc]
+
+
+            --   simp_rw [← Finset.mul_sum]
+            --   simp_rw [mul_comm]
+
+            --   sorry
+            -- . intro p
+            --   simp
 
           .
             rw [Finset.sum_congr (s₂ := { x | x.1 = x.2}) (g := fun x => ((Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp x.1) ^2 * ((Q_R_lin V (16 * ↑R)) (remapped_ortho x.1)) (remapped_ortho x.1))]
