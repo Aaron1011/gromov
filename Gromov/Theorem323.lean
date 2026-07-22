@@ -2909,12 +2909,9 @@ lemma growth_bound_basis_change (d: ℕ) {index: Type*} [Fintype index] [Decidab
 
 
 set_option maxHeartbeats 2500000 in
-lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodule ℝ LipschitzH, U ≤ V ∧ dim V ≤ 2 * dim U ∧ ∀ f ∈ U, Q_R (16 * (R_2 data)) f f ≤ Real.exp (2 * (a data.w)) * Q_R ((R_2 data)) f f := by
+lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodule ℝ LipschitzH, U ≤ V ∧ dim V ≤ 2 * dim U ∧ ∀ f ∈ U, Q_R (16 * (R_2 data)) f f ≤ Real.exp (2 * (a data.d)) * Q_R ((R_2 data)) f f := by
   classical
-  by_contra!
 
-  have a_gt := (GoodScales data).second_h_i
-  simp [h, f] at a_gt
 
   let R := 16 ^ ((GoodScales data).i_2)
   have h_R: R'_ V ≤ ↑R := by
@@ -3118,8 +3115,8 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
     sorry
   apply growth_bound_basis_change data.d b remapped_ortho at new_growth
 
-  have new_data := Classical.choice (lemma_3_24 b data.w data.d data.hw data.hd data.h_growth)
-
+  have a_gt := (GoodScales data).second_h_i
+  simp [h, f] at a_gt
   rw [Real.log_mul] at a_gt
   .
     have log_pos_first: 0 ≤ Real.log ↑(#(S ^ 16 ^ ((GoodScales data).i_2 + 1))) := by
@@ -3151,6 +3148,54 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
 
         simp [Q_R_matrix] at a_gt
+
+        let large_basis := { i: Fin (Module.finrank ℝ ↥V) | (Real.exp (2 * (a data.d))) * Q_R_lin V (R) (remapped_ortho i) (remapped_ortho i) < Q_R_lin V (16 * R) (remapped_ortho i) (remapped_ortho i)}
+        let large_submodule := Submodule.span ℝ (remapped_ortho '' large_basis)
+        by_cases dim_small: 2 * dim large_submodule < dim V
+        .
+          let small_submodule := (Submodule.span ℝ ((Set.range remapped_ortho) \ (remapped_ortho '' large_basis)))
+          use Submodule.map V.subtype small_submodule
+          refine ⟨?_, ?_, ?_⟩
+          . apply Submodule.map_subtype_le
+          . simp [dim]
+            sorry
+            --exact dim_large
+          .
+            have all_le: ∀ f ∈ small_submodule, Q_R_lin V (16 * ↑(R_2 data)) f f ≤ Real.exp (2 * a data.d) * Q_R_lin V ↑(R_2 data) f f := by
+              intro f hf
+              induction hf using Submodule.span_induction with
+              | mem x h =>
+                rw [Set.mem_diff] at h
+                obtain ⟨x_mem, x_not_large⟩ := h
+                simp only [large_basis] at x_not_large
+                simp at x_not_large
+                simp at x_mem
+                obtain ⟨i, hi⟩ := x_mem
+                specialize x_not_large i
+                simp [hi] at x_not_large
+                simp [Q_R_lin, R] at x_not_large
+                simp [R_2]
+                ring
+                ring_nf at x_not_large
+                exact x_not_large
+              | zero =>
+                simp [Q_R]
+              | add x y hx hy ihx ihy =>
+                simp_rw [map_add]
+                sorry
+              | smul a x hx ihx =>
+                simp
+                ring
+                ring_nf at ihx
+                grw [ihx]
+                ring
+                simp
+
+            intro f hf
+            simp at hf
+            obtain ⟨f_mem_V, hf⟩ := hf
+            specialize all_le ⟨_, f_mem_V⟩ hf
+            apply all_le
         sorry
 
         -- OLD - BAD
