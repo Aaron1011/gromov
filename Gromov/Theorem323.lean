@@ -2993,6 +2993,27 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
           rw [Matrix.IsHermitian.eigenvalues_eq]
           rw [star_dotProduct_toMatrix₂_mulVec]
           simp [Q_R_16_new_ortho]
+          simp_rw [Finset.mul_sum]
+          have one_le_q_r_16_diag: ∀ k, 1 ≤ (Q_R_lin V (16 * ↑R)) (remapped_ortho k) (remapped_ortho k) := by
+            intro k
+            simp [Q_R_lin, Q_R]
+            grw [← Finset.sum_le_sum_of_subset_of_nonneg (s := B_r R)]
+            .
+              have Q_r_one_app: Q_R_ortho k k = 1 := by
+                simp [Q_R_ortho_eq_1]
+
+              simp [Q_R_ortho, Q_R_lin, Q_R] at Q_r_one_app
+              simp [B_r]
+              rw [Q_r_one_app]
+
+            . simp [B_r]
+              apply Metric.closedBall_subset_closedBall
+              norm_cast
+              grind
+            . intro k hk k_not
+              rw [← pow_two]
+              positivity
+
           --grw [← Finset.single_le_sum (a := ⟨0, by exact Module.finrank_pos⟩)]
 
 
@@ -3014,7 +3035,7 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
               sorry
             .
               intro p hp
-              
+
               grw [← Finset.sum_le_sum_of_subset_of_nonneg (s := {y ∈ Finset.univ ×ˢ Finset.univ | y.1 = y.2})]
               .
                 grw [← Finset.card_nsmul_le_sum (n := 1)]
