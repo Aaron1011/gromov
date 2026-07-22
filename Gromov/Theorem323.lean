@@ -208,10 +208,10 @@ open scoped Topology
 
 -- These definitions go outside, since we need to explicitly vary the V that we pass in for the theorem statement
 noncomputable def V_basis (V: Submodule ℝ LipschitzH) := Module.Basis.ofVectorSpace ℝ V
-noncomputable def Q_R_matrix (V: Submodule ℝ LipschitzH) (R: ℝ) [FiniteDimensional ℝ V] [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)] := ((Q_R_lin V R).toMatrix₂ (V_basis V) (V_basis V))
-noncomputable def my_expr (V: Submodule ℝ LipschitzH) (d: ℝ) (R : ℕ) [FiniteDimensional ℝ V] [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)] := #(S ^ R) * ((Q_R_matrix V R).det ^ ((1 : ℝ) / Module.finrank ℝ V)) / (R ^ d)
+noncomputable def Q_R_matrix {ι : Type*} [Fintype ι] [DecidableEq ι] {V: Submodule ℝ LipschitzH} (b : Module.Basis ι ℝ ↥V) (R: ℝ) := ((Q_R_lin V R).toMatrix₂ b b)
+noncomputable def my_expr {ι : Type*} [Fintype ι] [DecidableEq ι] {V: Submodule ℝ LipschitzH} (b : Module.Basis ι ℝ ↥V) (d: ℝ) (R : ℕ) := #(S ^ R) * ((Q_R_matrix b R).det ^ ((1 : ℝ) / Module.finrank ℝ V)) / (R ^ d)
 -- This is a liminf < ∞ in Vikman, but we can actually prove that it goes to 0, which makes things much easier to work with
-noncomputable def growth_bound (V: Submodule ℝ LipschitzH) (d: ℝ) [finite_V : FiniteDimensional ℝ V] [decidable_V : DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]  := Filter.Tendsto (fun (R: ℕ) => my_expr V d R) (Filter.atTop) ((𝓝[>] 0))
+noncomputable def growth_bound {ι : Type*} [Fintype ι] [DecidableEq ι] {V: Submodule ℝ LipschitzH} (b : Module.Basis ι ℝ ↥V) (d: ℝ) := Filter.Tendsto (fun (R: ℕ) => my_expr b d R) (Filter.atTop) ((𝓝[>] 0))
 
 lemma Q_R_lin_symm (V: Submodule ℝ LipschitzH) (R: ℝ): (Q_R_lin V R).IsSymm := {
   eq := by
@@ -220,7 +220,7 @@ lemma Q_R_lin_symm (V: Submodule ℝ LipschitzH) (R: ℝ): (Q_R_lin V R).IsSymm 
     simp_rw [mul_comm]
 }
 
-lemma Q_R_lin_hermetian (V: Submodule ℝ LipschitzH) (R: ℝ) [FiniteDimensional ℝ V] [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]: (Q_R_matrix V R).IsHermitian := by
+lemma Q_R_lin_hermetian {ι : Type*} [Fintype ι] [DecidableEq ι] {V: Submodule ℝ LipschitzH} (b : Module.Basis ι ℝ ↥V) (R: ℝ): (Q_R_matrix b R).IsHermitian := by
   rw [Q_R_matrix, ← LinearMap.isSymm_iff_isHermitian_toMatrix]
   apply Q_R_lin_symm
 
@@ -369,8 +369,9 @@ lemma Q_R_pos_on_R' {V: Submodule ℝ LipschitzH} (v: V) (hv: v ≠ 0) [FiniteDi
     rw [← pow_two]
     positivity
 
-lemma Q_R_matrix_pos_def (V: Submodule ℝ LipschitzH) [FiniteDimensional ℝ V] [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)] (R: ℝ) (hR: (R'_ V) ≤ R): (Q_R_matrix V R).PosDef := by
-  apply Matrix.PosDef.of_dotProduct_mulVec_pos (Q_R_lin_hermetian V _)
+lemma Q_R_matrix_pos_def {ι : Type*} [Fintype ι] [DecidableEq ι] {V: Submodule ℝ LipschitzH} [FiniteDimensional ℝ V] (b : Module.Basis ι ℝ ↥V) (R: ℝ) (hR: (R'_ V) ≤ R): (Q_R_matrix b R).PosDef := by
+  classical
+  apply Matrix.PosDef.of_dotProduct_mulVec_pos (Q_R_lin_hermetian b _)
   intro x hx
   simp [Q_R_matrix]
   conv =>
@@ -408,7 +409,7 @@ variable {V: Submodule ℝ LipschitzH} [V_finite: FiniteDimensional ℝ V] [Nont
 instance nonempty_basis: Nonempty ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V) := Module.Basis.index_nonempty (Module.Basis.ofVectorSpace _ _)
 
 -- TODO - generalize and upstream
-lemma euclidean_of_lp_le (x: EuclideanSpace ℝ ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)) (i: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)):
+lemma euclidean_of_lp_le {ι : Type*} [Fintype ι] (x: EuclideanSpace ℝ ι) (i: ι):
     |x.ofLp i| ≤ ‖x‖ := by
 
   rw [EuclideanSpace.norm_eq]
@@ -423,58 +424,58 @@ lemma euclidean_of_lp_le (x: EuclideanSpace ℝ ↑(Module.Basis.ofVectorSpaceIn
   . positivity
 
 
-/-- The Lipschitz constant `‖(V_basis i).val‖` of the `i`-th basis vector of `V`. -/
-noncomputable def v_lipschitz_constant (i : ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)) : ℝ :=
-  ‖(V_basis (V := V) i).val‖
+/-- The Lipschitz constant `‖(b i).val‖` of the `i`-th vector of the basis `b` of `V`. -/
+noncomputable def v_lipschitz_constant {ι : Type*} (b : Module.Basis ι ℝ ↥V) (i : ι) : ℝ :=
+  ‖(b i).val‖
 
-/-- The value at the origin `‖(V_basis i).val 1‖` of the `i`-th basis vector of `V`. -/
-noncomputable def v_origin_norm (i : ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)) : ℝ :=
-  ‖(V_basis (V := V) i).val 1‖
+/-- The value at the origin `‖(b i).val 1‖` of the `i`-th vector of the basis `b` of `V`. -/
+noncomputable def v_origin_norm {ι : Type*} (b : Module.Basis ι ℝ ↥V) (i : ι) : ℝ :=
+  ‖(b i).val 1‖
 
-/-- The maximum, over basis vectors of `V`, of the Lipschitz constant `v_lipschitz_constant`. -/
-noncomputable def max_lipschitz : ℝ :=
-  v_lipschitz_constant (Finite.exists_max (v_lipschitz_constant (V := V))).choose
+/-- The maximum, over vectors of the basis `b`, of the Lipschitz constant `v_lipschitz_constant`. -/
+noncomputable def max_lipschitz {ι : Type*} [Finite ι] [Nonempty ι] (b : Module.Basis ι ℝ ↥V) : ℝ :=
+  v_lipschitz_constant b (Finite.exists_max (v_lipschitz_constant b)).choose
 
-/-- The maximum, over basis vectors of `V`, of the value at the origin `v_origin_norm`. -/
-noncomputable def max_origin : ℝ :=
-  v_origin_norm (Finite.exists_max (v_origin_norm (V := V))).choose
+/-- The maximum, over vectors of the basis `b`, of the value at the origin `v_origin_norm`. -/
+noncomputable def max_origin {ι : Type*} [Finite ι] [Nonempty ι] (b : Module.Basis ι ℝ ↥V) : ℝ :=
+  v_origin_norm b (Finite.exists_max (v_origin_norm b)).choose
 
-lemma le_max_lipschitz (i) : v_lipschitz_constant (V := V) i ≤ max_lipschitz (V := V) :=
-  (Finite.exists_max (v_lipschitz_constant (V := V))).choose_spec i
+lemma le_max_lipschitz {ι : Type*} [Finite ι] [Nonempty ι] (b : Module.Basis ι ℝ ↥V) (i) : v_lipschitz_constant b i ≤ max_lipschitz b :=
+  (Finite.exists_max (v_lipschitz_constant b)).choose_spec i
 
-lemma le_max_origin (i) : v_origin_norm (V := V) i ≤ max_origin (V := V) :=
-  (Finite.exists_max (v_origin_norm (V := V))).choose_spec i
+lemma le_max_origin {ι : Type*} [Finite ι] [Nonempty ι] (b : Module.Basis ι ℝ ↥V) (i) : v_origin_norm b i ≤ max_origin b :=
+  (Finite.exists_max (v_origin_norm b)).choose_spec i
 
-lemma max_lipschitz_nonneg : 0 ≤ max_lipschitz (V := V) := by
+lemma max_lipschitz_nonneg {ι : Type*} [Finite ι] [Nonempty ι] (b : Module.Basis ι ℝ ↥V) : 0 ≤ max_lipschitz b := by
   unfold max_lipschitz v_lipschitz_constant; positivity
 
-lemma max_origin_nonneg : 0 ≤ max_origin (V := V) := by
+lemma max_origin_nonneg {ι : Type*} [Finite ι] [Nonempty ι] (b : Module.Basis ι ℝ ↥V) : 0 ≤ max_origin b := by
   unfold max_origin v_origin_norm; positivity
 
 /-- The `R`-independent constant appearing in `det_bound` (the `(1 + R) ^ 2` factor is kept
 separate, in the statement of `det_bound`). -/
-noncomputable def det_bound_const : ℝ :=
-  ((Module.finrank ℝ ↥V) * max_lipschitz (V := V) + (Module.finrank ℝ ↥V) * max_origin (V := V)) ^ 2
+noncomputable def det_bound_const {ι : Type*} [Finite ι] [Nonempty ι] (b : Module.Basis ι ℝ ↥V) : ℝ :=
+  ((Module.finrank ℝ ↥V) * max_lipschitz b + (Module.finrank ℝ ↥V) * max_origin b) ^ 2
 
-lemma det_bound_const_nonneg: 0 ≤ det_bound_const (V := V) := by
+lemma det_bound_const_nonneg {ι : Type*} [Finite ι] [Nonempty ι] (b : Module.Basis ι ℝ ↥V) : 0 ≤ det_bound_const b := by
   simp [det_bound_const]
   positivity
 
-lemma det_bound (R: ℕ) (hR: (R'_ V) ≤ R):
-    ((Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V))
-      ≤ det_bound_const (V := V) * (1 + R) ^ 2 * #(S ^ R) := by
+lemma det_bound {ι : Type*} [Fintype ι] [DecidableEq ι] [Nonempty ι] (b : Module.Basis ι ℝ ↥V) (R: ℕ) (hR: (R'_ V) ≤ R):
+    ((Q_R_matrix b R).det ^ ((1: ℝ) / Module.finrank ℝ V))
+      ≤ det_bound_const b * (1 + R) ^ 2 * #(S ^ R) := by
   classical
-  let argmax_eigen := (Finite.exists_max (Q_R_lin_hermetian R (V := V)).eigenvalues).choose
-  let m :=  (Q_R_lin_hermetian R (V := V)).eigenvalues (argmax_eigen)
-  let m_vec := (Q_R_lin_hermetian R (V := V)).eigenvectorBasis argmax_eigen
-  let m_vec_V := V_basis (V := V).equivFun.symm (m_vec.ofLp)
+  let argmax_eigen := (Finite.exists_max (Q_R_lin_hermetian b R).eigenvalues).choose
+  let m :=  (Q_R_lin_hermetian b R).eigenvalues (argmax_eigen)
+  let m_vec := (Q_R_lin_hermetian b R).eigenvectorBasis argmax_eigen
+  let m_vec_V := b.equivFun.symm (m_vec.ofLp)
 
-  let v_lipschitz_constant := v_lipschitz_constant (V := V)
-  let v_origin_norm := v_origin_norm (V := V)
-  let max_lipschitz := max_lipschitz (V := V)
-  let max_origin := max_origin (V := V)
-  have h_max_lipschitz : ∀ i, v_lipschitz_constant i ≤ max_lipschitz := le_max_lipschitz (V := V)
-  have h_max_origin : ∀ i, v_origin_norm i ≤ max_origin := le_max_origin (V := V)
+  let v_lipschitz_constant := v_lipschitz_constant b
+  let v_origin_norm := v_origin_norm b
+  let max_lipschitz := max_lipschitz b
+  let max_origin := max_origin b
+  have h_max_lipschitz : ∀ i, v_lipschitz_constant i ≤ max_lipschitz := le_max_lipschitz b
+  have h_max_origin : ∀ i, v_origin_norm i ≤ max_origin := le_max_origin b
   obtain hB := iterated_lipschitz_bound m_vec_V.val
 
   -- have B_nonneg: 0 ≤ B := by
@@ -483,15 +484,15 @@ lemma det_bound (R: ℕ) (hR: (R'_ V) ≤ R):
   --   have foo := abs_nonneg ((m_vec_V).val.toFun 1)
   --   grw [hB] at foo
   --   apply nonneg_of_mul_nonneg_left foo (by grind)
-  rw [show det_bound_const (V := V) * (1 + R) ^ 2
+  rw [show det_bound_const b * (1 + R) ^ 2
         = (((Module.finrank ℝ ↥V) * max_lipschitz
             + (Module.finrank ℝ ↥V) * max_origin) * (1 + R)) ^ 2 from by
       simp only [max_lipschitz, max_origin, det_bound_const]; ring]
-  rw [(Q_R_lin_hermetian R (V := V)).det_eq_prod_eigenvalues]
+  rw [(Q_R_lin_hermetian b R).det_eq_prod_eigenvalues]
   grw [Finset.prod_le_prod (g := fun _ => m)]
   .
     simp
-    rw [← Module.finrank_eq_card_basis (Module.Basis.ofVectorSpace ℝ V)]
+    rw [← Module.finrank_eq_card_basis b]
     rw [←  Real.rpow_natCast]
     rw [← Real.rpow_mul]
     .
@@ -501,7 +502,7 @@ lemma det_bound (R: ℕ) (hR: (R'_ V) ≤ R):
       unfold m
       rw [Matrix.IsHermitian.eigenvalues_eq]
       simp [Q_R_matrix]
-      have foo := dotProduct_toMatrix₂_mulVec (V_basis (V := V)) (V_basis (V := V)) (Q_R_lin R (V := V))
+      have foo := dotProduct_toMatrix₂_mulVec b b (Q_R_lin V R)
       conv at foo =>
         intro x y
         lhs
@@ -550,7 +551,7 @@ lemma det_bound (R: ℕ) (hR: (R'_ V) ≤ R):
             arg 1
             arg 1
             arg 1
-            equals (Q_R_lin_hermetian V ↑R).eigenvectorBasis =>
+            equals (Q_R_lin_hermetian b ↑R).eigenvectorBasis =>
               rfl
           conv at foo =>
             lhs
@@ -578,7 +579,7 @@ lemma det_bound (R: ℕ) (hR: (R'_ V) ≤ R):
                 grw [Finset.sum_le_card_nsmul (n := ↑max_lipschitz)]
                 .
                   simp
-                  rw [← Module.finrank_eq_card_basis (Module.Basis.ofVectorSpace ℝ V)]
+                  rw [← Module.finrank_eq_card_basis b]
                 .
                   intro i _
                   simp [norm_smul]
@@ -592,7 +593,7 @@ lemma det_bound (R: ℕ) (hR: (R'_ V) ≤ R):
                 grw [Finset.abs_sum_le_sum_abs]
                 grw [Finset.sum_le_card_nsmul (n := max_origin)]
                 . simp
-                  rw [← Module.finrank_eq_card_basis (Module.Basis.ofVectorSpace ℝ V)]
+                  rw [← Module.finrank_eq_card_basis b]
                 .
                   intro i hi
                   simp
@@ -600,26 +601,26 @@ lemma det_bound (R: ℕ) (hR: (R'_ V) ≤ R):
                   simp
                   apply h_max_origin
             . positivity
-            . exact add_nonneg (mul_nonneg (by positivity) (max_lipschitz_nonneg (V := V)))
-                (mul_nonneg (by positivity) (max_origin_nonneg (V := V)))
+            . exact add_nonneg (mul_nonneg (by positivity) (max_lipschitz_nonneg b))
+                (mul_nonneg (by positivity) (max_origin_nonneg b))
             . simp
           . positivity
 
     . unfold m
       apply Matrix.PosSemidef.eigenvalues_nonneg
-      apply (Q_R_matrix_pos_def V R hR).posSemidef
+      apply (Q_R_matrix_pos_def b R hR).posSemidef
   .
     apply Finset.prod_nonneg
     intro i _
     apply Matrix.PosSemidef.eigenvalues_nonneg
-    apply (Q_R_matrix_pos_def V R hR).posSemidef
+    apply (Q_R_matrix_pos_def b R hR).posSemidef
   .
     intro i _
     apply Matrix.PosSemidef.eigenvalues_nonneg
-    apply (Q_R_matrix_pos_def V R hR).posSemidef
+    apply (Q_R_matrix_pos_def b R hR).posSemidef
   . intro i _
     unfold m
-    have foo := (Finite.exists_max (Q_R_lin_hermetian V R).eigenvalues).choose_spec
+    have foo := (Finite.exists_max (Q_R_lin_hermetian b R).eigenvalues).choose_spec
     apply foo i
 
 #print axioms det_bound
@@ -643,6 +644,8 @@ include v_wrapper_inst
 local instance v_finite_dim_inst: FiniteDimensional ℝ V := v_wrapper_inst.V_finite
 local instance v_nontrivial_inst: Nontrivial V := v_wrapper_inst.V_nontrivial
 local instance V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ V) := v_wrapper_inst.V_decidable
+
+variable {ι : Type*} [Fintype ι] [DecidableEq ι] [Nonempty ι]
 
 private noncomputable def R' := R'_ V
 
@@ -672,7 +675,7 @@ private noncomputable def dim (V: Type*) [AddCommMonoid V] [Module ℝ V] : ℝ 
 
 private noncomputable def i₀ : ℕ := Nat.clog 16 ⌈R'⌉₊
 
-lemma Q_R_matrix_pos_def_i₀ (R: ℝ) (hR: 16 ^ (i₀) ≤ R): (Q_R_matrix V R).PosDef := by
+lemma Q_R_matrix_pos_def_i₀ (b : Module.Basis ι ℝ V) (R: ℝ) (hR: 16 ^ (i₀) ≤ R): (Q_R_matrix b R).PosDef := by
   apply Q_R_matrix_pos_def
   simp [i₀] at hR
   have foo := Nat.le_pow_clog (b := 16) (x := ⌈R'_ V⌉₊) (by simp)
@@ -684,16 +687,16 @@ lemma Q_R_matrix_pos_def_i₀ (R: ℝ) (hR: 16 ^ (i₀) ≤ R): (Q_R_matrix V R)
   unfold R' at hR
   grw [hR]
 
-private noncomputable def f (R: ℕ): ℝ := #(S ^ R) * (Q_R_matrix V R).det ^ (dim V)⁻¹
-private noncomputable def h (i: ℕ): ℝ := Real.log (f (16 ^ i))
+private noncomputable def f (b : Module.Basis ι ℝ V) (R: ℕ): ℝ := #(S ^ R) * (Q_R_matrix b R).det ^ (dim V)⁻¹
+private noncomputable def h (b : Module.Basis ι ℝ V) (i: ℕ): ℝ := Real.log (f b (16 ^ i))
 
 -- Matrix.le_iff
 
 
-lemma f_monotone_on: MonotoneOn f (Set.Ici ⌈R'⌉₊) := by
-  intro a ha b hb hab
+lemma f_monotone_on (bas : Module.Basis ι ℝ V): MonotoneOn (f bas) (Set.Ici ⌈R'⌉₊) := by
+  intro x hx y hy hxy
   unfold f
-  grw [Finset.pow_subset_pow_right (n := b)]
+  grw [Finset.pow_subset_pow_right (n := y)]
   .
     rw [mul_le_mul_iff_right₀]
     .
@@ -701,18 +704,18 @@ lemma f_monotone_on: MonotoneOn f (Set.Ici ⌈R'⌉₊) := by
       .
         apply matrix_det_montone
         .
-          apply Q_R_matrix_pos_def V a (by simp [R'] at ha; exact ha)
+          apply Q_R_matrix_pos_def bas x (by simp [R'] at hx; exact hx)
         .
           unfold Q_R_matrix
           rw [← map_sub]
           rw [← LinearMap.isPosSemidef_iff_posSemidef_toMatrix]
           apply Q_R_lin_sub_pos_semi_def
-          simpa using hab
+          simpa using hxy
       .
-        have foo := Q_R_matrix_pos_def V a (by simp [R'] at ha; exact ha)
+        have foo := Q_R_matrix_pos_def bas x (by simp [R'] at hx; exact hx)
         grind [foo.det_pos]
       .
-        have foo := Q_R_matrix_pos_def V b (by simp [R'] at hb; exact hb)
+        have foo := Q_R_matrix_pos_def bas y (by simp [R'] at hy; exact hy)
         grind [foo.det_pos]
       . simp [dim]
         exact Module.finrank_pos
@@ -722,12 +725,12 @@ lemma f_monotone_on: MonotoneOn f (Set.Ici ⌈R'⌉₊) := by
       apply S_nonempty
 
   . apply Real.rpow_nonneg
-    have foo := Q_R_matrix_pos_def V a (by simp [R'] at ha; exact ha)
+    have foo := Q_R_matrix_pos_def bas x (by simp [R'] at hx; exact hx)
     grind [foo.det_pos]
   . apply hGS.one_mem
-  . exact hab
+  . exact hxy
 
-lemma h_montone_on: MonotoneOn h (Set.Ici i₀) := by
+lemma h_montone_on (bas : Module.Basis ι ℝ V): MonotoneOn (h bas) (Set.Ici i₀) := by
   unfold h
   rw [← Function.comp_def]
   apply MonotoneOn.comp
@@ -735,7 +738,7 @@ lemma h_montone_on: MonotoneOn h (Set.Ici i₀) := by
   .
     rw [← Function.comp_def]
     apply MonotoneOn.comp
-    . apply f_monotone_on
+    . apply f_monotone_on bas
     .
       conv =>
         arg 1
@@ -762,14 +765,14 @@ lemma h_montone_on: MonotoneOn h (Set.Ici i₀) := by
       apply S_nonempty
     .
       apply Real.rpow_pos_of_pos
-      apply (Q_R_matrix_pos_def_i₀ _ ?_).det_pos
+      apply (Q_R_matrix_pos_def_i₀ bas _ ?_).det_pos
       rw [pow_le_pow_iff_right₀]
       . exact ha
       . simp
 
 
 
-lemma growth_implies_lim_h (d: ℕ) (h_growth: growth_bound V d): Filter.Tendsto (fun (i: ℕ) => (h i - d * i * Real.log 16)) Filter.atTop Filter.atBot := by
+lemma growth_implies_lim_h (b : Module.Basis ι ℝ V) (d: ℕ) (h_growth: growth_bound b d): Filter.Tendsto (fun (i: ℕ) => (h b i - d * i * Real.log 16)) Filter.atTop Filter.atBot := by
   unfold growth_bound my_expr at h_growth
   have pow_tendsto: Filter.Tendsto (fun n => 16 ^ n) Filter.atTop Filter.atTop := by
     apply StrictMono.tendsto_atTop
@@ -791,7 +794,7 @@ lemma growth_implies_lim_h (d: ℕ) (h_growth: growth_bound V d): Filter.Tendsto
       . simp
         grind [S_nonempty]
       .
-        have det_pos := (Q_R_matrix_pos_def_i₀ (16 ^ (x + i₀)) (by
+        have det_pos := (Q_R_matrix_pos_def_i₀ b (16 ^ (x + i₀)) (by
           rw [add_comm]
           rw [pow_add]
           simp
@@ -822,13 +825,13 @@ lemma growth_implies_lim_h (d: ℕ) (h_growth: growth_bound V d): Filter.Tendsto
 noncomputable def a (d: ℕ) := 4 * d * Real.log 16
 
 
-lemma exists_j_0_for_h (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_bound V d): ∃ j_0: ℕ, h (i₀ + 3 * w * (j_0 + 1)) - h (i₀ + 3 * w * j_0) < w * (a d) := by
+lemma exists_j_0_for_h (b : Module.Basis ι ℝ V) (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_bound b d): ∃ j_0: ℕ, h b (i₀ + 3 * w * (j_0 + 1)) - h b (i₀ + 3 * w * j_0) < w * (a d) := by
   by_contra!
 
-  have h_sum (N: ℕ) := Finset.sum_Ico_sub (f := fun n => h (i₀ + 3 * w * n)) (m := 0) (n := N) (by simp)
+  have h_sum (N: ℕ) := Finset.sum_Ico_sub (f := fun n => h b (i₀ + 3 * w * n)) (m := 0) (n := N) (by simp)
   simp_rw [eq_comm, sub_eq_iff_eq_add] at h_sum
 
-  have h_gt (N: ℕ): h (i₀ + (3 * w * N)) ≥ 4 * d * w * N * (Real.log 16) + h i₀ := by
+  have h_gt (N: ℕ): h b (i₀ + (3 * w * N)) ≥ 4 * d * w * N * (Real.log 16) + h b i₀ := by
     rw [h_sum]
     grw [← Finset.card_nsmul_le_sum (n := w * (a d))]
     .
@@ -838,12 +841,12 @@ lemma exists_j_0_for_h (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_boun
     . intro n hn
       apply this
 
-  have h_diff_ge (N: ℕ): h (i₀ + (3 * w * N)) - d * (i₀ + 3 * w * N) * Real.log 16 ≥ d * (w * N - i₀) * (Real.log 16) + h i₀ := by
+  have h_diff_ge (N: ℕ): h b (i₀ + (3 * w * N)) - d * (i₀ + 3 * w * N) * Real.log 16 ≥ d * (w * N - i₀) * (Real.log 16) + h b i₀ := by
     grw [h_gt]
     simp
     grind
 
-  have rhs_diverges: Filter.Tendsto (fun N => d * (w * N - i₀) * (Real.log 16) + h i₀) Filter.atTop Filter.atTop := by
+  have rhs_diverges: Filter.Tendsto (fun N => d * (w * N - i₀) * (Real.log 16) + h b i₀) Filter.atTop Filter.atTop := by
     apply Filter.tendsto_atTop_add_const_right
     rw [Filter.tendsto_mul_const_atTop_of_pos (by positivity)]
     rw [Filter.tendsto_const_mul_atTop_of_pos (by positivity)]
@@ -894,47 +897,47 @@ lemma exists_j_0_for_h (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_boun
 
 
 
-structure Lemma3_24_data (d w: ℕ) where
+structure Lemma3_24_data (b : Module.Basis ι ℝ V) (d w: ℕ) where
   i_1 : ℕ
   i_2 : ℕ
   i_1_ge: i₀ ≤ i_1
   i_2_ge: i₀ ≤ i_2
   i_2_pos: 0 < i_2
   i_diff_mem: i_2 - i_1 ∈ Set.Ioo w (3 * w)
-  h_diff_lt_w: h (i_2 + 1) - h i_1 < w * (a d)
-  first_h_i: h (i_1 + 1) - h i_1 < (a d)
-  second_h_i : h (i_2 + 1) - h i_2 < (a d)
+  h_diff_lt_w: h b (i_2 + 1) - h b i_1 < w * (a d)
+  first_h_i: h b (i_1 + 1) - h b i_1 < (a d)
+  second_h_i : h b (i_2 + 1) - h b i_2 < (a d)
 
-lemma lemma_3_24 (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_bound V d): Nonempty (Lemma3_24_data d w) := by
-  obtain ⟨j_0, h_j_0⟩ := exists_j_0_for_h w d hw hd h_growth
+lemma lemma_3_24 (b : Module.Basis ι ℝ V) (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_bound b d): Nonempty (Lemma3_24_data b d w) := by
+  obtain ⟨j_0, h_j_0⟩ := exists_j_0_for_h b w d hw hd h_growth
   let m := i₀ + 3 * w * j_0
 
-  have exists_i1: ∃ i_1: ℕ, i_1 ∈ Set.Ico m (m + w) ∧ h (i_1 + 1) - h i_1 < (a d) := by
+  have exists_i1: ∃ i_1: ℕ, i_1 ∈ Set.Ico m (m + w) ∧ h b (i_1 + 1) - h b i_1 < (a d) := by
     by_contra!
 
-    have h_sum (N: ℕ) := Finset.sum_Ico_sub (f := fun n => h (m + n)) (m := 0) (n := w) (by simp)
+    have h_sum (N: ℕ) := Finset.sum_Ico_sub (f := fun n => h b (m + n)) (m := 0) (n := w) (by simp)
     simp only [Nat.Ico_zero_eq_range, add_zero, forall_const] at h_sum
 
-    have h_m_diff_le: h (m + w) - h (m) ≤ h (i₀ + 3 * w * (j_0 + 1)) - h (i₀ + 3 * w * (j_0)) := by
+    have h_m_diff_le: h b (m + w) - h b (m) ≤ h b (i₀ + 3 * w * (j_0 + 1)) - h b (i₀ + 3 * w * (j_0)) := by
       apply sub_le_sub
       .
-        apply h_montone_on
+        apply h_montone_on b
         . simp [m]
           grind
         . simp
         . simp [m]
           grind
-      . apply h_montone_on
+      . apply h_montone_on b
         . simp [m]
         . simp [m]
         . simp [m]
 
 
-    have h_le_w_a_d : h (m  + w) - h m ≤ w * (a d) := by
+    have h_le_w_a_d : h b (m  + w) - h b m ≤ w * (a d) := by
       grw [h_m_diff_le]
       grw [h_j_0]
 
-    have w_a_le_h : w * (a d) ≤ h (m + w) - h m := by
+    have w_a_le_h : w * (a d) ≤ h b (m + w) - h b m := by
       rw [h_sum.symm]
       grw [← Finset.card_nsmul_le_sum (n := (a d))]
       . simp
@@ -944,33 +947,33 @@ lemma lemma_3_24 (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_bound V d)
     grind
 
   -- TODO - can this be deduplicated with exists_i1 ?
-  have exists_i2: ∃ i_2: ℕ, i_2 ∈ Set.Ico (m + 2*w) (m + 3 * w) ∧ h (i_2 + 1) - h i_2 < (a d) := by
+  have exists_i2: ∃ i_2: ℕ, i_2 ∈ Set.Ico (m + 2*w) (m + 3 * w) ∧ h b (i_2 + 1) - h b i_2 < (a d) := by
     by_contra!
 
-    have h_sum (N: ℕ) := Finset.sum_Ico_sub (f := fun n => h (m + n)) (m := (2 * w)) (n := (3 * w)) (by grind)
+    have h_sum (N: ℕ) := Finset.sum_Ico_sub (f := fun n => h b (m + n)) (m := (2 * w)) (n := (3 * w)) (by grind)
     simp only [Nat.Ico_zero_eq_range, add_zero, forall_const] at h_sum
 
-    have h_m_diff_le: h (m + 3 * w) - h (m + 2 * w) ≤ h (i₀ + 3 * w * (j_0 + 1)) - h (i₀ + 3 * w * (j_0)) := by
+    have h_m_diff_le: h b (m + 3 * w) - h b (m + 2 * w) ≤ h b (i₀ + 3 * w * (j_0 + 1)) - h b (i₀ + 3 * w * (j_0)) := by
       apply sub_le_sub
       .
-        apply h_montone_on
+        apply h_montone_on b
         . simp [m]
           grind
         . simp
         . simp [m]
           grind
-      . apply h_montone_on
+      . apply h_montone_on b
         . simp [m]
         . simp [m]
           grind
         . simp [m]
 
 
-    have h_le_w_a_d : h (m  + 3 * w) - h (m + 2 * w) ≤ w * (a d) := by
+    have h_le_w_a_d : h b (m  + 3 * w) - h b (m + 2 * w) ≤ w * (a d) := by
       grw [h_m_diff_le]
       grw [h_j_0]
 
-    have w_a_le_h : w * (a d) ≤ h (m + 3 * w) - h (m + 2* w) := by
+    have w_a_le_h : w * (a d) ≤ h b (m + 3 * w) - h b (m + 2* w) := by
 
       rw [h_sum.symm]
       grw [← Finset.card_nsmul_le_sum (n := (a d))]
@@ -986,12 +989,12 @@ lemma lemma_3_24 (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_bound V d)
 
   obtain ⟨i_1, h_i_1⟩ := exists_i1
   obtain ⟨i_2, h_i_2⟩ := exists_i2
-  have diff_i_lt: h (i_2 + 1) - h i_1 < w * (a d) := by
-    grw [h_montone_on _ _ (b := i₀ + 3 * w * (j_0 + 1))]
+  have diff_i_lt: h b (i_2 + 1) - h b i_1 < w * (a d) := by
+    grw [h_montone_on b _ _ (b := i₀ + 3 * w * (j_0 + 1))]
     .
       apply LE.le.trans_lt ?_ h_j_0
       apply sub_le_sub_left
-      apply h_montone_on
+      apply h_montone_on b
       . simp
       . simp
         grind
@@ -1018,32 +1021,34 @@ lemma lemma_3_24 (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_bound V d)
 
 -- Controlled cover
 
-structure GoodScalesData where
+variable {b : Module.Basis ι ℝ V}
+
+structure GoodScalesData (b : Module.Basis ι ℝ V) where
   w: ℕ
   d: ℕ
   hw: 0 < w
   hd: 0 < d
   w_gt: 4 < w
-  h_growth: growth_bound V d
+  h_growth: growth_bound b d
 
-noncomputable def GoodScales (data: GoodScalesData) := Classical.choice (lemma_3_24 data.w data.d data.hw data.hd data.h_growth)
+noncomputable def GoodScales (data: GoodScalesData b) := Classical.choice (lemma_3_24 b data.w data.d data.hw data.hd data.h_growth)
 
-noncomputable def R_1 (data: GoodScalesData) := 2 * 16^(GoodScales data).i_1
-noncomputable def R_2 (data: GoodScalesData) := 16^(GoodScales data).i_2
+noncomputable def R_1 (data: GoodScalesData b) := 2 * 16^(GoodScales data).i_1
+noncomputable def R_2 (data: GoodScalesData b) := 16^(GoodScales data).i_2
 
 -- TODO - does it matter than 'Metric.maximalSeparatedSet' uses 'R_1 < dist' instead of 'R_1 <= dist' ?
-def X_j (data: GoodScalesData) := Metric.maximalSeparatedSet (R_1 data) ((Metric.closedBall (1: G) (R_2 data)))
+def X_j (data: GoodScalesData b) := Metric.maximalSeparatedSet (R_1 data) ((Metric.closedBall (1: G) (R_2 data)))
 -- A collection of disjoint balls that cover the ball R_2
-def B (data: GoodScalesData) := (fun a => Metric.closedBall a (R_1 data)) '' (X_j data)
-def B_half (data: GoodScalesData) := (fun a => Metric.closedBall a (R_1 data / 2)) '' (X_j data)
-def B_3 (data: GoodScalesData) := (fun a => Metric.closedBall a (3 * R_1 data)) '' (X_j data)
+def B (data: GoodScalesData b) := (fun a => Metric.closedBall a (R_1 data)) '' (X_j data)
+def B_half (data: GoodScalesData b) := (fun a => Metric.closedBall a (R_1 data / 2)) '' (X_j data)
+def B_3 (data: GoodScalesData b) := (fun a => Metric.closedBall a (3 * R_1 data)) '' (X_j data)
 
-lemma X_j_finite (data: GoodScalesData): (X_j data).Finite := by
+lemma X_j_finite (data: GoodScalesData b): (X_j data).Finite := by
   apply Set.Finite.subset (finite_closed_ball (1 : G) (R_2 data))
   simp [X_j]
   apply Metric.maximalSeparatedSet_subset
 
-lemma B_ball_injective_on (data: GoodScalesData) (R: ℝ) (R_pos: 0 ≤ R) (hR: R ≤ R_1 data): Set.InjOn (fun a => Metric.closedBall a (R)) (X_j data) := by
+lemma B_ball_injective_on (data: GoodScalesData b) (R: ℝ) (R_pos: 0 ≤ R) (hR: R ≤ R_1 data): Set.InjOn (fun a => Metric.closedBall a (R)) (X_j data) := by
   intro a ha b hb hab
   by_contra!
   simp at hab
@@ -1067,7 +1072,7 @@ lemma B_ball_injective_on (data: GoodScalesData) (R: ℝ) (R_pos: 0 ≤ R) (hR: 
   norm_cast at sep
   grind
 
-lemma B_covers_R2 (data: GoodScalesData): Metric.closedBall 1 (R_2 data) ⊆ ⋃₀ (B data) := by
+lemma B_covers_R2 (data: GoodScalesData b): Metric.closedBall 1 (R_2 data) ⊆ ⋃₀ (B data) := by
   by_contra!
   rw [Set.not_subset] at this
   obtain ⟨x, x_mem, x_not_mem⟩ := this
@@ -1119,7 +1124,7 @@ lemma B_covers_R2 (data: GoodScalesData): Metric.closedBall 1 (R_2 data) ⊆ ⋃
     simp
     apply finite_closed_ball
 
-lemma B_half_disjoint (data: GoodScalesData): (B_half data).PairwiseDisjoint id := by
+lemma B_half_disjoint (data: GoodScalesData b): (B_half data).PairwiseDisjoint id := by
   simp [Set.pairwiseDisjoint_iff]
   intro X hX Y hY hXY
   obtain ⟨a, ha⟩ := hXY
@@ -1183,27 +1188,27 @@ lemma ball_smul_eq_origin (a: G) (r: ℝ): Metric.closedBall a r = (MulOpposite.
   grind
 
 
-lemma B_finite (data: GoodScalesData): (B data).Finite := by
+lemma B_finite (data: GoodScalesData b): (B data).Finite := by
   simp [B]
   apply Set.Finite.image
   simp [X_j]
   apply Set.Finite.subset ?_ (Metric.maximalSeparatedSet_subset)
   apply finite_closed_ball
 
-lemma B_half_finite (data: GoodScalesData): (B_half data).Finite := by
+lemma B_half_finite (data: GoodScalesData b): (B_half data).Finite := by
   simp [B_half]
   apply Set.Finite.image
   simp [X_j]
   apply Set.Finite.subset ?_ (Metric.maximalSeparatedSet_subset)
   apply finite_closed_ball
 
-noncomputable def B_finsets (data: GoodScalesData): Finset (Finset G) := Finset.image ((fun a => (finite_closed_ball a (R_1 data )).toFinset)) (X_j_finite data).toFinset
+noncomputable def B_finsets (data: GoodScalesData b): Finset (Finset G) := Finset.image ((fun a => (finite_closed_ball a (R_1 data )).toFinset)) (X_j_finite data).toFinset
 
 
 -- TODO - combine this with 'B_half'
-noncomputable def B_half_finsets (data: GoodScalesData): Finset (Finset G) := Finset.image ((fun a => (finite_closed_ball a (R_1 data / 2)).toFinset)) (X_j_finite data).toFinset
+noncomputable def B_half_finsets (data: GoodScalesData b): Finset (Finset G) := Finset.image ((fun a => (finite_closed_ball a (R_1 data / 2)).toFinset)) (X_j_finite data).toFinset
 
-lemma B_3_finite (data: GoodScalesData): (B_3 data).Finite := by
+lemma B_3_finite (data: GoodScalesData b): (B_3 data).Finite := by
   simp [B_3]
   apply Set.Finite.image
   simp [X_j]
@@ -1211,7 +1216,7 @@ lemma B_3_finite (data: GoodScalesData): (B_3 data).Finite := by
   apply finite_closed_ball
 
 -- Suprisingly, we can prove an upper bound with 4*R_1, rather than the 8*R_1 from the paper
-lemma inter_mult_helper (data: GoodScalesData): InterMult (B_3 data) * #(S ^ ((R_1 data) / 2)) ≤ #(S ^ (4 * (R_1 data))) := by
+lemma inter_mult_helper (data: GoodScalesData b): InterMult (B_3 data) * #(S ^ ((R_1 data) / 2)) ≤ #(S ^ (4 * (R_1 data))) := by
   classical
   apply Nat.mul_le_of_le_div
   unfold InterMult
@@ -1372,7 +1377,7 @@ plus a determinant term. The determinant term is monotone in the scale (Proposit
 leaving a comparison of ball cardinalities that follows from `Finset.card_pow_mono`. -/
 lemma log_card_pow_sub_le {j k m n : ℕ} (hj : i₀ ≤ j) (hjk : j ≤ k) (hm0 : m ≠ 0)
     (hm : m ≤ 16 ^ k) (hn : 16 ^ j ≤ n) :
-    Real.log (#(S ^ m)) - Real.log (#(S ^ n)) ≤ h k - h j := by
+    Real.log (#(S ^ m)) - Real.log (#(S ^ n)) ≤ h b k - h b j := by
   have card_pos : ∀ p : ℕ, (0:ℝ) < #(S ^ p) := by
     intro p
     simp
@@ -1384,10 +1389,10 @@ lemma log_card_pow_sub_le {j k m n : ℕ} (hj : i₀ ≤ j) (hjk : j ≤ k) (hm0
   have i₀_le_k : ((16:ℝ) ^ i₀) ≤ ((16 ^ k : ℕ) : ℝ) := by
     push_cast
     exact pow_le_pow_right₀ (by norm_num) (hj.trans hjk)
-  have pd_j : (Q_R_matrix V ((16 ^ j : ℕ) : ℝ)).PosDef := Q_R_matrix_pos_def_i₀ _ i₀_le_j
+  have pd_j : (Q_R_matrix b ((16 ^ j : ℕ) : ℝ)).PosDef := Q_R_matrix_pos_def_i₀ b _ i₀_le_j
   -- Proposition 3.22: the determinant is monotone in the scale, so the determinant part of
   -- `h k - h j` is non-negative and may be discarded.
-  have det_le : (Q_R_matrix V ((16 ^ j : ℕ) : ℝ)).det ≤ (Q_R_matrix V ((16 ^ k : ℕ) : ℝ)).det := by
+  have det_le : (Q_R_matrix b ((16 ^ j : ℕ) : ℝ)).det ≤ (Q_R_matrix b ((16 ^ k : ℕ) : ℝ)).det := by
     apply matrix_det_montone
     . exact pd_j
     . unfold Q_R_matrix
@@ -1399,8 +1404,8 @@ lemma log_card_pow_sub_le {j k m n : ℕ} (hj : i₀ ≤ j) (hjk : j ≤ k) (hm0
   have dim_nonneg : (0:ℝ) ≤ (dim V)⁻¹ := by
     simp [dim]
   have log_det_le :
-      Real.log ((Q_R_matrix V ((16 ^ j : ℕ) : ℝ)).det ^ (dim V)⁻¹) ≤
-        Real.log ((Q_R_matrix V ((16 ^ k : ℕ) : ℝ)).det ^ (dim V)⁻¹) :=
+      Real.log ((Q_R_matrix b ((16 ^ j : ℕ) : ℝ)).det ^ (dim V)⁻¹) ≤
+        Real.log ((Q_R_matrix b ((16 ^ k : ℕ) : ℝ)).det ^ (dim V)⁻¹) :=
     Real.log_le_log (Real.rpow_pos_of_pos pd_j.det_pos _)
       (Real.rpow_le_rpow pd_j.det_pos.le det_le dim_nonneg)
   have card_le :
@@ -1420,11 +1425,11 @@ lemma log_card_pow_sub_le {j k m n : ℕ} (hj : i₀ ≤ j) (hjk : j ≤ k) (hm0
   . exact ne_of_gt (Real.rpow_pos_of_pos pd_j.det_pos _)
   . exact ne_of_gt (card_pos (16 ^ k))
   . exact ne_of_gt (Real.rpow_pos_of_pos
-      (Q_R_matrix_pos_def_i₀ _ i₀_le_k).det_pos _)
+      (Q_R_matrix_pos_def_i₀ b _ i₀_le_k).det_pos _)
 
 -- Lemma 3.25 (a)
 
-lemma log_inter_mult_b3 (data: GoodScalesData): InterMult (B_3 data) ≤ Real.exp (a data.d) := by
+lemma log_inter_mult_b3 (data: GoodScalesData b): InterMult (B_3 data) ≤ Real.exp (a data.d) := by
   by_cases mult_zero: InterMult (B_3 data) = 0
   . simp [mult_zero]
     positivity
@@ -1479,7 +1484,7 @@ noncomputable def B_r (r: ℝ) := (finite_closed_ball 1 r).toFinset
 noncomputable def B_c_r (g: G) (r: ℝ) := (finite_closed_ball g r).toFinset
 
 -- Lemma 3.25 (b)
-lemma card_B_le_exp_wa (data: GoodScalesData): #(B_finite data).toFinset < Real.exp (data.w * (a data.d)) := by
+lemma card_B_le_exp_wa (data: GoodScalesData b): #(B_finite data).toFinset < Real.exp (data.w * (a data.d)) := by
   --rw [← Nat.card_eq_card_finite_toFinset]
   have B_union := Finset.card_biUnion (s := (B_half_finsets data)) (t := id) ?_
   .
@@ -2264,7 +2269,7 @@ lemma card_B_r_eq (R: ℕ): #(B_r R) = #(S ^ R) := by
   rw [← card_closed_ball_eq]
   simp [B_r]
 
-lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (f: G → ℝ): ∑ x ∈ (B_c_r j (R_1 data )), |f x - (f_avg_c j (R_1 data ) f)|^2 ≤
+lemma lemma_3_25_poincare (data: GoodScalesData b) (j: (X_j data)) (f: G → ℝ): ∑ x ∈ (B_c_r j (R_1 data )), |f x - (f_avg_c j (R_1 data ) f)|^2 ≤
     16 * (R_1 data + 1)^2 * #S * (Real.exp (a data.d)) * ∑ x ∈ (B_c_r j (3 * (R_1 data + 1))), deriv_sq f x := by
 
   have R_1_pos: 0 < R_1 data := by
@@ -2344,7 +2349,7 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (f: G → ℝ):
           equals ↑(2 * ((R_1 data) + 1) - 2) =>
             simp
         rw [card_B_r_eq]
-        grw [log_card_pow_sub_le (k := (GoodScales data).i_1 + 1) (j := (GoodScales data).i_1)]
+        grw [log_card_pow_sub_le (b := b) (k := (GoodScales data).i_1 + 1) (j := (GoodScales data).i_1)]
         .
           grw [(GoodScales data).first_h_i]
         .
@@ -2410,8 +2415,8 @@ lemma lemma_3_25_poincare (data: GoodScalesData) (j: (X_j data)) (f: G → ℝ):
 
 -- Estimating functions relative to cover
 
-noncomputable def J (data: GoodScalesData) := #((X_j_finite data).toFinset)
-noncomputable def phi (data: GoodScalesData): V →ₗ[ℝ] EuclideanSpace ℝ (B_finsets data) := {
+noncomputable def J (data: GoodScalesData b) := #((X_j_finite data).toFinset)
+noncomputable def phi (data: GoodScalesData b): V →ₗ[ℝ] EuclideanSpace ℝ (B_finsets data) := {
   toFun := fun u => WithLp.toLp 2 (fun (j: B_finsets data) => ((#j.val : ℝ)⁻¹) * ∑ x ∈ j.val, u.val x)
   map_add' := by
     intro x y
@@ -2431,7 +2436,7 @@ noncomputable def phi (data: GoodScalesData): V →ₗ[ℝ] EuclideanSpace ℝ (
 def C: ℝ := 32 * (#S)
 
 set_option maxHeartbeats 2500000 in
-lemma lemma_3_26_a (data: GoodScalesData) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(S^(R_1 data ))) * ‖(phi data u)‖^2 + C * (Real.exp ((a data.d))) * Real.exp (↑data.w * a data.d) * (R_1 data + 1)^2 * (∑ x ∈ B_r (2 * R_2 data), deriv_sq u x)  := by
+lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(S^(R_1 data ))) * ‖(phi data u)‖^2 + C * (Real.exp ((a data.d))) * Real.exp (↑data.w * a data.d) * (R_1 data + 1)^2 * (∑ x ∈ B_r (2 * R_2 data), deriv_sq u x)  := by
 
   rw [Q_R]
   let a := ⋃₀ (B data)
@@ -2800,7 +2805,7 @@ lemma lemma_3_26_a (data: GoodScalesData) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(
 -- Lemma 3.27
 
 set_option maxHeartbeats 2500000 in
-lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule ℝ LipschitzH, U ≤ V ∧ dim V ≤ 2 * dim U ∧ ∀ f ∈ U, Q_R (16 * (R_2 data)) f f ≤ Real.exp (2 * (a data.w)) * Q_R ((R_2 data)) f f := by
+lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodule ℝ LipschitzH, U ≤ V ∧ dim V ≤ 2 * dim U ∧ ∀ f ∈ U, Q_R (16 * (R_2 data)) f f ≤ Real.exp (2 * (a data.w)) * Q_R ((R_2 data)) f f := by
   classical
   by_contra!
 
@@ -2851,7 +2856,7 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
       .
 
 
-        have q_r_base_pos_def := (Q_R_matrix_pos_def_i₀ (16 ^ ((GoodScales data).i_2)) (by
+        have q_r_base_pos_def := (Q_R_matrix_pos_def_i₀ b (16 ^ ((GoodScales data).i_2)) (by
           simp [i₀]
           rw [pow_le_pow_iff_right₀]
           . sorry
@@ -3454,7 +3459,8 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData): ∃ U: Submodule 
 
 end V_Wrapper_Section
 
-lemma theorem_3_23 (d: ℝ): ∃ C: ℕ, ∀ data: V_Data, (growth_bound data.V d (finite_V := data.hV) (decidable_V := data.V_decidable)) → (Module.finrank ℝ data.V) < C := by
+-- Theorem 3.23
+lemma theorem_3_23 (d: ℝ): ∃ C: ℕ, ∀ data: V_Data, (haveI := data.hV; haveI := data.V_decidable; growth_bound (V_basis data.V) d) → (Module.finrank ℝ data.V) < C := by
   have C: ℕ := sorry
   use C
   intro data h_growth
@@ -3466,6 +3472,7 @@ lemma theorem_3_23 (d: ℝ): ∃ C: ℕ, ∀ data: V_Data, (growth_bound data.V 
 open scoped Topology
 
 -- TODO - do we really need the double by_contra here?
+-- Theorem 3.19
 set_option maxHeartbeats 2500000 in
 instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
   classical
@@ -3559,14 +3566,16 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       simp
       -- (R' (V := V))
       let R'' := ⌈R'_ large_v.V⌉₊
+      haveI := large_v.hV
+      haveI := nontrivial_v
       rw [← Filter.tendsto_add_atTop_iff_nat R'']
       --  Filter.tendsto_add_atTop_iff_nat
-      apply squeeze_zero_nhdsGT (g := (fun (R: ℕ) => (det_bound_const (V := large_v.V) * (1 + (R + R'')) ^ 2 * ((a * (R + R'')^d : ℝ))) / ((R + R'') ^ (↑d + 3) : ℝ)))
+      apply squeeze_zero_nhdsGT (g := (fun (R: ℕ) => (det_bound_const (V_basis large_v.V) * (1 + (R + R'')) ^ 2 * ((a * (R + R'')^d : ℝ))) / ((R + R'') ^ (↑d + 3) : ℝ)))
       .
         rw [Filter.eventually_atTop]
         use 1
         intro R R_pos
-        have det_pos := (Q_R_matrix_pos_def (R + R'') (V := large_v.V) (by
+        have det_pos := (Q_R_matrix_pos_def (V_basis large_v.V) (R + R'') (by
           -- TODO - why is this so messy?
           simp [R'']
           norm_cast
@@ -3576,11 +3585,12 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
           grind
         )).det_pos
         norm_cast at det_pos
+        have hrr : 0 < R + R'' := by omega
         positivity
       .
         apply Filter.Eventually.of_forall
         intro R
-        have foo := det_bound (V := large_v.V) (R := R + R'') (by
+        have foo := det_bound (V_basis large_v.V) (R := R + R'') (by
           simp [R'']
           norm_cast
           have foo := Nat.le_ceil (a := R'_ (V := large_v.V))
@@ -3589,9 +3599,10 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
           grind
         )
         simp
-        simp at foo
-        grw [foo]
-        by_cases const_zero: det_bound_const (V := large_v.V) = 0
+        rw [one_div] at foo
+        push_cast at foo
+        refine le_trans (mul_le_mul_of_nonneg_right foo (by positivity)) ?_
+        by_cases const_zero: det_bound_const (V_basis large_v.V) = 0
         .
           simp [const_zero]
 
@@ -3611,7 +3622,7 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
             simp
             rw [mul_div_assoc]
         .
-          have nonneg := det_bound_const_nonneg (V := large_v.V)
+          have nonneg := det_bound_const_nonneg (V_basis large_v.V)
           grind
       . poly_tendsto
     .
