@@ -25,6 +25,23 @@ theorem Matrix.dot_mulVec_eq_sum_sum {m n R : Type*} [Fintype n] [Fintype m] [No
   simp_rw [dotProduct_mulVec, dotProduct, vecMul_eq_sum, Finset.sum_apply, Pi.smul_apply,
     smul_eq_mul, Finset.sum_mul]
 
+/-- Reindexing both bases of a `LinearMap.toMatrix₂` by an equiv turns it into a `submatrix`. -/
+theorem LinearMap.toMatrix₂_reindex {R M ι κ : Type*} [CommSemiring R] [AddCommMonoid M]
+    [Module R M] [Fintype ι] [DecidableEq ι] [Fintype κ] [DecidableEq κ]
+    (b : Module.Basis ι R M) (e : ι ≃ κ) (B : M →ₗ[R] M →ₗ[R] R) :
+    LinearMap.toMatrix₂ (b.reindex e) (b.reindex e) B
+      = (LinearMap.toMatrix₂ b b B).submatrix e.symm e.symm := by
+  ext i j
+  simp [LinearMap.toMatrix₂_apply, Module.Basis.reindex_apply, Matrix.submatrix_apply]
+
+/-- The determinant of `LinearMap.toMatrix₂` is invariant under reindexing the basis. -/
+theorem LinearMap.toMatrix₂_reindex_det {R M ι κ : Type*} [CommRing R] [AddCommGroup M]
+    [Module R M] [Fintype ι] [DecidableEq ι] [Fintype κ] [DecidableEq κ]
+    (b : Module.Basis ι R M) (e : ι ≃ κ) (B : M →ₗ[R] M →ₗ[R] R) :
+    (LinearMap.toMatrix₂ (b.reindex e) (b.reindex e) B).det
+      = (LinearMap.toMatrix₂ b b B).det := by
+  rw [LinearMap.toMatrix₂_reindex, Matrix.det_submatrix_equiv_self]
+
 -- TODO - generalize and upstream
 -- Based on https://math.stackexchange.com/questions/1101184/show-that-if-x-succeq-y-then-detx-ge-dety
 lemma matrix_psd_det_one {n: Type*} [Fintype n] [DecidableEq n] (A: Matrix n n ℝ) (ha: A.PosSemidef): 1 ≤ (A + 1).det := by
@@ -1030,9 +1047,6 @@ structure GoodScalesData (b : Module.Basis ι ℝ V) where
   hd: 0 < d
   w_gt: 4 < w
   h_growth: growth_bound b d
-
-lemma growth_bound_basis_change (d: ℕ) (b_1 b_2: Module.Basis ι ℝ V): growth_bound b_1 d = growth_bound b_2 d := by
-  sorry
 
 noncomputable def GoodScales (data: GoodScalesData b) := Classical.choice (lemma_3_24 b data.w data.d data.hw data.hd data.h_growth)
 
@@ -2807,6 +2821,78 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
 
 -- Lemma 3.27
 
+
+lemma growth_bound_basis_change (d: ℕ) {index: Type*} [Fintype index] [DecidableEq index] (equiv: ι ≃ index) (b_1: Module.Basis ι ℝ V) (b_2: Module.Basis index ℝ V) (h_growth: growth_bound b_1 d) : growth_bound b_2 d := by
+  unfold growth_bound my_expr Q_R_matrix
+  unfold growth_bound my_expr Q_R_matrix at h_growth
+  have conv_plain: ∀ R, (LinearMap.toMatrix₂ b_2 b_2) (Q_R_lin V ↑R) = (LinearMap.toMatrix₂ b_2 b_2) (Q_R_lin_plain V ↑R) := by
+    intro R
+    ext i j
+    simp [Q_R_lin, Q_R_lin_plain]
+
+  have conv_plain_b_1: ∀ R, (LinearMap.toMatrix₂ b_1 b_1) (Q_R_lin V ↑R) = (LinearMap.toMatrix₂ b_1 b_1) (Q_R_lin_plain V ↑R) := by
+    intro R
+    ext i j
+    simp [Q_R_lin, Q_R_lin_plain]
+
+  simp_rw [conv_plain]
+  conv =>
+    arg 1
+    intro R
+    rw [← Matrix.det_reindex_self equiv.symm]
+    rw [← LinearMap.toMatrix₂_mul_basis_toMatrix (b₁ := b_1.reindex equiv) (b₂ := b_1.reindex equiv)]
+    simp [-LinearMap.toMatrix₂_mul_basis_toMatrix]
+    rw [mul_assoc]
+    rw [mul_comm _ (((b_1.toMatrix ⇑b_2).submatrix (⇑equiv.symm) id).det)]
+    rw [← mul_assoc]
+    rw [Real.mul_rpow (by sorry) (by
+      apply Matrix.PosSemidef.det_nonneg
+      conv =>
+        arg 1
+        equals (LinearMap.toMatrix₂ (b_1.reindex equiv) (b_1.reindex equiv)) (Q_R_lin V ↑R) =>
+          ext i j
+          simp [Q_R_lin, Q_R_lin_plain]
+
+      -- TODO - make this a standalone lemma
+      rw [← LinearMap.isPosSemidef_iff_posSemidef_toMatrix]
+      rw [LinearMap.isPosSemidef_def]
+      refine ⟨?_, ?_⟩
+      .
+        apply Q_R_lin_symm
+      .
+        rw [LinearMap.isNonneg_def]
+        intro x
+        simp [Q_R_lin, Q_R]
+        simp_rw [← pow_two]
+        positivity
+
+    )]
+    rw [← mul_assoc]
+    rw [mul_comm ((#(S ^ R)) : ℝ)]
+    rw [mul_assoc]
+    rw [mul_div_assoc]
+
+
+
+  let K := (((b_1.toMatrix ⇑b_2).transpose.submatrix id ⇑equiv.symm).det *
+          ((b_1.toMatrix ⇑b_2).submatrix (⇑equiv.symm) id).det) ^ (↑(Module.finrank ℝ ↥V) : ℝ)⁻¹
+  conv =>
+    rhs
+    equals (nhdsWithin (K * 0) (Set.Ioi (K * 0))) =>
+      simp
+
+  apply Filter.TendstoNhdsWithinIoi.const_mul
+  .
+    apply Real.rpow_pos_of_pos
+
+    sorry
+  .
+    simp_rw [LinearMap.toMatrix₂_reindex_det]
+    simp_rw [conv_plain_b_1] at h_growth
+    simp at h_growth
+    apply h_growth
+
+
 set_option maxHeartbeats 2500000 in
 lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodule ℝ LipschitzH, U ≤ V ∧ dim V ≤ 2 * dim U ∧ ∀ f ∈ U, Q_R (16 * (R_2 data)) f f ≤ Real.exp (2 * (a data.w)) * Q_R ((R_2 data)) f f := by
   classical
@@ -3042,6 +3128,11 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
 
 
+        have new_growth := data.h_growth
+        have nonempty_fin: Nonempty (Fin (Module.finrank ℝ ↥V)) := by
+          sorry
+        have foo := growth_bound_basis_change data.d sorry b remapped_ortho
+        have new_data := Classical.choice (lemma_3_24 b data.w data.d data.hw data.hd data.h_growth)
         simp [Q_R_matrix] at a_gt
         sorry
 
