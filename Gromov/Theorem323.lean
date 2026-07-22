@@ -2822,7 +2822,9 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
 -- Lemma 3.27
 
 
-lemma growth_bound_basis_change (d: ℕ) {index: Type*} [Fintype index] [DecidableEq index] (equiv: ι ≃ index) (b_1: Module.Basis ι ℝ V) (b_2: Module.Basis index ℝ V) (h_growth: growth_bound b_1 d) : growth_bound b_2 d := by
+lemma growth_bound_basis_change (d: ℕ) {index: Type*} [Fintype index] [DecidableEq index] (b_1: Module.Basis ι ℝ V) (b_2: Module.Basis index ℝ V) (h_growth: growth_bound b_1 d) : growth_bound b_2 d := by
+  -- the two bases index the same space, so their index types are canonically equivalent
+  let equiv : ι ≃ index := b_1.indexEquiv b_2
   unfold growth_bound my_expr Q_R_matrix
   unfold growth_bound my_expr Q_R_matrix at h_growth
   have conv_plain: ∀ R, (LinearMap.toMatrix₂ b_2 b_2) (Q_R_lin V ↑R) = (LinearMap.toMatrix₂ b_2 b_2) (Q_R_lin_plain V ↑R) := by
@@ -2928,6 +2930,196 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
     . exact foo
     . simp
 
+  have q_r_base_pos_def := (Q_R_matrix_pos_def_i₀ b (16 ^ ((GoodScales data).i_2)) (by
+    simp [i₀]
+    rw [pow_le_pow_iff_right₀]
+    . sorry
+    . simp
+  ))
+
+  let Q_R_pre_inner_core: PreInnerProductSpace.Core ℝ V := {
+      inner := fun u v => Q_R R u.val v.val
+      conj_inner_symm := by
+        simp [Q_R]
+        grind
+      re_inner_nonneg := by
+        simp [Q_R]
+        sorry
+      add_left := by
+        simp
+        sorry
+      smul_left := by
+        simp
+        sorry
+  }
+
+  -- TODO - unift this with above
+  -- let Q_R_inner_core: InnerProductSpace.Core ℝ V := {
+  --   inner := fun u v => Q_R R u.val v.val
+  --   conj_inner_symm := by
+  --     simp [Q_R]
+  --     grind
+  --   re_inner_nonneg := by
+  --     simp [Q_R]
+  --     sorry
+  --   add_left := by
+  --     simp
+  --     sorry
+  --   smul_left := by
+  --     simp
+  --     sorry
+  --   definite := by sorry
+  -- }
+
+  -- Install the Q_R-derived seminorm locally *before* `ofCore`, so that the
+  -- ambient LipschitzH norm on `↥V` is shadowed and `Q_R_inner` is over the
+  -- same `SeminormedAddCommGroup` instance that instance search will pick.
+  letI Q_R_seminorm : SeminormedAddCommGroup ↥V :=
+    InnerProductSpace.Core.toSeminormedAddCommGroup (c := Q_R_pre_inner_core)
+  letI Q_R_inner : InnerProductSpace ℝ ↥V := InnerProductSpace.ofCore Q_R_pre_inner_core
+
+  have norm_eq_q_r : ∀ x : ↥V, ‖x‖ = Real.sqrt (Q_R R x x) := fun _ => rfl
+  have norm_sq_eq_q_r : ∀ x : ↥V, ‖x‖^2 = (Q_R R x x) := by
+    intro x
+    rw [norm_eq_q_r]
+    rw [Real.sq_sqrt]
+    simp [Q_R]
+    simp_rw [← pow_two]
+    positivity
+  have inner_eq_q_r  : ∀ x y : ↥V, inner ℝ x y = Q_R R x y := fun _ _ => rfl
+
+  --have semi : SeminormedAddCommGroup V := by infer_instance
+  --have inner_prod := Matrix.toNormedAddCommGroup _ q_r_base_pos_def
+  obtain ⟨v_orthogonal, v_orthogonal_eval⟩ := LinearMap.BilinForm.exists_orthogonal_basis (Q_R_lin_symm V R)
+
+  --let q_r_16_lin_eigen := LinearMap.IsSymmetric.eigenvectorBasis (T := )
+  let q_r_16_m := (Q_R_lin V (16 * R)).toMatrix₂ v_orthogonal v_orthogonal
+  have q_r_16_m_hermitian: q_r_16_m.IsHermitian := by
+    simp [q_r_16_m]
+    apply (LinearMap.isSymm_iff_isHermitian_toMatrix _).mp
+    apply Q_R_lin_symm
+
+  let q_r_16_eigen := q_r_16_m_hermitian.eigenvectorBasis.toBasis
+  let eigen_basis_V := (v_orthogonal.repr.trans q_r_16_eigen.repr.symm).symm
+  let norm_eigen_q_r (i: Fin (Module.finrank ℝ ↥V)) := ‖eigen_basis_V (q_r_16_eigen i)‖
+
+  let v_map_normalize := Module.Basis.constr q_r_16_eigen ℝ (fun a => (norm_eigen_q_r a)⁻¹ • (q_r_16_eigen a))
+  let v_map_normalize_inv := Module.Basis.constr q_r_16_eigen ℝ (fun a => (norm_eigen_q_r) • (q_r_16_eigen a))
+  let v_map_normalize_equiv := LinearEquiv.ofLinear (re₁₂ := RingHomInvPair.ids) (re₂₁ := RingHomInvPair.ids) v_map_normalize v_map_normalize_inv (σ₁₂:= RingHom.id ℝ) (σ₂₁ := RingHom.id ℝ) (R₂ := ℝ) (R := ℝ) (by
+    sorry
+  ) (by
+    sorry
+  )
+  let v_orthonormal := Module.Basis.map q_r_16_eigen v_map_normalize_equiv
+
+  let remapped_ortho := Module.Basis.map v_orthonormal eigen_basis_V
+
+  let Q_R_ortho := (Q_R_lin V R).toMatrix₂ remapped_ortho remapped_ortho
+  have Q_R_ortho_m_hermitian: Q_R_ortho.IsHermitian := by
+    simp [Q_R_ortho]
+    apply (LinearMap.isSymm_iff_isHermitian_toMatrix _).mp
+    apply Q_R_lin_symm
+
+  have v_orthonormal_isortho : (Q_R_lin V ↑R).IsOrthoᵢ remapped_ortho := by
+    simp [remapped_ortho]
+    rw [LinearMap.isOrthoᵢ_def]
+    rw [LinearMap.isOrthoᵢ_def] at v_orthogonal_eval
+    intro x y hxy
+    have x_mem := x.prop
+    simp [-Subtype.coe_prop] at x_mem
+    specialize v_orthogonal_eval x y hxy
+    simp [v_map_normalize_equiv, v_map_normalize]
+    simp [eigen_basis_V, v_orthonormal, v_map_normalize_equiv, v_map_normalize]
+    right
+    right
+    exact v_orthogonal_eval
+
+
+  have Q_R_ortho_eq_1: Q_R_ortho = 1 := by
+    ext i j
+    simp [Q_R_ortho, Matrix.one_apply]
+    split_ifs
+    .
+      rename_i i_eq_j
+      rw [i_eq_j]
+      simp [remapped_ortho, v_map_normalize_equiv, v_map_normalize]
+      simp [eigen_basis_V, v_orthonormal, v_map_normalize_equiv, v_map_normalize]
+      ring
+      field_simp
+      rw [norm_sq_eq_q_r]
+      simp only [eigen_basis_V, q_r_16_eigen]
+      simp
+      have eigen_repr_eq: ∀ j,  q_r_16_m_hermitian.eigenvectorBasis.toBasis.repr (q_r_16_m_hermitian.eigenvectorBasis j) = Finsupp.single j 1 := by
+        intro j
+        ext a
+        simp [Finsupp.single_apply]
+        simp_rw [eq_comm (a := a)]
+
+
+      simp [eigen_repr_eq]
+      simp [Q_R_lin]
+      conv =>
+        lhs
+        lhs
+        equals  Q_R ↑R ⇑(v_orthogonal j).val ⇑(v_orthogonal j).val =>
+          rfl
+
+      simp
+      apply ne_of_gt
+      apply Q_R_pos_on_R'
+      . apply Module.Basis.ne_zero
+      . grind
+    .
+      rw [LinearMap.isOrthoᵢ_def] at v_orthonormal_isortho
+      apply v_orthonormal_isortho
+      grind
+
+  let Q_R_16_new_ortho := (Q_R_lin V (16 *R)).toMatrix₂ remapped_ortho remapped_ortho
+  have Q_R_16_new_ortho_hermitian: Q_R_16_new_ortho.IsHermitian := by
+    simp [Q_R_16_new_ortho]
+    apply (LinearMap.isSymm_iff_isHermitian_toMatrix _).mp
+    apply Q_R_lin_symm
+
+  have det_Q_R_one: Q_R_ortho.det = 1 := by
+    simp [Q_R_ortho_eq_1]
+
+  have det_Q_R_16_ge: 1 ≤ Q_R_16_new_ortho.det := by
+    rw [← det_Q_R_one]
+    apply matrix_det_montone
+    .
+      simp [Q_R_ortho]
+      apply Matrix.PosDef.of_dotProduct_mulVec_pos (?_)
+      .
+        intro x hx
+        simp [Q_R_matrix]
+        conv =>
+          rhs
+          lhs
+          equals (star x) => simp
+        rw [star_dotProduct_toMatrix₂_mulVec]
+        apply Q_R_pos_on_R'
+        . rw [LinearEquiv.map_ne_zero_iff]
+          exact hx
+        . exact h_R
+      . apply Q_R_ortho_m_hermitian
+    .
+      simp [Q_R_16_new_ortho, Q_R_ortho]
+      rw [← map_sub]
+      rw [← LinearMap.isPosSemidef_iff_posSemidef_toMatrix]
+      apply Q_R_lin_sub_pos_semi_def
+      norm_cast
+      grind
+
+
+
+
+  have new_growth := data.h_growth
+  have nonempty_fin: Nonempty (Fin (Module.finrank ℝ ↥V)) := by
+    sorry
+  apply growth_bound_basis_change data.d b remapped_ortho at new_growth
+
+  have new_data := Classical.choice (lemma_3_24 b data.w data.d data.hw data.hd data.h_growth)
+
   rw [Real.log_mul] at a_gt
   .
     have log_pos_first: 0 ≤ Real.log ↑(#(S ^ 16 ^ ((GoodScales data).i_2 + 1))) := by
@@ -2958,194 +3150,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
       .
 
 
-        have q_r_base_pos_def := (Q_R_matrix_pos_def_i₀ b (16 ^ ((GoodScales data).i_2)) (by
-          simp [i₀]
-          rw [pow_le_pow_iff_right₀]
-          . sorry
-          . simp
-        ))
-
-        let Q_R_pre_inner_core: PreInnerProductSpace.Core ℝ V := {
-            inner := fun u v => Q_R R u.val v.val
-            conj_inner_symm := by
-              simp [Q_R]
-              grind
-            re_inner_nonneg := by
-              simp [Q_R]
-              sorry
-            add_left := by
-              simp
-              sorry
-            smul_left := by
-              simp
-              sorry
-        }
-
-        -- TODO - unift this with above
-        -- let Q_R_inner_core: InnerProductSpace.Core ℝ V := {
-        --   inner := fun u v => Q_R R u.val v.val
-        --   conj_inner_symm := by
-        --     simp [Q_R]
-        --     grind
-        --   re_inner_nonneg := by
-        --     simp [Q_R]
-        --     sorry
-        --   add_left := by
-        --     simp
-        --     sorry
-        --   smul_left := by
-        --     simp
-        --     sorry
-        --   definite := by sorry
-        -- }
-
-        -- Install the Q_R-derived seminorm locally *before* `ofCore`, so that the
-        -- ambient LipschitzH norm on `↥V` is shadowed and `Q_R_inner` is over the
-        -- same `SeminormedAddCommGroup` instance that instance search will pick.
-        letI Q_R_seminorm : SeminormedAddCommGroup ↥V :=
-          InnerProductSpace.Core.toSeminormedAddCommGroup (c := Q_R_pre_inner_core)
-        letI Q_R_inner : InnerProductSpace ℝ ↥V := InnerProductSpace.ofCore Q_R_pre_inner_core
-
-        have norm_eq_q_r : ∀ x : ↥V, ‖x‖ = Real.sqrt (Q_R R x x) := fun _ => rfl
-        have norm_sq_eq_q_r : ∀ x : ↥V, ‖x‖^2 = (Q_R R x x) := by
-          intro x
-          rw [norm_eq_q_r]
-          rw [Real.sq_sqrt]
-          simp [Q_R]
-          simp_rw [← pow_two]
-          positivity
-        have inner_eq_q_r  : ∀ x y : ↥V, inner ℝ x y = Q_R R x y := fun _ _ => rfl
-
-        --have semi : SeminormedAddCommGroup V := by infer_instance
-        --have inner_prod := Matrix.toNormedAddCommGroup _ q_r_base_pos_def
-        obtain ⟨v_orthogonal, v_orthogonal_eval⟩ := LinearMap.BilinForm.exists_orthogonal_basis (Q_R_lin_symm V R)
-
-        --let q_r_16_lin_eigen := LinearMap.IsSymmetric.eigenvectorBasis (T := )
-        let q_r_16_m := (Q_R_lin V (16 * R)).toMatrix₂ v_orthogonal v_orthogonal
-        have q_r_16_m_hermitian: q_r_16_m.IsHermitian := by
-          simp [q_r_16_m]
-          apply (LinearMap.isSymm_iff_isHermitian_toMatrix _).mp
-          apply Q_R_lin_symm
-
-        let q_r_16_eigen := q_r_16_m_hermitian.eigenvectorBasis.toBasis
-        let eigen_basis_V := (v_orthogonal.repr.trans q_r_16_eigen.repr.symm).symm
-        let norm_eigen_q_r (i: Fin (Module.finrank ℝ ↥V)) := ‖eigen_basis_V (q_r_16_eigen i)‖
-
-        let v_map_normalize := Module.Basis.constr q_r_16_eigen ℝ (fun a => (norm_eigen_q_r a)⁻¹ • (q_r_16_eigen a))
-        let v_map_normalize_inv := Module.Basis.constr q_r_16_eigen ℝ (fun a => (norm_eigen_q_r) • (q_r_16_eigen a))
-        let v_map_normalize_equiv := LinearEquiv.ofLinear (re₁₂ := RingHomInvPair.ids) (re₂₁ := RingHomInvPair.ids) v_map_normalize v_map_normalize_inv (σ₁₂:= RingHom.id ℝ) (σ₂₁ := RingHom.id ℝ) (R₂ := ℝ) (R := ℝ) (by
-          sorry
-        ) (by
-          sorry
-        )
-        let v_orthonormal := Module.Basis.map q_r_16_eigen v_map_normalize_equiv
-
-        let remapped_ortho := Module.Basis.map v_orthonormal eigen_basis_V
-
-        let Q_R_ortho := (Q_R_lin V R).toMatrix₂ remapped_ortho remapped_ortho
-        have Q_R_ortho_m_hermitian: Q_R_ortho.IsHermitian := by
-          simp [Q_R_ortho]
-          apply (LinearMap.isSymm_iff_isHermitian_toMatrix _).mp
-          apply Q_R_lin_symm
-
-        have v_orthonormal_isortho : (Q_R_lin V ↑R).IsOrthoᵢ remapped_ortho := by
-          simp [remapped_ortho]
-          rw [LinearMap.isOrthoᵢ_def]
-          rw [LinearMap.isOrthoᵢ_def] at v_orthogonal_eval
-          intro x y hxy
-          have x_mem := x.prop
-          simp [-Subtype.coe_prop] at x_mem
-          specialize v_orthogonal_eval x y hxy
-          simp [v_map_normalize_equiv, v_map_normalize]
-          simp [eigen_basis_V, v_orthonormal, v_map_normalize_equiv, v_map_normalize]
-          right
-          right
-          exact v_orthogonal_eval
-
-
-        have Q_R_ortho_eq_1: Q_R_ortho = 1 := by
-          ext i j
-          simp [Q_R_ortho, Matrix.one_apply]
-          split_ifs
-          .
-            rename_i i_eq_j
-            rw [i_eq_j]
-            simp [remapped_ortho, v_map_normalize_equiv, v_map_normalize]
-            simp [eigen_basis_V, v_orthonormal, v_map_normalize_equiv, v_map_normalize]
-            ring
-            field_simp
-            rw [norm_sq_eq_q_r]
-            simp only [eigen_basis_V, q_r_16_eigen]
-            simp
-            have eigen_repr_eq: ∀ j,  q_r_16_m_hermitian.eigenvectorBasis.toBasis.repr (q_r_16_m_hermitian.eigenvectorBasis j) = Finsupp.single j 1 := by
-              intro j
-              ext a
-              simp [Finsupp.single_apply]
-              simp_rw [eq_comm (a := a)]
-
-
-            simp [eigen_repr_eq]
-            simp [Q_R_lin]
-            conv =>
-              lhs
-              lhs
-              equals  Q_R ↑R ⇑(v_orthogonal j).val ⇑(v_orthogonal j).val =>
-                rfl
-
-            simp
-            apply ne_of_gt
-            apply Q_R_pos_on_R'
-            . apply Module.Basis.ne_zero
-            . grind
-          .
-            rw [LinearMap.isOrthoᵢ_def] at v_orthonormal_isortho
-            apply v_orthonormal_isortho
-            grind
-
-        let Q_R_16_new_ortho := (Q_R_lin V (16 *R)).toMatrix₂ remapped_ortho remapped_ortho
-        have Q_R_16_new_ortho_hermitian: Q_R_16_new_ortho.IsHermitian := by
-          simp [Q_R_16_new_ortho]
-          apply (LinearMap.isSymm_iff_isHermitian_toMatrix _).mp
-          apply Q_R_lin_symm
-
-        have det_Q_R_one: Q_R_ortho.det = 1 := by
-          simp [Q_R_ortho_eq_1]
-
-        have det_Q_R_16_ge: 1 ≤ Q_R_16_new_ortho.det := by
-          rw [← det_Q_R_one]
-          apply matrix_det_montone
-          .
-            simp [Q_R_ortho]
-            apply Matrix.PosDef.of_dotProduct_mulVec_pos (?_)
-            .
-              intro x hx
-              simp [Q_R_matrix]
-              conv =>
-                rhs
-                lhs
-                equals (star x) => simp
-              rw [star_dotProduct_toMatrix₂_mulVec]
-              apply Q_R_pos_on_R'
-              . rw [LinearEquiv.map_ne_zero_iff]
-                exact hx
-              . exact h_R
-            . apply Q_R_ortho_m_hermitian
-          .
-            simp [Q_R_16_new_ortho, Q_R_ortho]
-            rw [← map_sub]
-            rw [← LinearMap.isPosSemidef_iff_posSemidef_toMatrix]
-            apply Q_R_lin_sub_pos_semi_def
-            norm_cast
-            grind
-
-
-
-
-        have new_growth := data.h_growth
-        have nonempty_fin: Nonempty (Fin (Module.finrank ℝ ↥V)) := by
-          sorry
-        have foo := growth_bound_basis_change data.d sorry b remapped_ortho
-        have new_data := Classical.choice (lemma_3_24 b data.w data.d data.hw data.hd data.h_growth)
         simp [Q_R_matrix] at a_gt
         sorry
 
