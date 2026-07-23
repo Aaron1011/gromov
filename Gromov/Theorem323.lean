@@ -2979,33 +2979,30 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
   obtain ⟨v_orthogonal_orig, v_orthogonal_orig_eval⟩ := LinearMap.BilinForm.exists_orthogonal_basis (Q_R_lin_symm V R)
   let v_orthonormal := v_orthogonal_orig.unitsSMul (fun a => Units.mk0 ‖v_orthogonal_orig a‖⁻¹ (by
     simp
-    rw [← ne_eq]
-    rw [norm_eq_q_r]
-    apply norm_ne_zero_iff.mpr
-    rw [norm_eq_zero]
+    exact Module.Basis.ne_zero v_orthogonal_orig a
   ))
 
   --let q_r_16_lin_eigen := LinearMap.IsSymmetric.eigenvectorBasis (T := )
-  let q_r_16_m := (Q_R_lin V (16 * R)).toMatrix₂ v_orthogonal v_orthogonal
+  let q_r_16_m := (Q_R_lin V (16 * R)).toMatrix₂ v_orthonormal v_orthonormal
   have q_r_16_m_hermitian: q_r_16_m.IsHermitian := by
     simp [q_r_16_m]
     apply (LinearMap.isSymm_iff_isHermitian_toMatrix _).mp
     apply Q_R_lin_symm
 
   let q_r_16_eigen := q_r_16_m_hermitian.eigenvectorBasis.toBasis
-  let eigen_basis_V := (v_orthogonal.repr.trans q_r_16_eigen.repr.symm).symm
-  let norm_eigen_q_r (i: Fin (Module.finrank ℝ ↥V)) := ‖eigen_basis_V (q_r_16_eigen i)‖
+  let eigen_basis_V :=  (WithLp.linearEquiv 2 ℝ (Fin (Module.finrank ℝ ↥V) → ℝ)).trans v_orthonormal.equivFun.symm
+  -- let norm_eigen_q_r (i: Fin (Module.finrank ℝ ↥V)) := ‖eigen_basis_V (q_r_16_eigen i)‖
 
-  let v_map_normalize := Module.Basis.constr q_r_16_eigen ℝ (fun a => (norm_eigen_q_r a)⁻¹ • (q_r_16_eigen a))
-  let v_map_normalize_inv := Module.Basis.constr q_r_16_eigen ℝ (fun a => (norm_eigen_q_r) • (q_r_16_eigen a))
-  let v_map_normalize_equiv := LinearEquiv.ofLinear (re₁₂ := RingHomInvPair.ids) (re₂₁ := RingHomInvPair.ids) v_map_normalize v_map_normalize_inv (σ₁₂:= RingHom.id ℝ) (σ₂₁ := RingHom.id ℝ) (R₂ := ℝ) (R := ℝ) (by
-    sorry
-  ) (by
-    sorry
-  )
-  let v_orthonormal := Module.Basis.map q_r_16_eigen v_map_normalize_equiv
+  -- let v_map_normalize := Module.Basis.constr q_r_16_eigen ℝ (fun a => (norm_eigen_q_r a)⁻¹ • (q_r_16_eigen a))
+  -- let v_map_normalize_inv := Module.Basis.constr q_r_16_eigen ℝ (fun a => (norm_eigen_q_r) • (q_r_16_eigen a))
+  -- let v_map_normalize_equiv := LinearEquiv.ofLinear (re₁₂ := RingHomInvPair.ids) (re₂₁ := RingHomInvPair.ids) v_map_normalize v_map_normalize_inv (σ₁₂:= RingHom.id ℝ) (σ₂₁ := RingHom.id ℝ) (R₂ := ℝ) (R := ℝ) (by
+  --   sorry
+  -- ) (by
+  --   sorry
+  -- )
+  -- let v_orthonormal := Module.Basis.map q_r_16_eigen v_map_normalize_equiv
 
-  let remapped_ortho := Module.Basis.map v_orthonormal eigen_basis_V
+  let remapped_ortho := Module.Basis.map q_r_16_eigen eigen_basis_V
 
   let Q_R_ortho := (Q_R_lin V R).toMatrix₂ remapped_ortho remapped_ortho
   have Q_R_ortho_m_hermitian: Q_R_ortho.IsHermitian := by
@@ -3016,16 +3013,67 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
   have v_orthonormal_isortho : (Q_R_lin V ↑R).IsOrthoᵢ remapped_ortho := by
     simp [remapped_ortho]
     rw [LinearMap.isOrthoᵢ_def]
-    rw [LinearMap.isOrthoᵢ_def] at v_orthogonal_eval
+    rw [LinearMap.isOrthoᵢ_def] at v_orthogonal_orig_eval
     intro x y hxy
     have x_mem := x.prop
     simp [-Subtype.coe_prop] at x_mem
-    specialize v_orthogonal_eval x y hxy
-    simp [v_map_normalize_equiv, v_map_normalize]
-    simp [eigen_basis_V, v_orthonormal, v_map_normalize_equiv, v_map_normalize]
-    right
-    right
-    exact v_orthogonal_eval
+    --specialize v_orthogonal_orig_eval x y hxy
+    --simp [v_map_normalize_equiv, v_map_normalize]
+    simp [eigen_basis_V, v_orthonormal]
+    simp_rw [Module.Basis.unitsSMul_apply]
+    simp_rw [Units.smul_def]
+    simp_rw [map_smul]
+    simp
+    simp_rw [Finset.mul_sum]
+    conv =>
+      lhs
+      arg 2
+      intro i
+      rw [Finset.sum_eq_single_of_mem i (by simp) (by
+        intro j hj hij
+        simp
+        right
+        right
+        right
+        right
+        -- TODO - why doesn't an 'rw' with this work?
+        apply v_orthogonal_orig_eval _ _ hij
+      )]
+
+    ring
+    simp [norm_eq_q_r]
+    have Q_R_pos: ∀ i, 0 ≤ Q_R ↑R ⇑(v_orthogonal_orig i).val ⇑(v_orthogonal_orig i).val := by
+      intro i
+      simp [Q_R, ← pow_two]
+      positivity
+    conv =>
+      lhs
+      arg 2
+      intro i
+      rw [Real.sq_sqrt (by apply Q_R_pos)]
+    field_simp
+    have eval_nonzero: ∀ i, (Q_R_lin V ↑R) (v_orthogonal_orig i) (v_orthogonal_orig i) ≠ 0 := by
+      intro i
+      simp [Q_R_lin]
+      apply ne_of_gt
+      apply Q_R_pos_on_R'
+      . exact Module.Basis.ne_zero v_orthogonal_orig i
+      . exact h_R
+    conv =>
+      lhs
+      arg 2
+      intro i
+      rw [mul_div_assoc]
+      rhs
+      equals ((Q_R_lin V ↑R) (v_orthogonal_orig i)) (v_orthogonal_orig i) / ((Q_R_lin V ↑R) (v_orthogonal_orig i)) (v_orthogonal_orig i) =>
+        rfl
+
+
+    field_simp [eval_nonzero]
+    have inner_zero :=  q_r_16_m_hermitian.eigenvectorBasis.inner_eq_zero hxy
+    rw [EuclideanSpace.inner_eq_star_dotProduct] at inner_zero
+    simp [dotProduct] at inner_zero
+    exact inner_zero
 
 
   have Q_R_ortho_eq_1: Q_R_ortho = 1 := by
