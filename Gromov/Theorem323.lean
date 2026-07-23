@@ -3257,17 +3257,25 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
     apply Module.finrank_pos
   apply growth_bound_basis_change data.d b remapped_ortho at new_growth
 
-  have a_gt := (GoodScales data).second_h_i
+  let new_scales := (GoodScales {
+    w := data.w
+    d := data.d
+    hw := data.hw
+    hd := data.hd
+    w_gt := data.w_gt
+    h_growth := new_growth
+  } (b := remapped_ortho))
+  have a_gt := new_scales.second_h_i
   simp [h, f] at a_gt
   rw [Real.log_mul] at a_gt
   .
-    have log_pos_first: 0 ≤ Real.log ↑(#(S ^ 16 ^ ((GoodScales data).i_2 + 1))) := by
+    have log_pos_first: 0 ≤ Real.log ↑(#(S ^ 16 ^ (new_scales.i_2 + 1))) := by
       apply Real.log_nonneg
       simp
       apply Finset.Nonempty.pow
       simp [S_nonempty]
 
-    have log_second: Real.log ↑(#(S ^ 16 ^ (GoodScales data).i_2)) ≤ Real.log ↑(#(S ^ 16 ^ ((GoodScales data).i_2 + 1))) := by
+    have log_second: Real.log ↑(#(S ^ 16 ^ new_scales.i_2)) ≤ Real.log ↑(#(S ^ 16 ^ (new_scales.i_2 + 1))) := by
       apply Real.log_le_log
       . simp
         apply Finset.Nonempty.pow
@@ -3576,6 +3584,9 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
             obtain ⟨f_mem_V, hf⟩ := hf
             specialize all_le ⟨_, f_mem_V⟩ hf
             apply all_le
+
+        simp at dim_small
+
         sorry
 
         -- OLD - BAD
