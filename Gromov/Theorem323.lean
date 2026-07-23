@@ -3280,7 +3280,7 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
 
     --
-    have inner_x_self (x: V) (k: ℝ) (hk: ∀ i ∈ (remapped_ortho.repr x).support, k * (Q_R_lin_plain V (16 * R) (remapped_ortho i) (remapped_ortho i)) ≤ (Q_R_lin_plain V (R) (remapped_ortho i) (remapped_ortho i))) : k * Q_R_lin_plain V (16 * R) x x ≤ Q_R_lin_plain V (R) x x := by
+    have inner_x_self (x: V) (k: ℝ) (hk: ∀ i ∈ (remapped_ortho.repr x).support, (Q_R_lin_plain V (16 * R) (remapped_ortho i) (remapped_ortho i)) ≤ k * (Q_R_lin_plain V (R) (remapped_ortho i) (remapped_ortho i))) : Q_R_lin_plain V (16 * R) x x ≤ k * Q_R_lin_plain V (R) x x := by
       rw [←  Module.Basis.sum_repr remapped_ortho (u := x)]
       have inner_sum_eq: ∀ i, ∑ i_1, inner ℝ ((remapped_ortho.repr x) i_1 • remapped_ortho i_1) ((remapped_ortho.repr x) i • remapped_ortho i) = inner ℝ ((remapped_ortho.repr x) i • remapped_ortho i) ((remapped_ortho.repr x) i • remapped_ortho i) := by
         intro i
@@ -3325,6 +3325,7 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
       simp_rw [map_sum]
       simp [Finset.sum_apply]
       conv =>
+        rhs
         rhs
         arg 2
         intro i
@@ -3395,12 +3396,12 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
       .
         conv =>
           lhs
-          equals k * ((Q_R_lin_plain V (16 * ↑R)) (remapped_ortho i)) (remapped_ortho i)  * (remapped_ortho.repr x) i * (remapped_ortho.repr x) i =>
+          equals ((Q_R_lin_plain V (16 * ↑R)) (remapped_ortho i)) (remapped_ortho i)  * (remapped_ortho.repr x) i * (remapped_ortho.repr x) i =>
             ring
 
         conv =>
           rhs
-          equals ((Q_R_lin_plain V ↑R) (remapped_ortho i)) (remapped_ortho i) * (remapped_ortho.repr x) i * (remapped_ortho.repr x) i =>
+          equals k * ((Q_R_lin_plain V ↑R) (remapped_ortho i)) (remapped_ortho i) * (remapped_ortho.repr x) i * (remapped_ortho.repr x) i =>
             ring
 
 
@@ -3408,8 +3409,20 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
         nth_rw 2 [mul_assoc]
         specialize hk i i_mem_inter
         grw [hk]
+        . ring
+          simp
         . rw [← pow_two]
           positivity
+      .
+        rw [Finset.mem_inter, not_and_or] at i_mem_inter
+        cases i_mem_inter
+        . rename_i i_zero
+          simp at i_zero
+          simp [i_zero]
+        . rename_i i_zero
+          simp at i_zero
+          simp [i_zero]
+
 
 
 
@@ -3495,66 +3508,10 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
           .
             have all_le: ∀ f ∈ small_submodule, Q_R_lin V (16 * ↑(R_2 data)) f f ≤ Real.exp (2 * a data.d) * Q_R_lin V ↑(R_2 data) f f := by
               intro f hf
-              induction hf using Submodule.span_induction with
-              | mem x h =>
-                rw [Set.mem_diff] at h
-                obtain ⟨x_mem, x_not_large⟩ := h
-                simp only [large_basis] at x_not_large
-                simp at x_not_large
-                simp at x_mem
-                obtain ⟨i, hi⟩ := x_mem
-                specialize x_not_large i
-                simp [hi] at x_not_large
-                simp [Q_R_lin, R] at x_not_large
-                simp [R_2]
-                ring
-                ring_nf at x_not_large
-                exact x_not_large
-              | zero =>
-                simp [Q_R]
-              | add x y hx hy ihx ihy =>
-                simp_rw [map_add]
-                simp
-                grw [ihx, ihy]
-                have q_symm := Q_R_lin_symm V (16 * R_2 data)
-                rw [LinearMap.isSymm_def] at q_symm
-                simp only [Real.ringHom_apply] at q_symm
-                simp_rw [q_symm y x]
-                simp [Q_R_lin]
-                ring
-
-                rw [LinearMap.isOrthoᵢ_def] at q_r_16_remapped_orthogonal
-                rw [inner_eq_q_r] at inner_x_y
-                grw [inner_x_y]
-
-                -- TODO - we need orthogonality with respect to Q_R_16 for this
-                -- rw [mul_comm (Q_R (↑(R_2 data) * 16) x y) 2]
-
-                -- -- TODO - factor this out, and/or re-use caucy schwartz from the norm definition
-                -- have x_y_le: Q_R ((R_2 data) * 16) x y ≤ √(Q_R (16 * ↑(R_2 data)) x x ) * √(Q_R (16 * ↑(R_2 data)) y y) := by
-                --   sorry
-
-                -- grw [x_y_le]
-                -- simp [Q_R_lin] at ihx ihy
-                -- grw [ihx, ihy]
-                -- ring
-                -- field_simp
-
-                -- unfold R at inner_eq_q_r
-                -- simp [R_2]
-
-                --rw [← inner_eq_q_r]
-
-                --simp at hx
-
-                sorry
-              | smul a x hx ihx =>
-                simp
-                ring
-                ring_nf at ihx
-                grw [ihx]
-                ring
-                simp
+              apply inner_x_self
+              intro i hi
+              simp at hf
+              sorry
 
             intro f hf
             simp at hf
