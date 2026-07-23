@@ -3765,6 +3765,7 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
   . exact (Real.rpow_pos_of_pos (Q_R_matrix_pos_def b (16 ^ ((GoodScales data).i_2 + 1))
       (le_trans h_R (by simp only [R]; push_cast; exact pow_le_pow_right₀ (by norm_num) (Nat.le_succ _)))).det_pos _).ne'
 
+#print axioms exists_bounded_doubling_subspace
 
 
 
