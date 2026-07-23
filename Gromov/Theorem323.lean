@@ -3501,7 +3501,23 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
           . simp [dim]
             simp [dim] at dim_small
             have large_small_compl: IsCompl large_submodule small_submodule := by
-              sorry
+              simp [large_submodule, small_submodule]
+              have diff_eq: Set.range ⇑remapped_ortho \ ⇑remapped_ortho '' ↑large_basis = Set.image remapped_ortho small_basis := by
+                ext a
+                simp [large_basis, small_basis]
+                grind
+              rw [diff_eq]
+              apply LinearIndependent.isCompl_span_image
+              . apply Module.Basis.linearIndependent
+              . simp
+              . apply IsCompl.of_eq
+                . simp
+                  ext a
+                  simp [large_basis, small_basis]
+                . simp
+                  ext a
+                  simp [large_basis, small_basis]
+                  grind
 
             have dim_sum := Submodule.finrank_add_eq_of_isCompl large_small_compl
             rw [eq_comm, add_comm] at dim_sum
