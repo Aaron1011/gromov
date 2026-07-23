@@ -3192,6 +3192,52 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
 
 
+  have q_r_16_remapped_orthogonal : (Q_R_lin_plain V (16 * R)).IsOrthoᵢ remapped_ortho := by
+    simp [remapped_ortho]
+    rw [LinearMap.isOrthoᵢ_def]
+    rw [LinearMap.isOrthoᵢ_def] at v_orthogonal_orig_eval
+    intro x y hxy
+    have x_mem := x.prop
+    simp [-Subtype.coe_prop] at x_mem
+    simp
+    rw [apply_eq_dotProduct_toMatrix₂_mulVec (v_orthonormal) (v_orthonormal)]
+    simp
+    simp [eigen_basis_V]
+    have repr_self: ∀ x, (∑ i, fun₀ | i => (q_r_16_eigen x).ofLp i) = (q_r_16_eigen x).ofLp := by
+      intro x
+      sorry
+      -- simp
+      -- rw [Finsupp.univ_sum_single]
+      -- simp
+      -- ext a
+      -- simp
+      -- rw [Finsupp.univ_sum_single_apply']
+
+    simp [repr_self]
+    unfold q_r_16_eigen
+    unfold q_r_16_m
+    conv =>
+      lhs
+      rhs
+      lhs
+      equals q_r_16_m => rfl
+
+    have tobasis_lp: ∀ x, (q_r_16_m_hermitian.eigenvectorBasis.toBasis x).ofLp = (q_r_16_m_hermitian.eigenvectorBasis x).ofLp := by
+      simp
+    simp [tobasis_lp]
+    rw [Matrix.IsHermitian.mulVec_eigenvectorBasis q_r_16_m_hermitian]
+    simp
+    right
+    conv =>
+      lhs
+      rhs
+      equals star ((q_r_16_m_hermitian.eigenvectorBasis y).ofLp) =>
+        simp
+
+    rw [← EuclideanSpace.inner_eq_star_dotProduct]
+    apply OrthonormalBasis.inner_eq_zero
+    exact hxy.symm
+
 
   have new_growth := data.h_growth
   have nonempty_fin: Nonempty (Fin (Module.finrank ℝ ↥V)) := by
