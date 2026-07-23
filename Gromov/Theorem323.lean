@@ -3076,6 +3076,74 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
     exact inner_zero
 
 
+  have q_r_lin_remapped_one: ∀ i, ((Q_R_lin V ↑R) (remapped_ortho i)) (remapped_ortho i) = 1 := by
+    intro i
+    simp [remapped_ortho]
+    simp [eigen_basis_V,]
+    ring
+    field_simp
+    simp only [eigen_basis_V, q_r_16_eigen]
+    simp
+    simp_rw [Finset.mul_sum]
+    simp [v_orthonormal]
+    rw [LinearMap.isOrthoᵢ_def] at v_orthogonal_orig_eval
+
+    simp_rw [Module.Basis.unitsSMul_apply]
+    simp_rw [Units.smul_def]
+    simp_rw [map_smul]
+    simp
+
+    conv =>
+      lhs
+      arg 2
+      intro i
+      rw [Finset.sum_eq_single_of_mem i (by simp) (by
+        intro j hj hij
+        simp
+        right
+        right
+        right
+        right
+        -- TODO - why doesn't an 'rw' with this work?
+        apply v_orthogonal_orig_eval _ _ hij
+      )]
+
+
+    ring
+    simp [norm_eq_q_r]
+    have Q_R_pos: ∀ i, 0 ≤ Q_R ↑R ⇑(v_orthogonal_orig i).val ⇑(v_orthogonal_orig i).val := by
+      intro i
+      simp [Q_R, ← pow_two]
+      positivity
+    conv =>
+      lhs
+      arg 2
+      intro i
+      rw [Real.sq_sqrt (by apply Q_R_pos)]
+    field_simp
+    have eval_nonzero: ∀ i, (Q_R_lin V ↑R) (v_orthogonal_orig i) (v_orthogonal_orig i) ≠ 0 := by
+      intro i
+      simp [Q_R_lin]
+      apply ne_of_gt
+      apply Q_R_pos_on_R'
+      . exact Module.Basis.ne_zero v_orthogonal_orig i
+      . exact h_R
+    conv =>
+      lhs
+      arg 2
+      intro i
+      rw [mul_div_assoc]
+      rhs
+      equals ((Q_R_lin V ↑R) (v_orthogonal_orig i)) (v_orthogonal_orig i) / ((Q_R_lin V ↑R) (v_orthogonal_orig i)) (v_orthogonal_orig i) =>
+        rfl
+
+
+    field_simp [eval_nonzero]
+    have one_eq: (1: ℝ) = 1^2 := by
+      simp
+    rw [one_eq, ← OrthonormalBasis.norm_eq_one (q_r_16_m_hermitian.eigenvectorBasis) i]
+    rw [EuclideanSpace.real_norm_sq_eq]
+
   -- TODO - an enormous amount of this should get deduplicated with v_orthonormal_isortho
   have Q_R_ortho_eq_1: Q_R_ortho = 1 := by
     ext i j
@@ -3084,71 +3152,7 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
     .
       rename_i i_eq_j
       rw [i_eq_j]
-      simp [remapped_ortho]
-      simp [eigen_basis_V,]
-      ring
-      field_simp
-      simp only [eigen_basis_V, q_r_16_eigen]
-      simp
-      simp_rw [Finset.mul_sum]
-      simp [v_orthonormal]
-      rw [LinearMap.isOrthoᵢ_def] at v_orthogonal_orig_eval
-
-      simp_rw [Module.Basis.unitsSMul_apply]
-      simp_rw [Units.smul_def]
-      simp_rw [map_smul]
-      simp
-
-      conv =>
-        lhs
-        arg 2
-        intro i
-        rw [Finset.sum_eq_single_of_mem i (by simp) (by
-          intro j hj hij
-          simp
-          right
-          right
-          right
-          right
-          -- TODO - why doesn't an 'rw' with this work?
-          apply v_orthogonal_orig_eval _ _ hij
-        )]
-
-
-      ring
-      simp [norm_eq_q_r]
-      have Q_R_pos: ∀ i, 0 ≤ Q_R ↑R ⇑(v_orthogonal_orig i).val ⇑(v_orthogonal_orig i).val := by
-        intro i
-        simp [Q_R, ← pow_two]
-        positivity
-      conv =>
-        lhs
-        arg 2
-        intro i
-        rw [Real.sq_sqrt (by apply Q_R_pos)]
-      field_simp
-      have eval_nonzero: ∀ i, (Q_R_lin V ↑R) (v_orthogonal_orig i) (v_orthogonal_orig i) ≠ 0 := by
-        intro i
-        simp [Q_R_lin]
-        apply ne_of_gt
-        apply Q_R_pos_on_R'
-        . exact Module.Basis.ne_zero v_orthogonal_orig i
-        . exact h_R
-      conv =>
-        lhs
-        arg 2
-        intro i
-        rw [mul_div_assoc]
-        rhs
-        equals ((Q_R_lin V ↑R) (v_orthogonal_orig i)) (v_orthogonal_orig i) / ((Q_R_lin V ↑R) (v_orthogonal_orig i)) (v_orthogonal_orig i) =>
-          rfl
-
-
-      field_simp [eval_nonzero]
-      have one_eq: (1: ℝ) = 1^2 := by
-        simp
-      rw [one_eq, ← OrthonormalBasis.norm_eq_one (q_r_16_m_hermitian.eigenvectorBasis) j]
-      rw [EuclideanSpace.real_norm_sq_eq]
+      apply q_r_lin_remapped_one
     .
       rw [LinearMap.isOrthoᵢ_def] at v_orthonormal_isortho
       apply v_orthonormal_isortho
@@ -3249,7 +3253,8 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
   have new_growth := data.h_growth
   have nonempty_fin: Nonempty (Fin (Module.finrank ℝ ↥V)) := by
-    sorry
+    use 0
+    apply Module.finrank_pos
   apply growth_bound_basis_change data.d b remapped_ortho at new_growth
 
   have a_gt := (GoodScales data).second_h_i
@@ -3272,6 +3277,166 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
         apply Finset.pow_subset_pow_right
         . simp [one_mem]
         . grind
+
+
+    --
+    have inner_x_y (x y: V) (k: ℝ) (ha: ∀ i ∈ (remapped_ortho.repr x).support ∩ (remapped_ortho.repr y).support, k * (Q_R_lin_plain V (16 * R) (remapped_ortho i) (remapped_ortho i)) ≤ (Q_R_lin_plain V (R) (remapped_ortho i) (remapped_ortho i))) : inner ℝ x y ≤ Q_R_lin_plain V (16 * R) x y := by
+      rw [←  Module.Basis.sum_repr remapped_ortho (u := x)]
+      rw [←  Module.Basis.sum_repr remapped_ortho (u := y)]
+      rw [inner_sum]
+      simp_rw [sum_inner]
+      have inner_sum_eq: ∀ i, ∑ i_1, inner ℝ ((remapped_ortho.repr x) i_1 • remapped_ortho i_1) ((remapped_ortho.repr y) i • remapped_ortho i) = inner ℝ ((remapped_ortho.repr x) i • remapped_ortho i) ((remapped_ortho.repr y) i • remapped_ortho i) := by
+        intro i
+        rw [Finset.sum_eq_single i]
+        . intro k hk k_neq
+          rw [inner_eq_q_r]
+          simp [map_smul]
+          rw [LinearMap.isOrthoᵢ_def] at v_orthonormal_isortho
+          specialize v_orthonormal_isortho k i k_neq
+          simp [Q_R_lin] at v_orthonormal_isortho
+          simp [Q_R]
+          simp [Q_R] at v_orthonormal_isortho
+          simp_rw [mul_assoc]
+          rw [← Finset.mul_sum]
+          simp_rw [mul_comm ((remapped_ortho.repr y) i)]
+          simp_rw [← mul_assoc]
+          rw [← Finset.sum_mul]
+          simp [v_orthonormal_isortho]
+        .
+          intro hi
+          simp at hi
+
+
+      have q_r_16_sum_eq: ∀ i, ∑ i_1, Q_R_lin_plain V (16 * R) ((remapped_ortho.repr x) i_1 • remapped_ortho i_1) ((remapped_ortho.repr y) i • remapped_ortho i) = Q_R_lin_plain V (16 * R) ((remapped_ortho.repr x) i • remapped_ortho i) ((remapped_ortho.repr y) i • remapped_ortho i) := by
+        intro i
+        rw [Finset.sum_eq_single i]
+        . intro k hk k_neq
+          simp [map_smul]
+          rw [LinearMap.isOrthoᵢ_def] at q_r_16_remapped_orthogonal
+          specialize q_r_16_remapped_orthogonal k i k_neq
+          simp [Q_R_lin_plain] at q_r_16_remapped_orthogonal
+          simp [Q_R_lin_plain, Q_R]
+          simp [Q_R] at q_r_16_remapped_orthogonal
+          right
+          right
+          simp [q_r_16_remapped_orthogonal]
+        .
+          intro hi
+          simp at hi
+
+      conv =>
+        lhs
+        arg 2
+        intro i
+        rw [inner_sum_eq]
+        -- equals inner ℝ ((remapped_ortho.repr x) i • remapped_ortho i) ((remapped_ortho.repr y) i • remapped_ortho i) =>
+        --   rw [inner_sum_eq]
+
+
+      simp_rw [inner_smul_left]
+      simp_rw [inner_smul_right]
+      simp
+      simp_rw [norm_sq_eq_q_r]
+      have norm_ortho: ∀ i, ‖remapped_ortho i‖^2 = 1 := by
+        intro i
+        rw [norm_sq_eq_q_r]
+        have foo := q_r_lin_remapped_one i
+        simp [Q_R_lin] at foo
+        exact foo
+
+      simp [norm_ortho]
+
+      -- New code
+
+      conv =>
+        rhs
+        rw [←  Module.Basis.sum_repr remapped_ortho (u := x)]
+        rw [←  Module.Basis.sum_repr remapped_ortho (u := y)]
+
+
+      simp_rw [map_sum]
+      simp
+      simp_rw [Finset.mul_sum]
+      conv =>
+        rhs
+        arg 2
+        intro i
+        rw [Finset.sum_eq_single i (by
+          intro k hk k_neq
+          simp [map_smul]
+          rw [LinearMap.isOrthoᵢ_def] at q_r_16_remapped_orthogonal
+          specialize q_r_16_remapped_orthogonal k i k_neq
+          simp [Q_R_lin_plain] at q_r_16_remapped_orthogonal
+          simp [Q_R_lin_plain, Q_R]
+          simp [Q_R] at q_r_16_remapped_orthogonal
+          right
+          right
+          simp [q_r_16_remapped_orthogonal]
+        ) (by
+          intro hi
+          simp at hi
+        )]
+
+      apply Finset.sum_le_sum
+      intro i hi
+      
+
+
+
+      rw [apply_eq_dotProduct_toMatrix₂_mulVec (v_orthonormal) (v_orthonormal)]
+      simp [eigen_basis_V]
+      have repr_self: ∀ x, (∑ i, fun₀ | i => (q_r_16_eigen x).ofLp i) = (q_r_16_eigen x).ofLp := by
+        intro z
+        conv =>
+          lhs
+          arg 2
+          intro i
+          equals Pi.single i ((q_r_16_eigen z).ofLp i) =>
+            simp
+            ext a
+            rw [Finsupp.single_apply]
+            rw [Pi.single_apply]
+            have foo := eq_comm (a := i) (b := a)
+            simp_rw [foo]
+
+
+        ext a
+        simp
+
+      -- simp [repr_self]
+      -- unfold q_r_16_eigen
+      -- unfold q_r_16_m
+      -- conv =>
+      --   lhs
+      --   rhs
+      --   lhs
+      --   equals q_r_16_m => rfl
+
+      have tobasis_lp: ∀ x, (q_r_16_m_hermitian.eigenvectorBasis.toBasis x).ofLp = (q_r_16_m_hermitian.eigenvectorBasis x).ofLp := by
+        simp
+      simp [tobasis_lp]
+      rw [Matrix.IsHermitian.mulVec_eigenvectorBasis q_r_16_m_hermitian]
+      simp
+      right
+      conv =>
+        lhs
+        rhs
+        equals star ((q_r_16_m_hermitian.eigenvectorBasis y).ofLp) =>
+          simp
+
+      rw [← EuclideanSpace.inner_eq_star_dotProduct]
+
+
+
+
+      -- simp
+
+      -- rw [Orthonormal.inner_sum]
+      -- . sorry
+      -- . simp [remapped_ortho, q_r_16_eigen]
+
+      -- sorry
+
 
     grw [← log_second] at a_gt
     rw [Real.log_mul] at a_gt
@@ -3327,6 +3492,11 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
                 simp_rw [q_symm y x]
                 simp [Q_R_lin]
                 ring
+
+                rw [LinearMap.isOrthoᵢ_def] at q_r_16_remapped_orthogonal
+                rw [inner_eq_q_r] at inner_x_y
+                grw [inner_x_y]
+
                 -- TODO - we need orthogonality with respect to Q_R_16 for this
                 -- rw [mul_comm (Q_R (↑(R_2 data) * 16) x y) 2]
 
