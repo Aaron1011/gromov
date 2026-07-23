@@ -2835,7 +2835,9 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
   have q_r_base_pos_def := (Q_R_matrix_pos_def_i₀ b (16 ^ ((GoodScales data).i_2)) (by
     simp [i₀]
     rw [pow_le_pow_iff_right₀]
-    . sorry
+    . have foo := (GoodScales data).i_2_ge
+      simp [i₀] at foo
+      exact foo
     . simp
   ))
 
@@ -2848,13 +2850,24 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
       grind
     re_inner_nonneg := by
       simp [Q_R]
-      sorry
+      intro a _
+      apply Finset.sum_nonneg
+      intro x _
+      exact mul_self_nonneg _
     add_left := by
       simp
-      sorry
+      intro a _ a1 _ a2 _
+      simp [Q_R]
+      simp_rw [add_mul]
+      rw [Finset.sum_add_distrib]
     smul_left := by
       simp
-      sorry
+      intro a _ a1 _ r
+      simp [Q_R]
+      rw [Finset.mul_sum]
+      apply Finset.sum_congr rfl
+      intro i _
+      ring
     definite := fun x hx => by
       by_contra hne
       exact absurd hx (ne_of_gt (Q_R_pos_on_R' x hne R h_R))
@@ -3682,24 +3695,44 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
                       exact hx
                     . grw [h_R]
                       simp [R]
-                  . sorry
+                  . exact q_r_16_m_hermitian
             . simp [dim]
             . intro i hi i_not_mem
               sorry
           . intro i
             simp
-            sorry
+            apply ne_of_gt
+            apply Matrix.PosDef.eigenvalues_pos
+            apply Matrix.PosDef.of_dotProduct_mulVec_pos (?_)
+            . intro x hx
+              simp [Q_R_matrix]
+              conv =>
+                rhs
+                lhs
+                equals (star x) => simp
+              rw [star_dotProduct_toMatrix₂_mulVec]
+              apply Q_R_pos_on_R'
+              . rw [LinearEquiv.map_ne_zero_iff]
+                exact hx
+              . grw [h_R]
+                simp [R]
+            . exact q_r_16_m_hermitian
 
-      . sorry
-      . sorry
-      . sorry
-      . sorry
+      . exact (Q_R_matrix_pos_def b (16 ^ ((GoodScales data).i_2 + 1))
+          (le_trans h_R (by simp only [R]; push_cast; exact pow_le_pow_right₀ (by norm_num) (Nat.le_succ _)))).det_pos.ne'
+      . exact q_r_base_pos_def.det_pos.ne'
+      . exact q_r_base_pos_def.det_pos
+      . exact (Q_R_matrix_pos_def b (16 ^ ((GoodScales data).i_2 + 1))
+          (le_trans h_R (by simp only [R]; push_cast; exact pow_le_pow_right₀ (by norm_num) (Nat.le_succ _)))).det_pos
     . simp
       have foo := S_nonempty
       grind
-    . sorry
-  . sorry
-  . sorry
+    . exact (Real.rpow_pos_of_pos q_r_base_pos_def.det_pos _).ne'
+  . simp
+    have foo := S_nonempty
+    grind
+  . exact (Real.rpow_pos_of_pos (Q_R_matrix_pos_def b (16 ^ ((GoodScales data).i_2 + 1))
+      (le_trans h_R (by simp only [R]; push_cast; exact pow_le_pow_right₀ (by norm_num) (Nat.le_succ _)))).det_pos _).ne'
 
 
 
