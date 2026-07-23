@@ -3408,10 +3408,11 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
         rw [mul_assoc]
         nth_rw 2 [mul_assoc]
+        specialize hk i i_mem_inter
+
         apply mul_le_mul_of_nonneg'
         .
           apply hk
-          exact i_mem_inter
         . simp
         . sorry
         . simp [Q_R_lin_plain, Q_R, ← pow_two]
@@ -3428,25 +3429,25 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
 
 
-      rw [apply_eq_dotProduct_toMatrix₂_mulVec (v_orthonormal) (v_orthonormal)]
-      simp [eigen_basis_V]
-      have repr_self: ∀ x, (∑ i, fun₀ | i => (q_r_16_eigen x).ofLp i) = (q_r_16_eigen x).ofLp := by
-        intro z
-        conv =>
-          lhs
-          arg 2
-          intro i
-          equals Pi.single i ((q_r_16_eigen z).ofLp i) =>
-            simp
-            ext a
-            rw [Finsupp.single_apply]
-            rw [Pi.single_apply]
-            have foo := eq_comm (a := i) (b := a)
-            simp_rw [foo]
+      -- rw [apply_eq_dotProduct_toMatrix₂_mulVec (v_orthonormal) (v_orthonormal)]
+      -- simp [eigen_basis_V]
+      -- have repr_self: ∀ x, (∑ i, fun₀ | i => (q_r_16_eigen x).ofLp i) = (q_r_16_eigen x).ofLp := by
+      --   intro z
+      --   conv =>
+      --     lhs
+      --     arg 2
+      --     intro i
+      --     equals Pi.single i ((q_r_16_eigen z).ofLp i) =>
+      --       simp
+      --       ext a
+      --       rw [Finsupp.single_apply]
+      --       rw [Pi.single_apply]
+      --       have foo := eq_comm (a := i) (b := a)
+      --       simp_rw [foo]
 
 
-        ext a
-        simp
+      --   ext a
+      --   simp
 
       -- simp [repr_self]
       -- unfold q_r_16_eigen
@@ -3457,19 +3458,19 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
       --   lhs
       --   equals q_r_16_m => rfl
 
-      have tobasis_lp: ∀ x, (q_r_16_m_hermitian.eigenvectorBasis.toBasis x).ofLp = (q_r_16_m_hermitian.eigenvectorBasis x).ofLp := by
-        simp
-      simp [tobasis_lp]
-      rw [Matrix.IsHermitian.mulVec_eigenvectorBasis q_r_16_m_hermitian]
-      simp
-      right
-      conv =>
-        lhs
-        rhs
-        equals star ((q_r_16_m_hermitian.eigenvectorBasis y).ofLp) =>
-          simp
+      -- have tobasis_lp: ∀ x, (q_r_16_m_hermitian.eigenvectorBasis.toBasis x).ofLp = (q_r_16_m_hermitian.eigenvectorBasis x).ofLp := by
+      --   simp
+      -- simp [tobasis_lp]
+      -- rw [Matrix.IsHermitian.mulVec_eigenvectorBasis q_r_16_m_hermitian]
+      -- simp
+      -- right
+      -- conv =>
+      --   lhs
+      --   rhs
+      --   equals star ((q_r_16_m_hermitian.eigenvectorBasis y).ofLp) =>
+      --     simp
 
-      rw [← EuclideanSpace.inner_eq_star_dotProduct]
+      -- rw [← EuclideanSpace.inner_eq_star_dotProduct]
 
 
 
