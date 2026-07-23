@@ -3414,14 +3414,8 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
         . rw [← pow_two]
           positivity
       .
-        rw [Finset.mem_inter, not_and_or] at i_mem_inter
-        cases i_mem_inter
-        . rename_i i_zero
-          simp at i_zero
-          simp [i_zero]
-        . rename_i i_zero
-          simp at i_zero
-          simp [i_zero]
+        simp at i_mem_inter
+        simp [i_mem_inter]
 
 
 
@@ -3494,11 +3488,11 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
         simp [Q_R_matrix] at a_gt
 
-        let large_basis := { i: Fin (Module.finrank ℝ ↥V) | (Real.exp (2 * (a data.d))) * Q_R_lin V (R) (remapped_ortho i) (remapped_ortho i) < Q_R_lin V (16 * R) (remapped_ortho i) (remapped_ortho i)}
-        let large_submodule := Submodule.span ℝ (remapped_ortho '' large_basis)
+        let large_basis: Finset _ := { i: Fin (Module.finrank ℝ ↥V) | (Real.exp (2 * (a data.d))) * Q_R_lin V (R) (remapped_ortho i) (remapped_ortho i) < Q_R_lin V (16 * R) (remapped_ortho i) (remapped_ortho i)}
+        let large_submodule := Submodule.span ℝ ((Finset.image remapped_ortho large_basis) : Set V)
         by_cases dim_small: 2 * dim large_submodule < dim V
         .
-          let small_submodule := (Submodule.span ℝ ((Set.range remapped_ortho) \ (remapped_ortho '' large_basis)))
+          let small_submodule := Submodule.span ℝ ((Finset.image remapped_ortho Finset.univ ) \ (Finset.image remapped_ortho large_basis) : Set V)
           use Submodule.map V.subtype small_submodule
           refine ⟨?_, ?_, ?_⟩
           . apply Submodule.map_subtype_le
@@ -3510,9 +3504,28 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
               intro f hf
               apply inner_x_self
               intro i hi
-              simp at hf
-              sorry
+              simp only [small_submodule, ← Finset.coe_sdiff] at hf
+              rw [Submodule.mem_span_finset] at hf
+              obtain ⟨g, g_supp, f_eq_g⟩ := hf
+              rw [← f_eq_g] at hi
+              rw [Finset.sum_sdiff_eq_sub] at hi
+              .
+                simp at hi
+                rw [Finset.sum_image (by simp; apply Module.Basis.injective)] at hi
+                rw [Finset.sum_image (by apply (Module.Basis.injective _).injOn)] at hi
+                simp at hi
+                have i_not_mem: ¬(i ∈ large_basis) := by
+                  sorry
 
+                simp [large_basis] at i_not_mem
+                simp [Q_R_lin_plain]
+                simp [Q_R_lin] at i_not_mem
+                simpa using i_not_mem
+
+
+
+              . apply Finset.image_subset_image
+                simp
             intro f hf
             simp at hf
             obtain ⟨f_mem_V, hf⟩ := hf
