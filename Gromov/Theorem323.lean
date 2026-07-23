@@ -3427,76 +3427,128 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
           rw [pow_succ']
           apply Q_R_16_new_ortho_hermitian
 
-        have q_r_16_eigen_ge: ∀ i ∈ large_basis, Real.exp (2 * a data.d) * ((Q_R_lin V ↑R) (remapped_ortho i)) (remapped_ortho i) ≤ lin_hermitian.eigenvalues i := by
+        have q_r_16_eigen_ge: ∀ i ∈ large_basis, Real.exp (2 * a data.d) * ((Q_R_lin V ↑R) (remapped_ortho i)) (remapped_ortho i) ≤ q_r_16_m_hermitian.eigenvalues i := by
           intro i hi
           rw [Matrix.IsHermitian.eigenvalues_eq]
-          have foo := dotProduct_toMatrix₂_mulVec remapped_ortho remapped_ortho (Q_R_lin V (16 * R))
-          conv at foo =>
+          have app_eq := dotProduct_toMatrix₂_mulVec v_orthonormal v_orthonormal (B := (Q_R_lin V (16 ^ ((GoodScales data).i_2 + 1))))
+
+
+          conv at app_eq =>
             intro x y
             lhs
             lhs
             equals x =>
-              ext a
+              ext j
               simp
-          conv at foo =>
+
+          conv at app_eq =>
             intro x y
             lhs
             rhs
             rhs
             equals y =>
-              ext a
+              ext j
               simp
-          simp only [star_trivial, RCLike.re_to_real]
-          simp only [R] at foo
-          norm_cast at foo
-          simp_rw [← pow_succ'] at foo
-          norm_cast
-          rw [foo]
-          simp [large_basis] at hi
-          grw [hi]
-          simp
-          simp_rw [Finset.mul_sum]
+
+
+          simp [star, R]
           conv =>
             rhs
-            arg 2
-            intro i
-            rw [Finset.sum_eq_single i (by
-              intro k hk k_neq
-              simp [map_smul]
-              rw [LinearMap.isOrthoᵢ_def] at q_r_16_remapped_orthogonal
-              specialize q_r_16_remapped_orthogonal k i k_neq
-              simp [Q_R_lin_plain] at q_r_16_remapped_orthogonal
-              right
-              right
-              simp [Q_R_lin, Q_R]
-              simp [Q_R, R] at q_r_16_remapped_orthogonal
-              simp_rw [← pow_succ'] at q_r_16_remapped_orthogonal
-              simp [q_r_16_remapped_orthogonal]
+            rhs
+            arg 1
+            simp [q_r_16_m]
+          simp [R]
+          simp_rw [← pow_succ']
+          rw [app_eq]
+          simp [large_basis, R] at hi
+          grw [hi]
+          simp [remapped_ortho, eigen_basis_V, q_r_16_eigen]
+          simp_rw [← pow_succ']
 
-            ) (by
-              intro hi
-              simp at hi
-            )]
+          rfl
 
-          grw [← Finset.single_le_sum (a := i)]
-          .
-            rw [← mul_assoc]
-            rw [← pow_two]
-            rw [← EuclideanSpace.real_norm_sq_eq]
-            simp
 
-          grw [← Finset.sum_le_sum (f := fun i_1 => (Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp i_1 * ((Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp i_1))]
-          .
-            simp_rw [← pow_two]
-            rw [← EuclideanSpace.real_norm_sq_eq]
+          -- simp [remapped_ortho, q_r_16_eigen]
+          -- simp [eigen_basis_V]
+          -- simp [remapped_ortho, q_r_16_eigen]
+          -- simp [eigen_basis_V]
+          -- simp_rw [Finset.mul_sum]
+          -- have repr_symm: ∀ x, (q_r_16_m_hermitian.eigenvectorBasis.repr.symm (q_r_16_m_hermitian.eigenvectorBasis i)).ofLp x = (q_r_16_m_hermitian.eigenvectorBasis i).ofLp x := by
+          --   sorry
+          -- simp
+          -- simp_rw [repr_symm]
+          -- have foo := dotProduct_toMatrix₂_mulVec remapped_ortho remapped_ortho (Q_R_lin V (16 * R))
+          -- conv at foo =>
+          --   intro x y
+          --   lhs
+          --   lhs
+          --   equals x =>
+          --     ext a
+          --     simp
+          -- conv at foo =>
+          --   intro x y
+          --   lhs
+          --   rhs
+          --   rhs
+          --   equals y =>
+          --     ext a
+          --     simp
+          -- simp only [star_trivial, RCLike.re_to_real]
+          -- simp only [R] at foo
+          -- norm_cast at foo
+          -- simp_rw [← pow_succ'] at foo
+          -- norm_cast
+          -- rw [foo]
+          -- simp [large_basis] at hi
+          -- grw [hi]
+          -- simp
+          -- simp_rw [Finset.mul_sum]
+          -- conv =>
+          --   rhs
+          --   arg 2
+          --   intro i
+          --   rw [Finset.sum_eq_single i (by
+          --     intro k hk k_neq
+          --     simp [map_smul]
+          --     rw [LinearMap.isOrthoᵢ_def] at q_r_16_remapped_orthogonal
+          --     specialize q_r_16_remapped_orthogonal k i k_neq
+          --     simp [Q_R_lin_plain] at q_r_16_remapped_orthogonal
+          --     right
+          --     right
+          --     simp [Q_R_lin, Q_R]
+          --     simp [Q_R, R] at q_r_16_remapped_orthogonal
+          --     simp_rw [← pow_succ'] at q_r_16_remapped_orthogonal
+          --     simp [q_r_16_remapped_orthogonal]
 
-            sorry
-          .
-            intro i hi
-            rw [← mul_assoc]
-            simp [← pow_two]
-            grw [← q_r_16_eigen_ge_one]
-            simp
+          --   ) (by
+          --     intro hi
+          --     simp at hi
+          --   )]
+
+          -- grw [← Finset.single_le_sum (a := i)]
+          -- .
+          --   rw [← mul_assoc]
+          --   rw [← pow_two]
+          --   rw [← EuclideanSpace.real_norm_sq_eq]
+          --   simp
+
+          -- . intro i hi
+          --   rw [← mul_assoc]
+          --   rw [← pow_two]
+          --   sorry
+          -- . simp
+          -- grw [← Finset.sum_le_sum (f := fun i_1 => (Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp i_1 * ((Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp i_1))]
+          -- .
+          --   simp_rw [← pow_two]
+          --   rw [← EuclideanSpace.real_norm_sq_eq]
+
+          --   sorry
+          -- .
+          --   intro i hi
+          --   rw [← mul_assoc]
+          --   simp [← pow_two]
+          --   grw [← q_r_16_eigen_ge_one]
+          --   simp
 
 
 
