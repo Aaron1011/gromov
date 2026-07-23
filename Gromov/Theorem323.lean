@@ -3508,7 +3508,46 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
             grw [← Finset.sum_le_sum_of_subset_of_nonneg (s := large_basis) (h := by simp)] at a_gt
             .
               grw [← Finset.card_nsmul_le_sum (n := 2 * (a data.d))] at a_gt
-              . sorry
+              .
+                simp [dim, large_submodule] at dim_small
+                rw [finrank_span_finset_eq_card] at dim_small
+                . rw [Finset.card_image_iff.mpr] at dim_small
+                  .
+                    rw [← div_le_iff₀'] at dim_small
+                    .
+                      norm_cast at dim_small
+                      conv at dim_small =>
+                        lhs
+                        equals ↑(Module.finrank ℝ V / 2) =>
+                          rw [Nat.cast_div]
+                          . grind
+                          . apply Even.two_dvd
+                            apply v_wrapper_inst.V_even
+                          . simp
+
+                      norm_cast at dim_small
+                      grw [← dim_small] at a_gt
+                      simp [dim] at a_gt
+                      rw [Nat.cast_div] at a_gt
+                      .
+                        have rank_ne: (↑(Module.finrank ℝ ↥V) : ℝ) ≠ 0 := by
+                          apply ne_of_gt
+                          simp
+                          apply Module.finrank_pos
+                        field_simp at a_gt
+                        grind
+                      . apply Even.two_dvd
+                        apply v_wrapper_inst.V_even
+                      . simp
+                      . simp [dim]
+                      . simp [a]
+                        positivity
+                    . simp
+                  . apply (Module.Basis.injective _).injOn
+                .
+                  rw [Finset.coe_image]
+                  apply LinearIndepOn.id_image
+                  apply Module.Basis.linearIndepOn
               . simp [dim]
               . intro i hi
                 rw [Real.le_log_iff_exp_le]
@@ -3551,17 +3590,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
       have foo := S_nonempty
       grind
     . sorry
-
-
-    -- grw [← log_pos_first] at a_gt
-    -- rw [Real.log_mul] at a_gt
-    -- .
-    --   simp at a_gt
-    --   rw [sub_add_eq_sub_sub] at a_gt
-    --   grw [log_second] at a_gt
-
-    -- . sorry
-    -- . sorry
   . sorry
   . sorry
 
