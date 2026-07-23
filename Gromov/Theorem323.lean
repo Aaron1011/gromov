@@ -3490,6 +3490,36 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
           rw [pow_succ']
           apply Q_R_16_new_ortho_hermitian
 
+        have key_eq: ∀ i, (Q_R_lin V (16 * ↑R)) (remapped_ortho i) (remapped_ortho i) = q_r_16_m_hermitian.eigenvalues i := by
+          intro i
+          rw [Matrix.IsHermitian.eigenvalues_eq]
+          have app_eq := dotProduct_toMatrix₂_mulVec v_orthonormal v_orthonormal (B := (Q_R_lin V (16 ^ ((GoodScales data).i_2 + 1))))
+          conv at app_eq =>
+            intro x y
+            lhs
+            lhs
+            equals x =>
+              ext j
+              simp
+          conv at app_eq =>
+            intro x y
+            lhs
+            rhs
+            rhs
+            equals y =>
+              ext j
+              simp
+          simp [star, R]
+          conv =>
+            rhs
+            rhs
+            arg 1
+            simp [q_r_16_m]
+          simp [R]
+          simp_rw [← pow_succ']
+          rw [app_eq]
+          simp [remapped_ortho, eigen_basis_V, q_r_16_eigen]
+
         have q_r_16_eigen_ge: ∀ i ∈ large_basis, Real.exp (2 * a data.d) * ((Q_R_lin V ↑R) (remapped_ortho i)) (remapped_ortho i) ≤ q_r_16_m_hermitian.eigenvalues i := by
           intro i hi
           rw [Matrix.IsHermitian.eigenvalues_eq]
@@ -3698,7 +3728,8 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
                   . exact q_r_16_m_hermitian
             . simp [dim]
             . intro i hi i_not_mem
-              sorry
+              rw [← key_eq i]
+              exact Real.log_nonneg (q_r_16_eigen_ge_one i)
           . intro i
             simp
             apply ne_of_gt
