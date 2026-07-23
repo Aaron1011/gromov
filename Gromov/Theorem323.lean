@@ -3401,25 +3401,147 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
         unfold Q_R_ortho at det_Q_R_one
         simp [R] at det_Q_R_one
         simp [det_Q_R_one] at a_gt
-        rw [Matrix.IsHermitian.det_eq_prod_eigenvalues] at a_gt
-        .
-          rw [Real.log_prod] at a_gt
+
+        have q_r_16_eigen_ge_one: ∀ i, (1: ℝ) ≤ (Q_R_lin V (16 * ↑R)) (remapped_ortho i) (remapped_ortho i) := by
+          intro i
+          simp [Q_R_lin, Q_R]
+          grw [← Finset.sum_le_sum_of_subset_of_nonneg (s := (finite_closed_ball 1 R).toFinset)]
           .
-            grw [← Finset.card_nsmul_le_sum] at a_gt
-            sorry
-            sorry
-            sorry
-            sorry
-          . intro i
+            have foo := q_r_lin_remapped_one
+            simp [Q_R_lin, Q_R] at foo
+            simp [finite_closed_ball]
+            rw [foo]
+          .
             simp
-            sorry
-          --grw [← Finset.pow_card_le_prod] at a_gt
-          --sorry
-        .
+            apply Metric.closedBall_subset_closedBall
+            norm_cast
+            grind
+          .
+            intro i hi _
+            rw [← pow_two]
+            positivity
+
+        have lin_hermitian: ((LinearMap.toMatrix₂ remapped_ortho remapped_ortho) (Q_R_lin V (16 ^ ((GoodScales data).i_2 + 1)))).IsHermitian := by
           simp [Q_R_16_new_ortho, R] at Q_R_16_new_ortho_hermitian
           field_simp at Q_R_16_new_ortho_hermitian
           rw [pow_succ']
           apply Q_R_16_new_ortho_hermitian
+
+        have q_r_16_eigen_ge: ∀ i ∈ large_basis, Real.exp (2 * a data.d) * ((Q_R_lin V ↑R) (remapped_ortho i)) (remapped_ortho i) ≤ lin_hermitian.eigenvalues i := by
+          intro i hi
+          rw [Matrix.IsHermitian.eigenvalues_eq]
+          have foo := dotProduct_toMatrix₂_mulVec remapped_ortho remapped_ortho (Q_R_lin V (16 * R))
+          conv at foo =>
+            intro x y
+            lhs
+            lhs
+            equals x =>
+              ext a
+              simp
+          conv at foo =>
+            intro x y
+            lhs
+            rhs
+            rhs
+            equals y =>
+              ext a
+              simp
+          simp only [star_trivial, RCLike.re_to_real]
+          simp only [R] at foo
+          norm_cast at foo
+          simp_rw [← pow_succ'] at foo
+          norm_cast
+          rw [foo]
+          simp [large_basis] at hi
+          grw [hi]
+          simp
+          simp_rw [Finset.mul_sum]
+          conv =>
+            rhs
+            arg 2
+            intro i
+            rw [Finset.sum_eq_single i (by
+              intro k hk k_neq
+              simp [map_smul]
+              rw [LinearMap.isOrthoᵢ_def] at q_r_16_remapped_orthogonal
+              specialize q_r_16_remapped_orthogonal k i k_neq
+              simp [Q_R_lin_plain] at q_r_16_remapped_orthogonal
+              right
+              right
+              simp [Q_R_lin, Q_R]
+              simp [Q_R, R] at q_r_16_remapped_orthogonal
+              simp_rw [← pow_succ'] at q_r_16_remapped_orthogonal
+              simp [q_r_16_remapped_orthogonal]
+
+            ) (by
+              intro hi
+              simp at hi
+            )]
+
+          grw [← Finset.single_le_sum (a := i)]
+          .
+            rw [← mul_assoc]
+            rw [← pow_two]
+            rw [← EuclideanSpace.real_norm_sq_eq]
+            simp
+
+          grw [← Finset.sum_le_sum (f := fun i_1 => (Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp i_1 * ((Q_R_16_new_ortho_hermitian.eigenvectorBasis i).ofLp i_1))]
+          .
+            simp_rw [← pow_two]
+            rw [← EuclideanSpace.real_norm_sq_eq]
+
+            sorry
+          .
+            intro i hi
+            rw [← mul_assoc]
+            simp [← pow_two]
+            grw [← q_r_16_eigen_ge_one]
+            simp
+
+
+
+        rw [Matrix.IsHermitian.det_eq_prod_eigenvalues lin_hermitian] at a_gt
+        .
+          simp at a_gt
+          rw [Real.log_prod] at a_gt
+          .
+            grw [← Finset.sum_le_sum_of_subset_of_nonneg (s := large_basis) (h := by simp)] at a_gt
+            .
+              grw [← Finset.card_nsmul_le_sum (n := 2 * (a data.d))] at a_gt
+              . sorry
+              . simp [dim]
+              . intro i hi
+                rw [Real.le_log_iff_exp_le]
+                .
+                  grw [← q_r_16_eigen_ge]
+                  .
+                    simp [q_r_lin_remapped_one]
+                  . exact hi
+                .
+                  apply Matrix.PosDef.eigenvalues_pos
+                  apply Matrix.PosDef.of_dotProduct_mulVec_pos (?_)
+                  .
+                    intro x hx
+                    simp [Q_R_matrix]
+                    conv =>
+                      rhs
+                      lhs
+                      equals (star x) => simp
+                    rw [star_dotProduct_toMatrix₂_mulVec]
+                    apply Q_R_pos_on_R'
+                    . rw [LinearEquiv.map_ne_zero_iff]
+                      exact hx
+                    . grw [h_R]
+                      simp [R]
+                      rw [pow_succ]
+                      simp
+                  . sorry
+            . simp [dim]
+            . intro i hi i_not_mem
+              sorry
+          . intro i
+            simp
+            sorry
 
       . sorry
       . sorry
