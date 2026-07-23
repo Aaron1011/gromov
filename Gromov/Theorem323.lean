@@ -42,6 +42,27 @@ theorem LinearMap.toMatrix₂_reindex_det {R M ι κ : Type*} [CommRing R] [AddC
       = (LinearMap.toMatrix₂ b b B).det := by
   rw [LinearMap.toMatrix₂_reindex, Matrix.det_submatrix_equiv_self]
 
+/-- For two bases `b`, `c` of the same real vector space, the `LinearMap.toMatrix₂`
+determinants differ by a fixed positive constant `K = (b.reindex e).det c)²` (the square of the
+change-of-basis determinant), **uniformly in the bilinear form** `B`. In particular the ratio of
+two such determinants (e.g. at different scales) is basis-independent. -/
+theorem LinearMap.toMatrix₂_det_basis_change {M ι κ : Type*} [AddCommGroup M] [Module ℝ M]
+    [Fintype ι] [DecidableEq ι] [Fintype κ] [DecidableEq κ]
+    (b : Module.Basis ι ℝ M) (c : Module.Basis κ ℝ M) :
+    ∃ K : ℝ, 0 < K ∧ ∀ B : M →ₗ[ℝ] M →ₗ[ℝ] ℝ,
+      (LinearMap.toMatrix₂ c c B).det = K * (LinearMap.toMatrix₂ b b B).det := by
+  let e := b.indexEquiv c
+  refine ⟨((b.reindex e).det ⇑c) ^ 2, ?_, fun B => ?_⟩
+  · have hne : (b.reindex e).det ⇑c ≠ 0 := by
+      rw [Module.Basis.det_apply]
+      exact left_ne_zero_of_mul_eq_one (by
+        rw [← Matrix.det_mul, Module.Basis.toMatrix_mul_toMatrix_flip, Matrix.det_one])
+    positivity
+  · rw [← LinearMap.toMatrix₂_reindex_det b e B,
+        ← LinearMap.toMatrix₂_mul_basis_toMatrix (b₁ := b.reindex e) (b₂ := b.reindex e) c c B,
+        Matrix.det_mul, Matrix.det_mul, Matrix.det_transpose, ← Module.Basis.det_apply]
+    ring
+
 -- TODO - generalize and upstream
 -- Based on https://math.stackexchange.com/questions/1101184/show-that-if-x-succeq-y-then-detx-ge-dety
 lemma matrix_psd_det_one {n: Type*} [Fintype n] [DecidableEq n] (A: Matrix n n ℝ) (ha: A.PosSemidef): 1 ≤ (A + 1).det := by
@@ -2821,6 +2842,20 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
 
 -- Lemma 3.27
 
+/-- The determinant of `Q_R_matrix` at two bases of `V` differs by a positive constant that is
+**uniform in the scale `R`**. Hence the determinant *ratio* between two scales — and so the
+`h`-difference used to select good scales — is basis-independent. -/
+lemma Q_R_matrix_det_basis_change {index : Type*} [Fintype index] [DecidableEq index]
+    (b_1 : Module.Basis ι ℝ V) (b_2 : Module.Basis index ℝ V) :
+    ∃ K : ℝ, 0 < K ∧ ∀ R : ℝ, (Q_R_matrix b_2 R).det = K * (Q_R_matrix b_1 R).det := by
+  obtain ⟨K, hK, hB⟩ := LinearMap.toMatrix₂_det_basis_change b_1 b_2
+  refine ⟨K, hK, fun R => ?_⟩
+  have h2 : Q_R_matrix b_2 R = LinearMap.toMatrix₂ b_2 b_2 (Q_R_lin_plain V R) := by
+    simp only [Q_R_matrix]; ext i j; simp [Q_R_lin, Q_R_lin_plain]
+  have h1 : Q_R_matrix b_1 R = LinearMap.toMatrix₂ b_1 b_1 (Q_R_lin_plain V R) := by
+    simp only [Q_R_matrix]; ext i j; simp [Q_R_lin, Q_R_lin_plain]
+  rw [h2, h1, hB]
+
 
 lemma growth_bound_basis_change (d: ℕ) {index: Type*} [Fintype index] [DecidableEq index] (b_1: Module.Basis ι ℝ V) (b_2: Module.Basis index ℝ V) (h_growth: growth_bound b_1 d) : growth_bound b_2 d := by
   -- the two bases index the same space, so their index types are canonically equivalent
@@ -3257,25 +3292,25 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
     apply Module.finrank_pos
   apply growth_bound_basis_change data.d b remapped_ortho at new_growth
 
-  let new_scales := (GoodScales {
-    w := data.w
-    d := data.d
-    hw := data.hw
-    hd := data.hd
-    w_gt := data.w_gt
-    h_growth := new_growth
-  } (b := remapped_ortho))
-  have a_gt := new_scales.second_h_i
+  -- let new_scales := (GoodScales {
+  --   w := data.w
+  --   d := data.d
+  --   hw := data.hw
+  --   hd := data.hd
+  --   w_gt := data.w_gt
+  --   h_growth := new_growth
+  -- } (b := remapped_ortho))
+  have a_gt := (GoodScales data).second_h_i
   simp [h, f] at a_gt
   rw [Real.log_mul] at a_gt
   .
-    have log_pos_first: 0 ≤ Real.log ↑(#(S ^ 16 ^ (new_scales.i_2 + 1))) := by
+    have log_pos_first: 0 ≤ Real.log ↑(#(S ^ 16 ^ ((GoodScales data).i_2 + 1))) := by
       apply Real.log_nonneg
       simp
       apply Finset.Nonempty.pow
       simp [S_nonempty]
 
-    have log_second: Real.log ↑(#(S ^ 16 ^ new_scales.i_2)) ≤ Real.log ↑(#(S ^ 16 ^ (new_scales.i_2 + 1))) := by
+    have log_second: Real.log ↑(#(S ^ 16 ^ (GoodScales data).i_2)) ≤ Real.log ↑(#(S ^ 16 ^ ((GoodScales data).i_2 + 1))) := by
       apply Real.log_le_log
       . simp
         apply Finset.Nonempty.pow
@@ -3586,8 +3621,32 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
             apply all_le
 
         simp at dim_small
-
-        sorry
+        have basis_change := Q_R_matrix_det_basis_change remapped_ortho b
+        obtain ⟨K, k_pos, hK⟩ := basis_change
+        simp [Q_R_matrix] at hK
+        simp [hK] at a_gt
+        field_simp at a_gt
+        unfold Q_R_ortho at det_Q_R_one
+        simp [R] at det_Q_R_one
+        simp [det_Q_R_one] at a_gt
+        rw [Matrix.IsHermitian.det_eq_prod_eigenvalues] at a_gt
+        .
+          rw [Real.log_prod] at a_gt
+          .
+            grw [← Finset.card_nsmul_le_sum] at a_gt
+            sorry
+            sorry
+            sorry
+          . intro i
+            simp
+            sorry
+          --grw [← Finset.pow_card_le_prod] at a_gt
+          --sorry
+        .
+          simp [Q_R_16_new_ortho, R] at Q_R_16_new_ortho_hermitian
+          field_simp at Q_R_16_new_ortho_hermitian
+          rw [pow_succ']
+          apply Q_R_16_new_ortho_hermitian
 
         -- OLD - BAD
 
