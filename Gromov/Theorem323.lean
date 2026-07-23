@@ -3076,6 +3076,7 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
     exact inner_zero
 
 
+  -- TODO - an enormous amount of this should get deduplicated with v_orthonormal_isortho
   have Q_R_ortho_eq_1: Q_R_ortho = 1 := by
     ext i j
     simp [Q_R_ortho, Matrix.one_apply]
@@ -3083,32 +3084,71 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
     .
       rename_i i_eq_j
       rw [i_eq_j]
-      simp [remapped_ortho, v_map_normalize_equiv, v_map_normalize]
-      simp [eigen_basis_V, v_orthonormal, v_map_normalize_equiv, v_map_normalize]
+      simp [remapped_ortho]
+      simp [eigen_basis_V,]
       ring
       field_simp
-      rw [norm_sq_eq_q_r]
       simp only [eigen_basis_V, q_r_16_eigen]
       simp
-      have eigen_repr_eq: ∀ j,  q_r_16_m_hermitian.eigenvectorBasis.toBasis.repr (q_r_16_m_hermitian.eigenvectorBasis j) = Finsupp.single j 1 := by
-        intro j
-        ext a
-        simp [Finsupp.single_apply]
-        simp_rw [eq_comm (a := a)]
+      simp_rw [Finset.mul_sum]
+      simp [v_orthonormal]
+      rw [LinearMap.isOrthoᵢ_def] at v_orthogonal_orig_eval
 
+      simp_rw [Module.Basis.unitsSMul_apply]
+      simp_rw [Units.smul_def]
+      simp_rw [map_smul]
+      simp
 
-      simp [eigen_repr_eq]
-      simp [Q_R_lin]
       conv =>
-        arg 1
-        arg 1
-        equals  Q_R ↑R ⇑(v_orthogonal j).val ⇑(v_orthogonal j).val =>
+        lhs
+        arg 2
+        intro i
+        rw [Finset.sum_eq_single_of_mem i (by simp) (by
+          intro j hj hij
+          simp
+          right
+          right
+          right
+          right
+          -- TODO - why doesn't an 'rw' with this work?
+          apply v_orthogonal_orig_eval _ _ hij
+        )]
+
+
+      ring
+      simp [norm_eq_q_r]
+      have Q_R_pos: ∀ i, 0 ≤ Q_R ↑R ⇑(v_orthogonal_orig i).val ⇑(v_orthogonal_orig i).val := by
+        intro i
+        simp [Q_R, ← pow_two]
+        positivity
+      conv =>
+        lhs
+        arg 2
+        intro i
+        rw [Real.sq_sqrt (by apply Q_R_pos)]
+      field_simp
+      have eval_nonzero: ∀ i, (Q_R_lin V ↑R) (v_orthogonal_orig i) (v_orthogonal_orig i) ≠ 0 := by
+        intro i
+        simp [Q_R_lin]
+        apply ne_of_gt
+        apply Q_R_pos_on_R'
+        . exact Module.Basis.ne_zero v_orthogonal_orig i
+        . exact h_R
+      conv =>
+        lhs
+        arg 2
+        intro i
+        rw [mul_div_assoc]
+        rhs
+        equals ((Q_R_lin V ↑R) (v_orthogonal_orig i)) (v_orthogonal_orig i) / ((Q_R_lin V ↑R) (v_orthogonal_orig i)) (v_orthogonal_orig i) =>
           rfl
 
-      apply ne_of_gt
-      apply Q_R_pos_on_R'
-      . apply Module.Basis.ne_zero
-      . grind
+
+      field_simp [eval_nonzero]
+      have one_eq: (1: ℝ) = 1^2 := by
+        simp
+      rw [one_eq, ← OrthonormalBasis.norm_eq_one (q_r_16_m_hermitian.eigenvectorBasis) j]
+      rw [EuclideanSpace.real_norm_sq_eq]
     .
       rw [LinearMap.isOrthoᵢ_def] at v_orthonormal_isortho
       apply v_orthonormal_isortho
