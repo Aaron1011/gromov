@@ -3515,7 +3515,19 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
                 rw [Finset.sum_image (by apply (Module.Basis.injective _).injOn)] at hi
                 simp at hi
                 have i_not_mem: ¬(i ∈ large_basis) := by
-                  sorry
+                  by_contra!
+                  rw [Finset.sum_eq_single_of_mem i this] at hi
+                  .
+                    rw [Finset.sum_eq_single_of_mem i (by simp)] at hi
+                    . simp at hi
+                    . intro k hk i_neq
+                      simp
+                      right
+                      simp [Finsupp.single_apply, i_neq]
+                  . intro k hk i_neq
+                    simp
+                    right
+                    simp [Finsupp.single_apply, i_neq]
 
                 simp [large_basis] at i_not_mem
                 simp [Q_R_lin_plain]
