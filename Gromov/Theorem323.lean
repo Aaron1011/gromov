@@ -2934,46 +2934,35 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
     . simp
   ))
 
-  let Q_R_pre_inner_core: PreInnerProductSpace.Core ℝ V := {
-      inner := fun u v => Q_R R u.val v.val
-      conj_inner_symm := by
-        simp [Q_R]
-        grind
-      re_inner_nonneg := by
-        simp [Q_R]
-        sorry
-      add_left := by
-        simp
-        sorry
-      smul_left := by
-        simp
-        sorry
+  -- Full (definite) inner product core, registered as a local instance so that
+  -- `toNormedAddCommGroup` / `ofCore` pick it up by inference.
+  letI Q_R_inner_core: InnerProductSpace.Core ℝ V := {
+    inner := fun u v => Q_R R u.val v.val
+    conj_inner_symm := by
+      simp [Q_R]
+      grind
+    re_inner_nonneg := by
+      simp [Q_R]
+      sorry
+    add_left := by
+      simp
+      sorry
+    smul_left := by
+      simp
+      sorry
+    definite := fun x hx => by
+      by_contra hne
+      exact absurd hx (ne_of_gt (Q_R_pos_on_R' x hne R h_R))
   }
 
-  -- TODO - unift this with above
-  -- let Q_R_inner_core: InnerProductSpace.Core ℝ V := {
-  --   inner := fun u v => Q_R R u.val v.val
-  --   conj_inner_symm := by
-  --     simp [Q_R]
-  --     grind
-  --   re_inner_nonneg := by
-  --     simp [Q_R]
-  --     sorry
-  --   add_left := by
-  --     simp
-  --     sorry
-  --   smul_left := by
-  --     simp
-  --     sorry
-  --   definite := by sorry
-  -- }
-
-  -- Install the Q_R-derived seminorm locally *before* `ofCore`, so that the
-  -- ambient LipschitzH norm on `↥V` is shadowed and `Q_R_inner` is over the
-  -- same `SeminormedAddCommGroup` instance that instance search will pick.
-  letI Q_R_seminorm : SeminormedAddCommGroup ↥V :=
-    InnerProductSpace.Core.toSeminormedAddCommGroup (c := Q_R_pre_inner_core)
-  letI Q_R_inner : InnerProductSpace ℝ ↥V := InnerProductSpace.ofCore Q_R_pre_inner_core
+  -- Install the definite Q_R-derived NORM (not just a seminorm) *before* `ofCore`, so the
+  -- ambient LipschitzH norm on `↥V` is shadowed and `Q_R_inner` is over this `NormedAddCommGroup`.
+  letI Q_R_norm : NormedAddCommGroup ↥V := InnerProductSpace.Core.toNormedAddCommGroup (𝕜 := ℝ)
+  -- Also expose the seminorm projection as a *direct* local instance, so it shadows the
+  -- ambient `V.seminormedAddCommGroup` (a bare `NormedAddCommGroup` letI does not).
+  letI Q_R_seminorm : SeminormedAddCommGroup ↥V := Q_R_norm.toSeminormedAddCommGroup
+  letI Q_R_inner : InnerProductSpace ℝ ↥V :=
+    InnerProductSpace.ofCore (inferInstance : PreInnerProductSpace.Core ℝ ↥V)
 
   have norm_eq_q_r : ∀ x : ↥V, ‖x‖ = Real.sqrt (Q_R R x x) := fun _ => rfl
   have norm_sq_eq_q_r : ∀ x : ↥V, ‖x‖^2 = (Q_R R x x) := by
@@ -2987,7 +2976,14 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
   --have semi : SeminormedAddCommGroup V := by infer_instance
   --have inner_prod := Matrix.toNormedAddCommGroup _ q_r_base_pos_def
-  obtain ⟨v_orthogonal, v_orthogonal_eval⟩ := LinearMap.BilinForm.exists_orthogonal_basis (Q_R_lin_symm V R)
+  obtain ⟨v_orthogonal_orig, v_orthogonal_orig_eval⟩ := LinearMap.BilinForm.exists_orthogonal_basis (Q_R_lin_symm V R)
+  let v_orthonormal := v_orthogonal_orig.unitsSMul (fun a => Units.mk0 ‖v_orthogonal_orig a‖⁻¹ (by
+    simp
+    rw [← ne_eq]
+    rw [norm_eq_q_r]
+    apply norm_ne_zero_iff.mpr
+    rw [norm_eq_zero]
+  ))
 
   --let q_r_16_lin_eigen := LinearMap.IsSymmetric.eigenvectorBasis (T := )
   let q_r_16_m := (Q_R_lin V (16 * R)).toMatrix₂ v_orthogonal v_orthogonal
