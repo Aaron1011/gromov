@@ -3204,14 +3204,22 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
     simp
     simp [eigen_basis_V]
     have repr_self: ∀ x, (∑ i, fun₀ | i => (q_r_16_eigen x).ofLp i) = (q_r_16_eigen x).ofLp := by
-      intro x
-      sorry
-      -- simp
-      -- rw [Finsupp.univ_sum_single]
-      -- simp
-      -- ext a
-      -- simp
-      -- rw [Finsupp.univ_sum_single_apply']
+      intro z
+      conv =>
+        lhs
+        arg 2
+        intro i
+        equals Pi.single i ((q_r_16_eigen z).ofLp i) =>
+          simp
+          ext a
+          rw [Finsupp.single_apply]
+          rw [Pi.single_apply]
+          have foo := eq_comm (a := i) (b := a)
+          simp_rw [foo]
+
+
+      ext a
+      simp
 
     simp [repr_self]
     unfold q_r_16_eigen
