@@ -3637,6 +3637,7 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
             sorry
             sorry
             sorry
+            sorry
           . intro i
             simp
             sorry
