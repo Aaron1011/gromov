@@ -3038,6 +3038,37 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
     rw [one_eq, ← OrthonormalBasis.norm_eq_one (q_r_16_m_hermitian.eigenvectorBasis) i]
     rw [EuclideanSpace.real_norm_sq_eq]
 
+  let q_r_v_orthonormal := (Q_R_lin V (R)).toMatrix₂ v_orthonormal v_orthonormal
+
+  have Q_R_v_orthonormal_eq_1: q_r_v_orthonormal = 1 := by
+    ext i j
+    simp [q_r_v_orthonormal, Matrix.one_apply]
+    split_ifs
+    .
+      rename_i i_eq_j
+      rw [i_eq_j]
+      simp [v_orthonormal]
+      simp [Module.Basis.unitsSMul_apply]
+      rw [← mul_assoc, ← pow_two]
+      simp
+      rw [norm_sq_eq_q_r]
+      simp [Q_R_lin]
+      apply inv_mul_cancel₀
+      apply ne_of_gt
+      apply Q_R_pos_on_R'
+      . apply Module.Basis.ne_zero
+      . exact h_R
+
+
+    .
+      rw [LinearMap.isOrthoᵢ_def] at v_orthogonal_orig_eval
+      simp [v_orthonormal]
+      simp [Module.Basis.unitsSMul_apply]
+      right
+      right
+      apply v_orthogonal_orig_eval
+      grind
+
   -- TODO - an enormous amount of this should get deduplicated with v_orthonormal_isortho
   have Q_R_ortho_eq_1: Q_R_ortho = 1 := by
     ext i j
@@ -3393,14 +3424,33 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
             apply all_le
 
         simp at dim_small
-        have basis_change := Q_R_matrix_det_basis_change remapped_ortho b
+        have basis_change := Q_R_matrix_det_basis_change v_orthonormal b
         obtain ⟨K, k_pos, hK⟩ := basis_change
         simp [Q_R_matrix] at hK
         simp [hK] at a_gt
         field_simp at a_gt
         unfold Q_R_ortho at det_Q_R_one
-        simp [R] at det_Q_R_one
-        simp [det_Q_R_one] at a_gt
+        have foo := Q_R_v_orthonormal_eq_1
+        unfold q_r_v_orthonormal at Q_R_v_orthonormal_eq_1
+        simp [R] at Q_R_v_orthonormal_eq_1
+        simp [Q_R_v_orthonormal_eq_1] at a_gt
+
+        -- have new_basis_change := Q_R_matrix_det_basis_change v_orthonormal remapped_ortho
+        -- obtain ⟨K_2, K_2_pos, hK_2⟩ := new_basis_change
+        -- simp [Q_R_matrix] at hK_2
+        -- simp [hK_2] at a_gt
+
+        -- have new_mul_le: Real.log (((LinearMap.toMatrix₂ v_orthonormal v_orthonormal) (Q_R_lin V (16 ^ ((GoodScales data).i_2 + 1)))).det) / dim ↥V ≤ Real.log (K_2 * ((LinearMap.toMatrix₂ v_orthonormal v_orthonormal) (Q_R_lin V (16 ^ ((GoodScales data).i_2 + 1)))).det) / dim ↥V := by
+        --   rw [div_le_div_iff_of_pos_right]
+        --   . apply Real.log_le_log
+        --     . simp
+        --     . sorry
+        --   . simp [dim]
+        --     apply Module.finrank_pos
+
+
+
+        --grw [← new_mul_le]
 
         have q_r_16_eigen_ge_one: ∀ i, (1: ℝ) ≤ (Q_R_lin V (16 * ↑R)) (remapped_ortho i) (remapped_ortho i) := by
           intro i
@@ -3551,8 +3601,14 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
           --   simp
 
 
+        conv at a_gt =>
+          lhs
+          pattern Matrix.det _
+          equals q_r_16_m.det =>
+            simp [q_r_16_m, R]
+            rw [pow_succ']
 
-        rw [Matrix.IsHermitian.det_eq_prod_eigenvalues lin_hermitian] at a_gt
+        rw [Matrix.IsHermitian.det_eq_prod_eigenvalues q_r_16_m_hermitian] at a_gt
         .
           simp at a_gt
           rw [Real.log_prod] at a_gt
@@ -3604,6 +3660,8 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
               . intro i hi
                 rw [Real.le_log_iff_exp_le]
                 .
+
+
                   grw [← q_r_16_eigen_ge]
                   .
                     simp [q_r_lin_remapped_one]
@@ -3624,8 +3682,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
                       exact hx
                     . grw [h_R]
                       simp [R]
-                      rw [pow_succ]
-                      simp
                   . sorry
             . simp [dim]
             . intro i hi i_not_mem
