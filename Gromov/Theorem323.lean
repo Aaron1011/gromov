@@ -3280,11 +3280,9 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
 
     --
-    have inner_x_y (x y: V) (k: ℝ) (ha: ∀ i ∈ (remapped_ortho.repr x).support ∩ (remapped_ortho.repr y).support, k * (Q_R_lin_plain V (16 * R) (remapped_ortho i) (remapped_ortho i)) ≤ (Q_R_lin_plain V (R) (remapped_ortho i) (remapped_ortho i))) : inner ℝ x y ≤ Q_R_lin_plain V (16 * R) x y := by
+    have inner_x_y (x y: V) (k: ℝ) (hk: ∀ i ∈ (remapped_ortho.repr x).support ∩ (remapped_ortho.repr y).support, k * (Q_R_lin_plain V (16 * R) (remapped_ortho i) (remapped_ortho i)) ≤ (Q_R_lin_plain V (R) (remapped_ortho i) (remapped_ortho i))) : k * Q_R_lin_plain V (16 * R) x y ≤ Q_R_lin_plain V (R) x y := by
       rw [←  Module.Basis.sum_repr remapped_ortho (u := x)]
       rw [←  Module.Basis.sum_repr remapped_ortho (u := y)]
-      rw [inner_sum]
-      simp_rw [sum_inner]
       have inner_sum_eq: ∀ i, ∑ i_1, inner ℝ ((remapped_ortho.repr x) i_1 • remapped_ortho i_1) ((remapped_ortho.repr y) i • remapped_ortho i) = inner ℝ ((remapped_ortho.repr x) i • remapped_ortho i) ((remapped_ortho.repr y) i • remapped_ortho i) := by
         intro i
         rw [Finset.sum_eq_single i]
@@ -3324,27 +3322,43 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
           intro hi
           simp at hi
 
+      rw [map_sum]
+      simp_rw [map_sum]
+      simp [Finset.sum_apply]
       conv =>
-        lhs
+        rhs
         arg 2
         intro i
-        rw [inner_sum_eq]
+        rw [Finset.sum_eq_single i (by
+          intro k hk k_neq
+          simp [map_smul]
+          rw [LinearMap.isOrthoᵢ_def] at v_orthonormal_isortho
+          right
+          specialize v_orthonormal_isortho k i k_neq
+          simp [Q_R_lin] at v_orthonormal_isortho
+          simp [Q_R_lin_plain, Q_R]
+          simp [Q_R] at v_orthonormal_isortho
+          simp [v_orthonormal_isortho]
+        ) (by
+          intro hi
+          simp at hi
+        )]
         -- equals inner ℝ ((remapped_ortho.repr x) i • remapped_ortho i) ((remapped_ortho.repr y) i • remapped_ortho i) =>
         --   rw [inner_sum_eq]
 
 
-      simp_rw [inner_smul_left]
-      simp_rw [inner_smul_right]
-      simp
-      simp_rw [norm_sq_eq_q_r]
-      have norm_ortho: ∀ i, ‖remapped_ortho i‖^2 = 1 := by
-        intro i
-        rw [norm_sq_eq_q_r]
-        have foo := q_r_lin_remapped_one i
-        simp [Q_R_lin] at foo
-        exact foo
+      -- simp_rw [inner_smul_left]
+      -- simp_rw [inner_smul_right]
+      -- simp
+      -- simp_rw [norm_sq_eq_q_r]
+      -- have norm_ortho: ∀ i, ‖remapped_ortho i‖^2 = 1 := by
+      --   intro i
+      --   rw [norm_sq_eq_q_r]
+      --   have foo := q_r_lin_remapped_one i
+      --   simp [Q_R_lin] at foo
+      --   exact foo
 
-      simp [norm_ortho]
+      -- simp [norm_ortho]
 
       -- New code
 
@@ -3358,7 +3372,7 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
       simp
       simp_rw [Finset.mul_sum]
       conv =>
-        rhs
+        lhs
         arg 2
         intro i
         rw [Finset.sum_eq_single i (by
@@ -3379,7 +3393,38 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
       apply Finset.sum_le_sum
       intro i hi
-      
+      by_cases i_mem_inter: i ∈ (remapped_ortho.repr x).support ∩ (remapped_ortho.repr y).support
+      .
+        conv =>
+          lhs
+          equals k * ((Q_R_lin_plain V (16 * ↑R)) (remapped_ortho i)) (remapped_ortho i)  * (remapped_ortho.repr y) i * (remapped_ortho.repr x) i =>
+            ring
+
+        conv =>
+          rhs
+          equals ((Q_R_lin_plain V ↑R) (remapped_ortho i)) (remapped_ortho i) * (remapped_ortho.repr y) i * (remapped_ortho.repr x) i =>
+            ring
+
+
+        rw [mul_assoc]
+        nth_rw 2 [mul_assoc]
+        apply mul_le_mul_of_nonneg'
+        .
+          apply hk
+          exact i_mem_inter
+        . simp
+        . sorry
+        . simp [Q_R_lin_plain, Q_R, ← pow_two]
+          positivity
+      .
+        rw [Finset.mem_inter, not_and_or] at i_mem_inter
+        cases i_mem_inter
+        . rename_i i_zero
+          simp at i_zero
+          simp [i_zero]
+        . rename_i i_zero
+          simp at i_zero
+          simp [i_zero]
 
 
 
