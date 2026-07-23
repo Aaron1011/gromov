@@ -3489,6 +3489,8 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
         simp [Q_R_matrix] at a_gt
 
         let large_basis: Finset _ := { i: Fin (Module.finrank ℝ ↥V) | (Real.exp (2 * (a data.d))) * Q_R_lin V (R) (remapped_ortho i) (remapped_ortho i) < Q_R_lin V (16 * R) (remapped_ortho i) (remapped_ortho i)}
+        let small_basis: Finset _ := { i: Fin (Module.finrank ℝ ↥V) | ¬((Real.exp (2 * (a data.d))) * Q_R_lin V (R) (remapped_ortho i) (remapped_ortho i) < Q_R_lin V (16 * R) (remapped_ortho i) (remapped_ortho i))}
+        let large_submodule := Submodule.span ℝ ((Finset.image remapped_ortho large_basis) : Set V)
         let large_submodule := Submodule.span ℝ ((Finset.image remapped_ortho large_basis) : Set V)
         by_cases dim_small: 2 * dim large_submodule < dim V
         .
@@ -3497,8 +3499,23 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
           refine ⟨?_, ?_, ?_⟩
           . apply Submodule.map_subtype_le
           . simp [dim]
-            sorry
-            --exact dim_large
+            simp [dim] at dim_small
+            have large_small_compl: IsCompl large_submodule small_submodule := by
+              sorry
+
+            have dim_sum := Submodule.finrank_add_eq_of_isCompl large_small_compl
+            rw [eq_comm, add_comm] at dim_sum
+
+            apply Nat.sub_eq_of_eq_add at dim_sum
+            rw [← dim_sum]
+            rw [Nat.cast_sub (by apply Submodule.finrank_le)]
+            rw [mul_sub]
+            have dim_le := Submodule.finrank_le large_submodule
+            simp
+            rw [le_sub_iff_add_le']
+            grw [dim_small]
+            ring
+            simp
           .
             have all_le: ∀ f ∈ small_submodule, Q_R_lin V (16 * ↑(R_2 data)) f f ≤ Real.exp (2 * a data.d) * Q_R_lin V ↑(R_2 data) f f := by
               intro f hf
