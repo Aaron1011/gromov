@@ -4428,7 +4428,23 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
 
             grw [r_ratio_le] at u_le
             ring_nf at u_le
-            . sorry
+            .
+              have le_half: Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val ≤ (2: ℝ)⁻¹ * Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val := by
+                sorry
+
+              have Q_r_zero: Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val = 0 := by
+                by_contra!
+                rw [mul_comm] at le_half
+                have foo := one_le_of_le_mul_left₀ (by
+                  have nonneg: 0 ≤ Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val := by
+                    simp [Q_R, ← pow_two]
+                    positivity
+                  grind
+                ) le_half
+                norm_num at foo
+
+              
+              sorry
             . sorry
             . sorry
 
