@@ -3298,18 +3298,25 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
             rw [sum_swap]
 
             have card_inter_le (x: G): #({i ∈ (X_j_finite data).toFinset | x ∈ B_c_r i (3 * (↑(R_1 data + 1)) )}) ≤ InterMult (B_3 data) := by
-              -- rw [← Finset.card_image_of_injOn (f := fun a => Metric.closedBall a (3 * R_1 data)) (H := by
-              --   intro a ha b hb
-              --   simp at ha
-              --   simp at hb
-              --   have foo := B_ball_injective_on data (3 * ↑(R_1 data)) (by simp) (by simp)
-              --   sorry
-              -- )]
               simp [InterMult, InterMult_f]
               apply le_csSup
-              . sorry
+              .
+                -- TODO - deduplicate this
+                unfold BddAbove
+                use (B_3 data).encard.toNat
+                rw [mem_upperBounds]
+                intro x hx
+                simp [InterMult_f] at hx
+                obtain ⟨a, b, x_eq⟩ := hx
+                rw [← x_eq]
+                apply ENat.toNat_le_toNat
+                .
+                  apply Set.encard_le_encard
+                  grind
+                . simp
+                  apply B_3_finite
               . simp
-                use (fun a => B_c_r a ((3 * (↑(R_1 data + 1))))) '' {i ∈ (X_j_finite data).toFinset | x ∈ B_c_r i ((3 * (↑(R_1 data))) )}
+                use (fun a => B_c_r a ((3 * (↑(R_1 data + 1))))) '' {i ∈ (X_j_finite data).toFinset | x ∈ B_c_r i ((3 * (↑(R_1 data + 1))) )}
                 refine ⟨⟨?_, ?_,⟩, ?_⟩
                 . simp
                   intro a ha
@@ -3320,21 +3327,18 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
                     exact ha.1
                   .
                     simp [B_c_r]
-                    sorry
 
                 .
                   simp
                   rw [eq_comm, ← ne_eq, ← Set.nonempty_iff_empty_ne]
                   use x
                   simp
-                  sorry
                 .
                   rw [← Set.ncard_def]
                   rw [← Set.ncard_coe_finset]
                   simp_rw [B_c_r_eq_smul]
                   rw [Set.ncard_image_of_injective]
                   . simp
-                    sorry
                   . intro a b hab
                     simp at hab
                     apply IsCancelSMul.right_cancel at hab
@@ -3397,7 +3401,7 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
             --       norm_cast
             --       simp
             --       rw [mul_comm 32]
-            --       sorry
+            --       s orry
             --       --apply le_refl
             --     . simp [deriv_sq]
             --       positivity
