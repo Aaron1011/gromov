@@ -446,7 +446,7 @@ lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.suppor
 -- TODO - can we make WordNorm.instSemiNormedGroup and use norm notation
 set_option maxHeartbeats 9000000 in
 lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr: r ≠ 0):
-    ∑ x ∈ Metric.closedBall 1 (2 * r), deriv_sq f x ≤ ((1: ℝ) / r^2) * ∑ x ∈ Metric.closedBall 1 (4 * r), ∑ s ∈ S, f x ^ 2 := by
+    ∑ x ∈ Metric.closedBall 1 (2 * r), deriv_sq f x ≤ ((1: ℝ) / r^2) * #(S) * ∑ x ∈ Metric.closedBall 1 (4 * r), f x ^ 2 := by
   -- `deriv_sq f x = ∑ s, (f (s*x) - f x)^2`; the proof below is written with the
   -- (equal) `(f x - f (s*x))^2` orientation, so rewrite to that first.
   have hrw : ∀ x : G, deriv_sq f x = ∑ s ∈ S, (f x - f (s * x)) ^ 2 := fun x => by
@@ -500,6 +500,12 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
           rw [Finset.mul_sum]
           apply Finset.sum_le_sum
           intro x hx
+          conv =>
+            rhs
+            rw [mul_assoc]
+            rhs
+            equals ∑ s ∈ S, (f x)^2 =>
+              simp
           rw [Finset.mul_sum]
           apply Finset.sum_le_sum
           intro s hs
