@@ -1748,7 +1748,7 @@ def X_j (data: GoodScalesData b) := Metric.maximalSeparatedSet (R_1 data) ((Metr
 -- A collection of disjoint balls that cover the ball R_2
 def B (data: GoodScalesData b) := (fun a => Metric.closedBall a (R_1 data)) '' (X_j data)
 def B_half (data: GoodScalesData b) := (fun a => Metric.closedBall a (R_1 data / 2)) '' (X_j data)
-def B_3 (data: GoodScalesData b) := (fun a => Metric.closedBall a (3 * R_1 data)) '' (X_j data)
+def B_3 (data: GoodScalesData b) := (fun a => Metric.closedBall a (3 * (R_1 data + 1))) '' (X_j data)
 
 lemma X_j_finite (data: GoodScalesData b): (X_j data).Finite := by
   apply Set.Finite.subset (finite_closed_ball (1 : G) (R_2 data))
@@ -1923,7 +1923,7 @@ lemma B_3_finite (data: GoodScalesData b): (B_3 data).Finite := by
   apply finite_closed_ball
 
 -- Suprisingly, we can prove an upper bound with 4*R_1, rather than the 8*R_1 from the paper
-lemma inter_mult_helper (data: GoodScalesData b): InterMult (B_3 data) * #(S ^ ((R_1 data) / 2)) ≤ #(S ^ (4 * (R_1 data))) := by
+lemma inter_mult_helper (data: GoodScalesData b): InterMult (B_3 data) * #(S ^ ((R_1 data) / 2)) ≤ #(S ^ (4 * (R_1 data + 1))) := by
   classical
   apply Nat.mul_le_of_le_div
   unfold InterMult
@@ -1941,7 +1941,7 @@ lemma inter_mult_helper (data: GoodScalesData b): InterMult (B_3 data) * #(S ^ (
       simp
       rw [Nat.le_div_iff_mul_le]
       .
-        have X_inner_nonempty: ∀ t ∈ X, ∃ a, a ∈ (X_j data) ∧ Metric.closedBall a (3 * R_1 data) = t := by
+        have X_inner_nonempty: ∀ t ∈ X, ∃ a, a ∈ (X_j data) ∧ Metric.closedBall a (3 * (R_1 data + 1)) = t := by
           intro t ht
           specialize X_subset ht
           simp [B_3] at X_subset
@@ -2152,11 +2152,23 @@ lemma log_inter_mult_b3 (data: GoodScalesData b): InterMult (B_3 data) ≤ Real.
       .
         have bound := (GoodScales data).first_h_i
         grw [← bound]
+        --grw [log_card_pow_sub_le (b := b) (k := (GoodScales data).i_1 + 1) (j := (GoodScales data).i_1)]
+
+
+        --apply log_card_pow_sub_le
         apply log_card_pow_sub_le (GoodScales data).i_1_ge (Nat.le_succ _)
         . simp [R_1]
         . rw [pow_succ]
           simp [R_1]
-          omega
+          ring
+          rw [← le_tsub_iff_right]
+          .
+            rw [← Nat.mul_sub]
+            norm_num
+            grw [← Nat.one_le_pow]
+            . simp
+            . simp
+          . simp
         . simp [R_1]
       . norm_cast
         rw [Finset.card_eq_zero]
