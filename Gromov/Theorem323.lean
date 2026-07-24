@@ -3238,6 +3238,54 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
 
 
             simp_rw [← Finset.mul_sum]
+            have sum_swap: ∑ i ∈ (X_j_finite data).toFinset, ∑ x ∈ B_c_r (i) (3 * (↑(R_1 data) + 1)), deriv_sq (u.val).toFun x = ∑ x ∈ B_r (8 * (R_2 data)), #{ i ∈ (X_j_finite data).toFinset | x ∈ B_c_r (↑i) (3 * (↑(R_1 data) + 1))} * deriv_sq (u.val).toFun x := by
+              simp_rw [Finset.card_filter]
+              simp_rw [Nat.cast_sum]
+              simp_rw [Finset.sum_mul]
+              rw [Finset.sum_comm]
+              apply Finset.sum_congr
+              . simp
+              . intro i hi
+                have set_eq: B_r (8 * ↑(R_2 data)) ∩ B_c_r i (3 * (↑(R_1 data) + 1)) = B_c_r i (3 * (↑(R_1 data) + 1)) := by
+                  simp
+                  intro x hx
+                  simp [B_c_r] at hx
+                  simp [X_j] at hi
+                  apply Metric.maximalSeparatedSet_subset at hi
+                  simp [B_r]
+                  simp at hi
+                  grw [dist_triangle _ i]
+                  grw [hx, hi]
+                  simp [R_1, R_2]
+
+                  rw [two_mul]
+                  have i_1_le:  (GoodScales data).i_1 ≤  (GoodScales data).i_2 := by
+                    have foo :=  (GoodScales data).i_diff_mem
+                    simp at foo
+                    grind
+                  grw [i_1_le]
+                  ring
+                  .
+                    simp
+                    rw [← le_sub_iff_add_le]
+                    ring
+                    have i_2_pos := (GoodScales data).i_2_pos
+                    have le_one: 1 ≤  (GoodScales data).i_2 := by grind
+                    grw [← le_one]
+                    .
+                      norm_num
+                    . simp
+                  . simp
+                  . simp
+                simp
+                rw [set_eq]
+
+
+              --rw [← Finset.sum_finset_product' (r := {p : (X_j_finite data).toFinset × (finite_closed_ball 1 (2 * (R_2 data))) | True})] -- p | p.1 ∈ (X_j_finite data).toFinset ∧ p.2 = 1
+            rw [Finset.sum_attach (f := fun (i: G) => ∑ x ∈ B_c_r (i) (3 * (↑(R_1 data) + 1)), deriv_sq (u.val).toFun x)]
+            rw [sum_swap]
+
+            
             grw [Finset.sum_le_sum (g := fun (i: (X_j_finite data).toFinset) => ∑ x ∈ B_r (2 * (R_2 data)), deriv_sq (u.val).toFun x)]
             .
 
