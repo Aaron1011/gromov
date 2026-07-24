@@ -934,7 +934,7 @@ lemma Q_R_lin_sub_pos_semi_def (V : Submodule ℝ LipschitzH) (R_1 R_2: ℝ) (hr
       rw [← pow_two]
       positivity
 
-lemma v_r_all_nonzero (V: Submodule ℝ LipschitzH) [FiniteDimensional ℝ V]: ∃ R: ℝ, ∀ u ∈ V, u ≠ 0 → ∃ g ∈ Metric.closedBall 1 R, u g ≠ 0 := by
+lemma v_r_all_nonzero (V: Submodule ℝ LipschitzH) [FiniteDimensional ℝ V]: ∃ R: ℝ, 1 < R ∧ ∀ u ∈ V, u ≠ 0 → ∃ g ∈ Metric.closedBall 1 R, u g ≠ 0 := by
   let zero_ball (n: ℕ): Submodule ℝ V := {
       carrier := {v: V | ∀ g ∈ Metric.closedBall 1 n, v.val g = 0}
       add_mem' := by
@@ -996,7 +996,8 @@ lemma v_r_all_nonzero (V: Submodule ℝ LipschitzH) [FiniteDimensional ℝ V]: �
 
     simp at inter_zero
     simp [zero_ball] at inter_zero
-    use n
+    use (max 2 n)
+    refine ⟨by (grind), ?_⟩
     intro u hu
     rw [Set.ext_iff] at inter_zero
     specialize inter_zero ⟨u, hu⟩
@@ -1004,7 +1005,12 @@ lemma v_r_all_nonzero (V: Submodule ℝ LipschitzH) [FiniteDimensional ℝ V]: �
     intro u_ne_zero
     simp [u_ne_zero] at inter_zero
     simp
-    exact inter_zero
+    obtain ⟨x, h_x_1, h_x_2⟩ := inter_zero
+    use x
+    refine ⟨?_, ?_⟩
+    . right
+      exact h_x_1
+    . exact h_x_2
   . intro a b hab
     simp [zero_ball]
     intro u hu hg
@@ -1018,6 +1024,9 @@ lemma v_r_all_nonzero (V: Submodule ℝ LipschitzH) [FiniteDimensional ℝ V]: �
 
 noncomputable def R'_ (V: Submodule ℝ LipschitzH) [FiniteDimensional ℝ V] : ℝ := (v_r_all_nonzero V).choose
 
+lemma R'_pos (V: Submodule ℝ LipschitzH) [FiniteDimensional ℝ V]: 1 < R'_ V := by
+  have foo := (v_r_all_nonzero V).choose_spec.1
+  exact foo
 
 lemma Q_R_pos_on_R' {V: Submodule ℝ LipschitzH} (v: V) (hv: v ≠ 0) [FiniteDimensional ℝ V] [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)] (R: ℝ) (hR: (R'_ V) ≤ R): 0 < Q_R R v v := by
   simp [Q_R]
@@ -1026,8 +1035,7 @@ lemma Q_R_pos_on_R' {V: Submodule ℝ LipschitzH} (v: V) (hv: v ≠ 0) [FiniteDi
     by_contra!
     simp_rw [← pow_two] at this
     simp only [sq_nonpos_iff] at this
-
-    have foo := (v_r_all_nonzero V).choose_spec (v) (by apply Submodule.coe_mem) ?_
+    have foo := (v_r_all_nonzero V).choose_spec.2 (v) (by apply Submodule.coe_mem) ?_
     .
       obtain ⟨g, g_mem, x_g_nonzero⟩ := foo
       specialize this g ?_
@@ -1585,6 +1593,7 @@ structure Lemma3_24_data (b : Module.Basis ι ℝ V) (d w: ℕ) where
   i_2 : ℕ
   i_1_ge: i₀ ≤ i_1
   i_2_ge: i₀ ≤ i_2
+  i_1_pos: 0 < i_1
   i_2_pos: 0 < i_2
   i_diff_mem: i_2 - i_1 ∈ Set.Ioo w (3 * w)
   h_diff_lt_w: h b (i_2 + 1) - h b i_1 < w * (a d)
@@ -1689,12 +1698,26 @@ lemma lemma_3_24 (b : Module.Basis ι ℝ V) (w d: ℕ) (hw: 0 < w) (hd: 0 < d) 
       grind
     . simp [m]
 
+  have foo := h_i_1.1
+  simp at foo
+  have i_1_ge := foo.1
+  simp [m] at i_1_ge
+  have i_0_pos: 0 < i₀ := by
+    simp [i₀]
+    apply Nat.clog_pos
+    . simp
+    . simp [R']
+      rw [Nat.lt_ceil]
+      simp [R'_]
+      have r_pos := R'_pos V
+      exact r_pos
   apply Nonempty.intro
   exact {
     i_1 := i_1
     i_2 := i_2
     i_1_ge := by grind
     i_2_ge := by grind
+    i_1_pos := by grind
     i_2_pos := by grind
     i_diff_mem := by grind
     h_diff_lt_w := diff_i_lt
@@ -4271,7 +4294,8 @@ end V_Wrapper_Section
 -- Theorem 3.23
 set_option maxHeartbeats 2500000 in
 lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI := data.hV; haveI := data.V_decidable; growth_bound (V_basis data.V) d) → (Module.finrank ℝ data.V) < C := by
-  have C: ℕ := sorry
+  let w := ⌈Real.logb 16 ((16^4) * #(S) * Real.exp (4 * a (d)))⌉₊
+  let C: ℕ := 1 + (⌈2 * Real.exp (w * (a d))⌉₊)
   use C
   intro v_data h_growth
 
@@ -4341,11 +4365,21 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
     simp [phi_u] at hu
     simp [hu] at u_le
 
-    have u_bound := harmonic_r2_inequality u (by sorry) (R_2 data) (by simp [R_2])
+    have u_bound := harmonic_r2_inequality u (by
+      have u_prop := u.val.val.harmonic
+      simp [Harmonic] at u_prop
+      simp [Laplace_b]
+      ext a
+      simp
+      nth_rw 1 [u_prop]
+      simp [f_conv_mu]
+    ) (R_2 data) (by simp [R_2])
     simp [B_r] at u_le
     grw [u_bound] at u_le
     .
-      have u_double := bounded_double u (by sorry)
+      have u_double := bounded_double u (by
+        exact u.prop
+      )
       conv at u_double =>
         lhs
         simp [Q_R]
@@ -4359,52 +4393,43 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
           by_cases u_zero: u = 0
           . exact u_zero
           .
-            have r_ratio_le: (R_1 data) / (R_2 data) ≤ 2 * ((16: ℝ) ^ (-(data.w : ℝ))) := by
+            have r_pos := R'_pos v_data.V
+            have r_ratio_le: (R_1 data + 1) / (R_2 data) ≤ 4 * ((16: ℝ) ^ (-(data.w : ℝ))) := by
               simp [R_1, R_2]
               field_simp
               have i_diff := (GoodScales data).i_diff_mem
               simp at i_diff
+              have one_le: (1: ℝ) ≤ 2*(16^((GoodScales data).i_1)) := by
+                norm_num
+                apply one_le_mul_of_one_le_of_one_le
+                . simp
+                . rw [one_le_pow_iff_of_nonneg]
+                  . simp
+                  . simp
+                  . simp
+                    have h_i := (GoodScales data).i_1_pos
+                    grind
+              grw [one_le]
+              rw [← mul_add]
+              rw [← two_mul]
+              ring
               rw [← pow_add]
+              simp
               rw [pow_le_pow_iff_right₀]
               . grind
               . simp
 
-            
-            field_simp at u_le
-            have r_2_le: R_2 data < (R_2 data : ℝ) + 1 := by
-              simp
 
-            grw [r_2_le] at u_le
-
-            simp_rw [mul_assoc] at u_le
-            rw [mul_div_assoc] at u_le
-            rw [le_mul_iff_one_le_right] at u_le
-            .
-
-              simp [R_1, R_2] at u_le
-              rw [one_le_div] at u_le
-              .
-                have i_2_diff := (GoodScales data).i_diff_mem
-                simp at i_2_diff
-                have i_2_sub := i_2_diff.1
-                rw [lt_tsub_iff_right] at i_2_sub
-                grw [← i_2_sub] at u_le
-                sorry
-                simp
-                -- sorry
-                -- conv at u_le =>
-                --   rhs
-                --   equals ((16 ^ (GoodScales data).i_1 + 1) ^ 2) * GeneratesNS.C * (Real.exp (a data.d) * (Real.exp (↑data.w * a data.d) * ((2)^2 * (↑(#S) * Real.exp (a data.d * 2))))) =>
-                --     rw [mul_pow]
-                --     ring
-                -- ring_nf at u_le
-                -- simp_rw [mul_assoc] at u_le
-                -- nth_rw 2 [mul_comm _ 4] at u_le
+            conv at u_le =>
+              rhs
+              equals GeneratesNS.C * Real.exp (a data.d) * Real.exp (↑data.w * a data.d) * (((↑(R_1 data) + 1) / ((↑(R_2 data : ℝ))))^2 * ↑(#S) * (Real.exp (2 * a data.d) * Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val)) =>
+                ring
 
 
-              . sorry
-
-
+            grw [r_ratio_le] at u_le
+            ring_nf at u_le
+            . sorry
+            . sorry
             . sorry
 
         . simp [GeneratesNS.C]
@@ -4425,7 +4450,36 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
 
 
 
-  sorry
+  apply LinearMap.finrank_le_finrank_of_injective at phi_u_inj
+  simp at phi_u_inj
+  simp [dim] at hU_dim
+  norm_cast at hU_dim
+  have wrapper_eq: V_Wrapper.V = v_data.V := rfl
+  rw [wrapper_eq] at hU_dim
+  grw [hU_dim]
+
+  conv at phi_u_inj =>
+    lhs
+    equals Module.finrank ℝ U =>
+      rw [wrapper_eq] at U_sub_v
+      exact (Submodule.submoduleOfEquivOfLe U_sub_v).finrank_eq
+
+  grw [phi_u_inj]
+  have foo := card_B_le_exp_wa data
+  have card_eq: #(B_finite data).toFinset = #(B_finsets data) := by
+    simp [B, B_finsets]
+    sorry
+  rw [← card_eq]
+  rify
+  grw [card_B_le_exp_wa]
+  simp [C]
+  conv =>
+    lhs
+    equals 0 + 2 * Real.exp (↑data.w * a data.d) =>
+      simp
+  apply add_lt_add_of_lt_of_le
+  . simp
+  . apply Nat.le_ceil
 
 
 open scoped Topology
@@ -4448,7 +4502,7 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
 
 
   obtain ⟨d, hd⟩ := hGS.g_growth
-  obtain ⟨C, V_bound⟩ := theorem_3_23 ((d + 3) + (d + 3))
+  obtain ⟨C, V_bound⟩ := theorem_3_23 ((d + 3) + (d + 3)) (by simp)
 
   obtain ⟨fin_basis_idx, card_fin_basis_idx⟩ := B_infinite.exists_subset_card_eq _ (2 + C * 2)
   let fin_basis := Finset.image (B) fin_basis_idx
