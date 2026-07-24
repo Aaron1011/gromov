@@ -3114,10 +3114,10 @@ noncomputable def phi (data: GoodScalesData b): V →ₗ[ℝ] EuclideanSpace ℝ
 def C: ℝ := 32 * (#S)
 
 set_option maxHeartbeats 2500000 in
-lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(S^(R_1 data ))) * ‖(phi data u)‖^2 + C * (Real.exp ((a data.d))) * (R_1 data + 1)^2 * (∑ x ∈ B_r (8 * R_2 data), deriv_sq u x)  := by
+lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(S^(R_1 data ))) * ‖(phi data u)‖^2 + C * (Real.exp ((2 * a data.d))) * (R_1 data + 1)^2 * (∑ x ∈ B_r (8 * R_2 data), deriv_sq u x)  := by
 
   rw [Q_R]
-  let a := ⋃₀ (B data)
+  let b_union := ⋃₀ (B data)
   grw [Finset.sum_le_sum_of_subset_of_nonneg (t := (B_finsets data).biUnion id)]
   .
     grw [Finset.sum_biUnion_le (fun x => mul_self_nonneg ((↑u : LipschitzH) x))]
@@ -3285,7 +3285,7 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
             rw [Finset.sum_attach (f := fun (i: G) => ∑ x ∈ B_c_r (i) (3 * (↑(R_1 data) + 1)), deriv_sq (u.val).toFun x)]
             rw [sum_swap]
 
-            have card_inter_le (x: G): #({i ∈ (X_j_finite data).toFinset | x ∈ B_c_r i (3 * (↑(R_1 data)) + 1)}) ≤ InterMult (B_3 data) := by
+            have card_inter_le (x: G): #({i ∈ (X_j_finite data).toFinset | x ∈ B_c_r i (3 * (↑(R_1 data + 1)) )}) ≤ InterMult (B_3 data) := by
               -- rw [← Finset.card_image_of_injOn (f := fun a => Metric.closedBall a (3 * R_1 data)) (H := by
               --   intro a ha b hb
               --   simp at ha
@@ -3297,7 +3297,7 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
               apply le_csSup
               . sorry
               . simp
-                use (fun a => B_c_r a ((3 * (↑(R_1 data))) + 1)) '' {i ∈ (X_j_finite data).toFinset | x ∈ B_c_r i ((3 * (↑(R_1 data))) )}
+                use (fun a => B_c_r a ((3 * (↑(R_1 data + 1))))) '' {i ∈ (X_j_finite data).toFinset | x ∈ B_c_r i ((3 * (↑(R_1 data))) )}
                 refine ⟨⟨?_, ?_,⟩, ?_⟩
                 . simp
                   intro a ha
@@ -3335,11 +3335,36 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
             simp [C]
             simp_rw [← mul_assoc]
             norm_num
+            rw [two_mul, Real.exp_add]
+            conv =>
+              rhs
+              equals (32 * ↑(#S) * (Real.exp (a data.d) * (↑(R_1 data) + 1) ^ 2)) * ((Real.exp (a data.d)) * ∑ x ∈ B_r (8 * ↑(R_2 data)), deriv_sq (⇑u.val) x) =>
+                ring
             apply mul_le_mul
             . ring
               simp
-            . sorry
-            . sorry
+            .
+              grw [Finset.sum_le_sum (g := fun x => Real.exp (a data.d) *  (deriv_sq (u.val).toFun x))]
+              .
+
+                rw [← Finset.mul_sum]
+                apply le_refl
+              . intro i hi
+                norm_cast
+                norm_cast at card_inter_le
+                grw [card_inter_le]
+                .
+                  grw [log_inter_mult_b3]
+                  simp [deriv_sq, ← pow_two]
+                  positivity
+                . simp [deriv_sq, ← pow_two]
+                  positivity
+
+            . simp [deriv_sq, ← pow_two]
+              apply Finset.sum_nonneg
+              intro i hi
+              norm_cast
+              positivity
             . positivity
 
             -- grw [Finset.sum_le_sum (g := fun (i: (X_j_finite data).toFinset) => ∑ x ∈ B_r (2 * (R_2 data)), deriv_sq (u.val).toFun x)]
@@ -4554,7 +4579,7 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
 
             conv at u_le =>
               rhs
-              equals GeneratesNS.C * Real.exp (a data.d) * (((↑(R_1 data) + 1) / ((↑(4 * R_2 data : ℝ))))^2 * ↑(#S) * (Real.exp (2 * a data.d) * Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val)) =>
+              equals GeneratesNS.C * Real.exp (2 * a data.d) * (((↑(R_1 data) + 1) / ((↑(4 * R_2 data : ℝ))))^2 * ↑(#S) * (Real.exp (2 * a data.d) * Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val)) =>
                 ring
 
 
