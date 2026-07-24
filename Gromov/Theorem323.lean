@@ -168,6 +168,631 @@ variable [hGS: Generates]
 include hGS
 
 
+-- Reverse poincare inequality
+-- Lemma 12.2
+set_option maxHeartbeats 9000000 in
+lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.support.Finite):
+    ∑' (x: G), ∑ s ∈ S, ((f x * φ x) - (f (s * x) * φ (s * x)))^2 ≤  ∑' (x: G), ∑ s ∈ S, (f x)^2 * (φ (s * x) - φ x)^2  := by
+
+  -- 2⁻¹ * ∑' (x: G), (↑(#S))⁻¹ * ∑ s ∈ S, ((f (x) * φ (x)) - (f (s * x) * φ (s * x)))^2
+  conv =>
+    lhs
+    arg 1
+    intro x
+    arg 2
+    intro s
+    rw [pow_two]
+  have S_card := S_card_ne_zero_re
+  apply le_of_mul_le_mul_left (a := 2⁻¹ * (↑(#S) : ℝ)⁻¹) (a0 := by simp [S_nonempty])
+  rw [mul_assoc]
+  rw [← tsum_mul_left]
+  rw [← laplace_sum_swap_helper]
+  .
+    conv =>
+      lhs
+      arg 1
+      intro x
+      rw [← Pi.mul_def]
+      rw [laplace_prod_harmonic (hf := hf)]
+      rw [← mul_assoc]
+      rw [mul_comm (f x * φ x)]
+      rw [mul_assoc, mul_assoc]
+      rw [Finset.mul_sum]
+
+
+    rw [tsum_mul_left]
+    simp_rw [Finset.mul_sum]
+    simp_rw [mul_comm (f _)]
+    rw [Summable.tsum_finsetSum]
+    .
+      conv =>
+        lhs
+        rhs
+        arg 2
+        intro s
+        rw [← Equiv.tsum_eq (Equiv.mulLeft s⁻¹)]
+        simp
+
+      nth_rw 2 [S_eq_Sinv]
+      simp
+
+      have sum_swap: ∑ x ∈ S, ∑' (c : G), φ (x * c) * ((φ (x * c) - φ c) * f c) * f (x * c) = -∑ x ∈ S, ∑' (c : G), φ (c) * ((φ (x * c) - φ c) * f (x * c)) * f (c) := by
+        conv =>
+          lhs
+          arg 2
+          intro s
+          rw [← Equiv.tsum_eq (Equiv.mulLeft s⁻¹)]
+          simp
+        nth_rw 2 [S_eq_Sinv]
+        simp
+        rw [← Finset.sum_neg_distrib]
+        simp_rw [← tsum_neg]
+        ring
+
+      -- have sum_swap: ∑ x ∈ S, ∑' (c : G), φ (x * c) * ((φ (x * c) - φ c) * f c) * f (x * c) = -∑ x ∈ S, ∑' (c : G), φ (x * c) * ((φ c - (φ (x * c))) * f c) * f (x * c) := by
+      --   rw [← Finset.sum_neg_distrib]
+      --   simp_rw [← tsum_neg]
+      --   ring
+
+
+      have double {a b: ℝ} (hab: a = b): a = (a + b) / 2 := by
+        rw [hab]
+        ring
+
+      rw [double sum_swap]
+      rw [← sub_eq_add_neg]
+      conv =>
+        lhs
+        rhs
+        lhs
+        rhs
+        arg 2
+        intro s
+        arg 1
+        intro x
+        equals (((φ (s * x) - φ x) * f (s * x)) * f x) * (φ x) =>
+          ring
+
+      conv =>
+        lhs
+        rhs
+        lhs
+        lhs
+        arg 2
+        intro s
+        arg 1
+        intro x
+        equals (((φ (s * x) - φ x) * f (s * x)) * f (x)) * φ (s * x)  =>
+          ring
+
+      rw [← Finset.sum_sub_distrib]
+      conv =>
+        lhs
+        rhs
+        arg 1
+        arg 2
+        intro s
+        rw [← Summable.tsum_sub (by
+          apply summable_of_hasFiniteSupport
+          unfold Function.HasFiniteSupport
+          simp
+          apply Set.Finite.inter_of_right
+          rw [← Function.comp_def]
+          rw [Function.support_comp_eq_preimage]
+          apply Set.Finite.preimage'
+          . apply hφ
+          . intro x hx
+            simp
+        ) (by
+          apply summable_of_hasFiniteSupport
+          unfold Function.HasFiniteSupport
+          simp
+          apply Set.Finite.inter_of_right
+          apply hφ
+        )]
+      simp_rw [← mul_sub]
+      conv =>
+        lhs
+        rhs
+        lhs
+        arg 2
+        intro s
+        arg 1
+        intro x
+        equals (f (s * x)) * f x * ((φ (s * x) - φ x))^2 =>
+          ring
+
+      have f_prod (x s: G): f (s * x) * (f x) ≤ (f (s * x)^2 + (f x)^2) / 2 := by
+        field_simp
+        rw [mul_comm]
+        rw [← mul_assoc]
+        apply two_mul_le_add_sq
+
+      rw [div_eq_inv_mul]
+      rw [← mul_assoc]
+      nth_rw 2 [mul_comm]
+      rw [mul_le_mul_iff_of_pos_left]
+      calc
+        ∑ s ∈ S, ∑' (x : G), f (s * x) * f x * (φ (s * x) - φ x) ^ 2 ≤ ∑ s ∈ S, ∑' (x : G), (f (s * x)^2 +  (f x)^2) * 2⁻¹ * (φ (s * x) - φ x) ^ 2 := by
+
+          apply Finset.sum_le_sum
+          intro s hs
+          apply Summable.tsum_le_tsum
+          intro x
+          grw [f_prod]
+          field_simp
+          . simp
+          .
+            apply summable_of_finite_support
+            unfold Function.HasFiniteSupport
+            simp
+            apply Set.Finite.inter_of_right
+            apply Set.Finite.subset ?_ (Function.support_sub _ _)
+            simp
+            refine ⟨?_, hφ⟩
+            rw [← Function.comp_def]
+            rw [Function.support_comp_eq_preimage]
+            apply Set.Finite.preimage'
+            . apply hφ
+            . intro x hx
+              simp
+          .
+            apply summable_of_finite_support
+            unfold Function.HasFiniteSupport
+            simp
+            apply Set.Finite.inter_of_right
+            apply Set.Finite.subset ?_ (Function.support_sub _ _)
+            simp
+            refine ⟨?_, hφ⟩
+            rw [← Function.comp_def]
+            rw [Function.support_comp_eq_preimage]
+            apply Set.Finite.preimage'
+            . apply hφ
+            . intro x hx
+              simp
+        _ ≤ _ := by
+          simp_rw [add_mul]
+          conv =>
+            lhs
+            arg 2
+            intro s
+            rw [Summable.tsum_add (by
+              apply summable_of_finite_support
+              unfold Function.HasFiniteSupport
+              simp
+              apply Set.Finite.inter_of_right
+              apply Set.Finite.subset ?_ (Function.support_sub _ _)
+              simp
+              refine ⟨?_, hφ⟩
+              rw [← Function.comp_def]
+              rw [Function.support_comp_eq_preimage]
+              apply Set.Finite.preimage'
+              . apply hφ
+              . intro x hx
+                simp
+            ) (by
+                apply summable_of_finite_support
+                unfold Function.HasFiniteSupport
+                simp
+                apply Set.Finite.inter_of_right
+                apply Set.Finite.subset ?_ (Function.support_sub _ _)
+                simp
+                refine ⟨?_, hφ⟩
+                rw [← Function.comp_def]
+                rw [Function.support_comp_eq_preimage]
+                apply Set.Finite.preimage'
+                . apply hφ
+                . intro x hx
+                  simp
+            )]
+          rw [Finset.sum_add_distrib]
+          conv =>
+            lhs
+            lhs
+            arg 2
+            intro s
+            rw [← Equiv.tsum_eq (Equiv.mulLeft s⁻¹)]
+            simp
+          nth_rw 1 [S_eq_Sinv]
+          simp
+          rename_bvar c → b
+          simp_rw [sub_sq_comm]
+          field_simp
+          norm_num
+          field_simp
+          simp_rw [tsum_div_const]
+          rw [← Finset.sum_div]
+          field_simp
+          rw [← Summable.tsum_finsetSum]
+          intro s hs
+          apply summable_of_finite_support
+          unfold Function.HasFiniteSupport
+          simp
+          apply Set.Finite.inter_of_right
+          apply Set.Finite.subset ?_ (Function.support_sub _ _)
+          simp
+          refine ⟨hφ, ?_⟩
+          rw [← Function.comp_def]
+          rw [Function.support_comp_eq_preimage]
+          apply Set.Finite.preimage'
+          . apply hφ
+          . intro x hx
+            simp
+      . simp [S_nonempty]
+    .
+      intro s hs
+      apply summable_of_finite_support
+      unfold Function.HasFiniteSupport
+      simp
+      apply Set.Finite.inter_of_left
+      apply Set.Finite.inter_of_left
+      apply hφ
+  . left
+    simp
+    apply Set.Finite.inter_of_right
+    apply hφ
+
+#print axioms cutoff_inequality
+
+-- TODO - can we make WordNorm.instSemiNormedGroup and use norm notation
+set_option maxHeartbeats 9000000 in
+lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr: r ≠ 0):
+    ∑ x ∈ Metric.closedBall 1 (2 * r), ∑ s ∈ S, (f x - f (s * x)) ^ 2 ≤ ((1: ℝ) / r^2) * ∑ x ∈ Metric.closedBall 1 (4 * r), ∑ s ∈ S, f x ^ 2 := by
+
+  -- m * x + b
+  -- m * (4*r) + b = 0
+  -- b = -4 * r * m
+
+  -- m * (2 *r) - * (4 * r * m) = 1
+  -- 2rm - 4rm = 1
+  -- m = -1/2
+  let φ := fun (x: G) => if WordNorm x ≤ (2 * r) + 1 then 1 else if (WordNorm x ≤ 4 * r) then (-(WordNorm x)/(2 * (r: ℝ))) + 2 else 0
+  have phi_support : φ.support ⊆ Metric.ball 1 (4 * r) := by
+    intro s hs
+    simp at hs
+    rw [ite_eq_iff] at hs
+    simp at hs
+    by_cases s_gt: 2 * r + 1 < (WordNorm s)
+    .
+      specialize hs s_gt
+      simp [dist]
+      rw [WordDist_one]
+      by_cases eq_four: WordNorm s = 4*r
+      .
+        simp [eq_four] at hs
+        field_simp [hr] at hs
+        norm_num at hs
+      .
+        norm_cast
+        grind
+    .
+      simp at s_gt
+      simp [dist, WordDist_one]
+      norm_cast
+      grind
+
+
+  have foo := cutoff_inequality f φ hf ?_
+  .
+    rw [tsum_eq_sum (s := (finite_closed_ball 1 (4 * r)).toFinset)] at foo
+    rw [tsum_eq_sum (s := (finite_closed_ball 1 (4 * r)).toFinset)] at foo
+    .
+      grw [← Finset.sum_le_sum_of_subset_of_nonneg (s := (finite_closed_ball 1 (2 * r)).toFinset)] at foo
+      .
+        rw [Finset.sum_congr (g := fun x => ∑ s ∈ S, (f x - f (s * x)) ^ 2) (s₂ := (finite_closed_ball 1 (2 * r)).toFinset)] at foo
+        .
+          simp at foo
+          grw [foo]
+          rw [Finset.mul_sum]
+          apply Finset.sum_le_sum
+          intro x hx
+          rw [Finset.mul_sum]
+          apply Finset.sum_le_sum
+          intro s hs
+          simp [φ]
+          have norm_s_x := word_dist_mul_eq (x := 1) (y := s) (z := x) hs
+          simp_rw [WordDist_comm] at norm_s_x
+          simp_rw [WordDist_one] at norm_s_x
+          rw [← or_assoc] at norm_s_x
+          cases norm_s_x
+          .
+            rename_i norm_s_x_eq
+            cases norm_s_x_eq
+            .
+              rename_i s_lt
+              simp [dist] at hx
+              norm_cast at hx
+              rw [WordDist_one] at hx
+              by_cases s_x_le: WordNorm (s * x) ≤ 2 *r + 1
+              .
+                simp [s_x_le]
+                simp [s_lt]
+                split_ifs
+                . simp
+                  positivity
+                .
+                  have s_x_eq: WordNorm (s * x) = 2 *r + 1 := by grind
+                  simp [s_x_eq]
+                  field_simp
+                  apply mul_le_mul
+                  . simp
+                  .
+                    norm_num
+                    ring
+                    norm_num
+                  . positivity
+                  . positivity
+                .
+                  grind
+              .
+                have sub_eq: (WordNorm x) - 1 = WordNorm (s * x) := by omega
+                have s_x_le_four: WordNorm (s * x) ≤ 4 * r := by
+                  simp [s_lt] at hx
+                  grind
+                simp [s_x_le, s_x_le_four]
+                split_ifs
+                .
+                  grind
+                .
+                  simp [← sub_eq]
+                  rw [← sub_div]
+                  simp
+                  field_simp
+                  push_cast
+                  conv =>
+                    lhs
+                    rhs
+                    lhs
+                    equals 1 =>
+                      rw [sub_eq]
+                      rw [s_lt]
+                      push_cast
+                      ring
+                  simp
+                  norm_num
+                  -- TODO - surely this can be simplified
+                  by_cases f_x_zero: (f x) ^2 = 0
+                  . simp [f_x_zero]
+
+                  rw [le_mul_iff_one_le_right]
+                  . norm_num
+                  . positivity
+            .
+              rename_i s_lt
+              simp [dist] at hx
+              norm_cast at hx
+              rw [WordDist_one] at hx
+              by_cases s_x_le: WordNorm (s * x) ≤ 2*r + 1
+              .
+                simp [s_x_le]
+                split_ifs
+                . simp
+                  positivity
+                .
+                  have s_x_eq: WordNorm (s * x) = 2 *r := by grind
+                  simp [s_x_eq]
+                  rw [mul_comm]
+                  apply mul_le_mul
+                  .
+                    norm_num
+                    ring
+                    norm_num
+                    field_simp
+                    rw [mul_sub]
+                    rw [← pow_two]
+                    rw [sub_mul]
+                    conv =>
+                      lhs
+                      equals (2 * r) * (2 * r) - (WordNorm x) * 2 * r * 2 + (WordNorm x)^2 =>
+                        ring
+                    rename_i x_gt
+                    simp at x_gt
+                    have x_lt_r_real: 2 * (r: ℝ) < WordNorm x := by
+                      grind
+                    grw [x_lt_r_real]
+                    rw [mul_assoc]
+                    rw [mul_comm (r: ℝ) 2]
+                    rw [← pow_two]
+                    ring
+                    conv =>
+                      lhs
+                      equals 2 * ((WordNorm x)^2 - (WordNorm x) * r * 2) =>
+                        ring
+
+                    grind
+                  . simp
+                  . positivity
+                  . norm_num
+              .
+                by_cases norm_x_eq: WordNorm x = 4 * r
+                .
+                  have s_x_eq: WordNorm (s * x) = 1 + 4 *r := by grind
+                  have not_le: ¬(WordNorm (s * x) ≤ (2 *r) + 1) := by grind
+                  have not_le_four: ¬(WordNorm (s * x) ≤ (4 *r)) := by grind
+                  have x_le: (WordNorm (x) ≤ (4 *r)) := by grind
+                  have not_x_le: ¬(WordNorm (x) ≤ (2 *r) + 1) := by grind
+                  simp [not_le, not_le_four, x_le, not_x_le]
+                  rw [mul_comm]
+                  -- TODO - surely this can be simplified
+                  by_cases f_x_zero: (f x) ^2 = 0
+                  . simp [f_x_zero]
+                  rw [mul_le_mul_iff_left₀]
+                  .
+                    field_simp
+                    grw [x_le]
+                    grind
+                    simp
+                    norm_num
+                    simp [norm_x_eq]
+                  . positivity
+
+                have sub_eq: (WordNorm x) = WordNorm (s * x) - 1 := by omega
+                have s_x_le_four: WordNorm (s * x) ≤ 4 * r := by
+                  rw [← s_lt]
+                  grind
+                simp [s_x_le, s_x_le_four]
+                split_ifs
+                .
+                  field_simp
+                  -- TODO - surely this can be simplified
+                  by_cases f_x_zero: (f x) ^2 = 0
+                  . simp [f_x_zero]
+
+                  rw [mul_le_mul_iff_right₀]
+                  .
+                    norm_num
+                    field_simp
+                    conv =>
+                      lhs
+                      lhs
+                      ring
+                    conv =>
+                      rhs
+                      equals (2^2) =>
+                        norm_num
+
+                    have norm_x_eq: WordNorm x = 2 *r + 1 := by grind
+                    rw [← s_lt, norm_x_eq]
+                    conv =>
+                      lhs
+                      lhs
+                      simp
+                      field_simp
+                      ring
+                    norm_num
+
+                  . positivity
+                .
+                  simp [← sub_eq]
+                  rw [← sub_div]
+                  simp
+                  field_simp
+                  push_cast
+                  conv =>
+                    lhs
+                    rhs
+                    lhs
+                    equals -1 =>
+                      rw [sub_eq]
+                      push_cast
+                      rw [Nat.cast_sub (by grind)]
+                      ring
+                  simp
+                  norm_num
+                  -- TODO - surely this can be simplified
+                  by_cases f_x_zero: (f x) ^2 = 0
+                  . simp [f_x_zero]
+
+                  rw [le_mul_iff_one_le_right]
+                  . norm_num
+                  . positivity
+
+          .
+            rename_i norm_eq
+            simp [← norm_eq]
+            positivity
+        . rfl
+        . intro x hx
+          apply Finset.sum_congr
+          . rfl
+          . intro s hs
+            simp [φ]
+            have hx_orig := hx
+            simp [dist, WordDist_one] at hx
+            norm_cast at hx
+            have hx_le : WordNorm x ≤ 2 * r + 1 := by grind
+            simp [hx_le]
+
+            have hx_le_sub : WordNorm x ≤ 2 * r := by grind
+            have foo := dist_word_le_mul (x := 1) (y := s⁻¹) (z := (s * x)) (by rw [S_eq_Sinv]; simp [hs])
+            simp at foo
+            simp [WordDist_comm, WordDist_one] at foo
+            -- by_cases s_x_le: WordNorm (s * x) ≤ 2 * r + 1
+            -- . simp [s_x_le]
+            -- .
+            --   simp [s_x_le]
+            --   have le_four: WordNorm (s * x) ≤ 4 * r := by grind
+            --   simp [le_four]
+            --   congr
+            --   apply pow_le_pow_left₀
+            --   rw [pow_le_pow_iff_left₀]
+            --   rw [pow_le_pow_iff_left₀]
+
+
+            grw [hx_le_sub] at foo
+            simp [foo]
+      . simp
+        intro a ha
+        simp at ha
+        simp
+        grind
+      .
+        intro a ha ha2
+        positivity
+    .
+      intro s hs
+      simp at hs
+      apply Finset.sum_eq_zero
+      intro x hx
+      have phi_s := Set.notMem_subset phi_support (a := s) ?_
+      .
+        simp at phi_s
+        simp [phi_s]
+        have phi_s_x := Set.notMem_subset phi_support (a := x * s)
+        .
+          simp at phi_s_x
+          simp [dist] at hs
+          rw [WordDist_comm] at hs
+          grw [dist_word_le_mul (y := x)] at hs
+          simp at hs
+          simp [dist] at phi_s_x
+          norm_cast at hs
+          norm_cast at phi_s_x
+          rw [Nat.lt_add_one_iff] at hs
+          rw [WordDist_comm] at hs
+          specialize phi_s_x hs
+          simp [phi_s_x]
+          exact hx
+      . simp
+        grind
+    .
+      -- TODO - deduplicate this
+      intro s hs
+      simp at hs
+      apply Finset.sum_eq_zero
+      intro x hx
+      have phi_s := Set.notMem_subset phi_support (a := s) ?_
+      .
+        simp at phi_s
+        simp [phi_s]
+        have phi_s_x := Set.notMem_subset phi_support (a := x * s)
+        .
+          simp at phi_s_x
+          simp [dist] at hs
+          rw [WordDist_comm] at hs
+          grw [dist_word_le_mul (y := x)] at hs
+          simp at hs
+          simp [dist] at phi_s_x
+          norm_cast at hs
+          norm_cast at phi_s_x
+          rw [Nat.lt_add_one_iff] at hs
+          rw [WordDist_comm] at hs
+          specialize phi_s_x hs
+          simp [phi_s_x]
+          exact hx
+      . simp
+        grind
+
+  .
+    simp [φ]
+    apply Set.Finite.subset (s := Metric.ball 1 (4 * r))
+    .
+      apply finite_ball
+    . exact phi_support
+
+#print axioms harmonic_r2_inequality
+
+
 noncomputable def Q_R (R : ℝ) (u v: G → ℝ): ℝ := ∑ g ∈ Metric.closedBall 1 R, (u g) * (v g)
 noncomputable def Q_R_lin (V: Submodule ℝ LipschitzH) (R: ℝ): V →ₗ⋆[ℝ] V →ₗ[ℝ] ℝ := {
   toFun := fun u => {

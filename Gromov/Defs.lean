@@ -1731,4 +1731,217 @@ lemma card_closed_ball_eq (R: ℕ): #((finite_closed_ball 1 R).toFinset) = #(S ^
   rw [closed_ball_eq_S_pow]
 
 
+
+-- Proposition 1.5 helper (moved from Harmonic.lean)
+lemma laplace_sum_swap_helper {f g: G → ℝ} (hgf: f.support.Finite ∨ g.support.Finite): ∑' (x: G), (f x) * (Laplace_b g) x = 2⁻¹ * ∑' (x: G), ((#(S) : ℝ)⁻¹) * ∑ s ∈ S, (((f x) - (f (s * x))) * ((g x) - (g (s * x)))) := by
+  simp_rw [sub_mul]
+  simp_rw [Finset.sum_sub_distrib]
+  simp_rw [Laplace_b, f_conv_mu]
+  simp
+  simp_rw [← Finset.mul_sum]
+  simp_rw [Finset.sum_sub_distrib]
+  simp
+  have foo := S_card_ne_zero_re
+  conv =>
+    rhs
+    rhs
+    arg 1
+    intro x
+    rw [mul_sub (#S : ℝ)⁻¹]
+    lhs
+    rw [← mul_assoc]
+    rw [mul_sub]
+    ring
+    rw [mul_inv_cancel₀ (by apply S_card_ne_zero_re)]
+
+
+  simp
+  rw [Summable.tsum_sub]
+
+  conv =>
+    rhs
+    rhs
+    rhs
+    arg 1
+    intro x
+    rw [Finset.mul_sum]
+  rename_bvar b → x
+  rw [Summable.tsum_finsetSum]
+  .
+    conv =>
+      rhs
+      rhs
+      rhs
+      arg 2
+      intro s
+      rw [← Equiv.tsum_eq (Equiv.mulLeft s⁻¹)]
+      simp
+
+
+    rw [← Summable.tsum_finsetSum]
+    .
+      simp_rw [← mul_assoc]
+      simp_rw [mul_sub ((#S : ℝ)⁻¹ * _)]
+      simp_rw [Finset.sum_sub_distrib]
+      simp
+      simp_rw [← mul_assoc]
+      rw [mul_inv_cancel₀ (by apply S_card_ne_zero_re)]
+      simp
+      rename_bvar b → x
+      conv =>
+        rhs
+        rhs
+        rhs
+        arg 1
+        intro x
+        rw [← neg_sub]
+        rw [← Finset.mul_sum]
+        rw [Finset.sum_equiv (Equiv.inv _) (s := S) (t := S) (g := fun s => g (s * x)) (by
+          intro s
+          simp
+          nth_rw 2 [S_eq_Sinv]
+          simp
+        ) (by
+          intro s
+          simp
+        )]
+
+
+      rw [tsum_neg]
+      simp
+      rename_bvar b → x
+      rw [← mul_two]
+      simp_rw [mul_comm _ (f _), mul_assoc]
+      simp_rw [← mul_sub]
+      ring
+    .
+      intro s hs
+      apply Summable.mul_left
+      apply summable_of_finite_support
+      unfold Function.HasFiniteSupport
+      simp
+      clear foo
+      wlog hg: g.support.Finite
+      .
+        apply Set.Finite.inter_of_left
+        have hf := hgf
+        simp [hg] at hf
+        exact hf
+      .
+        apply Set.Finite.inter_of_right
+        apply Set.Finite.subset ?_ (Function.support_sub _ _)
+        simp
+        refine ⟨?_, hg⟩
+        rw [← Function.comp_def]
+        rw [Function.support_comp_eq_preimage]
+        apply Set.Finite.preimage'
+        . apply hg
+        . intro x hx
+          simp
+  .
+  -- TODO - deduplicate this
+      intro s hs
+      apply Summable.mul_left
+      apply summable_of_finite_support
+      unfold Function.HasFiniteSupport
+      simp
+      wlog hg: g.support.Finite
+      .
+        apply Set.Finite.inter_of_left
+        have hf := hgf
+        simp [hg] at hf
+        rw [← Function.comp_def]
+        rw [Function.support_comp_eq_preimage]
+        apply Set.Finite.preimage'
+        . apply hf
+        . intro x hx
+          simp
+      .
+        apply Set.Finite.inter_of_right
+        apply Set.Finite.subset ?_ (Function.support_sub _ _)
+        simp
+        refine ⟨hg, ?_⟩
+        rw [← Function.comp_def]
+        rw [Function.support_comp_eq_preimage]
+        apply Set.Finite.preimage'
+        . apply hg
+        . intro x hx
+          simp
+  .
+    apply Summable.sub
+    apply summable_of_finite_support
+    .
+      unfold Function.HasFiniteSupport
+      simp
+      cases hgf
+      . apply Set.Finite.inter_of_left
+        grind
+      . apply Set.Finite.inter_of_right
+        grind
+    .
+      simp_rw [mul_assoc]
+      apply Summable.mul_left
+      simp_rw [Finset.mul_sum]
+      apply summable_sum
+      intro s hs
+      apply summable_of_finite_support
+      unfold Function.HasFiniteSupport
+      simp
+      cases hgf
+      . rename_i hf
+        apply Set.Finite.inter_of_left
+        apply hf
+      .
+        rename_i hg
+        apply Set.Finite.inter_of_right
+        rw [← Function.comp_def]
+        rw [Function.support_comp_eq_preimage]
+        apply Set.Finite.preimage'
+        . apply hg
+        . intro x hx
+          simp
+  .
+    apply Summable.mul_left
+    apply summable_sum
+    intro s hs
+    simp_rw [mul_sub]
+    apply Summable.sub
+    .
+      apply summable_of_finite_support
+      unfold Function.HasFiniteSupport
+      simp
+      cases hgf
+      . rename_i hf
+        apply Set.Finite.inter_of_left
+        rw [← Function.comp_def]
+        rw [Function.support_comp_eq_preimage]
+        apply Set.Finite.preimage'
+        . apply hf
+        . intro x hx
+          simp
+      . rename_i hg
+        apply Set.Finite.inter_of_right
+        apply hg
+    .
+      apply summable_of_finite_support
+      unfold Function.HasFiniteSupport
+      simp
+      cases hgf
+      . rename_i hf
+        apply Set.Finite.inter_of_left
+        rw [← Function.comp_def]
+        rw [Function.support_comp_eq_preimage]
+        apply Set.Finite.preimage'
+        . apply hf
+        . intro x hx
+          simp
+      . rename_i hg
+        apply Set.Finite.inter_of_right
+        rw [← Function.comp_def]
+        rw [Function.support_comp_eq_preimage]
+        apply Set.Finite.preimage'
+        . apply hg
+        . intro x hx
+          simp
+
 end GeneratesNS
