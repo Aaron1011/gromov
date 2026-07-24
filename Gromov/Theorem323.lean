@@ -4597,6 +4597,8 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
                   rw [← Real.exp_nat_mul]; norm_num
                 have he2 : Real.exp (a data.d * 2) = Real.exp (a data.d) ^ 2 := by
                   rw [show a data.d * 2 = 2 * a data.d from by ring, ← Real.exp_nat_mul]; norm_num
+                have he2sq : Real.exp (a data.d * 2) ^ 2 = Real.exp (a data.d) ^ 4 := by
+                  rw [he2]; ring
                 have hS0 : (0:ℝ) < ↑(#S) := by exact_mod_cast Finset.card_pos.mpr S_nonempty
                 have hXpos : (0:ℝ) < 16 ^ 4 * ↑(#S) * Real.exp (a data.d) ^ 4 := by positivity
                 have h16w : (16:ℝ) ^ 4 * ↑(#S) * Real.exp (a data.d) ^ 4 ≤ (16:ℝ) ^ (↑data.w : ℝ) := by
@@ -4622,13 +4624,13 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
                   positivity
                 have hP : ((16:ℝ) ^ (-↑data.w : ℝ)) ^ 2 * (↑(#S)) ^ 2 * Real.exp (a data.d) ^ 4 * 16 ^ 8 ≤ 1 := by
                   nlinarith [hsq, hE4, hM8]
-                have key : GeneratesNS.C * Real.exp (a data.d) ^ 2 * (16 ^ (-↑data.w : ℝ)) ^ 2 * ↑(#S)
-                    * Real.exp (a data.d * 2) * 16 ≤ 2⁻¹ := by
-                  rw [he2]; simp only [GeneratesNS.C]
+                have key : GeneratesNS.C * Real.exp (a data.d * 2) ^ 2 * (16 ^ (-↑data.w : ℝ)) ^ 2 * ↑(#S)
+                    * 16 ≤ 2⁻¹ := by
+                  rw [he2sq]; simp only [GeneratesNS.C]
                   nlinarith [hP, hM8]
                 calc Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val
-                    ≤ (GeneratesNS.C * Real.exp (a data.d) ^ 2 * (16 ^ (-↑data.w : ℝ)) ^ 2 * ↑(#S)
-                        * Real.exp (a data.d * 2) * 16) * Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val := by nlinarith [u_le]
+                    ≤ (GeneratesNS.C * Real.exp (a data.d * 2) ^ 2 * (16 ^ (-↑data.w : ℝ)) ^ 2 * ↑(#S)
+                        * 16) * Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val := by nlinarith [u_le]
                   _ ≤ 2⁻¹ * Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val := by nlinarith [key, qr_nonneg]
 
               have Q_r_zero: Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val = 0 := by
