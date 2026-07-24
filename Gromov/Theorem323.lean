@@ -3473,6 +3473,19 @@ lemma growth_bound_basis_change (d: ℕ) {index: Type*} [Fintype index] [Decidab
     apply h_growth
 
 
+lemma R'_le_R_2 (data: GoodScalesData b) : R'_ V ≤ (↑(R_2 data) : ℝ) := by
+  have foo := (GoodScales data).i_2_ge
+  simp [i₀] at foo
+  have pow_le := Nat.le_pow_clog (b := 16) (x := ⌈R'_ V⌉₊) (by simp)
+  have r_ceil := Nat.le_ceil (R')
+  unfold R' at r_ceil
+  grw [r_ceil]
+  grw [pow_le]
+  simp [R_2]
+  rw [pow_le_pow_iff_right₀]
+  . exact foo
+  . simp
+
 set_option maxHeartbeats 2500000 in
 lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodule ℝ LipschitzH, U ≤ V ∧ dim V ≤ 2 * dim U ∧ ∀ f ∈ U, Q_R (16 * (R_2 data)) f f ≤ Real.exp (2 * (a data.d)) * Q_R ((R_2 data)) f f := by
   classical
@@ -4445,9 +4458,14 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
                 norm_num at foo
 
 
-              sorry
-            . sorry
-            . sorry
+              rw [← Submodule.coe_eq_zero]
+              by_contra hne
+              exact absurd Q_r_zero (ne_of_gt (Q_R_pos_on_R' (↑u) hne _ (R'_le_R_2 data)))
+            . simp [GeneratesNS.C]
+              positivity
+            . apply mul_nonneg (by positivity)
+              simp [Q_R, ← pow_two]
+              positivity
 
         . simp [GeneratesNS.C]
           positivity
@@ -4485,7 +4503,6 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
   have foo := card_B_le_exp_wa data
   have card_eq: #(B_finite data).toFinset = #(B_finsets data) := by
     simp [B, B_finsets]
-    sorry
   rw [← card_eq]
   rify
   grw [card_B_le_exp_wa]
