@@ -4269,10 +4269,160 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 end V_Wrapper_Section
 
 -- Theorem 3.23
-lemma theorem_3_23 (d: ℝ): ∃ C: ℕ, ∀ data: V_Data, (haveI := data.hV; haveI := data.V_decidable; growth_bound (V_basis data.V) d) → (Module.finrank ℝ data.V) < C := by
+set_option maxHeartbeats 2500000 in
+lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI := data.hV; haveI := data.V_decidable; growth_bound (V_basis data.V) d) → (Module.finrank ℝ data.V) < C := by
   have C: ℕ := sorry
   use C
-  intro data h_growth
+  intro v_data h_growth
+
+  let wrapper: V_Wrapper := {
+    V := v_data.V
+    V_finite := v_data.hV
+    V_nontrivial := sorry
+    V_even := v_data.V_even
+    V_decidable := v_data.V_decidable
+  }
+
+  have v_finite := v_data.hV
+  let v_dec := v_data.V_decidable
+
+  have nonempty_basis: Nonempty ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥v_data.V) := by
+    sorry
+
+  let data: GoodScalesData (V_basis v_data.V) := {
+    w := ⌈Real.logb 16 ((16^4) * #(S) * Real.exp (4 * a (d)))⌉₊
+    d := d
+    hw := by
+      simp
+      apply Real.logb_pos
+      . simp
+      . apply one_lt_mul
+        .
+          have card_s: 1 ≤ #(S) := by
+            simp
+            apply S_nonempty
+          grw [← card_s]
+          simp
+          norm_num
+        .
+          norm_num
+          simp [a]
+          positivity
+    hd := hd
+    w_gt := by
+      rw [Nat.lt_ceil]
+      simp
+      rw [Real.lt_logb_iff_rpow_lt]
+      .
+        have mul_pos: 1 < ↑(#S) * Real.exp (4 * a d) := by
+          apply one_lt_mul
+          . simp
+            apply S_nonempty
+          . simp [a]
+            positivity
+        linarith
+      . simp
+      . have S_ne: #(S) ≠ 0 := by
+          have foo :=  S_card_ne_zero_re
+          simpa using foo
+        positivity
+    h_growth := h_growth
+  }
+
+  obtain ⟨U, U_sub_v, hU_dim, bounded_double⟩ := exists_bounded_doubling_subspace data
+
+  let phi_u := (phi data).domRestrict (U.submoduleOf v_data.V)
+  have phi_u_inj: Function.Injective phi_u := by
+    rw [← LinearMap.ker_eq_bot]
+    rw [LinearMap.ker_eq_bot']
+    intro u hu
+
+    have u_le := lemma_3_26_a data u
+    simp [phi_u] at hu
+    simp [hu] at u_le
+
+    have u_bound := harmonic_r2_inequality u (by sorry) (R_2 data) (by simp [R_2])
+    simp [B_r] at u_le
+    grw [u_bound] at u_le
+    .
+      have u_double := bounded_double u (by sorry)
+      conv at u_double =>
+        lhs
+        simp [Q_R]
+
+      simp_rw [← pow_two] at u_double
+      grw [Finset.sum_le_sum_of_subset_of_nonneg (t := (finite_closed_ball 1 (16 * (R_2 data))).toFinset)] at u_le
+      .
+        simp [finite_closed_ball] at u_le
+        grw [u_double] at u_le
+        .
+          by_cases u_zero: u = 0
+          . exact u_zero
+          .
+            have r_ratio_le: (R_1 data) / (R_2 data) ≤ 2 * ((16: ℝ) ^ (-(data.w : ℝ))) := by
+              simp [R_1, R_2]
+              field_simp
+              have i_diff := (GoodScales data).i_diff_mem
+              simp at i_diff
+              rw [← pow_add]
+              rw [pow_le_pow_iff_right₀]
+              . grind
+              . simp
+
+            
+            field_simp at u_le
+            have r_2_le: R_2 data < (R_2 data : ℝ) + 1 := by
+              simp
+
+            grw [r_2_le] at u_le
+
+            simp_rw [mul_assoc] at u_le
+            rw [mul_div_assoc] at u_le
+            rw [le_mul_iff_one_le_right] at u_le
+            .
+
+              simp [R_1, R_2] at u_le
+              rw [one_le_div] at u_le
+              .
+                have i_2_diff := (GoodScales data).i_diff_mem
+                simp at i_2_diff
+                have i_2_sub := i_2_diff.1
+                rw [lt_tsub_iff_right] at i_2_sub
+                grw [← i_2_sub] at u_le
+                sorry
+                simp
+                -- sorry
+                -- conv at u_le =>
+                --   rhs
+                --   equals ((16 ^ (GoodScales data).i_1 + 1) ^ 2) * GeneratesNS.C * (Real.exp (a data.d) * (Real.exp (↑data.w * a data.d) * ((2)^2 * (↑(#S) * Real.exp (a data.d * 2))))) =>
+                --     rw [mul_pow]
+                --     ring
+                -- ring_nf at u_le
+                -- simp_rw [mul_assoc] at u_le
+                -- nth_rw 2 [mul_comm _ 4] at u_le
+
+
+              . sorry
+
+
+            . sorry
+
+        . simp [GeneratesNS.C]
+          positivity
+      .
+        simp [GeneratesNS.C]
+        positivity
+      . intro a ha
+        simp
+        simp at ha
+        grind
+      . intro i hi _
+        positivity
+    .
+      simp [GeneratesNS.C]
+      positivity
+
+
 
 
   sorry
