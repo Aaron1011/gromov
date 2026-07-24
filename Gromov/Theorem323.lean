@@ -4430,6 +4430,7 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
             ring_nf at u_le
             .
               have le_half: Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val ≤ (2: ℝ)⁻¹ * Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val := by
+
                 sorry
 
               have Q_r_zero: Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val = 0 := by
@@ -4443,7 +4444,7 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
                 ) le_half
                 norm_num at foo
 
-              
+
               sorry
             . sorry
             . sorry
