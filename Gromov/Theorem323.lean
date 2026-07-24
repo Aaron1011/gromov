@@ -2076,6 +2076,176 @@ lemma inter_mult_helper (data: GoodScalesData b): InterMult (B_3 data) * #(S ^ (
     . rw [Set.nonempty_iff_ne_empty]
       grind
 
+
+
+noncomputable def B_r (r: ℝ) := (finite_closed_ball 1 r).toFinset
+noncomputable def B_c_r (g: G) (r: ℝ) := (finite_closed_ball g r).toFinset
+
+lemma B_c_r_eq_smul (a: G) (r: ℝ): B_c_r a r = (MulOpposite.op a) • B_r r := by
+  rw [B_c_r, B_r]
+  rw [← Finset.coe_inj]
+  simp
+
+lemma pack_center_helper (data: GoodScalesData b) (x: G): #{ c ∈ (X_j_finite data).toFinset | x ∈ B_c_r c (3 * (R_1 data + 1)) } * #(S ^ ((R_1 data) / 2)) ≤ #(S ^ (4 * (R_1 data + 1))) := by
+  rw [← closed_ball_eq_S_pow]
+  rw [← smul_eq_mul]
+  rw [← Finset.sum_const]
+
+  rw [← closed_ball_eq_S_pow]
+  grw [Finset.sum_le_sum (g := fun a => #(B_c_r a ↑((R_1 data : ℝ) / 2)))]
+  .
+    rw [← Finset.card_biUnion]
+    .
+      --simp only [Finset.sum_const_zero, add_zero]
+      nth_rw 2 [← Finset.card_smul_finset (MulOpposite.op x)]
+      apply Finset.card_le_card
+      rw [← Finset.coe_subset]
+      --rw [Finset.coe_smul_finset]
+      -- conv =>
+      --   rhs
+      --   arg 2
+      --   simp
+
+      --rw [← ball_smul_eq_origin]
+      intro a ha
+      simp at ha
+      obtain ⟨p, ⟨p_mem, a_mem⟩⟩ := ha
+      simp
+      simp [B_c_r] at a_mem
+      grw [dist_triangle _ p]
+      grw [a_mem]
+      have p_dist := p_mem.1
+      simp [X_j] at p_dist
+      apply Metric.maximalSeparatedSet_subset at p_dist
+      simp at p_dist
+      have x_mem := p_mem.2
+      simp [B_c_r] at x_mem
+      rw [dist_comm] at x_mem
+      grw [x_mem]
+      rw [mul_add]
+      ring
+      grind
+    .
+      rw [Finset.pairwiseDisjoint_iff]
+      intro a ha b hb hab
+
+      have from_b := B_half_disjoint data
+      simp at ha hb
+      simp [B_half] at from_b
+
+      rw [Set.pairwiseDisjoint_iff] at from_b
+      simp only [Set.mem_image, id_eq, forall_exists_index, and_imp] at from_b
+      simp at hab
+      have inter_eq := from_b a ha.1 (i := (Metric.closedBall a ((↑(R_1 data) : ℝ) / 2) )) (?_) b hb.1 (j := (Metric.closedBall b (↑(R_1 data : ℝ) / 2) )) (?_) ?_
+      .
+        apply B_ball_injective_on data (R_1 data / 2) (by grind) (by simp [R_1]) at inter_eq
+        .
+          simp [inter_eq]
+        . grind
+        . grind
+      . rfl
+      . rfl
+      .
+        rw [← Finset.coe_nonempty] at hab
+        simp [B_c_r] at hab
+        simpa using hab
+  .
+    intro a ha
+    simp at ha
+    simp [B_c_r_eq_smul, B_r]
+    rw [Nat.cast_div]
+    . simp
+    . simp [R_1]
+    . simp
+
+  --   obtain ⟨⟨c, hc, a_dist⟩, other⟩ := ha
+  --   .
+  --     grw [other]
+  --     grw [Nat.cast_div_le]
+  --     simp
+  --     grind
+  --     -- grw [dist_triangle _ c]
+  --     -- grw [a_dist]
+  --     -- simp at h_base
+  --     -- specialize h_base c hc
+
+  --     -- have q_prop := (X_inner_nonempty c hc).choose_spec
+  --     -- rw [← q_prop.2] at h_base
+  --     -- simp at h_base
+  --     -- rw [dist_comm] at h_base
+  --     -- simp [q]
+  --     -- grw [h_base]
+  --     -- grind
+  -- .
+  --   rw [Finset.pairwiseDisjoint_iff]
+  --   intro a ha b hb hab
+
+  --   have from_b := B_half_disjoint data
+  --   simp at ha
+  --   simp at hb
+  --   simp [B_half] at from_b
+
+  --   have a_mem := ha.1
+  --   have b_mem := hb.1
+  --   simp [X_j] at a_mem
+  --   simp [X_j] at b_mem
+
+  --   --have foo := B_ball_injective_on data
+
+
+
+
+  --   -- let a_center := (X_inner_nonempty _ a_prop).choose
+  --   -- let b_center := (X_inner_nonempty _ b_prop).choose
+  --   -- obtain ⟨a_center_mem, a_eq⟩ := (X_inner_nonempty _ a_prop).choose_spec
+  --   -- obtain ⟨b_center_mem, b_eq⟩ := (X_inner_nonempty _ b_prop).choose_spec
+
+
+  --   rw [Set.pairwiseDisjoint_iff] at from_b
+  --   simp only [Set.mem_image, id_eq, forall_exists_index, and_imp] at from_b
+  --   simp at hab
+  --   specialize from_b a ha.1
+  --   have inter_eq := from_b a_center a_center_mem (i := (Metric.closedBall a_center (↑(R_1 data) / 2) )) (?_) b_center b_center_mem (j := (Metric.closedBall b_center (↑(R_1 data) / 2) )) (?_) ?_
+  --   .
+
+  --     rw [← a_eq, ← b_eq]
+  --     simp [a_center, b_center] at inter_eq
+  --     apply B_ball_injective_on data (R_1 data / 2) (by grind) (by simp [R_1]) at inter_eq
+  --     .
+  --       simp [inter_eq]
+  --     . grind
+  --     . grind
+  --   . rfl
+  --   . rfl
+  --   . simp [a_center, b_center]
+  --     rw [← Finset.coe_nonempty] at hab
+  --     simp at hab
+  --     exact hab
+
+  -- . intro y hy
+  --   simp at hy
+  --   simp only [hy, ↓reduceDIte]
+  --   nth_rw 1 [← Finset.card_smul_finset (MulOpposite.op (X_inner_nonempty y hy).choose)]
+  --   apply Finset.card_le_card
+  --   intro a ha
+  --   simp at ha
+  --   simp
+  --   rw [Finset.mem_smul_finset] at ha
+  --   obtain ⟨z, z_mem, z_mul_eq⟩ := ha
+  --   simp at z_mem
+  --   rw [← z_mul_eq]
+  --   simp
+  --   simp [dist, WordDist]
+  --   rw [← word_norm_inv]
+  --   simp [dist, WordDist_one] at z_mem
+  --   norm_cast
+  --   grw [z_mem]
+  --   grw [Nat.cast_div_le]
+  --   simp
+
+-- . simp
+--   apply Finset.Nonempty.pow
+--   simp [S_nonempty]
 /-- Common step for Lemma 3.25 (a) and (b).
 
 `h i = log (#(S ^ 16 ^ i) * det (Q_{16 ^ i}) ^ (dim V)⁻¹)` splits into a log-cardinality term
@@ -2198,9 +2368,6 @@ lemma log_inter_mult_b3 (data: GoodScalesData b): InterMult (B_3 data) ≤ Real.
 #print axioms inter_mult_helper
 #print axioms log_inter_mult_b3
 
-
-noncomputable def B_r (r: ℝ) := (finite_closed_ball 1 r).toFinset
-noncomputable def B_c_r (g: G) (r: ℝ) := (finite_closed_ball g r).toFinset
 
 -- Lemma 3.25 (b)
 lemma card_B_le_exp_wa (data: GoodScalesData b): #(B_finite data).toFinset < Real.exp (data.w * (a data.d)) := by
@@ -2541,10 +2708,7 @@ lemma double_ball_sum (R: ℕ) (hR: 0 < R) (f: G → ℝ) (hf: ∀ g, 0 ≤ f g)
 
 
 -- TODO - get rid of some lemmas, since mathlib already has Metric.smul_closedBall defined
-lemma B_c_r_eq_smul (a: G) (r: ℝ): B_c_r a r = (MulOpposite.op a) • B_r r := by
-  rw [B_c_r, B_r]
-  rw [← Finset.coe_inj]
-  simp?
+
 
 -- lemma B_c_r_eq_smul_normal (a: G) (r: ℝ): a • B_r r ⊆ B_c_r a r := by
 --   rw [B_c_r, B_r]
