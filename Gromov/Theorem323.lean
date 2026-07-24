@@ -4310,9 +4310,8 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
 
   have v_finite := v_data.hV
   let v_dec := v_data.V_decidable
+  have v_nontrivial := v_data.V_nontrivial
 
-  have nonempty_basis: Nonempty ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥v_data.V) := by
-    sorry
 
   let data: GoodScalesData (V_basis v_data.V) := {
     w := ⌈Real.logb 16 ((16^4) * #(S) * Real.exp (4 * a (d)))⌉₊
