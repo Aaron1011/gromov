@@ -5125,3 +5125,4 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       exact Module.Basis.linearIndepOn B ↑fin_basis_idx
 
 #synth FiniteDimensional ℝ LipschitzH
+#print axioms Lipschitz_finite_dimensional
