@@ -1346,6 +1346,7 @@ private noncomputable def R' := R'_ V
 structure V_Data where
   V: Submodule ℝ LipschitzH
   hV: FiniteDimensional ℝ V
+  V_nontrivial: Nontrivial V
   (V_even : Even (Module.finrank ℝ V))
   V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)
 
@@ -4302,7 +4303,7 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
   let wrapper: V_Wrapper := {
     V := v_data.V
     V_finite := v_data.hV
-    V_nontrivial := sorry
+    V_nontrivial := v_data.V_nontrivial
     V_even := v_data.V_even
     V_decidable := v_data.V_decidable
   }
@@ -4524,6 +4525,17 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
         exact Module.Basis.linearIndepOn B ↑fin_basis_idx
     V_decidable := by
       infer_instance
+    V_nontrivial := by
+      rw [nontrivial_iff]
+      have one_lt: 1 < #fin_basis_idx := by
+        grind
+      rw [Finset.one_lt_card_iff] at one_lt
+      obtain ⟨a, b, ha, hb, a_neq⟩ := one_lt
+      use ⟨B a, by simp [fin_basis, ha]⟩
+      use ⟨B b, by simp [fin_basis, hb]⟩
+      simp
+      apply (Module.Basis.injective _).ne
+      exact a_neq
   }
   specialize V_bound large_v ?_
   .
