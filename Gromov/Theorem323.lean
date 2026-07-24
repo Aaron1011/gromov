@@ -3114,7 +3114,7 @@ noncomputable def phi (data: GoodScalesData b): V →ₗ[ℝ] EuclideanSpace ℝ
 def C: ℝ := 32 * (#S)
 
 set_option maxHeartbeats 2500000 in
-lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(S^(R_1 data ))) * ‖(phi data u)‖^2 + C * (Real.exp ((a data.d))) * Real.exp (a data.d) * (R_1 data + 1)^2 * (∑ x ∈ B_r (2 * R_2 data), deriv_sq u x)  := by
+lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(S^(R_1 data ))) * ‖(phi data u)‖^2 + C * (Real.exp ((a data.d))) * (R_1 data + 1)^2 * (∑ x ∈ B_r (8 * R_2 data), deriv_sq u x)  := by
 
   rw [Q_R]
   let a := ⋃₀ (B data)
@@ -3285,97 +3285,153 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
             rw [Finset.sum_attach (f := fun (i: G) => ∑ x ∈ B_c_r (i) (3 * (↑(R_1 data) + 1)), deriv_sq (u.val).toFun x)]
             rw [sum_swap]
 
-            
-            grw [Finset.sum_le_sum (g := fun (i: (X_j_finite data).toFinset) => ∑ x ∈ B_r (2 * (R_2 data)), deriv_sq (u.val).toFun x)]
-            .
-
-              have b_card := card_B_le_exp_wa data
-              rw [← Set.ncard_eq_toFinset_card (hs := by apply B_finite)] at b_card
-              simp [B] at b_card
-              simp
-              rw [← Set.ncard_eq_toFinset_card (hs := by apply X_j_finite)]
-
-              rw [(Set.ncard_image_iff (by apply X_j_finite)).mpr] at b_card
-              . grw [b_card]
-                .
-                  simp [C]
-                  field_simp
-                  norm_num
-                  norm_cast
-                  simp
-                  rw [mul_comm 32]
-                  sorry
-                  --apply le_refl
-                . simp [deriv_sq]
-                  positivity
-              . apply B_ball_injective_on
+            have card_inter_le (x: G): #({i ∈ (X_j_finite data).toFinset | x ∈ B_c_r i (3 * (↑(R_1 data)) + 1)}) ≤ InterMult (B_3 data) := by
+              -- rw [← Finset.card_image_of_injOn (f := fun a => Metric.closedBall a (3 * R_1 data)) (H := by
+              --   intro a ha b hb
+              --   simp at ha
+              --   simp at hb
+              --   have foo := B_ball_injective_on data (3 * ↑(R_1 data)) (by simp) (by simp)
+              --   sorry
+              -- )]
+              simp [InterMult, InterMult_f]
+              apply le_csSup
+              . sorry
+              . simp
+                use (fun a => B_c_r a ((3 * (↑(R_1 data))) + 1)) '' {i ∈ (X_j_finite data).toFinset | x ∈ B_c_r i ((3 * (↑(R_1 data))) )}
+                refine ⟨⟨?_, ?_,⟩, ?_⟩
                 . simp
-                . simp
-            . intro i hi
-              apply Finset.sum_le_sum_of_subset_of_nonneg
-              .
-                simp [-Finset.mem_attach] at hi
-                have i_prop := i.prop
-                simp [-SetLike.coe_mem, X_j] at i_prop
-                intro p hp
-                simp [B_r]
-                grw [dist_triangle _ i.val]
-                simp [B_c_r] at hp
-                grw [hp]
-                have i_mem := Metric.maximalSeparatedSet_subset i_prop
-                simp at i_mem
-                grw [i_mem]
-                rw [two_mul]
-                apply add_le_add
-                . simp [R_1, R_2]
-                  field_simp
-                  rw [mul_add]
-                  simp
-                  ring
-
-                  have i_sub := (GoodScales data).i_diff_mem
-                  simp at i_sub
-                  have first := i_sub.1
-                  have i1_lt : (GoodScales data).i_1 < (GoodScales data).i_2 - data.w := by
-                    grind
-
-                  have explicit_w := data.w_gt
-                  have i_1_lt_const: (GoodScales data).i_1 < (GoodScales data).i_2 - 4 := by
-                    grind
-
-                  grw [i_1_lt_const]
-                  rw [← Real.rpow_natCast]
-                  rw [Nat.cast_sub (by grind)]
-                  rw [Real.rpow_sub]
-                  norm_num
-                  ring
-                  have i_2_pos := (GoodScales data).i_2_pos
-                  have i_2_ge : 1 ≤ (GoodScales data).i_2 := by grind
-
-                  have three_le: (3: ℝ) < (16 ^ (GoodScales data).i_2) / 2 := by
-                    field_simp
-                    norm_num
-
-                    grw [← i_2_ge]
-                    .
-                      simp
-                      norm_num
-                    . simp
-                  nth_grw 1 [three_le]
+                  intro a ha
+                  simp [B_3]
+                  use a
+                  refine ⟨?_, ?_⟩
+                  . simp at ha
+                    exact ha.1
                   .
-                    simp
-                    field_simp
-                    norm_num
+                    simp [B_c_r]
+                    sorry
+
+                .
+                  simp
+                  rw [eq_comm, ← ne_eq, ← Set.nonempty_iff_empty_ne]
+                  use x
+                  simp
+                  sorry
+                .
+                  rw [← Set.ncard_def]
+                  rw [← Set.ncard_coe_finset]
+                  simp_rw [B_c_r_eq_smul]
+                  rw [Set.ncard_image_of_injective]
                   . simp
-                  . simp
-                . simp
-                -- simp [B_r, dist, WordDist_one]
-                -- simp [B_c_r, dist, WordDist] at hp
+                    sorry
+                  . intro a b hab
+                    simp at hab
+                    apply IsCancelSMul.right_cancel at hab
+                    .
+                      simp at hab
+                      exact hab
+                    . sorry
 
 
-              . intros
-                simp [deriv_sq]
-                positivity
+            simp [C]
+            simp_rw [← mul_assoc]
+            norm_num
+            apply mul_le_mul
+            . ring
+              simp
+            . sorry
+            . sorry
+            . positivity
+
+            -- grw [Finset.sum_le_sum (g := fun (i: (X_j_finite data).toFinset) => ∑ x ∈ B_r (2 * (R_2 data)), deriv_sq (u.val).toFun x)]
+            -- .
+
+            --   have b_card := card_B_le_exp_wa data
+            --   rw [← Set.ncard_eq_toFinset_card (hs := by apply B_finite)] at b_card
+            --   simp [B] at b_card
+            --   simp
+            --   rw [← Set.ncard_eq_toFinset_card (hs := by apply X_j_finite)]
+
+            --   rw [(Set.ncard_image_iff (by apply X_j_finite)).mpr] at b_card
+            --   . grw [b_card]
+            --     .
+            --       simp [C]
+            --       field_simp
+            --       norm_num
+            --       norm_cast
+            --       simp
+            --       rw [mul_comm 32]
+            --       sorry
+            --       --apply le_refl
+            --     . simp [deriv_sq]
+            --       positivity
+            --   . apply B_ball_injective_on
+            --     . simp
+            --     . simp
+            -- . intro i hi
+            --   apply Finset.sum_le_sum_of_subset_of_nonneg
+            --   .
+            --     simp [-Finset.mem_attach] at hi
+            --     have i_prop := i.prop
+            --     simp [-SetLike.coe_mem, X_j] at i_prop
+            --     intro p hp
+            --     simp [B_r]
+            --     grw [dist_triangle _ i.val]
+            --     simp [B_c_r] at hp
+            --     grw [hp]
+            --     have i_mem := Metric.maximalSeparatedSet_subset i_prop
+            --     simp at i_mem
+            --     grw [i_mem]
+            --     rw [two_mul]
+            --     apply add_le_add
+            --     . simp [R_1, R_2]
+            --       field_simp
+            --       rw [mul_add]
+            --       simp
+            --       ring
+
+            --       have i_sub := (GoodScales data).i_diff_mem
+            --       simp at i_sub
+            --       have first := i_sub.1
+            --       have i1_lt : (GoodScales data).i_1 < (GoodScales data).i_2 - data.w := by
+            --         grind
+
+            --       have explicit_w := data.w_gt
+            --       have i_1_lt_const: (GoodScales data).i_1 < (GoodScales data).i_2 - 4 := by
+            --         grind
+
+            --       grw [i_1_lt_const]
+            --       rw [← Real.rpow_natCast]
+            --       rw [Nat.cast_sub (by grind)]
+            --       rw [Real.rpow_sub]
+            --       norm_num
+            --       ring
+            --       have i_2_pos := (GoodScales data).i_2_pos
+            --       have i_2_ge : 1 ≤ (GoodScales data).i_2 := by grind
+
+            --       have three_le: (3: ℝ) < (16 ^ (GoodScales data).i_2) / 2 := by
+            --         field_simp
+            --         norm_num
+
+            --         grw [← i_2_ge]
+            --         .
+            --           simp
+            --           norm_num
+            --         . simp
+            --       nth_grw 1 [three_le]
+            --       .
+            --         simp
+            --         field_simp
+            --         norm_num
+            --       . simp
+            --       . simp
+            --     . simp
+            --     -- simp [B_r, dist, WordDist_one]
+            --     -- simp [B_c_r, dist, WordDist] at hp
+
+
+            --   . intros
+            --     simp [deriv_sq]
+            --     positivity
         .
           simp
           have foo := B_ball_injective_on data (R_1 data ) (by simp [R_1]) (by simp)
@@ -4435,8 +4491,17 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
       simp
       nth_rw 1 [u_prop]
       simp [f_conv_mu]
-    ) (R_2 data) (by simp [R_2])
+    ) (4 * R_2 data) (by simp [R_2])
     simp [B_r] at u_le
+    conv at u_bound =>
+      lhs
+      arg 1
+      equals (Metric.closedBall 1 (8 * (R_2 data))).toFinset =>
+        simp
+        ring
+
+
+
     grw [u_bound] at u_le
     .
       have u_double := bounded_double u (by
@@ -4456,7 +4521,7 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
           . exact u_zero
           .
             have r_pos := R'_pos v_data.V
-            have r_ratio_le: (R_1 data + 1) / (R_2 data) ≤ 4 * ((16: ℝ) ^ (-(data.w : ℝ))) := by
+            have r_ratio_le: (R_1 data + 1) / (4 * R_2 data) ≤ 4 * ((16: ℝ) ^ (-(data.w : ℝ))) := by
               simp [R_1, R_2]
               field_simp
               have i_diff := (GoodScales data).i_diff_mem
@@ -4477,14 +4542,19 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
               ring
               rw [← pow_add]
               simp
-              rw [pow_le_pow_iff_right₀]
-              . grind
+              apply mul_le_mul
+              .
+                rw [pow_le_pow_iff_right₀]
+                . grind
+                . simp
+              . norm_num
+              . simp
               . simp
 
 
             conv at u_le =>
               rhs
-              equals GeneratesNS.C * Real.exp (a data.d) * Real.exp (a data.d) * (((↑(R_1 data) + 1) / ((↑(R_2 data : ℝ))))^2 * ↑(#S) * (Real.exp (2 * a data.d) * Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val)) =>
+              equals GeneratesNS.C * Real.exp (a data.d) * (((↑(R_1 data) + 1) / ((↑(4 * R_2 data : ℝ))))^2 * ↑(#S) * (Real.exp (2 * a data.d) * Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val)) =>
                 ring
 
 
