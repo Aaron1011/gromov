@@ -2246,6 +2246,9 @@ lemma pack_center_helper (data: GoodScalesData b) (x: G): #{ c ∈ (X_j_finite d
 -- . simp
 --   apply Finset.Nonempty.pow
 --   simp [S_nonempty]
+
+
+
 /-- Common step for Lemma 3.25 (a) and (b).
 
 `h i = log (#(S ^ 16 ^ i) * det (Q_{16 ^ i}) ^ (dim V)⁻¹)` splits into a log-cardinality term
@@ -2365,8 +2368,74 @@ lemma log_inter_mult_b3 (data: GoodScalesData b): InterMult (B_3 data) ≤ Real.
   . simp
     grind
 
+
+lemma log_pack_center_helper (data: GoodScalesData b) (x: G): #{ c ∈ (X_j_finite data).toFinset | x ∈ B_c_r c (3 * (R_1 data + 1)) } ≤ Real.exp (a data.d) := by
+  by_cases inter_empty: { c ∈ (X_j_finite data).toFinset | x ∈ B_c_r c (3 * (R_1 data + 1)) } = ∅
+  . simp [inter_empty]
+    apply Real.exp_nonneg
+
+  rw [← Real.log_le_iff_le_exp]
+  have foo := pack_center_helper data x
+  rw [← Nat.le_div_iff_mul_le] at foo
+  grw [foo]
+  .
+    grw [Nat.cast_div_le]
+    .
+      rw [Real.log_div]
+      .
+        have bound := (GoodScales data).first_h_i
+        grw [← bound]
+        --grw [log_card_pow_sub_le (b := b) (k := (GoodScales data).i_1 + 1) (j := (GoodScales data).i_1)]
+
+
+        --apply log_card_pow_sub_le
+        apply log_card_pow_sub_le (GoodScales data).i_1_ge (Nat.le_succ _)
+        . simp [R_1]
+        . rw [pow_succ]
+          simp [R_1]
+          ring
+          rw [← le_tsub_iff_right]
+          .
+            rw [← Nat.mul_sub]
+            norm_num
+            grw [← Nat.one_le_pow]
+            . simp
+            . simp
+          . simp
+        . simp [R_1]
+      . norm_cast
+        rw [Finset.card_eq_zero]
+        rw [← ne_eq, ← Finset.nonempty_iff_ne_empty]
+        apply Finset.Nonempty.pow
+        simp [S_nonempty]
+      . norm_cast
+        rw [Finset.card_eq_zero]
+        rw [← ne_eq, ← Finset.nonempty_iff_ne_empty]
+        apply Finset.Nonempty.pow
+        simp [S_nonempty]
+    . simp
+      refine ⟨?_, ?_⟩
+      . apply Finset.Nonempty.pow
+        simp [S_nonempty]
+      .
+        apply Finset.card_pow_mono
+        . simp [R_1]
+        . grind
+  .
+    simp
+    rw [Finset.nonempty_iff_ne_empty]
+    simpa using inter_empty
+  . simp
+    apply Finset.Nonempty.pow
+    simp [S_nonempty]
+  . simp
+    rw [Finset.nonempty_iff_ne_empty]
+    simpa using inter_empty
+
+
 #print axioms inter_mult_helper
 #print axioms log_inter_mult_b3
+#print axioms log_pack_center_helper
 
 
 -- Lemma 3.25 (b)
@@ -3461,55 +3530,10 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
             rw [Finset.sum_attach (f := fun (i: G) => ∑ x ∈ B_c_r (i) (3 * (↑(R_1 data) + 1)), deriv_sq (u.val).toFun x)]
             rw [sum_swap]
 
-            have card_inter_le (x: G): #({i ∈ (X_j_finite data).toFinset | x ∈ B_c_r i (3 * (↑(R_1 data + 1)) )}) ≤ InterMult (B_3 data) := by
-              simp [InterMult, InterMult_f]
-              apply le_csSup
-              .
-                -- TODO - deduplicate this
-                unfold BddAbove
-                use (B_3 data).encard.toNat
-                rw [mem_upperBounds]
-                intro x hx
-                simp [InterMult_f] at hx
-                obtain ⟨a, b, x_eq⟩ := hx
-                rw [← x_eq]
-                apply ENat.toNat_le_toNat
-                .
-                  apply Set.encard_le_encard
-                  grind
-                . simp
-                  apply B_3_finite
-              . simp
-                use (fun a => B_c_r a ((3 * (↑(R_1 data + 1))))) '' {i ∈ (X_j_finite data).toFinset | x ∈ B_c_r i ((3 * (↑(R_1 data + 1))) )}
-                refine ⟨⟨?_, ?_,⟩, ?_⟩
-                . simp
-                  intro a ha
-                  simp [B_3]
-                  use a
-                  refine ⟨?_, ?_⟩
-                  . simp at ha
-                    exact ha.1
-                  .
-                    simp [B_c_r]
-
-                .
-                  simp
-                  rw [eq_comm, ← ne_eq, ← Set.nonempty_iff_empty_ne]
-                  use x
-                  simp
-                .
-                  rw [← Set.ncard_def]
-                  rw [← Set.ncard_coe_finset]
-                  simp_rw [B_c_r_eq_smul]
-                  rw [Set.ncard_image_of_injective]
-                  . simp
-                  . intro a b hab
-                    simp at hab
-                    apply IsCancelSMul.right_cancel at hab
-                    .
-                      simp at hab
-                      exact hab
-                    . sorry
+            have card_inter_le (x: G): #({i ∈ (X_j_finite data).toFinset | x ∈ B_c_r i (3 * (↑(R_1 data + 1)) )}) ≤ Real.exp (a data.d) := by
+              have foo := log_pack_center_helper data x
+              rw [Nat.cast_add]
+              simpa using foo
 
 
             simp [C]
@@ -3533,12 +3557,8 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
                 norm_cast
                 norm_cast at card_inter_le
                 grw [card_inter_le]
-                .
-                  grw [log_inter_mult_b3]
-                  simp [deriv_sq, ← pow_two]
-                  positivity
-                . simp [deriv_sq, ← pow_two]
-                  positivity
+                simp [deriv_sq, ← pow_two]
+                positivity
 
             . simp [deriv_sq, ← pow_two]
               apply Finset.sum_nonneg
