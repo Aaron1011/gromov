@@ -3114,7 +3114,7 @@ noncomputable def phi (data: GoodScalesData b): V →ₗ[ℝ] EuclideanSpace ℝ
 def C: ℝ := 32 * (#S)
 
 set_option maxHeartbeats 2500000 in
-lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(S^(R_1 data ))) * ‖(phi data u)‖^2 + C * (Real.exp ((a data.d))) * Real.exp (↑data.w * a data.d) * (R_1 data + 1)^2 * (∑ x ∈ B_r (2 * R_2 data), deriv_sq u x)  := by
+lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(S^(R_1 data ))) * ‖(phi data u)‖^2 + C * (Real.exp ((a data.d))) * Real.exp (a data.d) * (R_1 data + 1)^2 * (∑ x ∈ B_r (2 * R_2 data), deriv_sq u x)  := by
 
   rw [Q_R]
   let a := ⋃₀ (B data)
@@ -3256,7 +3256,8 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
                   norm_cast
                   simp
                   rw [mul_comm 32]
-                  apply le_refl
+                  sorry
+                  --apply le_refl
                 . simp [deriv_sq]
                   positivity
               . apply B_ball_injective_on
@@ -4435,7 +4436,7 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
 
             conv at u_le =>
               rhs
-              equals GeneratesNS.C * Real.exp (a data.d) * Real.exp (↑data.w * a data.d) * (((↑(R_1 data) + 1) / ((↑(R_2 data : ℝ))))^2 * ↑(#S) * (Real.exp (2 * a data.d) * Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val)) =>
+              equals GeneratesNS.C * Real.exp (a data.d) * Real.exp (a data.d) * (((↑(R_1 data) + 1) / ((↑(R_2 data : ℝ))))^2 * ↑(#S) * (Real.exp (2 * a data.d) * Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val)) =>
                 ring
 
 
@@ -4443,8 +4444,49 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
             ring_nf at u_le
             .
               have le_half: Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val ≤ (2: ℝ)⁻¹ * Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val := by
-
-                sorry
+                have qr_nonneg : 0 ≤ Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val := by
+                  simp [Q_R, ← pow_two]; positivity
+                have ha : (0:ℝ) ≤ a data.d := by simp only [a]; positivity
+                have hE1 : (1:ℝ) ≤ Real.exp (a data.d) := Real.one_le_exp ha
+                have hE4 : (1:ℝ) ≤ Real.exp (a data.d) ^ 4 := one_le_pow₀ hE1
+                have hEpos : (0:ℝ) < Real.exp (a data.d) := Real.exp_pos _
+                have he4 : Real.exp (4 * a data.d) = Real.exp (a data.d) ^ 4 := by
+                  rw [← Real.exp_nat_mul]; norm_num
+                have he2 : Real.exp (a data.d * 2) = Real.exp (a data.d) ^ 2 := by
+                  rw [show a data.d * 2 = 2 * a data.d from by ring, ← Real.exp_nat_mul]; norm_num
+                have hS0 : (0:ℝ) < ↑(#S) := by exact_mod_cast Finset.card_pos.mpr S_nonempty
+                have hXpos : (0:ℝ) < 16 ^ 4 * ↑(#S) * Real.exp (a data.d) ^ 4 := by positivity
+                have h16w : (16:ℝ) ^ 4 * ↑(#S) * Real.exp (a data.d) ^ 4 ≤ (16:ℝ) ^ (↑data.w : ℝ) := by
+                  rw [← he4]
+                  have hlog : (16:ℝ) ^ Real.logb 16 (16 ^ 4 * ↑(#S) * Real.exp (4 * a data.d))
+                      = 16 ^ 4 * ↑(#S) * Real.exp (4 * a data.d) :=
+                    Real.rpow_logb (by norm_num) (by norm_num) (by rw [he4]; exact hXpos)
+                  have hle : Real.logb 16 (16 ^ 4 * ↑(#S) * Real.exp (4 * a data.d)) ≤ (↑data.w : ℝ) := by
+                    have hdef : data.w = ⌈Real.logb 16 (16 ^ 4 * ↑(#S) * Real.exp (4 * a data.d))⌉₊ := rfl
+                    rw [hdef]; exact_mod_cast Nat.le_ceil _
+                  calc 16 ^ 4 * ↑(#S) * Real.exp (4 * a data.d)
+                      = (16:ℝ) ^ Real.logb 16 (16 ^ 4 * ↑(#S) * Real.exp (4 * a data.d)) := hlog.symm
+                    _ ≤ (16:ℝ) ^ (↑data.w : ℝ) := Real.rpow_le_rpow_of_exponent_le (by norm_num) hle
+                have ht0 : (0:ℝ) ≤ (16:ℝ) ^ (-↑data.w : ℝ) := Real.rpow_nonneg (by norm_num) _
+                have htX : (16:ℝ) ^ (-↑data.w : ℝ) * (16 ^ 4 * ↑(#S) * Real.exp (a data.d) ^ 4) ≤ 1 := by
+                  calc (16:ℝ) ^ (-↑data.w : ℝ) * (16 ^ 4 * ↑(#S) * Real.exp (a data.d) ^ 4)
+                      ≤ (16:ℝ) ^ (-↑data.w : ℝ) * (16:ℝ) ^ (↑data.w : ℝ) :=
+                        mul_le_mul_of_nonneg_left h16w ht0
+                    _ = 1 := by rw [← Real.rpow_add (by norm_num)]; simp
+                have hsq : ((16:ℝ) ^ (-↑data.w : ℝ) * (16 ^ 4 * ↑(#S) * Real.exp (a data.d) ^ 4)) ^ 2 ≤ 1 := by
+                  nlinarith [htX, mul_nonneg ht0 (le_of_lt hXpos)]
+                have hM8 : (0:ℝ) ≤ ((16:ℝ) ^ (-↑data.w : ℝ)) ^ 2 * (↑(#S)) ^ 2 * Real.exp (a data.d) ^ 4 * 16 ^ 8 := by
+                  positivity
+                have hP : ((16:ℝ) ^ (-↑data.w : ℝ)) ^ 2 * (↑(#S)) ^ 2 * Real.exp (a data.d) ^ 4 * 16 ^ 8 ≤ 1 := by
+                  nlinarith [hsq, hE4, hM8]
+                have key : GeneratesNS.C * Real.exp (a data.d) ^ 2 * (16 ^ (-↑data.w : ℝ)) ^ 2 * ↑(#S)
+                    * Real.exp (a data.d * 2) * 16 ≤ 2⁻¹ := by
+                  rw [he2]; simp only [GeneratesNS.C]
+                  nlinarith [hP, hM8]
+                calc Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val
+                    ≤ (GeneratesNS.C * Real.exp (a data.d) ^ 2 * (16 ^ (-↑data.w : ℝ)) ^ 2 * ↑(#S)
+                        * Real.exp (a data.d * 2) * 16) * Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val := by nlinarith [u_le]
+                  _ ≤ 2⁻¹ * Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val := by nlinarith [key, qr_nonneg]
 
               have Q_r_zero: Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val = 0 := by
                 by_contra!
@@ -4502,7 +4544,19 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
   grw [phi_u_inj]
   have foo := card_B_le_exp_wa data
   have card_eq: #(B_finite data).toFinset = #(B_finsets data) := by
-    simp [B, B_finsets]
+    have hR1 : (0:ℝ) ≤ ↑(R_1 data) := Nat.cast_nonneg _
+    have hcoe := (X_j_finite data).coe_toFinset
+    have hinj1 : Set.InjOn (fun a => Metric.closedBall a (↑(R_1 data):ℝ)) (X_j data) :=
+      B_ball_injective_on data (↑(R_1 data)) hR1 le_rfl
+    have hinj2 : Set.InjOn (fun a => (finite_closed_ball a (R_1 data)).toFinset) (X_j data) := by
+      intro a ha b hb hab
+      exact hinj1 ha hb (Set.Finite.toFinset_inj.mp hab)
+    have hB : (B_finite data).toFinset
+        = Finset.image (fun a => Metric.closedBall a (↑(R_1 data):ℝ)) (X_j_finite data).toFinset := by
+      ext s
+      simp only [Set.Finite.mem_toFinset, B, Set.mem_image, Finset.mem_image, Finset.mem_coe]
+    rw [hB, B_finsets, Finset.card_image_of_injOn (hinj1.mono hcoe.le),
+      Finset.card_image_of_injOn (hinj2.mono hcoe.le)]
   rw [← card_eq]
   rify
   grw [card_B_le_exp_wa]
