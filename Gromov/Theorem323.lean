@@ -170,6 +170,15 @@ include hGS
 
 -- Reverse poincare inequality
 -- Lemma 12.2
+-- The gradient-squared for the *left* Cayley graph (edges `{x, s * x}`).
+-- Note that, as with `Harmonic`, our multiplication order is swapped relative to the paper:
+-- `f (s * x)` instead of `f (x * s)`. This is what makes it agree with `MeasureTheory.convolution`
+-- (see the note above `Conv` in `Defs.lean`) and with the right-invariant `WordDist`, so that
+-- the balls `B_c_r j r = B_r r * j` are right translates and no `MulOpposite` leaks into the
+-- convolution terms. `deriv_sq` is invariant under right translation:
+-- `deriv_sq (f ∘ (· * j)) x = deriv_sq f (x * j)`, which is what Lemma 3.25 (c) needs.
+noncomputable def deriv_sq (f: G → ℝ) (x: G) := ∑ s ∈ S, (f (s * x) - f x)^2
+
 set_option maxHeartbeats 9000000 in
 lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.support.Finite):
     ∑' (x: G), ∑ s ∈ S, ((f x * φ x) - (f (s * x) * φ (s * x)))^2 ≤  ∑' (x: G), ∑ s ∈ S, (f x)^2 * (φ (s * x) - φ x)^2  := by
@@ -437,7 +446,12 @@ lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.suppor
 -- TODO - can we make WordNorm.instSemiNormedGroup and use norm notation
 set_option maxHeartbeats 9000000 in
 lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr: r ≠ 0):
-    ∑ x ∈ Metric.closedBall 1 (2 * r), ∑ s ∈ S, (f x - f (s * x)) ^ 2 ≤ ((1: ℝ) / r^2) * ∑ x ∈ Metric.closedBall 1 (4 * r), ∑ s ∈ S, f x ^ 2 := by
+    ∑ x ∈ Metric.closedBall 1 (2 * r), deriv_sq f x ≤ ((1: ℝ) / r^2) * ∑ x ∈ Metric.closedBall 1 (4 * r), ∑ s ∈ S, f x ^ 2 := by
+  -- `deriv_sq f x = ∑ s, (f (s*x) - f x)^2`; the proof below is written with the
+  -- (equal) `(f x - f (s*x))^2` orientation, so rewrite to that first.
+  have hrw : ∀ x : G, deriv_sq f x = ∑ s ∈ S, (f x - f (s * x)) ^ 2 := fun x => by
+    simp only [deriv_sq]; exact Finset.sum_congr rfl fun s _ => by ring
+  simp_rw [hrw]
 
   -- m * x + b
   -- m * (4*r) + b = 0
@@ -2290,15 +2304,6 @@ noncomputable def f_avg_c (g: G) (R: ℝ) (f : G → ℝ) := (#((finite_closed_b
 -- geodesics on the left (`x * γ z i`). It is invariant under left translation, and so is NOT
 -- the orientation compatible with our right-invariant `WordDist x y = WordNorm (y * x⁻¹)`.
 noncomputable def deriv_sq_R (f: G → ℝ) (x: G) := ∑ s ∈ S, (f (x * s) - f x)^2
-
--- The gradient-squared for the *left* Cayley graph (edges `{x, s * x}`).
--- Note that, as with `Harmonic`, our multiplication order is swapped relative to the paper:
--- `f (s * x)` instead of `f (x * s)`. This is what makes it agree with `MeasureTheory.convolution`
--- (see the note above `Conv` in `Defs.lean`) and with the right-invariant `WordDist`, so that
--- the balls `B_c_r j r = B_r r * j` are right translates and no `MulOpposite` leaks into the
--- convolution terms. `deriv_sq` is invariant under right translation:
--- `deriv_sq (f ∘ (· * j)) x = deriv_sq f (x * j)`, which is what Lemma 3.25 (c) needs.
-noncomputable def deriv_sq (f: G → ℝ) (x: G) := ∑ s ∈ S, (f (s * x) - f x)^2
 
 -- Reindexing `s ↦ s⁻¹` over the symmetric generating set `S` turns a right-gradient of
 -- `f ∘ (·⁻¹)` into a left-gradient of `f` at the inverted point.

@@ -1944,4 +1944,24 @@ lemma laplace_sum_swap_helper {f g: G → ℝ} (hgf: f.support.Finite ∨ g.supp
         . intro x hx
           simp
 
+
+
+lemma laplace_prod_harmonic (f φ : G → ℝ)  (hf: Laplace_b  f = 0) (x: G): Laplace_b (f * φ) x = ((1 : ℝ) / (#(S) : ℝ)) * ∑ s ∈ S, f (s * x) * ((φ (x) - φ (s * x))) := by
+  simp_rw [Laplace_b]
+  simp_rw [f_conv_mu]
+  simp
+  simp_rw [Laplace_b] at hf
+  conv =>
+    rhs
+    simp [mul_sub]
+    simp [← Finset.sum_mul]
+
+  simp_rw [f_conv_mu] at hf
+  apply_fun (fun f => f x) at hf
+  simp at hf
+  rw [← mul_assoc]
+  rw [sub_eq_zero] at hf
+  rw [← hf]
+
+
 end GeneratesNS
