@@ -1006,7 +1006,8 @@ theorem LipschitzWith.sum {ι : Type*} {α : Type*} {E : Type*}
 
 section V_variable
 
-variable {V: Submodule ℝ LipschitzH} [V_finite: FiniteDimensional ℝ V] [Nontrivial V] (hV : Even (Module.finrank V))  [V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]
+variable {V: Submodule ℝ LipschitzH} [V_finite: FiniteDimensional ℝ V] [Nontrivial V]
+  [V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]
 
 instance nonempty_basis: Nonempty ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V) := Module.Basis.index_nonempty (Module.Basis.ofVectorSpace _ _)
 
@@ -1223,6 +1224,13 @@ end V_variable
 -- Everything in this section freely references fields from V_Wrapper
 section V_Wrapper_Section
 
+/-- The standing hypotheses on the subspace `V`, bundled.
+
+This is a `class` purely so that `open V_Wrapper` plus `variable [V_Wrapper]` below lets the whole
+section talk about a single fixed `V` by name. Registering the three instance-valued projections
+below means `FiniteDimensional`/`Nontrivial`/`DecidableEq` for that `V` are found automatically
+wherever a `V_Wrapper` is in scope — including at a call site that merely has `(data : V_Wrapper)`
+as an ordinary hypothesis, which is how `theorem_3_23` quantifies over all such subspaces. -/
 class V_Wrapper where
   V: Submodule ℝ LipschitzH
   V_finite: FiniteDimensional ℝ V
@@ -1230,27 +1238,16 @@ class V_Wrapper where
   V_even: Even (Module.finrank ℝ V)
   V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ V)
 
+attribute [instance] V_Wrapper.V_finite V_Wrapper.V_nontrivial V_Wrapper.V_decidable
+
 open V_Wrapper
 
 variable [v_wrapper_inst: V_Wrapper]
 include v_wrapper_inst
 
-local instance v_finite_dim_inst: FiniteDimensional ℝ V := v_wrapper_inst.V_finite
-local instance v_nontrivial_inst: Nontrivial V := v_wrapper_inst.V_nontrivial
-local instance V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ V) := v_wrapper_inst.V_decidable
-
 variable {ι : Type*} [Fintype ι] [DecidableEq ι] [Nonempty ι]
 
 private noncomputable def R' := R'_ V
-
--- Todo - is the better way to declare theorem_3_23 so that the constant is not allowed to depend on V?
--- TODO - can this somehow be merged with V_wrapper?
-structure V_Data where
-  V: Submodule ℝ LipschitzH
-  hV: FiniteDimensional ℝ V
-  V_nontrivial: Nontrivial V
-  (V_even : Even (Module.finrank ℝ V))
-  V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)
 
 noncomputable def Q_R_single (R : ℝ) (u: G → ℝ): ℝ := ∑ g ∈ Metric.closedBall 1 R, (u g)^2
 
@@ -4162,24 +4159,13 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 end V_Wrapper_Section
 
 -- Theorem 3.23
+-- Todo - is the better way to declare theorem_3_23 so that the constant is not allowed to depend on V?
 set_option maxHeartbeats 2500000 in
-lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI := data.hV; haveI := data.V_decidable; growth_bound (V_basis data.V) d) → (Module.finrank ℝ data.V) < C := by
+lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ v_data: V_Wrapper, growth_bound (V_basis v_data.V) d → (Module.finrank ℝ v_data.V) < C := by
   let w := ⌈Real.logb 16 ((16^4) * #(S) * Real.exp (4 * a (d)))⌉₊
   let C: ℕ := 1 + (⌈2 * Real.exp (w * (a d))⌉₊)
   use C
   intro v_data h_growth
-
-  let wrapper: V_Wrapper := {
-    V := v_data.V
-    V_finite := v_data.hV
-    V_nontrivial := v_data.V_nontrivial
-    V_even := v_data.V_even
-    V_decidable := v_data.V_decidable
-  }
-
-  have v_finite := v_data.hV
-  let v_dec := v_data.V_decidable
-  have v_nontrivial := v_data.V_nontrivial
 
   let data: GoodScalesData (V_basis v_data.V) := {
     w := ⌈Real.logb 16 ((16^4) * #(S) * Real.exp (4 * a (d)))⌉₊
@@ -4390,14 +4376,11 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
   simp at phi_u_inj
   simp [dim] at hU_dim
   norm_cast at hU_dim
-  have wrapper_eq: V_Wrapper.V = v_data.V := rfl
-  rw [wrapper_eq] at hU_dim
   grw [hU_dim]
 
   conv at phi_u_inj =>
     lhs
     equals Module.finrank ℝ U =>
-      rw [wrapper_eq] at U_sub_v
       exact (Submodule.submoduleOfEquivOfLe U_sub_v).finrank_eq
 
   grw [phi_u_inj]
@@ -4451,9 +4434,9 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
 
   obtain ⟨fin_basis_idx, card_fin_basis_idx⟩ := B_infinite.exists_subset_card_eq _ (2 + C * 2)
   let fin_basis := Finset.image (B) fin_basis_idx
-  let large_v: V_Data := {
+  let large_v: V_Wrapper := {
     V := Submodule.span ℝ fin_basis
-    hV := by infer_instance
+    V_finite := by infer_instance
     V_even := by
       rw [finrank_span_finset_eq_card]
       .
@@ -4481,6 +4464,8 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       apply (Module.Basis.injective _).ne
       exact a_neq
   }
+  -- `large_v.V` does not reduce on its own inside `rw`, so name the (definitional) equation.
+  have large_v_V: large_v.V = Submodule.span ℝ fin_basis := rfl
   specialize V_bound large_v ?_
   .
     simp [growth_bound, my_expr]
@@ -4501,18 +4486,6 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       rw [mul_comm _ (1 / _)]
       rw [← mul_assoc]
 
-    have nontrivial_v : Nontrivial large_v.V := by
-      apply Module.nontrivial_of_finrank_pos (R := ℝ)
-      rw [finrank_span_finset_eq_card]
-      .
-        simp [fin_basis]
-        rw [← Finset.card_ne_zero]
-        grind
-      .
-        simp [fin_basis]
-        apply LinearIndepOn.id_image
-        exact Module.Basis.linearIndepOn B ↑fin_basis_idx
-
     conv =>
       pattern (𝓝[>] 0)
       equals (𝓝[>] (0 * 0)) => simp
@@ -4524,8 +4497,6 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       simp
       -- (R' (V := V))
       let R'' := ⌈R'_ large_v.V⌉₊
-      haveI := large_v.hV
-      haveI := nontrivial_v
       rw [← Filter.tendsto_add_atTop_iff_nat R'']
       --  Filter.tendsto_add_atTop_iff_nat
       apply squeeze_zero_nhdsGT (g := (fun (R: ℕ) => (det_bound_const (V_basis large_v.V) * (1 + (R + R'')) ^ 2 * ((a * (R + R'')^d : ℝ))) / ((R + R'') ^ (↑d + 3) : ℝ)))
@@ -4611,8 +4582,7 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
           simp
       . poly_tendsto
   .
-    -- TODO - deduplicate
-    rw [finrank_span_finset_eq_card] at V_bound
+    rw [large_v_V, finrank_span_finset_eq_card] at V_bound
     .
       simp [fin_basis] at V_bound
       rw [Finset.card_image_of_injective] at V_bound
