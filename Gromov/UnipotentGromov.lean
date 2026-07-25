@@ -1306,8 +1306,8 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal
     simp at h_prev
     simp [iteratedCommutator]
     rw [Function.iterate_add_apply]
-    rw [← QuotientGroup.out_eq' (a := iteratedCommutator _ _ _)] at h_prev
-    rw [QuotientGroup.eq_one_iff] at h_prev
+    --rw [← QuotientGroup.out_eq' (a := iteratedCommutator _ _ _)] at h_prev
+    --rw [QuotientGroup.eq_one_iff] at h_prev
 
     --let foo :=  iteratedCommutatorNormal (H.subtype g) (gamma ^ z_a) (n)
     specialize h_z_unipotent ⟨⟨((fun x ↦ ⁅x, gamma ^ z_a⁆)^[n] ↑g), (by
@@ -1331,7 +1331,10 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal
     )⟩, by (
       sorry
     )⟩ ?_
-    . sorry
+    .
+      simp [iteratedCommutator] at h_prev
+
+      sorry
     .
       simp [iteratedCommutator] at h_z_unipotent
       exact h_z_unipotent
