@@ -3,6 +3,8 @@ import Gromov.Defs
 import Gromov.LipschitzNorm
 import Gromov.TendstoTactic
 import Gromov.TendstoNhdsMul
+import Gromov.ToMathlib.LinearAlgebra.Matrix.PosDef
+import Gromov.ToMathlib.LinearAlgebra.Matrix.ToMatrix
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
@@ -13,14 +15,6 @@ set_option linter.style.emptyLine false
 open scoped Finset
 open scoped Pointwise
 
-/-- Reindexing both bases of a `LinearMap.toMatrix₂` by an equiv turns it into a `submatrix`. -/
-theorem LinearMap.toMatrix₂_reindex {R M ι κ : Type*} [CommSemiring R] [AddCommMonoid M]
-    [Module R M] [Fintype ι] [DecidableEq ι] [Fintype κ] [DecidableEq κ]
-    (b : Module.Basis ι R M) (e : ι ≃ κ) (B : M →ₗ[R] M →ₗ[R] R) :
-    LinearMap.toMatrix₂ (b.reindex e) (b.reindex e) B
-      = (LinearMap.toMatrix₂ b b B).submatrix e.symm e.symm := by
-  ext i j
-  simp [LinearMap.toMatrix₂_apply, Module.Basis.reindex_apply, Matrix.submatrix_apply]
 
 /-- The determinant of `LinearMap.toMatrix₂` is invariant under reindexing the basis. -/
 theorem LinearMap.toMatrix₂_reindex_det {R M ι κ : Type*} [CommRing R] [AddCommGroup M]
@@ -51,31 +45,6 @@ theorem LinearMap.toMatrix₂_det_basis_change {M ι κ : Type*} [AddCommGroup M
         Matrix.det_mul, Matrix.det_mul, Matrix.det_transpose, ← Module.Basis.det_apply]
     ring
 
--- TODO - generalize and upstream
--- Based on https://math.stackexchange.com/questions/1101184/show-that-if-x-succeq-y-then-detx-ge-dety
-lemma matrix_psd_det_one {n: Type*} [Fintype n] [DecidableEq n] (A: Matrix n n ℝ) (ha: A.PosSemidef): 1 ≤ (A + 1).det := by
-  have foo := ha.isHermitian.spectral_theorem
-  have H := ha.isHermitian
-  simp at foo
-  rw [foo]
-  conv =>
-    rhs
-    arg 1
-    equals H.eigenvectorUnitary * ((Matrix.diagonal H.eigenvalues) + 1) * (star H.eigenvectorUnitary) =>
-      rw [mul_add, add_mul]
-      simp
-
-  rw [Matrix.det_conj_of_mul_eq_one]
-  .
-    rw [← Matrix.diagonal_one']
-    rw [Matrix.diagonal_add]
-    simp
-    apply Finset.one_le_prod
-    intro i _
-    have foo := ha.eigenvalues_nonneg
-    grind
-  . simp
-  . simp
 
 open MatrixOrder in
 lemma matrix_det_montone {n: Type*} [Fintype n] [DecidableEq n] (A B: Matrix n n ℝ) (hb: B.PosDef) (hab: (A - B).PosSemidef): B.det ≤ A.det := by
