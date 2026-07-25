@@ -1,6 +1,6 @@
 import Gromov.TendstoTactic
 
--- Tests for the poly_tendsto tactic (see Mathlib/Algebra/Group/Gromov/TendstoTactic.lean)
+-- Tests for the poly_tendsto tactic (see Gromov/TendstoTactic.lean)
 example : Filter.Tendsto
     (fun x : ℕ ↦ (1 + (↑x + 1) * 2 + (↑x + 1) ^ 2) / (↑x + 1) ^ 3 : ℕ → ℝ)
     Filter.atTop (nhds 0) := by

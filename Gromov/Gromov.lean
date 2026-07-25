@@ -26,7 +26,7 @@ variable [hGS: Generates]
 include hGS
 
 -- `LipschitzH_seminorm` and `LipschitzH_normed` are public instances in
--- `Mathlib.Algebra.Group.Gromov.LipschitzNorm`, so they are already available here.
+-- `Gromov.LipschitzNorm`, so they are already available here.
 
 -- The lift of LipschitzSemiNorm to W, using a proof that LipschitzSemiNorm doesn't depend on the choice representative
 -- (adding a constant to a Lipschitz function doesn't change its Lipschitz constant)

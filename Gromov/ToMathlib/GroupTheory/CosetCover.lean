@@ -9,6 +9,8 @@ Right-handed analogues of the `leftCoset_cover_const` results in
 Upstreaming status: ready modulo style (line lengths, `simp` squeezing).
 -/
 
+open scoped Pointwise
+
 namespace Subgroup
 
 variable {G : Type*} [Group G]
