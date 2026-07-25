@@ -1,4 +1,4 @@
-import Mathlib.Algebra.Group.Gromov.TendstoTactic
+import Gromov.TendstoTactic
 
 -- Tests for the poly_tendsto tactic (see Mathlib/Algebra/Group/Gromov/TendstoTactic.lean)
 example : Filter.Tendsto

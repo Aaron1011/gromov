@@ -1,0 +1,8 @@
+# `lake` stores its files here:
+.lake
+# Created by `lake exe cache get` if no home directory is available
+.cache
+# macOS leaves these files everywhere:
+.DS_Store
+# Python bytecode cache directories
+**/__pycache__/

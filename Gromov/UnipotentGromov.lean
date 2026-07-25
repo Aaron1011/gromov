@@ -1,6 +1,7 @@
 import Mathlib
-import Mathlib.Algebra.Group.Gromov.MatrixSubsum
-import Mathlib.Algebra.Group.Gromov.AbelianFg
+import Gromov.ToMathlib.GroupTheory.FiniteAbelian.Basic
+import Gromov.MatrixSubsum
+import Gromov.AbelianFg
 
 set_option linter.style.longLine false
 set_option linter.style.commandStart false

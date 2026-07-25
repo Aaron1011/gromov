@@ -1,8 +1,8 @@
 import Mathlib
-import Mathlib.Algebra.Group.Gromov.Defs
-import Mathlib.Algebra.Group.Gromov.LipschitzNorm
-import Mathlib.Algebra.Group.Gromov.TendstoTactic
-import Mathlib.Algebra.Group.Gromov.TendstoNhdsMul
+import Gromov.Defs
+import Gromov.LipschitzNorm
+import Gromov.TendstoTactic
+import Gromov.TendstoNhdsMul
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

@@ -1,10 +1,12 @@
 import Mathlib
-import Mathlib.Algebra.Group.Gromov.Complexification
-import Mathlib.Algebra.Group.Gromov.Defs
-import Mathlib.Algebra.Group.Gromov.Harmonic
-import Mathlib.Algebra.Group.Gromov.UnitaryGromov
-import Mathlib.Algebra.Group.Gromov.UnipotentGromov
-import Mathlib.Algebra.Group.Gromov.NilpotentFinite
+import Gromov.ToMathlib.GroupTheory.CosetCover
+import Gromov.ToMathlib.GroupTheory.FiniteAbelian.Basic
+import Gromov.Complexification
+import Gromov.Defs
+import Gromov.Harmonic
+import Gromov.UnitaryGromov
+import Gromov.UnipotentGromov
+import Gromov.NilpotentFinite
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false

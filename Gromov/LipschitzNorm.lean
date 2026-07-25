@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Hill
 -/
 import Mathlib
-import Mathlib.Algebra.Group.Gromov.Defs
+import Gromov.Defs
 
 /-!
 # The Lipschitz seminorm on `LipschitzH`

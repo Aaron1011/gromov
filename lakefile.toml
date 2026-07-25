@@ -1,0 +1,10 @@
+name = "gromov"
+defaultTargets = ["Gromov"]
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "8e3c989104daaa052921bf43de9eef0e1ac9fbf5"
+
+[[lean_lib]]
+name = "Gromov"
