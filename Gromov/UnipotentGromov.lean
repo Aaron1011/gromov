@@ -1232,16 +1232,17 @@ lemma matrix_map_pow  {n : Type*} {α : Type*} {β : Type*} [CommSemiring α] [F
     simp
     rw [ih]
 
-lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] (H: Subgroup G) {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: G):
-    ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N', iteratedCommutator g.val.val (gamma^a) n = 1 := by
+lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] (H: Subgroup G) {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N'):
+    ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N', Nat.iterate (fun x => x * (gamma x)) n g = 1 := by
 
   sorry
 
 set_option maxHeartbeats 1000000 in
 set_option synthInstance.maxHeartbeats 40000 in
-lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal] {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: G):
-    ∃ a n, a ≠ 0 ∧ ∀ g ∈ N', iteratedCommutator g.val (gamma^a) n = 1 := by
+lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal] {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N'):
+    ∃ a n, a ≠ 0 ∧ ∀ g : N', Nat.iterate (fun x => x * (gamma x)) n g = 1 := by
 
+    -- Nat.iterate (fun x => x * (gamma x)) n g.val
 
 
   -- refine ⟨by sorry, ?_⟩
@@ -1259,6 +1260,8 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal
     simp at order
     simp [order, iteratedCommutator]
 
+-- lemma quot_mk_one (H: Type*) [Group H] (P: Subgroup H) [P.Normal] (a: H) (ha: QuotientGroup.mk a = (QuotientGroup.mk' P 1)): a ∈ P := by
+--   simp? at ha
 
 
   induction hn: Group.nilpotencyClass N' using Nat.strong_induction_on generalizing G N' with
@@ -1272,6 +1275,23 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal
   --   simp at order
   --   simp [order, iteratedCommutator]
   | h n ih =>
+
+    let new_N' := (⊤ : Subgroup (⊤ : Subgroup (↥N' ⧸ Subgroup.center ↥N')))
+    let first_map := (MulAut.congr (Subgroup.topEquiv (G := ↥N' ⧸ Subgroup.center ↥N'))).symm
+    let second_map := (MulAut.congr (Subgroup.topEquiv (G := (⊤ : Subgroup (↥N' ⧸ Subgroup.center ↥N'))))).symm
+    let aut_transfer := first_map.trans second_map
+    let gamma_quot := QuotientGroup.congr (Subgroup.center N') (Subgroup.center N') gamma (by
+      conv =>
+        lhs
+        arg 1
+        equals gamma.toMonoidHom =>
+          simp
+      rw [Subgroup.characteristic_iff_map_eq.mp]
+      exact Subgroup.centerCharacteristic
+    )
+    let final_gamma := aut_transfer gamma_quot
+
+
     have foo := ih (Group.nilpotencyClass (⊤ : Subgroup (⊤ : Subgroup (↥N' ⧸ Subgroup.center ↥N')))) (by
       grw [Subgroup.nilpotencyClass_le]
       grw [Subgroup.nilpotencyClass_le]
@@ -1291,7 +1311,7 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal
 
       rw [← Group.fg_iff_subgroup_fg]
       apply Subgroup.fg_of_index_ne_zero
-    ) sorry sorry rfl
+    ) final_gamma sorry rfl
 
     clear ih
     obtain ⟨a, n, ha, h_prev⟩ := foo
@@ -1301,42 +1321,62 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal
     use z_a
     use z_n + n
     refine ⟨h_z_a, ?_⟩
-    intro g hg
-    specialize h_prev ⟨QuotientGroup.mk ⟨g, hg⟩, by simp⟩ (by simp)
-    simp at h_prev
-    simp [iteratedCommutator]
+    intro g
+    let g_h_prev: (⊤ : Subgroup (⊤ : Subgroup (↥N' ⧸ Subgroup.center ↥N'))) := ⟨⟨g, by simp⟩, by simp⟩
+    specialize h_prev g_h_prev
     rw [Function.iterate_add_apply]
     --rw [← QuotientGroup.out_eq' (a := iteratedCommutator _ _ _)] at h_prev
     --rw [QuotientGroup.eq_one_iff] at h_prev
 
     --let foo :=  iteratedCommutatorNormal (H.subtype g) (gamma ^ z_a) (n)
-    specialize h_z_unipotent ⟨⟨((fun x ↦ ⁅x, gamma ^ z_a⁆)^[n] ↑g), (by
+    specialize h_z_unipotent ⟨⟨((fun x ↦ x * (gamma x))^[n] g), (by
       clear h_prev
       induction n with
       | zero =>
         simp
       | succ n n_ind =>
         rw [Function.iterate_succ']
-        nth_rw 1 [Bracket.bracket]
         simp
-        rw [mul_assoc]
-        rw [mul_assoc]
         apply Subgroup.mul_mem
         . exact n_ind
-        .
-          rw [← mul_assoc]
-          apply Subgroup.Normal.conj_mem
-          . infer_instance
-          . simpa using n_ind
+        . simp
+        -- rw [mul_assoc]
+        -- rw [mul_assoc]
+        -- apply Subgroup.mul_mem
+        -- . exact n_ind
+        -- .
+        --   rw [← mul_assoc]
+        --   apply Subgroup.Normal.conj_mem
+        --   . infer_instance
+        --   . simpa using n_ind
     )⟩, by (
       sorry
     )⟩ ?_
     .
-      simp [iteratedCommutator] at h_prev
 
-      sorry
+      have swap_gamma: ∀ x, gamma x = (final_gamma ⟨⟨x, sorry⟩, sorry⟩).val.val := by
+        intro x
+        simp [final_gamma, aut_transfer, second_map, first_map]
+        rfl
+
+      have coe_iter: ((fun x ↦ x * final_gamma x)^[n] g_h_prev).val.val = (fun x ↦ x * gamma x)^[n] g := by
+        clear h_prev
+        induction n with
+        | zero =>
+          simp [g_h_prev]
+        | succ n ind_n =>
+          simp_rw [Function.iterate_succ']
+          simp
+          simp [ind_n]
+          rw [swap_gamma]
+          simp
+          rw [← ind_n]
+
+      simp
+      rw [← QuotientGroup.eq_one_iff]
+      rw [← coe_iter]
+      simp [h_prev]
     .
-      simp [iteratedCommutator] at h_z_unipotent
       exact h_z_unipotent
 
 
