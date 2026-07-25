@@ -3560,6 +3560,15 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
   let Q_R_ortho := (Q_R_lin V R).toMatrix₂ remapped_ortho remapped_ortho
   have Q_R_ortho_m_hermitian: Q_R_ortho.IsHermitian := Q_R_lin_hermetian remapped_ortho R
 
+  have Q_R_pos: ∀ i, 0 ≤ Q_R ↑R ⇑(v_orthogonal_orig i).val ⇑(v_orthogonal_orig i).val :=
+    fun i => Q_R_self_nonneg _ _
+  have eval_nonzero: ∀ i, (Q_R_lin V ↑R) (v_orthogonal_orig i) (v_orthogonal_orig i) ≠ 0 := by
+    intro i
+    simp [Q_R_lin]
+    apply ne_of_gt
+    apply Q_R_pos_on_R'
+    . exact Module.Basis.ne_zero v_orthogonal_orig i
+    . exact h_R
   have v_orthonormal_isortho : (Q_R_lin V ↑R).IsOrthoᵢ remapped_ortho := by
     simp [remapped_ortho]
     rw [LinearMap.isOrthoᵢ_def]
@@ -3590,22 +3599,12 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
     ring
     simp [norm_eq_q_r]
-    have Q_R_pos: ∀ i, 0 ≤ Q_R ↑R ⇑(v_orthogonal_orig i).val ⇑(v_orthogonal_orig i).val := by
-      intro i
-      exact Q_R_self_nonneg _ _
     conv =>
       lhs
       arg 2
       intro i
       rw [Real.sq_sqrt (by apply Q_R_pos)]
     field_simp
-    have eval_nonzero: ∀ i, (Q_R_lin V ↑R) (v_orthogonal_orig i) (v_orthogonal_orig i) ≠ 0 := by
-      intro i
-      simp [Q_R_lin]
-      apply ne_of_gt
-      apply Q_R_pos_on_R'
-      . exact Module.Basis.ne_zero v_orthogonal_orig i
-      . exact h_R
     conv =>
       lhs
       arg 2
@@ -3655,22 +3654,12 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
     ring
     simp [norm_eq_q_r]
-    have Q_R_pos: ∀ i, 0 ≤ Q_R ↑R ⇑(v_orthogonal_orig i).val ⇑(v_orthogonal_orig i).val := by
-      intro i
-      exact Q_R_self_nonneg _ _
     conv =>
       lhs
       arg 2
       intro i
       rw [Real.sq_sqrt (by apply Q_R_pos)]
     field_simp
-    have eval_nonzero: ∀ i, (Q_R_lin V ↑R) (v_orthogonal_orig i) (v_orthogonal_orig i) ≠ 0 := by
-      intro i
-      simp [Q_R_lin]
-      apply ne_of_gt
-      apply Q_R_pos_on_R'
-      . exact Module.Basis.ne_zero v_orthogonal_orig i
-      . exact h_R
     conv =>
       lhs
       arg 2
