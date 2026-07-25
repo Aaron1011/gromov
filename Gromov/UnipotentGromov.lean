@@ -11,18 +11,19 @@ set_option linter.style.longLine false
 set_option linter.style.commandStart false
 set_option linter.style.cdot false
 
-open scoped commutatorElement IsMulCommutative
+open scoped commutatorElement IsMulCommutative Pointwise
 
 
 def iteratedCommutator {T: Type*} [Group T] (base right: T) (n: ℕ) := Nat.iterate (fun x => ⁅x, right⁆) n base
 
 
-def iterate_comm_set {G: Type*} [Group G] (S: Set G) (n: ℕ): Set G :=
+def iterate_comm_set {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (n: ℕ): Finset G :=
   match n with
   | 0 => S
-  | n + 1 => Set.iUnion (fun (s: S) => Set.image (fun g => ⁅g, s⁆) (iterate_comm_set S n))
+  | n + 1 => Finset.biUnion S (fun s => Finset.image (fun g => ⁅g, s⁆) (iterate_comm_set S n))
 
-lemma iterate_comm_set_eq_fold {G: Type*} [Group G] (S: Set G) (n: ℕ):
+
+lemma iterate_comm_set_eq_fold {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (n: ℕ):
     iterate_comm_set S n = { g | ∃ s: S, ∃ l: List S, l.length = n ∧ (l.unattach.foldr (fun acc s => ⁅s, acc⁆) s.val) = g } := by
 
   induction n with
@@ -36,6 +37,7 @@ lemma iterate_comm_set_eq_fold {G: Type*} [Group G] (S: Set G) (n: ℕ):
     .
       intro h
       obtain ⟨s, s_mem, ⟨x, x_mem, comm_eq⟩⟩ := h
+      rw [← Finset.mem_coe] at x_mem
       rw [ih] at x_mem
       simp at x_mem
       obtain ⟨t, t_mem, l, l_len, l_fold_eq⟩ := x_mem
@@ -73,6 +75,7 @@ lemma iterate_comm_set_eq_fold {G: Type*} [Group G] (S: Set G) (n: ℕ):
       use List.foldr (fun x b ↦ ⁅b, x⁆) t tail.unattach
       refine ⟨?_, ?_⟩
       .
+        rw [← Finset.mem_coe]
         rw [ih]
         simp
         use t
@@ -139,9 +142,7 @@ lemma new_mem_S_prod_list {G: Type*} [Group G] {S: Set G} {x: G} (hx: x ∈ Subg
 
 
 
-
-
-lemma double_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: (⊤ : Subgroup G).lowerCentralSeries n = Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) n ∪ ↑((⊤ : Subgroup G).lowerCentralSeries (n + 1)))) (g': ↑(S ∪ S⁻¹))  (l'_mem: l' ∈ ↑(iterate_comm_set (S ∪ S⁻¹) n ∪ (iterate_comm_set (S ∪ S⁻¹) n)⁻¹)): ⁅l'⁻¹, ⁅g'.val, l'⁆⁆ ∈ Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n + 1) ∪ ↑((⊤ : Subgroup G).lowerCentralSeries (n + 1 + 1))) := by
+lemma double_comm_mem {G: Type*}  [DecidableEq G] [Group G] (S: Finset G) {l': G} (n: ℕ) (ih: (⊤ : Subgroup G).lowerCentralSeries n = Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) n ∪ ↑((⊤ : Subgroup G).lowerCentralSeries (n + 1)))) (g': ↑(S ∪ S⁻¹))  (l'_mem: l' ∈ ↑(iterate_comm_set (S ∪ S⁻¹) n ∪ (iterate_comm_set (S ∪ S⁻¹) n)⁻¹)): ⁅l'⁻¹, ⁅g'.val, l'⁆⁆ ∈ Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n + 1) ∪ ↑((⊤ : Subgroup G).lowerCentralSeries (n + 1 + 1))) := by
   rw [← Subgroup.inv_mem_iff]
   simp
   apply Subgroup.mem_closure_of_mem
@@ -160,6 +161,7 @@ lemma double_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: (⊤
     use l'
     refine ⟨?_, ?_⟩
     . rw [ih]
+      simp at l'_mem
       cases l'_mem
       .
         rename_i l'_mem_forward
@@ -180,7 +182,7 @@ lemma double_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: (⊤
 
 
 set_option maxHeartbeats 400000 in
-lemma triple_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: (⊤ : Subgroup G).lowerCentralSeries n = Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) n ∪ ↑((⊤ : Subgroup G).lowerCentralSeries (n + 1)))) (g': ↑(S ∪ S⁻¹))   (l'_mem_comm: l' ∈ iterate_comm_set (S ∪ S⁻¹) n ∨ l'⁻¹ ∈ iterate_comm_set (S ∪ S⁻¹) n):  ⁅l'⁻¹, ⁅g'.val, l'⁆⁆ * ⁅g'.val, l'⁆ ∈  Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n + 1) ∪ ↑((⊤ : Subgroup G).lowerCentralSeries (n + 1 + 1))) := by
+lemma triple_comm_mem {G: Type*} [Group G] [DecidableEq G] (S: Finset G) {l': G} (n: ℕ) (ih: (⊤ : Subgroup G).lowerCentralSeries n = Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) n ∪ ↑((⊤ : Subgroup G).lowerCentralSeries (n + 1)))) (g': ↑(S ∪ S⁻¹))   (l'_mem_comm: l' ∈ iterate_comm_set (S ∪ S⁻¹) n ∨ l'⁻¹ ∈ iterate_comm_set (S ∪ S⁻¹) n):  ⁅l'⁻¹, ⁅g'.val, l'⁆⁆ * ⁅g'.val, l'⁆ ∈  Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n + 1) ∪ ↑((⊤ : Subgroup G).lowerCentralSeries (n + 1 + 1))) := by
   -- have l'_mem: l' ∈ l.unattach := by
   --   simp [h_l']
 
@@ -189,7 +191,7 @@ lemma triple_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: (⊤
   --simp at l'_mem_comm
 
   have g'_prop := g'.prop
-  rw [Set.mem_union] at g'_prop
+  rw [Finset.mem_union] at g'_prop
 
 
 
@@ -206,7 +208,7 @@ lemma triple_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: (⊤
         apply Set.mem_union_left
         simp [iterate_comm_set]
         use g'
-        refine ⟨g'_prop, ?_⟩
+        refine ⟨by simpa using g'_prop, ?_⟩
         use l'
       .
         rw [← Subgroup.inv_mem_iff]
@@ -272,7 +274,7 @@ lemma triple_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: (⊤
 -- Note - the book seems to implicitly assume that the generating set is symmetric
 
 set_option maxHeartbeats 400000 in
-lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup.closure S = ⊤) (n: ℕ):
+lemma lower_central_generates_succ {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (hS: Subgroup.closure (S: Set G) = ⊤) (n: ℕ):
   (⊤ : Subgroup G).lowerCentralSeries n = Subgroup.closure ((iterate_comm_set (S ∪ S⁻¹) n) ∪ ↑((⊤ : Subgroup G).lowerCentralSeries (n + 1))) := by
     induction n with
     | zero =>
@@ -390,7 +392,12 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
 
                 rw [comm_first_inv]
                 simp
-                have foo := triple_comm_mem (l' := l'⁻¹) _ _ ih g'  (by
+                have foo := triple_comm_mem (l' := l'⁻¹) _ _ ih ⟨g', by (
+                  have foo := g'.prop
+                  simp [-Subtype.coe_prop] at foo
+                  simp
+                  exact foo
+                )⟩  (by
                   simp
                   grind
                 )
@@ -553,7 +560,7 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
 
 -- Corollary 13.45
 -- TODO - we might not actually need this from Gromov. Also, it's unclear whether 'k' is fixed, or if we need to take a union over all k ≥ n
-lemma nilpotent_comm_generates {G: Type*} [Group G] [Group.IsNilpotent G] (S: Set G) (hS: Subgroup.closure S = ⊤) (n k: ℕ) (hn: n ≤ k):
+lemma nilpotent_comm_generates {G: Type*} [Group G] [DecidableEq G] [Group.IsNilpotent G] (S: Finset G) (hS: Subgroup.closure (S: Set G) = ⊤) (n k: ℕ) (hn: n ≤ k):
   (⊤ : Subgroup G).lowerCentralSeries k = Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) k) := by
 
   by_cases class_zero: Group.nilpotencyClass G = 0
@@ -661,17 +668,17 @@ lemma nilpotent_comm_generates {G: Type*} [Group G] [Group.IsNilpotent G] (S: Se
   --     rw [lower_central_generates_succ S hS] at class_le_k
   --     simp [class_le_k]
 
-variable {G: Type*} [Group G] (S: Set G)
+variable {G: Type*} [Group G] [DecidableEq G] (S: Finset G)
 
 
 -- https://math.stackexchange.com/questions/4995327/group-in-the-lower-central-series-is-generated-by-conjugates-of-comutators-of-ge
-lemma iterate_comm_generates (hS: Subgroup.closure S = ⊤) (n: ℕ):
+lemma iterate_comm_generates (hS: Subgroup.closure (S: Set G) = ⊤) (n: ℕ):
   (Subgroup.normalClosure (iterate_comm_set (S) n)) = (⊤ : Subgroup G).lowerCentralSeries n := by
   induction n with
   | zero =>
     simp [iterate_comm_set]
 
-    have closure_le: ⊤ ≤ Subgroup.closure (S) := by
+    have closure_le: ⊤ ≤ Subgroup.closure (S : Set G) := by
       simp [hS]
 
 
@@ -822,7 +829,7 @@ lemma iterate_comm_generates (hS: Subgroup.closure S = ⊤) (n: ℕ):
 #print axioms iterate_comm_generates
 
 -- Lemma 13.55 from https://www.math.ucdavis.edu/~kapovich/EPR/ggt.pdf
-lemma comm_trivial_implies_nilpotent {G: Type*} [Group G] (S: Set G) (hS: Subgroup.closure S = ⊤) (n: ℕ) (h_comm: iterate_comm_set (S) (n) = {1}):
+lemma comm_trivial_implies_nilpotent {G: Type*} [DecidableEq G] [Group G] (S: Finset G) (hS: Subgroup.closure (S: Set G) = ⊤) (n: ℕ) (h_comm: iterate_comm_set (S) (n) = {1}):
     (⊤ : Subgroup G).lowerCentralSeries n = ⊥ := by
 
   rw [← iterate_comm_generates S hS n]
@@ -1232,9 +1239,70 @@ lemma matrix_map_pow  {n : Type*} {α : Type*} {β : Type*} [CommSemiring α] [F
     simp
     rw [ih]
 
+-- A subgroup of an FG commutative group is again FG
+lemma fg_of_subgroup_fg_comm {A : Type*} [CommGroup A] [Group.FG A] (H : Subgroup A) : H.FG := by
+  rw [Subgroup.fg_iff_add_fg]
+  have : Module.Finite ℤ (Additive A) := Module.Finite.iff_addGroup_fg.mpr inferInstance
+  have h := IsNoetherian.noetherian (R := ℤ) (AddSubgroup.toIntSubmodule H.toAddSubgroup)
+  rw [Submodule.fg_iff_addSubgroup_fg] at h
+  simpa using h
+
+set_option maxHeartbeats 5000000 in
+lemma fg_of_subgroup_fg_nilpotent {A: Type*} [DecidableEq A] [Group A] [Group.IsNilpotent A] (A_fg: Group.FG A) (H: Subgroup A): H.FG := by
+  revert H
+  induction hn: Group.nilpotencyClass A with
+  | zero =>
+    rw [Group.nilpotencyClass_zero_iff_subsingleton] at hn
+    intro H
+    have H_eq: H = ⊥ := by
+      ext a
+      simp
+      simp [Subsingleton.eq_one a]
+    simp [H_eq]
+    exact fg_of_subgroup_fg_comm ⊥
+  | succ n ih =>
+    have comm_eq := Subgroup.lowerCentralSeries_succ (⊤ : Subgroup A) n
+    rw [← hn] at comm_eq
+    simp at comm_eq
+    rw [eq_comm, Subgroup.commutator_eq_bot_iff_le_centralizer] at comm_eq
+    simp at comm_eq
+    rw [Subgroup.centralizer_univ] at comm_eq
+    have n_fg: (Subgroup.lowerCentralSeries (⊤ : Subgroup A) n).FG := by
+      obtain ⟨S, hS⟩ := A_fg
+      rw [lower_central_generates_succ (G := A) S hS]
+      rw [← hn]
+      simp
+      rw [← Group.fg_iff_subgroup_fg]
+      apply Group.closure_finset_fg
+
+    sorry
+
+
 lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] (H: Subgroup G) {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N'):
     ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N', Nat.iterate (fun x => x * ((gamma^a) x)) n g = 1 := by
 
+  let T := CommGroup.torsion (Subgroup.center N')
+  have center_fg: Group.FG (Subgroup.center N') := by
+    sorry
+  have T_fg : T.FG := by
+    rw [Subgroup.fg_iff_add_fg]
+    have : Module.Finite ℤ (Additive (Subgroup.center N')) := Module.Finite.iff_addGroup_fg.mpr (by
+      apply AddGroup.fg_of_group_fg
+    )
+    let foo: IsNoetherian ℤ (AddSubgroup.toIntSubmodule T.toAddSubgroup) := by
+      infer_instance
+    have h := IsNoetherian.noetherian (R := ℤ) (AddSubgroup.toIntSubmodule T.toAddSubgroup)
+    rw [Submodule.fg_iff_addSubgroup_fg] at h
+    simpa using h
+
+    -- Submodule.FG.of_le
+  --have T_finite := CommGroup.finite_of_fg_isMulTorsion T
+
+
+  have center_fg: Group.FG (Subgroup.center N') := by
+    sorry
+  have center_iso := CommGroup.equiv_free_prod_prod_multiplicative_zmod (Subgroup.center N')
+  obtain ⟨I, J, fin_I, fin_J, I_pow, I_pow_prime, K_map, ⟨center_iso⟩⟩ := center_iso
   sorry
 
 set_option maxHeartbeats 1000000 in
@@ -2525,7 +2593,7 @@ lemma RepeatComm_min_strict_mono {G: Type*} [Group G] {N: Subgroup G} (N_normal:
 --     rw [c_eq]
 --     exact Nat.le_of_succ_le b_lt_n
 
-lemma iterated_mem_iterated_set {G: Type*} [Group G] (base right: G) (S: Set G) (base_mem: base ∈ S) (right_mem: right ∈ S) (n: ℕ): iteratedCommutator base right n ∈ iterate_comm_set S n := by
+lemma iterated_mem_iterated_set {G: Type*} [DecidableEq G] [Group G] (base right: G) (S: Finset G) (base_mem: base ∈ S) (right_mem: right ∈ S) (n: ℕ): iteratedCommutator base right n ∈ iterate_comm_set S n := by
   induction n with
   | zero =>
     simp [iterate_comm_set, iteratedCommutator]
@@ -2543,7 +2611,7 @@ lemma iterated_mem_iterated_set {G: Type*} [Group G] (base right: G) (S: Set G) 
     refine ⟨right_mem, ?_⟩
     use iteratedCommutator base right n
 
-lemma one_mem_iterated_comm {G: Type*} [Group G] (S: Set G) (n m: ℕ) (hn: n ≤ m) (hS: 1 ∈ iterate_comm_set S n):
+lemma one_mem_iterated_comm {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (n m: ℕ) (hn: n ≤ m) (hS: 1 ∈ iterate_comm_set S n):
     1 ∈ iterate_comm_set S m := by
 
   classical
@@ -2560,8 +2628,8 @@ lemma one_mem_iterated_comm {G: Type*} [Group G] (S: Set G) (n m: ℕ) (hn: n �
       . simp at ih
       . simp at ih
     have S_nonempty: S.Nonempty := by
-      exact Set.nonempty_iff_ne_empty.mpr S_empty
-    rw [Set.nonempty_def] at S_nonempty
+      apply Finset.nonempty_iff_ne_empty.mpr S_empty
+    rw [Finset.nonempty_def] at S_nonempty
     obtain ⟨s, s_mem⟩ := S_nonempty
     use s
     refine ⟨s_mem, ?_⟩
@@ -2569,8 +2637,8 @@ lemma one_mem_iterated_comm {G: Type*} [Group G] (S: Set G) (n m: ℕ) (hn: n �
     refine ⟨ih, ?_⟩
     simp
 
-lemma comm_subgroup_mem {G: Type*} [Group G] {H: Subgroup G} (S: Set H) (n: ℕ):
-  (iterate_comm_set (H.subtype '' S) n) ⊆ H := by
+lemma comm_subgroup_mem {G: Type*} [DecidableEq G] [Group G] {H: Subgroup G} (S: Finset H) (n: ℕ):
+  ↑(iterate_comm_set (Finset.image H.subtype  S) n) ⊆ (H: Set G) := by
     induction n with
     | zero =>
       simp [iterate_comm_set]
@@ -2594,8 +2662,8 @@ lemma comm_subgroup_mem {G: Type*} [Group G] {H: Subgroup G} (S: Set H) (n: ℕ)
         exact h_mem
 
 
-lemma iterate_comm_subgroup {G: Type*} [Group G] {H: Subgroup G} (S: Set H) (h: H) (n: ℕ):
-  h ∈ (iterate_comm_set S n) ↔ h.val ∈ iterate_comm_set (H.subtype '' S) n := by
+lemma iterate_comm_subgroup {G: Type*} [DecidableEq G] [Group G] {H: Subgroup G} (S: Finset H) (h: H) (n: ℕ):
+  h ∈ (iterate_comm_set S n) ↔ h.val ∈ iterate_comm_set (Finset.image H.subtype S) n := by
     induction n generalizing h with
     | zero =>
       simp [iterate_comm_set]
@@ -2781,8 +2849,10 @@ lemma count_mem_group_implies_lowercentral {G: Type*} [Group G] {N': Subgroup G}
 -- `Subgroup.map_toSubmonoid` rewrites the `.carrier` predicate of `Subgroup.map`, which breaks the
 -- `unattach`/commutator rewrites below. Disable it for this proof.
 attribute [-simp] Subgroup.map_toSubmonoid in
-lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Subgroup H} [H_normal: H.Normal] [N'_char: N'.Characteristic] [N'_nilpotent: Group.IsNilpotent N'] (gamma_alpha: G) (gamma_not_n: ¬(gamma_alpha ∈ (Subgroup.map (Subgroup.subtype _) N'))) (m: ℕ) (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g.val gamma_alpha m = 1):
-  Group.IsNilpotent (Subgroup.closure ((Subgroup.map (Subgroup.subtype _) N') ∪ {gamma_alpha})) := by
+lemma unipotent_commutator_trivial {G: Type*} [DecidableEq G] [Group G] (H: Subgroup G) {N': Subgroup H} [H_normal: H.Normal] [N'_char: N'.Characteristic] [N'_nilpotent: Group.IsNilpotent N'] (gamma_alpha: G) (gamma_not_n: ¬(gamma_alpha ∈ (Subgroup.map (Subgroup.subtype _) N'))) (m: ℕ)
+  (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g.val gamma_alpha m = 1)
+  (S: Finset H) (hS: Subgroup.closure S = N'):
+  Group.IsNilpotent (Subgroup.closure ((Finset.image (Subgroup.subtype _) S) ∪ {gamma_alpha})) := by
 
   classical
 
@@ -2792,15 +2862,27 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
     have N'_bot: N' = ⊥ := by
       rw [Subgroup.eq_bot_iff_forall]
       simpa using h_gamma_alpha
-    rw [N'_bot]
+
+    --rw [N'_bot]
     simp
 
-    let foo := Subgroup.closureCommGroupOfComm (k := (Subtype.val '' {(1 : H)} ∪ {gamma_alpha})) ?_
-    . apply CommGroup.isNilpotent
+
+    let foo := Subgroup.closureCommGroupOfComm (k := (↑(Finset.image Subtype.val S) ∪ {gamma_alpha})) ?_
+    .
+
+      apply CommGroup.isNilpotent
     . intro x hx y hy
-      simp at hx
-      simp at hy
-      aesop
+      by_cases S_empty: S = ∅
+      . simp [S_empty] at hx hy
+        grind
+      .
+        have S_eq: S = {1} := by
+          simp only [N'_bot, Subgroup.closure_eq_bot_iff] at hS
+          have S_subset: S ⊆ {1} := by
+            grind
+          grind
+        simp [S_eq] at hx hy
+        aesop
   have nilpotent_map: Group.IsNilpotent ↥(Subgroup.map H.subtype N') := by
     apply map_nilpotent
     . exact Subgroup.subtype_injective H
@@ -2809,10 +2891,17 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
   rw [nilpotent_iff_lowerCentralSeries]
   use ((1 + (Group.nilpotencyClass ↥(Subgroup.map H.subtype N'))) * (m + 1)) + 2
 
-  apply comm_trivial_implies_nilpotent (S := Set.range (fun (a: ↑(((Subgroup.subtype _) '' N'.carrier) ∪ {gamma_alpha})) => ⟨a.val, by apply Subgroup.mem_closure_of_mem; exact a.property⟩))
+  apply comm_trivial_implies_nilpotent (S := Finset.image (fun (a: ↑((Finset.image (Subgroup.subtype _) S) ∪ {gamma_alpha})) => ⟨a.val, by (
+    apply Subgroup.mem_closure_of_mem
+    have a_prop := a.property
+    simp at a_prop
+    simp
+    exact a_prop
+  )⟩) Finset.univ)
   .
 
 
+    simp
     apply Subgroup.map_injective
       (Subgroup.subtype_injective
         (Subgroup.closure (↑(Subgroup.map H.subtype N') ∪ {gamma_alpha})))
@@ -2830,24 +2919,24 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
     rw [iterate_comm_subgroup]
     simp
 
-    -- TODO - make this less of a mess
-    conv =>
-      arg 1
-      arg 1
-      arg 1
-      equals ((Subgroup.map (Subgroup.subtype _) N').carrier ∪ {gamma_alpha}) =>
-        ext a
-        simp only [Set.mem_image, Set.mem_range]
-        constructor
-        . rintro ⟨x, ⟨y, rfl⟩, rfl⟩
-          exact y.2
-        . intro ha
-          exact ⟨_, ⟨⟨a, ha⟩, rfl⟩, rfl⟩
+    -- -- TODO - make this less of a mess
+    -- conv =>
+    --   arg 1
+    --   arg 1
+    --   arg 1
+    --   equals (Finset.image (Subgroup.subtype _) S) ∪ {gamma_alpha} =>
+    --     ext a
+    --     simp only [Set.mem_image, Set.mem_range]
+    --     constructor
+    --     . rintro ⟨x, ⟨y, rfl⟩, rfl⟩
+    --       exact y.2
+    --     . intro ha
+    --       exact ⟨_, ⟨⟨a, ha⟩, rfl⟩, rfl⟩
 
     refine ⟨?_, ?_⟩
     .
       intro a_mem
-
+      rw [← Finset.mem_coe] at a_mem
       rw [iterate_comm_set_eq_fold] at a_mem
       simp only [Set.mem_setOf_eq] at a_mem
       obtain ⟨s, l, l_length, a_eq⟩ := a_mem
@@ -3151,7 +3240,7 @@ theorem G''_nilpotent {G: Type*} [Group G] (H: Subgroup G) {N': Subgroup H} [H_n
 
 
 -- TODO - this theorem statement is wrong
-lemma lowerCentralSeriefs_bracket_pow {G: Type*} [Group G] {N: Subgroup G} [hN: N.Normal]
+lemma lowerCentralSeriefs_bracket_pow {G: Type*} [DecidableEq G] [Group G] {N: Subgroup G} [hN: N.Normal]
   (base: N) (right: G) (k n: ℕ) :
     (iteratedCommutatorNormal base (right^n) k) ∈ (⊤ : Subgroup (↥N)).lowerCentralSeries k := by
 
@@ -3182,9 +3271,9 @@ lemma lowerCentralSeriefs_bracket_pow {G: Type*} [Group G] {N: Subgroup G} [hN: 
     -- simp
     use ?_
     .
-      rw [← iterate_comm_generates (S := Set.univ) (hS := by simp)]
+      --rw [← iterate_comm_generates (S := Finset.univ) (hS := by simp)]
 
-      apply Subgroup.mem_closure_of_mem
+      --apply Subgroup.mem_closure_of_mem
       sorry
       -- simp
       -- use iteratedCommutatorNormal base (right ^ n) k

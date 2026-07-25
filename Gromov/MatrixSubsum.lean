@@ -619,7 +619,9 @@ lemma int_matrix_poly_growth_eigenvalue {d p: ℕ} (A: (Matrix (Fin d) (Fin d) �
         one_lt_k
 
       obtain ⟨N, hN⟩ := foo
+
       
+
       sorry
 
 
