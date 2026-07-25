@@ -2848,7 +2848,10 @@ lemma count_mem_group_implies_lowercentral {G: Type*} [Group G] {N': Subgroup G}
 
 -- `Subgroup.map_toSubmonoid` rewrites the `.carrier` predicate of `Subgroup.map`, which breaks the
 -- `unattach`/commutator rewrites below. Disable it for this proof.
-attribute [-simp] Subgroup.map_toSubmonoid in
+-- `Subgroup.coe_subtype` rewrites `⇑H.subtype` to `Subtype.val`, which desynchronises the index
+-- type `↥(Finset.image (⇑H.subtype) S ∪ {gamma_alpha})` of `l`/`gamma_list` from the goal and makes
+-- the `rw`s below fail on a motive that is only defeq at default transparency. Disable it too.
+attribute [-simp] Subgroup.map_toSubmonoid Subgroup.coe_subtype in
 lemma unipotent_commutator_trivial {G: Type*} [DecidableEq G] [Group G] (H: Subgroup G) {N': Subgroup H} [H_normal: H.Normal] [N'_char: N'.Characteristic] [N'_nilpotent: Group.IsNilpotent N'] (gamma_alpha: G) (gamma_not_n: ¬(gamma_alpha ∈ (Subgroup.map (Subgroup.subtype _) N'))) (m: ℕ)
   (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g.val gamma_alpha m = 1)
   (S: Finset H) (hS: Subgroup.closure S = N'):
@@ -2864,10 +2867,8 @@ lemma unipotent_commutator_trivial {G: Type*} [DecidableEq G] [Group G] (H: Subg
       simpa using h_gamma_alpha
 
     --rw [N'_bot]
-    simp
 
-
-    let foo := Subgroup.closureCommGroupOfComm (k := (↑(Finset.image Subtype.val S) ∪ {gamma_alpha})) ?_
+    let foo := Subgroup.closureCommGroupOfComm (k := (↑(Finset.image (⇑H.subtype) S) ∪ {gamma_alpha})) ?_
     .
 
       apply CommGroup.isNilpotent
@@ -2883,6 +2884,17 @@ lemma unipotent_commutator_trivial {G: Type*} [DecidableEq G] [Group G] (H: Subg
           grind
         simp [S_eq] at hx hy
         aesop
+  -- `S` generates `N'`, so it lands inside `N'`, and its image inside `Subgroup.map H.subtype N'`.
+  have S_sub_N': ∀ y ∈ S, y ∈ N' := by
+    intro y hy
+    rw [← hS]
+    exact Subgroup.subset_closure hy
+  have image_sub_map: ∀ g ∈ Finset.image (⇑H.subtype) S, g ∈ Subgroup.map H.subtype N' := by
+    intro g hg
+    rw [Finset.mem_image] at hg
+    obtain ⟨y, hy, rfl⟩ := hg
+    exact ⟨y, S_sub_N' y hy, rfl⟩
+
   have nilpotent_map: Group.IsNilpotent ↥(Subgroup.map H.subtype N') := by
     apply map_nilpotent
     . exact Subgroup.subtype_injective H
@@ -2901,37 +2913,35 @@ lemma unipotent_commutator_trivial {G: Type*} [DecidableEq G] [Group G] (H: Subg
   .
 
 
-    simp
-    apply Subgroup.map_injective
-      (Subgroup.subtype_injective
-        (Subgroup.closure (↑(Subgroup.map H.subtype N') ∪ {gamma_alpha})))
+    simp only [Finset.coe_image, Finset.coe_univ, Set.image_univ]
+    apply Subgroup.map_injective (Subgroup.subtype_injective _)
     rw [MonoidHom.map_closure, ← MonoidHom.range_eq_map, Subgroup.range_subtype]
     congr 1
     ext g
     simp only [Set.mem_image, Set.mem_range]
     constructor
     · rintro ⟨_, ⟨y, rfl⟩, rfl⟩
-      exact y.property
+      have h := y.property
+      rw [Finset.mem_union] at h
+      rcases h with h | h
+      · exact Set.mem_union_left _ h
+      · exact Set.mem_union_right _ (Finset.mem_singleton.mp h)
     · intro hg
-      exact ⟨⟨g, by apply Subgroup.mem_closure_of_mem; exact hg⟩, ⟨⟨g, hg⟩, rfl⟩, rfl⟩
+      exact ⟨⟨g, by apply Subgroup.mem_closure_of_mem; exact hg⟩,
+        ⟨⟨g, by simpa using hg⟩, rfl⟩, rfl⟩
   .
     ext a
     rw [iterate_comm_subgroup]
-    simp
 
-    -- -- TODO - make this less of a mess
-    -- conv =>
-    --   arg 1
-    --   arg 1
-    --   arg 1
-    --   equals (Finset.image (Subgroup.subtype _) S) ∪ {gamma_alpha} =>
-    --     ext a
-    --     simp only [Set.mem_image, Set.mem_range]
-    --     constructor
-    --     . rintro ⟨x, ⟨y, rfl⟩, rfl⟩
-    --       exact y.2
-    --     . intro ha
-    --       exact ⟨_, ⟨⟨a, ha⟩, rfl⟩, rfl⟩
+    -- The image of the attached generating set back down into `G` is the original
+    -- `Finset.image H.subtype S ∪ {gamma_alpha}`.
+    conv =>
+      arg 1
+      arg 1
+      arg 1
+      equals (Finset.image (⇑H.subtype) S) ∪ {gamma_alpha} =>
+        rw [Finset.image_image, Finset.univ_eq_attach]
+        exact Finset.attach_image_val
 
     refine ⟨?_, ?_⟩
     .
@@ -2995,7 +3005,7 @@ lemma unipotent_commutator_trivial {G: Type*} [DecidableEq G] [Group G] (H: Subg
 
         have eq_gamma_alpha_unattach: ∀ b ∈ gamma_list.unattach, b = gamma_alpha := by
           intro b hb
-          simp at hb
+          rw [List.mem_unattach] at hb
           obtain ⟨b_mem, other⟩ := hb
           specialize eq_gamma_alpha _ other
           simp at eq_gamma_alpha
@@ -3012,12 +3022,13 @@ lemma unipotent_commutator_trivial {G: Type*} [DecidableEq G] [Group G] (H: Subg
 
 
 
+        refine Finset.mem_singleton.mpr ?_
         ext
         rw [← a_eq]
         rw [List.IsInfix] at h_gamma_list
         obtain ⟨l_prefix, l_suffix, h_list_eq⟩ := h_gamma_list
         rw [← h_list_eq]
-        simp
+        simp only [List.unattach_append, List.foldr_append, OneMemClass.coe_one]
         rw [gamma_list_eq]
         rw [list_foldr_replicate]
         unfold iteratedCommutator at h_gamma_alpha
@@ -3027,7 +3038,7 @@ lemma unipotent_commutator_trivial {G: Type*} [DecidableEq G] [Group G] (H: Subg
           --simp [l_suffix_nil]
 
         have s_mem := s.property
-        rw [Set.mem_union] at s_mem
+        rw [Finset.mem_union] at s_mem
         cases s_mem
         . rename_i s_mem_N'
           rw [subsequent_comm_one]
@@ -3047,28 +3058,30 @@ lemma unipotent_commutator_trivial {G: Type*} [DecidableEq G] [Group G] (H: Subg
               . exact ih
           .
             clear h_list_eq
-            rw [← Subgroup.mem_map_iff_mem (f := H.subtype) (by simp)]
+            rw [← Subgroup.mem_map_iff_mem (f := H.subtype) (Subgroup.subtype_injective H)]
             induction l_suffix with
             | nil =>
               simp at s_mem_N'
               obtain ⟨hs, s_mem⟩ := s_mem_N'
               simp
               use hs
+              rw [← hS]
+              exact Subgroup.subset_closure s_mem
             | cons head tail ih =>
               simp [-Subgroup.mem_map]
               apply normal_comm_mem (by infer_instance)
               exact ih
-          . simp
+          . rw [List.length_unattach]
             omega
         .
           rename_i s_eq_gamma
           simp at s_eq_gamma
           rw [s_eq_gamma]
 
-          have gamma_len_eq: gamma_list.length = gamma_list.length - 1 + 1 := by
+          have gamma_len_eq: gamma_list.unattach.length = gamma_list.unattach.length - 1 + 1 := by
+            rw [List.length_unattach]
             omega
 
-          simp
           rw [gamma_len_eq]
           simp
 
@@ -3081,7 +3094,7 @@ lemma unipotent_commutator_trivial {G: Type*} [DecidableEq G] [Group G] (H: Subg
               simp
             | cons head tail ih =>
               have head_prop := head.prop
-              rw [Set.mem_union] at head_prop
+              rw [Finset.mem_union] at head_prop
 
               cases head_prop
               .
@@ -3090,7 +3103,7 @@ lemma unipotent_commutator_trivial {G: Type*} [DecidableEq G] [Group G] (H: Subg
                 apply Set.mem_union_left
                 apply normal_comm_mem (by infer_instance)
                 apply normal_comm_mem_right (by infer_instance)
-                exact head_in_N
+                exact image_sub_map _ head_in_N
               . rename_i head_gamma
                 simp at head_gamma
                 --rw [head_gamma]
@@ -3142,13 +3155,14 @@ lemma unipotent_commutator_trivial {G: Type*} [DecidableEq G] [Group G] (H: Subg
         rw [Nat.div_eq_of_lt] at count_not_gamma
         . simp at count_not_gamma
 
+          refine Finset.mem_singleton.mpr ?_
           ext
           rw [← a_eq]
 
           conv at count_not_gamma =>
             arg 2
             arg 1
-            equals (fun (a: ↑(((Subgroup.map (Subgroup.subtype _) N').carrier ∪ {gamma_alpha}))) => decide (a.val ∈ (((Subgroup.map (Subgroup.subtype _) N'))))) =>
+            equals (fun (a: ↥(Finset.image (⇑H.subtype) S ∪ {gamma_alpha})) => decide (a.val ∈ (((Subgroup.map (Subgroup.subtype _) N'))))) =>
               ext x
               simp
               rw [← decide_not]
@@ -3161,13 +3175,12 @@ lemma unipotent_commutator_trivial {G: Type*} [DecidableEq G] [Group G] (H: Subg
                 apply gamma_not_n other
               . intro hx
                 have x_prop := x.prop
-                rw [Set.mem_union] at x_prop
+                rw [Finset.mem_union] at x_prop
                 simp [hx] at x_prop
                 cases x_prop
                 . rename_i mem_N'
                   obtain ⟨mem_H, mem_N⟩ := mem_N'
-                  specialize hx mem_H
-                  contradiction
+                  exact absurd (S_sub_N' _ mem_N) (hx mem_H)
                 . rename_i x_eq
                   exact x_eq
 
@@ -3205,27 +3218,20 @@ lemma unipotent_commutator_trivial {G: Type*} [DecidableEq G] [Group G] (H: Subg
         . omega
     .
       intro a_eq
-      replace a_eq : a = 1 := a_eq
-      have iterate_mem := iterated_mem_iterated_set 1 gamma_alpha (((Subgroup.map (Subgroup.subtype _) N').carrier ∪ {gamma_alpha})) (by simp) (by simp) m
-      have foo := h_gamma_alpha 1 (by simp)
-      simp at foo
-      rw [foo] at iterate_mem
-
-      have one_mem_mul := one_mem_iterated_comm ((((Subgroup.map (Subgroup.subtype _) N').carrier ∪ {gamma_alpha}))) m (m := (1 + ((Group.nilpotencyClass ↥(Subgroup.map H.subtype N')))) * (m + 1) + 2) (by
-        nth_grw 1 [Nat.lt_add_one (n := m)]
-        apply add_le_add
-        .
-          conv =>
-            lhs
-            equals 1 * m => simp
-
-          apply Nat.mul_le_mul
-          . omega
-          . omega
-        . simp
-      ) iterate_mem
+      replace a_eq : a = 1 := Finset.mem_singleton.mp a_eq
+      -- `S` need not contain `1`, so start the iterated commutator at `gamma_alpha`
+      -- instead: `⁅gamma_alpha, gamma_alpha⁆ = 1`, and the remaining iterations stay at `1`.
+      have iterate_mem := iterated_mem_iterated_set gamma_alpha gamma_alpha
+        (Finset.image (⇑H.subtype) S ∪ {gamma_alpha}) (by simp) (by simp)
+        ((1 + ((Group.nilpotencyClass ↥(Subgroup.map H.subtype N')))) * (m + 1) + 2)
+      have comm_one : iteratedCommutator gamma_alpha gamma_alpha
+          ((1 + ((Group.nilpotencyClass ↥(Subgroup.map H.subtype N')))) * (m + 1) + 2) = 1 := by
+        unfold iteratedCommutator
+        rw [Function.iterate_add_apply]
+        simp [nat_iterate_comm_one]
+      rw [comm_one] at iterate_mem
       rw [a_eq]
-      simpa using one_mem_mul
+      simpa using iterate_mem
 
 #print axioms unipotent_commutator_trivial
 
