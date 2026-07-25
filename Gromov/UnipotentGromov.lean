@@ -1334,11 +1334,11 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal
     clear ih
     obtain ⟨a, n, ha, h_prev⟩ := foo
 
-    obtain ⟨z_a, z_n, h_z_a, h_z_unipotent⟩ := exists_gamma_n_unipotent_center_N' H (N' := N') (N'_nilpotent) (hN') gamma
+    obtain ⟨z_a, z_n, h_z_a, h_z_unipotent⟩ := exists_gamma_n_unipotent_center_N' H (N' := N') (N'_nilpotent) (hN') (gamma^a)
 
-    use z_a
+    use a * z_a
     use z_n + n
-    refine ⟨h_z_a, ?_⟩
+    refine ⟨by positivity, ?_⟩
     intro g
     let g_h_prev: (⊤ : Subgroup (⊤ : Subgroup (↥N' ⧸ Subgroup.center ↥N'))) := ⟨⟨g, by simp⟩, by simp⟩
     specialize h_prev g_h_prev
@@ -1347,7 +1347,7 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal
     --rw [QuotientGroup.eq_one_iff] at h_prev
 
     --let foo :=  iteratedCommutatorNormal (H.subtype g) (gamma ^ z_a) (n)
-    specialize h_z_unipotent ⟨⟨((fun x ↦ x * ((gamma^a) x))^[n] g), (by
+    specialize h_z_unipotent ⟨⟨((fun x ↦ x * ((gamma^(a*z_a)) x))^[n] g), (by
       clear h_prev
       induction n with
       | zero =>
@@ -1389,7 +1389,7 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal
           sorry
         --rfl
 
-      have coe_iter: ((fun x ↦ x * (final_gamma^a) x)^[n] g_h_prev).val.val = (fun x ↦ x * (gamma^a) x)^[n] g := by
+      have coe_iter: ((fun x ↦ x * (final_gamma^(a*z_a)) x)^[n] g_h_prev).val.val = (fun x ↦ x * (gamma^(a*z_a)) x)^[n] g := by
         clear h_prev
         induction n with
         | zero =>
@@ -1406,9 +1406,11 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal
       rw [← QuotientGroup.eq_one_iff]
       rw [← coe_iter]
       simp [h_prev]
+      sorry
     .
       --sorry
 
+      simp_rw [← pow_mul] at h_z_unipotent
       exact h_z_unipotent
 
 
