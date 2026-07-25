@@ -1389,8 +1389,9 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal
           sorry
         --rfl
 
-      have coe_iter: ((fun x ↦ x * (final_gamma^(a*z_a)) x)^[n] g_h_prev).val.val = (fun x ↦ x * (gamma^(a*z_a)) x)^[n] g := by
+      have coe_iter: ∀ m: ℕ, ((fun x ↦ x * (final_gamma^(m)) x)^[n] g_h_prev).val.val = (fun x ↦ x * (gamma^(m)) x)^[n] g := by
         clear h_prev
+        intro m
         induction n with
         | zero =>
           simp [g_h_prev]
@@ -1405,8 +1406,7 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal
       simp
       rw [← QuotientGroup.eq_one_iff]
       rw [← coe_iter]
-      simp [h_prev]
-      sorry
+      simpa using h_prev
     .
       --sorry
 
@@ -3586,3 +3586,7 @@ lemma lowerCentralSeriefs_bracket_pow {G: Type*} [Group G] {N: Subgroup G} [hN: 
 -- termination_by n
 -- decreasing_by
 --  all_goals { sorry }
+
+
+-- [a, b] = aba⁻¹b⁻¹
+-- [a, b^n] = a(b^n)a⁻¹(b^n)⁻¹
