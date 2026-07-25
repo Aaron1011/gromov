@@ -1232,10 +1232,112 @@ lemma matrix_map_pow  {n : Type*} {α : Type*} {β : Type*} [CommSemiring α] [F
     simp
     rw [ih]
 
+lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] (H: Subgroup G) {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: G):
+    ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N', iteratedCommutator g.val.val (gamma^a) n = 1 := by
+
+  sorry
+
 set_option maxHeartbeats 1000000 in
 set_option synthInstance.maxHeartbeats 40000 in
-lemma center_unipotent {G: Type*} [Group G] {N: Subgroup G} [Group.IsNilpotent N] [N_normal: N.Normal] (hN: Subgroup.FG N) (gamma: G):
-    ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N, iteratedCommutator g.val (gamma^a) n = 1 := by
+lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal] {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: G):
+    ∃ a n, a ≠ 0 ∧ ∀ g ∈ N', iteratedCommutator g.val (gamma^a) n = 1 := by
+
+
+
+  -- refine ⟨by sorry, ?_⟩
+  -- let P := fun (A: Type _) [inst1: Group A] => ∀ g: A, iteratedCommutator (g) (gamma ^ sorry) sorry = 1
+
+  -- induction ↥N' using Group.nilpotent_center_quotient_ind (P := P) with
+
+  by_cases N'_subsingle: Subsingleton N'
+  .
+    use 1
+    use 1
+    simp
+    intro a ha a_mem
+    have order := Subsingleton.orderOf_eq (⟨_, a_mem⟩ : N')
+    simp at order
+    simp [order, iteratedCommutator]
+
+
+
+  induction hn: Group.nilpotencyClass N' using Nat.strong_induction_on generalizing G N' with
+  -- | zero =>
+  --   rw [Group.nilpotencyClass_zero_iff_subsingleton] at hn
+  --   use 1
+  --   use 1
+  --   simp
+  --   intro a ha a_mem
+  --   have order := Subsingleton.orderOf_eq (⟨_, a_mem⟩ : N')
+  --   simp at order
+  --   simp [order, iteratedCommutator]
+  | h n ih =>
+    have foo := ih (Group.nilpotencyClass (⊤ : Subgroup (⊤ : Subgroup (↥N' ⧸ Subgroup.center ↥N')))) (by
+      grw [Subgroup.nilpotencyClass_le]
+      grw [Subgroup.nilpotencyClass_le]
+      simp [nilpotencyClass_quotient_center]
+      rw [← hn]
+      simp
+      by_contra!
+      simp at this
+      rw [nilpotencyClass_zero_iff_subsingleton] at this
+      contradiction
+    ) (G := N' ⧸ Subgroup.center N') ⊤ (N' := ⊤) (by simp; apply Group.nilpotent_quotient_of_nilpotent) (by
+      have fg_quot: Group.FG (↥N' ⧸ Subgroup.center ↥N') := by
+        rw [← Group.fg_iff_subgroup_fg] at hN'
+        apply QuotientGroup.fg
+      have base_fg: Group.FG (⊤ : Subgroup (↥N' ⧸ Subgroup.center ↥N')) := by
+        apply Subgroup.fg_of_index_ne_zero
+
+      rw [← Group.fg_iff_subgroup_fg]
+      apply Subgroup.fg_of_index_ne_zero
+    ) sorry sorry rfl
+
+    clear ih
+    obtain ⟨a, n, ha, h_prev⟩ := foo
+
+    obtain ⟨z_a, z_n, h_z_a, h_z_unipotent⟩ := exists_gamma_n_unipotent_center_N' H (N' := N') (N'_nilpotent) (hN') gamma
+
+    use z_a
+    use z_n + n
+    refine ⟨h_z_a, ?_⟩
+    intro g hg
+    specialize h_prev ⟨QuotientGroup.mk ⟨g, hg⟩, by simp⟩ (by simp)
+    simp at h_prev
+    simp [iteratedCommutator]
+    rw [Function.iterate_add_apply]
+    rw [← QuotientGroup.out_eq' (a := iteratedCommutator _ _ _)] at h_prev
+    rw [QuotientGroup.eq_one_iff] at h_prev
+
+    --let foo :=  iteratedCommutatorNormal (H.subtype g) (gamma ^ z_a) (n)
+    specialize h_z_unipotent ⟨⟨((fun x ↦ ⁅x, gamma ^ z_a⁆)^[n] ↑g), (by
+      clear h_prev
+      induction n with
+      | zero =>
+        simp
+      | succ n n_ind =>
+        rw [Function.iterate_succ']
+        nth_rw 1 [Bracket.bracket]
+        simp
+        rw [mul_assoc]
+        rw [mul_assoc]
+        apply Subgroup.mul_mem
+        . exact n_ind
+        .
+          rw [← mul_assoc]
+          apply Subgroup.Normal.conj_mem
+          . infer_instance
+          . simpa using n_ind
+    )⟩, by (
+      sorry
+    )⟩ ?_
+    . sorry
+    .
+      simp [iteratedCommutator] at h_z_unipotent
+      exact h_z_unipotent
+
+
+
 
   -- Use the fact that this is a subgroup of a finitely-generated nilpotent group
   have center_fg: Group.FG (Subgroup.center N) := by
@@ -2958,6 +3060,12 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
 
 #print axioms unipotent_commutator_trivial
 
+
+theorem G''_nilpotent {G: Type*} [Group G] (H: Subgroup G) {N': Subgroup H} [H_normal: H.Normal] [N'_char: N'.Characteristic] (N'_fg: N'.FG) (gamma: G):
+    Group.IsNilpotent (Subgroup.closure ((Subgroup.map (Subgroup.subtype _) N') ∪ {gamma})) := by
+
+  have foo := center_unipotent (G := (Subgroup.map H.subtype H)) (N := N') N'_fg gamma
+  sorry
 
 
 

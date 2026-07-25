@@ -5396,8 +5396,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       rw [← Group.isNilpotent_congr normalCore_iso]
       apply Subgroup.isNilpotent
 
-    have N_fg: Subgroup.FG N := by
-      sorry
+    -- have N_fg: Subgroup.FG N := by
+    --   sorry
 
     rw [Subgroup.finiteIndex_iff] at N_finite_index
     let N' := Subgroup.closure (Set.range (fun (a: Multiplicative data.φ.ker) => a ^ N.index))
