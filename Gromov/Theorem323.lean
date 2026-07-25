@@ -10,11 +10,8 @@ set_option linter.style.longLine false
 set_option linter.flexible false
 set_option linter.style.emptyLine false
 
-
 open scoped Finset
 open scoped Pointwise
-
-
 
 -- Ported from Mathlib.Data.Matrix.Mul (not present in this mathlib version).
 -- Remove once this file is bumped to a mathlib that includes it.
@@ -89,7 +86,6 @@ lemma matrix_psd_det_one {n: Type*} [Fintype n] [DecidableEq n] (A: Matrix n n �
   . simp
   . simp
 
-
 open MatrixOrder in
 lemma matrix_det_montone {n: Type*} [Fintype n] [DecidableEq n] (A B: Matrix n n ℝ) (hb: B.PosDef) (hab: (A - B).PosSemidef): B.det ≤ A.det := by
 
@@ -101,14 +97,12 @@ lemma matrix_det_montone {n: Type*} [Fintype n] [DecidableEq n] (A B: Matrix n n
     . grind [hb.det_pos]
     . grind [hb.det_pos]
 
-
   have det_prod_eq: A.det = B.det * ((CFC.sqrt B)⁻¹ * (A - B) * (CFC.sqrt B)⁻¹ + 1).det := by
     conv =>
       lhs
       arg 1
       equals (CFC.sqrt B) * (CFC.sqrt B)⁻¹ * A * (CFC.sqrt B)⁻¹ * (CFC.sqrt B) =>
         simp
-
 
     rw [mul_assoc, mul_assoc, mul_assoc]
     rw [Matrix.det_mul]
@@ -145,7 +139,6 @@ lemma matrix_det_montone {n: Type*} [Fintype n] [DecidableEq n] (A B: Matrix n n
     exact hab
   . apply hb.det_pos
 
-
 -- TODO - upstream. Mathlib only has `Finset.sum_biUnion` (which needs `PairwiseDisjoint`)
 -- and the `ENNReal` `tsum` versions.
 theorem Finset.sum_biUnion_le {κ α : Type*} [DecidableEq α] {s: Finset κ} {t: κ → Finset α}
@@ -159,14 +152,11 @@ theorem Finset.sum_biUnion_le {κ α : Type*} [DecidableEq α] {s: Finset κ} {t
     have hnn: 0 ≤ ∑ x ∈ t a ∩ s.biUnion t, f x := Finset.sum_nonneg fun x _ => hf x
     linarith
 
-
 namespace GeneratesNS
 open Generates
 
-
 variable [hGS: Generates]
 include hGS
-
 
 -- Reverse poincare inequality
 -- Lemma 12.2
@@ -208,7 +198,6 @@ lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.suppor
       rw [mul_assoc, mul_assoc]
       rw [Finset.mul_sum]
 
-
     rw [tsum_mul_left]
     simp_rw [Finset.mul_sum]
     simp_rw [mul_comm (f _)]
@@ -237,12 +226,6 @@ lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.suppor
         rw [← Finset.sum_neg_distrib]
         simp_rw [← tsum_neg]
         ring
-
-      -- have sum_swap: ∑ x ∈ S, ∑' (c : G), φ (x * c) * ((φ (x * c) - φ c) * f c) * f (x * c) = -∑ x ∈ S, ∑' (c : G), φ (x * c) * ((φ c - (φ (x * c))) * f c) * f (x * c) := by
-      --   rw [← Finset.sum_neg_distrib]
-      --   simp_rw [← tsum_neg]
-      --   ring
-
 
       have double {a b: ℝ} (hab: a = b): a = (a + b) / 2 := by
         rw [hab]
@@ -485,7 +468,6 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
       norm_cast
       grind
 
-
   have foo := cutoff_inequality f φ hf ?_
   .
     rw [tsum_eq_sum (s := (finite_closed_ball 1 (4 * r)).toFinset)] at foo
@@ -727,17 +709,6 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
             have foo := dist_word_le_mul (x := 1) (y := s⁻¹) (z := (s * x)) (by rw [S_eq_Sinv]; simp [hs])
             simp at foo
             simp [WordDist_comm, WordDist_one] at foo
-            -- by_cases s_x_le: WordNorm (s * x) ≤ 2 * r + 1
-            -- . simp [s_x_le]
-            -- .
-            --   simp [s_x_le]
-            --   have le_four: WordNorm (s * x) ≤ 4 * r := by grind
-            --   simp [le_four]
-            --   congr
-            --   apply pow_le_pow_left₀
-            --   rw [pow_le_pow_iff_left₀]
-            --   rw [pow_le_pow_iff_left₀]
-
 
             grw [hx_le_sub] at foo
             simp [foo]
@@ -812,8 +783,10 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
 
 #print axioms harmonic_r2_inequality
 
-
 noncomputable def Q_R (R : ℝ) (u v: G → ℝ): ℝ := ∑ g ∈ Metric.closedBall 1 R, (u g) * (v g)
+
+lemma Q_R_self_nonneg (R : ℝ) (v : G → ℝ) : 0 ≤ Q_R R v v := by
+  simp [Q_R, ← pow_two]; positivity
 noncomputable def Q_R_lin (V: Submodule ℝ LipschitzH) (R: ℝ): V →ₗ⋆[ℝ] V →ₗ[ℝ] ℝ := {
   toFun := fun u => {
     toFun := fun v => Q_R R u.val v.val
@@ -881,13 +854,7 @@ noncomputable def Q_R_lin_plain (V: Submodule ℝ LipschitzH) (R: ℝ): V →ₗ
     ring
 }
 
-
-
-
-
-
 open scoped Topology
-
 
 -- These definitions go outside, since we need to explicitly vary the V that we pass in for the theorem statement
 noncomputable def V_basis (V: Submodule ℝ LipschitzH) := Module.Basis.ofVectorSpace ℝ V
@@ -1020,8 +987,6 @@ lemma v_r_all_nonzero (V: Submodule ℝ LipschitzH) [FiniteDimensional ℝ V]: �
     specialize hg g_dist
     exact hg
 
-
-
 noncomputable def R'_ (V: Submodule ℝ LipschitzH) [FiniteDimensional ℝ V] : ℝ := (v_r_all_nonzero V).choose
 
 lemma R'_pos (V: Submodule ℝ LipschitzH) [FiniteDimensional ℝ V]: 1 < R'_ V := by
@@ -1091,8 +1056,6 @@ theorem LipschitzWith.sum {ι : Type*} {α : Type*} {E : Type*}
     exact (hf a (Finset.mem_insert_self a s)).add
       (ih (fun i hi => hf i (Finset.mem_insert_of_mem hi)))
 
-
-
 section V_variable
 
 variable {V: Submodule ℝ LipschitzH} [V_finite: FiniteDimensional ℝ V] [Nontrivial V] (hV : Even (Module.finrank V))  [V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]
@@ -1113,7 +1076,6 @@ lemma euclidean_of_lp_le {ι : Type*} [Fintype ι] (x: EuclideanSpace ℝ ι) (i
     . simp
   . simp
   . positivity
-
 
 /-- The Lipschitz constant `‖(b i).val‖` of the `i`-th vector of the basis `b` of `V`. -/
 noncomputable def v_lipschitz_constant {ι : Type*} (b : Module.Basis ι ℝ ↥V) (i : ι) : ℝ :=
@@ -1169,12 +1131,6 @@ lemma det_bound {ι : Type*} [Fintype ι] [DecidableEq ι] [Nonempty ι] (b : Mo
   have h_max_origin : ∀ i, v_origin_norm i ≤ max_origin := le_max_origin b
   obtain hB := iterated_lipschitz_bound m_vec_V.val
 
-  -- have B_nonneg: 0 ≤ B := by
-  --   specialize hB 1
-  --   simp at hB
-  --   have foo := abs_nonneg ((m_vec_V).val.toFun 1)
-  --   grw [hB] at foo
-  --   apply nonneg_of_mul_nonneg_left foo (by grind)
   rw [show det_bound_const b * (1 + R) ^ 2
         = (((Module.finrank ℝ ↥V) * max_lipschitz
             + (Module.finrank ℝ ↥V) * max_origin) * (1 + R)) ^ 2 from by
@@ -1340,7 +1296,6 @@ variable {ι : Type*} [Fintype ι] [DecidableEq ι] [Nonempty ι]
 
 private noncomputable def R' := R'_ V
 
-
 -- Todo - is the better way to declare theorem_3_23 so that the constant is not allowed to depend on V?
 -- TODO - can this somehow be merged with V_wrapper?
 structure V_Data where
@@ -1350,16 +1305,11 @@ structure V_Data where
   (V_even : Even (Module.finrank ℝ V))
   V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)
 
-
 noncomputable def Q_R_single (R : ℝ) (u: G → ℝ): ℝ := ∑ g ∈ Metric.closedBall 1 R, (u g)^2
 
 lemma Q_R_single_eq (R: ℝ) (u : G → ℝ): Q_R_single R u = Q_R R u u := by
   unfold Q_R_single Q_R
   simp_rw [pow_two]
-
-
-
-
 
 -- Finding good scales:
 
@@ -1383,7 +1333,6 @@ private noncomputable def f (b : Module.Basis ι ℝ V) (R: ℕ): ℝ := #(S ^ R
 private noncomputable def h (b : Module.Basis ι ℝ V) (i: ℕ): ℝ := Real.log (f b (16 ^ i))
 
 -- Matrix.le_iff
-
 
 lemma f_monotone_on (bas : Module.Basis ι ℝ V): MonotoneOn (f bas) (Set.Ici ⌈R'⌉₊) := by
   intro x hx y hy hxy
@@ -1462,8 +1411,6 @@ lemma h_montone_on (bas : Module.Basis ι ℝ V): MonotoneOn (h bas) (Set.Ici i�
       . exact ha
       . simp
 
-
-
 lemma growth_implies_lim_h (b : Module.Basis ι ℝ V) (d: ℕ) (h_growth: growth_bound b d): Filter.Tendsto (fun (i: ℕ) => (h b i - d * i * Real.log 16)) Filter.atTop Filter.atBot := by
   unfold growth_bound my_expr at h_growth
   have pow_tendsto: Filter.Tendsto (fun n => 16 ^ n) Filter.atTop Filter.atTop := by
@@ -1515,7 +1462,6 @@ lemma growth_implies_lim_h (b : Module.Basis ι ℝ V) (d: ℕ) (h_growth: growt
 #print axioms growth_implies_lim_h
 
 noncomputable def a (d: ℕ) := 4 * d * Real.log 16
-
 
 lemma exists_j_0_for_h (b : Module.Basis ι ℝ V) (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_bound b d): ∃ j_0: ℕ, h b (i₀ + 3 * w * (j_0 + 1)) - h b (i₀ + 3 * w * j_0) < w * (a d) := by
   by_contra!
@@ -1586,9 +1532,6 @@ lemma exists_j_0_for_h (b : Module.Basis ι ℝ V) (w d: ℕ) (hw: 0 < w) (hd: 0
   grw [← h_positive_start] at h_ge_one
   grind
 
-
-
-
 structure Lemma3_24_data (b : Module.Basis ι ℝ V) (d w: ℕ) where
   i_1 : ℕ
   i_2 : ℕ
@@ -1625,7 +1568,6 @@ lemma lemma_3_24 (b : Module.Basis ι ℝ V) (w d: ℕ) (hw: 0 < w) (hd: 0 < d) 
         . simp [m]
         . simp [m]
 
-
     have h_le_w_a_d : h b (m  + w) - h b m ≤ w * (a d) := by
       grw [h_m_diff_le]
       grw [h_j_0]
@@ -1660,7 +1602,6 @@ lemma lemma_3_24 (b : Module.Basis ι ℝ V) (w d: ℕ) (hw: 0 < w) (hd: 0 < d) 
         . simp [m]
           grind
         . simp [m]
-
 
     have h_le_w_a_d : h b (m  + 3 * w) - h b (m + 2 * w) ≤ w * (a d) := by
       grw [h_m_diff_le]
@@ -1805,8 +1746,6 @@ lemma B_covers_R2 (data: GoodScalesData b): Metric.closedBall 1 (R_2 data) ⊆ �
       by_contra!
       specialize x_not_mem x this
       simp [R_1] at x_not_mem
-      --norm_cast at x_not_mem
-      --grind
   .
     apply Set.union_subset
     . simp [X_j]
@@ -1844,7 +1783,6 @@ lemma B_half_disjoint (data: GoodScalesData b): (B_half data).PairwiseDisjoint i
     rw [x_eq_y] at hx
     rw [← hx, ← hy]
 
-
   rw [← hx, ← hy] at ha
   simp at ha
   obtain ⟨a_dist_x, a_dist_y⟩ := ha
@@ -1856,7 +1794,6 @@ lemma B_half_disjoint (data: GoodScalesData b): (B_half data).PairwiseDisjoint i
   have x_sep := is_sep x_mem y_mem x_eq_y
   simp at x_sep
 
-
   have x_y_dist_bad := dist_triangle x a y
   rw [dist_comm x a] at x_y_dist_bad
   grw [a_dist_x, a_dist_y] at x_y_dist_bad
@@ -1865,7 +1802,6 @@ lemma B_half_disjoint (data: GoodScalesData b): (B_half data).PairwiseDisjoint i
   simp [edist, PseudoMetricSpace.edist] at x_sep
   simp [dist] at x_y_dist_bad
   grind
-
 
 -- Intersection multiplicity. See https://www.math.ucdavis.edu/~kapovich/EPR/kapovich_drutu.pdf page 24 for the definition
 -- (search for 'multiplicity')
@@ -1894,7 +1830,6 @@ lemma ball_smul_eq_origin (a: G) (r: ℝ): Metric.closedBall a r = (MulOpposite.
   have bar := ball_subset_smul_origin a r
   grind
 
-
 lemma B_finite (data: GoodScalesData b): (B data).Finite := by
   simp [B]
   apply Set.Finite.image
@@ -1910,7 +1845,6 @@ lemma B_half_finite (data: GoodScalesData b): (B_half data).Finite := by
   apply finite_closed_ball
 
 noncomputable def B_finsets (data: GoodScalesData b): Finset (Finset G) := Finset.image ((fun a => (finite_closed_ball a (R_1 data )).toFinset)) (X_j_finite data).toFinset
-
 
 -- TODO - combine this with 'B_half'
 noncomputable def B_half_finsets (data: GoodScalesData b): Finset (Finset G) := Finset.image ((fun a => (finite_closed_ball a (R_1 data / 2)).toFinset)) (X_j_finite data).toFinset
@@ -2014,7 +1948,6 @@ lemma inter_mult_helper (data: GoodScalesData b): InterMult (B_3 data) * #(S ^ (
             obtain ⟨a_center_mem, a_eq⟩ := (X_inner_nonempty _ a_prop).choose_spec
             obtain ⟨b_center_mem, b_eq⟩ := (X_inner_nonempty _ b_prop).choose_spec
 
-
             rw [Set.pairwiseDisjoint_iff] at from_b
             simp only [Set.mem_image, id_eq, forall_exists_index, and_imp] at from_b
             simp at hab
@@ -2076,8 +2009,6 @@ lemma inter_mult_helper (data: GoodScalesData b): InterMult (B_3 data) * #(S ^ (
     . rw [Set.nonempty_iff_ne_empty]
       grind
 
-
-
 noncomputable def B_r (r: ℝ) := (finite_closed_ball 1 r).toFinset
 noncomputable def B_c_r (g: G) (r: ℝ) := (finite_closed_ball g r).toFinset
 
@@ -2100,11 +2031,6 @@ lemma pack_center_helper (data: GoodScalesData b) (x: G): #{ c ∈ (X_j_finite d
       nth_rw 2 [← Finset.card_smul_finset (MulOpposite.op x)]
       apply Finset.card_le_card
       rw [← Finset.coe_subset]
-      --rw [Finset.coe_smul_finset]
-      -- conv =>
-      --   rhs
-      --   arg 2
-      --   simp
 
       --rw [← ball_smul_eq_origin]
       intro a ha
@@ -2157,97 +2083,6 @@ lemma pack_center_helper (data: GoodScalesData b) (x: G): #{ c ∈ (X_j_finite d
     . simp
     . simp [R_1]
     . simp
-
-  --   obtain ⟨⟨c, hc, a_dist⟩, other⟩ := ha
-  --   .
-  --     grw [other]
-  --     grw [Nat.cast_div_le]
-  --     simp
-  --     grind
-  --     -- grw [dist_triangle _ c]
-  --     -- grw [a_dist]
-  --     -- simp at h_base
-  --     -- specialize h_base c hc
-
-  --     -- have q_prop := (X_inner_nonempty c hc).choose_spec
-  --     -- rw [← q_prop.2] at h_base
-  --     -- simp at h_base
-  --     -- rw [dist_comm] at h_base
-  --     -- simp [q]
-  --     -- grw [h_base]
-  --     -- grind
-  -- .
-  --   rw [Finset.pairwiseDisjoint_iff]
-  --   intro a ha b hb hab
-
-  --   have from_b := B_half_disjoint data
-  --   simp at ha
-  --   simp at hb
-  --   simp [B_half] at from_b
-
-  --   have a_mem := ha.1
-  --   have b_mem := hb.1
-  --   simp [X_j] at a_mem
-  --   simp [X_j] at b_mem
-
-  --   --have foo := B_ball_injective_on data
-
-
-
-
-  --   -- let a_center := (X_inner_nonempty _ a_prop).choose
-  --   -- let b_center := (X_inner_nonempty _ b_prop).choose
-  --   -- obtain ⟨a_center_mem, a_eq⟩ := (X_inner_nonempty _ a_prop).choose_spec
-  --   -- obtain ⟨b_center_mem, b_eq⟩ := (X_inner_nonempty _ b_prop).choose_spec
-
-
-  --   rw [Set.pairwiseDisjoint_iff] at from_b
-  --   simp only [Set.mem_image, id_eq, forall_exists_index, and_imp] at from_b
-  --   simp at hab
-  --   specialize from_b a ha.1
-  --   have inter_eq := from_b a_center a_center_mem (i := (Metric.closedBall a_center (↑(R_1 data) / 2) )) (?_) b_center b_center_mem (j := (Metric.closedBall b_center (↑(R_1 data) / 2) )) (?_) ?_
-  --   .
-
-  --     rw [← a_eq, ← b_eq]
-  --     simp [a_center, b_center] at inter_eq
-  --     apply B_ball_injective_on data (R_1 data / 2) (by grind) (by simp [R_1]) at inter_eq
-  --     .
-  --       simp [inter_eq]
-  --     . grind
-  --     . grind
-  --   . rfl
-  --   . rfl
-  --   . simp [a_center, b_center]
-  --     rw [← Finset.coe_nonempty] at hab
-  --     simp at hab
-  --     exact hab
-
-  -- . intro y hy
-  --   simp at hy
-  --   simp only [hy, ↓reduceDIte]
-  --   nth_rw 1 [← Finset.card_smul_finset (MulOpposite.op (X_inner_nonempty y hy).choose)]
-  --   apply Finset.card_le_card
-  --   intro a ha
-  --   simp at ha
-  --   simp
-  --   rw [Finset.mem_smul_finset] at ha
-  --   obtain ⟨z, z_mem, z_mul_eq⟩ := ha
-  --   simp at z_mem
-  --   rw [← z_mul_eq]
-  --   simp
-  --   simp [dist, WordDist]
-  --   rw [← word_norm_inv]
-  --   simp [dist, WordDist_one] at z_mem
-  --   norm_cast
-  --   grw [z_mem]
-  --   grw [Nat.cast_div_le]
-  --   simp
-
--- . simp
---   apply Finset.Nonempty.pow
---   simp [S_nonempty]
-
-
 
 /-- Common step for Lemma 3.25 (a) and (b).
 
@@ -2327,7 +2162,6 @@ lemma log_inter_mult_b3 (data: GoodScalesData b): InterMult (B_3 data) ≤ Real.
         grw [← bound]
         --grw [log_card_pow_sub_le (b := b) (k := (GoodScales data).i_1 + 1) (j := (GoodScales data).i_1)]
 
-
         --apply log_card_pow_sub_le
         apply log_card_pow_sub_le (GoodScales data).i_1_ge (Nat.le_succ _)
         . simp [R_1]
@@ -2368,7 +2202,6 @@ lemma log_inter_mult_b3 (data: GoodScalesData b): InterMult (B_3 data) ≤ Real.
   . simp
     grind
 
-
 lemma log_pack_center_helper (data: GoodScalesData b) (x: G): #{ c ∈ (X_j_finite data).toFinset | x ∈ B_c_r c (3 * (R_1 data + 1)) } ≤ Real.exp (a data.d) := by
   by_cases inter_empty: { c ∈ (X_j_finite data).toFinset | x ∈ B_c_r c (3 * (R_1 data + 1)) } = ∅
   . simp [inter_empty]
@@ -2386,7 +2219,6 @@ lemma log_pack_center_helper (data: GoodScalesData b) (x: G): #{ c ∈ (X_j_fini
         have bound := (GoodScales data).first_h_i
         grw [← bound]
         --grw [log_card_pow_sub_le (b := b) (k := (GoodScales data).i_1 + 1) (j := (GoodScales data).i_1)]
-
 
         --apply log_card_pow_sub_le
         apply log_card_pow_sub_le (GoodScales data).i_1_ge (Nat.le_succ _)
@@ -2432,11 +2264,9 @@ lemma log_pack_center_helper (data: GoodScalesData b) (x: G): #{ c ∈ (X_j_fini
     rw [Finset.nonempty_iff_ne_empty]
     simpa using inter_empty
 
-
 #print axioms inter_mult_helper
 #print axioms log_inter_mult_b3
 #print axioms log_pack_center_helper
-
 
 -- Lemma 3.25 (b)
 lemma card_B_le_exp_wa (data: GoodScalesData b): #(B_finite data).toFinset < Real.exp (data.w * (a data.d)) := by
@@ -2546,7 +2376,6 @@ lemma card_B_le_exp_wa (data: GoodScalesData b): #(B_finite data).toFinset < Rea
           rw [Set.ncard_eq_toFinset_card']
           simp
 
-
       simp [-Metric.smul_closedBall]
       conv =>
         lhs
@@ -2556,7 +2385,6 @@ lemma card_B_le_exp_wa (data: GoodScalesData b): #(B_finite data).toFinset < Rea
           rw [Set.ncard_eq_toFinset_card']
           simp [R_1]
       rw [card_closed_ball_eq]
-
 
   .
     -- TODO - there must be a less horrendous way of dealing with Finset here
@@ -2572,15 +2400,9 @@ lemma card_B_le_exp_wa (data: GoodScalesData b): #(B_finite data).toFinset < Rea
     specialize foo a ha b hb hab hp_a hp_b
     simpa using foo
 
-
 noncomputable def f_avg (R: ℝ) (f : G → ℝ) := (#((finite_closed_ball 1 R).toFinset) : ℝ)⁻¹ * ∑ y ∈ (finite_closed_ball 1 R).toFinset, f y
 noncomputable def f_avg_c (g: G) (R: ℝ) (f : G → ℝ) := (#((finite_closed_ball 1 R).toFinset) : ℝ)⁻¹ * ∑ y ∈ B_c_r g R, f y
 
--- (#S : ℝ)⁻¹ *
--- The gradient-squared for the *right* Cayley graph (edges `{x, x * s}`), as in Vikman Def 2.12.
--- This is the orientation used internally by `poincare_inequality`, whose proof translates
--- geodesics on the left (`x * γ z i`). It is invariant under left translation, and so is NOT
--- the orientation compatible with our right-invariant `WordDist x y = WordNorm (y * x⁻¹)`.
 noncomputable def deriv_sq_R (f: G → ℝ) (x: G) := ∑ s ∈ S, (f (x * s) - f x)^2
 
 -- Reindexing `s ↦ s⁻¹` over the symmetric generating set `S` turns a right-gradient of
@@ -2601,7 +2423,6 @@ lemma three_term_cs (a b: ℝ) (n: Type*) {s: Finset n} (f: n → ℝ): a + (∑
   grw [Real.sum_mul_le_sqrt_mul_sqrt]
   simp
   grind
-
 
 lemma ball_x_one_subset (x: G): (Metric.closedBall x 1) ⊆ ((x) • S) ∪ ((MulOpposite.op x • S))  := by
   intro a ha
@@ -2645,7 +2466,6 @@ lemma le_of_sub_eq (a b c: ℝ) (ha: a = b - c) (hc: 0 ≤ c): a ≤ b := by
 lemma double_ball_sum (R: ℕ) (hR: 0 < R) (f: G → ℝ) (hf: ∀ g, 0 ≤ f g): ∑ x ∈ B_r (↑(R - 1)), ∑ y ∈ (Metric.closedBall x 1), f y ≤ 2 * #S * ∑ x ∈ B_r R, f x := by
   classical
 
-
   grw [Finset.sum_le_sum (g := fun x =>  ∑ y ∈ ((x) • S) ∪ ((MulOpposite.op x • S)), f y)]
   .
     have union_sub (x: G) := Finset.sum_union_inter (f := f) (s₁ := x • S) (s₂ := (MulOpposite.op x • S))
@@ -2655,7 +2475,6 @@ lemma double_ball_sum (R: ℕ) (hR: 0 < R) (f: G → ℝ) (hf: ∀ g, 0 ≤ f g)
       simp [hf]
     )
     grw [Finset.sum_le_sum (h := fun x hx => foo x)]
-
 
     simp_rw [← Finset.image_smul]
     conv =>
@@ -2751,7 +2570,6 @@ lemma double_ball_sum (R: ℕ) (hR: 0 < R) (f: G → ℝ) (hf: ∀ g, 0 ≤ f g)
         grw [card_le]
         apply hf
 
-
     . rw [Finset.image_subset_iff]
       intro x hx
       simp at hx
@@ -2775,21 +2593,7 @@ lemma double_ball_sum (R: ℕ) (hR: 0 < R) (f: G → ℝ) (hf: ∀ g, 0 ≤ f g)
     . intros
       apply hf
 
-
 -- TODO - get rid of some lemmas, since mathlib already has Metric.smul_closedBall defined
-
-
--- lemma B_c_r_eq_smul_normal (a: G) (r: ℝ): a • B_r r ⊆ B_c_r a r := by
---   rw [B_c_r, B_r]
---   intro x hx
---   simp
---   simp at hx
---   rw [Finset.mem_smul_finset] at hx
---   obtain ⟨k, k_mem, k_eq⟩ := hx
---   rw [← k_eq]
---   simp [dist, WordDist]
---   rw [← Finset.coe_inj]
---   simp
 
 -- Theorem 3.20
 set_option maxHeartbeats 3500000 in
@@ -2853,7 +2657,6 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
       simp
       grind
 
-
   let γ (z: G) (i: ℕ) := ((word_norm_prod_self z).choose.take i).unattach.prod
   have gamma_zero (z: G): γ z 0 = 1 := by simp [γ]
   have gamma_norm (z: G): γ z (WordNorm z) = z := by
@@ -2874,8 +2677,6 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
     have i_le := word_norm_le ((word_norm_prod_self z).choose.take i).unattach.prod ((word_norm_prod_self z).choose.take i) (by simp [ProdS])
     grw [List.length_take_le] at i_le
     exact i_le
-
-
 
   have gamma_sum (z: G) (hz: z ∈ B_r (2*R - 2)): ∑ x ∈ B_r (R - 1), ∑ i ∈ Finset.range (WordNorm z), δ_f (x * (γ z i)) ≤ 2 * R * ∑ x ∈ B_r (3*R - 1), δ_f x := by
 
@@ -2942,11 +2743,7 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
           . simp [← hp.2]
           . simp
 
-
-
   have diff_le_delta_sum (x y: G) (hx: x ∈ B_r (R - 1)) (hy: y ∈ B_r (R - 1)): |f y - f x| ≤ √((2 * R) * (∑ i ∈ Finset.range (WordNorm (x⁻¹ * y)), δ_f (x * γ (x⁻¹ * y) i))) := by
-
-
 
     have inv_prod_le: WordNorm (x⁻¹ * y) ≤ 2*R - 2 := by
       grw [word_norm_mul_le]
@@ -2975,7 +2772,6 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
         simp
       . simp
 
-
     conv =>
       lhs
       equals |(f (x * γ (x⁻¹ * y) (WordNorm (x⁻¹ * y)))) - f (x * γ (x⁻¹ * y) 0)| =>
@@ -2989,11 +2785,9 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
       intro i
       rw [← mul_one (a := |_|)]
 
-
     grw [Real.sum_mul_le_sqrt_mul_sqrt]
     simp
     grw [root_le_R]
-
 
     have sum_le_delta: ∑ x_1 ∈ Finset.range (WordNorm (x⁻¹ * y)), (f (x * γ (x⁻¹ * y) x_1) - f (x * γ (x⁻¹ * y) (x_1 + 1))) ^ 2 ≤ ∑ n ∈ Finset.range (WordNorm (x⁻¹ * y)), δ_f (x * (γ (x⁻¹ * y) n)) := by
       apply Finset.sum_le_sum
@@ -3037,8 +2831,6 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
         . positivity
       . simp [dist, WordDist, word_norm_one]
 
-
-
     simp_rw [sub_sq_comm]
     grw [sum_le_delta]
     rw [mul_comm]
@@ -3078,8 +2870,6 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
   rw [← le_div_iff₀ (by simp; grind)]
   rw [Finset.sum_product]
   simp only []
-  --rw [Finset.sum_comm]
-  --simp_rw [Finset.sum_comp]
   rw [Finset.sum_comm]
   -- TODO - use gcongr here
   grw [Finset.sum_le_sum (g := fun z => ∑ x ∈ B_r (2*R - 2), ∑ i ∈ Finset.range (WordNorm x), δ_f (z * γ x i))]
@@ -3111,7 +2901,6 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
     grw [double_ball_sum]
     .
       norm_cast
-
 
       have four_le: (4: ℝ) ≤ 8 := by
         grind
@@ -3155,7 +2944,6 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
       simp [δ_f, deriv_sq_R]
       positivity
 
-
 #print axioms poincare_inequality
 
 -- `B_r` is centred at `1`, so it is closed under inversion (`word_norm_inv`).
@@ -3198,7 +2986,6 @@ lemma lemma_3_25_poincare (data: GoodScalesData b) (j: (X_j data)) (f: G → ℝ
   have R_1_pos: 0 < R_1 data := by
     simp [R_1]
 
-
   -- `deriv_sq` is invariant under right translation, and `B_c_r j r` is the right translate
   -- `B_r r * j`, so the left-handed Poincaré inequality is the one that transfers here.
   have poincare := poincare_inequality_left (R_1 data + 1) (f ∘ (fun g => g * j.val))
@@ -3212,7 +2999,6 @@ lemma lemma_3_25_poincare (data: GoodScalesData b) (j: (X_j data)) (f: G → ℝ
       rw [B_c_r_eq_smul]
       rw [← Finset.image_smul]
       simp
-
 
   conv at poincare =>
     lhs
@@ -3236,14 +3022,8 @@ lemma lemma_3_25_poincare (data: GoodScalesData b) (j: (X_j data)) (f: G → ℝ
   clear poincare
 
   have vol_frac_le: ↑(#(B_r (2 * (↑(R_1 data) + 1) - 2))) / ↑(#(B_r ↑(R_1 data))) ≤ Real.exp (a data.d) := by
-    -- by_cases R_one: (R_1 data) = 1
-    -- . simp [B_r, R_one]
-    --   simp [a]
-    --   norm_cast
 
     --   positivity
-
-
 
     rw [← Real.log_le_iff_le_exp]
     . rw [Real.log_div]
@@ -3258,7 +3038,6 @@ lemma lemma_3_25_poincare (data: GoodScalesData b) (j: (X_j data)) (f: G → ℝ
           rw [Nat.cast_sub]
           . simp
           . grind
-
 
         --rw [sub_eq, sub_one_eq,card_B_r_eq]
         rw [card_B_r_eq]
@@ -3288,9 +3067,6 @@ lemma lemma_3_25_poincare (data: GoodScalesData b) (j: (X_j data)) (f: G → ℝ
           grind
         .
           simp [R_1]
-          -- norm_num
-          -- ring
-          -- grind
       . simp only [B_r, Set.toFinite_toFinset, ne_eq, Nat.cast_eq_zero]
         apply Finset.card_ne_zero_of_mem (a := 1)
         simp [R_1]
@@ -3399,16 +3175,6 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
           simp [B_c_r] at foo
           rw [foo]
           simp
-          -- conv =>
-          --   lhs
-          --   arg 1
-          --   arg 1
-          --   equals ↑((R_1 data) ) =>
-          --     rw [Nat.cast_sub]
-          --     .
-          --       simp [R_1]
-          --     . simp [R_1]
-          --       grind
 
           rw [card_B_r_eq]
 
@@ -3421,7 +3187,6 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
           rhs
           rw [← Finset.univ_eq_attach]
           rw [← EuclideanSpace.real_norm_sq_eq]
-
 
         -- The summand only depends on `↑j`, so we can drop the `.attach` and only then
         -- unfold `B_finsets` into a `Finset.image` and push the function call inwards.
@@ -3438,13 +3203,11 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
         .
           rw [mul_add]
 
-
           rw [add_comm]
           apply add_le_add
           .
             ring
             simp
-
 
           .
 
@@ -3480,7 +3243,6 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
             grw [Finset.sum_le_sum (h := fun (a : {x // x ∈ (X_j_finite data).toFinset}) _ =>
               lemma_3_25_poincare data ⟨a.val, (X_j_finite data).mem_toFinset.mp a.prop⟩
                 (f := u.val.toFun))]
-
 
             simp_rw [← Finset.mul_sum]
             have sum_swap: ∑ i ∈ (X_j_finite data).toFinset, ∑ x ∈ B_c_r (i) (3 * (↑(R_1 data) + 1)), deriv_sq (u.val).toFun x = ∑ x ∈ B_r (8 * (R_2 data)), #{ i ∈ (X_j_finite data).toFinset | x ∈ B_c_r (↑i) (3 * (↑(R_1 data) + 1))} * deriv_sq (u.val).toFun x := by
@@ -3525,7 +3287,6 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
                 simp
                 rw [set_eq]
 
-
               --rw [← Finset.sum_finset_product' (r := {p : (X_j_finite data).toFinset × (finite_closed_ball 1 (2 * (R_2 data))) | True})] -- p | p.1 ∈ (X_j_finite data).toFinset ∧ p.2 = 1
             rw [Finset.sum_attach (f := fun (i: G) => ∑ x ∈ B_c_r (i) (3 * (↑(R_1 data) + 1)), deriv_sq (u.val).toFun x)]
             rw [sum_swap]
@@ -3534,7 +3295,6 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
               have foo := log_pack_center_helper data x
               rw [Nat.cast_add]
               simpa using foo
-
 
             simp [C]
             simp_rw [← mul_assoc]
@@ -3567,96 +3327,6 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
               positivity
             . positivity
 
-            -- grw [Finset.sum_le_sum (g := fun (i: (X_j_finite data).toFinset) => ∑ x ∈ B_r (2 * (R_2 data)), deriv_sq (u.val).toFun x)]
-            -- .
-
-            --   have b_card := card_B_le_exp_wa data
-            --   rw [← Set.ncard_eq_toFinset_card (hs := by apply B_finite)] at b_card
-            --   simp [B] at b_card
-            --   simp
-            --   rw [← Set.ncard_eq_toFinset_card (hs := by apply X_j_finite)]
-
-            --   rw [(Set.ncard_image_iff (by apply X_j_finite)).mpr] at b_card
-            --   . grw [b_card]
-            --     .
-            --       simp [C]
-            --       field_simp
-            --       norm_num
-            --       norm_cast
-            --       simp
-            --       rw [mul_comm 32]
-            --       s orry
-            --       --apply le_refl
-            --     . simp [deriv_sq]
-            --       positivity
-            --   . apply B_ball_injective_on
-            --     . simp
-            --     . simp
-            -- . intro i hi
-            --   apply Finset.sum_le_sum_of_subset_of_nonneg
-            --   .
-            --     simp [-Finset.mem_attach] at hi
-            --     have i_prop := i.prop
-            --     simp [-SetLike.coe_mem, X_j] at i_prop
-            --     intro p hp
-            --     simp [B_r]
-            --     grw [dist_triangle _ i.val]
-            --     simp [B_c_r] at hp
-            --     grw [hp]
-            --     have i_mem := Metric.maximalSeparatedSet_subset i_prop
-            --     simp at i_mem
-            --     grw [i_mem]
-            --     rw [two_mul]
-            --     apply add_le_add
-            --     . simp [R_1, R_2]
-            --       field_simp
-            --       rw [mul_add]
-            --       simp
-            --       ring
-
-            --       have i_sub := (GoodScales data).i_diff_mem
-            --       simp at i_sub
-            --       have first := i_sub.1
-            --       have i1_lt : (GoodScales data).i_1 < (GoodScales data).i_2 - data.w := by
-            --         grind
-
-            --       have explicit_w := data.w_gt
-            --       have i_1_lt_const: (GoodScales data).i_1 < (GoodScales data).i_2 - 4 := by
-            --         grind
-
-            --       grw [i_1_lt_const]
-            --       rw [← Real.rpow_natCast]
-            --       rw [Nat.cast_sub (by grind)]
-            --       rw [Real.rpow_sub]
-            --       norm_num
-            --       ring
-            --       have i_2_pos := (GoodScales data).i_2_pos
-            --       have i_2_ge : 1 ≤ (GoodScales data).i_2 := by grind
-
-            --       have three_le: (3: ℝ) < (16 ^ (GoodScales data).i_2) / 2 := by
-            --         field_simp
-            --         norm_num
-
-            --         grw [← i_2_ge]
-            --         .
-            --           simp
-            --           norm_num
-            --         . simp
-            --       nth_grw 1 [three_le]
-            --       .
-            --         simp
-            --         field_simp
-            --         norm_num
-            --       . simp
-            --       . simp
-            --     . simp
-            --     -- simp [B_r, dist, WordDist_one]
-            --     -- simp [B_c_r, dist, WordDist] at hp
-
-
-            --   . intros
-            --     simp [deriv_sq]
-            --     positivity
         .
           simp
           have foo := B_ball_injective_on data (R_1 data ) (by simp [R_1]) (by simp)
@@ -3668,20 +3338,10 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
           )
           exact foo
 
-
-
-        -- rw [Finset.sum_attach]
-        -- simp [Finset.sum_image]
-        -- grw [Finset.sum_le_sum]
-
-
-
       . intro j hj
         apply Finset.sum_le_sum
         intro x hx
         apply u_bound
-
-
 
   .
     have cover := B_covers_R2 data
@@ -3715,7 +3375,6 @@ lemma Q_R_matrix_det_basis_change {index : Type*} [Fintype index] [DecidableEq i
   have h1 : Q_R_matrix b_1 R = LinearMap.toMatrix₂ b_1 b_1 (Q_R_lin_plain V R) := by
     simp only [Q_R_matrix]; ext i j; simp [Q_R_lin, Q_R_lin_plain]
   rw [h2, h1, hB]
-
 
 lemma growth_bound_basis_change (d: ℕ) {index: Type*} [Fintype index] [DecidableEq index] (b_1: Module.Basis ι ℝ V) (b_2: Module.Basis index ℝ V) (h_growth: growth_bound b_1 d) : growth_bound b_2 d := by
   -- the two bases index the same space, so their index types are canonically equivalent
@@ -3782,8 +3441,6 @@ lemma growth_bound_basis_change (d: ℕ) {index: Type*} [Fintype index] [Decidab
     rw [mul_assoc]
     rw [mul_div_assoc]
 
-
-
   let K := (((b_1.toMatrix ⇑b_2).transpose.submatrix id ⇑equiv.symm).det *
           ((b_1.toMatrix ⇑b_2).submatrix (⇑equiv.symm) id).det) ^ (↑(Module.finrank ℝ ↥V) : ℝ)⁻¹
   conv =>
@@ -3802,7 +3459,6 @@ lemma growth_bound_basis_change (d: ℕ) {index: Type*} [Fintype index] [Decidab
     simp at h_growth
     apply h_growth
 
-
 lemma R'_le_R_2 (data: GoodScalesData b) : R'_ V ≤ (↑(R_2 data) : ℝ) := by
   have foo := (GoodScales data).i_2_ge
   simp [i₀] at foo
@@ -3819,7 +3475,6 @@ lemma R'_le_R_2 (data: GoodScalesData b) : R'_ V ≤ (↑(R_2 data) : ℝ) := by
 set_option maxHeartbeats 2500000 in
 lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodule ℝ LipschitzH, U ≤ V ∧ dim V ≤ 2 * dim U ∧ ∀ f ∈ U, Q_R (16 * (R_2 data)) f f ≤ Real.exp (2 * (a data.d)) * Q_R ((R_2 data)) f f := by
   classical
-
 
   let R := 16 ^ ((GoodScales data).i_2)
   have h_R: R'_ V ≤ ↑R := by
@@ -3899,8 +3554,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
     positivity
   have inner_eq_q_r  : ∀ x y : ↥V, inner ℝ x y = Q_R R x y := fun _ _ => rfl
 
-  --have semi : SeminormedAddCommGroup V := by infer_instance
-  --have inner_prod := Matrix.toNormedAddCommGroup _ q_r_base_pos_def
   obtain ⟨v_orthogonal_orig, v_orthogonal_orig_eval⟩ := LinearMap.BilinForm.exists_orthogonal_basis (Q_R_lin_symm V R)
   let v_orthonormal := v_orthogonal_orig.unitsSMul (fun a => Units.mk0 ‖v_orthogonal_orig a‖⁻¹ (by
     simp
@@ -3931,8 +3584,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
     intro x y hxy
     have x_mem := x.prop
     simp [-Subtype.coe_prop] at x_mem
-    --specialize v_orthogonal_orig_eval x y hxy
-    --simp [v_map_normalize_equiv, v_map_normalize]
     simp [eigen_basis_V, v_orthonormal]
     simp_rw [Module.Basis.unitsSMul_apply]
     simp_rw [Units.smul_def]
@@ -3958,8 +3609,7 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
     simp [norm_eq_q_r]
     have Q_R_pos: ∀ i, 0 ≤ Q_R ↑R ⇑(v_orthogonal_orig i).val ⇑(v_orthogonal_orig i).val := by
       intro i
-      simp [Q_R, ← pow_two]
-      positivity
+      exact Q_R_self_nonneg _ _
     conv =>
       lhs
       arg 2
@@ -3982,13 +3632,11 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
       equals ((Q_R_lin V ↑R) (v_orthogonal_orig i)) (v_orthogonal_orig i) / ((Q_R_lin V ↑R) (v_orthogonal_orig i)) (v_orthogonal_orig i) =>
         rfl
 
-
     field_simp [eval_nonzero]
     have inner_zero :=  q_r_16_m_hermitian.eigenvectorBasis.inner_eq_zero hxy
     rw [EuclideanSpace.inner_eq_star_dotProduct] at inner_zero
     simp [dotProduct] at inner_zero
     exact inner_zero
-
 
   have q_r_lin_remapped_one: ∀ i, ((Q_R_lin V ↑R) (remapped_ortho i)) (remapped_ortho i) = 1 := by
     intro i
@@ -4022,13 +3670,11 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
         apply v_orthogonal_orig_eval _ _ hij
       )]
 
-
     ring
     simp [norm_eq_q_r]
     have Q_R_pos: ∀ i, 0 ≤ Q_R ↑R ⇑(v_orthogonal_orig i).val ⇑(v_orthogonal_orig i).val := by
       intro i
-      simp [Q_R, ← pow_two]
-      positivity
+      exact Q_R_self_nonneg _ _
     conv =>
       lhs
       arg 2
@@ -4050,7 +3696,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
       rhs
       equals ((Q_R_lin V ↑R) (v_orthogonal_orig i)) (v_orthogonal_orig i) / ((Q_R_lin V ↑R) (v_orthogonal_orig i)) (v_orthogonal_orig i) =>
         rfl
-
 
     field_simp [eval_nonzero]
     have one_eq: (1: ℝ) = 1^2 := by
@@ -4078,7 +3723,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
       apply Q_R_pos_on_R'
       . apply Module.Basis.ne_zero
       . exact h_R
-
 
     .
       rw [LinearMap.isOrthoᵢ_def] at v_orthogonal_orig_eval
@@ -4139,8 +3783,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
       norm_cast
       grind
 
-
-
   have q_r_16_remapped_orthogonal : (Q_R_lin_plain V (16 * R)).IsOrthoᵢ remapped_ortho := by
     simp [remapped_ortho]
     rw [LinearMap.isOrthoᵢ_def]
@@ -4165,7 +3807,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
           rw [Pi.single_apply]
           have foo := eq_comm (a := i) (b := a)
           simp_rw [foo]
-
 
       ext a
       simp
@@ -4195,7 +3836,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
     apply OrthonormalBasis.inner_eq_zero
     exact hxy.symm
 
-
   have new_growth := data.h_growth
   have nonempty_fin: Nonempty (Fin (Module.finrank ℝ ↥V)) := by
     use 0
@@ -4222,7 +3862,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
         . simp [one_mem]
         . grind
 
-
     --
     have inner_x_self (x: V) (k: ℝ) (hk: ∀ i ∈ (remapped_ortho.repr x).support, (Q_R_lin_plain V (16 * R) (remapped_ortho i) (remapped_ortho i)) ≤ k * (Q_R_lin_plain V (R) (remapped_ortho i) (remapped_ortho i))) : Q_R_lin_plain V (16 * R) x x ≤ k * Q_R_lin_plain V (R) x x := by
       rw [←  Module.Basis.sum_repr remapped_ortho (u := x)]
@@ -4246,7 +3885,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
         .
           intro hi
           simp at hi
-
 
       have q_r_16_sum_eq: ∀ i, ∑ i_1, Q_R_lin_plain V (16 * R) ((remapped_ortho.repr x) i_1 • remapped_ortho i_1) ((remapped_ortho.repr x) i • remapped_ortho i) = Q_R_lin_plain V (16 * R) ((remapped_ortho.repr x) i • remapped_ortho i) ((remapped_ortho.repr x) i • remapped_ortho i) := by
         intro i
@@ -4291,7 +3929,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
         rhs
         rw [←  Module.Basis.sum_repr remapped_ortho (u := x)]
 
-
       simp_rw [map_sum]
       simp
       simp_rw [Finset.mul_sum]
@@ -4329,7 +3966,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
           equals k * ((Q_R_lin_plain V ↑R) (remapped_ortho i)) (remapped_ortho i) * (remapped_ortho.repr x) i * (remapped_ortho.repr x) i =>
             ring
 
-
         rw [mul_assoc]
         nth_rw 2 [mul_assoc]
         specialize hk i i_mem_inter
@@ -4350,7 +3986,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
       rw [← mul_sub] at a_gt
       rw [← Real.log_div] at a_gt
       .
-
 
         simp [Q_R_matrix] at a_gt
 
@@ -4431,8 +4066,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
                 simp [Q_R_lin] at i_not_mem
                 simpa using i_not_mem
 
-
-
               . apply Finset.image_subset_image
                 simp
             intro f hf
@@ -4508,7 +4141,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
           simp only [large_basis, Finset.mem_filter, Finset.mem_univ, true_and] at hi
           exact le_of_lt hi
 
-
         conv at a_gt =>
           lhs
           pattern Matrix.det _
@@ -4569,7 +4201,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
                 rw [Real.le_log_iff_exp_le]
                 .
 
-
                   grw [← q_r_16_eigen_ge]
                   .
                     simp [q_r_lin_remapped_one]
@@ -4629,10 +4260,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
 #print axioms exists_bounded_doubling_subspace
 
-
-
-
-
 end V_Wrapper_Section
 
 -- Theorem 3.23
@@ -4654,7 +4281,6 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
   have v_finite := v_data.hV
   let v_dec := v_data.V_decidable
   have v_nontrivial := v_data.V_nontrivial
-
 
   let data: GoodScalesData (V_basis v_data.V) := {
     w := ⌈Real.logb 16 ((16^4) * #(S) * Real.exp (4 * a (d)))⌉₊
@@ -4725,8 +4351,6 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
         simp
         ring
 
-
-
     grw [u_bound] at u_le
     .
       have u_double := bounded_double u (by
@@ -4776,19 +4400,17 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
               . simp
               . simp
 
-
             conv at u_le =>
               rhs
               equals GeneratesNS.C * Real.exp (2 * a data.d) * (((↑(R_1 data) + 1) / ((↑(4 * R_2 data : ℝ))))^2 * ↑(#S) * (Real.exp (2 * a data.d) * Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val)) =>
                 ring
 
-
             grw [r_ratio_le] at u_le
             ring_nf at u_le
             .
               have le_half: Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val ≤ (2: ℝ)⁻¹ * Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val := by
-                have qr_nonneg : 0 ≤ Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val := by
-                  simp [Q_R, ← pow_two]; positivity
+                have qr_nonneg : 0 ≤ Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val :=
+                  Q_R_self_nonneg _ _
                 have ha : (0:ℝ) ≤ a data.d := by simp only [a]; positivity
                 have hE1 : (1:ℝ) ≤ Real.exp (a data.d) := Real.one_le_exp ha
                 have hE4 : (1:ℝ) ≤ Real.exp (a data.d) ^ 4 := one_le_pow₀ hE1
@@ -4837,13 +4459,11 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
                 by_contra!
                 rw [mul_comm] at le_half
                 have foo := one_le_of_le_mul_left₀ (by
-                  have nonneg: 0 ≤ Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val := by
-                    simp [Q_R, ← pow_two]
-                    positivity
+                  have nonneg: 0 ≤ Q_R ↑(R_2 data) ⇑u.val.val ⇑u.val.val :=
+                    Q_R_self_nonneg _ _
                   grind
                 ) le_half
                 norm_num at foo
-
 
               rw [← Submodule.coe_eq_zero]
               by_contra hne
@@ -4851,8 +4471,7 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
             . simp [GeneratesNS.C]
               positivity
             . apply mul_nonneg (by positivity)
-              simp [Q_R, ← pow_two]
-              positivity
+              exact Q_R_self_nonneg _ _
 
         . simp [GeneratesNS.C]
           positivity
@@ -4868,9 +4487,6 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
     .
       simp [GeneratesNS.C]
       positivity
-
-
-
 
   apply LinearMap.finrank_le_finrank_of_injective at phi_u_inj
   simp at phi_u_inj
@@ -4914,7 +4530,6 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ data: V_Data, (haveI :=
   . simp
   . apply Nat.le_ceil
 
-
 open scoped Topology
 
 -- TODO - do we really need the double by_contra here?
@@ -4932,7 +4547,6 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
     have finite_dim: FiniteDimensional ℝ LipschitzH := by
       infer_instance
     contradiction
-
 
   obtain ⟨d, hd⟩ := hGS.g_growth
   obtain ⟨C, V_bound⟩ := theorem_3_23 ((d + 3) + (d + 3)) (by simp)
@@ -4972,16 +4586,6 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
   specialize V_bound large_v ?_
   .
     simp [growth_bound, my_expr]
-    -- have ne_top_of_zero (a: ENNReal) (ha: a ≤ 0): a ≠ ⊤ := by
-    --   simp at ha
-    --   simp [ha]
-    -- apply ne_top_of_zero
-    -- simp
-    -- apply Filter.Tendsto.liminf_eq
-    -- conv =>
-    --   pattern nhds 0
-    --   equals nhds ((ENNReal.ofReal (0 * 0))) =>
-    --     simp
 
     -- apply ENNReal.tendsto_ofReal
     norm_cast
@@ -5010,7 +4614,6 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
         simp [fin_basis]
         apply LinearIndepOn.id_image
         exact Module.Basis.linearIndepOn B ↑fin_basis_idx
-
 
     conv =>
       pattern (𝓝[>] 0)
