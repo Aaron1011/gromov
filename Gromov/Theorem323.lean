@@ -941,7 +941,7 @@ lemma R'_pos (V: Submodule ℝ LipschitzH) [FiniteDimensional ℝ V]: 1 < R'_ V 
   have foo := (v_r_all_nonzero V).choose_spec.1
   exact foo
 
-lemma Q_R_pos_on_R' {V: Submodule ℝ LipschitzH} (v: V) (hv: v ≠ 0) [FiniteDimensional ℝ V] [DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)] (R: ℝ) (hR: (R'_ V) ≤ R): 0 < Q_R R v v := by
+lemma Q_R_pos_on_R' {V: Submodule ℝ LipschitzH} (v: V) (hv: v ≠ 0) [FiniteDimensional ℝ V] (R: ℝ) (hR: (R'_ V) ≤ R): 0 < Q_R R v v := by
   simp [Q_R]
   rw [Finset.sum_pos_iff_of_nonneg]
   .
@@ -1007,7 +1007,6 @@ theorem LipschitzWith.sum {ι : Type*} {α : Type*} {E : Type*}
 section V_variable
 
 variable {V: Submodule ℝ LipschitzH} [V_finite: FiniteDimensional ℝ V] [Nontrivial V]
-  [V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)]
 
 instance nonempty_basis: Nonempty ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V) := Module.Basis.index_nonempty (Module.Basis.ofVectorSpace _ _)
 
@@ -1227,18 +1226,18 @@ section V_Wrapper_Section
 /-- The standing hypotheses on the subspace `V`, bundled.
 
 This is a `class` purely so that `open V_Wrapper` plus `variable [V_Wrapper]` below lets the whole
-section talk about a single fixed `V` by name. Registering the three instance-valued projections
-below means `FiniteDimensional`/`Nontrivial`/`DecidableEq` for that `V` are found automatically
-wherever a `V_Wrapper` is in scope — including at a call site that merely has `(data : V_Wrapper)`
-as an ordinary hypothesis, which is how `theorem_3_23` quantifies over all such subspaces. -/
+section talk about a single fixed `V` by name. Registering the two instance-valued projections
+below means `FiniteDimensional`/`Nontrivial` for that `V` are found automatically wherever a
+`V_Wrapper` is in scope — including at a call site that merely has `(data : V_Wrapper)` as an
+ordinary hypothesis, which is how `theorem_3_23` quantifies over all such subspaces.
+(`DecidableEq` needs no field: it follows from `LipschitzH_DecidableEq`.) -/
 class V_Wrapper where
   V: Submodule ℝ LipschitzH
   V_finite: FiniteDimensional ℝ V
   V_nontrivial: Nontrivial V
   V_even: Even (Module.finrank ℝ V)
-  V_decidable: DecidableEq ↑(Module.Basis.ofVectorSpaceIndex ℝ V)
 
-attribute [instance] V_Wrapper.V_finite V_Wrapper.V_nontrivial V_Wrapper.V_decidable
+attribute [instance] V_Wrapper.V_finite V_Wrapper.V_nontrivial
 
 open V_Wrapper
 
@@ -4450,8 +4449,6 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
         simp [fin_basis]
         apply LinearIndepOn.id_image
         exact Module.Basis.linearIndepOn B ↑fin_basis_idx
-    V_decidable := by
-      infer_instance
     V_nontrivial := by
       rw [nontrivial_iff]
       have one_lt: 1 < #fin_basis_idx := by

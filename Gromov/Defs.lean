@@ -727,6 +727,15 @@ instance: FunLike (LipschitzH) G ℝ where
   -- TODO - why does this work? I blindly copied it from `OneHom.funLike`
   coe_injective f g h := by cases f; cases g; congr
 
+/-- Nothing here is ever evaluated, and there is no computable equality test on `LipschitzH`
+anyway, so decide equality classically once and for all. Supplying a single concrete instance
+for this one type — rather than `open Classical`, which also overrides the *computable*
+instances on e.g. `G` and `Fin n` — means every `DecidableEq` on `LipschitzH`, on a subspace
+`↥V`, or on a basis index `↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)` resolves to the same term,
+so no diamonds arise. Same idiom as `GL_W_DecidableEq` in `Gromov.lean`. -/
+noncomputable instance LipschitzH_DecidableEq: DecidableEq (LipschitzH) :=
+  Classical.typeDecidableEq _
+
 @[ext]
 theorem LipschitzH.ext [Generates ] {f g: LipschitzH} (h: ∀ x, f.toFun x = g.toFun x): f = g := DFunLike.ext _ _ h
 
