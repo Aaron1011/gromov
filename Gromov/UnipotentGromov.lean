@@ -1415,798 +1415,800 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal
       exact h_z_unipotent
 
 
-
-
-  -- Use the fact that this is a subgroup of a finitely-generated nilpotent group
-  have center_fg: Group.FG (Subgroup.center N) := by
-    sorry
-  have center_iso := CommGroup.equiv_free_prod_directSum_zmod (Subgroup.center N)
-  obtain ⟨I, J, fin_I, fin_J, I_pow, I_pow_prime, K_map, ⟨center_iso⟩⟩ := center_iso
-
-
-  --have center_normal_in_G := ConjAct.normal_of_characteristic_of_normal (K := Subgroup.center N)
-
-  let new_conj := MulAut.conjNormal (H := (Subgroup.map N.subtype (Subgroup.center ↥N))) gamma
-
-  -- have subtype_center_iso := Subgroup.equivMapOfInjective (Subgroup.center N) N.subtype (by apply Subgroup.subtype_injective)
-  -- have aut_congr := MulAut.congr subtype_center_iso
-  -- let gamma_conj := aut_congr.symm.toMonoidHom new_conj
-  -- let mulaut_fg_abelian := MulAut.congr center_iso
-
-
-  -- TODO - bad K?
-  --let K := Nat.card (((i : I) → Multiplicative (ZMod (I_pow i ^ K_map i))))
-
-  let center_fst := (MonoidHom.fst _ _).comp center_iso.toMonoidHom
-  let aut_congr := MulAut.congr center_iso
-
-  let gamma_pow_conj (n: ℕ): MulAut ↥(Subgroup.center ↥N) := {
-    toFun := fun a => ⟨⟨gamma^n * a * (gamma^n)⁻¹, by
-      apply N_normal.conj_mem
-      simp
-    ⟩, by
-      have map_normal: (Subgroup.map (Subgroup.subtype _) (Subgroup.center N)).Normal := by
-        infer_instance
-      have foo := map_normal.conj_mem a (by simp) (gamma^n)
-      simp at foo
-      obtain ⟨a_mem, other_mem⟩ := foo
-      exact other_mem
-    ⟩
-    invFun := fun a =>  ⟨⟨(gamma^n)⁻¹ * a * (gamma^n), by
-      apply N_normal.conj_mem'
-      simp
-    ⟩, by (
-      have map_normal: (Subgroup.map (Subgroup.subtype _) (Subgroup.center N)).Normal := by
-        infer_instance
-      have foo := map_normal.conj_mem' a (by simp) (gamma^n)
-      simp at foo
-      obtain ⟨a_mem, other_mem⟩ := foo
-      exact other_mem
-    )⟩
-    left_inv := by
-      intro a
-      group
-    right_inv := by
-      intro a
-      group
-    map_mul' := by
-      simp
-  }
-
-
-
-  let gamma_conj := gamma_pow_conj 1
-
-  have torsion_free: IsMulTorsionFree ((Subgroup.center N) ⧸ (CommGroup.torsion (Subgroup.center N))) := by
-    apply QuotientGroup.instIsMulTorsionFree
-
-  have center_quot_equiv := finDimVectorspaceEquiv (R := ℤ) (n := Module.finrank ℤ (Additive (((Subgroup.center N) ⧸ (CommGroup.torsion (Subgroup.center N)))))) (hn := by simp) (M := Additive (((Subgroup.center N) ⧸ (CommGroup.torsion (Subgroup.center N)))))
-
-  let gamma_quot := QuotientGroup.congr (CommGroup.torsion (Subgroup.center N)) (CommGroup.torsion (Subgroup.center N)) gamma_conj (by
-    conv =>
-      arg 1
-      arg 1
-      equals gamma_conj.toMonoidHom => rfl
-    apply Subgroup.characteristic_iff_map_eq (H := (CommGroup.torsion (Subgroup.center N))).mp
-    apply torsion_characteristic
-  )
-
-  let add_gamma_conj := gamma_quot.toAdditive.toIntLinearEquiv (modM := inferInstance) (modM₂ := inferInstance)
-  let gamma_int := LinearEquiv.conj center_quot_equiv (add_gamma_conj)
-  let gamma_matrix := gamma_int.toMatrix'.map (complexOfIntHom)
-
-  -- TODO - deduplicate the val_inv and inv_val code
-  have gamma_eigenvalues := int_matrix_poly_growth_eigenvalue {
-    val := gamma_int.toMatrix'
-    inv := (LinearEquiv.conj center_quot_equiv (add_gamma_conj.symm)).toMatrix'
-    val_inv := by
-      unfold gamma_int
-      rw [← LinearMap.toMatrix'_mul]
-      apply_fun (fun f => Matrix.toLin' f)
-      .
-        simp
-        conv =>
-          lhs
-          equals (center_quot_equiv.conj add_gamma_conj).comp (center_quot_equiv.conj (add_gamma_conj.symm)) =>
-            rfl
-
-        rw [← LinearEquiv.conj_comp]
-        simp
-      .
-        intro a b hab
-        simpa using hab
-    inv_val := by
-      unfold gamma_int
-      rw [← LinearMap.toMatrix'_mul]
-      apply_fun (fun f => Matrix.toLin' f)
-      .
-        simp
-        conv =>
-          lhs
-          equals (center_quot_equiv.conj add_gamma_conj.symm).comp (center_quot_equiv.conj (add_gamma_conj)) =>
-            rfl
-
-        rw [← LinearEquiv.conj_comp]
-        simp
-      .
-        intro a b hab
-        simpa using hab
-
-  } (p := sorry) sorry sorry
-  simp only [] at gamma_eigenvalues
-
-  -- use pow_eq_one_of_norm_le_one (Kronecker's Theorem) once mathlib is bumped
-
-  have gamma_eigen_unity: ∀ k : Module.End.Eigenvalues gamma_matrix.toLin', ∃ n, 0 < n ∧ k.val^n = 1 := by
-    sorry
-
-  choose k_root h_k_root using gamma_eigen_unity
-  let n_prod := ∏ n ∈ (Finset.image k_root Finset.univ), n
-
-
-  let K := Nat.card (MulAut ↥(Subgroup.map (N.subtype.comp (Subgroup.center ↥N).subtype) (CommGroup.torsion ↥(Subgroup.center ↥N))))
-
-
-  have n_prod_ne: n_prod ≠ 0 := by
-    unfold n_prod
-    rw [Finset.prod_ne_zero_iff]
-    intro k hk
-    simp at hk
-    obtain ⟨a, ha⟩ := hk
-    have gamma_pow := (h_k_root a).1
-    rw [ha] at gamma_pow
-    grind
-
-  have K_ne_zero: K ≠ 0 := by
-    unfold K
-    rw [Nat.card_ne_zero]
-    refine ⟨by infer_instance, ?_⟩
-    unfold MulAut
-
-    have torsion_fg: Group.FG ↥(CommGroup.torsion ↥(Subgroup.center ↥N)) := by
-      simp
-      rw [Subgroup.fg_iff_add_fg]
-      apply fg_subgroup_of_abelian
-      apply AddGroup.fg_of_group_fg
-
-    have torsion_finite : Finite (CommGroup.torsion ↥(Subgroup.center ↥N)) := by
-      apply CommGroup.finite_of_fg_torsion
-      -- TODO - extract this and pr to mathlib
-      intro g
-      have foo := g.property
-      rw [CommGroup.mem_torsion] at foo
-      rw [isOfFinOrder_iff_pow_eq_one] at foo
-      rw [isOfFinOrder_iff_pow_eq_one]
-      simp_rw [Subtype.ext_iff]
-      simp_rw [Subtype.ext_iff] at foo
-      simpa using foo
-
-    apply MulEquiv.finite_left
-
-  have n_prod_mul_ne: (n_prod * K : ℕ) ≠ (0 : ℂ) := by
-    simp
-    refine ⟨n_prod_ne, ?_⟩
-    apply K_ne_zero
-
-  have n_prod_pow: ∀ k: Module.End.Eigenvalues gamma_matrix.toLin', k.val^(n_prod * K) = 1 := by
-    intro k
-    rw [pow_mul]
-    unfold n_prod
-    rw [← Finset.prod_erase_mul (a := k_root k)]
-    .
-      rw [pow_mul']
-      simp [h_k_root]
-    . simp
-
-
-
-  -- TODO - generalize and pr to mathlib
-  have gamma_pow_eigen: ∀ k: Module.End.Eigenvalues ((gamma_matrix.toLin')^(n_prod * K)), k.val = 1 := by
-    intro k
-    have k_prop := k.property
-    have has_eigen: Module.End.HasEigenvalue (Matrix.toLin' gamma_matrix ^ (n_prod * K)) k := by
-      exact k.property
-    rw [Module.End.hasEigenvalue_iff_mem_spectrum] at has_eigen
-    rw [← AlgEquiv.spectrum_eq (f := Module.End.toContinuousLinearMap _)] at has_eigen
-    simp at has_eigen
-    rw [spectrum.map_pow_of_pos] at has_eigen
-    .
-      rw [AlgEquiv.spectrum_eq] at has_eigen
-      simp at has_eigen
-      obtain ⟨c, c_mem, c_pow_eq⟩ := has_eigen
-      simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val]
-      simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val] at c_pow_eq
-      rw [← c_pow_eq]
-      rw [← Matrix.spectrum_toLin'] at c_mem
-      rw [← Module.End.hasEigenvalue_iff_mem_spectrum] at c_mem
-      specialize n_prod_pow ⟨_, c_mem⟩
-      simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val] at n_prod_pow
-      exact n_prod_pow
-    .
-      simp at n_prod_mul_ne
-      simp
-      omega
-
-
-
-  -- have torsion_ne_top: CommGroup.torsion ↥(Subgroup.center ↥N) ≠ ⊤ := by
-
-  --   sorry
-
-
-  -- have quot_nontrivial : Nontrivial ((Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)) := by
-  --   -- TODO - use QuotientGroup.nontrivial_iff
-  --   sorry
-
-  -- Module.free_of_finite_type_torsion_free'
-  -- QuotientGroup.instIsMulTorsionFree
-
-  -- have rank_ne_zero: NeZero (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)))) := by
-  --   rw [neZero_iff]
-  --   rw [Nat.ne_zero_iff_zero_lt]
-
-  --   -- QuotientGroup.nontrivial_iff
-  --   apply Module.finrank_pos
-
-  obtain ⟨m, hm⟩ := eigen_one_unipotent _ gamma_pow_eigen
-
-  -- have m_ne_zero: m ≠ 0 := by
-  --   by_contra!
-  --   simp [this] at hm
-  --   rw [eq_comm] at hm
-  --   rw [LinearMap.ext_iff] at hm
-  --   specialize hm 1
-  --   rw [LinearMap.zero_apply] at hm
-  --   rw [Module.End.one_apply] at hm
-  --   rw [funext_iff] at hm
-  --   specialize hm ⟨0, ?_⟩
-  --   .
-  --     apply Module.finrank_pos
-  --   .
-  --     simp at hm
-
-
-  -- have quotient_comm_trivial: ∀ z : (↥(Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)), iteratedCommutator z.out.val.val ((gamma) ^ (n_prod)) m ∈ Subgroup.map (Subgroup.subtype _) (Subgroup.center N) := by
-  --   clear * - gamma_conj
-  --   intro z
-
-  --   have comm_eq: ∀ n: ℕ, iteratedCommutator z.out.val.val ((gamma) ^ (n_prod)) 1 = (center_quot_equiv.symm ((-((gamma_int ^ n_prod) - 1)) ((center_quot_equiv z)))).out.val.val := by
-
-  --     intro n
-  --     simp [iteratedCommutator, Bracket.bracket]
-  --     conv =>
-  --       lhs
-  --       equals z.out.val.val * ((gamma_pow_conj n_prod) z.out⁻¹) =>
-  --         simp [gamma_pow_conj]
-  --         group
-
-  --     rw [← Subgroup.coe_mul, ← Subgroup.coe_mul]
-  --     rw [← Subtype.ext_iff, ← Subtype.ext_iff]
-  --     simp
-
-
-  --     sorry
-
-  --   sorry
-
-
-
-
-  use (n_prod * K)
-  -- Using 'm + 2' avoids an issue with the quotient group being trivial
-  use (m + 1)
-  refine ⟨?_, ?_⟩
-  .
-    simp [K]
-    refine ⟨n_prod_ne, ?_⟩
-    apply K_ne_zero
-
-  intro g hg
-  unfold iteratedCommutator
-  rw [Function.iterate_succ']
-  simp
-
-  have comm_torsion_trivial: ∀ h ∈ (CommGroup.torsion ↥(Subgroup.center ↥N)), ⁅h.val.val, gamma ^ (n_prod * K)⁆ = 1 := by
-    intro h h_mem
-    rw [commutatorElement_def]
-
-
-
-    -- TODO - this can probably be generalized into a lemma about characteristic subgroups, and pr'd to mathlib
-    have normal_center_map: (Subgroup.map (N.subtype.comp (Subgroup.center ↥N).subtype) (CommGroup.torsion ↥(Subgroup.center ↥N))).Normal := {
-      conj_mem := by
-        intro f hf k
-        simp at hf
-        obtain ⟨f_mem_N, f_mem_center, f_mem_torsion⟩ := hf
-        simp
-        use ?_
-        . use ?_
-          .
-            rw [CommGroup.mem_torsion]
-            conv =>
-              arg 1
-              arg 1
-              arg 1
-              equals (MulAut.conj k) f =>
-                rfl
-
-            rw [isOfFinOrder_iff_pow_eq_one]
-            simp_rw [Subtype.ext_iff]
-            simp
-            rw [← isOfFinOrder_iff_pow_eq_one]
-            rw [CommGroup.mem_torsion] at f_mem_torsion
-            rw [isOfFinOrder_iff_pow_eq_one] at f_mem_torsion
-            simp_rw [Subtype.ext_iff] at f_mem_torsion
-            simp at f_mem_torsion
-            rw [← isOfFinOrder_iff_pow_eq_one] at f_mem_torsion
-            exact f_mem_torsion
-          .
-            have first := ConjAct.normal_of_characteristic_of_normal (H := N) (K := Subgroup.center ↥N)
-            have foo := first.conj_mem f (by simp; use f_mem_N) k
-            simp at foo
-            obtain ⟨mem_n, mem_center⟩ := foo
-            exact mem_center
-        .
-          apply N_normal.conj_mem
-          exact f_mem_N
-    }
-
-    have conj_trivial: MulAut.conjNormal (H := Subgroup.map ((Subgroup.subtype _).comp (Subgroup.subtype _)) ((CommGroup.torsion ↥(Subgroup.center ↥N)))) (gamma ^ (n_prod * K)) = 1 := by
-      rw [MonoidHom.map_pow]
-      rw [pow_mul']
-      unfold K
-      simp
-
-    apply_fun (fun f => f ⟨h⁻¹, by simpa using h_mem⟩) at conj_trivial
-    rw [Subtype.ext_iff] at conj_trivial
-    rw [MulAut.conjNormal_apply] at conj_trivial
-    simp at conj_trivial
-    conv =>
-      lhs
-      equals h.val.val * (gamma ^ (n_prod * K) * (↑↑h)⁻¹ * (gamma ^ (n_prod * K))⁻¹) =>
-        group
-    simp [conj_trivial]
-
-
-  have comm_mem_N: ∀ n, ∀ m, ∀ g: N, (fun x ↦ ⁅x, gamma ^ (n)⁆)^[m] ↑g ∈ N := by
-    intro n m g
-    have foo := iterated_comm_normal_eq_iterated g (gamma ^ (n)) (m)
-    unfold iteratedCommutator at foo
-    rw [← foo]
-    simp
-
-  have mem_center:  ∀ n, ∀ m, ⟨_, (comm_mem_N n m g)⟩ ∈ Subgroup.center N := by
-    intro n m
-    have foo := iterated_comm_normal_eq_iterated (N := Subgroup.map (Subgroup.subtype _) (Subgroup.center N)) ⟨g, by simpa using hg⟩ (gamma ^ (n)) (m)
-    unfold iteratedCommutator at foo
-    simp only [] at foo
-    simp_rw [← foo]
-    rw [← Subgroup.mem_map_iff_mem (f := Subgroup.subtype _)]
-    . simp
-    . exact Subgroup.subtype_injective N
-
-  have mem_torsion: ⟨_, (mem_center (n_prod * K) m)⟩ ∈ CommGroup.torsion ↥(Subgroup.center ↥N) := by
-    rw [← QuotientGroup.eq_one_iff]
-    apply_fun center_quot_equiv ∘ Additive.ofMul
-    .
-      conv =>
-        lhs
-        equals (-1)^(m) * ((((gamma_int ^ (n_prod * K)) - 1)^(m)) (center_quot_equiv (Additive.ofMul (QuotientGroup.mk (⟨_, hg⟩))))) =>
-
-          apply_fun center_quot_equiv.symm
-          .
-            simp
-            clear hm
-            induction m with
-            | zero =>
-              simp [Bracket.bracket]
-              -- apply_fun center_quot_equiv ∘ (Additive.ofMul)
-              -- .
-              --   simp [-EmbeddingLike.apply_eq_iff_eq]
-              --   conv =>
-              --     lhs
-              --     arg 2
-              --     arg 2
-              --     arg 1
-              --     equals ⟨g, hg⟩ * ⟨⟨gamma ^ (n_prod * K) * (↑g)⁻¹ * (gamma ^ (n_prod * K))⁻¹, (by
-              --       have foo := N_normal.conj_mem g⁻¹ (by simp) (gamma ^ (n_prod * K))
-              --       exact foo
-              --     )⟩, (by
-              --       let map_normal: (Subgroup.map (Subgroup.subtype _) (Subgroup.center N)).Normal := by
-              --         infer_instance
-
-              --       have foo := map_normal.conj_mem g⁻¹ (by simp [hg]) (gamma ^ (n_prod * K))
-              --       simp at foo
-              --       obtain ⟨mem_N, mem_center⟩ := foo
-              --       exact mem_center
-              --     )⟩ =>
-              --       simp
-              --       rw [Subtype.ext_iff]
-              --       simp
-              --       group
-              --   rw [QuotientGroup.mk_mul]
-              --   rw [ofMul_mul]
-              --   rw [LinearEquiv.map_add]
-              --   conv =>
-              --     rhs
-              --     arg 2
-              --     arg 1
-              --     unfold Additive.ofMul
-              --   simp
-              --   rw [sub_eq_add_neg]
-              --   simp
-              --   unfold gamma_int
-              --   conv =>
-              --     rhs
-              --     arg 1
-              --     arg 1
-              --     -- TODO - extract this to a lemma and upstream to mathlib
-              --     equals center_quot_equiv.conj (add_gamma_conj ^ (n_prod * K)) =>
-              --       induction (n_prod * K) with
-              --       | zero =>
-              --         simp
-              --         conv =>
-              --           rhs
-              --           arg 2
-              --           equals LinearMap.id => rfl
-              --         simp
-              --         rfl
-              --       | succ k ih =>
-              --         rw [pow_succ']
-              --         rw [ih]
-              --         rw [pow_succ']
-              --         conv =>
-              --           rhs
-              --           pattern _ * _
-              --           equals add_gamma_conj.toLinearMap ∘ₗ (add_gamma_conj.toLinearMap ^ k) =>
-              --             rfl
-              --         rw [LinearEquiv.conj_comp]
-              --         rfl
-              --   rw [LinearEquiv.conj_apply_apply]
-              --   nth_rw 1 [← neg_one_smul (R := ℤ)]
-              --   rw [← LinearEquiv.map_smul]
-              --   rw [neg_one_smul]
-              --   congr
-              --   simp
-              --   -- TODO - investigate why this needed to be explicitly factored out and generalized over 'n'
-              --   -- for the induction proof below to work
-              --   have pow_mem_N: ∀ n, gamma ^ (n) * ↑g * gamma⁻¹ ^ (n) ∈ N := by
-              --     simp
-              --     intro n
-              --     apply N_normal.conj_mem
-              --     simp
-              --   conv =>
-              --     rhs
-              --     arg 1
-              --     arg 2
-              --     equals Additive.ofMul (QuotientGroup.mk' (CommGroup.torsion ↥(Subgroup.center ↥N)) (⟨⟨(gamma^(n_prod * K)) * g * gamma⁻¹^((n_prod * K)), (pow_mem_N _)⟩, (by
-              --       simp
-              --       norm_cast
-              --       -- TODO - deduplicate this
-              --       let map_normal: (Subgroup.map (Subgroup.subtype _) (Subgroup.center N)).Normal := by
-              --         infer_instance
-
-
-              --       have foo := map_normal.conj_mem g (by simp [hg]) (gamma ^ (n_prod * K))
-              --       simp at foo
-              --       obtain ⟨mem_N, mem_center⟩ := foo
-              --       exact mem_center
-              --     )⟩)) =>
-              --       clear * -
-              --       simp
-              --       norm_cast
-              --       -- rw[← QuotientGroup.out_eq' (a := Additive.toMul _)]
-              --       -- rw [QuotientGroup.eq]
-
-              --       -- congr
-              --       -- rw [Subtype.ext_iff]
-              --       -- simp
-              --       -- rw [Subtype.ext_iff]
-              --       -- simp
-              --       induction (n_prod * K) with
-              --       | zero =>
-              --         simp
-              --       | succ q ih =>
-              --         nth_rw 1 [pow_succ']
-              --         conv =>
-              --           lhs
-              --           equals (add_gamma_conj.toLinearMap) ((add_gamma_conj.toLinearMap ^ (q)) (Additive.ofMul (QuotientGroup.mk ⟨g, hg⟩))) =>
-              --             simp
-              --         rw [ih]
-              --         simp [add_gamma_conj, gamma_quot, gamma_conj, gamma_pow_conj]
-              --         group
-
-              --   simp
-              --   rw [← QuotientGroup.mk_inv]
-              --   congr
-              --   simp
-              --   group
-              -- .
-              --   intro a b hab
-              --   simpa using hab
-            | succ j ih =>
-              simp_rw [Function.iterate_succ']
-              simp
-              conv =>
-                lhs
-                equals (Additive.ofMul (QuotientGroup.mk ⟨⟨(fun x ↦ ⁅x, gamma ^ (n_prod * K)⁆)^[j] ↑g, by apply comm_mem_N⟩, by apply mem_center⟩))
-                  + (Additive.ofMul (gamma_quot ((QuotientGroup.mk ⟨⟨(fun x ↦ ⁅x, gamma ^ (n_prod * K)⁆)^[j] ↑g, by apply comm_mem_N⟩, by apply mem_center⟩)))) =>
-
-                  sorry
-
-              rw [ih]
-              apply_fun center_quot_equiv
-              .
-                simp
-                sorry
-              . sorry
-              -- simp [gamma_quot]
-              -- sorry
-              -- simp [Bracket.bracket]
-              -- simp [Bracket.bracket] at ih
-              -- set gamma_a := gamma ^ (n_prod * K)
-              -- sorry
-          . exact LinearEquiv.injective center_quot_equiv.symm
-
-      -- v * (B * v)⁻¹
-
-      -- v * (B * v)⁻¹ * (B * (v * (B * v)⁻¹))⁻¹
-      --
-
-      -- conv =>
-      --   lhs
-      --   arg 2
-      --   arg 1
-      --   arg 1
-      --   arg 1
-      --   equals ((g.val * ((gamma_pow_conj (n_prod * K)) ⟨g⁻¹, by simpa using hg⟩))^(((-1 : ℤ)^(m + 1))))^((m + 1)) =>
-      --     clear * -
-      --     -- TODO - extract this to a lemma
-      --     induction m with
-      --     | zero =>
-      --       simp [Bracket.bracket, gamma_pow_conj]
-      --       group
-      --     | succ n ih =>
-      --       rw [Function.iterate_succ']
-      --       simp only [Function.comp_apply]
-      --       simp_rw [ih]
-      --       simp [gamma_pow_conj]
-      --       simp [Bracket.bracket]
-      --       set q := (gamma ^ (n_prod * K))
-      --       set f := ((↑g * (q * (↑g)⁻¹ * q⁻¹)))
-      --       nth_rw 6 [pow_succ]
-      --       rw [pow_succ (n := n + 1)]
-      --       simp
-      --       rw [← mul_inv_rev]
-      --       rw [← pow_succ']
-      --       simp
-      --       rw [← inv_zpow]
-      --       simp
-      --       simp [gamma_pow_conj]
-      --       nth_rw 3 [pow_succ]
-      --       rw [pow_succ (a := (-1 : ℤ))]
-      --       simp
-      --       nth_rw 2 [← inv_pow]
-      --       nth_rw 4 [← inv_pow]
-
-      --       rw [← inv_zpow]
-      --       simp
-
-      --       simp
-      --       nth_rw 1 [← inv_pow]
-      --       simp
-      --       group
-      --       sorry
-
-      rw [← Matrix.toLin'_pow] at hm
-      conv at hm =>
-        lhs
-        arg 1
-        rhs
-        equals Matrix.toLin' 1 =>
-          simp
-          ext a
-          simp
-
-      rw [sub_eq_add_neg] at hm
-      conv at hm =>
-        lhs
-        arg 1
-        rhs
-        equals Matrix.toLin' (-1) =>
-          simp
-
-      rw [← LinearEquiv.map_add] at hm
-      rw [← Matrix.toLin'_pow] at hm
-      apply_fun (fun f => LinearMap.toMatrix' f) at hm
-      rw [LinearMap.toMatrix'_toLin'] at hm
-      simp at hm
-      unfold gamma_matrix at hm
-      conv at hm =>
-        lhs
-        equals ((gamma_int.toMatrix'^(n_prod * K) - 1)^m).map complexOfIntHom =>
-          rw [Matrix.ext_iff_mulVec]
-          intro v
-          rw [matrix_map_pow]
-          conv =>
-            pattern -1
-            equals (-1 : Matrix _ _ ℤ).map complexOfIntHom =>
-              ext i j
-              simp
-              simp [Matrix.one_apply]
-
-          rw [← Matrix.map_add]
-          .
-            rw [matrix_map_pow]
-            rfl
-          .
-            intro x y
-            simp
-
-
-
-
-      have gamma_int_app_zero: (LinearMap.toMatrix' gamma_int ^ (n_prod * K) - 1)^(m ) = 0 := by
-        ext i j
-        simp
-        rw [← Matrix.ext_iff] at hm
-        specialize hm i j
-        simp at hm
-        norm_cast at hm
-
-
-      have gamma_int_app_succ_zero: (LinearMap.toMatrix' gamma_int ^ (n_prod * K) - 1)^(m + 1) = 0 := by
-        rw [pow_succ]
-        simp [gamma_int_app_zero]
-
-      conv =>
-        lhs
-        arg 2
-        arg 1
-        equals 0 =>
-          apply_fun (fun f => LinearMap.toMatrix' f)
-          .
-            simp only [map_zero]
-            rw [← gamma_int_app_succ_zero]
-            ext i j
-            simp
-            rw [← LinearMap.toMatrix_eq_toMatrix']
-            rw [LinearMap.toMatrix_pow]
-            rw [LinearMap.toMatrix_eq_toMatrix']
-            conv =>
-              rhs
-              arg 1
-              equals LinearMap.toMatrix' ((gamma_int^(n_prod * K)) - 1) =>
-                ext i j
-                simp [Matrix.one_apply, Pi.single_apply]
-
-            rw [← LinearMap.toMatrix_eq_toMatrix']
-            rw [LinearMap.toMatrix_pow]
-            rw [LinearMap.toMatrix_eq_toMatrix']
-            simp
-            sorry
-          .
-            intro a b hab
-            simpa using hab
-
-
-      simp
-      -- conv =>
-      --   rhs
-      --   equals center_quot_equiv ((0 : Additive _)) => rfl
-      -- simp
-    . exact LinearEquiv.injective center_quot_equiv
-
-  specialize comm_torsion_trivial _ mem_torsion
-  simpa using comm_torsion_trivial
-
-
-
-
-
-
-  -- let induced_gamma_aut := aut_congr gamma_conj
-
-
-  -- have induced_trivial: ∀ g: Subgroup.center N, ((induced_gamma_aut^K) (center_iso g)).snd = 1 := by
-  --   intro g
-  --   simp [induced_gamma_aut, aut_congr]
-  --   --rw [← MonoidHom.map_pow]
-
-  --   simp [K]
-  --   sorry
-
-  -- -- let induced_snd_aut: MulAut (((i : I) → Multiplicative (ZMod (I_pow i ^ K_map i)))) := {
-  -- --   toFun := fun a => aut_congr gamma_conj
-  -- -- }
-
-  -- --let center_aut_fst := (MonoidHom.fst _ _).comp aut_congr.toMonoidHom
-
-  -- have gamma_snd_trivial: ∀ g: Subgroup.center N, (center_iso g^K).snd = 1 := by
-  --   intro g
-  --   simp [K]
-
-
-
-  -- have map_pow_hom: ∀ p, (((MulAut.congr center_iso).toMonoidHom (aut_congr.symm.toMonoidHom ((new_conj)^(ord_fin)))).toMonoidHom p).fst = p.fst := by
-  --   intro p
-  --   rw [MonoidHom.map_pow]
-  --   rw [MonoidHom.map_pow]
-  --   have my_prod := MonoidHom.prod_unique (f := (MulEquiv.toMonoidHom ((MulAut.congr center_iso).toMonoidHom (aut_congr.symm.toMonoidHom new_conj) ^ ord_fin)))
-  --   have my_coprod := MonoidHom.coprod_unique (f := (MulEquiv.toMonoidHom ((MulAut.congr center_iso).toMonoidHom (aut_congr.symm.toMonoidHom new_conj) ^ ord_fin)))
-  --   rw [← my_coprod]
-  --   rw [MonoidHom.coprod_apply]
-  --   simp
-  --   -- rw [MonoidHom.prod_apply]
-  --   -- -- rw [MonoidHom.comp_apply]
-  --   -- -- rw [MonoidHom.comp_apply]
-  --   -- -- simp only [MonoidHom.inr_apply, MonoidHom.inl_apply]
-  --   -- rw [← my_prod]
-  --   -- rw [MonoidHom.prod_apply]
-  --   -- rw [MonoidHom.comp_apply]
-  --   -- rw [MonoidHom.comp_apply]
-  --   -- simp
-  --   -- unfold MulAut
-
-  --   -- rw [MulEquiv.toMonoidHom_eq_coe]
-  --   -- rw [MonoidHom.coe_coe]
-
-  --   -- rw [MonoidHom.pow_map]
-
-  --   -- simp
-  --   -- dsimp only [ord_fin]
-
-
-
-  --   sorry
-
-
-
-
-
-
-  -- have map_pow : ∃ F: ((i : I) → Multiplicative (ZMod (I_pow i ^ K_map i))), (MulAut.congr center_iso).toMonoidHom (aut_congr.symm.toMonoidHom ((new_conj)^(42))) = MonoidHom.toMulEquiv
-  --   ((MonoidHom.coprod (MonoidHom.prod sorry sorry) (MonoidHom.prod sorry (MonoidHom.id _))))
-  --   ((MonoidHom.coprod (MonoidHom.prod sorry sorry) (MonoidHom.prod sorry (MonoidHom.id _)))) sorry sorry := by
-
-  --   use sorry
-  --   simp
-
-  --   -- conv =>
-  --   --   arg 1
-  --   --   arg 2
-  --   --   equals (center_iso.toMonoidHom ((aut_congr.symm new_conj ^ ord_fin).toMonoidHom (center_iso.symm a))).1 b =>
-  --   --     simp
-
-
-  --   --simp
-  --   -- rw [MonoidHom.pow_apply]
-  --   -- rw [MonoidHom.map_pow]
-  --   -- rw [MonoidHom.map_pow]
-  --   -- ext x y
-  --   -- simp
-  --   -- have f_eq := MonoidHom.coprod_unique (f := (MulAut.congr center_iso).toMonoidHom (aut_congr.symm.toMonoidHom new_conj))
-
-
-
-
-  --   sorry
-
-
-
-  -- let target_aut := mulaut_fg_abelian gamma_conj
-  -- let target_hom := MonoidHom.comp (MonoidHom.fst _ _) target_aut.toMonoidHom
-
-  -- have foo := MonoidHom.coprod_unique target_hom
-
-  -- simp at ord_fin
-  --rw [Nat.card_prod] at ord_fin
-
-
-
-
-  --have conj_gamma := ((MulAut.conj gamma).toMonoidHom.restrict N).restrict (Subgroup.center N)
-  --let comp_hom := MonoidHom.comp conj_gamma center_iso.symm.toMonoidHom
+-- lemma old_unipotent_stuff {G: Type*} [Group G] (H: Subgroup G) [H.Normal] {N: Subgroup H} [N'_normal: N.Normal] (N'_nilpotent: Group.IsNilpotent N) (hN': Subgroup.FG N) (gamma: MulAut N):
+--     ∃ a n, a ≠ 0 ∧ ∀ g : N, Nat.iterate (fun x => x * ((gamma^a) x)) n g = 1 := by
+
+
+--   -- Use the fact that this is a subgroup of a finitely-generated nilpotent group
+--   have center_fg: Group.FG (Subgroup.center N) := by
+--     sorry
+--   have center_iso := CommGroup.equiv_free_prod_directSum_zmod (Subgroup.center N)
+--   obtain ⟨I, J, fin_I, fin_J, I_pow, I_pow_prime, K_map, ⟨center_iso⟩⟩ := center_iso
+
+
+--   --have center_normal_in_G := ConjAct.normal_of_characteristic_of_normal (K := Subgroup.center N)
+
+--   let new_conj := MulAut.conjNormal (H := (Subgroup.map N.subtype (Subgroup.center ↥N))) gamma
+
+--   -- have subtype_center_iso := Subgroup.equivMapOfInjective (Subgroup.center N) N.subtype (by apply Subgroup.subtype_injective)
+--   -- have aut_congr := MulAut.congr subtype_center_iso
+--   -- let gamma_conj := aut_congr.symm.toMonoidHom new_conj
+--   -- let mulaut_fg_abelian := MulAut.congr center_iso
+
+
+--   -- TODO - bad K?
+--   --let K := Nat.card (((i : I) → Multiplicative (ZMod (I_pow i ^ K_map i))))
+
+--   let center_fst := (MonoidHom.fst _ _).comp center_iso.toMonoidHom
+--   let aut_congr := MulAut.congr center_iso
+
+--   let gamma_pow_conj (n: ℕ): MulAut ↥(Subgroup.center ↥N) := {
+--     toFun := fun a => ⟨⟨gamma^n * a * (gamma^n)⁻¹, by
+--       apply N_normal.conj_mem
+--       simp
+--     ⟩, by
+--       have map_normal: (Subgroup.map (Subgroup.subtype _) (Subgroup.center N)).Normal := by
+--         infer_instance
+--       have foo := map_normal.conj_mem a (by simp) (gamma^n)
+--       simp at foo
+--       obtain ⟨a_mem, other_mem⟩ := foo
+--       exact other_mem
+--     ⟩
+--     invFun := fun a =>  ⟨⟨(gamma^n)⁻¹ * a * (gamma^n), by
+--       apply N_normal.conj_mem'
+--       simp
+--     ⟩, by (
+--       have map_normal: (Subgroup.map (Subgroup.subtype _) (Subgroup.center N)).Normal := by
+--         infer_instance
+--       have foo := map_normal.conj_mem' a (by simp) (gamma^n)
+--       simp at foo
+--       obtain ⟨a_mem, other_mem⟩ := foo
+--       exact other_mem
+--     )⟩
+--     left_inv := by
+--       intro a
+--       group
+--     right_inv := by
+--       intro a
+--       group
+--     map_mul' := by
+--       simp
+--   }
+
+
+
+--   let gamma_conj := gamma_pow_conj 1
+
+--   have torsion_free: IsMulTorsionFree ((Subgroup.center N) ⧸ (CommGroup.torsion (Subgroup.center N))) := by
+--     apply QuotientGroup.instIsMulTorsionFree
+
+--   have center_quot_equiv := finDimVectorspaceEquiv (R := ℤ) (n := Module.finrank ℤ (Additive (((Subgroup.center N) ⧸ (CommGroup.torsion (Subgroup.center N)))))) (hn := by simp) (M := Additive (((Subgroup.center N) ⧸ (CommGroup.torsion (Subgroup.center N)))))
+
+--   let gamma_quot := QuotientGroup.congr (CommGroup.torsion (Subgroup.center N)) (CommGroup.torsion (Subgroup.center N)) gamma_conj (by
+--     conv =>
+--       arg 1
+--       arg 1
+--       equals gamma_conj.toMonoidHom => rfl
+--     apply Subgroup.characteristic_iff_map_eq (H := (CommGroup.torsion (Subgroup.center N))).mp
+--     apply torsion_characteristic
+--   )
+
+--   let add_gamma_conj := gamma_quot.toAdditive.toIntLinearEquiv (modM := inferInstance) (modM₂ := inferInstance)
+--   let gamma_int := LinearEquiv.conj center_quot_equiv (add_gamma_conj)
+--   let gamma_matrix := gamma_int.toMatrix'.map (complexOfIntHom)
+
+--   -- TODO - deduplicate the val_inv and inv_val code
+--   have gamma_eigenvalues := int_matrix_poly_growth_eigenvalue {
+--     val := gamma_int.toMatrix'
+--     inv := (LinearEquiv.conj center_quot_equiv (add_gamma_conj.symm)).toMatrix'
+--     val_inv := by
+--       unfold gamma_int
+--       rw [← LinearMap.toMatrix'_mul]
+--       apply_fun (fun f => Matrix.toLin' f)
+--       .
+--         simp
+--         conv =>
+--           lhs
+--           equals (center_quot_equiv.conj add_gamma_conj).comp (center_quot_equiv.conj (add_gamma_conj.symm)) =>
+--             rfl
+
+--         rw [← LinearEquiv.conj_comp]
+--         simp
+--       .
+--         intro a b hab
+--         simpa using hab
+--     inv_val := by
+--       unfold gamma_int
+--       rw [← LinearMap.toMatrix'_mul]
+--       apply_fun (fun f => Matrix.toLin' f)
+--       .
+--         simp
+--         conv =>
+--           lhs
+--           equals (center_quot_equiv.conj add_gamma_conj.symm).comp (center_quot_equiv.conj (add_gamma_conj)) =>
+--             rfl
+
+--         rw [← LinearEquiv.conj_comp]
+--         simp
+--       .
+--         intro a b hab
+--         simpa using hab
+
+--   } (p := sorry) sorry sorry
+--   simp only [] at gamma_eigenvalues
+
+--   -- use pow_eq_one_of_norm_le_one (Kronecker's Theorem) once mathlib is bumped
+
+--   have gamma_eigen_unity: ∀ k : Module.End.Eigenvalues gamma_matrix.toLin', ∃ n, 0 < n ∧ k.val^n = 1 := by
+--     sorry
+
+--   choose k_root h_k_root using gamma_eigen_unity
+--   let n_prod := ∏ n ∈ (Finset.image k_root Finset.univ), n
+
+
+--   let K := Nat.card (MulAut ↥(Subgroup.map (N.subtype.comp (Subgroup.center ↥N).subtype) (CommGroup.torsion ↥(Subgroup.center ↥N))))
+
+
+--   have n_prod_ne: n_prod ≠ 0 := by
+--     unfold n_prod
+--     rw [Finset.prod_ne_zero_iff]
+--     intro k hk
+--     simp at hk
+--     obtain ⟨a, ha⟩ := hk
+--     have gamma_pow := (h_k_root a).1
+--     rw [ha] at gamma_pow
+--     grind
+
+--   have K_ne_zero: K ≠ 0 := by
+--     unfold K
+--     rw [Nat.card_ne_zero]
+--     refine ⟨by infer_instance, ?_⟩
+--     unfold MulAut
+
+--     have torsion_fg: Group.FG ↥(CommGroup.torsion ↥(Subgroup.center ↥N)) := by
+--       simp
+--       rw [Subgroup.fg_iff_add_fg]
+--       apply fg_subgroup_of_abelian
+--       apply AddGroup.fg_of_group_fg
+
+--     have torsion_finite : Finite (CommGroup.torsion ↥(Subgroup.center ↥N)) := by
+--       apply CommGroup.finite_of_fg_torsion
+--       -- TODO - extract this and pr to mathlib
+--       intro g
+--       have foo := g.property
+--       rw [CommGroup.mem_torsion] at foo
+--       rw [isOfFinOrder_iff_pow_eq_one] at foo
+--       rw [isOfFinOrder_iff_pow_eq_one]
+--       simp_rw [Subtype.ext_iff]
+--       simp_rw [Subtype.ext_iff] at foo
+--       simpa using foo
+
+--     apply MulEquiv.finite_left
+
+--   have n_prod_mul_ne: (n_prod * K : ℕ) ≠ (0 : ℂ) := by
+--     simp
+--     refine ⟨n_prod_ne, ?_⟩
+--     apply K_ne_zero
+
+--   have n_prod_pow: ∀ k: Module.End.Eigenvalues gamma_matrix.toLin', k.val^(n_prod * K) = 1 := by
+--     intro k
+--     rw [pow_mul]
+--     unfold n_prod
+--     rw [← Finset.prod_erase_mul (a := k_root k)]
+--     .
+--       rw [pow_mul']
+--       simp [h_k_root]
+--     . simp
+
+
+
+--   -- TODO - generalize and pr to mathlib
+--   have gamma_pow_eigen: ∀ k: Module.End.Eigenvalues ((gamma_matrix.toLin')^(n_prod * K)), k.val = 1 := by
+--     intro k
+--     have k_prop := k.property
+--     have has_eigen: Module.End.HasEigenvalue (Matrix.toLin' gamma_matrix ^ (n_prod * K)) k := by
+--       exact k.property
+--     rw [Module.End.hasEigenvalue_iff_mem_spectrum] at has_eigen
+--     rw [← AlgEquiv.spectrum_eq (f := Module.End.toContinuousLinearMap _)] at has_eigen
+--     simp at has_eigen
+--     rw [spectrum.map_pow_of_pos] at has_eigen
+--     .
+--       rw [AlgEquiv.spectrum_eq] at has_eigen
+--       simp at has_eigen
+--       obtain ⟨c, c_mem, c_pow_eq⟩ := has_eigen
+--       simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val]
+--       simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val] at c_pow_eq
+--       rw [← c_pow_eq]
+--       rw [← Matrix.spectrum_toLin'] at c_mem
+--       rw [← Module.End.hasEigenvalue_iff_mem_spectrum] at c_mem
+--       specialize n_prod_pow ⟨_, c_mem⟩
+--       simp [Module.End.Eigenvalues.val, Module.End.UnifEigenvalues.val] at n_prod_pow
+--       exact n_prod_pow
+--     .
+--       simp at n_prod_mul_ne
+--       simp
+--       omega
+
+
+
+--   -- have torsion_ne_top: CommGroup.torsion ↥(Subgroup.center ↥N) ≠ ⊤ := by
+
+--   --   sorry
+
+
+--   -- have quot_nontrivial : Nontrivial ((Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)) := by
+--   --   -- TODO - use QuotientGroup.nontrivial_iff
+--   --   sorry
+
+--   -- Module.free_of_finite_type_torsion_free'
+--   -- QuotientGroup.instIsMulTorsionFree
+
+--   -- have rank_ne_zero: NeZero (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)))) := by
+--   --   rw [neZero_iff]
+--   --   rw [Nat.ne_zero_iff_zero_lt]
+
+--   --   -- QuotientGroup.nontrivial_iff
+--   --   apply Module.finrank_pos
+
+--   obtain ⟨m, hm⟩ := eigen_one_unipotent _ gamma_pow_eigen
+
+--   -- have m_ne_zero: m ≠ 0 := by
+--   --   by_contra!
+--   --   simp [this] at hm
+--   --   rw [eq_comm] at hm
+--   --   rw [LinearMap.ext_iff] at hm
+--   --   specialize hm 1
+--   --   rw [LinearMap.zero_apply] at hm
+--   --   rw [Module.End.one_apply] at hm
+--   --   rw [funext_iff] at hm
+--   --   specialize hm ⟨0, ?_⟩
+--   --   .
+--   --     apply Module.finrank_pos
+--   --   .
+--   --     simp at hm
+
+
+--   -- have quotient_comm_trivial: ∀ z : (↥(Subgroup.center ↥N) ⧸ CommGroup.torsion ↥(Subgroup.center ↥N)), iteratedCommutator z.out.val.val ((gamma) ^ (n_prod)) m ∈ Subgroup.map (Subgroup.subtype _) (Subgroup.center N) := by
+--   --   clear * - gamma_conj
+--   --   intro z
+
+--   --   have comm_eq: ∀ n: ℕ, iteratedCommutator z.out.val.val ((gamma) ^ (n_prod)) 1 = (center_quot_equiv.symm ((-((gamma_int ^ n_prod) - 1)) ((center_quot_equiv z)))).out.val.val := by
+
+--   --     intro n
+--   --     simp [iteratedCommutator, Bracket.bracket]
+--   --     conv =>
+--   --       lhs
+--   --       equals z.out.val.val * ((gamma_pow_conj n_prod) z.out⁻¹) =>
+--   --         simp [gamma_pow_conj]
+--   --         group
+
+--   --     rw [← Subgroup.coe_mul, ← Subgroup.coe_mul]
+--   --     rw [← Subtype.ext_iff, ← Subtype.ext_iff]
+--   --     simp
+
+
+--   --     sorry
+
+--   --   sorry
+
+
+
+
+--   use (n_prod * K)
+--   -- Using 'm + 2' avoids an issue with the quotient group being trivial
+--   use (m + 1)
+--   refine ⟨?_, ?_⟩
+--   .
+--     simp [K]
+--     refine ⟨n_prod_ne, ?_⟩
+--     apply K_ne_zero
+
+--   intro g hg
+--   unfold iteratedCommutator
+--   rw [Function.iterate_succ']
+--   simp
+
+--   have comm_torsion_trivial: ∀ h ∈ (CommGroup.torsion ↥(Subgroup.center ↥N)), ⁅h.val.val, gamma ^ (n_prod * K)⁆ = 1 := by
+--     intro h h_mem
+--     rw [commutatorElement_def]
+
+
+
+--     -- TODO - this can probably be generalized into a lemma about characteristic subgroups, and pr'd to mathlib
+--     have normal_center_map: (Subgroup.map (N.subtype.comp (Subgroup.center ↥N).subtype) (CommGroup.torsion ↥(Subgroup.center ↥N))).Normal := {
+--       conj_mem := by
+--         intro f hf k
+--         simp at hf
+--         obtain ⟨f_mem_N, f_mem_center, f_mem_torsion⟩ := hf
+--         simp
+--         use ?_
+--         . use ?_
+--           .
+--             rw [CommGroup.mem_torsion]
+--             conv =>
+--               arg 1
+--               arg 1
+--               arg 1
+--               equals (MulAut.conj k) f =>
+--                 rfl
+
+--             rw [isOfFinOrder_iff_pow_eq_one]
+--             simp_rw [Subtype.ext_iff]
+--             simp
+--             rw [← isOfFinOrder_iff_pow_eq_one]
+--             rw [CommGroup.mem_torsion] at f_mem_torsion
+--             rw [isOfFinOrder_iff_pow_eq_one] at f_mem_torsion
+--             simp_rw [Subtype.ext_iff] at f_mem_torsion
+--             simp at f_mem_torsion
+--             rw [← isOfFinOrder_iff_pow_eq_one] at f_mem_torsion
+--             exact f_mem_torsion
+--           .
+--             have first := ConjAct.normal_of_characteristic_of_normal (H := N) (K := Subgroup.center ↥N)
+--             have foo := first.conj_mem f (by simp; use f_mem_N) k
+--             simp at foo
+--             obtain ⟨mem_n, mem_center⟩ := foo
+--             exact mem_center
+--         .
+--           apply N_normal.conj_mem
+--           exact f_mem_N
+--     }
+
+--     have conj_trivial: MulAut.conjNormal (H := Subgroup.map ((Subgroup.subtype _).comp (Subgroup.subtype _)) ((CommGroup.torsion ↥(Subgroup.center ↥N)))) (gamma ^ (n_prod * K)) = 1 := by
+--       rw [MonoidHom.map_pow]
+--       rw [pow_mul']
+--       unfold K
+--       simp
+
+--     apply_fun (fun f => f ⟨h⁻¹, by simpa using h_mem⟩) at conj_trivial
+--     rw [Subtype.ext_iff] at conj_trivial
+--     rw [MulAut.conjNormal_apply] at conj_trivial
+--     simp at conj_trivial
+--     conv =>
+--       lhs
+--       equals h.val.val * (gamma ^ (n_prod * K) * (↑↑h)⁻¹ * (gamma ^ (n_prod * K))⁻¹) =>
+--         group
+--     simp [conj_trivial]
+
+
+--   have comm_mem_N: ∀ n, ∀ m, ∀ g: N, (fun x ↦ ⁅x, gamma ^ (n)⁆)^[m] ↑g ∈ N := by
+--     intro n m g
+--     have foo := iterated_comm_normal_eq_iterated g (gamma ^ (n)) (m)
+--     unfold iteratedCommutator at foo
+--     rw [← foo]
+--     simp
+
+--   have mem_center:  ∀ n, ∀ m, ⟨_, (comm_mem_N n m g)⟩ ∈ Subgroup.center N := by
+--     intro n m
+--     have foo := iterated_comm_normal_eq_iterated (N := Subgroup.map (Subgroup.subtype _) (Subgroup.center N)) ⟨g, by simpa using hg⟩ (gamma ^ (n)) (m)
+--     unfold iteratedCommutator at foo
+--     simp only [] at foo
+--     simp_rw [← foo]
+--     rw [← Subgroup.mem_map_iff_mem (f := Subgroup.subtype _)]
+--     . simp
+--     . exact Subgroup.subtype_injective N
+
+--   have mem_torsion: ⟨_, (mem_center (n_prod * K) m)⟩ ∈ CommGroup.torsion ↥(Subgroup.center ↥N) := by
+--     rw [← QuotientGroup.eq_one_iff]
+--     apply_fun center_quot_equiv ∘ Additive.ofMul
+--     .
+--       conv =>
+--         lhs
+--         equals (-1)^(m) * ((((gamma_int ^ (n_prod * K)) - 1)^(m)) (center_quot_equiv (Additive.ofMul (QuotientGroup.mk (⟨_, hg⟩))))) =>
+
+--           apply_fun center_quot_equiv.symm
+--           .
+--             simp
+--             clear hm
+--             induction m with
+--             | zero =>
+--               simp [Bracket.bracket]
+--               -- apply_fun center_quot_equiv ∘ (Additive.ofMul)
+--               -- .
+--               --   simp [-EmbeddingLike.apply_eq_iff_eq]
+--               --   conv =>
+--               --     lhs
+--               --     arg 2
+--               --     arg 2
+--               --     arg 1
+--               --     equals ⟨g, hg⟩ * ⟨⟨gamma ^ (n_prod * K) * (↑g)⁻¹ * (gamma ^ (n_prod * K))⁻¹, (by
+--               --       have foo := N_normal.conj_mem g⁻¹ (by simp) (gamma ^ (n_prod * K))
+--               --       exact foo
+--               --     )⟩, (by
+--               --       let map_normal: (Subgroup.map (Subgroup.subtype _) (Subgroup.center N)).Normal := by
+--               --         infer_instance
+
+--               --       have foo := map_normal.conj_mem g⁻¹ (by simp [hg]) (gamma ^ (n_prod * K))
+--               --       simp at foo
+--               --       obtain ⟨mem_N, mem_center⟩ := foo
+--               --       exact mem_center
+--               --     )⟩ =>
+--               --       simp
+--               --       rw [Subtype.ext_iff]
+--               --       simp
+--               --       group
+--               --   rw [QuotientGroup.mk_mul]
+--               --   rw [ofMul_mul]
+--               --   rw [LinearEquiv.map_add]
+--               --   conv =>
+--               --     rhs
+--               --     arg 2
+--               --     arg 1
+--               --     unfold Additive.ofMul
+--               --   simp
+--               --   rw [sub_eq_add_neg]
+--               --   simp
+--               --   unfold gamma_int
+--               --   conv =>
+--               --     rhs
+--               --     arg 1
+--               --     arg 1
+--               --     -- TODO - extract this to a lemma and upstream to mathlib
+--               --     equals center_quot_equiv.conj (add_gamma_conj ^ (n_prod * K)) =>
+--               --       induction (n_prod * K) with
+--               --       | zero =>
+--               --         simp
+--               --         conv =>
+--               --           rhs
+--               --           arg 2
+--               --           equals LinearMap.id => rfl
+--               --         simp
+--               --         rfl
+--               --       | succ k ih =>
+--               --         rw [pow_succ']
+--               --         rw [ih]
+--               --         rw [pow_succ']
+--               --         conv =>
+--               --           rhs
+--               --           pattern _ * _
+--               --           equals add_gamma_conj.toLinearMap ∘ₗ (add_gamma_conj.toLinearMap ^ k) =>
+--               --             rfl
+--               --         rw [LinearEquiv.conj_comp]
+--               --         rfl
+--               --   rw [LinearEquiv.conj_apply_apply]
+--               --   nth_rw 1 [← neg_one_smul (R := ℤ)]
+--               --   rw [← LinearEquiv.map_smul]
+--               --   rw [neg_one_smul]
+--               --   congr
+--               --   simp
+--               --   -- TODO - investigate why this needed to be explicitly factored out and generalized over 'n'
+--               --   -- for the induction proof below to work
+--               --   have pow_mem_N: ∀ n, gamma ^ (n) * ↑g * gamma⁻¹ ^ (n) ∈ N := by
+--               --     simp
+--               --     intro n
+--               --     apply N_normal.conj_mem
+--               --     simp
+--               --   conv =>
+--               --     rhs
+--               --     arg 1
+--               --     arg 2
+--               --     equals Additive.ofMul (QuotientGroup.mk' (CommGroup.torsion ↥(Subgroup.center ↥N)) (⟨⟨(gamma^(n_prod * K)) * g * gamma⁻¹^((n_prod * K)), (pow_mem_N _)⟩, (by
+--               --       simp
+--               --       norm_cast
+--               --       -- TODO - deduplicate this
+--               --       let map_normal: (Subgroup.map (Subgroup.subtype _) (Subgroup.center N)).Normal := by
+--               --         infer_instance
+
+
+--               --       have foo := map_normal.conj_mem g (by simp [hg]) (gamma ^ (n_prod * K))
+--               --       simp at foo
+--               --       obtain ⟨mem_N, mem_center⟩ := foo
+--               --       exact mem_center
+--               --     )⟩)) =>
+--               --       clear * -
+--               --       simp
+--               --       norm_cast
+--               --       -- rw[← QuotientGroup.out_eq' (a := Additive.toMul _)]
+--               --       -- rw [QuotientGroup.eq]
+
+--               --       -- congr
+--               --       -- rw [Subtype.ext_iff]
+--               --       -- simp
+--               --       -- rw [Subtype.ext_iff]
+--               --       -- simp
+--               --       induction (n_prod * K) with
+--               --       | zero =>
+--               --         simp
+--               --       | succ q ih =>
+--               --         nth_rw 1 [pow_succ']
+--               --         conv =>
+--               --           lhs
+--               --           equals (add_gamma_conj.toLinearMap) ((add_gamma_conj.toLinearMap ^ (q)) (Additive.ofMul (QuotientGroup.mk ⟨g, hg⟩))) =>
+--               --             simp
+--               --         rw [ih]
+--               --         simp [add_gamma_conj, gamma_quot, gamma_conj, gamma_pow_conj]
+--               --         group
+
+--               --   simp
+--               --   rw [← QuotientGroup.mk_inv]
+--               --   congr
+--               --   simp
+--               --   group
+--               -- .
+--               --   intro a b hab
+--               --   simpa using hab
+--             | succ j ih =>
+--               simp_rw [Function.iterate_succ']
+--               simp
+--               conv =>
+--                 lhs
+--                 equals (Additive.ofMul (QuotientGroup.mk ⟨⟨(fun x ↦ ⁅x, gamma ^ (n_prod * K)⁆)^[j] ↑g, by apply comm_mem_N⟩, by apply mem_center⟩))
+--                   + (Additive.ofMul (gamma_quot ((QuotientGroup.mk ⟨⟨(fun x ↦ ⁅x, gamma ^ (n_prod * K)⁆)^[j] ↑g, by apply comm_mem_N⟩, by apply mem_center⟩)))) =>
+
+--                   sorry
+
+--               rw [ih]
+--               apply_fun center_quot_equiv
+--               .
+--                 simp
+--                 sorry
+--               . sorry
+--               -- simp [gamma_quot]
+--               -- sorry
+--               -- simp [Bracket.bracket]
+--               -- simp [Bracket.bracket] at ih
+--               -- set gamma_a := gamma ^ (n_prod * K)
+--               -- sorry
+--           . exact LinearEquiv.injective center_quot_equiv.symm
+
+--       -- v * (B * v)⁻¹
+
+--       -- v * (B * v)⁻¹ * (B * (v * (B * v)⁻¹))⁻¹
+--       --
+
+--       -- conv =>
+--       --   lhs
+--       --   arg 2
+--       --   arg 1
+--       --   arg 1
+--       --   arg 1
+--       --   equals ((g.val * ((gamma_pow_conj (n_prod * K)) ⟨g⁻¹, by simpa using hg⟩))^(((-1 : ℤ)^(m + 1))))^((m + 1)) =>
+--       --     clear * -
+--       --     -- TODO - extract this to a lemma
+--       --     induction m with
+--       --     | zero =>
+--       --       simp [Bracket.bracket, gamma_pow_conj]
+--       --       group
+--       --     | succ n ih =>
+--       --       rw [Function.iterate_succ']
+--       --       simp only [Function.comp_apply]
+--       --       simp_rw [ih]
+--       --       simp [gamma_pow_conj]
+--       --       simp [Bracket.bracket]
+--       --       set q := (gamma ^ (n_prod * K))
+--       --       set f := ((↑g * (q * (↑g)⁻¹ * q⁻¹)))
+--       --       nth_rw 6 [pow_succ]
+--       --       rw [pow_succ (n := n + 1)]
+--       --       simp
+--       --       rw [← mul_inv_rev]
+--       --       rw [← pow_succ']
+--       --       simp
+--       --       rw [← inv_zpow]
+--       --       simp
+--       --       simp [gamma_pow_conj]
+--       --       nth_rw 3 [pow_succ]
+--       --       rw [pow_succ (a := (-1 : ℤ))]
+--       --       simp
+--       --       nth_rw 2 [← inv_pow]
+--       --       nth_rw 4 [← inv_pow]
+
+--       --       rw [← inv_zpow]
+--       --       simp
+
+--       --       simp
+--       --       nth_rw 1 [← inv_pow]
+--       --       simp
+--       --       group
+--       --       sorry
+
+--       rw [← Matrix.toLin'_pow] at hm
+--       conv at hm =>
+--         lhs
+--         arg 1
+--         rhs
+--         equals Matrix.toLin' 1 =>
+--           simp
+--           ext a
+--           simp
+
+--       rw [sub_eq_add_neg] at hm
+--       conv at hm =>
+--         lhs
+--         arg 1
+--         rhs
+--         equals Matrix.toLin' (-1) =>
+--           simp
+
+--       rw [← LinearEquiv.map_add] at hm
+--       rw [← Matrix.toLin'_pow] at hm
+--       apply_fun (fun f => LinearMap.toMatrix' f) at hm
+--       rw [LinearMap.toMatrix'_toLin'] at hm
+--       simp at hm
+--       unfold gamma_matrix at hm
+--       conv at hm =>
+--         lhs
+--         equals ((gamma_int.toMatrix'^(n_prod * K) - 1)^m).map complexOfIntHom =>
+--           rw [Matrix.ext_iff_mulVec]
+--           intro v
+--           rw [matrix_map_pow]
+--           conv =>
+--             pattern -1
+--             equals (-1 : Matrix _ _ ℤ).map complexOfIntHom =>
+--               ext i j
+--               simp
+--               simp [Matrix.one_apply]
+
+--           rw [← Matrix.map_add]
+--           .
+--             rw [matrix_map_pow]
+--             rfl
+--           .
+--             intro x y
+--             simp
+
+
+
+
+--       have gamma_int_app_zero: (LinearMap.toMatrix' gamma_int ^ (n_prod * K) - 1)^(m ) = 0 := by
+--         ext i j
+--         simp
+--         rw [← Matrix.ext_iff] at hm
+--         specialize hm i j
+--         simp at hm
+--         norm_cast at hm
+
+
+--       have gamma_int_app_succ_zero: (LinearMap.toMatrix' gamma_int ^ (n_prod * K) - 1)^(m + 1) = 0 := by
+--         rw [pow_succ]
+--         simp [gamma_int_app_zero]
+
+--       conv =>
+--         lhs
+--         arg 2
+--         arg 1
+--         equals 0 =>
+--           apply_fun (fun f => LinearMap.toMatrix' f)
+--           .
+--             simp only [map_zero]
+--             rw [← gamma_int_app_succ_zero]
+--             ext i j
+--             simp
+--             rw [← LinearMap.toMatrix_eq_toMatrix']
+--             rw [LinearMap.toMatrix_pow]
+--             rw [LinearMap.toMatrix_eq_toMatrix']
+--             conv =>
+--               rhs
+--               arg 1
+--               equals LinearMap.toMatrix' ((gamma_int^(n_prod * K)) - 1) =>
+--                 ext i j
+--                 simp [Matrix.one_apply, Pi.single_apply]
+
+--             rw [← LinearMap.toMatrix_eq_toMatrix']
+--             rw [LinearMap.toMatrix_pow]
+--             rw [LinearMap.toMatrix_eq_toMatrix']
+--             simp
+--             sorry
+--           .
+--             intro a b hab
+--             simpa using hab
+
+
+--       simp
+--       -- conv =>
+--       --   rhs
+--       --   equals center_quot_equiv ((0 : Additive _)) => rfl
+--       -- simp
+--     . exact LinearEquiv.injective center_quot_equiv
+
+--   specialize comm_torsion_trivial _ mem_torsion
+--   simpa using comm_torsion_trivial
+
+
+
+
+
+
+--   -- let induced_gamma_aut := aut_congr gamma_conj
+
+
+--   -- have induced_trivial: ∀ g: Subgroup.center N, ((induced_gamma_aut^K) (center_iso g)).snd = 1 := by
+--   --   intro g
+--   --   simp [induced_gamma_aut, aut_congr]
+--   --   --rw [← MonoidHom.map_pow]
+
+--   --   simp [K]
+--   --   sorry
+
+--   -- -- let induced_snd_aut: MulAut (((i : I) → Multiplicative (ZMod (I_pow i ^ K_map i)))) := {
+--   -- --   toFun := fun a => aut_congr gamma_conj
+--   -- -- }
+
+--   -- --let center_aut_fst := (MonoidHom.fst _ _).comp aut_congr.toMonoidHom
+
+--   -- have gamma_snd_trivial: ∀ g: Subgroup.center N, (center_iso g^K).snd = 1 := by
+--   --   intro g
+--   --   simp [K]
+
+
+
+--   -- have map_pow_hom: ∀ p, (((MulAut.congr center_iso).toMonoidHom (aut_congr.symm.toMonoidHom ((new_conj)^(ord_fin)))).toMonoidHom p).fst = p.fst := by
+--   --   intro p
+--   --   rw [MonoidHom.map_pow]
+--   --   rw [MonoidHom.map_pow]
+--   --   have my_prod := MonoidHom.prod_unique (f := (MulEquiv.toMonoidHom ((MulAut.congr center_iso).toMonoidHom (aut_congr.symm.toMonoidHom new_conj) ^ ord_fin)))
+--   --   have my_coprod := MonoidHom.coprod_unique (f := (MulEquiv.toMonoidHom ((MulAut.congr center_iso).toMonoidHom (aut_congr.symm.toMonoidHom new_conj) ^ ord_fin)))
+--   --   rw [← my_coprod]
+--   --   rw [MonoidHom.coprod_apply]
+--   --   simp
+--   --   -- rw [MonoidHom.prod_apply]
+--   --   -- -- rw [MonoidHom.comp_apply]
+--   --   -- -- rw [MonoidHom.comp_apply]
+--   --   -- -- simp only [MonoidHom.inr_apply, MonoidHom.inl_apply]
+--   --   -- rw [← my_prod]
+--   --   -- rw [MonoidHom.prod_apply]
+--   --   -- rw [MonoidHom.comp_apply]
+--   --   -- rw [MonoidHom.comp_apply]
+--   --   -- simp
+--   --   -- unfold MulAut
+
+--   --   -- rw [MulEquiv.toMonoidHom_eq_coe]
+--   --   -- rw [MonoidHom.coe_coe]
+
+--   --   -- rw [MonoidHom.pow_map]
+
+--   --   -- simp
+--   --   -- dsimp only [ord_fin]
+
+
+
+--   --   sorry
+
+
+
+
+
+
+--   -- have map_pow : ∃ F: ((i : I) → Multiplicative (ZMod (I_pow i ^ K_map i))), (MulAut.congr center_iso).toMonoidHom (aut_congr.symm.toMonoidHom ((new_conj)^(42))) = MonoidHom.toMulEquiv
+--   --   ((MonoidHom.coprod (MonoidHom.prod sorry sorry) (MonoidHom.prod sorry (MonoidHom.id _))))
+--   --   ((MonoidHom.coprod (MonoidHom.prod sorry sorry) (MonoidHom.prod sorry (MonoidHom.id _)))) sorry sorry := by
+
+--   --   use sorry
+--   --   simp
+
+--   --   -- conv =>
+--   --   --   arg 1
+--   --   --   arg 2
+--   --   --   equals (center_iso.toMonoidHom ((aut_congr.symm new_conj ^ ord_fin).toMonoidHom (center_iso.symm a))).1 b =>
+--   --   --     simp
+
+
+--   --   --simp
+--   --   -- rw [MonoidHom.pow_apply]
+--   --   -- rw [MonoidHom.map_pow]
+--   --   -- rw [MonoidHom.map_pow]
+--   --   -- ext x y
+--   --   -- simp
+--   --   -- have f_eq := MonoidHom.coprod_unique (f := (MulAut.congr center_iso).toMonoidHom (aut_congr.symm.toMonoidHom new_conj))
+
+
+
+
+--   --   sorry
+
+
+
+--   -- let target_aut := mulaut_fg_abelian gamma_conj
+--   -- let target_hom := MonoidHom.comp (MonoidHom.fst _ _) target_aut.toMonoidHom
+
+--   -- have foo := MonoidHom.coprod_unique target_hom
+
+--   -- simp at ord_fin
+--   --rw [Nat.card_prod] at ord_fin
+
+
+
+
+--   --have conj_gamma := ((MulAut.conj gamma).toMonoidHom.restrict N).restrict (Subgroup.center N)
+--   --let comp_hom := MonoidHom.comp conj_gamma center_iso.symm.toMonoidHom
 
 
 lemma normal_comm_mem_right {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) (a b: G) (hb: b ∈ N) :
@@ -3142,7 +3144,7 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
 theorem G''_nilpotent {G: Type*} [Group G] (H: Subgroup G) {N': Subgroup H} [H_normal: H.Normal] [N'_char: N'.Characteristic] (N'_fg: N'.FG) (gamma: G):
     Group.IsNilpotent (Subgroup.closure ((Subgroup.map (Subgroup.subtype _) N') ∪ {gamma})) := by
 
-  have foo := center_unipotent (G := (Subgroup.map H.subtype H)) (N := N') N'_fg gamma
+  --have foo := center_unipotent (G := (Subgroup.map H.subtype H)) (N := N') N'_fg gamma
   sorry
 
 

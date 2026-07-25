@@ -1469,8 +1469,6 @@ noncomputable def Laplace (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α 
 noncomputable instance fintype_ball (x: G) (r: ℝ): Fintype ↑(Metric.ball x r) := Set.Finite.fintype (finite_ball _ _)
 noncomputable instance fintype_closedBall (x: G) (r: ℝ): Fintype ↑(Metric.closedBall x r) := Set.Finite.fintype (finite_closed_ball _ _)
 
-instance fintype_ball_boundary (x: G) (r: ℝ): Fintype ↑{y | dist y x = r} := by
-  sorry
 
 -- Graphs and Discrete Direchlet Spaces
 -- https://www.math.uni-potsdam.de/fileadmin/user_upload/Prof-GraphTh/Keller/KellerLenzWojciechowski_GraphsAndDiscreteDirichletSpaces_wu_version.pdf
@@ -1490,57 +1488,6 @@ instance fintype_ball_boundary (x: G) (r: ℝ): Fintype ↑{y | dist y x = r} :=
 --   .
 --     simp [a_eq_one]
 --     grind
-
-
-
-
--- New argument:
--- Write ∑ s ∈ S (f x - f (x * s))^2
--- = ∑ s ∈ S (f x)^2 - (f x) (f ( x * s)) + (f (x * s))^2
--- = |S| * (f x)^2 - (f x) * |S| * (f x) + |S| * (f x)^2 -- use harmonicity, and simplify the shift 'f ( x *s)' when summing over all x
--- = |S| * (f x)^2
-
--- New approach
--- (f△f) = f(f - (f ⬝ μ)) = f^2 - f(f ⬝ μ)
-
---  f^2 - f(f ⬝ μ) +
-
--- Other stuff:
---   (∑ s ∈ S, (f x - f (x * s)))^2
--- = (∑ s_1 ∈ S, ∑ s_2 ∈ S, ((f x) - f(x * s_1))*((f x) - f(x * s_2)
--- = (∑ s_1 ∈ S, ∑ s_2 ∈ S, (f x)^2 - (f x)(f (x * s_1)) - (f x) (f (x * s_2)) + (f (x * s_1))(f (x * s_2)))
--- = (∑ s_1 ∈ S, ∑ s_2 ∈ S, (f x)^2 - (f x)((f (x * s_1) - (f (x * s_2))) + (f (x * s_1))(f (x * s_2)))
-lemma harmonic_stokes_theorem (f: G → ℝ) (hf: Harmonic f) (r: ℝ): ∑ x ∈ Metric.ball 1 (2 * r), ∑ s ∈ S, (f x - f (x * s))^2 = 0 := by
-  sorry
-  --rw [s_sinv_split_one]
-  --rw []
-
-
-  -- Use this if we end up with closedBall in the theorem statement
-  -- conv =>
-  --   arg 1
-  --   arg 1
-  --   equals (Metric.ball 1 (2 * r)).toFinset ∪ {x : G | dist x 1 = 2 * r}.toFinset =>
-  --     rw [← Set.toFinset_union]
-  --     simp_rw [Metric.closedBall, Metric.ball]
-  --     simp [le_iff_lt_or_eq]
-  --     rw [Set.setOf_or]
-
-  -- rw [Finset.sum_union]
-  -- conv =>
-  --   lhs
-  --   lhs
-  --   equals 0 =>
-
-
-  --     sorry
-  -- simp_rw [Metric.closedBall]
-
-  --sorry
-
---instance V_FiniteDimentional: FiniteDimensional ℂ (LipschitzH) := by
-  -- This is a very long part of the proof in Vikman
---  sorry
 
 
 def ConstF: Submodule ℝ (LipschitzH) := {
