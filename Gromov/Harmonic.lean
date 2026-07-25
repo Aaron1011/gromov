@@ -8,6 +8,7 @@ import Gromov.TendstoNhdsMul
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
+attribute [local implicit_reducible] Additive
 
 namespace GeneratesNS
 open Generates
@@ -55,7 +56,7 @@ lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b  f = 0) (a: G
             .
               apply ne_of_gt at sum_strict_lt
               contradiction
-            . simpa using hS
+            . simpa using S_nonempty
           . intro s hs
             apply h_max
           . use s
@@ -231,17 +232,12 @@ lemma conv_assoc_of_lp2 {f g h: G → ℝ} (hf: MemLp f 2 Measure.count) (hg: Me
       .
         simp
         apply ENNReal.mul_lt_top
-        . apply ENNReal.mul_lt_top
-          . simp
-          .
-            simp_rw [← Real.norm_eq_abs]
-            rw [MeasureTheory.eLpNorm_norm]
-            rw [my_add_haar_eq_count]
-            exact MemLp.eLpNorm_lt_top hg
         .
-
-
-
+          simp_rw [← Real.norm_eq_abs]
+          rw [MeasureTheory.eLpNorm_norm]
+          rw [my_add_haar_eq_count]
+          exact MemLp.eLpNorm_lt_top hg
+        .
           simp_rw [← Real.norm_eq_abs]
           rw [MeasureTheory.eLpNorm_norm]
           rw [my_add_haar_eq_count]
@@ -782,7 +778,7 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
         have conv_finsupp := mu_conv_finsupp  n
         unfold muConv at conv_finsupp
 
-        apply summable_of_finite_support
+        apply summable_of_hasFiniteSupport
         apply Set.Finite.of_injOn (f := fun a => ( (Additive.toMul a))) (ht := conv_finsupp)
         .
           intro a ha
@@ -806,7 +802,7 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
         have conv_finsupp := mu_conv_finsupp  n
         unfold muConv at conv_finsupp
 
-        apply summable_of_finite_support
+        apply summable_of_hasFiniteSupport
         apply Set.Finite.of_injOn (f := fun a => ( (Additive.toMul a))) (ht := conv_finsupp)
         .
           intro a ha
@@ -885,7 +881,7 @@ lemma conv_laplce_norm (n: ℕ) (H_n: ℕ → G → ℝ): eLpNorm ((Laplace_b ((
       rw [← ofReal_norm_eq_enorm, ENNReal.ofReal_le_one]
       exact ContinuousLinearMap.opNorm_mul_le ℝ ℝ
     rw [mul_assoc]
-    exact le_trans (mul_le_mul_right' hmul _) (le_of_eq (one_mul _))
+    exact le_trans (mul_le_mul_left hmul _) (le_of_eq (one_mul _))
   .
     apply conv_exists_fin_supp
     right
@@ -918,7 +914,7 @@ lemma conv_sum {T: Type*} (H: Finset T) (f: T → G → ℝ) (h: G → ℝ) (h_f
 
     rw [Summable.tsum_finsetSum]
     intro s hs
-    apply summable_of_finite_support
+    apply summable_of_hasFiniteSupport
     change (Function.support _).Finite
     simp only [Function.support_mul]
     apply Set.Finite.inter_of_right
@@ -936,20 +932,10 @@ lemma conv_sum {T: Type*} (H: Finset T) (f: T → G → ℝ) (h: G → ℝ) (h_f
 
 lemma lintegral_g_eq_add (f: G → ENNReal): (∫⁻ (g: G), f g) = (∑' (g : G), f g) := by
   rw [MeasureTheory.lintegral_countable']
-  simp [MeasureTheory.volume]
-  unfold myHaar
-  conv =>
-    arg 1
-    arg 1
-    intro a
-    rw [MeasureTheory.Measure.haar_singleton]
-    simp [MeasureTheory.Measure.haarMeasure_self]
-    rw [← mul_singleton_carrier]
-    simp [TopologicalSpace.PositiveCompacts.carrier_eq_coe]
-    simp [MeasureTheory.Measure.haarMeasure_self]
+  simp [MeasureTheory.volume, my_haar_eq_count]
 
 lemma integral_eq_eq_sum (f: G → ℝ) (hf: Integrable f): (∫ (g: G), f g) = (∑' (g : G), f g) := by
-  rw [MeasureTheory.integral_countable']
+  rw [MeasureTheory.integral_countable]
   .
     simp [MeasureTheory.volume]
     simp_rw [my_haar_eq_count]
@@ -994,7 +980,7 @@ lemma mu_norm_one (m: ℕ): MeasureTheory.eLpNorm (muConv  m) 1 = 1 := by
         apply summable_sum
         intro i hi
         simp only [Pi.single_apply]
-        apply summable_of_finite_support
+        apply summable_of_hasFiniteSupport
         apply Set.Finite.subset (s := {(List.ofFn i).unattach.prod})
         . simp
         . intro a ha
@@ -1028,7 +1014,7 @@ lemma mu_norm_one (m: ℕ): MeasureTheory.eLpNorm (muConv  m) 1 = 1 := by
   .
     -- TODO - deduplicate this with the above goal
     intro a ha
-    apply summable_of_finite_support
+    apply summable_of_hasFiniteSupport
     apply Set.Finite.subset (s := {(List.ofFn a).unattach.prod})
     . simp
     . intro a ha
@@ -1171,7 +1157,6 @@ theorem f_n_sub_conv (n: ℕ): MeasureTheory.eLpNorm ((f_n  n) - (Conv (f_n  n) 
         induction n with
         | zero =>
           simp
-          group
 
         | succ y iy =>
           rw [Finset.sum_fin_eq_sum_range]
@@ -1204,7 +1189,7 @@ theorem f_n_sub_conv (n: ℕ): MeasureTheory.eLpNorm ((f_n  n) - (Conv (f_n  n) 
       _ ≤ ‖((n + 1): ℝ)⁻¹‖ₑ * (MeasureTheory.eLpNorm ((mu)) 1 MeasureTheory.volume + (MeasureTheory.eLpNorm ((muConv (n + 1))) 1 MeasureTheory.volume)) := by
         have sub_le := MeasureTheory.eLpNorm_sub_le (p := 1) (f := mu ) (g := muConv  (n + 1)) (μ := MeasureTheory.volume) ?_ ?_ (by simp)
         .
-          apply mul_le_mul_left' sub_le
+          apply mul_le_mul_right sub_le
         . apply MeasureTheory.AEStronglyMeasurable.of_discrete
         . apply MeasureTheory.AEStronglyMeasurable.of_discrete
       _ ≤ ENNReal.ofReal ((2: ℝ) / ((n + 1): ℝ)) := by
@@ -1252,7 +1237,6 @@ noncomputable def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (h_seq:
       simp [IsSeqClosed] at closed_lipschitz
       have F_lipschitz := closed_lipschitz (p := F) (x := (fun n ↦ Conv (H_n (seq n)) (f_n (seq n)))) (by
         intro n
-        simp
         apply h_conv_lipschitz
       ) tendsto_F
       exact F_lipschitz
@@ -1751,7 +1735,7 @@ noncomputable def conv_finsupp_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.vo
   refine lt_of_le_of_lt norm_bound ?_
   apply WithTop.mul_lt_top
   . apply WithTop.mul_lt_top
-    . norm_cast
+    . exact enorm_lt_top
     . rw [← my_add_haar_eq_count]
       apply (MeasureTheory.Lp.memLp f).2
   .
@@ -1980,7 +1964,7 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
     intro a
     rhs
     -- TODO  - deduplicate this with the 'have lp_mul' block above
-    rw [MeasureTheory.integral_countable' (by
+    rw [MeasureTheory.integral_countable (by
       simp [f_conv_delta]
       simp [Integrable]
       refine ⟨by apply AEStronglyMeasurable.of_discrete, ?_⟩
@@ -1988,18 +1972,17 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
       simp [Real.enorm_eq_ofReal_abs]
       rw [lintegral_g_eq_add]
       rw [lt_top_iff_ne_top]
+      simp_rw [← ENNReal.ofReal_mul (abs_nonneg _), ← abs_mul]
       rw [← ENNReal.ofReal_tsum_of_nonneg]
       . apply ENNReal.ofReal_ne_top
       . intro n
         positivity
       .
         apply Summable.abs
-        have real_inner : ∀ a b : ℝ, ⟪a, b⟫ = a * b := fun a b => by rw [show (⟪a, b⟫ : ℝ) = b * a from rfl, mul_comm]
-        simp_rw [real_inner]
+        simp_rw [mul_comm]
         apply summable_f_mul_translate
     )]
   simp [volume, my_haar_eq_count, f_conv_delta] at inner_f_conv
-  simp_rw [real_inner] at inner_f_conv
   conv =>
     lhs
     rhs
@@ -2010,6 +1993,7 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
 
   simp only [Finset.sum_inv_index]
 
+  simp_rw [mul_comm] at inner_f_conv
   simp_rw [← inner_f_conv]
   -- Split '2 * ‖f‖^2 into two copies of ‖f‖^2, and convert one into ‖Conv f delta‖^2
   rw [two_mul]
@@ -2034,9 +2018,7 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
   simp_rw [← f_conv_delta]
   have card_s_ne: #(S) ≠ 0 := by
     simp
-    have foo := S_nonempty
-    simp at foo
-    exact Finset.nonempty_iff_ne_empty.mp foo
+    exact Finset.nonempty_iff_ne_empty.mp S_nonempty
   simp_rw [norm_sub_sq_real]
   simp only [MeasureTheory.Lp.norm_def]
   simp_rw [conv_finsupp_lp2]
@@ -2214,12 +2196,6 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
 
   -- MeasureTheory.Lp.coeFn_smul
 
-  have inner_real : ∀ a b : ℝ, @inner ℝ ℝ RCLike.toInnerProductSpaceReal.toInner a b = b * a := by
-    intro a b
-    show @inner ℝ ℝ RCLike.innerProductSpace.toInner a b = b * a
-    rw [RCLike.inner_apply, RCLike.conj_to_real]
-  simp only [inner_real]
-
   conv =>
     lhs
     arg 2
@@ -2288,8 +2264,6 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
       . exact inv_surjective
     ) (by
       intro a
-      simp
-      have foo := hGS.has_inv a
       refine ⟨?_, ?_⟩
       . apply hGS.has_inv a
       . simpa using (hGS.has_inv a⁻¹)
@@ -2535,7 +2509,6 @@ lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_
   refine ⟨?_, ?_⟩
   .
     intro hg
-    simp at hg
     rw [Submodule.mem_orthogonal] at hg
     have inner_laplace_zero: ∀ u: (Lp ℝ 2 volume), ⟪Laplace_linear u, g⟫ = 0 := by
       intro u
@@ -2653,7 +2626,7 @@ lemma f_conv_delta_helper (f: G → ℝ) (s: G): (Conv  f (delta s)) = fun g => 
 lemma f_mul_mu_summable (f: G → ℝ) (g: G) (s: G):
   Summable fun a ↦
     (f ((Additive.toMul a))) * (if s = ((((Additive.toMul a))⁻¹ * g)) then 1 else 0) := by
-  apply summable_of_finite_support
+  apply summable_of_hasFiniteSupport
   change (Function.support _).Finite
   simp only [one_div, Function.support_mul, Function.support_inv]
   apply Set.Finite.inter_of_right
@@ -2742,7 +2715,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     simp [seq]
     simp at norm_gt
     by_contra!
-    simp [setOf] at this
+    simp only [Set.ofPred] at this
     simp [this] at norm_gt
     norm_num at norm_gt
 
@@ -2795,7 +2768,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
           refine le_trans (ENNReal.eLpNorm_top_convolution_le (μ := myHaarAddOpp) (c := 1) (p := 2) (q := 2) (hpq := inferInstance) (by apply AEMeasurable.of_discrete) (by apply AEMeasurable.of_discrete) (by intro a b; simp)) ?_
           .
             simp [norm, volume] at H_n_norm
-            simp_rw [my_haar_eq_count] at H_n_norm
             rw [my_add_haar_eq_count]
             simp [H_n_norm]
 
@@ -2817,7 +2789,9 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
               .
                 have hkey : (∫⁻ (a : Additive G), ‖(H_n (seq n) s : Additive G → ℝ) a‖ₑ ^ 2 ∂Measure.count) ^ (2 : ℝ)⁻¹ = 1 := by
                   have h := H_n_norm n
-                  simpa [eLpNorm, eLpNorm', one_div] using h
+                  show (∫⁻ (a : G), ‖(H_n (seq n) s : G → ℝ) a‖ₑ ^ 2 ∂Measure.count) ^ (2 : ℝ)⁻¹ = 1
+                  simpa [MeasureTheory.Lp.enorm_def, eLpNorm, eLpNorm', one_div, volume,
+                    my_haar_eq_count] using h
                 rw [hkey, one_mul]
                 apply ENNReal.rpow_le_rpow
                 .
@@ -2867,7 +2841,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
                   . simp
                 . simp
               .
-                simpa using hGS.hS
+                simpa using S_nonempty
 
               -- Finset.single_le_sum
             . simp
@@ -3190,7 +3164,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     H_G_conv_zero n
   )) (by
     intro n
-    simp
     apply _root_.subset_closure
     simp
   )
@@ -3533,7 +3506,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
       arg 1
       arg 1
       rw [← Summable.tsum_sub (by
-        apply summable_of_finite_support
+        apply summable_of_hasFiniteSupport
         change (Function.support _).Finite
         simp only [Function.support_mul]
         apply Set.Finite.inter_of_right
@@ -3552,7 +3525,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
           . intro a ha b hb
             simp
       ) (by
-        apply summable_of_finite_support
+        apply summable_of_hasFiniteSupport
         change (Function.support _).Finite
         simp only [Function.support_mul]
         apply Set.Finite.inter_of_right
@@ -3577,13 +3550,8 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     rw [ENNReal.ofReal_eq_ofReal_iff]
     rw [← Function.Injective.tsum_eq (γ := G) (β := Additive (G)) (g := fun a => Additive.ofMul (a⁻¹))]
     simp
-    unfold Additive.ofMul
-    simp
-    simp [Neg.neg, Multiplicative.ofAdd]
-    unfold Additive.toMul
-    unfold Additive.ofMul
-    simp
     rw [abs_of_nonneg]
+    rfl
     .
       apply tsum_nonneg
       apply H_n_diff_pos n
@@ -3604,7 +3572,7 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     . apply H_n_diff_pos n
     .
       simp_rw [← mul_sub]
-      apply summable_of_finite_support
+      apply summable_of_hasFiniteSupport
       change (Function.support _).Finite
       simp only [Function.support_mul]
       apply Set.Finite.inter_of_right
@@ -3762,7 +3730,6 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
 
   have h_n_pointwise_converge := IsCompact.tendsto_subseq compact_closure_f (x := fun n => (Conv (H_n (eps_seq n)) (f_n (eps_seq n)))) (by
     intro n
-    simp
     apply Set.mem_of_subset_of_mem (_root_.subset_closure)
     simp
   )

@@ -43,7 +43,7 @@ lemma linearmap_comp_eq_mul {P: Type*} [AddCommMonoid P] [Module ℂ P] (a b: P 
 --       have foo := sub_mem.1 ⟨f, f_mem_p⟩
 --       have f_eq: f = (⟨f, f_mem_p⟩ : p) := by simp
 --       rw [f_eq]
---       rw [LinearMap.ofIsCompl_left_apply]
+--       rw [LinearMap.ofIsCompl_apply_left]
 --       exact foo
 --     .
 --       rw [isCompl_iff] at h
@@ -59,7 +59,7 @@ lemma linearmap_comp_eq_mul {P: Type*} [AddCommMonoid P] [Module ℂ P] (a b: P 
 --       have foo := sub_mem.2 ⟨f, f_mem_q⟩
 --       have f_eq: f = (⟨f, f_mem_q⟩ : q) := by simp
 --       rw [f_eq]
---       rw [LinearMap.ofIsCompl_right_apply]
+--       rw [LinearMap.ofIsCompl_apply_right]
 --       exact foo
 
 lemma swap_terms_helper {A: Type*} [AddCommGroup A] (a b c d: A): (a + b) + (c + d) = a + c + b + d := by abel
@@ -131,9 +131,9 @@ lemma ofIsCompl_adjoint_comp {P: Type*} [NormedAddCommGroup P] [CompleteSpace P]
     rw [LinearMap.ofIsCompl_eq_add]
     simp
 
-    have adjoint_compl_p_eq : LinearMap.adjoint (p.linearProjOfIsCompl q h) = p.subtype := by
+    have adjoint_compl_p_eq : LinearMap.adjoint (p.projectionOnto q h) = p.subtype := by
       rw [eq_comm]
-      simp [-Submodule.coe_linearProjOfIsCompl_apply, LinearMap.eq_adjoint_iff]
+      simp [-Submodule.coe_projectionOnto_apply, LinearMap.eq_adjoint_iff]
       intro b hb z
       obtain ⟨x, y, z_eq, other⟩ := Submodule.existsUnique_add_of_isCompl h z
       rw [← z_eq]
@@ -144,9 +144,9 @@ lemma ofIsCompl_adjoint_comp {P: Type*} [NormedAddCommGroup P] [CompleteSpace P]
       rw [b_eq]
       apply Submodule.IsOrtho.inner_eq hpq (by simp [hb]) (by simp)
 
-    have adjoint_compl_q_eq : LinearMap.adjoint (q.linearProjOfIsCompl p h.symm) = q.subtype := by
+    have adjoint_compl_q_eq : LinearMap.adjoint (q.projectionOnto p h.symm) = q.subtype := by
       rw [eq_comm]
-      simp [-Submodule.coe_linearProjOfIsCompl_apply, LinearMap.eq_adjoint_iff]
+      simp [-Submodule.coe_projectionOnto_apply, LinearMap.eq_adjoint_iff]
       intro b hb z
       obtain ⟨x, y, z_eq, other⟩ := Submodule.existsUnique_add_of_isCompl h z
       rw [← z_eq]
@@ -208,7 +208,7 @@ lemma ofIsCompl_adjoint_comp {P: Type*} [NormedAddCommGroup P] [CompleteSpace P]
       equals (⟨ψ y, by apply hψ_map⟩ : q).val =>
         simp
 
-    rw [LinearMap.ofIsCompl_right_apply]
+    rw [LinearMap.ofIsCompl_apply_right]
     simp
 
     rw [adjoint_psi_eq]
@@ -219,7 +219,7 @@ lemma ofIsCompl_adjoint_comp {P: Type*} [NormedAddCommGroup P] [CompleteSpace P]
         simp
 
 
-    rw [LinearMap.ofIsCompl_left_apply]
+    rw [LinearMap.ofIsCompl_apply_left]
     simp
 
 
@@ -246,7 +246,7 @@ lemma ofIsCompl_commute {P: Type*} [NormedAddCommGroup P] [CompleteSpace P] [Inn
   have a_y: a y = (⟨a y, a_map_q y⟩ : q).val := by simp
 
   rw [a_x, a_y]
-  rw [LinearMap.ofIsCompl_left_apply, LinearMap.ofIsCompl_right_apply]
+  rw [LinearMap.ofIsCompl_apply_left, LinearMap.ofIsCompl_apply_right]
   rw [phi_a_comm]
   rw [psi_a_comm]
 
@@ -951,16 +951,16 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             intro z
             simp [map_first_x_new, map_first]
             simp_rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal]
-            rw [Matrix.toEuclideanLin_apply]
-            rw [Matrix.toEuclideanLin_apply]
-            rw [Matrix.toEuclideanLin_apply]
-            rw [Matrix.toEuclideanLin_apply]
-            simp
             have x_prop := x.property
             rw [Subgroup.mem_centralizer_iff] at x_prop
             simp at x_prop
             rw [Subtype.ext_iff] at x_prop
             simp at x_prop
+            show (Matrix.toEuclideanLin (↑↑x : Matrix (Fin n) (Fin n) ℂ))
+                  ((Matrix.toEuclideanLin (↑↑g : Matrix (Fin n) (Fin n) ℂ)) (↑z : EuclideanSpace ℂ (Fin n)))
+                = (Matrix.toEuclideanLin (↑↑g : Matrix (Fin n) (Fin n) ℂ))
+                  ((Matrix.toEuclideanLin (↑↑x : Matrix (Fin n) (Fin n) ℂ)) (↑z : EuclideanSpace ℂ (Fin n)))
+            simp only [Matrix.toEuclideanLin_apply, WithLp.ofLp_toLp, Matrix.mulVec_mulVec]
             rw [x_prop]
           .
             intro z
@@ -1020,7 +1020,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
           intro z
           apply Subtype.ext
           simp only [LinearMap.restrict_coe_apply, new, LinearEquiv.apply_symm_apply,
-            LinearMap.ofIsCompl_left_apply, map_first_x_new, map_first, LinearMap.coe_mk,
+            LinearMap.ofIsCompl_apply_left, map_first_x_new, map_first, LinearMap.coe_mk,
             AddHom.coe_mk]
         .
           rw [Subtype.ext_iff]

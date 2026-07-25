@@ -105,7 +105,8 @@ lemma fg_of_quot {G: Type*} [DecidableEq G] [Group G] (H: Subgroup G) [Decidable
     apply fg_H
 
   obtain ⟨S_H, S_H_closure⟩ := fg_H
-  use S_H ∪ ((Finset.image (fun a => a.out) fg_quot.out.choose) ∪ ((Finset.image (fun a => a⁻¹.out) fg_quot.out.choose)))
+  have fg_quot_out : ∃ S : Finset (G ⧸ H), Subgroup.closure (S : Set (G ⧸ H)) = ⊤ := fg_quot.out
+  use S_H ∪ ((Finset.image (fun a => a.out) fg_quot_out.choose) ∪ ((Finset.image (fun a => a⁻¹.out) fg_quot_out.choose)))
   rw [← Finset.coe_union]
   rw [← Finset.coe_union]
   refine ⟨?_, ?_⟩
@@ -113,8 +114,7 @@ lemma fg_of_quot {G: Type*} [DecidableEq G] [Group G] (H: Subgroup G) [Decidable
     ext a
     simp
 
-    have quot_gen := fg_quot.out.choose_spec
-    simp at quot_gen
+    have quot_gen := fg_quot_out.choose_spec
 
     have a_mem: QuotientGroup.mk' H a ∈ (⊤ : (Subgroup (G ⧸ H))) := by simp
     rw [← quot_gen] at a_mem

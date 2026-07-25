@@ -194,7 +194,7 @@ lemma closure_set_union_normal {G: Type*} [Group G] (S: Set G) (N: Subgroup G) (
 #print axioms closure_set_union_normal
 
 
-lemma double_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: lowerCentralSeries G n = Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) n ∪ ↑(lowerCentralSeries G (n + 1)))) (g': ↑(S ∪ S⁻¹))  (l'_mem: l' ∈ ↑(iterate_comm_set (S ∪ S⁻¹) n ∪ (iterate_comm_set (S ∪ S⁻¹) n)⁻¹)): ⁅l'⁻¹, ⁅g'.val, l'⁆⁆ ∈ Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n + 1) ∪ ↑(lowerCentralSeries G (n + 1 + 1))) := by
+lemma double_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: (⊤ : Subgroup G).lowerCentralSeries n = Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) n ∪ ↑((⊤ : Subgroup G).lowerCentralSeries (n + 1)))) (g': ↑(S ∪ S⁻¹))  (l'_mem: l' ∈ ↑(iterate_comm_set (S ∪ S⁻¹) n ∪ (iterate_comm_set (S ∪ S⁻¹) n)⁻¹)): ⁅l'⁻¹, ⁅g'.val, l'⁆⁆ ∈ Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n + 1) ∪ ↑((⊤ : Subgroup G).lowerCentralSeries (n + 1 + 1))) := by
   rw [← Subgroup.inv_mem_iff]
   simp
   apply Subgroup.mem_closure_of_mem
@@ -227,15 +227,13 @@ lemma double_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: lowe
         exact l'_mem_inv
     .
       use g'
-      simp [Bracket.bracket]
   .
     use l'⁻¹
-    simp [Bracket.bracket]
 
 
 
 set_option maxHeartbeats 400000 in
-lemma triple_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: lowerCentralSeries G n = Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) n ∪ ↑(lowerCentralSeries G (n + 1)))) (g': ↑(S ∪ S⁻¹))   (l'_mem_comm: l' ∈ iterate_comm_set (S ∪ S⁻¹) n ∨ l'⁻¹ ∈ iterate_comm_set (S ∪ S⁻¹) n):  ⁅l'⁻¹, ⁅g'.val, l'⁆⁆ * ⁅g'.val, l'⁆ ∈  Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n + 1) ∪ ↑(lowerCentralSeries G (n + 1 + 1))) := by
+lemma triple_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: (⊤ : Subgroup G).lowerCentralSeries n = Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) n ∪ ↑((⊤ : Subgroup G).lowerCentralSeries (n + 1)))) (g': ↑(S ∪ S⁻¹))   (l'_mem_comm: l' ∈ iterate_comm_set (S ∪ S⁻¹) n ∨ l'⁻¹ ∈ iterate_comm_set (S ∪ S⁻¹) n):  ⁅l'⁻¹, ⁅g'.val, l'⁆⁆ * ⁅g'.val, l'⁆ ∈  Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) (n + 1) ∪ ↑((⊤ : Subgroup G).lowerCentralSeries (n + 1 + 1))) := by
   -- have l'_mem: l' ∈ l.unattach := by
   --   simp [h_l']
 
@@ -328,7 +326,7 @@ lemma triple_comm_mem {G: Type*} [Group G] (S: Set G) {l': G} (n: ℕ) (ih: lowe
 
 set_option maxHeartbeats 400000 in
 lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup.closure S = ⊤) (n: ℕ):
-  lowerCentralSeries G n = Subgroup.closure ((iterate_comm_set (S ∪ S⁻¹) n) ∪ ↑(lowerCentralSeries G (n + 1))) := by
+  (⊤ : Subgroup G).lowerCentralSeries n = Subgroup.closure ((iterate_comm_set (S ∪ S⁻¹) n) ∪ ↑((⊤ : Subgroup G).lowerCentralSeries (n + 1))) := by
     induction n with
     | zero =>
       simp [iterate_comm_set]
@@ -347,24 +345,21 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
         simp at hp
         obtain ⟨c, c_mem, ⟨g, p_eq_comm⟩⟩ := hp
         rw [← p_eq_comm]
-        rw [← commutatorElement_def]
         rw [ih] at c_mem
 
-        have h_c_prod := closure_set_union_normal (S := iterate_comm_set (S ∪ S⁻¹) n) (N := lowerCentralSeries G (n + 1)) (by
+        have h_c_prod := closure_set_union_normal (S := iterate_comm_set (S ∪ S⁻¹) n) (N := (⊤ : Subgroup G).lowerCentralSeries (n + 1)) (by
           infer_instance
         ) c_mem
         obtain ⟨x, l, c_prod⟩ := h_c_prod
         rw [c_prod]
         rw [comm_prod]
 
-        have x_comm_mem: ⁅x.val, g⁆ ∈ lowerCentralSeries G (n + 1 + 1) := by
+        have x_comm_mem: ⁅x.val, g⁆ ∈ (⊤ : Subgroup G).lowerCentralSeries (n + 1 + 1) := by
           rw [mem_lowerCentralSeries_succ_iff]
           apply Subgroup.mem_closure_of_mem
           simp
           use x
-          simp
-          use g
-          simp [Bracket.bracket]
+          exact ⟨x.2, g, rfl⟩
 
 
         apply Subgroup.mul_mem
@@ -491,41 +486,26 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
                       simp
                       apply Subgroup.mem_closure_of_mem
                       apply Set.mem_union_right
-                      simp
-                      rw [mem_lowerCentralSeries_succ_iff]
-                      apply Subgroup.mem_closure_of_mem
-                      simp
-                      use ⁅l.unattach.prod, (g_list.getLast g_list_zero).val⁆
-                      refine ⟨?_, ?_⟩
-                      .
-
-                        simp [mem_lowerCentralSeries_succ_iff]
-                        apply Subgroup.mem_closure_of_mem
-                        simp
-                        use l.unattach.prod
-                        refine ⟨?_, ?_⟩
-                        .
-                          rw [ih]
-                          apply Subgroup.list_prod_mem
-                          intro x hx
-                          simp at hx
-                          obtain ⟨x_mem, x_subtype_mem⟩ := hx
-                          cases x_mem
-                          . rename_i x_mem_forward
-                            apply Subgroup.mem_closure_of_mem
-                            grind
-                          . rename_i x_mem_inv
-                            rw [← Subgroup.closure_inv]
-                            apply Subgroup.mem_closure_of_mem
-                            simp
-                            left
-                            exact x_mem_inv
-                        .
-                          use (g_list.getLast g_list_zero)
-                          simp [Bracket.bracket]
-                      .
-                        use (List.take (g_list.length - 1) g_list).unattach.prod
-                        simp [Bracket.bracket]
+                      simp only [SetLike.mem_coe]
+                      have l_prod_mem : l.unattach.prod ∈ (⊤ : Subgroup G).lowerCentralSeries n := by
+                        rw [ih]
+                        apply Subgroup.list_prod_mem
+                        intro x hx
+                        simp at hx
+                        obtain ⟨x_mem, x_subtype_mem⟩ := hx
+                        cases x_mem
+                        . rename_i x_mem_forward
+                          apply Subgroup.mem_closure_of_mem
+                          grind
+                        . rename_i x_mem_inv
+                          rw [← Subgroup.closure_inv]
+                          apply Subgroup.mem_closure_of_mem
+                          simp
+                          left
+                          exact x_mem_inv
+                      exact Subgroup.commutator_mem_commutator
+                        (Subgroup.commutator_mem_commutator l_prod_mem (Subgroup.mem_top _))
+                        (Subgroup.mem_top _)
                   .
 
                     have prev := hk (l.length + 1) (by omega) l [(g_list.getLast g_list_zero)] (by
@@ -558,37 +538,24 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
                     simp
                     apply Subgroup.mem_closure_of_mem
                     apply Set.mem_union_right
-                    simp
-                    rw [mem_lowerCentralSeries_succ_iff]
-                    apply Subgroup.mem_closure_of_mem
-                    simp
-                    use ⁅(l.getLast (by simpa using l_ne_zero)).val, g_list.unattach.prod⁆
-                    refine ⟨?_, ?_⟩
-                    .
-                      rw [mem_lowerCentralSeries_succ_iff]
-                      apply Subgroup.mem_closure_of_mem
-                      simp
-                      use (l.getLast (by simpa using l_ne_zero)).val
-                      refine ⟨?_, ?_⟩
-                      .
-                        rw [ih]
-                        have l_prop := (l.getLast (by simpa using l_ne_zero)).prop
-                        rw [Set.mem_union] at l_prop
-                        cases l_prop
-                        . rename_i l_prop_forward
-                          apply Subgroup.mem_closure_of_mem
-                          grind
-                        . rename_i l_prop_inv
-                          rw [← Subgroup.closure_inv]
-                          simp
-                          apply Subgroup.mem_closure_of_mem
-                          grind
-                      .
-                        use g_list.unattach.prod
-                        simp [Bracket.bracket]
-                    .
-                      use (List.take (l.length - 1) l).unattach.prod
-                      simp [Bracket.bracket]
+                    simp only [SetLike.mem_coe]
+                    have last_mem : (l.getLast (by simpa using l_ne_zero)).val ∈
+                        (⊤ : Subgroup G).lowerCentralSeries n := by
+                      rw [ih]
+                      have l_prop := (l.getLast (by simpa using l_ne_zero)).prop
+                      rw [Set.mem_union] at l_prop
+                      cases l_prop
+                      . rename_i l_prop_forward
+                        apply Subgroup.mem_closure_of_mem
+                        grind
+                      . rename_i l_prop_inv
+                        rw [← Subgroup.closure_inv]
+                        simp
+                        apply Subgroup.mem_closure_of_mem
+                        grind
+                    exact Subgroup.commutator_mem_commutator
+                      (Subgroup.commutator_mem_commutator last_mem (Subgroup.mem_top _))
+                      (Subgroup.mem_top _)
                   .
 
                     have foo := hk (g_list.length + 1) (by omega) [l.getLast (by simpa using l_ne_zero)] g_list (by simp)
@@ -605,7 +572,7 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
       rw [mem_lowerCentralSeries_succ_iff]
 
 
-      have closure_le: (Subgroup.closure ((iterate_comm_set (S ∪ S⁻¹) (n + 1)) ∪ ↑(lowerCentralSeries G (n + 1 + 1)))) ≤ (Subgroup.closure {x | ∃ p ∈ lowerCentralSeries G n, ∃ q ∈ (⊤ : Subgroup G), p * q * p⁻¹ * q⁻¹ = x}) := by
+      have closure_le: (Subgroup.closure ((iterate_comm_set (S ∪ S⁻¹) (n + 1)) ∪ ↑((⊤ : Subgroup G).lowerCentralSeries (n + 1 + 1)))) ≤ (Subgroup.closure {x | ∃ p ∈ (⊤ : Subgroup G).lowerCentralSeries n, ∃ q ∈ (⊤ : Subgroup G), ⁅p, q⁆ = x}) := by
         rw [Subgroup.closure_le]
         intro x hx
         simp at hx
@@ -622,14 +589,10 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
           . apply Subgroup.mem_closure_of_mem
             grind
           . use s
-            rw [← c_comm]
-            simp [Bracket.bracket]
         .
           rename_i x_mem_lower_two
-          have x_mem_lower_succ: x ∈ lowerCentralSeries G (n + 1) := by
-            rw [lowerCentralSeries] at x_mem_lower_two
-            have foo := Subgroup.commutator_le_left (G := G) (lowerCentralSeries G (n + 1)) ⊤
-            apply foo x_mem_lower_two
+          have x_mem_lower_succ: x ∈ (⊤ : Subgroup G).lowerCentralSeries (n + 1) :=
+            Subgroup.commutator_le_left _ _ x_mem_lower_two
 
 
           rw [mem_lowerCentralSeries_succ_iff] at x_mem_lower_succ
@@ -644,17 +607,16 @@ lemma lower_central_generates_succ {G: Type*} [Group G] (S: Set G) (hS: Subgroup
 -- Corollary 13.45
 -- TODO - we might not actually need this from Gromov. Also, it's unclear whether 'k' is fixed, or if we need to take a union over all k ≥ n
 lemma nilpotent_comm_generates {G: Type*} [Group G] [Group.IsNilpotent G] (S: Set G) (hS: Subgroup.closure S = ⊤) (n k: ℕ) (hn: n ≤ k):
-  lowerCentralSeries G k = Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) k) := by
+  (⊤ : Subgroup G).lowerCentralSeries k = Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) k) := by
 
   by_cases class_zero: Group.nilpotencyClass G = 0
   .
-    simp at class_zero
     rw [nilpotencyClass_zero_iff_subsingleton] at class_zero
 
     have unique_subgroup: Unique (Subgroup G) := by infer_instance
 
     -- TODO - what's the right way to apply Unique?
-    rw [unique_subgroup.eq_default (lowerCentralSeries G k)]
+    rw [unique_subgroup.eq_default ((⊤ : Subgroup G).lowerCentralSeries k)]
     rw [unique_subgroup.eq_default (Subgroup.closure (iterate_comm_set (S ∪ S⁻¹) k))]
   .
 
@@ -757,7 +719,7 @@ variable {G: Type*} [Group G] (S: Set G)
 
 -- https://math.stackexchange.com/questions/4995327/group-in-the-lower-central-series-is-generated-by-conjugates-of-comutators-of-ge
 lemma iterate_comm_generates (hS: Subgroup.closure S = ⊤) (n: ℕ):
-  (Subgroup.normalClosure (iterate_comm_set (S) n)) = lowerCentralSeries G n := by
+  (Subgroup.normalClosure (iterate_comm_set (S) n)) = (⊤ : Subgroup G).lowerCentralSeries n := by
   induction n with
   | zero =>
     simp [iterate_comm_set]
@@ -914,7 +876,7 @@ lemma iterate_comm_generates (hS: Subgroup.closure S = ⊤) (n: ℕ):
 
 -- Lemma 13.55 from https://www.math.ucdavis.edu/~kapovich/EPR/ggt.pdf
 lemma comm_trivial_implies_nilpotent {G: Type*} [Group G] (S: Set G) (hS: Subgroup.closure S = ⊤) (n: ℕ) (h_comm: iterate_comm_set (S) (n) = {1}):
-    lowerCentralSeries G n = ⊥ := by
+    (⊤ : Subgroup G).lowerCentralSeries n = ⊥ := by
 
   rw [← iterate_comm_generates S hS n]
   rw [h_comm]
@@ -933,7 +895,7 @@ structure G''CommData {T: Type*} [Group T] (N: Subgroup T) (gamma_alpha: T) wher
   -- As a result, 'pos' strictly increases at each step
   pos: Lex (ℕ × ℕ)
   -- The first component of our position is our index in the lower central series of M
-  pos_first: cur ∈ Subgroup.map N.subtype (lowerCentralSeries N pos.1)
+  pos_first: cur ∈ Subgroup.lowerCentralSeries N pos.1
   -- The second component is the number of copies of 'right' that occur in successive adjacent commutators
   pos_second: pos.2 ≠ 0 → ∃ b: T, cur = iteratedCommutator b gamma_alpha pos.2
 
@@ -947,13 +909,12 @@ structure G''CommData {T: Type*} [Group T] (N: Subgroup T) (gamma_alpha: T) wher
 --open Classical in
 
 -- TODO - upstream to mathlib
-instance lower_central_characteristic {G: Type*} [Group G] (n: ℕ): (lowerCentralSeries G n).Characteristic := by
+instance lower_central_characteristic {G: Type*} [Group G] (n: ℕ): ((⊤ : Subgroup G).lowerCentralSeries n).Characteristic := by
   induction n with
   | zero =>
     simp
     infer_instance
   | succ n ih =>
-    unfold lowerCentralSeries
     infer_instance
 
 -- TODO - generalize and upstream to mathlib
@@ -964,6 +925,7 @@ lemma prod_lex_has_unbounded {f: ℕ → Lex (ℕ × ℕ)} (hf: StrictMono f):
   have fst_max := Nat.sSup_mem (s := Set.range (Prod.fst ∘ f)) (by apply Set.range_nonempty) fst_bounded
   simp at fst_max
   obtain ⟨fst_max, h_fst_max⟩ := fst_max
+  replace h_fst_max : (f fst_max).1 = sSup (Set.range (Prod.fst ∘ f)) := h_fst_max
   -- have snd_max := Nat.sSup_mem (s := Set.range (Prod.snd ∘ f)) (by apply Set.range_nonempty) snd_bounded
   -- simp at snd_max
   -- obtain ⟨snd_max, h_snd_max⟩ := snd_max
@@ -984,7 +946,8 @@ lemma prod_lex_has_unbounded {f: ℕ → Lex (ℕ × ℕ)} (hf: StrictMono f):
     rw [h_fst_max] at f_gt_max
 
 
-    have f_succ_le := le_csSup fst_bounded (a := (f (1 + fst_max)).1) (by simp)
+    have f_succ_le := le_csSup fst_bounded (a := (f (1 + fst_max)).1) ⟨1 + fst_max, rfl⟩
+    rw [← h_fst_max] at f_succ_le
     linarith
   .
     rename_i h
@@ -992,7 +955,9 @@ lemma prod_lex_has_unbounded {f: ℕ → Lex (ℕ × ℕ)} (hf: StrictMono f):
 
     have bdd_above_subset: BddAbove { a: ℕ | ∃ n: ℕ, (f n).1 = (f fst_max).1 ∧ (f n).2 = a } := by
       apply BddAbove.mono (t := Set.range (Prod.snd ∘ f))
-      . grind
+      . intro a ha
+        obtain ⟨m, -, hm⟩ := ha
+        exact ⟨m, hm⟩
       . apply snd_bounded
 
     have snd_max := Nat.sSup_mem (by
@@ -1014,7 +979,7 @@ lemma prod_lex_has_unbounded {f: ℕ → Lex (ℕ × ℕ)} (hf: StrictMono f):
         rhs
         equals (f (1 + snd_max)).1 => rfl
 
-      have f_succ_le := le_csSup fst_bounded (a := (f (1 + snd_max)).1) (by simp)
+      have f_succ_le := le_csSup fst_bounded (a := (f (1 + snd_max)).1) ⟨1 + snd_max, rfl⟩
       rw [← h_fst_max] at f_succ_le
       linarith
     . rename_i fst_eq_snd_lt
@@ -1054,52 +1019,18 @@ noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
     split_ifs
     .
       rename_i next_eq_gamma
-      have prev_mem: prev.cur ∈ N := by
-        have foo := prev.pos_first
-        simp at foo
-        obtain ⟨a, a_eq⟩ := foo
-        use a
-
-      dsimp [Bracket.bracket]
-
-      have conj_mem: cur * prev.cur⁻¹ * cur⁻¹ ∈ N := by
-        apply N_normal.conj_mem
-        exact (Subgroup.inv_mem_iff N).mpr prev_mem
-
-
-      have prod_mem: prev.cur * (cur * prev.cur⁻¹ * cur⁻¹) ∈ N := by
-        apply N.mul_mem
-        exact prev_mem
-        exact conj_mem
-
-
-      rw [← mul_assoc] at prod_mem
-      rw [← mul_assoc] at prod_mem
-      simp
-      use prod_mem
+      simp only [next_eq_gamma, if_true]
       have prev_cur_mem := prev.pos_first
 
-      have lower_normal: (lowerCentralSeries (↥N) prev.pos.1).Normal := by
-        infer_instance
-
-      have map_normal: (Subgroup.map N.subtype (lowerCentralSeries (↥N) prev.pos.1)).Normal := by
+      have map_normal: (Subgroup.lowerCentralSeries N prev.pos.1).Normal := by
         infer_instance
 
       have map_conj := map_normal.conj_mem prev.cur⁻¹ (by exact
-        (Subgroup.inv_mem_iff (Subgroup.map N.subtype (lowerCentralSeries (↥N) prev.pos.1))).mpr prev_cur_mem) gamma_alpha
-      simp_rw [next_eq_gamma]
+        (Subgroup.inv_mem_iff (Subgroup.lowerCentralSeries N prev.pos.1)).mpr prev_cur_mem)
+        gamma_alpha
 
-
-      have new_prod_mem: prev.cur * (gamma_alpha * prev.cur⁻¹ * gamma_alpha⁻¹) ∈ Subgroup.map N.subtype (lowerCentralSeries (↥N) prev.pos.1) := by
-        apply Subgroup.mul_mem
-        exact prev_cur_mem
-        exact map_conj
-
-      rw [← mul_assoc] at new_prod_mem
-      rw [← mul_assoc] at new_prod_mem
-      simp at new_prod_mem
-      obtain ⟨a, ha⟩ := new_prod_mem
-      exact ha
+      rw [commutatorElement_def, mul_assoc, mul_assoc]
+      exact Subgroup.mul_mem _ prev_cur_mem (by rwa [← mul_assoc])
     .
       rename_i cur_neq
       have h_cur_neq := h_cur cur_neq
@@ -1123,65 +1054,21 @@ noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
       --     . exact conj_mem
       --     . exact (Subgroup.inv_mem_iff N).mpr h_cur_neq
 
-      simp
-      have prev_mem := prev.pos_first
-      simp at prev_mem
-      obtain ⟨prev_cur_mem_N, prev_cur_mem_lower⟩ := prev_mem
-      use ?_
-      .
-        dsimp [Bracket.bracket]
-        have lower_normal : (lowerCentralSeries N prev.pos.1).Normal := by infer_instance
-        have conj_mem := lower_normal.conj_mem ⟨prev.cur⁻¹, by exact (Subgroup.inv_mem_iff N).mpr prev_cur_mem_N⟩ (by
-          rw [← Subgroup.mem_map_iff_mem (f := Subgroup.subtype N)]
-          rw [Subgroup.subtype_apply]
-          simp
-          use ?_
-          . exact prev_cur_mem_N
-          . exact Subgroup.subtype_injective N
-        ) ⟨cur, h_cur_neq⟩
-        rw [← Subgroup.mem_map_iff_mem (f := Subgroup.subtype N)]
-        rw [Subgroup.subtype_apply]
-        simp only []
-        simp
-        use ?_
-        .
-          rw [mem_lowerCentralSeries_succ_iff]
-          apply Subgroup.mem_closure_of_mem
-          simp
-          use prev.cur
-          use prev_cur_mem_N
-          refine ⟨prev_cur_mem_lower, ?_⟩
-          use cur
-          use h_cur_neq
-          rfl
-
-        . apply Subgroup.mul_mem
-          . apply Subgroup.mul_mem
-            . apply Subgroup.mul_mem
-              . exact prev_cur_mem_N
-              . exact h_cur_neq
-            . exact (Subgroup.inv_mem_iff N).mpr prev_cur_mem_N
-          . exact (Subgroup.inv_mem_iff N).mpr h_cur_neq
-        exact Subgroup.subtype_injective N
-      .
-        dsimp [Bracket.bracket]
-        apply Subgroup.mul_mem
-        . apply Subgroup.mul_mem
-          . apply Subgroup.mul_mem
-            . exact prev_cur_mem_N
-            . exact h_cur_neq
-          . exact (Subgroup.inv_mem_iff N).mpr prev_cur_mem_N
-        . exact (Subgroup.inv_mem_iff N).mpr h_cur_neq
+      simp only [cur_neq, if_false]
+      exact Subgroup.commutator_mem_commutator prev.pos_first h_cur_neq
   pos_second := by
     split_ifs
     . rename_i cur_eq
+      simp only [cur_eq, if_true]
+      show prev.pos.2 + 1 ≠ 0 → ∃ b : T,
+        ⁅prev.cur, gamma_alpha⁆ = iteratedCommutator b gamma_alpha (prev.pos.2 + 1)
       intro _
       unfold iteratedCommutator
       have prev_val := prev.pos_second
       match h_pos: prev.pos.2 with
       | 0 =>
         use prev.cur
-        simp [cur_eq]
+        simp
       | k + 1 =>
         specialize prev_val (by omega)
         obtain ⟨b, b_eq⟩ := prev_val
@@ -1195,10 +1082,10 @@ noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
         rw [Function.comp_def]
         beta_reduce
         rw [b_eq]
-        rw [cur_eq]
         rw [Function.iterate_succ']
         simp
     . rename_i cur_neq
+      simp only [cur_neq, if_false]
       simp
 }
 
@@ -1206,35 +1093,15 @@ noncomputable def G''_comm {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Nor
 lemma G''_comm_strict_mono {T: Type*} [Group T] {N: Subgroup T} (N_normal: N.Normal) (gamma_alpha cur: T) (h_cur: cur ≠ gamma_alpha → cur ∈ N) (prev: G''CommData N gamma_alpha):
   prev.pos < (G''_comm N_normal gamma_alpha cur h_cur prev).pos := by
 
-  simp [G''_comm]
-  split_ifs
-  .
-    rw [Prod.Lex.lt_iff]
-    right
-    refine ⟨?_, ?_⟩
-    .
-      conv =>
-        lhs
-        equals prev.pos.1 => rfl
-      conv =>
-        rhs
-        equals (prev.pos.1) => rfl
-    . conv =>
-        lhs
-        equals (prev.pos.2) => rfl
-      conv =>
-        rhs
-        equals (prev.pos.2 + 1) => rfl
-      omega
-  . rw [Prod.Lex.lt_iff]
-    left
-    conv =>
-      lhs
-      equals prev.pos.1 => rfl
-    conv =>
-      rhs
-      equals (prev.pos.1 + 1) => rfl
-    omega
+  by_cases h : cur = gamma_alpha
+  . have hpos : (G''_comm N_normal gamma_alpha cur h_cur prev).pos
+        = toLex (prev.pos.1, prev.pos.2 + 1) := if_pos h
+    rw [hpos, Prod.Lex.lt_iff]
+    exact Or.inr ⟨rfl, Nat.lt_succ_self _⟩
+  . have hpos : (G''_comm N_normal gamma_alpha cur h_cur prev).pos
+        = toLex (prev.pos.1 + 1, 0) := if_neg h
+    rw [hpos, Prod.Lex.lt_iff]
+    exact Or.inl (Nat.lt_succ_self _)
 #print axioms G''_comm
 
 -- noncomputable instance inf_lex: InfSet (Lex (ℕ × ℕ)) := {
@@ -2333,9 +2200,7 @@ match n with
     have g_prop := g.prop
     intro hg
     simp [hg] at g_prop
-    have prev_mem := prev.pos_first
-    simp at prev_mem
-    obtain ⟨prev_cur_mem_N, prev_cur_mem_lower⟩ := prev_mem
+    have prev_cur_mem_N := Subgroup.lowerCentralSeries_le_self N _ prev.pos_first
     cases g_prop
     .
       rename_i g_eq_gamma
@@ -2452,10 +2317,7 @@ lemma RepeatComm_min_strict_mono' {G: Type*} [Group G] {N: Subgroup G} (N_normal
     have prev_mono := G''_comm_strict_mono N_normal gamma_alpha ⁅prev.cur, g⁆ (by
       intro hg
       apply normal_comm_mem N_normal
-      have prev_cur_mem_N := prev.pos_first
-      simp at prev_cur_mem_N
-      obtain ⟨prev_cur_mem, _⟩ := prev_cur_mem_N
-      exact prev_cur_mem
+      exact Subgroup.lowerCentralSeries_le_self N _ prev.pos_first
     ) prev
     exact gt_trans prev_mono prev_not_lt
 
@@ -2656,7 +2518,6 @@ lemma one_mem_iterated_comm {G: Type*} [Group G] (S: Set G) (n m: ℕ) (hn: n �
       split at ih
       . simp at ih
       . simp at ih
-    simp at S_empty
     have S_nonempty: S.Nonempty := by
       exact Set.nonempty_iff_ne_empty.mpr S_empty
     rw [Set.nonempty_def] at S_nonempty
@@ -2946,7 +2807,7 @@ lemma nat_le_mul (a n: ℕ) (hn: n ≠ 0): a ≤ n * a := by
 -- List.countP (fun a ↦ !decide (↑a = gamma_alpha)) l
 lemma count_mem_group_implies_lowercentral {G: Type*} [Group G] {N': Subgroup G} [∀ a: G, Decidable (a ∈ N')] (N'_normal: N'.Normal) (l: List G) (g: G)
     (l_nonempty: l ≠ []) (count_ne_zero: (l.countP (fun a => decide (a ∈ N'))) ≠ 0):
-    l.foldr (fun acc s ↦ ⁅s, acc⁆) g ∈ Subgroup.map N'.subtype (lowerCentralSeries N' ((l.countP (fun a => decide (a ∈ N'))) - 1)) := by
+    l.foldr (fun acc s ↦ ⁅s, acc⁆) g ∈ Subgroup.lowerCentralSeries N' ((l.countP (fun a => decide (a ∈ N'))) - 1) := by
 
   induction l with
   | nil =>
@@ -2954,16 +2815,8 @@ lemma count_mem_group_implies_lowercentral {G: Type*} [Group G] {N': Subgroup G}
   | cons head tail ih =>
     by_cases head_in_N': head ∈ N'
     .
-      conv =>
-        arg 1
-        arg 2
-        arg 2
-        simp [head_in_N']
-
-
-
-
-      rw [Subgroup.mem_map]
+      simp only [List.countP_cons, List.foldr_cons, head_in_N', decide_true, if_true,
+        Nat.add_sub_cancel]
       by_cases tail_empty: tail = []
       .
         simp [tail_empty]
@@ -2982,38 +2835,7 @@ lemma count_mem_group_implies_lowercentral {G: Type*} [Group G] {N': Subgroup G}
 
           rw [count_sub_eq]
           specialize ih (by simpa using tail_empty) count_eq_zero
-
-          use ⟨⁅List.foldr (fun acc s ↦ ⁅s, acc⁆) g tail, head⁆, ?_⟩
-          . simp
-
-
-
-            rw [mem_lowerCentralSeries_succ_iff]
-            apply Subgroup.mem_closure_of_mem
-            simp
-            use List.foldr (fun acc s ↦ ⁅s, acc⁆) g tail
-            use ?_
-            . refine ⟨?_, ?_⟩
-              .
-                rw [Subgroup.mem_map] at ih
-                obtain ⟨x, hx, other⟩ := ih
-                simp_rw [← other]
-                simp
-                exact hx
-              .
-                use head
-                use head_in_N'
-                rfl
-            .
-              rw [Subgroup.mem_map] at ih
-              obtain ⟨x, hx, other⟩ := ih
-              rw [← other]
-              simp
-
-      -- simp_rw [mem_lowerCentralSeries_succ_iff]
-      -- simp_rw [List.foldr_cons]
-
-      -- sorry
+          exact Subgroup.commutator_mem_commutator ih head_in_N'
     . rw [List.countP_cons]
       simp only [head_in_N', decide_false, Bool.false_eq_true, ↓reduceIte]
 
@@ -3029,7 +2851,7 @@ lemma count_mem_group_implies_lowercentral {G: Type*} [Group G] {N': Subgroup G}
       specialize ih tail_nonempty count_ne_zero
       rw [List.foldr_cons]
       apply normal_comm_mem
-      . exact ConjAct.normal_of_characteristic_of_normal
+      . infer_instance
       . exact ih
 
 
@@ -3079,8 +2901,8 @@ lemma map_nilpotent {G H: Type*} [Group G] [Group H] (A: Subgroup G) (f: G →* 
   -- use n
   -- sorry
 
--- `Subgroup.map_toSubmonoid` is a post-bump simp lemma that rewrites the `.carrier` predicate
--- of `Subgroup.map`, breaking `unattach`/commutator rewrites below. Disable it for this proof.
+-- `Subgroup.map_toSubmonoid` rewrites the `.carrier` predicate of `Subgroup.map`, which breaks the
+-- `unattach`/commutator rewrites below. Disable it for this proof.
 attribute [-simp] Subgroup.map_toSubmonoid in
 lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Subgroup H} [H_normal: H.Normal] [N'_char: N'.Characteristic] [N'_nilpotent: Group.IsNilpotent N'] (gamma_alpha: G) (gamma_not_n: ¬(gamma_alpha ∈ (Subgroup.map (Subgroup.subtype _) N'))) (m: ℕ) (h_gamma_alpha: ∀ g ∈ N', iteratedCommutator g.val gamma_alpha m = 1):
   Group.IsNilpotent (Subgroup.closure ((Subgroup.map (Subgroup.subtype _) N') ∪ {gamma_alpha})) := by
@@ -3138,33 +2960,12 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
       arg 1
       equals ((Subgroup.map (Subgroup.subtype _) N').carrier ∪ {gamma_alpha}) =>
         ext a
-        simp
-        refine ⟨?_, ?_⟩
-        .
-          intro ha
-          rcases ha with ⟨w, h_eq⟩ | ⟨a_1, h_N', x_close, h_eq⟩
-          . left
-            simpa using h_eq.symm
-          . right
-            have ha1 : a_1 = a := by simpa using h_eq
-            rwa [ha1] at h_N'
-        . intro a_eq
-          cases a_eq
-          . rename_i left
-            left
-            refine ⟨?_, ?_⟩
-            .
-              apply Subgroup.mem_closure_of_mem
-              simp
-            . exact id (Eq.symm left)
-          . rename_i h_right
-            right
-            refine ⟨a, h_right, ?_, ?_⟩
-            . apply Subgroup.mem_closure_of_mem
-              simp
-              right
-              exact h_right
-            . rfl
+        simp only [Set.mem_image, Set.mem_range]
+        constructor
+        . rintro ⟨x, ⟨y, rfl⟩, rfl⟩
+          exact y.2
+        . intro ha
+          exact ⟨_, ⟨⟨a, ha⟩, rfl⟩, rfl⟩
 
     refine ⟨?_, ?_⟩
     .
@@ -3417,30 +3218,9 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
 
           have foo := count_mem_group_implies_lowercentral (N' := (Subgroup.map H.subtype N')) (by infer_instance) l.unattach s ?_ ?_
           .
-            rw [Subgroup.mem_map] at foo
-            obtain ⟨x, x_mem, other⟩ := foo
+            rw [Subgroup.lowerCentralSeries_eq_bot_of_nilpotencyClass_le (by omega)] at foo
+            simpa using foo
 
-            rw [← other]
-            simp
-
-            conv at x_mem =>
-              arg 1
-              equals ⊥ =>
-
-                --sorry
-                have nilpotent_map: Group.IsNilpotent ↥(Subgroup.map H.subtype N') := by
-                  apply map_nilpotent
-                  . exact Subgroup.subtype_injective H
-                  . exact N'_nilpotent
-                rw [lowerCentralSeries_eq_bot_iff_nilpotencyClass_le]
-                omega
-
-
-
-
-
-            simp at x_mem
-            exact x_mem
           .
             -- TODO - this is ridiculously overcomplicated
             have l_nonempty: l ≠ [] := by
@@ -3459,7 +3239,7 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
         . omega
     .
       intro a_eq
-      simp at a_eq
+      replace a_eq : a = 1 := a_eq
       have iterate_mem := iterated_mem_iterated_set 1 gamma_alpha (((Subgroup.map (Subgroup.subtype _) N').carrier ∪ {gamma_alpha})) (by simp) (by simp) m
       have foo := h_gamma_alpha 1 (by simp)
       simp at foo
@@ -3490,7 +3270,7 @@ lemma unipotent_commutator_trivial {G: Type*} [Group G] (H: Subgroup G) {N': Sub
 -- TODO - this theorem statement is wrong
 lemma lowerCentralSeriefs_bracket_pow {G: Type*} [Group G] {N: Subgroup G} [hN: N.Normal]
   (base: N) (right: G) (k n: ℕ) :
-    (iteratedCommutatorNormal base (right^n) k) ∈ lowerCentralSeries N k := by
+    (iteratedCommutatorNormal base (right^n) k) ∈ (⊤ : Subgroup (↥N)).lowerCentralSeries k := by
 
   induction k with
   | zero =>

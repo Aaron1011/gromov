@@ -77,7 +77,6 @@ lemma interval_sum_le {R: Type*} {d: ℕ} [RCLike R] [ NormSMulClass R (Fin d �
     . rename_i v_zero
       simp [v_zero] at hv
     . rename_i le_zero
-      simp at le_zero
       rw [← Real.rpow_natCast] at le_zero
       have pow_pos := Real.rpow_pos_of_pos (x := 3) (by norm_num) b
       linarith
@@ -142,15 +141,7 @@ lemma interval_sum_le {R: Type*} {d: ℕ} [RCLike R] [ NormSMulClass R (Fin d �
 
         nth_rw 2 [← mul_assoc] at two_mul_le
         rw [← pow_succ'] at two_mul_le
-        rw [mul_lt_mul_iff_left₀]
-        . omega
-        . rw [norm_pos_iff]
-          simp
-          refine ⟨?_, ?_⟩
-          . intro k_zero
-            simp [k_zero] at hk
-            norm_num at hk
-          . simpa using hv
+        exact mul_le_mul_of_nonneg_right two_lt_k.le (norm_nonneg _)
       .
         intro a b hab
         simp
@@ -581,8 +572,7 @@ lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)ˣ)
       simp
       rw [mul_v]
     ) (by omega) (a.image Subtype.val) (b.image Subtype.val) ?_ ?_ ?_
-    . simp at sums_eq
-      rw [Finset.image_inj] at sums_eq
+    . rw [Finset.image_inj] at sums_eq
       . exact sums_eq
       . simp
     .
@@ -641,7 +631,7 @@ open scoped Pointwise Finset
 
 -- TODO - this is probably wrong
 lemma hom_poly_growth {d: ℕ} [DecidableEq ((AddAut ((Fin d) → ℤ)))] (S: Finset (AddAut ((Fin d) → ℤ))) {p: ℕ}
-  (hS: ∃ a, ∀ n ≥ 1, #(S ^ n) ≤ a * n^p): False := by
+  (hS: ∃ a, ∀ n ≥ 1, #(n • S) ≤ a * n^p): False := by
 
   let S' := S.image (fun g => homToComplex g)
   sorry

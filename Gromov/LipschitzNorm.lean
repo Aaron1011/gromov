@@ -216,7 +216,7 @@ noncomputable instance LipschitzH_seminorm: SeminormedAddCommGroup (LipschitzH) 
         ring
       rw [e1, e2, e3, add_comm]
       exact h
-    simpa using key
+    exact_mod_cast key
 
 -- Note that we only implement SeminormedAddCommGroup for LipschitzH, so this is only
 -- really a seminormed space. The quotient space W := LipschitzH ⧸ ConstF

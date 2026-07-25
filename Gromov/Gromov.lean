@@ -566,8 +566,12 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
       rw [Subgroup.mem_map] at x_mem
       obtain ⟨y, y_mem, x_eq⟩ := x_mem
       simp_rw [← x_eq]
-      simp [MonoidHom.ofInjective, MulEquiv.ofBijective, Equiv.ofBijective, Function.surjInv]
-      exact y_mem
+      have key : (MonoidHom.ofInjective (subtype_injective H')).symm
+          ⟨H'.subtype (H_equiv_H'.symm.toMonoidHom y), ⟨_, rfl⟩⟩
+            = H_equiv_H'.symm.toMonoidHom y :=
+        subtype_injective H' (MonoidHom.apply_ofInjective_symm _ _)
+      rw [key]
+      simpa using y_mem
     )
     map_one' := by simp
     map_mul' := by
@@ -613,8 +617,7 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
         rw [map_dim]
         by_cases dim_eq_zero: Module.finrank ℂ (V) = 0
         . simp [dim_eq_zero]
-        . simp at dim_eq_zero
-          have dim_eq_one: Module.finrank ℂ (V) = 1 := by omega
+        . have dim_eq_one: Module.finrank ℂ (V) = 1 := by omega
           simp [dim_eq_one]
 
       rw [finrank_le_one_iff] at map_dim_le_one
@@ -680,7 +683,12 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
               use H'.subtype (H_equiv_H'.symm a)
               simp [my_hom]
               use ?_
-              . simp [MonoidHom.ofInjective, MulEquiv.ofBijective, Equiv.ofBijective, Function.surjInv]
+              . have key : (MonoidHom.ofInjective (subtype_injective H')).symm
+                    ⟨↑(H_equiv_H'.symm (↑a : ↥H)), ⟨H_equiv_H'.symm (↑a : ↥H), rfl⟩⟩
+                      = H_equiv_H'.symm (↑a : ↥H) :=
+                  subtype_injective H' (MonoidHom.apply_ofInjective_symm _ _)
+                exact Subtype.ext ((congrArg H_equiv_H' key).trans
+                  (H_equiv_H'.apply_symm_apply _))
               . simp [G']
                 use a.val
                 use ?_
@@ -829,7 +837,7 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
       rw [key, inner_smul_left]
     definite := by
       intro x hx
-      simpa using hx
+      exact W_equiv.map_eq_zero_iff.mp (by simpa using hx)
   }
 
   let temp_inner := InnerProductSpace.ofCore inner_prod_core.toCore
@@ -1101,7 +1109,6 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
                 rfl
             simp at lim_seq_not_mem
           . intro n
-            simp
             have seq_n := seq_in n
             obtain ⟨x, x_mem, seq_eq_x⟩ := seq_n
             simp_rw [← seq_eq_x]
@@ -1276,47 +1283,31 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
       simpa using hab
 
   have reverse_hom_range_top: reverse_hom.range = ⊤ := by
-    simp [reverse_hom]
     rw [Subgroup.eq_top_iff']
     intro x
-    simp
-    use new_map_entry (plain_linear_to_clm x.val)
-    use ?_
+    have x_prop := x.property
+    rw [MonoidHom.mem_range] at x_prop
+    obtain ⟨g, hg⟩ := x_prop
+    have mem_range: plain_linear_to_clm ↑x ∈ my_new_range := by
+      refine MonoidHom.mem_range.mpr ⟨g, ?_⟩
+      rw [← hg]
+      rfl
+    have mem_closure: plain_linear_to_clm ↑x ∈ my_new_range.topologicalClosure :=
+      Subgroup.le_topologicalClosure my_new_range mem_range
+    refine MonoidHom.mem_range.mpr
+      ⟨⟨⟨new_map_entry (plain_linear_to_clm ↑x),
+          Subgroup.mem_map_of_mem new_map_hom.toMonoidHom mem_closure⟩, ?_⟩, ?_⟩
     .
-      use ?_
-      . have hrt : ∀ y, new_map_hom.symm (new_map_entry y) = y := new_map_hom.left_inv
-        refine Subtype.ext ?_
-        change (Units.map (ContinuousLinearMap.toLinearMapRingHom (R₁ := ℝ) (M₁ := W)).toMonoidHom)
-            (new_map_hom.symm (new_map_entry (plain_linear_to_clm ↑x))) = x.val
-        rw [hrt]
-        ext f
-        rfl
-      .
-        rw [Subgroup.mem_subgroupOf]
-        . simp [my_new_range]
-          have x_prop := x.property
-          rw [MonoidHom.mem_range] at x_prop
-          obtain ⟨g, hg⟩ := x_prop
-          use g
-          simp [new_map_hom, new_map_entry]
-          ext f
-          rw [← hg]
-          rfl
+      rw [Subgroup.mem_subgroupOf]
+      exact Subgroup.mem_map_of_mem new_map_hom.toMonoidHom mem_range
     .
-      simp [mapped_group, my_new_range]
-      have x_prop := x.property
-      rw [MonoidHom.mem_range] at x_prop
-      obtain ⟨g, hg⟩ := x_prop
-      use (plain_linear_to_clm x.val)
-      refine ⟨?_, ?_⟩
-      .
-        have mem_range: plain_linear_to_clm ↑x ∈ (GRepW.comp GRepW_base).range := by
-          simp
-          use g
-          rw [← hg]
-          rfl
-        apply Subgroup.le_topologicalClosure (GRepW.comp (GRepW_base)).range mem_range
-      . rfl
+      have hrt : ∀ y, new_map_hom.symm (new_map_entry y) = y := new_map_hom.left_inv
+      refine Subtype.ext ?_
+      change (Units.map (ContinuousLinearMap.toLinearMapRingHom (R₁ := ℝ) (M₁ := W)).toMonoidHom)
+          (new_map_hom.symm (new_map_entry (plain_linear_to_clm ↑x))) = x.val
+      rw [hrt]
+      ext f
+      rfl
 
 
 
@@ -1370,7 +1361,6 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
       refine ⟨?_, ?_⟩
       . intro ha
         rw [Subgroup.mem_subgroupOf]
-        simp at ha
         induction ha using Subgroup.closure_induction_left with
         | one => simp
         | mul_left y hy z hz h_other_z =>
@@ -1465,7 +1455,6 @@ lemma g_hom_abelian {T: Type*} [Group T] (A: Subgroup G) (A_finite_index: A.Fini
 
   have j_nonempty: Nonempty j := by
     by_contra!
-    simp [this] at iso
     have H_finite : Finite H := by
       rw [Equiv.finite_iff iso.toEquiv]
       have finite_i: Finite i := by
@@ -1634,7 +1623,6 @@ lemma rho_g_case_infinite {d: ℕ} (hd: HasPolynomialGrowthD S d) (hr: Infinite 
     simp [g_rho]
     exact MonoidHom.rangeRestrict_surjective GRepW_base
   .
-    dsimp [MonoidHom.range]
     unfold rho_g at hr
     have card_mul := Subgroup.card_mul_index H
     unfold rho_g at card_mul
@@ -1642,8 +1630,7 @@ lemma rho_g_case_infinite {d: ℕ} (hd: HasPolynomialGrowthD S d) (hr: Infinite 
     rw [Nat.mul_eq_zero] at card_mul
     replace card_mul := card_mul.resolve_right H_finite_index.index_ne_zero
     rw [Nat.card_eq_zero] at card_mul
-    simp at card_mul
-    exact card_mul
+    exact card_mul.resolve_left (fun h => h.false ⟨1, H.one_mem⟩)
   . exact H_abelian
   . exact H_finite_index
   . exact h_fg
@@ -1957,14 +1944,15 @@ lemma laplace_bounded (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G
   )]
   simp
   rw [two_mul]
-  . simp
+  . rw [← MeasureTheory.Lp.enorm_def]
   -- TODO - inline these in the right places
+  . simp
   .
     intro i hs
     apply MeasureTheory.AEStronglyMeasurable.of_discrete
-  . simp
+  . norm_num
   .
-    apply MeasureTheory.memLp_finset_sum
+    apply MeasureTheory.memLp_finsetSum
     intro s hs
     rw [← Function.comp_def]
     apply MeasureTheory.MemLp.comp_of_map
@@ -2119,7 +2107,6 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
 
   have sum_le := Finset.sum_le_sum (g := fun i => ‖f‖ * ‖conv_f_delta_lp i‖) (f := fun i => ⟪f, conv_f_delta_lp i⟫) (s := S) (by
     intro s hs
-    simp
     have foo := norm_inner_le_norm (x := f) (y := conv_f_delta_lp s) (𝕜 := ℝ)
     rw [Real.norm_eq_abs] at foo
     exact real_inner_le_norm f (conv_f_delta_lp s)
@@ -2831,7 +2818,6 @@ lemma sub_sq_le_abs (a b : ℝ) (ha: 0 ≤ a) (hb: 0 ≤ b): (a - b)^2 ≤ |a^2 
 lemma card_s_ne: #(S) ≠ 0 := by
   simp
   have foo := S_nonempty
-  simp at foo
   exact Finset.nonempty_iff_ne_empty.mp foo
 
 lemma bounded_from_elpnorm_bound (f: G → ℝ) (p: ℕ) (hp: p ≠ 0) (C: ℝ) (hC: 0 ≤ C) (hf: eLpNorm f p (volume) ≤ (ENNReal.ofReal C)): ∀ g: G, |f g| ≤ C := by
@@ -2873,7 +2859,7 @@ lemma rho_g_case_finite (hr: Finite (↥(rho_g))): Nonempty (Theorem3_1_Input G)
   have ker_finite_index := Subgroup.finiteIndex_ker (GRepW_base)
   let G' := (GRepW_base).ker
 
-  let G'_action := (GRepW_base).restrict G'
+  let G'_action := (GRepW_base).domRestrict G'
 
   have act_ker (g: G) := MonoidHom.mem_ker (f := (GRepW_base)) (x := g)
 
@@ -3310,7 +3296,6 @@ lemma new_three_two_poly_growth (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD 
   by_contra!
   simp [HasPolynomialGrowthD] at hG
   have little_o_poly := isLittleO_pow_exp_pos_mul_atTop d (b := Real.log 2) (Real.log_pos (by simp))
-  simp at little_o_poly
   simp_rw [Real.exp_mul] at little_o_poly
   rw [Real.exp_log (by simp)] at little_o_poly
   apply Asymptotics.IsLittleO.eventuallyLE at little_o_poly
@@ -3603,7 +3588,6 @@ lemma new_three_two_poly_growth (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD 
             simp
             rw [ih]
             simp [List.unattach, -List.map_subtype]
-            simp at ih
             have my_spec := Exists.choose_spec ((s_n_bound M hM h h.property))
             have first_prop := my_spec.1
             -- wtf
@@ -3729,7 +3713,6 @@ lemma new_three_two_poly_growth (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD 
     apply Real.log_pos
     simp
   )
-  simp at little_o_poly
   simp_rw [Real.exp_mul] at little_o_poly
   rw [Real.exp_log (by simp)] at little_o_poly
 
@@ -4155,9 +4138,11 @@ lemma closure_iterate_mulact {T: Type*} [Group T] [DecidableEq T] (a b: T) (n: �
 
 #print axioms closure_iterate_mulact
 
+attribute [local implicit_reducible] Additive Multiplicative
+
 --- Consequence of `three_two_poly_growth` - the set of all 'γ^n *e_i γ^(-n)' is contained the closure of S_n
 lemma three_poly_poly_growth_all_s_n (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (γ: G) (φ: (Additive G) →+ ℤ) (hγ: φ γ = 1)
-  : ∃ n, ∀ m, (Finset.image (gamma_m_helper (S := S) φ γ m) Finset.univ).toSet ⊆ Subgroup.closure (three_two_S_n S  φ γ (n)).toSet := by
+  : ∃ n, ∀ m, ((Finset.image (gamma_m_helper (S := S) φ γ m) Finset.univ : Finset G) : Set G) ⊆ Subgroup.closure ((three_two_S_n S  φ γ (n) : Finset G) : Set G) := by
 
   -- by_cases S_empty: S = ∅
   -- .
@@ -4235,6 +4220,8 @@ lemma three_poly_poly_growth_all_s_n (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGro
       refine ⟨by omega, ?_⟩
       use s
       use hs
+      rw [gamma_m_helper, zpow_neg]
+      exact p_eq
     .
       apply (Subgroup.closure_mono _) x_mem_closure_range
       intro z hz
@@ -4443,8 +4430,7 @@ lemma e_i_and_gamma_generates_G (φ: (Additive G) →+ ℤ) (γ: G) (hγ: φ γ 
       intro x hx
       unfold new_list list_with_mem l_attach at hx
       simp at hx
-      obtain ⟨⟨a, ha⟩, _, x_eq_sum⟩ := List.mem_map.mp hx
-      simp only [Function.comp_apply] at x_eq_sum
+      obtain ⟨a, ha, x_eq_sum⟩ := hx
       left
 
       have gamma_phi_in_minus_plus: γ^(φ a) ∈ ({1, γ, γ⁻¹} ∪ Set.range e_i_regular) ^ (max_phi - 1  +1) := by
@@ -5205,8 +5191,9 @@ lemma three_two_S_n_generates  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S
         simp at hx
         exact hx
 
-      have helper := (three_two_S_n_subset_ker S φ γ phi_gamma n) x_mem
-      simpa using helper
+      obtain ⟨y, hy, hyx⟩ := (three_two_S_n_subset_ker S φ γ phi_gamma n) x_mem
+      rw [← hyx]
+      exact hy
     | zero =>
       simp
     | add y z y_mem z_mem hy hz =>
@@ -5300,8 +5287,9 @@ noncomputable def phi_S (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (�
 
 omit hGS in
 noncomputable def S_n_ker_phi  {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1) (n: ℕ)  : Finset φ.ker := (three_two_S_n S φ γ n).attach.image (fun x => ⟨x.val, (by
-have foo := (three_two_S_n_subset_ker S φ γ hγ n) x.property
-simpa using foo
+obtain ⟨y, hy, hyx⟩ := (three_two_S_n_subset_ker S φ γ hγ n) x.property
+rw [← hyx]
+exact hy
 )⟩) ∪ {0}
 
 omit hGS in
@@ -5385,7 +5373,6 @@ noncomputable def ker_generates {d: ℕ} {n: ℕ} (hd: 1 ≤ d){G: Type*} [Group
         rw [AddSubgroup.ext_iff] at ker_generates
         specialize ker_generates a.val
         have foo := ker_generates.mpr a.prop
-        simp at foo
         conv at foo =>
           arg 2
           equals Additive.ofMul a.val => rfl
@@ -5394,8 +5381,6 @@ noncomputable def ker_generates {d: ℕ} {n: ℕ} (hd: 1 ≤ d){G: Type*} [Group
         rw [AddSubgroup.toSubgroup'_closure] at foo
         simp at foo
         unfold S_n_ker_phi
-        simp
-        simp only [Finset.insert_eq, Set.image_union]
         simp
         first
           | erw [Finset.coe_insert, Set.image_insert_eq, toMul_zero, Subgroup.closure_insert_one]
@@ -5412,18 +5397,17 @@ noncomputable def ker_generates {d: ℕ} {n: ℕ} (hd: 1 ≤ d){G: Type*} [Group
           conv =>
             arg 1
             arg 1
-            equals (three_two_S_n hGS.S data.φ γ n).toSet =>
+            equals ((three_two_S_n hGS.S data.φ γ n : Finset ↥data.G') : Set ↥data.G') =>
               ext b
               constructor
               · intro hb
                 obtain ⟨c, hc, rfl⟩ := hb
                 obtain ⟨d, hd, rfl⟩ := hc
-                obtain ⟨y, -, rfl⟩ := Finset.mem_image.mp hd
+                obtain ⟨y, rfl⟩ := hd
                 exact y.2
               · intro hb
                 have hbk : b ∈ three_two_S_n hGS.S data.φ γ n := by simpa using hb
-                exact Set.mem_image_of_mem _ (Set.mem_image_of_mem _
-                  (SetLike.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach _ ⟨b, hbk⟩))))
+                exact ⟨_, ⟨_, ⟨⟨b, hbk⟩, rfl⟩, rfl⟩, rfl⟩
           exact foo
         . simp [f]
           intro x y hxy
@@ -5561,7 +5545,6 @@ lemma three_two_kernel_poly_growth  (d: ℕ) (hd: d >= 1) (n: ℕ) (hG: HasPolyn
             )⟩)
             rw [← hf]
             rfl
-      rfl
 
 
 
@@ -5927,13 +5910,16 @@ omit hGS in
 lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (hd: 1 ≤ d) (h_growth: HasPolynomialGrowthD S d)
 (inductive_gromov: ∀ (Q_generates: Generates.{u}),(Q_growth : (HasPolynomialGrowthD (Q_generates.S)) (d - 1)) → Group.IsVirtuallyNilpotent Q_generates.G)
 : Group.IsVirtuallyNilpotent G := by
+  letI inst_dec_G : DecidableEq G := G_dec_eq
 
   have G'_finite_index := data.finite_index
   have G'_fg: Group.FG data.G' := by
     apply Subgroup.fg_of_index_ne_zero
 
+  have G'_fg_out : ∃ T : Finset ↥data.G', Subgroup.closure (T : Set ↥data.G') = ⊤ := G'_fg.out
+
   -- A symmetric generating set for G'
-  let S_G' := G'_fg.out.choose ∪  G'_fg.out.choose⁻¹ ∪ {1}
+  let S_G' := G'_fg_out.choose ∪  G'_fg_out.choose⁻¹ ∪ {1}
 
   -- TODO - factor out this proof that a subgroup has polynomial growth
   have G'_poly: HasPolynomialGrowthD (G := data.G') S_G' d := by
@@ -5980,7 +5966,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     generates := by
       simp [S_G']
       rw [Subgroup.closure_union]
-      rw [G'_fg.out.choose_spec]
+      rw [G'_fg_out.choose_spec]
       simp
     one_mem := by
       simp [S_G']
@@ -6008,40 +5994,9 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
 
   obtain ⟨γ, hγ⟩ := data.hφ 1
-  let bad_instance: Generates := {
-    G := data.G'
-    S := S_G'
-    g_group := by infer_instance
-    g_eq := inferInstance
-    hS := by
-      use 1
-      unfold S_G'
-      simp
-    generates := by
-      unfold S_G'
-      simp
-      rw [Subgroup.closure_union]
-      have foo := G'_fg.out.choose_spec
-      simp [foo]
-    one_mem := by
-      simp [S_G']
-    has_inv := by
-      unfold S_G'
-      intro g
-      rw [← Finset.mem_inv']
-      simp
-      nth_rw 2 [or_comm]
-      simp
-    g_infinite := by
-      have foo := Infinite.of_surjective _ data.hφ
-      exact foo
-    g_growth := by
-      use d
-  }
-  -- TODO - why can't this be an inline instance for hGS
-  obtain ⟨n, generates_with_n⟩ := three_two_S_n_generates  (hGS := bad_instance) d hd G'_poly data.φ γ hγ
+  obtain ⟨n, generates_with_n⟩ := three_two_S_n_generates  (hGS := new_generates) d hd G'_poly data.φ γ hγ
   have kernel_poly := three_two_kernel_poly_growth (hGS := new_generates) d hd n G'_poly data.φ γ hγ
-  have kernel_fg := three_two_ker_fg d hd G'_poly data.φ data.hφ
+  have kernel_fg := three_two_ker_fg (hGS := new_generates) d hd G'_poly data.φ data.hφ
   --have kernel_poly_fg_out := poly_growth_equiv_generates new_generates kernel_fg.choose (d := 2)
 
 
@@ -6285,15 +6240,11 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     have alpha_nilpotent := unipotent_commutator_trivial (G := data.G') (H := data.φ.ker.toSubgroup') (N' := N') (N'_char := N'_char) (N'_nilpotent := by
       exact N'_nilpotent
     ) (γ.toMul^α) (by
-      simp
       intro hx
       by_contra!
 
-      have gamma_alpha_mem_ker: (γ.toMul^α) ∈ data.φ.ker := by
-        -- This is *not* called 'extract_proofs'
-        generalize_proofs at this
-        rename_i mem_ker
-        exact mem_ker
+      have gamma_alpha_mem_ker: (γ.toMul^α) ∈ data.φ.ker :=
+        Subgroup.map_subtype_le _ hx
 
       simp at gamma_alpha_mem_ker
       clear * - hγ α gamma_alpha_mem_ker alpha_nonzero
@@ -6330,7 +6281,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
           conv =>
             arg 2
             equals conj_aut y =>
-              rw [Subtype.ext_iff]
+              refine Subtype.ext ?_
               simp [conj_aut]
               simp [← n_eq, new_N'_map]
               rfl
@@ -6544,7 +6495,6 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                 equals Additive.toMul '' data.φ.ker =>
                   ext a
                   simp
-                  exact ⟨fun ⟨h, _⟩ => h, fun h => ⟨h, Set.mem_univ _⟩⟩
               rw [← s_cosets]
               conv =>
                 arg 1
@@ -6650,7 +6600,6 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
 
               simp [hγ]
-              group
           .
             intro b hb a ha
             rw [Subgroup.mem_closure_singleton] at hb

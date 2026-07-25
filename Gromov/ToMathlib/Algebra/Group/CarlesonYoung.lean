@@ -238,7 +238,7 @@ private theorem enorm_convolution_le_eLpNorm_mul_eLpNorm_mul_eLpNorm_aux
     _ ≤ ENNReal.ofReal c * eLpNorm (F 0) (P 0) μ *
           (eLpNorm (F 1) (P 1) μ * eLpNorm (F 2) (P 2) μ) := by
       rw [lintegral_const_mul' _ _ ofReal_ne_top, mul_assoc]
-      refine mul_le_mul_of_nonneg_left ?_ (zero_le (ENNReal.ofReal c))
+      refine mul_le_mul_of_nonneg_left ?_ (zero_le (a := ENNReal.ofReal c))
       -- Check that the assumptions of `lintegral_prod_norm_pow_le'` apply
       have ae_meas_g := hg x
       have := (hf.pow_const p).mul (ae_meas_g.pow_const q)
@@ -359,7 +359,7 @@ private theorem eLpNorm_convolution_le_of_norm_le_mul_aux
     rw [hpqr]
     nth_rewrite 1 [← zero_add 1]
     apply ENNReal.add_lt_add_right ENNReal.one_ne_top
-    exact (zero_le r⁻¹).lt_or_eq.resolve_right (ENNReal.inv_ne_zero.mpr r_top).symm
+    exact (zero_le (a := r⁻¹)).lt_or_eq.resolve_right (ENNReal.inv_ne_zero.mpr r_top).symm
   have p_ne_top : p ≠ ∞ := by contrapose! hq; simpa [hq] using hpq
   have q_ne_top : q ≠ ∞ := by contrapose! hp; simpa [hp] using hpq
   -- When all exponents are finite, apply `eLpNorm_convolution_le_ofReal`

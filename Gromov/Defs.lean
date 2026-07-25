@@ -400,13 +400,13 @@ lemma word_norm_inv_le (x: G): WordNorm x ≤ WordNorm x⁻¹ := by
 
 
 lemma word_norm_inv (x: G): WordNorm x = WordNorm x⁻¹ := by
-apply Nat.le_antisymm
-. apply word_norm_inv_le
-.
-  conv =>
-    rhs
-    equals WordNorm x⁻¹⁻¹ => simp
-  apply word_norm_inv_le
+  apply Nat.le_antisymm
+  . apply word_norm_inv_le
+  .
+    conv =>
+      rhs
+      equals WordNorm x⁻¹⁻¹ => simp
+    apply word_norm_inv_le
 
 
 lemma WordDist_one (x: G): WordDist x 1 = WordNorm x := by
@@ -448,7 +448,7 @@ lemma singleton_open (x: G): IsOpen {x} := by
   exact hy
 
 instance discreteTopology: DiscreteTopology G := by
-  rw [← singletons_open_iff_discrete]
+  rw [discreteTopology_iff_isOpen_singleton]
   exact singleton_open
 
 instance : ContinuousMul G where
@@ -663,7 +663,6 @@ lemma count_ae_everywhere (p: G → Prop): (∀ᵐ g ∂(MeasureTheory.Measure.c
     contradiction
   . intro h
     by_contra this
-    simp at this
     rw [← ne_eq] at this
     rw [← Set.nonempty_iff_ne_empty'] at this
     obtain ⟨a, ha⟩ := this
@@ -679,7 +678,6 @@ lemma ae_eventually_everywhere {f g: G → ℝ}: ((∀ᵐ (x : G), f x = g x)) �
     rhs
     equals f = g =>
       have my_ext := funext_iff (f := f) (g := g)
-      simp at my_ext
       simp
       exact id (Iff.symm my_ext)
 
@@ -727,7 +725,7 @@ def IsLipschitz (f: G → ℝ) := ∃ C, LipschitzWith C f
 instance: FunLike (LipschitzH) G ℝ where
   coe := LipschitzH.toFun
   -- TODO - why does this work? I blindly copied it from `OneHom.funLike`
-  coe_injective' f g h := by cases f; cases g; congr
+  coe_injective f g h := by cases f; cases g; congr
 
 @[ext]
 theorem LipschitzH.ext [Generates ] {f g: LipschitzH} (h: ∀ x, f.toFun x = g.toFun x): f = g := DFunLike.ext _ _ h
@@ -913,9 +911,10 @@ instance LipschitzH.addMonoid [Generates ] : AddMonoid (LipschitzH) := {
   nsmul_succ := by
     intro n f
     ext g
+    show (((n + 1 : ℕ) : ℝ) • f).toFun g = (((n : ℕ) : ℝ) • f).toFun g + f.toFun g
     simp [lipschitz_smul_tofun]
-    rw [add_mul]
-    simp
+    push_cast
+    ring
 }
 
 
@@ -982,17 +981,18 @@ instance LipschitzH.instAddCommGroup: AddCommGroup (LipschitzH) := {
     rfl
   zsmul_succ' := by
     intro n f
-    simp
     ext g
+    show (((n + 1 : ℕ) : ℝ) • f).toFun g = (((n : ℕ) : ℝ) • f).toFun g + f.toFun g
     simp [lipschitz_smul_tofun]
-    rw [add_mul]
-    simp
+    push_cast
+    ring
   zsmul_neg' := by
     intro n hn
-    simp
     ext g
+    show ((Int.negSucc n : ℝ) • hn).toFun g = -((((n + 1 : ℕ) : ℝ)) • hn).toFun g
     simp [lipschitz_smul_tofun]
-    group
+    push_cast
+    ring
 }
 
 
@@ -1052,7 +1052,7 @@ instance lipschitzHVectorSpace : Module ℝ (LipschitzH) := {
     simp [HSMul.hSMul, SMul.smul, DFunLike.coe]
 }
 
-noncomputable instance finite_ball (x: G) (r: ℝ): Set.Finite (Metric.ball x r) := Set.Finite.of_finite_image (f := fun a => (word_norm_prod_self a).choose) (by
+lemma finite_ball (x: G) (r: ℝ): Set.Finite (Metric.ball x r) := Set.Finite.of_finite_image (f := fun a => (word_norm_prod_self a).choose) (by
   have foo := List.finite_length_le S (WordNorm x + ⌈r⌉₊)
   rw [← Set.finite_coe_iff, Set.coe_setOf] at foo
   apply Finite.of_injective (β := {l : List S // l.length ≤ WordNorm x + ⌈r⌉₊}) (fun a => ⟨a.val, by (
@@ -1087,7 +1087,7 @@ noncomputable instance finite_ball (x: G) (r: ℝ): Set.Finite (Metric.ball x r)
 )
 
 -- TODO - deduplicate 99% of this with finite_ball
-noncomputable instance finite_closed_ball (x: G) (r: ℝ): Set.Finite (Metric.closedBall x r) := Set.Finite.of_finite_image (f := fun a => (word_norm_prod_self a).choose) (by
+lemma finite_closed_ball (x: G) (r: ℝ): Set.Finite (Metric.closedBall x r) := Set.Finite.of_finite_image (f := fun a => (word_norm_prod_self a).choose) (by
   have foo := List.finite_length_le S (WordNorm x + ⌈r⌉₊)
   rw [← Set.finite_coe_iff, Set.coe_setOf] at foo
   apply Finite.of_injective (β := {l : List S // l.length ≤ WordNorm x + ⌈r⌉₊}) (fun a => ⟨a.val, by (
@@ -1190,9 +1190,6 @@ lemma conv_eq_sum {f h: G → ℝ} (hconv: ConvExists f h) (g: G): Conv f h g = 
       rhs
       arg 1
       equals Additive.ofMul g - a =>
-        unfold Additive.toMul
-        unfold Additive.ofMul
-        simp
         rw [sub_eq_add_neg]
         rfl
 
@@ -1263,17 +1260,6 @@ lemma f_conv_delta (f: G → ℝ) (g s: G): (Conv  f (delta s)) g = f (s⁻¹ * 
     rw [tsum_eq_sum (s := {opAdd ((s⁻¹ * g))}) ?_]
     .
       simp
-      -- TODO - why does this need 'conv'?
-      conv =>
-        lhs
-        arg 2
-        arg 3
-        simp only [mul_inv_rev, inv_inv, inv_mul_cancel_right]
-      rw [← mul_assoc]
-      -- TODO - why is 'simp' not doing these?
-      rw [mul_inv_cancel]
-      rw [one_mul]
-      simp
       rfl
     .
       intro b hb
@@ -1290,7 +1276,6 @@ lemma f_conv_delta (f: G → ℝ) (g s: G): (Conv  f (delta s)) g = f (s⁻¹ * 
       apply_fun Additive.ofMul
       simp
       apply_fun (fun x => x + b)
-      simp only []
       rw [add_assoc]
       simp
       exact hb
@@ -1589,7 +1574,6 @@ instance isometricGMul: IsIsometricSMul (MulOpposite G) (G) where
     simp [edist]
     simp [PseudoMetricSpace.edist]
     simp [WordDist]
-    group
 
 
 -- instance isometricGMul: IsIsometricSMul G G where
@@ -1615,7 +1599,6 @@ def gAct (g: G) (v: LipschitzH ): LipschitzH  := {
     simp [DFunLike.coe]
     grw [hC]
     simp [dist, WordDist]
-    group
   harmonic := by
     unfold Harmonic
     intro x
@@ -1650,7 +1633,6 @@ abbrev W := (LipschitzH) ⧸ ConstF
 
 def gActW (g: G): W → W := Quotient.lift (fun f => Submodule.Quotient.mk (gAct g f)) (by
   intro f h hfh
-  simp
   rw [Submodule.Quotient.eq']
   replace hfh := ConstF.quotientRel_def.mp hfh
   dsimp [gAct]
@@ -1659,8 +1641,7 @@ def gActW (g: G): W → W := Quotient.lift (fun f => Submodule.Quotient.mk (gAct
   simp [ConstF] at hfh
   obtain ⟨z, hz⟩ := hfh
   simp [ConstLipschitzH] at hz
-  simp [ConstF]
-  simp [ConstLipschitzH]
+  show ∃ y, ConstLipschitzH y = _
   use -z
   ext a
   apply_fun LipschitzH.toFun at hz
@@ -1670,6 +1651,7 @@ def gActW (g: G): W → W := Quotient.lift (fun f => Submodule.Quotient.mk (gAct
   simp
   rw [sub_eq_add_neg]
   rw [add_comm]
+  rfl
 )
 
 
@@ -1751,7 +1733,7 @@ lemma laplace_sum_swap_helper {f g: G → ℝ} (hgf: f.support.Finite ∨ g.supp
     lhs
     rw [← mul_assoc]
     rw [mul_sub]
-    ring
+    ring_nf
     rw [mul_inv_cancel₀ (by apply S_card_ne_zero_re)]
 
 

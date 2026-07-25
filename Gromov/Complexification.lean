@@ -149,8 +149,8 @@ instance [FiniteDimensional ℝ V] : FiniteDimensional ℂ (Cx V) :=
 on `(x, y) ≃ x + i y`. -/
 noncomputable def mapL (f : V →L[ℝ] V) : Cx V →ₗ[ℂ] Cx V where
   toFun p := (show V × V from (f p.fst, f p.snd))
-  map_add' p q := by ext <;> simp [map_add]
-  map_smul' c p := by ext <;> simp [map_sub, map_add, map_smul]
+  map_add' p q := by ext <;> simp [map_add] <;> rfl
+  map_smul' c p := by ext <;> simp [map_sub, map_add, map_smul] <;> rfl
 
 @[simp] lemma mapL_fst (f : V →L[ℝ] V) (p : Cx V) : (mapL f p).fst = f p.fst := rfl
 @[simp] lemma mapL_snd (f : V →L[ℝ] V) (p : Cx V) : (mapL f p).snd = f p.snd := rfl
@@ -187,7 +187,7 @@ lemma mapCLM_injective : Function.Injective (mapCLM : (V →L[ℝ] V) → Cx V �
   intro f g h
   ext x
   have hx := congrArg (fun T : Cx V →L[ℂ] Cx V => (T ((x, 0) : Cx V)).fst) h
-  simpa using hx
+  exact hx
 
 /-- Complexification as an injective group homomorphism on units. -/
 noncomputable def unitsMapHom : (V →L[ℝ] V)ˣ →* (Cx V →L[ℂ] Cx V)ˣ := Units.map mapCLMHom

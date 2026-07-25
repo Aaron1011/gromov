@@ -12,7 +12,6 @@ The following was proved by Aristotle:
 
 import Mathlib
 
-
 lemma star_normal_toContinuousLinearMap {A: Type*} [NormedAddCommGroup A] [InnerProductSpace ℂ A] [FiniteDimensional ℂ A]  (f: A →ₗ[ℂ] A):
     IsStarNormal f ↔ IsStarNormal (LinearMap.toContinuousLinearMap f) := by
 
@@ -37,16 +36,19 @@ lemma eigenvalue_adjoint {A: Type*} [NormedAddCommGroup A] [InnerProductSpace �
   have ker_adjoint := ContinuousLinearMap.IsStarNormal.ker_adjoint_eq_ker hf_cont
   rw [Module.End.hasEigenvector_iff]
   rw [Module.End.hasEigenvector_iff]
+  have ker_toContinuousLinearMap : ∀ X : A →ₗ[ℂ] A,
+      (LinearMap.toContinuousLinearMap X).ker = LinearMap.ker X := fun X => by
+    simp [LinearMap.coe_toContinuousLinearMap]
   by_cases v_eq_zero: v = 0
   . simp [v_eq_zero]
   .
     simp only [ne_eq, v_eq_zero, not_false_eq_true, and_true]
     rw [Module.End.eigenspace_def]
-    rw [← LinearMap.ker_toContinuousLinearMap]
+    rw [← ker_toContinuousLinearMap]
     rw [← ContinuousLinearMap.IsStarNormal.ker_adjoint_eq_ker]
     .
       rw [← LinearMap.adjoint_toContinuousLinearMap]
-      rw [LinearMap.ker_toContinuousLinearMap]
+      rw [ker_toContinuousLinearMap]
       rw [Module.End.eigenspace_def]
       rw [LinearMap.star_eq_adjoint]
       rw [map_sub]
