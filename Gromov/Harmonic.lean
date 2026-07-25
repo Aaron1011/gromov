@@ -78,16 +78,16 @@ variable {V: Submodule ℝ LipschitzH} [V_finite: FiniteDimensional ℝ V] [Nont
 
 
 
-lemma Q_lin_pos_semi_def (R: ℝ): (Q_R_matrix R (V := V)).PosSemidef := by
-  apply Matrix.PosSemidef.of_dotProduct_mulVec_nonneg (Q_R_lin_hermetian V _)
-  intro x
-  rw [Q_R_matrix]
-  rw [star_dotProduct_toMatrix₂_mulVec, Q_R_lin]
-  simp only [Q_R, DFunLike.coe]
-  apply Finset.sum_nonneg
-  intro g _
-  rw [← pow_two]
-  positivity
+-- lemma Q_lin_pos_semi_def (R: ℝ): (Q_R_matrix R (V := V)).PosSemidef := by
+--   apply Matrix.PosSemidef.of_dotProduct_mulVec_nonneg (Q_R_lin_hermetian V _)
+--   intro x
+--   rw [Q_R_matrix]
+--   rw [star_dotProduct_toMatrix₂_mulVec, Q_R_lin]
+--   simp only [Q_R, DFunLike.coe]
+--   apply Finset.sum_nonneg
+--   intro g _
+--   rw [← pow_two]
+--   positivity
 
 lemma v_basis_app_nonzero (k: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)): ∃ g: G, (V_basis V k).val g ≠ 0 := by
   by_contra!
@@ -3835,31 +3835,31 @@ theorem exists_nontrivial_harmonic: ∃ F: LipschitzH , ∀ z: ℝ, F ≠ ConstL
 instance new_nonempty_basis: Nonempty ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V) := Module.Basis.index_nonempty (Module.Basis.ofVectorSpace _ _)
 
 
-lemma hermitian_det_pow_le (R: ℝ) (hR: (v_r_all_nonzero V).choose ≤ R): (Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V) ≤ (Q_R_matrix R (V := V)).trace := by
-  rw [(Q_R_lin_hermetian V R).det_eq_prod_eigenvalues, (Q_R_lin_hermetian V R).trace_eq_sum_eigenvalues]
-  have am_gm :=  Real.geom_mean_le_arith_mean (ι := ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)) (s := Finset.univ)
-    (w := fun i => 1)
-    (z := fun i => (Q_R_lin_hermetian V R).eigenvalues i)
-    (by intro i hi; positivity)
-    (by
-      simp
-      rw [← Module.finrank_eq_card_basis (Module.Basis.ofVectorSpace ℝ V)]
-      rw [Module.finrank_pos_iff_of_free]
-      infer_instance
-    )
-    (by
-      intro i _
-      apply (Q_R_matrix_pos_def V R hR).posSemidef.eigenvalues_nonneg
-    )
-  simp at am_gm
-  simp
-  rw [← Module.finrank_eq_card_basis (Module.Basis.ofVectorSpace ℝ V)] at am_gm
-  grw [am_gm]
-  apply div_le_self
-  .
-    apply Finset.sum_nonneg
-    intro i _
-    apply (Q_R_matrix_pos_def V R hR).posSemidef.eigenvalues_nonneg
-  . simp
-    apply Submodule.nontrivial_iff_ne_bot.mp
-    infer_instance
+-- lemma hermitian_det_pow_le (R: ℝ) (hR: (v_r_all_nonzero V).choose ≤ R): (Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V) ≤ (Q_R_matrix R (V := V)).trace := by
+--   rw [(Q_R_lin_hermetian V R).det_eq_prod_eigenvalues, (Q_R_lin_hermetian V R).trace_eq_sum_eigenvalues]
+--   have am_gm :=  Real.geom_mean_le_arith_mean (ι := ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)) (s := Finset.univ)
+--     (w := fun i => 1)
+--     (z := fun i => (Q_R_lin_hermetian V R).eigenvalues i)
+--     (by intro i hi; positivity)
+--     (by
+--       simp
+--       rw [← Module.finrank_eq_card_basis (Module.Basis.ofVectorSpace ℝ V)]
+--       rw [Module.finrank_pos_iff_of_free]
+--       infer_instance
+--     )
+--     (by
+--       intro i _
+--       apply (Q_R_matrix_pos_def V R hR).posSemidef.eigenvalues_nonneg
+--     )
+--   simp at am_gm
+--   simp
+--   rw [← Module.finrank_eq_card_basis (Module.Basis.ofVectorSpace ℝ V)] at am_gm
+--   grw [am_gm]
+--   apply div_le_self
+--   .
+--     apply Finset.sum_nonneg
+--     intro i _
+--     apply (Q_R_matrix_pos_def V R hR).posSemidef.eigenvalues_nonneg
+--   . simp
+--     apply Submodule.nontrivial_iff_ne_bot.mp
+--     infer_instance
