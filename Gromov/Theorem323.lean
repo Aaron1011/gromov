@@ -3477,18 +3477,7 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
   classical
 
   let R := 16 ^ ((GoodScales data).i_2)
-  have h_R: R'_ V ≤ ↑R := by
-    have foo := (GoodScales data).i_2_ge
-    simp [i₀] at foo
-    have pow_le := Nat.le_pow_clog (b := 16) (x := ⌈R'_ V⌉₊) (by simp)
-    have r_ceil := Nat.le_ceil (R')
-    unfold R' at r_ceil
-    grw [r_ceil]
-    grw [pow_le]
-    simp [R]
-    rw [pow_le_pow_iff_right₀]
-    . exact foo
-    . simp
+  have h_R: R'_ V ≤ ↑R := R'_le_R_2 data
 
   have q_r_base_pos_def := (Q_R_matrix_pos_def_i₀ b (16 ^ ((GoodScales data).i_2)) (by
     simp [i₀]
@@ -3562,20 +3551,14 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
 
   --let q_r_16_lin_eigen := LinearMap.IsSymmetric.eigenvectorBasis (T := )
   let q_r_16_m := (Q_R_lin V (16 * R)).toMatrix₂ v_orthonormal v_orthonormal
-  have q_r_16_m_hermitian: q_r_16_m.IsHermitian := by
-    simp [q_r_16_m]
-    apply (LinearMap.isSymm_iff_isHermitian_toMatrix _).mp
-    apply Q_R_lin_symm
+  have q_r_16_m_hermitian: q_r_16_m.IsHermitian := Q_R_lin_hermetian v_orthonormal (16 * R)
 
   let q_r_16_eigen := q_r_16_m_hermitian.eigenvectorBasis.toBasis
   let eigen_basis_V :=  (WithLp.linearEquiv 2 ℝ (Fin (Module.finrank ℝ ↥V) → ℝ)).trans v_orthonormal.equivFun.symm
   let remapped_ortho := Module.Basis.map q_r_16_eigen eigen_basis_V
 
   let Q_R_ortho := (Q_R_lin V R).toMatrix₂ remapped_ortho remapped_ortho
-  have Q_R_ortho_m_hermitian: Q_R_ortho.IsHermitian := by
-    simp [Q_R_ortho]
-    apply (LinearMap.isSymm_iff_isHermitian_toMatrix _).mp
-    apply Q_R_lin_symm
+  have Q_R_ortho_m_hermitian: Q_R_ortho.IsHermitian := Q_R_lin_hermetian remapped_ortho R
 
   have v_orthonormal_isortho : (Q_R_lin V ↑R).IsOrthoᵢ remapped_ortho := by
     simp [remapped_ortho]
@@ -3748,10 +3731,7 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
       grind
 
   let Q_R_16_new_ortho := (Q_R_lin V (16 *R)).toMatrix₂ remapped_ortho remapped_ortho
-  have Q_R_16_new_ortho_hermitian: Q_R_16_new_ortho.IsHermitian := by
-    simp [Q_R_16_new_ortho]
-    apply (LinearMap.isSymm_iff_isHermitian_toMatrix _).mp
-    apply Q_R_lin_symm
+  have Q_R_16_new_ortho_hermitian: Q_R_16_new_ortho.IsHermitian := Q_R_lin_hermetian remapped_ortho (16 *R)
 
   have det_Q_R_one: Q_R_ortho.det = 1 := by
     simp [Q_R_ortho_eq_1]
