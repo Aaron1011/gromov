@@ -1406,7 +1406,8 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal
       simp
       rw [← QuotientGroup.eq_one_iff]
       rw [← coe_iter]
-      simpa using h_prev
+      --simpa using h_prev
+      sorry
     .
       --sorry
 
