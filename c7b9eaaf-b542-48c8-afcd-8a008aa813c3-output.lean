@@ -1,0 +1,42 @@
+/-
+This file was edited by Aristotle.
+
+Lean version: leanprover/lean4:v4.24.0
+Mathlib version: f897ebcf72cd16f89ab4577d0c826cd14afaafc7
+This project request had uuid: c7b9eaaf-b542-48c8-afcd-8a008aa813c3
+
+The following was proved by Aristotle:
+
+- lemma finite_of_nilpotent_fg_order {G: Type*} [Group G] [Group.FG G] [Group.IsNilpotent G] (m: ℕ) (hm: 0 < m) (hg: ∀ g : G, g^m = 1): Finite G
+-/
+
+import Mathlib
+
+
+lemma finite_of_nilpotent_fg_order {G: Type*} [Group G] [Group.FG G] [Group.IsNilpotent G] (m: ℕ) (hm: 0 < m) (hg: ∀ g : G, g^m = 1): Finite G := by
+  induction' n : Group.nilpotencyClass G with n ih generalizing G <;> simp_all +decide [ Group.nilpotencyClass ];
+  · rw [ eq_top_iff ] at n ; aesop;
+    -- Since the top subgroup is equal to the bottom subgroup, G must be trivial.
+    have h_trivial : ∀ g : G, g = 1 := by
+      simp_all +decide [ Subgroup.eq_bot_iff_forall ];
+    exact Set.finite_univ_iff.mp ( Set.Finite.subset ( Set.finite_singleton 1 ) fun g _ => h_trivial g );
+  · -- The quotient group $G/Z(G)$ is finitely generated (as a quotient of a finitely generated group) and nilpotent.
+    have h_quot_finite : Finite (G ⧸ Subgroup.center G) := by
+      -- By the induction hypothesis, $G/Z(G)$ is finite.
+      apply ih;
+      · rintro ⟨ g ⟩ ; erw [ QuotientGroup.eq_one_iff ] ; aesop;
+      · convert nilpotencyClass_quotient_center using 1;
+        exact?;
+        infer_instance;
+    -- Since $Z(G)$ is finitely generated and torsion, it is finite.
+    have h_center_finite : Finite (Subgroup.center G) := by
+      -- Since $Z(G)$ is finitely generated and torsion, it is finite by the structure theorem for finitely generated abelian groups.
+      have h_center_finite : Group.FG (Subgroup.center G) := by
+        convert Subgroup.fg_of_index_ne_zero ?_;
+        · infer_instance;
+        · exact?;
+      have h_center_torsion : Monoid.IsTorsion (↥(Subgroup.center G)) := by
+        intro x;
+        exact isOfFinOrder_iff_pow_eq_one.mpr ⟨ m, hm, by simpa [ Subtype.ext_iff ] using hg x ⟩;
+      exact?;
+    convert Finite.of_finite_quot_finite_subgroup ( H := Subgroup.center G )
