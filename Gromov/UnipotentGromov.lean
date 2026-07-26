@@ -1332,9 +1332,16 @@ lemma fg_of_subgroup_fg_nilpotent {A: Type*} [DecidableEq A] [Group A] [Group.Is
     have h_equiv :=  QuotientGroup.quotientInfEquivProdNormalQuotient H ((⊤ : Subgroup A).lowerCentralSeries n)
     sorry
 
+lemma iterate_const (A: Type*) (k: A) (n: ℕ): (fun _ => k)^[n] k = k := by
+  induction n with
+  | zero =>
+    simp
+  | succ n ih =>
+    simp [ih]
+
 set_option maxHeartbeats 1000000 in
 lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] [DecidableEq G] (H: Subgroup G) {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N'):
-    ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N', Nat.iterate (fun x => x * ((gamma^a) x)) n g = 1 := by
+    ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N', Nat.iterate (fun x => x * ((gamma^[a]) x⁻¹)) n g = 1 := by
 
   let torsion := CommGroup.torsion (Subgroup.center N')
   have center_fg: Group.FG (Subgroup.center N') := by
@@ -1443,8 +1450,10 @@ lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] [DecidableEq G] (H
     rw [orderOf_ne_zero_iff]
     apply fin_order_new_gamma
 
-  have new_gamma_pow: new_gamma_torsion^(orderOf new_gamma_torsion) = 1 := by
-    simp
+  have new_gamma_pow: new_gamma_torsion^[(orderOf new_gamma_torsion)] = 1 := by
+    sorry
+
+  have orig_new_gamma_pow := new_gamma_pow
 
   let gamma_lift := QuotientGroup.map (torsion) torsion gamma_center (by
     simp [torsion]
@@ -1459,27 +1468,87 @@ lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] [DecidableEq G] (H
     exact map_le
   )
 
-  -- have gamma_lift_order_pos: 0 < orderOf gamma_lift := by
-  --   -- Matrix eigenvalue/subsum argument
-  --   sorry
+  have unipotent_on_quot: ∃ n, 0 < n ∧ ∀ g : (Subgroup.center ↥N') ⧸ torsion, Nat.iterate (fun x => x * ((gamma_lift^[orderOf new_gamma_torsion] x⁻¹))) n g = 1 := by
+    sorry
+
+  obtain ⟨quot_n, quot_n_pos, h_quot_n⟩ := unipotent_on_quot
+  use (orderOf new_gamma_torsion)
+  use quot_n + 1
+  refine ⟨by grind, ?_⟩
+  intro g hg
 
 
-  -- use (orderOf new_gamma_torsion) * (orderOf gamma_lift)
+  specialize h_quot_n (QuotientGroup.mk ⟨g, hg⟩)
+
+  have swap_iter: ∀ n, ∀ g: Subgroup.center N', (fun x ↦ x * (gamma_lift^[orderOf new_gamma_torsion]) x⁻¹)^[n] g = QuotientGroup.mk ⟨((fun x ↦ x * (gamma^[orderOf new_gamma_torsion]) x⁻¹)^[n] g), by sorry⟩ := by
+    sorry
+
+  rw [swap_iter] at h_quot_n
+  rw [QuotientGroup.eq_one_iff] at h_quot_n
+  rw [Function.iterate_succ']
+  simp
 
 
+  rw [funext_iff] at new_gamma_pow
+  apply Subgroup.mem_map_of_mem (Subgroup.center ↥N').subtype at h_quot_n
+  specialize new_gamma_pow ⟨_, h_quot_n⟩
+  simp at new_gamma_pow
 
 
+  have iter_gamma_coe: ∀ n, ∀ g, (⇑new_gamma_torsion)^[n] g = gamma^[n] g := by
+    intro n
+    induction n with
+    | zero =>
+      simp
+    | succ n ih =>
+      intro g
+      rw [Function.iterate_succ]
+      simp
+      rw [ih]
+      simp [new_gamma_torsion, gamma_torsion]
 
 
+  rw [Subtype.ext_iff] at new_gamma_pow
+  rw [iter_gamma_coe] at new_gamma_pow
+  simp at new_gamma_pow
+  simp_rw [new_gamma_pow]
+  simp
 
-  have center_iso := CommGroup.equiv_free_prod_prod_multiplicative_zmod (Subgroup.center N')
-  obtain ⟨I, J, fin_I, fin_J, I_pow, I_pow_prime, K_map, ⟨center_iso⟩⟩ := center_iso
-  sorry
+
+  conv =>
+    lhs
+
+  rw [funext_iff] at orig_new_gamma_pow
+  --simp_rw [Subtype.ext_iff] at orig_new_gamma_pow
+  conv at orig_new_gamma_pow =>
+    intro x
+    arg 1
+    arg 1
+    simp [new_gamma_torsion]
+
+
+  simp_rw [Subtype.ext_iff] at orig_new_gamma_pow
+  conv at orig_new_gamma_pow =>
+    intro x
+    rw [iter_gamma_coe]
+    simp
+
+  have orig_gamma_for_n: ∀ x: N', (⇑gamma)^[orderOf new_gamma_torsion] x = x := by
+    sorry
+  simp at orig_new_gamma_pow
+  simp_rw [orig_gamma_for_n]
+  simp
+  have quot_n_eq: quot_n - 1 + 1 = quot_n := by grind
+  rw [← quot_n_eq]
+  rw [Function.iterate_succ]
+  simp
+  rw [iterate_const]
+
 
 set_option maxHeartbeats 1000000 in
 set_option synthInstance.maxHeartbeats 40000 in
-lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal] {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N'):
-    ∃ a n, a ≠ 0 ∧ ∀ g : N', Nat.iterate (fun x => x * ((gamma^a) x)) n g = 1 := by
+lemma exists_gamma_n_unipotent_N' {G: Type*} [DecidableEq G] [Group G] (H: Subgroup G) [H.Normal] {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N'):
+    ∃ a n, a ≠ 0 ∧ ∀ g : N', Nat.iterate (fun x => x * ((gamma^[a]) x)) n g = 1 := by
 
     -- Nat.iterate (fun x => x * (gamma x)) n g.val
 
@@ -1488,7 +1557,7 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal
   -- let P := fun (A: Type _) [inst1: Group A] => ∀ g: A, iteratedCommutator (g) (gamma ^ sorry) sorry = 1
 
   -- induction ↥N' using Group.nilpotent_center_quotient_ind (P := P) with
-
+  classical
   by_cases N'_subsingle: Subsingleton N'
   .
     use 1
@@ -1532,23 +1601,22 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [Group G] (H: Subgroup G) [H.Normal
 
     by_cases top_subsingle: Subsingleton (⊤ : Subgroup (⊤ : Subgroup (↥N' ⧸ Subgroup.center ↥N')))
     .
-      sorry
-      -- obtain ⟨z_a, z_n, h_z_a, h_z_unipotent⟩ := exists_gamma_n_unipotent_center_N' H (N' := N') (N'_nilpotent) (hN') gamma
+      obtain ⟨z_a, z_n, h_z_a, h_z_unipotent⟩ := exists_gamma_n_unipotent_center_N' H (N' := N') (N'_nilpotent) (hN') gamma
 
-      -- use z_a
-      -- use z_n
-      -- refine ⟨h_z_a, ?_⟩
-      -- intro g
-      -- have foo := top_subsingle.allEq
-      -- simp at foo
-      -- have center_top: Subgroup.center N' = ⊤ := by
-      --   rw [← QuotientGroup.subsingleton_iff]
-      --   exact {
-      --     allEq := foo
-      --   }
+      use z_a
+      use z_n
+      refine ⟨h_z_a, ?_⟩
+      intro g
+      have foo := top_subsingle.allEq
+      simp at foo
+      have center_top: Subgroup.center N' = ⊤ := by
+        rw [← QuotientGroup.subsingleton_iff]
+        exact {
+          allEq := foo
+        }
 
-      -- apply h_z_unipotent
-      -- simp [center_top]
+      apply h_z_unipotent
+      simp [center_top]
 
     have foo := ih (Group.nilpotencyClass (⊤ : Subgroup (⊤ : Subgroup (↥N' ⧸ Subgroup.center ↥N')))) (by
       grw [Subgroup.nilpotencyClass_le]
