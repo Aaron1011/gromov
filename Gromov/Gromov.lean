@@ -5536,34 +5536,86 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     let gamma_conj_ker_mul := AddEquiv.toMultiplicative gamma_conj_ker
     let gamma_conj_N' := MulAut.characteristic N' gamma_conj_ker_mul
 
-    have gamma_conj_iter: ∀ n, ∀ g, (gamma_conj_N'^[n] g).val.val = (toMul γ)^n * toMul (g.val.val) * ((toMul γ)^(n))⁻¹ := by
+    -- The underlying element of `data.G'` of an element of `N'`, with every `Additive` /
+    -- `Multiplicative` conversion spelled out instead of relying on definitional unfolding:
+    -- `↥N' → Multiplicative ↥data.φ.ker → ↥data.φ.ker → Additive ↥data.G' → ↥data.G'`.
+    let N'_val : ↥N' →* ↥data.G' :=
+      (AddMonoidHom.toMultiplicativeLeft data.φ.ker.subtype).comp N'.subtype
+
+    have gamma_conj_ker_apply: ∀ a: ↥data.φ.ker,
+        data.φ.ker.subtype (gamma_conj_ker a) = γ + data.φ.ker.subtype a + -γ := by
+      intro a
+      rw [show gamma_conj_ker a = gamma_conj_hom a from AddEquiv.ofBijective_apply _ _ _]
+      simp [gamma_conj_hom]
+
+    have gamma_conj_step: ∀ g: ↥N',
+        N'_val (gamma_conj_N' g) = Additive.toMul γ * N'_val g * (Additive.toMul γ)⁻¹ := by
+      intro g
+      simp only [N'_val, gamma_conj_N', gamma_conj_ker_mul, MonoidHom.coe_comp, Function.comp_apply,
+        AddMonoidHom.coe_toMultiplicativeLeft, Subgroup.coe_subtype,
+        MulAut.characteristic_apply_apply_coe, AddEquiv.toMultiplicative_apply_apply,
+        AddEquiv.toAddMonoidHom_eq_coe, AddMonoidHom.toMultiplicative_apply_apply,
+        AddMonoidHom.coe_coe, toAdd_ofAdd, gamma_conj_ker_apply, toMul_add, toMul_neg]
+
+    have gamma_conj_iter_val: ∀ (n: ℕ), ∀ g: ↥N',
+        N'_val (gamma_conj_N'^[n] g)
+          = Additive.toMul γ ^ n * N'_val g * (Additive.toMul γ ^ n)⁻¹ := by
       intro n
       induction n with
       | zero =>
         intro g
-        simp
-        rfl
+        simp only [Function.iterate_zero_apply, pow_zero, one_mul, inv_one, mul_one]
       | succ n ih =>
         intro g
-        rw [Function.iterate_succ']
-        simp
-        conv =>
-          lhs
-          arg 1
-          arg 1
-          arg 1
-          simp [gamma_conj_N', gamma_conj_ker_mul, gamma_conj_ker, gamma_conj_hom]
-        simp
-        norm_cast
-        sorry
+        rw [Function.iterate_succ_apply', gamma_conj_step, ih]
+        group
+
+    -- The two membership proofs needed to write the conjugate `γ^n * g * γ⁻ⁿ` back as an
+    -- element of `↥N'`.
+    have conj_mem_ker: ∀ (n: ℕ), ∀ g: ↥N',
+        Additive.ofMul (Additive.toMul γ ^ n * N'_val g * (Additive.toMul γ ^ n)⁻¹)
+          ∈ data.φ.ker := by
+      intro n g
+      rw [← gamma_conj_iter_val n g]
+      exact (Multiplicative.toAdd (N'.subtype (gamma_conj_N'^[n] g))).2
+
+    have conj_val_eq: ∀ (n: ℕ), ∀ g: ↥N',
+        (Multiplicative.ofAdd
+            (⟨Additive.ofMul (Additive.toMul γ ^ n * N'_val g * (Additive.toMul γ ^ n)⁻¹),
+              conj_mem_ker n g⟩ : ↥data.φ.ker))
+          = N'.subtype (gamma_conj_N'^[n] g) := by
+      intro n g
+      show Multiplicative.ofAdd _ = Multiplicative.ofAdd (Multiplicative.toAdd _)
+      congr 1
+      apply Subtype.ext
+      exact congrArg Additive.ofMul (gamma_conj_iter_val n g).symm
+
+    have conj_mem_N': ∀ (n: ℕ), ∀ g: ↥N',
+        (Multiplicative.ofAdd
+            (⟨Additive.ofMul (Additive.toMul γ ^ n * N'_val g * (Additive.toMul γ ^ n)⁻¹),
+              conj_mem_ker n g⟩ : ↥data.φ.ker)) ∈ N' := by
+      intro n g
+      rw [conj_val_eq n g]
+      exact (gamma_conj_N'^[n] g).2
+
+    have gamma_conj_iter: ∀ (n: ℕ), ∀ g: ↥N',
+        gamma_conj_N'^[n] g
+          = ⟨Multiplicative.ofAdd
+              (⟨Additive.ofMul (Additive.toMul γ ^ n * N'_val g * (Additive.toMul γ ^ n)⁻¹),
+                conj_mem_ker n g⟩ : ↥data.φ.ker), conj_mem_N' n g⟩ := by
+      intro n g
+      exact Subtype.ext (conj_val_eq n g).symm
 
     obtain ⟨α, m, alpha_nonzero, alpha_is_unipotent_conj⟩ := exists_gamma_n_unipotent_N' (N' := N')  N'_nilpotent N'_fg gamma_conj_N' --((MulAut.conj γ).characteristic N')
+
 
 
 
     have alpha_is_unipotent: ∀ g ∈ N', Nat.iterate (fun x => ⁅x, γ.toMul^α⁆) m g.val = 1 := by
       intro g hg
       specialize alpha_is_unipotent_conj ⟨g, hg⟩
+      --specialize gamma_conj_iter α ⟨g, hg⟩
+
       rw [Subtype.ext_iff] at alpha_is_unipotent_conj
       simp only [OneMemClass.coe_one] at alpha_is_unipotent_conj
       rw [Subtype.ext_iff] at alpha_is_unipotent_conj
@@ -5579,8 +5631,10 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
         simp
 
 
+
       rw [← alpha_is_unipotent_conj]
       clear alpha_is_unipotent_conj
+
       induction m generalizing g with
       | zero =>
         simp
@@ -5589,17 +5643,10 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
         simp_rw [Function.iterate_succ']
         simp
         rw [ih g hg]
+        rw [gamma_conj_iter]
         simp [Bracket.bracket]
         norm_cast
-        conv =>
-          rhs
-          arg 2
-          rhs
-          rhs
-          rhs
-          arg 1
-          arg 1
-          rhs
+        simp [N'_val]
         sorry
 
     -- TODO - generalize and upstream to mathlib
