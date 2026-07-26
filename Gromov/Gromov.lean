@@ -6058,7 +6058,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
 -- NOTE: from https://www.numdam.org/item/PMIHES_1981__53__53_0.pdf
 -- it looks like our definition of 'polynomial growth' should use `S ∪ S⁻¹`
-lemma main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtuallyNilpotent G := by
+theorem main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirtuallyNilpotent G := by
   induction hn: n generalizing hGS n with
   | zero =>
     simp [HasPolynomialGrowthD] at h
