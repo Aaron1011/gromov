@@ -1528,7 +1528,27 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
   have swap_iter: ∀ n, ∀ g: Subgroup.center N', (fun x ↦ x * (gamma_lift^[orderOf new_gamma_torsion]) x⁻¹)^[n] g = QuotientGroup.mk ⟨((fun x ↦ x * (gamma^[orderOf new_gamma_torsion]) x⁻¹)^[n] g), (by
     rw [mul_aut_iterate]
     simp
-    sorry
+    induction n generalizing g with
+    | zero =>
+      simp
+    | succ n ih =>
+      simp
+      have mul_mem_center: (↑g * ((gamma ^ orderOf new_gamma_torsion) ↑g)⁻¹) ∈ Subgroup.center N' := by
+        apply Subgroup.mul_mem
+        . simp
+        .
+          simp
+          have center_char: (Subgroup.center N').Characteristic := by
+            infer_instance
+          rw [Subgroup.characteristic_iff_le_comap] at center_char
+          specialize center_char (gamma ^ orderOf new_gamma_torsion) g.prop
+          simpa using center_char
+      conv =>
+        pattern (↑g * ((gamma ^ orderOf new_gamma_torsion) ↑g)⁻¹)
+        equals ↑(⟨_, mul_mem_center⟩ : Subgroup.center N') =>
+          rfl
+      apply ih
+
   )⟩ := by
     intro n
     induction n with

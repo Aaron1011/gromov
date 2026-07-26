@@ -6257,3 +6257,6 @@ theorem main_gromov_theorem (n: ℕ) (h: HasPolynomialGrowthD S n): Group.IsVirt
       -- }
       have prev := @ih Q_generates (n - 1) Q_poly (by omega)
       exact prev
+
+#print sorries main_gromov_theorem
+#print axioms main_gromov_theorem
