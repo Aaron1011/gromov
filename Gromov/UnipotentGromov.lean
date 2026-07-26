@@ -1575,7 +1575,7 @@ lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] [DecidableEq G] (H
 set_option maxHeartbeats 1000000 in
 set_option synthInstance.maxHeartbeats 40000 in
 lemma exists_gamma_n_unipotent_N' {G: Type*} [DecidableEq G] [Group G] (H: Subgroup G) [H.Normal] {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N'):
-    ∃ a n, a ≠ 0 ∧ ∀ g : N', Nat.iterate (fun x => x * ((gamma^[a]) x)) n g = 1 := by
+    ∃ a n, a ≠ 0 ∧ ∀ g : N', Nat.iterate (fun x => x * ((gamma^[a]) x⁻¹)) n g = 1 := by
 
     -- Nat.iterate (fun x => x * (gamma x)) n g.val
 
@@ -1744,10 +1744,11 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [DecidableEq G] [Group G] (H: Subgr
       --simpa using h_prev
       sorry
     .
-      --sorry
 
-      simp_rw [← pow_mul] at h_z_unipotent
-      exact h_z_unipotent
+      sorry
+
+      --simp_rw [← pow_mul] at h_z_unipotent
+      --exact h_z_unipotent
 
 
 -- lemma old_unipotent_stuff {G: Type*} [Group G] (H: Subgroup G) [H.Normal] {N: Subgroup H} [N'_normal: N.Normal] (N'_nilpotent: Group.IsNilpotent N) (hN': Subgroup.FG N) (gamma: MulAut N):
