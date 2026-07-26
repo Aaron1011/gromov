@@ -5589,9 +5589,12 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               simp [← n_eq, new_N'_map]
               rfl
           specialize conj_map y
+          rw [Subgroup.mem_comap] at conj_map
+          have N'_spec := N'_fg.choose_spec
+          rw [N'_spec] at hy
           simp [hy] at conj_map
-          sorry
-          --exact conj_map
+          rw [N'_spec]
+          exact conj_map
         .
           rfl
 
@@ -5699,9 +5702,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                 apply Set.mul_mem_mul
                 .
                   simp
-                  apply Subgroup.mem_closure_of_mem
-                  --exact hb
-                  sorry
+                  rw [← MonoidHom.map_closure]
+                  exact hb
                 .
                   simp
                   rw [Subgroup.mem_closure_singleton]
@@ -5742,9 +5744,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               apply Set.mul_mem_mul
               .
                 simp
-                apply Subgroup.mem_closure_of_mem
-                --exact hb
-                sorry
+                rw [← MonoidHom.map_closure]
+                exact hb
               .
                 simp [Subgroup.mem_closure_singleton]
         .
