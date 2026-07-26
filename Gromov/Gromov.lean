@@ -5396,23 +5396,9 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       rw [← Group.isNilpotent_congr normalCore_iso]
       apply Subgroup.isNilpotent
 
-    -- have N_fg: Subgroup.FG N := by
-    --   sorry
 
     rw [Subgroup.finiteIndex_iff] at N_finite_index
     let N' := Subgroup.closure (Set.range (fun (a: Multiplicative data.φ.ker) => a ^ N.index))
-
-
-
-    -- Page 24 of Vikman, "G′′ is virtually nilpotent:"
-    have alpha_unipotent: ∃ α: ℕ, ∃ m: ℕ, ∀ g ∈ N', Nat.iterate (fun x => ⁅x, γ.toMul^α⁆) m g.val = 1 := by
-      sorry
-
-    obtain ⟨α, m, alpha_is_unipotent⟩ := alpha_unipotent
-
-    -- This will probably come from the proof of 'alpha_unipotent'
-    have alpha_nonzero: α ≠ 0 := by
-      sorry
 
 
     let new_N'_map : _ →* _ := {
@@ -5520,9 +5506,101 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       apply Subgroup.fg_of_index_ne_zero
 
 
+    --let gamma_conj := AddAut.characteristic (data.φ.ker) (AddAut.addConj γ)
+    let gamma_conj_hom: data.φ.ker →+ data.φ.ker := {
+      toFun := fun a => ⟨γ + a + (-γ), (by
+        simp
+        exact a.prop
+      )⟩
+      map_zero' := by simp
+      map_add' := by
+        intro a b
+        simp
+    }
+    let gamma_conj_ker: AddAut (data.φ.ker) := AddEquiv.ofBijective gamma_conj_hom (by
+      unfold Function.Bijective
+      refine ⟨?_, ?_⟩
+      . intro a b hab
+        simp [gamma_conj_hom] at hab
+        exact hab
+      .
+        intro b
+        use ⟨(-γ) + b + γ, by (
+          simp
+          exact b.prop
+        )⟩
+        simp [gamma_conj_hom]
+        simp_rw [← add_assoc]
+        simp
+    )
+    let gamma_conj_ker_mul := AddEquiv.toMultiplicative gamma_conj_ker
+    let gamma_conj_N' := MulAut.characteristic N' gamma_conj_ker_mul
+
+    have gamma_conj_iter: ∀ n, ∀ g, (gamma_conj_N'^[n] g).val.val = (toMul γ)^n * toMul (g.val.val) * ((toMul γ)^(n))⁻¹ := by
+      intro n
+      induction n with
+      | zero =>
+        intro g
+        simp
+        rfl
+      | succ n ih =>
+        intro g
+        rw [Function.iterate_succ']
+        simp
+        conv =>
+          lhs
+          arg 1
+          arg 1
+          arg 1
+          simp [gamma_conj_N', gamma_conj_ker_mul, gamma_conj_ker, gamma_conj_hom]
+        simp
+        norm_cast
+        sorry
+
+    obtain ⟨α, m, alpha_nonzero, alpha_is_unipotent_conj⟩ := exists_gamma_n_unipotent_N' (N' := N')  N'_nilpotent N'_fg gamma_conj_N' --((MulAut.conj γ).characteristic N')
 
 
-    --have new_alpha := center_unipotent N'_fg γ.toMul
+
+    have alpha_is_unipotent: ∀ g ∈ N', Nat.iterate (fun x => ⁅x, γ.toMul^α⁆) m g.val = 1 := by
+      intro g hg
+      specialize alpha_is_unipotent_conj ⟨g, hg⟩
+      rw [Subtype.ext_iff] at alpha_is_unipotent_conj
+      simp only [OneMemClass.coe_one] at alpha_is_unipotent_conj
+      rw [Subtype.ext_iff] at alpha_is_unipotent_conj
+      simp [-SetLike.coe_eq_coe] at alpha_is_unipotent_conj
+      conv at alpha_is_unipotent_conj =>
+        rhs
+        equals (0 : Additive data.G') =>
+          rfl
+
+      apply_fun Additive.toMul at alpha_is_unipotent_conj
+      conv at alpha_is_unipotent_conj =>
+        rhs
+        simp
+
+
+      rw [← alpha_is_unipotent_conj]
+      clear alpha_is_unipotent_conj
+      induction m generalizing g with
+      | zero =>
+        simp
+        rfl
+      | succ m ih =>
+        simp_rw [Function.iterate_succ']
+        simp
+        rw [ih g hg]
+        simp [Bracket.bracket]
+        norm_cast
+        conv =>
+          rhs
+          arg 2
+          rhs
+          rhs
+          rhs
+          arg 1
+          arg 1
+          rhs
+        sorry
 
     -- TODO - generalize and upstream to mathlib
     have phi_ker_normal: (AddSubgroup.toSubgroup' data.φ.ker).Normal := by
