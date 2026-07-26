@@ -5612,42 +5612,32 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
 
     have alpha_is_unipotent: ∀ g ∈ N', Nat.iterate (fun x => ⁅x, γ.toMul^α⁆) m g.val = 1 := by
+      -- One commutator step with `γ^α` is the `N'_val`-image of one step of
+      -- `x ↦ x * gamma_conj_N'^[α] x⁻¹`, which is the map `exists_gamma_n_unipotent_N'` iterates.
+      have commutator_step: ∀ x: ↥N',
+          ⁅N'_val x, Additive.toMul γ ^ α⁆ = N'_val (x * (gamma_conj_N'^[α]) x⁻¹) := by
+        intro x
+        rw [map_mul, gamma_conj_iter_val α x⁻¹, map_inv, commutatorElement_def]
+        group
+
+      have commutator_iterate: ∀ (k: ℕ), ∀ x: ↥N',
+          (fun y => ⁅y, Additive.toMul γ ^ α⁆)^[k] (N'_val x)
+            = N'_val ((fun y => y * (gamma_conj_N'^[α]) y⁻¹)^[k] x) := by
+        intro k
+        induction k with
+        | zero =>
+          intro x
+          simp only [Function.iterate_zero_apply]
+        | succ k ih =>
+          intro x
+          simp only [Function.iterate_succ_apply]
+          rw [commutator_step x, ih]
+
       intro g hg
-      specialize alpha_is_unipotent_conj ⟨g, hg⟩
-      --specialize gamma_conj_iter α ⟨g, hg⟩
-
-      rw [Subtype.ext_iff] at alpha_is_unipotent_conj
-      simp only [OneMemClass.coe_one] at alpha_is_unipotent_conj
-      rw [Subtype.ext_iff] at alpha_is_unipotent_conj
-      simp [-SetLike.coe_eq_coe] at alpha_is_unipotent_conj
-      conv at alpha_is_unipotent_conj =>
-        rhs
-        equals (0 : Additive data.G') =>
-          rfl
-
-      apply_fun Additive.toMul at alpha_is_unipotent_conj
-      conv at alpha_is_unipotent_conj =>
-        rhs
-        simp
-
-
-
-      rw [← alpha_is_unipotent_conj]
-      clear alpha_is_unipotent_conj
-
-      induction m generalizing g with
-      | zero =>
-        simp
-        rfl
-      | succ m ih =>
-        simp_rw [Function.iterate_succ']
-        simp
-        rw [ih g hg]
-        rw [gamma_conj_iter]
-        simp [Bracket.bracket]
-        norm_cast
-        simp [N'_val]
-        sorry
+      -- `g.val` in the statement above is `N'_val ⟨g, hg⟩` modulo the `Multiplicative` /
+      -- `Additive` type synonyms; this `show` is the one place that identification is used.
+      show (fun x => ⁅x, Additive.toMul γ ^ α⁆)^[m] (N'_val ⟨g, hg⟩) = 1
+      rw [commutator_iterate m ⟨g, hg⟩, alpha_is_unipotent_conj ⟨g, hg⟩, map_one]
 
     -- TODO - generalize and upstream to mathlib
     have phi_ker_normal: (AddSubgroup.toSubgroup' data.φ.ker).Normal := by
