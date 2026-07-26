@@ -3980,18 +3980,6 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
 end HnEpsData
 
 -- TODO: upstream to mathlib
-lemma group_fg_map {G G': Type*} [Group G] [Group G'] (H: Subgroup G) (h_fg: H.FG) (f: G →* G'): (Subgroup.map f H).FG := by
-  obtain ⟨s, hs⟩ := h_fg
-  classical
-  rw [Subgroup.fg_iff]
-  use s.image f
-  refine ⟨?_, ?_⟩
-  .
-    rw [Finset.coe_image]
-    rw [← MonoidHom.map_closure]
-    rw [hs]
-  . simp
-    exact Set.toFinite (⇑f '' ↑s)
 
 
 -- Helper for theorem 3.8
