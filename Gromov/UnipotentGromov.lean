@@ -1374,6 +1374,18 @@ lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] [DecidableEq G] (H
     exact hg
   )
 
+  let pre_gamma_center := MonoidHom.domRestrict gamma.toMonoidHom (Subgroup.center N')
+  let gamma_center := MonoidHom.codRestrict pre_gamma_center (Subgroup.center N') (by
+    intro x
+    simp [pre_gamma_center]
+    have char := Subgroup.centerCharacteristic (G := N')
+    rw [Subgroup.characteristic_iff_comap_eq] at char
+    have foo := char gamma
+    rw [Subgroup.ext_iff] at foo
+    specialize foo x
+    simp at foo
+    exact foo
+  )
   have t_char: torsion.Characteristic := torsion_characteristic
   let torsion_N := Subgroup.map (Subgroup.subtype _) torsion
   let gamma_torsion := MonoidHom.domRestrict gamma.toMonoidHom torsion_N
@@ -1434,16 +1446,26 @@ lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] [DecidableEq G] (H
   have new_gamma_pow: new_gamma_torsion^(orderOf new_gamma_torsion) = 1 := by
     simp
 
-  -- let gamma_lift := QuotientGroup.map (torsion) torsion gamma.toMonoidHom (by
-  --   simp
-  --   intro a ha
-  --   simp
-  --   sorry
-  -- )
+  let gamma_lift := QuotientGroup.map (torsion) torsion gamma_center (by
+    simp [torsion]
+    intro x hx
+    simp
+
+    have map_le := CommGroup.map_torsion_le gamma_center
+    have gamma_x_mem: gamma_center x ∈ (Subgroup.map gamma_center (CommGroup.torsion ↥(Subgroup.center ↥N'))) := by
+      rw [Subgroup.mem_map]
+      use x
+    specialize map_le gamma_x_mem
+    exact map_le
+  )
 
   -- have gamma_lift_order_pos: 0 < orderOf gamma_lift := by
   --   -- Matrix eigenvalue/subsum argument
   --   sorry
+
+
+  -- use (orderOf new_gamma_torsion) * (orderOf gamma_lift)
+
 
 
 
