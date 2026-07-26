@@ -1339,6 +1339,17 @@ lemma iterate_const (A: Type*) (k: A) (n: ℕ): (fun _ => k)^[n] k = k := by
   | succ n ih =>
     simp [ih]
 
+
+
+-- Note: `⇑(f ^ n)`, not `f ^ n`: the latter elaborates at type `G → G` and picks up
+-- `Pi.instPow`, i.e. the pointwise power `fun a => (f a) ^ n`, not composition.
+lemma mul_aut_iterate {G: Type*} [Group G] (f: MulAut G) (n: ℕ): f^[n] = ⇑(f ^ n) := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    ext a
+    rw [Function.iterate_succ_apply, pow_succ, MulAut.mul_apply, ← ih]
+
 set_option maxHeartbeats 1000000 in
 lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] [DecidableEq G] (H: Subgroup G) {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N'):
     ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N', Nat.iterate (fun x => x * ((gamma^[a]) x⁻¹)) n g = 1 := by
@@ -1396,7 +1407,7 @@ lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] [DecidableEq G] (H
   have t_char: torsion.Characteristic := torsion_characteristic
   let torsion_N := Subgroup.map (Subgroup.subtype _) torsion
   let gamma_torsion := MonoidHom.domRestrict gamma.toMonoidHom torsion_N
-  let new_gamma_torsion := MonoidHom.codRestrict gamma_torsion torsion_N (by
+  let new_gamma_torsion_hom := MonoidHom.codRestrict gamma_torsion torsion_N (by
     rw [Subgroup.characteristic_iff_map_le] at t_char
     specialize t_char
     intro x
@@ -1436,13 +1447,23 @@ lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] [DecidableEq G] (H
       exact x_center
   )
 
-  have finite_aut: Finite (MulAut (torsion_N)) := by infer_instance
-  have finite_hom: Finite (↥torsion_N →* ↥torsion_N) := by
-    apply Finite.of_injective (fun (a: ↥torsion_N →* ↥torsion_N) => a.toFun)
-    intro a b hab
-    simp at hab
-    exact hab
+  let new_gamma_torsion: MulAut (torsion_N) := MulEquiv.ofBijective new_gamma_torsion_hom (by
+    unfold Function.Bijective
+    refine ⟨?_, ?_⟩
+    .
+      intro a b hab
+      simp [new_gamma_torsion_hom, gamma_torsion] at hab
+      exact hab
+    .
+      intro p
+      use ⟨gamma.symm p, (by
 
+        sorry
+      )⟩
+      simp [new_gamma_torsion_hom, gamma_torsion]
+  )
+
+  have finite_aut: Finite (MulAut (torsion_N)) := by infer_instance
   have fin_order_new_gamma := isOfFinOrder_of_finite new_gamma_torsion
 
   have order_pos: 0 < orderOf new_gamma_torsion := by
@@ -1450,8 +1471,25 @@ lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] [DecidableEq G] (H
     rw [orderOf_ne_zero_iff]
     apply fin_order_new_gamma
 
-  have new_gamma_pow: new_gamma_torsion^[(orderOf new_gamma_torsion)] = 1 := by
-    sorry
+  have iter_gamma_coe: ∀ n, ∀ g, (⇑new_gamma_torsion)^[n] g = gamma^[n] g := by
+    intro n
+    induction n with
+    | zero =>
+      simp
+    | succ n ih =>
+      intro g
+      rw [Function.iterate_succ]
+      simp
+      rw [ih]
+      simp [new_gamma_torsion, new_gamma_torsion_hom, gamma_torsion]
+
+
+  have new_gamma_pow: new_gamma_torsion^[(orderOf new_gamma_torsion)] = id := by
+    rw [mul_aut_iterate]
+    simp
+
+
+
 
   have orig_new_gamma_pow := new_gamma_pow
 
@@ -1495,17 +1533,6 @@ lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] [DecidableEq G] (H
   simp at new_gamma_pow
 
 
-  have iter_gamma_coe: ∀ n, ∀ g, (⇑new_gamma_torsion)^[n] g = gamma^[n] g := by
-    intro n
-    induction n with
-    | zero =>
-      simp
-    | succ n ih =>
-      intro g
-      rw [Function.iterate_succ]
-      simp
-      rw [ih]
-      simp [new_gamma_torsion, gamma_torsion]
 
 
   rw [Subtype.ext_iff] at new_gamma_pow
@@ -1515,34 +1542,34 @@ lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] [DecidableEq G] (H
   simp
 
 
-  conv =>
-    lhs
+  -- conv =>
+  --   lhs
 
-  rw [funext_iff] at orig_new_gamma_pow
-  --simp_rw [Subtype.ext_iff] at orig_new_gamma_pow
-  conv at orig_new_gamma_pow =>
-    intro x
-    arg 1
-    arg 1
-    simp [new_gamma_torsion]
+  -- rw [funext_iff] at orig_new_gamma_pow
+  -- --simp_rw [Subtype.ext_iff] at orig_new_gamma_pow
+  -- conv at orig_new_gamma_pow =>
+  --   intro x
+  --   arg 1
+  --   arg 1
+  --   simp [new_gamma_torsion]
 
 
-  simp_rw [Subtype.ext_iff] at orig_new_gamma_pow
-  conv at orig_new_gamma_pow =>
-    intro x
-    rw [iter_gamma_coe]
-    simp
+  -- simp_rw [Subtype.ext_iff] at orig_new_gamma_pow
+  -- conv at orig_new_gamma_pow =>
+  --   intro x
+  --   rw [iter_gamma_coe]
+  --   simp
 
-  have orig_gamma_for_n: ∀ x: N', (⇑gamma)^[orderOf new_gamma_torsion] x = x := by
-    sorry
-  simp at orig_new_gamma_pow
-  simp_rw [orig_gamma_for_n]
-  simp
-  have quot_n_eq: quot_n - 1 + 1 = quot_n := by grind
-  rw [← quot_n_eq]
-  rw [Function.iterate_succ]
-  simp
-  rw [iterate_const]
+  -- have orig_gamma_for_n: ∀ x: N', (⇑gamma)^[orderOf new_gamma_torsion] x = x := by
+  --   sorry
+  -- simp at orig_new_gamma_pow
+  -- simp_rw [orig_gamma_for_n]
+  -- simp
+  -- have quot_n_eq: quot_n - 1 + 1 = quot_n := by grind
+  -- rw [← quot_n_eq]
+  -- rw [Function.iterate_succ]
+  -- simp
+  -- rw [iterate_const]
 
 
 set_option maxHeartbeats 1000000 in
