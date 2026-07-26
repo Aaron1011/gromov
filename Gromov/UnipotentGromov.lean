@@ -1392,18 +1392,19 @@ lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] [DecidableEq G] (H
     exact hg
   )
 
-  let pre_gamma_center := MonoidHom.domRestrict gamma.toMonoidHom (Subgroup.center N')
-  let gamma_center := MonoidHom.codRestrict pre_gamma_center (Subgroup.center N') (by
-    intro x
-    simp [pre_gamma_center]
-    have char := Subgroup.centerCharacteristic (G := N')
-    rw [Subgroup.characteristic_iff_comap_eq] at char
-    have foo := char gamma
-    rw [Subgroup.ext_iff] at foo
-    specialize foo x
-    simp at foo
-    exact foo
-  )
+  -- let pre_gamma_center := MonoidHom.domRestrict gamma.toMonoidHom (Subgroup.center N')
+  -- let gamma_center := MonoidHom.codRestrict pre_gamma_center (Subgroup.center N') (by
+  --   intro x
+  --   simp [pre_gamma_center]
+  --   have char := Subgroup.centerCharacteristic (G := N')
+  --   rw [Subgroup.characteristic_iff_comap_eq] at char
+  --   have foo := char gamma
+  --   rw [Subgroup.ext_iff] at foo
+  --   specialize foo x
+  --   simp at foo
+  --   exact foo
+  -- )
+  let gamma_center := MulAut.characteristic (Subgroup.center N') gamma
   have t_char: torsion.Characteristic := torsion_characteristic
   let torsion_N := Subgroup.map (Subgroup.subtype _) torsion
   let gamma_torsion := MonoidHom.domRestrict gamma.toMonoidHom torsion_N
@@ -1447,21 +1448,23 @@ lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] [DecidableEq G] (H
       exact x_center
   )
 
-  let new_gamma_torsion: MulAut (torsion_N) := MulEquiv.ofBijective new_gamma_torsion_hom (by
-    unfold Function.Bijective
-    refine ⟨?_, ?_⟩
-    .
-      intro a b hab
-      simp [new_gamma_torsion_hom, gamma_torsion] at hab
-      exact hab
-    .
-      intro p
-      use ⟨gamma.symm p, (by
+  let new_gamma_torsion := MulAut.characteristic torsion_N gamma
 
-        sorry
-      )⟩
-      simp [new_gamma_torsion_hom, gamma_torsion]
-  )
+  -- let new_gamma_torsion: MulAut (torsion_N) := MulEquiv.ofBijective new_gamma_torsion_hom (by
+  --   unfold Function.Bijective
+  --   refine ⟨?_, ?_⟩
+  --   .
+  --     intro a b hab
+  --     simp [new_gamma_torsion_hom, gamma_torsion] at hab
+  --     exact hab
+  --   .
+  --     intro p
+  --     use ⟨gamma.symm p, (by
+
+  --       sorry
+  --     )⟩
+  --     simp [new_gamma_torsion_hom, gamma_torsion]
+  -- )
 
   have finite_aut: Finite (MulAut (torsion_N)) := by infer_instance
   have fin_order_new_gamma := isOfFinOrder_of_finite new_gamma_torsion
@@ -1493,15 +1496,17 @@ lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] [DecidableEq G] (H
 
   have orig_new_gamma_pow := new_gamma_pow
 
-  let gamma_lift := QuotientGroup.map (torsion) torsion gamma_center (by
+  let gamma_lift := QuotientGroup.map (torsion) torsion gamma_center.toMonoidHom (by
     simp [torsion]
     intro x hx
     simp
 
-    have map_le := CommGroup.map_torsion_le gamma_center
+    have map_le := CommGroup.map_torsion_le gamma_center.toMonoidHom
     have gamma_x_mem: gamma_center x ∈ (Subgroup.map gamma_center (CommGroup.torsion ↥(Subgroup.center ↥N'))) := by
       rw [Subgroup.mem_map]
       use x
+      simp
+      exact hx
     specialize map_le gamma_x_mem
     exact map_le
   )
@@ -1577,11 +1582,6 @@ set_option synthInstance.maxHeartbeats 160000 in
 lemma exists_gamma_n_unipotent_N' {G: Type*} [DecidableEq G] [Group G] (H: Subgroup G) [H.Normal] {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N'):
     ∃ a n, a ≠ 0 ∧ ∀ g : N', Nat.iterate (fun x => x * ((gamma^[a]) x⁻¹)) n g = 1 := by
 
-    -- Nat.iterate (fun x => x * (gamma x)) n g.val
-
-
-  -- refine ⟨by sorry, ?_⟩
-  -- let P := fun (A: Type _) [inst1: Group A] => ∀ g: A, iteratedCommutator (g) (gamma ^ sorry) sorry = 1
 
   -- induction ↥N' using Group.nilpotent_center_quotient_ind (P := P) with
   classical

@@ -5555,9 +5555,9 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       rw [AddMonoidHom.map_nsmul, hγ] at gak
       simp at gak
       exact alpha_nonzero gak
-    ) m alpha_is_unipotent
+    ) m alpha_is_unipotent N'_fg.choose N'_fg.choose_spec
 
-    have map_N'_invariant_gamma {n: ℕ}: ∀ b ∈ Subgroup.closure {γ.toMul^n}, ∀ a ∈ map new_N'_map N', b * a * b⁻¹ ∈ map new_N'_map N'  := by
+    have map_N'_invariant_gamma {n: ℕ}: ∀ b ∈ Subgroup.closure {γ.toMul^n}, ∀ a ∈ map new_N'_map (Subgroup.closure ↑(Exists.choose N'_fg)), b * a * b⁻¹ ∈ map new_N'_map (Subgroup.closure ↑(Exists.choose N'_fg))  := by
       intro gamma_pow h_gamma_pow n hn
       let conj_aut := MulAut.conjNormal gamma_pow (H := data.φ.ker.toSubgroup')
       have conj_map := N'_char.fixed conj_aut
@@ -5590,7 +5590,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               rfl
           specialize conj_map y
           simp [hy] at conj_map
-          exact conj_map
+          sorry
+          --exact conj_map
         .
           rfl
 
@@ -5601,9 +5602,11 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     rw [Group.isNilpotent_congr (Subgroup.equivMapOfInjective _ (Subgroup.subtype _) (by simp))] at alpha_nilpotent
     -- TODO - this is wrong. We need to use {toMul γ} so that we can prove that it has finite index (G'' is defined using
     -- just gamma, not gamma^alpha)
-    use (map data.G'.subtype (Subgroup.closure (↑(map (AddSubgroup.toSubgroup' data.φ.ker).subtype N') ∪ {toMul γ ^ α})))
+    use (map data.G'.subtype (Subgroup.closure (↑(Finset.image (⇑(AddSubgroup.toSubgroup' data.φ.ker).subtype) (Exists.choose N'_fg)) ∪ {toMul γ ^ α})))
+
     refine ⟨?_, ?_⟩
-    . exact alpha_nilpotent
+    .
+      exact alpha_nilpotent
     .
       rw [Subgroup.finiteIndex_iff]
       rw [Subgroup.index_map]
@@ -5613,7 +5616,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
         simp_rw [Set.insert_eq]
 
-        have gamma_alpha_le_gamma: (Subgroup.closure ({toMul γ ^ α} ∪ (new_N'_map '' N')) ≤ (Subgroup.closure ({toMul γ} ∪ (new_N'_map '' N')))) := by
+        have gamma_alpha_le_gamma: (Subgroup.closure ({toMul γ ^ α} ∪ (new_N'_map '' (N'_fg.choose)) )) ≤ (Subgroup.closure ({toMul γ} ∪ (new_N'_map '' (N'_fg.choose)))) := by
           simp
           intro g hg
           rw [Set.insert_eq]
@@ -5637,7 +5640,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
           arg 1
           arg 1
           arg 2
-          equals (new_N'_map '' N') => rfl
+          equals (new_N'_map '' (N'_fg.choose)) => rfl
         rw [← Subgroup.relIndex_mul_index gamma_alpha_le_gamma]
         simp
         refine ⟨?_, ?_⟩
@@ -5690,14 +5693,15 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                 rw [← SetLike.mem_coe]
                 rw [sup_comm]
                 rw [subgroup_coe_sup_invariant (by
-                  simp_rw [← MonoidHom.map_closure, Subgroup.closure_eq]
+                  simp_rw [← MonoidHom.map_closure]
                   apply map_N'_invariant_gamma
                 )]
                 apply Set.mul_mem_mul
                 .
                   simp
                   apply Subgroup.mem_closure_of_mem
-                  exact hb
+                  --exact hb
+                  sorry
                 .
                   simp
                   rw [Subgroup.mem_closure_singleton]
@@ -5732,14 +5736,15 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               rw [← SetLike.mem_coe]
 
               rw [subgroup_coe_sup_invariant (by
-                simp_rw [← MonoidHom.map_closure, Subgroup.closure_eq]
+                simp_rw [← MonoidHom.map_closure]
                 apply map_N'_invariant_gamma_one
               )]
               apply Set.mul_mem_mul
               .
                 simp
                 apply Subgroup.mem_closure_of_mem
-                exact hb
+                --exact hb
+                sorry
               .
                 simp [Subgroup.mem_closure_singleton]
         .
@@ -5768,18 +5773,18 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
             rw [sup_comm]
             rw [subgroup_coe_sup_invariant (by
               intro gamma_pow h_gamma_pow n hn
-              conv at hn =>
-                arg 1
-                equals ((Subgroup.closure (new_N'_map '' ↑N'))) =>
-                  rfl
+              -- conv at hn =>
+              --   arg 1
+              --   equals ((Subgroup.closure (new_N'_map '' ↑N'))) =>
+              --     rfl
               simp_rw [← MonoidHom.map_closure] at hn
-              simp only [closure_eq] at hn
-              conv =>
-                arg 1
-                equals ((Subgroup.closure (new_N'_map '' ↑N'))) =>
-                  rfl
+              --simp only [closure_eq] at hn
+              -- conv =>
+              --   arg 1
+              --   equals ((Subgroup.closure (new_N'_map '' ↑N'))) =>
+              --     rfl
               simp_rw [← MonoidHom.map_closure]
-              simp only [closure_eq]
+              --simp only [closure_eq]
               apply map_N'_invariant_gamma_one _ h_gamma_pow _ hn
             )]
             rw [set_smul_eq_mul]
@@ -5806,8 +5811,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                 arg 1
                 intro hi
                 arg 2
-                equals ↑((Subgroup.closure (new_N'_map '' ↑N'))) =>
-                  rfl
+                -- equals ↑((Subgroup.closure (new_N'_map '' ↑N'))) =>
+                --   rfl
 
               simp_rw [← MonoidHom.map_closure]
 
@@ -5831,6 +5836,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                 have foo := ha.1
                 rw [Set.mem_image] at foo
                 obtain ⟨b, b_mem, a_eq_b⟩ := foo
+                have N'_gen := N'_fg.choose_spec
+                rw [N'_gen] at b_mem
                 refine ⟨(↑i : Multiplicative ↥data.φ.ker) • b, Set.smul_mem_smul_set b_mem, ?_⟩
                 rw [← ha.2, ← a_eq_b]
                 rfl
@@ -5842,6 +5849,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                 refine ⟨new_N'_map n, ?_, ?_⟩
                 .
                   rw [Set.mem_image]
+                  have N'_gen := N'_fg.choose_spec
+                  rw [← N'_gen] at hn
                   exact ⟨n, hn, rfl⟩
                 . rw [← x_eq, ← x_eq_n]
                   rfl
