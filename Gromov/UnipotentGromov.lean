@@ -1572,8 +1572,8 @@ lemma exists_gamma_n_unipotent_center_N' {G: Type*} [Group G] [DecidableEq G] (H
   -- rw [iterate_const]
 
 
-set_option maxHeartbeats 1000000 in
-set_option synthInstance.maxHeartbeats 40000 in
+set_option maxHeartbeats 2000000 in
+set_option synthInstance.maxHeartbeats 160000 in
 lemma exists_gamma_n_unipotent_N' {G: Type*} [DecidableEq G] [Group G] (H: Subgroup G) [H.Normal] {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N'):
     ∃ a n, a ≠ 0 ∧ ∀ g : N', Nat.iterate (fun x => x * ((gamma^[a]) x⁻¹)) n g = 1 := by
 
@@ -1682,7 +1682,7 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [DecidableEq G] [Group G] (H: Subgr
     --rw [QuotientGroup.eq_one_iff] at h_prev
 
     --let foo :=  iteratedCommutatorNormal (H.subtype g) (gamma ^ z_a) (n)
-    specialize h_z_unipotent ⟨⟨((fun x ↦ x * ((gamma^(a*z_a)) x))^[n] g), (by
+    specialize h_z_unipotent ⟨⟨((fun x ↦ x * ((gamma^[a*z_a]) (x⁻¹)))^[n] g), (by
       clear h_prev
       induction n with
       | zero =>
@@ -1691,7 +1691,9 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [DecidableEq G] [Group G] (H: Subgr
         rw [Function.iterate_succ']
         simp
         apply Subgroup.mul_mem
-        . exact n_ind
+        .
+          simp only [iterate_map_inv] at n_ind
+          exact n_ind
         . simp
         -- rw [mul_assoc]
         -- rw [mul_assoc]
@@ -1712,33 +1714,35 @@ lemma exists_gamma_n_unipotent_N' {G: Type*} [DecidableEq G] [Group G] (H: Subgr
         simp [final_gamma, aut_transfer, second_map, first_map]
         rfl
 
-      have swap_gamma: ∀ x, ∀ m: ℕ, (gamma^m) x = ((final_gamma^m) ⟨⟨x, by simp⟩, by simp⟩).val.val := by
+      have swap_gamma: ∀ x, ∀ m: ℕ, (gamma^[m]) x = ((final_gamma^[m]) ⟨⟨x, by simp⟩, by simp⟩).val.val := by
         intro x m
-        induction m with
+        induction m generalizing x with
         | zero =>
           simp
         | succ m ih_m =>
-          simp_rw [pow_succ']
+          rw [Function.iterate_succ]
           simp
-          simp [final_gamma, aut_transfer, second_map, first_map]
-          sorry
-        --rfl
+          rw [ih_m]
+          rw [swap_gamma_base]
 
-      have coe_iter: ∀ m: ℕ, ((fun x ↦ x * (final_gamma^(m)) x)^[n] g_h_prev).val.val = (fun x ↦ x * (gamma^(m)) x)^[n] g := by
+
+      have coe_iter: ∀ m: ℕ, ((fun x ↦ x * (final_gamma^[m]) x⁻¹)^[n] g_h_prev).val.val = (fun x ↦ x * (gamma^[m]) x⁻¹)^[n] g := by
         clear h_prev
         intro m
         induction n with
         | zero =>
+          simp
           simp [g_h_prev]
         | succ n ind_n =>
           simp_rw [Function.iterate_succ']
           simp
+          simp at ind_n
           simp [ind_n]
           rw [swap_gamma]
           simp
           rw [← ind_n]
 
-      simp
+      simp [-iterate_map_inv]
       rw [← QuotientGroup.eq_one_iff]
       rw [← coe_iter]
       --simpa using h_prev
