@@ -641,8 +641,9 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
   classical
   --have eigen_one := int_matrix_poly_growth_eigenvalue (p := sorry) A sorry sorry
   have eigen_one: ∀ k : Module.End.Eigenvalues (A.val.map ((Int.castRingHom ℚ))).toLin', ‖k.val‖ = 1 := by sorry
+  let A_Q := (A.val.map ((Int.castRingHom ℚ)))
   let A' := (A.val.map ((Int.castRingHom ℚ))).toLin'
-  let F := A'.charpoly.SplittingField
+  let F := A_Q.charpoly.SplittingField
   let A_F := (A.val.map (Int.castRingHom F)).toLin'
   have char_nonzero: A_F.charpoly ≠ 0 := by
     by_contra!
@@ -690,11 +691,11 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
         . simp
           exact Polynomial.ne_zero_of_mem_rootSet k_mem_roots
 
-    have foo := Polynomial.IsSplittingField.splittingField A'.charpoly
+    have foo := Polynomial.IsSplittingField.splittingField A_Q.charpoly
     have finite_dim := foo.finiteDimensional
     have second_dim := (Polynomial.IsSplittingField.splittingField A_F.charpoly).finiteDimensional
     have trans_dim := FiniteDimensional.trans ℚ F A_F.charpoly.SplittingField
-    have f_number := NumberField.of_module_finite ℚ A'.charpoly.SplittingField
+    have f_number := NumberField.of_module_finite ℚ A_Q.charpoly.SplittingField
     have foo := NumberField.Embeddings.pow_eq_one_of_norm_le_one (A := ℂ) (hxi := k_integral)
     have nonempty_embed: Nonempty (NumberField.InfinitePlace F) := by infer_instance
     obtain ⟨f_embed, h_f_embed⟩ := nonempty_embed
@@ -730,7 +731,25 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
         exact Int.cast_injective
     ) (by
         intro f
-        have map_root := Polynomial.Splits.roots_map (f := A_F.charpoly) (by sorry) f
+        have map_root := Polynomial.Splits.roots_map (f := A_F.charpoly) (by
+          simp [A_F]
+          conv =>
+            arg 1
+            arg 1
+            equals (A.val.map (algebraMap ℤ ℚ)).map (algebraMap ℚ F) =>
+              ext a
+              simp
+          simp_rw [Matrix.charpoly_map]
+          unfold F
+          conv =>
+            rhs
+            arg 2
+            equals A_Q.charpoly =>
+              simp only [A_Q]
+              rw [Matrix.charpoly_map]
+              simp
+          apply Polynomial.SplittingField.splits
+        ) f
         apply_fun (fun f => f.toFinset) at map_root
         rw [Finset.ext_iff] at map_root
         specialize map_root (f k.val)
@@ -746,7 +765,6 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
             rw [Module.End.hasEigenvalue_iff_mem_spectrum] at root_char
             simp at root_char
             --rw [spectrum.algebraMap_mem_iff (S := ℚ)] at root_char
-            simp at root_char
             sorry
           simp [f_k_one]
         .
@@ -825,12 +843,24 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
         rw [Multiset.toFinset_eq_singleton_iff] at roots_singleton
         rw [roots_singleton.2]
         simp
+
         rw [← Polynomial.Splits.natDegree_eq_card_roots]
         .
           rw [LinearMap.charpoly_natDegree]
           simp
         .
+          have map_splits: ((A.val.map (algebraMap ℤ ℚ)).charpoly.map (algebraMap ℚ F)).Splits := by
+            apply Polynomial.SplittingField.splits
+          simp [A_F]
+          simp_rw [← Matrix.toLin'_pow]
+          simp_rw [Matrix.charpoly_toLin']
+
+
           have splits := Polynomial.SplittingField.splits (A_F^n_prod).charpoly
+          apply Polynomial.Splits.of_splits_map (hf := splits)
+          intro a ha
+          simp at ha
+          simp
           sorry
       . by_contra!
         have monic := (A_F^n_prod).charpoly_monic
