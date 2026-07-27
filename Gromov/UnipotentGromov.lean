@@ -1350,6 +1350,31 @@ lemma mul_aut_iterate {G: Type*} [Group G] (f: MulAut G) (n: ℕ): f^[n] = ⇑(f
     ext a
     rw [Function.iterate_succ_apply, pow_succ, MulAut.mul_apply, ← ih]
 
+lemma toIntLinearMap_pow_coe {M : Type*}  [AddCommGroup M]  (f : M →+ M) (n: ℕ): ↑((f.toIntLinearMap)^(n)) = (f^[n]) := by
+  induction n with
+  | zero =>
+    ext g
+    simp
+  | succ n ih =>
+    ext g
+    rw [pow_succ]
+    rw [Function.iterate_succ]
+    simp
+    rw [ih]
+
+
+lemma toIntLinearMap_pow_apply {M : Type*}  [AddCommGroup M]  (f : M →+ M) (g: M) (n: ℕ): ((f.toIntLinearMap)^(n)) g = (f^[n]) g := by
+  induction n generalizing g with
+  | zero =>
+    simp
+  | succ n ih =>
+    rw [pow_succ]
+    rw [Function.iterate_succ]
+    simp
+    rw [ih]
+
+
+
 set_option maxHeartbeats 1000000 in
 set_option synthInstance.maxHeartbeats 40000 in
 --  {G: Type*} [Group G] [DecidableEq G] (H: Subgroup G)
@@ -1490,14 +1515,6 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
       simp [new_gamma_torsion, new_gamma_torsion_hom, gamma_torsion]
 
 
-  have new_gamma_pow: new_gamma_torsion^[(orderOf new_gamma_torsion)] = id := by
-    rw [mul_aut_iterate]
-    simp
-
-
-
-
-  have orig_new_gamma_pow := new_gamma_pow
 
   let gamma_lift := QuotientGroup.map (torsion) torsion gamma_center.toMonoidHom (by
     simp [torsion]
@@ -1514,7 +1531,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     exact map_le
   )
 
-  have unipotent_on_quot: ∃ n, ∀ g : (Subgroup.center ↥N') ⧸ torsion, Nat.iterate (fun x => x * ((gamma_lift^[orderOf new_gamma_torsion] x⁻¹))) n g = 1 := by
+  have unipotent_on_quot: ∃ a, ∃ n, 0 < a ∧  ∀ g : (Subgroup.center ↥N') ⧸ torsion, Nat.iterate (fun x => x * ((gamma_lift^[a*orderOf new_gamma_torsion] x⁻¹))) n g = 1 := by
     let foo: CommGroup (Subgroup.center N') := by infer_instance
     -- if the additive picture is wanted, this is *definitionally* the same type:
     have add_torsion_free: IsAddTorsionFree
@@ -1528,18 +1545,126 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     let my_map: add_quot →ₗ[ℤ] add_quot := sorry
     let fin_dim: Module.Finite ℤ add_quot := by infer_instance
 
-    sorry
+    let gamma_add := gamma_lift.toAdditive.toIntLinearMap
+    let gamma_matrix := gamma_add.toMatrix (Module.finBasis _ _) (Module.finBasis _ _)
+    have invertible_gamma: Invertible gamma_matrix := by
+      sorry
+    have unipotent_gamma_matrix := int_matrix_unipotent sorry (unitOfInvertible gamma_matrix)
+    obtain ⟨a, n, a_pos, hm⟩ := unipotent_gamma_matrix
+    use a
+    use n
+    refine ⟨a_pos, ?_⟩
+    intro g
+    apply_fun (fun f => f.toLin (Module.finBasis _ _) (Module.finBasis _ _)) at hm
+    rw [LinearMap.ext_iff] at hm
+    specialize hm g
+    simp [gamma_matrix] at hm
+    simp [gamma_add] at hm
+    conv at hm =>
+      rhs
+      equals 0 => rfl
 
-  obtain ⟨quot_n, h_quot_n⟩ := unipotent_on_quot
-  use (orderOf new_gamma_torsion)
+
+
+    apply_fun (fun f => (f).toMul) at hm
+    conv at hm =>
+      rhs
+      equals 1 => rfl
+
+    rw [← neg_sub] at hm
+    rw [neg_pow] at hm
+    simp at hm
+    rw [Module.End.mul_eq_comp] at hm
+    simp at hm
+    simp [Function.comp_def] at hm
+    apply (LinearMap.ker_eq_bot'.mp (by
+      ext a
+      clear hm
+      induction n with
+      | zero => simp
+      | succ n ih =>
+        rw [pow_succ]
+        simp
+        simp at ih
+        exact ih
+    )) at hm
+    rw [← toMul_eq_one] at hm
+    rw [← hm]
+    clear hm
+
+    have x_mul_gamma_eq: (fun x => x * (⇑gamma_lift)^[a*orderOf new_gamma_torsion] x⁻¹) = Additive.toMul ∘ (-((MonoidHom.toAdditive gamma_lift).toIntLinearMap ^ (a*orderOf new_gamma_torsion) - LinearMap.id)).toFun ∘ (Additive.ofMul) := by
+      ext x
+      conv =>
+        rhs
+        equals Additive.toMul ((-((MonoidHom.toAdditive gamma_lift).toIntLinearMap ^ (a*orderOf new_gamma_torsion) - LinearMap.id)).toFun (Additive.ofMul x)) =>
+          rfl
+      simp
+      rw [toIntLinearMap_pow_apply]
+      simp
+      rw [Function.comp_def]
+      rw [div_eq_mul_inv]
+      simp
+      rfl
+
+    rw [x_mul_gamma_eq]
+    simp
+    rfl
+
+    induction n with
+    | zero =>
+      simp
+      rfl
+    | succ n ih =>
+      rw [Function.iterate_succ']
+      simp
+      rw [ih]
+      rw [pow_succ]
+      rw [Module.End.mul_eq_comp]
+      simp
+      rw [Function.comp_def]
+      simp
+      conv =>
+        rhs
+        pattern g
+        equals (Additive.ofMul g) =>
+          rfl
+
+      rw [LinearMap.sub_apply]
+      simp [-map_sub]
+      conv =>
+        rhs
+        rhs
+      simp_rw [toIntLinearMap_pow_apply]
+      sorry
+
+
+
+
+
+
+
+  obtain ⟨quot_pow, quot_n, quot_pow_pos, h_quot_n⟩ := unipotent_on_quot
+  use (quot_pow * orderOf new_gamma_torsion)
   use quot_n + 1
-  refine ⟨by grind, ?_⟩
+
+
+
+  have new_gamma_pow: new_gamma_torsion^[quot_pow * (orderOf new_gamma_torsion)] = id := by
+    rw [mul_comm, Function.iterate_mul]
+    rw [mul_aut_iterate]
+    simp
+
+  have orig_new_gamma_pow := new_gamma_pow
+
+  refine ⟨by positivity, ?_⟩
   intro g hg
+
+
 
 
   specialize h_quot_n (QuotientGroup.mk ⟨g, hg⟩)
 
-  have swap_iter: ∀ n, ∀ g: Subgroup.center N', (fun x ↦ x * (gamma_lift^[orderOf new_gamma_torsion]) x⁻¹)^[n] g = QuotientGroup.mk ⟨((fun x ↦ x * (gamma^[orderOf new_gamma_torsion]) x⁻¹)^[n] g), (by
+  have swap_iter: ∀ n, ∀ g: Subgroup.center N', (fun x ↦ x * (gamma_lift^[quot_pow * orderOf new_gamma_torsion]) x⁻¹)^[n] g = QuotientGroup.mk ⟨((fun x ↦ x * (gamma^[quot_pow * orderOf new_gamma_torsion]) x⁻¹)^[n] g), (by
     rw [mul_aut_iterate]
     simp
     induction n generalizing g with
@@ -1547,7 +1672,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
       simp
     | succ n ih =>
       simp
-      have mul_mem_center: (↑g * ((gamma ^ orderOf new_gamma_torsion) ↑g)⁻¹) ∈ Subgroup.center N' := by
+      have mul_mem_center: (↑g * ((gamma ^ (quot_pow * orderOf new_gamma_torsion)) ↑g)⁻¹) ∈ Subgroup.center N' := by
         apply Subgroup.mul_mem
         . simp
         .
@@ -1555,10 +1680,10 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
           have center_char: (Subgroup.center N').Characteristic := by
             infer_instance
           rw [Subgroup.characteristic_iff_le_comap] at center_char
-          specialize center_char (gamma ^ orderOf new_gamma_torsion) g.prop
+          specialize center_char (gamma ^ (quot_pow * orderOf new_gamma_torsion)) g.prop
           simpa using center_char
       conv =>
-        pattern (↑g * ((gamma ^ orderOf new_gamma_torsion) ↑g)⁻¹)
+        pattern (↑g * ((gamma ^ (quot_pow * orderOf new_gamma_torsion)) ↑g)⁻¹)
         equals ↑(⟨_, mul_mem_center⟩ : Subgroup.center N') =>
           rfl
       apply ih

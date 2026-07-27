@@ -637,7 +637,7 @@ theorem LinearMap.toMatrix'_pow {R : Type*} [CommSemiring R] {m : Type*} [Fintyp
     rw [ih]
 
 
-lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)ˣ): ∃ a m, (A.val^a - 1)^m = 0 := by
+lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)ˣ): ∃ a m, 0 < a ∧ (A.val^a - 1)^m = 0 := by
   classical
   --have eigen_one := int_matrix_poly_growth_eigenvalue (p := sorry) A sorry sorry
   have eigen_one: ∀ k : Module.End.Eigenvalues (A.val.map ((Int.castRingHom ℚ))).toLin', ‖k.val‖ = 1 := by sorry
@@ -851,16 +851,17 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
         .
           have map_splits: ((A.val.map (algebraMap ℤ ℚ)).charpoly.map (algebraMap ℚ F)).Splits := by
             apply Polynomial.SplittingField.splits
-          simp [A_F]
+          simp only [A_F]
           simp_rw [← Matrix.toLin'_pow]
           simp_rw [Matrix.charpoly_toLin']
-
-
+          rw [← Matrix.map_pow]
+          simp_rw [Matrix.charpoly_map]
           have splits := Polynomial.SplittingField.splits (A_F^n_prod).charpoly
-          apply Polynomial.Splits.of_splits_map (hf := splits)
-          intro a ha
-          simp at ha
-          simp
+
+          -- apply Polynomial.Splits.of_splits_map (hf := splits)
+          -- intro a ha
+          -- simp at ha
+          -- simp
           sorry
       . by_contra!
         have monic := (A_F^n_prod).charpoly_monic
@@ -877,6 +878,7 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
   have eval_zero := (A_F^n_prod).aeval_self_charpoly
   simp [a_f_char_eq] at eval_zero
   use d
+  refine ⟨by sorry, ?_⟩
   simp [A_F] at eval_zero
   apply_fun (fun f => f.toMatrix') at eval_zero
   simp [-EmbeddingLike.map_eq_zero_iff] at eval_zero
