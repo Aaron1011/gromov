@@ -1351,6 +1351,7 @@ lemma mul_aut_iterate {G: Type*} [Group G] (f: MulAut G) (n: ℕ): f^[n] = ⇑(f
     rw [Function.iterate_succ_apply, pow_succ, MulAut.mul_apply, ← ih]
 
 set_option maxHeartbeats 1000000 in
+set_option synthInstance.maxHeartbeats 40000 in
 --  {G: Type*} [Group G] [DecidableEq G] (H: Subgroup G)
 lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N'):
     ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N', Nat.iterate (fun x => x * ((gamma^[a]) x⁻¹)) n g = 1 := by
@@ -1513,10 +1514,23 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     exact map_le
   )
 
-  have unipotent_on_quot: ∃ n, 0 < n ∧ ∀ g : (Subgroup.center ↥N') ⧸ torsion, Nat.iterate (fun x => x * ((gamma_lift^[orderOf new_gamma_torsion] x⁻¹))) n g = 1 := by
+  have unipotent_on_quot: ∃ n, ∀ g : (Subgroup.center ↥N') ⧸ torsion, Nat.iterate (fun x => x * ((gamma_lift^[orderOf new_gamma_torsion] x⁻¹))) n g = 1 := by
+    let foo: CommGroup (Subgroup.center N') := by infer_instance
+    -- if the additive picture is wanted, this is *definitionally* the same type:
+    have add_torsion_free: IsAddTorsionFree
+        (Additive ↥(Subgroup.center ↥N') ⧸ AddCommGroup.torsion (Additive ↥(Subgroup.center ↥N'))) := by
+      infer_instance
+
+    let add_quot := (Additive ↥(Subgroup.center ↥N') ⧸ AddCommGroup.torsion (Additive ↥(Subgroup.center ↥N')))
+    have module_torsion_free: Module.IsTorsionFree ℤ add_quot := by
+      infer_instance
+
+    let my_map: add_quot →ₗ[ℤ] add_quot := sorry
+    let fin_dim: Module.Finite ℤ add_quot := by infer_instance
+
     sorry
 
-  obtain ⟨quot_n, quot_n_pos, h_quot_n⟩ := unipotent_on_quot
+  obtain ⟨quot_n, h_quot_n⟩ := unipotent_on_quot
   use (orderOf new_gamma_torsion)
   use quot_n + 1
   refine ⟨by grind, ?_⟩
