@@ -637,13 +637,18 @@ theorem LinearMap.toMatrix'_pow {R : Type*} [CommSemiring R] {m : Type*} [Fintyp
     rw [ih]
 
 
-lemma int_matrix_unipotent {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ): ∃ a m, (A.val^a - 1)^m = 0 := by
-
+lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)ˣ): ∃ a m, (A.val^a - 1)^m = 0 := by
+  classical
   --have eigen_one := int_matrix_poly_growth_eigenvalue (p := sorry) A sorry sorry
   have eigen_one: ∀ k : Module.End.Eigenvalues (A.val.map ((Int.castRingHom ℚ))).toLin', ‖k.val‖ = 1 := by sorry
   let A' := (A.val.map ((Int.castRingHom ℚ))).toLin'
   let F := A'.charpoly.SplittingField
   let A_F := (A.val.map (Int.castRingHom F)).toLin'
+  have char_nonzero: A_F.charpoly ≠ 0 := by
+    by_contra!
+    have monic := A_F.charpoly_monic
+    simp [this] at monic
+
   have eigen_root_unity: ∀ (k : Module.End.Eigenvalues A_F), ∃ n, 0 < n ∧ k.val^n = 1 := by
     intro k
     -- Module.End.hasEigenvalue_iff_isRoot_charpoly
@@ -652,12 +657,6 @@ lemma int_matrix_unipotent {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ): ∃ a m
       equals Module.End.HasEigenvalue A_F (↑k) =>
         rfl
     rw [Module.End.hasEigenvalue_iff_isRoot_charpoly] at k_prop
-    have char_nonzero: A_F.charpoly ≠ 0 := by
-      by_contra!
-      simp [A_F] at this
-      have char_monic := Matrix.charpoly_monic A.val
-      apply Polynomial.Monic.ne_zero at char_monic
-      sorry
 
 
     have k_mem_roots: ↑k.val ∈ A_F.charpoly.rootSet F := by
@@ -667,7 +666,9 @@ lemma int_matrix_unipotent {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ): ∃ a m
       exact k_prop
 
     have k_algebraic := isAlgebraic_of_mem_rootSet k_mem_roots
+
     let k_integral : IsIntegral ℤ k.val := by
+      --apply isIntegral_trans (A := F)
       sorry
     have foo := Polynomial.IsSplittingField.splittingField A'.charpoly
     have finite_dim := foo.finiteDimensional
@@ -679,7 +680,34 @@ lemma int_matrix_unipotent {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ): ∃ a m
     obtain ⟨f_embed, h_f_embed⟩ := nonempty_embed
     specialize foo (by
       simp
-      sorry
+      have eigen_zero := LinearMap.hasEigenvalue_zero_tfae (A_F)
+      have det_zero := (eigen_zero.out 0 3).mp
+      by_contra!
+      have has_k := k.prop
+      conv at has_k =>
+        lhs
+        equals k.val => rfl
+      simp [this] at has_k
+      specialize det_zero has_k
+      have a_det := Matrix.GeneralLinearGroup.det_ne_zero A
+      unfold A_F at det_zero
+      simp at det_zero
+      conv at det_zero =>
+        lhs
+        arg 1
+        equals (A.val).map (Int.castRingHom F) =>
+          simp
+      rw [← RingHom.mapMatrix_apply] at det_zero
+      simp at det_zero
+      apply_fun (fun a => (Int.castRingHom F) a) at a_det
+      . conv at a_det =>
+          rhs
+          simp
+        rw [RingHom.map_det] at a_det
+        simp at a_det
+        contradiction
+      . simp
+        exact Int.cast_injective
     ) (by
         intro f
         have map_root := Polynomial.Splits.roots_map (f := A_F.charpoly) (by sorry) f
@@ -688,9 +716,19 @@ lemma int_matrix_unipotent {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ): ∃ a m
         specialize map_root (f k.val)
         have f_a_mem := map_root.mpr ?_
         .
-          simp [A_F] at f_a_mem
-          --specialize eigen_one (f k.val)
-          sorry
+          have f_k_one: f k.val = 1 := by
+            simp [-Polynomial.IsRoot.def] at f_a_mem
+            have root_char := f_a_mem.2
+            simp_rw [← LinearMap.charpoly_toMatrix (b := (Pi.basisFun F (Fin d)))] at root_char
+            rw [← Matrix.charpoly_map] at root_char
+            rw [← Matrix.charpoly_toLin'] at root_char
+            rw [← Module.End.hasEigenvalue_iff_isRoot_charpoly] at root_char
+            rw [Module.End.hasEigenvalue_iff_mem_spectrum] at root_char
+            simp at root_char
+            --rw [spectrum.algebraMap_mem_iff (S := ℚ)] at root_char
+            simp at root_char
+            sorry
+          simp [f_k_one]
         .
           simp
           use k
@@ -713,17 +751,76 @@ lemma int_matrix_unipotent {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ): ∃ a m
 
     sorry
 
+  have char_nonzero: (A_F ^ n_prod).charpoly ≠ 0 := by
+    by_contra!
+    have foo := (A_F^n_prod).charpoly_monic
+    simp [this] at foo
+
 
 
   have a_f_char_eq: (A_F^n_prod).charpoly = (Polynomial.X - (Polynomial.C 1))^d := by
-    rw [Polynomial.eq_leadingCoeff_mul_of_monic_of_dvd_of_natDegree_le (q := (Polynomial.X - Polynomial.C 1) ^ d) (p :=  A_F.charpoly)]
+    rw [Polynomial.eq_leadingCoeff_mul_of_monic_of_dvd_of_natDegree_le (p := (Polynomial.X - Polynomial.C 1) ^ d) (q :=  (A_F^n_prod).charpoly)]
     .
-      simp only [Polynomial.leadingCoeff_pow, map_pow, Polynomial.leadingCoeff_X_sub_C]
+      rw [Polynomial.Monic.def.mp]
+      . simp
+      . exact LinearMap.charpoly_monic (A_F ^ n_prod)
+    . simp
+      apply Polynomial.Monic.pow
+      apply Polynomial.monic_X_sub_C
+    .
+      have roots_singleton: (A_F ^ n_prod).charpoly.roots.toFinset = {1} := by
+        ext a
+        simp only [Multiset.mem_toFinset]
+        rw [Polynomial.mem_roots']
+        simp [-Polynomial.IsRoot.def, char_nonzero]
+        rw [← Module.End.hasEigenvalue_iff_isRoot_charpoly]
+        refine ⟨?_, ?_⟩
+        . intro ha
+          specialize pow_eigen ⟨_, ha⟩
+          simpa using pow_eigen
+        . intro ha
+          have splits := Polynomial.SplittingField.splits (A_F^n_prod).charpoly
+          obtain ⟨k, hk⟩ := Polynomial.Splits.exists_eval_eq_zero splits (by
+            simp
+            have deg := LinearMap.charpoly_natDegree (A_F^n_prod)
+            simp at deg
+            rw [← Polynomial.degree_eq_iff_natDegree_eq_of_pos] at deg
+            . simp [deg]
+              grind
+            . exact hd
+          )
+          simp at hk
+          --rw [← Polynomial.mem_roots_iff_aeval_eq_zero] at hk
+
+          --rw [← Polynomial.IsRoot.def] at hk
+          --rw [← Module.End.hasEigenvalue_iff_isRoot_charpoly] at hk
+          rw [Module.End.hasEigenvalue_iff_isRoot_charpoly]
+          simp
+          sorry
+
+      rw [← Polynomial.le_rootMultiplicity_iff]
+
+      .
+        rw [← Polynomial.count_roots]
+        rw [Multiset.toFinset_eq_singleton_iff] at roots_singleton
+        rw [roots_singleton.2]
+        simp
+        rw [← Polynomial.Splits.natDegree_eq_card_roots]
+        .
+          rw [LinearMap.charpoly_natDegree]
+          simp
+        .
+          have splits := Polynomial.SplittingField.splits (A_F^n_prod).charpoly
+          sorry
+      . by_contra!
+        have monic := (A_F^n_prod).charpoly_monic
+        simp [this] at monic
+    .
+      simp only [Polynomial.natDegree_pow]
+      rw [Polynomial.natDegree_X_sub_C]
       simp
-      sorry
-    . sorry
-    . sorry
-    . sorry
+      rw [LinearMap.charpoly_natDegree]
+      simp
 
 
   use n_prod
