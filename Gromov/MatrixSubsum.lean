@@ -666,10 +666,30 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
       exact k_prop
 
     have k_algebraic := isAlgebraic_of_mem_rootSet k_mem_roots
+    let foo := k_algebraic.isIntegral
 
-    let k_integral : IsIntegral ℤ k.val := by
-      --apply isIntegral_trans (A := F)
-      sorry
+    have k_integral : IsIntegral ℤ k.val := by
+      apply IsIntegral.of_aeval_monic (p := A.val.charpoly)
+      . apply Matrix.charpoly_monic
+      . simp
+        grind
+      .
+        rw [Polynomial.mem_rootSet_of_ne] at k_mem_roots
+        .
+          conv at k_mem_roots =>
+            lhs
+            arg 2
+            simp only [A_F]
+
+          simp_rw [Matrix.charpoly_toLin', Matrix.charpoly_map] at k_mem_roots
+          rw [← Polynomial.aeval_eq_aeval_map] at k_mem_roots
+          . simp [k_mem_roots]
+            exact isIntegral_zero
+          . simp
+            exact RingHom.ext_int (Int.castRingHom F) (algebraMap ℤ F)
+        . simp
+          exact Polynomial.ne_zero_of_mem_rootSet k_mem_roots
+
     have foo := Polynomial.IsSplittingField.splittingField A'.charpoly
     have finite_dim := foo.finiteDimensional
     have second_dim := (Polynomial.IsSplittingField.splittingField A_F.charpoly).finiteDimensional
