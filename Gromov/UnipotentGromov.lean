@@ -1373,7 +1373,18 @@ lemma toIntLinearMap_pow_apply {M : Type*}  [AddCommGroup M]  (f : M →+ M) (g:
     simp
     rw [ih]
 
+lemma toIntLinearMap_comp_mul {M : Type*}  [AddCommGroup M] (f g : M →+ M): ((f.comp g).toIntLinearMap) = f.toIntLinearMap * g.toIntLinearMap := by
+  ext a
+  simp
 
+lemma toIntLinearMap_neg {M_1 M_2 : Type*}  [AddCommGroup M_1] [AddCommGroup M_2]  (f : M_1 →+ M_2): (-f).toIntLinearMap = -(f.toIntLinearMap) := by
+  ext a
+  simp
+
+@[simp]
+lemma toIntLinearMap_id {M : Type*}  [AddCommGroup M]: (AddMonoidHom.id M).toIntLinearMap = LinearMap.id := by
+  ext a
+  simp
 
 set_option maxHeartbeats 1000000 in
 set_option synthInstance.maxHeartbeats 40000 in
@@ -1516,19 +1527,20 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
 
 
 
-  let gamma_lift := QuotientGroup.map (torsion) torsion gamma_center.toMonoidHom (by
+  let gamma_lift := QuotientGroup.congr (torsion) torsion gamma_center (by
     simp [torsion]
-    intro x hx
-    simp
+    sorry
+    -- intro x hx
+    -- simp
 
-    have map_le := CommGroup.map_torsion_le gamma_center.toMonoidHom
-    have gamma_x_mem: gamma_center x ∈ (Subgroup.map gamma_center (CommGroup.torsion ↥(Subgroup.center ↥N'))) := by
-      rw [Subgroup.mem_map]
-      use x
-      simp
-      exact hx
-    specialize map_le gamma_x_mem
-    exact map_le
+    -- have map_le := CommGroup.map_torsion_le gamma_center.toMonoidHom
+    -- have gamma_x_mem: gamma_center x ∈ (Subgroup.map gamma_center (CommGroup.torsion ↥(Subgroup.center ↥N'))) := by
+    --   rw [Subgroup.mem_map]
+    --   use x
+    --   simp
+    --   exact hx
+    -- specialize map_le gamma_x_mem
+    -- exact map_le
   )
 
   have unipotent_on_quot: ∃ a, ∃ n, 0 < a ∧  ∀ g : (Subgroup.center ↥N') ⧸ torsion, Nat.iterate (fun x => x * ((gamma_lift^[a] x⁻¹))) n g = 1 := by
@@ -1542,13 +1554,23 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     have module_torsion_free: Module.IsTorsionFree ℤ add_quot := by
       infer_instance
 
-    let my_map: add_quot →ₗ[ℤ] add_quot := sorry
     let fin_dim: Module.Finite ℤ add_quot := by infer_instance
 
-    let gamma_add := gamma_lift.toAdditive.toIntLinearMap
+    let gamma_add := gamma_lift.toAdditive.toAddMonoidHom.toIntLinearMap
     let gamma_matrix := gamma_add.toMatrix (Module.finBasis _ _) (Module.finBasis _ _)
-    have invertible_gamma: Invertible gamma_matrix := by
-      sorry
+    have invertible_gamma: Invertible gamma_matrix := {
+      invOf := ((gamma_lift.toAdditive).symm.toAddMonoidHom).toIntLinearMap.toMatrix (Module.finBasis _ _) (Module.finBasis _ _)
+      invOf_mul_self := by
+        simp [gamma_matrix, gamma_add]
+        rw [← LinearMap.toMatrix_mul]
+        rw [← toIntLinearMap_comp_mul]
+        simp
+      mul_invOf_self := by
+        simp [gamma_matrix, gamma_add]
+        rw [← LinearMap.toMatrix_mul]
+        rw [← toIntLinearMap_comp_mul]
+        simp
+    }
     have unipotent_gamma_matrix := int_matrix_unipotent sorry (unitOfInvertible gamma_matrix)
     obtain ⟨a, n, a_pos, hm⟩ := unipotent_gamma_matrix
     use a
