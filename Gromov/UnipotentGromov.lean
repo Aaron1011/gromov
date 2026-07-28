@@ -1544,6 +1544,24 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
   )
 
   have unipotent_on_quot: ∃ a, ∃ n, 0 < a ∧  ∀ g : (Subgroup.center ↥N') ⧸ torsion, Nat.iterate (fun x => x * ((gamma_lift^[a] x⁻¹))) n g = 1 := by
+    wlog nontrivial_quot: Nontrivial ((Subgroup.center ↥N') ⧸ torsion)
+    .
+      clear this
+      simp at nontrivial_quot
+      use 1
+      use 1
+      simp
+      intro g
+      have quot_subsingelton: Subsingleton ((Subgroup.center ↥N') ⧸ torsion) := by
+        rw [QuotientGroup.subsingleton_iff]
+        exact nontrivial_quot
+
+      have g_eq := Subsingleton.eq_one g
+      simp [g_eq]
+
+
+
+
     let foo: CommGroup (Subgroup.center N') := by infer_instance
     -- if the additive picture is wanted, this is *definitionally* the same type:
     have add_torsion_free: IsAddTorsionFree
@@ -1571,7 +1589,9 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
         rw [← toIntLinearMap_comp_mul]
         simp
     }
-    have unipotent_gamma_matrix := int_matrix_unipotent sorry (unitOfInvertible gamma_matrix)
+    have unipotent_gamma_matrix := int_matrix_unipotent (by
+      apply Module.finrank_pos
+    ) (unitOfInvertible gamma_matrix)
     obtain ⟨a, n, a_pos, hm⟩ := unipotent_gamma_matrix
     use a
     use n
@@ -1614,11 +1634,11 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     rw [← hm]
     clear hm
 
-    have x_mul_gamma_eq: (fun x => x * (⇑gamma_lift)^[a] x⁻¹) = Additive.toMul ∘ (-((MonoidHom.toAdditive gamma_lift).toIntLinearMap ^ (a) - LinearMap.id)).toFun ∘ (Additive.ofMul) := by
+    have x_mul_gamma_eq: (fun x => x * (⇑gamma_lift)^[a] x⁻¹) = Additive.toMul ∘ (-((MonoidHom.toAdditive gamma_lift.toMonoidHom).toIntLinearMap ^ (a) - LinearMap.id)).toFun ∘ (Additive.ofMul) := by
       ext x
       conv =>
         rhs
-        equals Additive.toMul ((-((MonoidHom.toAdditive gamma_lift).toIntLinearMap ^ (a) - LinearMap.id)).toFun (Additive.ofMul x)) =>
+        equals Additive.toMul ((-((MonoidHom.toAdditive gamma_lift.toMonoidHom).toIntLinearMap ^ (a) - LinearMap.id)).toFun (Additive.ofMul x)) =>
           rfl
       simp
       rw [toIntLinearMap_pow_apply]
@@ -1782,8 +1802,11 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
   rw [Subtype.ext_iff] at new_gamma_pow
   rw [iter_gamma_coe] at new_gamma_pow
   simp at new_gamma_pow
-  simp_rw [new_gamma_pow]
-  simp
+  sorry
+  --simp_rw [new_gamma_pow]
+  --simp
+
+  -- OLD CODE
 
 
   -- conv =>
