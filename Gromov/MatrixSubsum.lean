@@ -597,6 +597,36 @@ lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)ˣ)
 
 #print axioms int_matrix_exponential_growth
 
+
+lemma map_preserves_eigen {F: Type*} {d: ℕ} [Field F] [FiniteDimensional F ((Fin d → F))] {d: ℕ} (A: (Matrix (Fin d) (Fin d) F)) (f: F →+* ℂ): ∀ k: Module.End.Eigenvalues A.toLin', Module.End.HasEigenvalue (A.map f).toLin' (f k) := by
+  intro k
+  have hk := k.prop
+  obtain ⟨v, hv⟩ := Module.End.HasEigenvalue.exists_hasEigenvector hk
+  have v_spec := hv
+  rw [Module.End.hasEigenvector_iff] at v_spec
+  apply Module.End.HasEigenvector.apply_eq_smul at hv
+  let map_vec := fun (j: (Fin d) → F) => (fun (i: Fin d) => f (j i))
+  apply_fun map_vec at hv
+  simp [map_vec] at hv
+  rw [funext_iff] at hv
+  simp_rw [RingHom.map_mulVec] at hv
+  apply Module.End.hasEigenvalue_of_hasEigenvector (x := f ∘ v)
+  rw [Module.End.hasEigenvector_iff]
+  simp
+  refine ⟨?_, ?_⟩
+  . ext j
+    rw [hv]
+    simp
+    left
+    rfl
+  .
+    rw [funext_iff]
+    simp_rw [Function.comp_apply, Pi.zero_apply, map_eq_zero]
+    rw [← funext_iff]
+    exact v_spec.2
+
+
+
 lemma int_matrix_poly_growth_eigenvalue {d p: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (S: Finset (Matrix (Fin d) (Fin d) ℂ)ˣ) (hS: ∃ a, ∀ n ≥ 1, #(S ^ n) ≤ a * n^p):
   ∀ k : Module.End.Eigenvalues (A.val.map (complexOfIntHom)).toLin', ‖k.val‖ = 1 := by
 
@@ -640,11 +670,30 @@ theorem LinearMap.toMatrix'_pow {R : Type*} [CommSemiring R] {m : Type*} [Fintyp
 lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)ˣ): ∃ a m, 0 < a ∧ (A.val^a - 1)^m = 0 := by
   classical
   --have eigen_one := int_matrix_poly_growth_eigenvalue (p := sorry) A sorry sorry
-  have eigen_one: ∀ k : Module.End.Eigenvalues (A.val.map ((Int.castRingHom ℚ))).toLin', ‖k.val‖ = 1 := by sorry
   let A_Q := (A.val.map ((Int.castRingHom ℚ)))
   let A' := (A.val.map ((Int.castRingHom ℚ))).toLin'
   let F := A_Q.charpoly.SplittingField
   let A_F := (A.val.map (Int.castRingHom F)).toLin'
+  have eigen_one_complex: ∀ k : Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ)).toLin', ‖k.val‖ = 1 := by sorry
+
+  have eigen_one_F: ∀ φ: F →+* ℂ, ∀ k: Module.End.Eigenvalues A_F, ‖φ k‖ = 1 := by
+    intro φ k
+    have k_spec := k.prop
+
+    have a_f_eigen := map_preserves_eigen (d := d) (A.val.map (Int.castRingHom F)) φ k
+    simp only [Matrix.map_map] at a_f_eigen
+    conv at a_f_eigen =>
+      pattern _ ∘ _
+      equals Int.castRingHom ℂ =>
+        ext a
+        simp
+
+
+    specialize eigen_one_complex ⟨_, a_f_eigen⟩
+    simp at eigen_one_complex
+    exact eigen_one_complex
+
+
   have char_nonzero: A_F.charpoly ≠ 0 := by
     by_contra!
     have monic := A_F.charpoly_monic
@@ -755,17 +804,32 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
         specialize map_root (f k.val)
         have f_a_mem := map_root.mpr ?_
         .
-          have f_k_one: f k.val = 1 := by
+          have f_k_one: ‖f k.val‖ = 1 := by
             simp [-Polynomial.IsRoot.def] at f_a_mem
             have root_char := f_a_mem.2
             simp_rw [← LinearMap.charpoly_toMatrix (b := (Pi.basisFun F (Fin d)))] at root_char
             rw [← Matrix.charpoly_map] at root_char
             rw [← Matrix.charpoly_toLin'] at root_char
             rw [← Module.End.hasEigenvalue_iff_isRoot_charpoly] at root_char
-            rw [Module.End.hasEigenvalue_iff_mem_spectrum] at root_char
-            simp at root_char
-            --rw [spectrum.algebraMap_mem_iff (S := ℚ)] at root_char
-            sorry
+            --have norm_one := eigen_one_F f ⟨_, root_char⟩
+            conv at root_char =>
+              arg 1
+              equals (A.val.map (Int.castRingHom ℂ)).toLin' =>
+                rw [LinearMap.ext_iff]
+                intro j
+                simp [A_F]
+                conv =>
+                  lhs
+                  pattern _ ∘ _
+                  equals Int.castRingHom ℂ =>
+                    ext a
+                    simp
+                simp
+
+
+            specialize eigen_one_complex ⟨_, root_char⟩
+            simp at eigen_one_complex
+            exact eigen_one_complex
           simp [f_k_one]
         .
           simp
