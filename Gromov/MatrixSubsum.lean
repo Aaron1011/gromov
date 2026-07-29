@@ -667,10 +667,9 @@ theorem LinearMap.toMatrix'_pow {R : Type*} [CommSemiring R] {m : Type*} [Fintyp
     rw [ih]
 
 
-lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)ˣ): ∃ a m, 0 < a ∧ (A.val^a - 1)^m = 0 := by
+lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (eigen_one_complex: ∀ k : Module.End.Eigenvalues ((A.val.map (Int.castRingHom ℂ ))).toLin', ‖k.val‖ = 1): ∃ a m, 0 < a ∧ (A.val^a - 1)^m = 0 := by
   classical
   let A_C := (A.val.map (Int.castRingHom ℂ ))
-  have eigen_one_complex: ∀ k : Module.End.Eigenvalues A_C.toLin', ‖k.val‖ = 1 := by sorry
 
   have char_nonzero: A_C.charpoly ≠ 0 := by
     by_contra!
@@ -923,7 +922,7 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
     . exact Int.cast_injective
 
 
-
+#print axioms int_matrix_unipotent
 #print axioms int_matrix_poly_growth_eigenvalue
 
 def homToComplex  {d: ℕ} (g: ((Fin d) → ℤ) ≃+ ((Fin d) → ℤ)) := (g.toAddMonoidHom.toIntLinearMap).toMatrix'.map complexOfIntHom
