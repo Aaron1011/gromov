@@ -1528,19 +1528,9 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
 
 
   let gamma_lift := QuotientGroup.congr (torsion) torsion gamma_center (by
-    simp [torsion]
-    sorry
-    -- intro x hx
-    -- simp
-
-    -- have map_le := CommGroup.map_torsion_le gamma_center.toMonoidHom
-    -- have gamma_x_mem: gamma_center x ∈ (Subgroup.map gamma_center (CommGroup.torsion ↥(Subgroup.center ↥N'))) := by
-    --   rw [Subgroup.mem_map]
-    --   use x
-    --   simp
-    --   exact hx
-    -- specialize map_le gamma_x_mem
-    -- exact map_le
+    rw [Subgroup.characteristic_iff_map_eq] at t_char
+    specialize t_char gamma_center
+    exact t_char
   )
 
   have unipotent_on_quot: ∃ a, ∃ n, 0 < a ∧  ∀ g : (Subgroup.center ↥N') ⧸ torsion, Nat.iterate (fun x => x * ((gamma_lift^[a] x⁻¹))) n g = 1 := by
@@ -2007,14 +1997,22 @@ lemma exists_gamma_n_unipotent_N' {H: Type*} [Group H] {N': Subgroup H} [N'_norm
       --simp [-iterate_map_inv]
       rw [← QuotientGroup.eq_one_iff]
       rw [← coe_iter]
+      exact h_prev
       --simpa using h_prev
+
+      -- a ((conj b) a⁻¹
+
+      --(a ((conj b) a⁻¹) (conj b) (a ((conj b) a⁻¹)⁻¹
+
+      -- a b a⁻¹ b⁻¹
+      -- (a b a⁻¹ b⁻¹) b (a b a⁻¹ b⁻¹)⁻¹ b⁻¹
+      -- (a b a⁻¹) b (a b⁻¹ a⁻¹ b⁻¹)
       sorry
     .
-
-      sorry
-
-      --simp_rw [← pow_mul] at h_z_unipotent
-      --exact h_z_unipotent
+      simp_rw [mul_aut_iterate] at h_z_unipotent
+      rw [mul_aut_iterate]
+      simp_rw [← pow_mul] at h_z_unipotent
+      exact h_z_unipotent
 
 
 -- lemma old_unipotent_stuff {G: Type*} [Group G] (H: Subgroup G) [H.Normal] {N: Subgroup H} [N'_normal: N.Normal] (N'_nilpotent: Group.IsNilpotent N) (hN': Subgroup.FG N) (gamma: MulAut N):
@@ -3768,13 +3766,6 @@ lemma unipotent_commutator_trivial {G: Type*} [DecidableEq G] [Group G] (H: Subg
       simpa using iterate_mem
 
 #print axioms unipotent_commutator_trivial
-
-
-theorem G''_nilpotent {G: Type*} [Group G] (H: Subgroup G) {N': Subgroup H} [H_normal: H.Normal] [N'_char: N'.Characteristic] (N'_fg: N'.FG) (gamma: G):
-    Group.IsNilpotent (Subgroup.closure ((Subgroup.map (Subgroup.subtype _) N') ∪ {gamma})) := by
-
-  --have foo := center_unipotent (G := (Subgroup.map H.subtype H)) (N := N') N'_fg gamma
-  sorry
 
 
 
