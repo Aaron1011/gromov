@@ -918,7 +918,14 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
     -- obtain ⟨n, n_pos, A_pow⟩ := foo
     -- use n
 
-  let n_prod := ∏ (k : Module.End.Eigenvalues A_C.toLin'), (eigen_root_unity k).choose
+  let eigen_pow (k: ℂ) (hk: Module.End.HasEigenvalue A_C.toLin' k) := (eigen_root_unity ⟨k, hk⟩).choose
+  have eigen_pow_self (k: ℂ) (hk: Module.End.HasEigenvalue A_C.toLin' k): k^(eigen_pow k hk) = 1 := by
+    have spec := (eigen_root_unity ⟨k, hk⟩).choose_spec
+    obtain ⟨_, pow_eq⟩ := spec
+    rw [← pow_eq]
+    rfl
+
+  let n_prod := ∏ (k : Module.End.Eigenvalues A_C.toLin'), eigen_pow k.val k.prop
   have n_prod_pos: 0 < n_prod := by
     simp [n_prod]
     intro i
@@ -926,16 +933,40 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
     simp at this
     sorry
 
+  have eigen_pow_prod_one: ∀ k:  Module.End.Eigenvalues A_C.toLin', k.val^n_prod = 1 := by
+    intro k
+    unfold n_prod
+    rw [← Finset.mul_prod_erase (f := fun (a: Module.End.Eigenvalues (Matrix.toLin' A_C)) => eigen_pow a.val a.prop) (a := ⟨k.val, k.prop⟩)]
+    .
+      rw [pow_mul]
+      have pow_self := eigen_pow_self (k := k.val) (hk := k.prop)
+      simp
+      rw [pow_self]
+      simp
+    . apply Finset.mem_univ
+
   have pow_eigen: ∀ j: Module.End.Eigenvalues (A_C.toLin'^n_prod), j.val = 1 := by
     intro a
     have a_spec := a.prop
     conv at a_spec =>
       equals Module.End.HasEigenvalue (A_C.toLin' ^ n_prod) (↑a) => rfl
     rw [Module.End.hasEigenvalue_iff_mem_spectrum] at a_spec
+    simp_rw [← Matrix.toLin'_pow] at a_spec
+    simp [-Matrix.toLin'_pow] at a_spec
+    rw [spectrum.map_pow_of_pos _ n_prod_pos] at a_spec
+    simp at a_spec
+    obtain ⟨k, k_mem, k_pow⟩ := a_spec
+    simp [Module.End.UnifEigenvalues.val] at k_pow
+    conv at k_pow =>
+      rhs
+      equals Module.End.Eigenvalues.val _ a => rfl
 
-    --rw [spectrum.map_pow_of_nonempty] at a_spec
-
-    sorry
+    rw [← k_pow]
+    rw [← Matrix.spectrum_toLin'] at k_mem
+    rw [← Module.End.hasEigenvalue_iff_mem_spectrum] at k_mem
+    have k_norm := eigen_one_complex ⟨k, k_mem⟩
+    rw [← eigen_pow_prod_one (k := ⟨k, k_mem⟩)]
+    . simp
 
   have char_nonzero: (A_C.toLin' ^ n_prod).charpoly ≠ 0 := by
     by_contra!
@@ -966,24 +997,18 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
           simpa using pow_eigen
         . intro ha
 
-          have splits := Polynomial.SplittingField.splits (A_C.toLin'^n_prod).charpoly
-          obtain ⟨k, hk⟩ := Polynomial.Splits.exists_eval_eq_zero splits (by
-            simp
-            have deg := LinearMap.charpoly_natDegree (A_C.toLin'^n_prod)
-            simp at deg
-            rw [← Polynomial.degree_eq_iff_natDegree_eq_of_pos] at deg
-            . simp [deg]
-              grind
-            . exact hd
-          )
-          simp at hk
-          --rw [← Polynomial.mem_roots_iff_aeval_eq_zero] at hk
+          have ne_zero: NeZero d := by
+            sorry
 
-          --rw [← Polynomial.IsRoot.def] at hk
-          --rw [← Module.End.hasEigenvalue_iff_isRoot_charpoly] at hk
-          rw [Module.End.hasEigenvalue_iff_isRoot_charpoly]
-          simp
-          sorry
+
+          obtain ⟨k, hk⟩ := Module.End.exists_eigenvalue (A_C.toLin')
+          have k_pow_prod: k^n_prod = 1 := by
+            rw [← eigen_pow_prod_one (k := ⟨k, hk⟩)]
+            simp
+
+          rw [ha, ← k_pow_prod]
+          apply Module.End.HasEigenvalue.pow
+          exact hk
 
       rw [← Polynomial.le_rootMultiplicity_iff]
 
