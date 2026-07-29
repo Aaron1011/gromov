@@ -1350,6 +1350,27 @@ lemma mul_aut_iterate {G: Type*} [Group G] (f: MulAut G) (n: ℕ): f^[n] = ⇑(f
     ext a
     rw [Function.iterate_succ_apply, pow_succ, MulAut.mul_apply, ← ih]
 
+-- lemma iterate_mul_aut_mul_eq_one {G: Type*} [Group G] (f : MulAut G) (n m k: ℕ) (g: G) (h: (fun x ↦ x * (f)^[n] x⁻¹)^[k] g = 1):
+--     (fun x ↦ x * (f)^[n*m] x⁻¹)^[k] g = 1 := by
+
+--   induction k generalizing g with
+--   | zero =>
+--     simpa using h
+--   | succ k ih =>
+--     rw [Function.iterate_succ']
+--     simp
+--     simp at ih
+--     rw [ih]
+--     . sorry
+--     .
+--       rw [Function.iterate_succ'] at h
+--       simp at h
+--       rw [← h]
+--       simp
+--       group
+--       sorry
+
+
 lemma toIntLinearMap_pow_coe {M : Type*}  [AddCommGroup M]  (f : M →+ M) (n: ℕ): ↑((f.toIntLinearMap)^(n)) = (f^[n]) := by
   induction n with
   | zero =>
@@ -1997,7 +2018,8 @@ lemma exists_gamma_n_unipotent_N' {H: Type*} [Group H] {N': Subgroup H} [N'_norm
       --simp [-iterate_map_inv]
       rw [← QuotientGroup.eq_one_iff]
       rw [← coe_iter]
-      exact h_prev
+      sorry
+      --exact h_prev
       --simpa using h_prev
 
       -- a ((conj b) a⁻¹
@@ -2007,7 +2029,7 @@ lemma exists_gamma_n_unipotent_N' {H: Type*} [Group H] {N': Subgroup H} [N'_norm
       -- a b a⁻¹ b⁻¹
       -- (a b a⁻¹ b⁻¹) b (a b a⁻¹ b⁻¹)⁻¹ b⁻¹
       -- (a b a⁻¹) b (a b⁻¹ a⁻¹ b⁻¹)
-      sorry
+
     .
       simp_rw [mul_aut_iterate] at h_z_unipotent
       rw [mul_aut_iterate]

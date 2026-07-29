@@ -842,13 +842,21 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
     obtain ⟨n, n_pos, A_pow⟩ := foo
     use n
 
-  have n_prod := ∏ (k : Module.End.Eigenvalues A_F), (eigen_root_unity k).choose
+  let n_prod := ∏ (k : Module.End.Eigenvalues A_F), (eigen_root_unity k).choose
+  have n_prod_pos: 0 < n_prod := by
+    simp [n_prod]
+    intro i
+    by_contra!
+    simp at this
+    sorry
+
   have pow_eigen: ∀ j: Module.End.Eigenvalues (A_F^n_prod), j.val = 1 := by
     intro a
     have a_spec := a.prop
     conv at a_spec =>
       equals Module.End.HasEigenvalue (A_F ^ n_prod) (↑a) => rfl
     rw [Module.End.hasEigenvalue_iff_mem_spectrum] at a_spec
+
     --rw [spectrum.map_pow_of_nonempty] at a_spec
 
     sorry
@@ -942,7 +950,7 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
   have eval_zero := (A_F^n_prod).aeval_self_charpoly
   simp [a_f_char_eq] at eval_zero
   use d
-  refine ⟨by sorry, ?_⟩
+  refine ⟨n_prod_pos, ?_⟩
   simp [A_F] at eval_zero
   apply_fun (fun f => f.toMatrix') at eval_zero
   simp [-EmbeddingLike.map_eq_zero_iff] at eval_zero
