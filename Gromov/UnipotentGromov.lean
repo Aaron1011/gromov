@@ -1413,6 +1413,7 @@ set_option synthInstance.maxHeartbeats 40000 in
 lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N'):
     ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N', Nat.iterate (fun x => x * ((gamma^[a]) x⁻¹)) n g = 1 := by
 
+  classical
   let torsion := CommGroup.torsion (Subgroup.center N')
   have center_fg: Group.FG (Subgroup.center N') := by
     rw [Group.fg_iff_subgroup_fg]
@@ -1600,6 +1601,9 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
         rw [← toIntLinearMap_comp_mul]
         simp
     }
+
+    have gamma_matrix_map_mulVec: ∀ n: ℕ, ∀ v, ((gamma_matrix.map (fun x ↦ (x: ℂ))) ^ (n)).mulVec v = gamma_add 0 := by
+      sorry
     have unipotent_gamma_matrix := int_matrix_unipotent (by
       apply Module.finrank_pos
     ) (unitOfInvertible gamma_matrix) (by
@@ -1610,8 +1614,8 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
         intro N_1
         use sorry
         simp
-        rw [← (Finset.card_image_iff (f := fun a => a)).mpr]
-        simp
+        rw [← (Finset.card_image_iff (f := fun (a: Fin (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion))) → ℂ) => ((Module.finBasis ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion)))).repr.symm a)).mpr]
+        simp_rw [← pow_mul]
         sorry
         sorry
       . sorry

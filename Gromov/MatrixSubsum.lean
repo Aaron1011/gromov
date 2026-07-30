@@ -627,9 +627,9 @@ lemma map_preserves_eigen {F: Type*} {d: ℕ} [Field F] [FiniteDimensional F ((F
 
 
 
-lemma int_matrix_poly_growth_eigenvalue {d p: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ)
-  (a b : ℕ)
-  (h_poly: ∀ v, ∀ N_1 , ∃ N_2, #((Finset.image (fun a => a.sum (fun b => ((((A.val.map (Int.castRingHom ℂ))^(N_1)))^b.val).mulVec v)) ((Finset.Ico N_1 N_2)).attach.powerset)) ≤ a * (N_2 - N_1)^(2*b)):
+lemma int_matrix_poly_growth_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ)
+  (a b : ℕ) (ha: 0 < a)
+  (h_poly: ∀ v, ∀ N_1 : ℕ , ∃ N_2: ℕ, N_1 < N_2 ∧ (4 * ↑b + Real.log ↑a < (Real.log 2) * (N_2 - N_1)^((1 : ℝ) / 2)) ∧ #((Finset.image (fun a => a.sum (fun b => ((((A.val.map (Int.castRingHom ℂ))^(N_1)))^b.val).mulVec v)) ((Finset.Ico N_1 N_2)).attach.powerset)) ≤ a * (N_2 - N_1)^(2*b)):
   ∀ k : Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ)).toLin', ‖k.val‖ = 1 := by
 
     cases int_matrix_eigenvalue A
@@ -654,7 +654,7 @@ lemma int_matrix_poly_growth_eigenvalue {d p: ℕ} (A: (Matrix (Fin d) (Fin d) �
 
       obtain ⟨N, hN⟩ := foo
       specialize h_poly v N
-      obtain ⟨N_2, card_le⟩ := h_poly
+      obtain ⟨N_2, N_2_gt, N_2_diff_gt, card_le⟩ := h_poly
       specialize hN N_2
       simp at hN
       simp at card_le
@@ -666,13 +666,52 @@ lemma int_matrix_poly_growth_eigenvalue {d p: ℕ} (A: (Matrix (Fin d) (Fin d) �
       nth_grw 2 [Real.log_natCast_le_rpow_div (ε := (1/2))] at hN
       simp at hN
       have sub_ne: 0 ≠ (N_2 - N) := by
-        sorry
+        grind
       field_simp at hN
       rw [add_comm] at hN
       rw [← sub_le_iff_le_add] at hN
       rw [← div_le_iff₀] at hN
       rw [sub_div] at hN
-      all_goals { sorry }
+      nth_rw 1 [mul_comm] at hN
+      rw [mul_div_assoc] at hN
+      rw [← Real.rpow_one_sub'] at hN
+      have le_n_pow: Real.log ↑a / ↑(N_2 - N) ^ ((1: ℝ) / 2) ≤ Real.log a := by
+        rw [div_eq_mul_inv]
+        apply mul_le_of_le_one_right
+        . positivity
+        . norm_num
+          field_simp
+          apply Real.one_le_rpow
+          . simp
+            grind
+          . norm_num
+
+
+      grw [le_n_pow] at hN
+      norm_num at hN
+      grw [N_2_diff_gt] at hN
+      simp at hN
+      rw [Nat.cast_sub] at hN
+      grind
+      . grind
+      . grind
+      . grind
+      .
+        positivity
+      . grind
+      . simp
+        grind
+      . norm_num
+        grind
+      . norm_num
+      . apply mul_pos
+        . simp
+          exact ha
+        . apply pow_pos
+          rw [Nat.cast_sub]
+          . simp
+            grind
+          . grind
 
 
 
