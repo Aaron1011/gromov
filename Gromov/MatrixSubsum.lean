@@ -532,9 +532,9 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℂ) (v: (Fin d) → �
 
 #print axioms subsums_unique
 
-lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)ˣ) (v: (Fin d) → ℂ) (v_ne_zero: ‖v‖ ≠ 0) (k: ℂ) (hv: A.val.mulVec v = k • v) (k_gt: 1 < ‖k‖):
-    ∃ N₀, ∀ N, 2^(N - N₀) ≤ #((Finset.image (fun a => a.sum (fun b => (((A^(N₀))).val^b.val).mulVec v)) ((Finset.Ico N₀ N)).attach.powerset)) := by
-  have mul_v := mul_pow_exact A.val v k hv
+lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)) (v: (Fin d) → ℂ) (v_ne_zero: ‖v‖ ≠ 0) (k: ℂ) (hv: A.mulVec v = k • v) (k_gt: 1 < ‖k‖):
+    ∃ N₀, ∀ N, 2^(N - N₀) ≤ #((Finset.image (fun a => a.sum (fun b => (((A^(N₀)))^b.val).mulVec v)) ((Finset.Ico N₀ N)).attach.powerset)) := by
+  have mul_v := mul_pow_exact A v k hv
 
   have pow_le: 3 ≤ ‖k‖^(Nat.ceil (Real.logb ‖k‖ 3)) := by
     rw [Real.le_pow_iff_log_le]
@@ -570,7 +570,6 @@ lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)ˣ)
       -- simp [k_zero] at k_gt
       -- norm_num at k_gt
     ) (k^(Nat.ceil (Real.logb ‖k‖ 3))) (by simp [pow_le]) (by
-      simp
       rw [mul_v]
     ) (by omega) (a.image Subtype.val) (b.image Subtype.val) ?_ ?_ ?_
     . rw [Finset.image_inj] at sums_eq
@@ -630,7 +629,7 @@ lemma map_preserves_eigen {F: Type*} {d: ℕ} [Field F] [FiniteDimensional F ((F
 
 lemma int_matrix_poly_growth_eigenvalue {d p: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ)
   (a b : ℕ)
-  (h_poly: ∀ v, ∀ N_1 , ∃ N_2, #((Finset.image (fun a => a.sum (fun b => ((((A.val.map (Int.castRingHom ℂ))^(N_1)))^b.val).mulVec v)) ((Finset.Ico N_1 N_2)).attach.powerset)) ≤ a * b^(2*(N_2 - N_1))):
+  (h_poly: ∀ v, ∀ N_1 , ∃ N_2, #((Finset.image (fun a => a.sum (fun b => ((((A.val.map (Int.castRingHom ℂ))^(N_1)))^b.val).mulVec v)) ((Finset.Ico N_1 N_2)).attach.powerset)) ≤ a * (N_2 - N_1)^(2*b)):
   ∀ k : Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ)).toLin', ‖k.val‖ = 1 := by
 
     cases int_matrix_eigenvalue A
@@ -648,7 +647,7 @@ lemma int_matrix_poly_growth_eigenvalue {d p: ℕ} (A: (Matrix (Fin d) (Fin d) �
       simp at map_v
 
       have foo := int_matrix_exponential_growth (d := d)
-        (A.map ((Int.castRingHom ℂ).mapMatrix (m := Fin d))) v (by simpa using hv.2) k (by simpa using map_v)
+        (A.val.map ((Int.castRingHom ℂ))) v (by simpa using hv.2) k (by simpa using map_v)
         one_lt_k
 
 
@@ -657,12 +656,26 @@ lemma int_matrix_poly_growth_eigenvalue {d p: ℕ} (A: (Matrix (Fin d) (Fin d) �
       specialize h_poly v N
       obtain ⟨N_2, card_le⟩ := h_poly
       specialize hN N_2
+      simp at hN
+      simp at card_le
+      grw [card_le] at hN
+      rify at hN
+      rw [Real.pow_le_iff_le_log] at hN
+      rw [Real.log_mul] at hN
+      rw [Real.log_pow] at hN
+      nth_grw 2 [Real.log_natCast_le_rpow_div (ε := (1/2))] at hN
+      simp at hN
+      have sub_ne: 0 ≠ (N_2 - N) := by
+        sorry
+      field_simp at hN
+      rw [add_comm] at hN
+      rw [← sub_le_iff_le_add] at hN
+      rw [← div_le_iff₀] at hN
+      rw [sub_div] at hN
+      all_goals { sorry }
 
 
 
-
-
-      sorry
 
 theorem LinearMap.toMatrix'_pow {R : Type*} [CommSemiring R] {m : Type*} [Fintype m] [DecidableEq m] (f : (m → R) →ₗ[R] m → R) (n: ℕ):
     LinearMap.toMatrix' (f^n) = (LinearMap.toMatrix' f)^n := by
