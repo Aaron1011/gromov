@@ -1602,8 +1602,8 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
         simp
     }
 
-    have gamma_matrix_map_mulVec: ∀ n: ℕ, ∀ v, ((gamma_matrix.map (fun x ↦ (x: ℂ))) ^ (n)).mulVec v = gamma_add 0 := by
-      sorry
+    -- have gamma_matrix_map_mulVec: ∀ n: ℕ, ∀ v, ((gamma_matrix.map (fun x ↦ (x: ℂ))) ^ (n)).mulVec v = gamma_add 0 := by
+    --   sorry
     have unipotent_gamma_matrix := int_matrix_unipotent (by
       apply Module.finrank_pos
     ) (unitOfInvertible gamma_matrix) (by
@@ -1614,9 +1614,8 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
         intro N_1
         use sorry
         simp
-        rw [← (Finset.card_image_iff (f := fun (a: Fin (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion))) → ℂ) => ((Module.finBasis ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion)))).repr.symm a)).mpr]
-        simp_rw [← pow_mul]
-        sorry
+        --rw [← (Finset.card_image_iff (f := fun (a: Fin (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion))) → ℂ) => ((Module.finBasis ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion)))).repr.symm a)).mpr]
+        --simp_rw [← pow_mul]
         sorry
       . sorry
       . sorry
