@@ -1606,7 +1606,13 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
       apply int_matrix_poly_growth_eigenvalue
       . sorry
       .
+        intro v
+        intro N_1
+        use sorry
         simp
+        rw [← (Finset.card_image_iff (f := fun a => a)).mpr]
+        simp
+        sorry
         sorry
       . sorry
       . sorry
