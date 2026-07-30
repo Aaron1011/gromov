@@ -1602,7 +1602,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     }
     have unipotent_gamma_matrix := int_matrix_unipotent (by
       apply Module.finrank_pos
-    ) (unitOfInvertible gamma_matrix)
+    ) (unitOfInvertible gamma_matrix) sorry
     obtain ⟨a, n, a_pos, hm⟩ := unipotent_gamma_matrix
     use a
     use n

@@ -195,7 +195,7 @@ def complexOfIntHom: ℤ →+* ℂ := {
 -- TODO - this can probably be generalized to any matrix with a determinant of +/- 1,
 -- and then upstreamed to mathlib
 lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ):
-    (∀ (k : ℂ), Module.End.HasEigenvalue ((A.val.map complexOfIntHom).toLin') k → ‖k‖ = 1) ∨ (∃ (k: ℂ), (Module.End.HasEigenvalue ((A.val.map complexOfIntHom).toLin') k) ∧ 1 < ‖k‖) := by
+    (∀ (k : ℂ), Module.End.HasEigenvalue ((A.val.map (Int.castRingHom ℂ)).toLin') k → ‖k‖ = 1) ∨ (∃ (k: ℂ), (Module.End.HasEigenvalue ((A.val.map (Int.castRingHom ℂ)).toLin') k) ∧ 1 < ‖k‖) := by
 
   rw [Classical.or_iff_not_imp_left]
   intro not_all_one
@@ -236,21 +236,23 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ):
     --
     have a_det_unit := Matrix.isUnits_det_units A
     rw [Int.isUnit_iff] at a_det_unit
-    let A_C := A.val.map complexOfIntHom
+    let A_C := A.val.map (Int.castRingHom ℂ)
     have det_eq := Matrix.det_eq_prod_roots_charpoly A_C
-    have foo := Matrix.charpoly_map A.val complexOfIntHom
+    have foo := Matrix.charpoly_map A.val (Int.castRingHom ℂ)
 
     have char_nonzero: A_C.charpoly ≠ 0 := by
       by_contra!
-      simp [A_C, complexOfIntHom] at this
+      simp [A_C, Int.castRingHom] at this
       have char_monic := Matrix.charpoly_monic A_C
-      simp [A_C, complexOfIntHom] at char_monic
+      simp [A_C, Int.castRingHom] at char_monic
       apply Polynomial.Monic.ne_zero at char_monic
       contradiction
 
 
     by_cases k_gt: 1 < ‖k‖
     . use k
+      simp
+      refine ⟨hk, k_gt⟩
 
     simp at k_gt
     have k_lt: ‖k‖ < 1 := by
@@ -283,10 +285,10 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ):
           rw [Matrix.det_neg] at eval_char
           simp at eval_char
 
-          have det_nonzero :=  Matrix.det_ne_zero_of_left_inverse (A := A_C) (B := (A.inv).map complexOfIntHom) ?_
+          have det_nonzero :=  Matrix.det_ne_zero_of_left_inverse (A := A_C) (B := (A.inv).map (Int.castRingHom ℂ)) ?_
           . contradiction
           .
-            simp [-Matrix.coe_units_inv, A_C]
+            simp [-Matrix.coe_units_inv, A_C, -Int.coe_castRingHom]
             rw [← Matrix.map_mul]
             simp
         .
@@ -327,17 +329,16 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ):
     . rename_i det_eq_one
       apply_fun (fun a => (a: ℂ)) at det_eq_one
       rw [cast_det] at det_eq_one
-      simp [A_C, complexOfIntHom] at det_eq
+      simp [A_C, Int.castRingHom] at det_eq
       rw [det_eq_one] at det_eq
-      simp [complexOfIntHom] at roots_prod_le
+      --simp [Int.castRingHom] at roots_prod_le
       rw [← det_eq] at roots_prod_le
       norm_num at roots_prod_le
     . rename_i det_eq_neg_one
       apply_fun (fun a => (a: ℂ)) at det_eq_neg_one
       rw [cast_det] at det_eq_neg_one
-      simp [A_C, complexOfIntHom] at det_eq
+      simp [A_C, Int.castRingHom] at det_eq
       rw [det_eq_neg_one] at det_eq
-      simp [complexOfIntHom] at roots_prod_le
       rw [← det_eq] at roots_prod_le
       norm_num at roots_prod_le
 
@@ -627,8 +628,10 @@ lemma map_preserves_eigen {F: Type*} {d: ℕ} [Field F] [FiniteDimensional F ((F
 
 
 
-lemma int_matrix_poly_growth_eigenvalue {d p: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (S: Finset (Matrix (Fin d) (Fin d) ℂ)ˣ) (hS: ∃ a, ∀ n ≥ 1, #(S ^ n) ≤ a * n^p):
-  ∀ k : Module.End.Eigenvalues (A.val.map (complexOfIntHom)).toLin', ‖k.val‖ = 1 := by
+lemma int_matrix_poly_growth_eigenvalue {d p: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ)
+  (a b : ℕ)
+  (h_poly: ∀ v, ∀ N_1 , ∃ N_2, #((Finset.image (fun a => a.sum (fun b => ((((A.val.map (Int.castRingHom ℂ))^(N_1)))^b.val).mulVec v)) ((Finset.Ico N_1 N_2)).attach.powerset)) ≤ a * b^(2*(N_2 - N_1))):
+  ∀ k : Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ)).toLin', ‖k.val‖ = 1 := by
 
     cases int_matrix_eigenvalue A
     .
@@ -645,12 +648,17 @@ lemma int_matrix_poly_growth_eigenvalue {d p: ℕ} (A: (Matrix (Fin d) (Fin d) �
       simp at map_v
 
       have foo := int_matrix_exponential_growth (d := d)
-        (A.map (complexOfIntHom.mapMatrix (m := Fin d))) v (by simpa using hv.2) k (by simpa using map_v)
+        (A.map ((Int.castRingHom ℂ).mapMatrix (m := Fin d))) v (by simpa using hv.2) k (by simpa using map_v)
         one_lt_k
 
 
 
       obtain ⟨N, hN⟩ := foo
+      specialize h_poly v N
+      obtain ⟨N_2, card_le⟩ := h_poly
+      specialize hN N_2
+
+
 
 
 
