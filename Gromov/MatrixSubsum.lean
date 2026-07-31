@@ -22,7 +22,7 @@ def poly_cancel  {R: Type*} [NormedCommRing R] {n: ℕ} (A: Matrix (Fin n) (Fin 
     grind
 } : DerivedSets A v p q)
 
-lemma mul_pow_exact {d: ℕ} {R: Type*} [RCLike R] [NormSMulClass R ((Fin d) → R)]   (A: Matrix (Fin d) (Fin d) R) (v: (Fin d) → R) (k: R)  (hva: A.vecMul v = (k • v)): ∀ n: ℕ, (A ^ n).vecMul v = ((k ^ n) • v) := by
+lemma mul_pow_exact {d: ℕ} {R: Type*} [Ring R] (A: Matrix (Fin d) (Fin d) R) (v: (Fin d) → R) (k: R)  (hva: A.vecMul v = (k • v)): ∀ n: ℕ, (A ^ n).vecMul v = ((k ^ n) • v) := by
   intro n
   induction n with
   | zero =>
@@ -34,7 +34,6 @@ lemma mul_pow_exact {d: ℕ} {R: Type*} [RCLike R] [NormSMulClass R ((Fin d) →
     rw [Matrix.smul_vecMul]
     rw [ih]
     rw [pow_succ']
-    ring_nf
     rw [mul_smul]
 
 
@@ -545,9 +544,9 @@ lemma matrix_map_eigenvector_component {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)
 -- and we keep the right-multiplication acting on some arbitrary non-eigenvector `v`. This lets the caller choose 'v' to be an integer vector
 -- cast to a complex vector (which can therefore be turned back into an element of G).
 -- This was easier than dealing with the "pick a vector with a component in the eigenvector" approach in the paper
-lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)) (φ: (Fin d) → ℂ) (v: (Fin d) → ℂ) (v_ne_zero: ‖v‖ ≠ 0) (k: ℂ) (hv: φ ⬝ᵥ (A.mulVec v) = (k • φ) ⬝ᵥ v) (k_gt: 1 < ‖k‖):
+lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)) (φ : (Fin d) → ℂ) (v: Fin d → ℤ) (v_ne_zero: ‖φ ⬝ᵥ (Int.castRingHom ℂ) ∘ v‖ ≠ 0) (k: ℂ) (hv: (A.map (Int.castRingHom ℂ)).vecMul φ = (k • φ)) (k_gt: 1 < ‖k‖):
     ∃ N₀, ∀ N, 2^(N - N₀) ≤ #((Finset.image (fun a => a.sum (fun b => (((A^(N₀)))^b.val).mulVec v)) ((Finset.Ico N₀ N)).attach.powerset)) := by
-  have mul_v := mul_pow_exact A v k hv
+  have mul_v := mul_pow_exact (A.map (Int.castRingHom ℂ)) φ k hv
 
   have pow_le: 3 ≤ ‖k‖^(Nat.ceil (Real.logb ‖k‖ 3)) := by
     rw [Real.le_pow_iff_log_le]
@@ -576,7 +575,7 @@ lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)) (
     have mul_one := mul_v 1
     simp at mul_one
 
-    have sums_eq := subsums_unique (A^(⌈Real.logb ‖k‖ 3⌉₊)) (v) (Nat.ceil (Real.logb ‖k‖ 3)) N (by
+    have sums_eq := subsums_unique ((A.map (Int.castRingHom ℂ))^(⌈Real.logb ‖k‖ 3⌉₊)) φ ((Int.castRingHom ℂ) ∘ v) (Nat.ceil (Real.logb ‖k‖ 3)) N (by
       simpa using v_ne_zero
       -- refine ⟨?_, by simpa using v_ne_zero⟩
       -- intro k_zero
@@ -604,10 +603,21 @@ lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)) (
       refine ⟨?_, by omega⟩
       simp
       exact le_x
-    . simp
+    .
       simp at hab
-      exact hab
-
+      simp_rw [← Matrix.map_pow]
+      simp_rw [Matrix.smul_eq_mulVec]
+      rw [funext_iff]
+      simp only [Finset.sum_apply]
+      simp_rw [← RingHom.map_mulVec]
+      simp_rw [← map_sum (g := (Int.castRingHom ℂ))]
+      simp_rw [← Finset.sum_apply]
+      intro x
+      apply congrArg
+      simp [-Finset.sum_apply]
+      rw [Finset.sum_apply (a := v)]
+      rw [Finset.sum_apply (a := v)]
+      rw [hab]
 #print axioms int_matrix_exponential_growth
 
 
@@ -658,10 +668,15 @@ lemma exists_basis_map_nonzero  {d: ℕ}  (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) [N
   have a_prop := A.ne_zero
   contradiction
 
+lemma exists_vector_component_nonzero {d: ℕ} (v: (Fin d) → ℂ) (hv: v ≠ 0): ∃ i, v i ≠ 0 := by
+  by_contra!
+  simp at hv
+  rw [funext_iff] at hv
+  simp [this] at hv
 
 lemma int_matrix_poly_growth_eigenvalue {d: ℕ} [NeZero d] (A: (Matrix (Fin d) (Fin d) ℤ)ˣ)
   (a b : ℕ) (ha: 0 < a)
-  (h_poly: ∀ v: (Fin d) → ℤ, ∀ N_1 : ℕ , ∃ N_2: ℕ, N_1 < N_2 ∧ (4 * ↑b + Real.log ↑a < (Real.log 2) * (N_2 - N_1)^((1 : ℝ) / 2)) ∧ #((Finset.image (fun a => a.sum (fun b => ((((A.val.map (Int.castRingHom ℂ))^(N_1)))^b.val).mulVec ((Int.castRingHom ℂ) ∘ v))) ((Finset.Ico N_1 N_2)).attach.powerset)) ≤ a * (N_2 - N_1)^(2*b)):
+  (h_poly: ∀ v: (Fin d) → ℤ, ∀ N_1 : ℕ , ∃ N_2: ℕ, N_1 < N_2 ∧ (4 * ↑b + Real.log ↑a < (Real.log 2) * (N_2 - N_1)^((1 : ℝ) / 2)) ∧ #((Finset.image (fun a => a.sum (fun b => ((((A.val)^(N_1)))^b.val).mulVec (v))) ((Finset.Ico N_1 N_2)).attach.powerset)) ≤ a * (N_2 - N_1)^(2*b)):
   ∀ k : Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ)).toLin', ‖k.val‖ = 1 := by
 
 
@@ -697,7 +712,7 @@ lemma int_matrix_poly_growth_eigenvalue {d: ℕ} [NeZero d] (A: (Matrix (Fin d) 
 
       simp at hv
       rw [sub_eq_zero] at hv
-      obtain ⟨q, hq⟩ := exists_basis_map_nonzero A
+      obtain ⟨q, hq⟩ := exists_vector_component_nonzero v v_nonzero
 
       have mul_dot: (v ⬝ᵥ (A.val.map (Int.castRingHom ℂ)).mulVec q) = (k • v) ⬝ᵥ q  := by
         rw [Matrix.dotProduct_mulVec]
@@ -708,20 +723,31 @@ lemma int_matrix_poly_growth_eigenvalue {d: ℕ} [NeZero d] (A: (Matrix (Fin d) 
 
 
 
-      apply Module.End.HasEigenvalue.exists_hasEigenvector at kh
-      obtain ⟨v, hv⟩ := kh
-      rw [Module.End.hasEigenvector_iff] at hv
-      have map_v := hv.1
-      simp at map_v
+      -- apply Module.End.HasEigenvalue.exists_hasEigenvector at kh
+      -- obtain ⟨v, hv⟩ := kh
+      -- rw [Module.End.hasEigenvector_iff] at hv
+      -- have map_v := hv.1
+      -- simp at map_v
 
       have foo := int_matrix_exponential_growth (d := d)
-        (A.val.map ((Int.castRingHom ℂ))) v (by simpa using hv.2) k (by simpa using map_v)
+        (A.val) v (Pi.single q 1) (by
+          simp
+          conv =>
+            arg 1
+            lhs
+            rhs
+            equals Pi.single q 1 =>
+              ext a
+              simp [Pi.single_apply]
+          simp
+          exact hq
+        ) k (by exact hv.symm)
         one_lt_k
 
 
 
       obtain ⟨N, hN⟩ := foo
-      specialize h_poly v N
+      specialize h_poly (Pi.single q 1) N
       obtain ⟨N_2, N_2_gt, N_2_diff_gt, card_le⟩ := h_poly
       specialize hN N_2
       simp at hN
