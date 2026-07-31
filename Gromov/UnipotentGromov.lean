@@ -1584,12 +1584,16 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     have module_torsion_free: Module.IsTorsionFree ℤ add_quot := by
       infer_instance
 
+
     let fin_dim: Module.Finite ℤ add_quot := by infer_instance
 
     let gamma_add := gamma_lift.toAdditive.toAddMonoidHom.toIntLinearMap
     let gamma_matrix := gamma_add.toMatrix (Module.finBasis _ _) (Module.finBasis _ _)
+    let B := (Module.finBasis ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion)))
+    have quot_fg: AddGroup.FG (Additive (↥(Subgroup.center ↥N') ⧸ torsion)) := by
+      infer_instance
     have invertible_gamma: Invertible gamma_matrix := {
-      invOf := ((gamma_lift.toAdditive).symm.toAddMonoidHom).toIntLinearMap.toMatrix (Module.finBasis _ _) (Module.finBasis _ _)
+      invOf := ((gamma_lift.toAdditive).symm.toAddMonoidHom).toIntLinearMap.toMatrix B B
       invOf_mul_self := by
         simp [gamma_matrix, gamma_add]
         rw [← LinearMap.toMatrix_mul]
@@ -1602,8 +1606,19 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
         simp
     }
 
-    -- have gamma_matrix_map_mulVec: ∀ n: ℕ, ∀ v, ((gamma_matrix.map (fun x ↦ (x: ℂ))) ^ (n)).mulVec v = gamma_add 0 := by
-    --   sorry
+    have gamma_matrix_map_mulVec: ∀ v, ((gamma_matrix.map (fun x ↦ (x: ℂ)))).mulVec v ∈ Finset.image (fun s => (fun (x: ℤ) => (x: ℂ)) ∘ (B.repr s)) quot_fg.out.choose  := by
+      intro v
+      simp [gamma_matrix]
+      use 1
+
+      refine ⟨?_, ?_⟩
+      .
+        use sorry
+      .
+        ext i
+        simp
+        sorry
+
     have unipotent_gamma_matrix := int_matrix_unipotent (by
       apply Module.finrank_pos
     ) (unitOfInvertible gamma_matrix) (by

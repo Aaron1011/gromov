@@ -532,6 +532,58 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℂ) (v: (Fin d) → �
 
 #print axioms subsums_unique
 
+lemma euclidean_vector_repr (n : ℕ) (x : EuclideanSpace ℂ (Fin n)) :
+    ∑ i, x i • EuclideanSpace.single i (1:ℂ) = x := by
+  simpa [EuclideanSpace.basisFun_apply, EuclideanSpace.basisFun_repr] using
+    (EuclideanSpace.basisFun (Fin n) ℂ).sum_repr x
+
+lemma matrix_map_eigenvector_component {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)) (v: EuclideanSpace ℂ (Fin d)) (v_norm: ‖v‖ = 1) (k: ℂ) (hv: (A.map (Int.castRingHom ℂ)).mulVec v = k • v) (k_gt: d < ‖k‖):
+    ∃ i: Fin d, 1 ≤ ‖(WithLp.toLp 2 ((A.map (Int.castRingHom ℂ)).mulVec (EuclideanSpace.single i 1)))‖ := by
+
+  have v_norm_one := v_norm
+  apply_fun (fun a => WithLp.toLp 2 a) at hv
+  by_contra!
+
+  let B := EuclideanSpace.basisFun (Fin d) ℂ
+  nth_rw 1 [← euclidean_vector_repr (x := v)] at hv
+  simp at hv
+  rw [Matrix.mulVec_sum] at hv
+  apply_fun (fun c => ‖c‖) at hv
+  rw [norm_smul] at hv
+  apply_fun (fun a => a^2) at v_norm
+  rw [EuclideanSpace.norm_sq_eq] at v_norm
+  simp at v_norm
+
+  simp [v_norm_one] at hv
+  apply ge_of_eq at hv
+  grw [norm_sum_le] at hv
+  simp_rw [Matrix.mulVec_smul] at hv
+  simp at hv
+  simp_rw [norm_smul] at hv
+
+
+  have single_le (x: Fin d) := Finset.single_le_sum (f := fun a => ‖v.ofLp a‖^2) (s := Finset.univ) (by intro i hi; positivity) (a := x)
+  grw [v_norm] at single_le
+  conv at single_le =>
+    intro x hx
+    rw [sq_le_one_iff₀ (by simp)]
+
+
+  grw [Finset.sum_le_sum (g := fun x => ‖WithLp.toLp 2 ((A.map fun x ↦ (x: ℂ)).col x)‖)] at hv
+  .
+
+
+    simp at this
+    grw [Finset.sum_le_card_nsmul (n := (1 : ℝ))] at hv
+    . simp at hv
+      grind
+    . intro i hi
+      grw [this]
+  . intro i hi
+    grw [single_le i hi]
+    simp
+
+
 lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)) (v: (Fin d) → ℂ) (v_ne_zero: ‖v‖ ≠ 0) (k: ℂ) (hv: A.mulVec v = k • v) (k_gt: 1 < ‖k‖):
     ∃ N₀, ∀ N, 2^(N - N₀) ≤ #((Finset.image (fun a => a.sum (fun b => (((A^(N₀)))^b.val).mulVec v)) ((Finset.Ico N₀ N)).attach.powerset)) := by
   have mul_v := mul_pow_exact A v k hv
@@ -629,7 +681,7 @@ lemma map_preserves_eigen {F: Type*} {d: ℕ} [Field F] [FiniteDimensional F ((F
 
 lemma int_matrix_poly_growth_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ)
   (a b : ℕ) (ha: 0 < a)
-  (h_poly: ∀ v, ∀ N_1 : ℕ , ∃ N_2: ℕ, N_1 < N_2 ∧ (4 * ↑b + Real.log ↑a < (Real.log 2) * (N_2 - N_1)^((1 : ℝ) / 2)) ∧ #((Finset.image (fun a => a.sum (fun b => ((((A.val.map (Int.castRingHom ℂ))^(N_1)))^b.val).mulVec v)) ((Finset.Ico N_1 N_2)).attach.powerset)) ≤ a * (N_2 - N_1)^(2*b)):
+  (h_poly: ∀ v: (Fin d) → ℤ, ∀ N_1 : ℕ , ∃ N_2: ℕ, N_1 < N_2 ∧ (4 * ↑b + Real.log ↑a < (Real.log 2) * (N_2 - N_1)^((1 : ℝ) / 2)) ∧ #((Finset.image (fun a => a.sum (fun b => ((((A.val.map (Int.castRingHom ℂ))^(N_1)))^b.val).mulVec ((Int.castRingHom ℂ) ∘ v))) ((Finset.Ico N_1 N_2)).attach.powerset)) ≤ a * (N_2 - N_1)^(2*b)):
   ∀ k : Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ)).toLin', ‖k.val‖ = 1 := by
 
     cases int_matrix_eigenvalue A
