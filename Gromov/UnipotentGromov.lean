@@ -1619,6 +1619,10 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
         simp
         sorry
 
+    have rank_nonzero: NeZero (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion))) := by
+      apply NeZero.of_pos
+      apply Module.finrank_pos
+
     have unipotent_gamma_matrix := int_matrix_unipotent (by
       apply Module.finrank_pos
     ) (unitOfInvertible gamma_matrix) (by
