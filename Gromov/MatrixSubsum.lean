@@ -22,38 +22,39 @@ def poly_cancel  {R: Type*} [NormedCommRing R] {n: ℕ} (A: Matrix (Fin n) (Fin 
     grind
 } : DerivedSets A v p q)
 
-lemma mul_pow_exact {d: ℕ} {R: Type*} [RCLike R] [NormSMulClass R ((Fin d) → R)]   (A: Matrix (Fin d) (Fin d) R) (v: (Fin d) → R) (k: R)  (hva: A.mulVec v = k • v): ∀ n: ℕ, (A ^ n).mulVec v = (k ^ n) • v := by
+lemma mul_pow_exact {d: ℕ} {R: Type*} [RCLike R] [NormSMulClass R ((Fin d) → R)]   (A: Matrix (Fin d) (Fin d) R) (v: (Fin d) → R) (k: R)  (hva: A.vecMul v = (k • v)): ∀ n: ℕ, (A ^ n).vecMul v = ((k ^ n) • v) := by
   intro n
   induction n with
   | zero =>
     simp
   | succ j ih =>
-    rw [pow_succ]
-    rw [← Matrix.mulVec_mulVec]
+    rw [pow_succ']
+    rw [← Matrix.vecMul_vecMul]
     rw [hva]
-    rw [Matrix.mulVec_smul]
+    rw [Matrix.smul_vecMul]
     rw [ih]
     rw [pow_succ']
     ring_nf
     rw [mul_smul]
 
 
-lemma interval_sum_le {R: Type*} {d: ℕ} [RCLike R] [ NormSMulClass R (Fin d → R)] (A: Matrix (Fin d) (Fin d) R) (v: (Fin d) → R) (hv: ‖v‖ ≠ 0) (k: R) (hk: 3 ≤ ‖k‖) (hva: A.mulVec v = k • v) (a b: ℕ):
-    ∑ i ∈ Finset.Ico a b, ‖(A ^ i).mulVec v‖ < ‖(A ^ b).mulVec v‖ := by
+lemma interval_sum_le {R: Type*} {d: ℕ} [RCLike R] [ NormSMulClass R (Fin d → R)] (A: Matrix (Fin d) (Fin d) R) (φ v: (Fin d) → R) (hv: ‖φ ⬝ᵥ v‖ ≠ 0) (k: R) (hk: 3 ≤ ‖k‖) (hva: A.vecMul φ = k • φ) (a b: ℕ):
+    ∑ i ∈ Finset.Ico a b, ‖φ ⬝ᵥ (A ^ i).mulVec v‖ < ‖φ ⬝ᵥ (A ^ b).mulVec v‖ := by
 
 
 
 
-  have mul_pow: ∀ n: ℕ, 3 ^ n * ‖v‖ ≤ ‖(A ^ n).mulVec v‖ := by
+  have mul_pow: ∀ n: ℕ, 3 ^ n * ‖φ ⬝ᵥ v‖ ≤ ‖φ ⬝ᵥ (A ^ n).mulVec v‖ := by
     intro n
     induction n with
     | zero =>
       simp only [pow_zero, one_mul, Matrix.one_mulVec, le_refl]
     | succ j ih =>
-      nth_rw 2 [pow_succ]
+      nth_rw 2 [pow_succ']
       rw [← Matrix.mulVec_mulVec]
+      rw [Matrix.dotProduct_mulVec]
       rw [hva]
-      rw [Matrix.mulVec_smul]
+      rw [smul_dotProduct]
       rw [norm_smul]
       rw [pow_succ']
       rw [mul_assoc]
@@ -85,29 +86,29 @@ lemma interval_sum_le {R: Type*} {d: ℕ} [RCLike R] [ NormSMulClass R (Fin d �
     induction b, b_le using Nat.le_induction with
     | base =>
       simp
-      rw [mul_pow_exact A v k hva]
-      rw [mul_pow_exact A v k hva]
+      simp_rw [Matrix.dotProduct_mulVec]
+      rw [mul_pow_exact A φ k hva]
+      rw [mul_pow_exact A φ k hva]
       rw [pow_succ]
       rw [mul_smul]
-      rw [norm_smul]
-      rw [norm_smul]
-      rw [norm_smul]
+      simp
       rw [← mul_assoc]
       rw [mul_lt_mul_iff_left₀]
       rw [lt_mul_iff_one_lt_right]
       .
         linarith
-      . simp
+      .
         positivity
       . simpa using hv
     | succ n hmn ih =>
       rw [Finset.sum_Ico_succ_top]
-      rw [pow_succ]
+      rw [pow_succ']
       rw [← Matrix.mulVec_mulVec]
+      nth_rw 2 [Matrix.dotProduct_mulVec]
       rw [hva]
-      rw [Matrix.mulVec_smul]
-      rw [norm_smul]
-      rw [mul_pow_exact A v k hva]
+      simp
+      rw [Matrix.dotProduct_mulVec]
+      rw [mul_pow_exact A φ k hva]
       -- ring
       -- nth_rw 2 [mul_comm]
       -- rw [← mul_assoc]
@@ -116,7 +117,8 @@ lemma interval_sum_le {R: Type*} {d: ℕ} [RCLike R] [ NormSMulClass R (Fin d �
       -- rw [mul_assoc]
 
       --rw [← pow_succ']
-      rw [mul_pow_exact A v k hva] at ih
+      rw [Matrix.dotProduct_mulVec] at ih
+      rw [mul_pow_exact A φ k hva] at ih
       apply_fun (fun x => x + ‖k‖ ^ n * ‖v‖) at ih
       .
         simp only [] at ih
@@ -124,6 +126,7 @@ lemma interval_sum_le {R: Type*} {d: ℕ} [RCLike R] [ NormSMulClass R (Fin d �
         norm_cast at ih
         simp at ih
         grw [ih]
+        simp
         rw [← two_mul]
 
 
@@ -132,16 +135,7 @@ lemma interval_sum_le {R: Type*} {d: ℕ} [RCLike R] [ NormSMulClass R (Fin d �
 
 
 
-        have two_mul_le:  2 * (‖k‖ ^ n * ‖v‖) < ‖k‖  * (‖k‖  ^ n * ‖v‖) := by
-          apply mul_lt_mul
-          . exact two_lt_k
-          . simp
-          . positivity
-          . positivity
-
-        nth_rw 2 [← mul_assoc] at two_mul_le
-        rw [← pow_succ'] at two_mul_le
-        exact mul_le_mul_of_nonneg_right two_lt_k.le (norm_nonneg _)
+        grw [two_lt_k]
       .
         intro a b hab
         simp
@@ -584,7 +578,11 @@ lemma matrix_map_eigenvector_component {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)
     simp
 
 
-lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)) (v: (Fin d) → ℂ) (v_ne_zero: ‖v‖ ≠ 0) (k: ℂ) (hv: A.mulVec v = k • v) (k_gt: 1 < ‖k‖):
+-- We diverge from the paper, and use an approach suggested by Claude: a left eigenvector `φ` is used instead of a right eigenvector,
+-- and we keep the right-multiplication acting on some arbitrary non-eigenvector `v`. This lets the caller choose 'v' to be an integer vector
+-- cast to a complex vector (which can therefore be turned back into an element of G).
+-- This was easier than dealing with the "pick a vector with a component in the eigenvector" approach in the paper
+lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℂ)) (φ: (Fin d) → ℂ) (v: (Fin d) → ℂ) (v_ne_zero: ‖v‖ ≠ 0) (k: ℂ) (hv: φ ⬝ᵥ (A.mulVec v) = (k • φ) ⬝ᵥ v) (k_gt: 1 < ‖k‖):
     ∃ N₀, ∀ N, 2^(N - N₀) ≤ #((Finset.image (fun a => a.sum (fun b => (((A^(N₀)))^b.val).mulVec v)) ((Finset.Ico N₀ N)).attach.powerset)) := by
   have mul_v := mul_pow_exact A v k hv
 
@@ -678,20 +676,75 @@ lemma map_preserves_eigen {F: Type*} {d: ℕ} [Field F] [FiniteDimensional F ((F
     exact v_spec.2
 
 
+lemma exists_basis_map_nonzero  {d: ℕ}  (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) [NeZero d]: ∃ a, A.val.mulVec (Pi.single a 1) ≠ 0 := by
+  by_contra!
 
-lemma int_matrix_poly_growth_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ)
+  let B := Pi.basisFun ℤ (Fin d)
+  have A_zero: A.val = 0 := by
+    rw [Matrix.ext_iff_mulVec]
+    intro v
+    rw [← B.sum_repr (u := v)]
+    rw [Matrix.mulVec_sum]
+    simp_rw [Matrix.mulVec_smul]
+    unfold B
+    simp_rw [Pi.basisFun_apply]
+    simp only [Pi.basisFun_repr]
+    simp_rw [this]
+    simp
+
+  have a_prop := A.ne_zero
+  contradiction
+
+
+lemma int_matrix_poly_growth_eigenvalue {d: ℕ} [NeZero d] (A: (Matrix (Fin d) (Fin d) ℤ)ˣ)
   (a b : ℕ) (ha: 0 < a)
   (h_poly: ∀ v: (Fin d) → ℤ, ∀ N_1 : ℕ , ∃ N_2: ℕ, N_1 < N_2 ∧ (4 * ↑b + Real.log ↑a < (Real.log 2) * (N_2 - N_1)^((1 : ℝ) / 2)) ∧ #((Finset.image (fun a => a.sum (fun b => ((((A.val.map (Int.castRingHom ℂ))^(N_1)))^b.val).mulVec ((Int.castRingHom ℂ) ∘ v))) ((Finset.Ico N_1 N_2)).attach.powerset)) ≤ a * (N_2 - N_1)^(2*b)):
   ∀ k : Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ)).toLin', ‖k.val‖ = 1 := by
 
+
+
     cases int_matrix_eigenvalue A
     .
-      rename_i eigen_norm_one
       intro k
+      rename_i eigen_norm_one
       apply eigen_norm_one k k.property
     .
+
       rename_i gt_one
-      obtain ⟨k, kh, one_lt_k⟩ := gt_one
+      obtain ⟨k, hk, one_lt_k⟩ := gt_one
+
+      have k_eigen := hk
+      rw [Module.End.hasEigenvalue_iff_mem_spectrum] at k_eigen
+      simp at k_eigen
+      rw [spectrum.mem_iff] at k_eigen
+      rw [Matrix.isUnit_iff_isUnit_det] at k_eigen
+      simp at k_eigen
+      rw [← Matrix.exists_vecMul_eq_zero_iff] at k_eigen
+      obtain ⟨v, v_nonzero, hv⟩ := k_eigen
+      rw [Matrix.vecMul_sub] at hv
+      conv at hv =>
+        lhs
+        lhs
+        equals Matrix.vecMul v (Matrix.diagonal (fun _ => k)) =>
+          ext a
+          simp
+          rw [Matrix.algebraMap_eq_diagonal]
+          rw [Matrix.vecMul_diagonal]
+          simp
+
+      simp at hv
+      rw [sub_eq_zero] at hv
+      obtain ⟨q, hq⟩ := exists_basis_map_nonzero A
+
+      have mul_dot: (v ⬝ᵥ (A.val.map (Int.castRingHom ℂ)).mulVec q) = (k • v) ⬝ᵥ q  := by
+        rw [Matrix.dotProduct_mulVec]
+        simp
+        rw [← hv]
+        simp
+
+
+
+
       apply Module.End.HasEigenvalue.exists_hasEigenvector at kh
       obtain ⟨v, hv⟩ := kh
       rw [Module.End.hasEigenvector_iff] at hv
