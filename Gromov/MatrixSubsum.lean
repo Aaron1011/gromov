@@ -340,7 +340,7 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ):
 #print axioms int_matrix_eigenvalue
 
 set_option maxHeartbeats 1200000 in
-lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℂ) (v: (Fin d) → ℂ) (N₀ N: ℕ) (hv: ‖v‖ ≠ 0) (k: ℂ) (hk: 3 ≤ ‖k‖)  (hva: A.mulVec v = k • v) (hn: N₀ ≤ N) (p q: Finset ℕ)
+lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℂ) (φ v: (Fin d) → ℂ) (N₀ N: ℕ) (hv: ‖φ ⬝ᵥ v‖ ≠ 0) (k: ℂ) (hk: 3 ≤ ‖k‖)  (hva: A.vecMul φ = k • φ) (hn: N₀ ≤ N) (p q: Finset ℕ)
   (hp: p ⊆ Finset.Ico N₀ N) (hq: q ⊆ Finset.Ico N₀ N) (hpq: p.sum (fun k => A^k • v) = q.sum (fun k => A^k • v)):
     p = q := by
 
@@ -405,7 +405,7 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℂ) (v: (Fin d) → �
       .
         wlog n_mem_p: n ∈ p
         .
-          have swapped := this A v N₀ N hv k hk hva n hmn ih q p hq hp hpq.symm (by grind) (by grind) (by grind)
+          have swapped := this A φ v N₀ N hv k hk hva n hmn ih q p hq hp hpq.symm (by grind) (by grind) (by grind)
           exact swapped.symm
         .
           rw [not_and_or] at n_neither
@@ -434,7 +434,6 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℂ) (v: (Fin d) → �
             rw [q_diff_eq] at h_sum
             rw [add_comm] at h_sum
             apply eq_add_neg_of_add_eq at h_sum
-            apply_fun norm at h_sum
 
 
 
@@ -454,14 +453,15 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℂ) (v: (Fin d) → �
               simp at a_mem
               grind
 
-            have a_pow_le: ‖(A ^ n).mulVec v‖ < ‖(A ^ n).mulVec v‖ := by
+            have a_pow_le: ‖φ ⬝ᵥ (A ^ n).mulVec v‖ < ‖φ ⬝ᵥ (A ^ n).mulVec v‖ := by
               nth_rw 1 [h_sum]
               rw [← Finset.sum_indicator_subset _ first_subset]
               rw [← Finset.sum_indicator_subset _ second_subset]
               rw [← sub_eq_add_neg]
               rw [← Finset.sum_sub_distrib]
+              rw [dotProduct_sum]
               grw [norm_sum_le]
-              grw [Finset.sum_le_sum (g := (fun x ↦ ‖(A ^ x).mulVec v‖))]
+              grw [Finset.sum_le_sum (g := (fun x ↦ ‖φ ⬝ᵥ (A ^ x).mulVec v‖))]
               .
 
                 apply interval_sum_le (k := k)
@@ -482,43 +482,6 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℂ) (v: (Fin d) → �
                   . simp
 
             simp at a_pow_le
-
-
-
-
-
-
-
-
-
-              -- have first_diff := Finset.sum_sdiff (f := fun n => (A^n).mulVec v) first_subset
-              -- simp at first_diff
-
-
-              -- rw [← Finset.sum_sdiff first_subset]
-
-
-
-
-              -- grw [abs_add_le]
-              -- simp
-              -- have first_subset: q \ p ⊆ ()
-              -- rw [Finset.sum_subset]
-              -- rw [neg_eq_neg_one_mul]
-              -- rw [Finset.mul_sum]
-              -- rw [← Finset.sum_union]
-
-              -- rw [← Finset.sum_sdiff_eq_sub]
-              -- . sorry
-              -- . intro a ha
-              --   simp
-              --   simp at ha
-              --   have first := ha.1.1
-              --   have second := ha.2
-              --   grind
-              -- sorry
-
-
           .
             rw [Finset.disjoint_iff_ne]
             intro a ha b hb
