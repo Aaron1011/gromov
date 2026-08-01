@@ -5629,7 +5629,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       use sorry
       intro a b
       grw [← Finset.card_image_of_injOn (f := fun a => a.val.toAdd.val.toMul.val) (by simp)]
-      grw [Finset.card_le_card (t := hGS.S^(max x_list.length gamma_list.length))]
+      grw [Finset.card_le_card (t := hGS.S^((b - a) * (x_list.length + gamma_list.length * (2 * a * b)) ))]
       ·
 
         grw [hp]
@@ -5672,7 +5672,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
         grw [List.sum_le_sum (g := Function.const _ (x_list.length + gamma_list.length * (2 * a * b)))]
         .
           simp [-le_sup_iff]
-          sorry
+          grw [Finset.card_le_univ]
+          simp
         .
           intro y hy
           simp at hy
