@@ -1668,12 +1668,12 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
       apply NeZero.of_pos
       apply Module.finrank_pos
 
-    have gamma_conj: ∃ q: ℕ, ∀ g, ∀ a b: ℕ, (0 < a) → (a < b) → ∃ p: ℕ, 0 < p ∧ (Finset.image (fun x ↦ (List.map (fun i ↦ (gamma)^[a * ↑i] g) x.toList).prod)
+    have gamma_conj: ∀ k: ℕ, (0 < k) →  ∃ q: ℕ, ∀ g, ∀ b: ℕ, 0 < b → ∃ p: ℕ, 0 < p ∧ ∀ a: ℕ, (0 < a) → (a < b) → (Finset.image (fun x ↦ (List.map (fun i ↦ (gamma)^[k * ↑i] g) x.toList).prod)
         (Finset.Ico a b).attach.powerset).card ≤ p * (b - a)^q := by
       sorry
 
 
-    have gamma_lift_conj: ∃ q: ℕ, ∀ g, ∀ a b: ℕ, (0 < a) → (a < b) → ∃ p: ℕ, 0 < p ∧ (Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma_lift)^[a * ↑i] g) x.toList).prod)
+    have gamma_lift_conj: ∀ k: ℕ, (0 < k) →  ∃ q: ℕ, ∀ g, ∀ b: ℕ, 0 < b → ∃ p: ℕ, 0 < p ∧ ∀ a: ℕ, (0 < a) → (a < b) → (Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma_lift)^[k * ↑i] g) x.toList).prod)
         (Finset.Ico a b).attach.powerset).card ≤ p * (b - a)^q := by
 
 
@@ -1692,11 +1692,14 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
 
 
         intro N_1
-        obtain ⟨q, hq⟩ := gamma_lift_conj
+        obtain ⟨q, hq⟩ := gamma_lift_conj ⌈Real.logb ‖k‖ 3⌉₊ (by sorry)
         --have K: ℕ := N_1 + ⌈((4 * ↑q + Real.log ↑p) / Real.log 2) ^ 2⌉₊ + 1
+
         have K : ℕ := sorry
-        obtain ⟨p, p_pos, hpq⟩ := hq g N_1 K sorry sorry
         use K
+
+        obtain ⟨p, p_pos, hpq⟩ := hq g K sorry
+        specialize hpq N_1 sorry sorry
         refine ⟨by sorry, ?_⟩
         use p
         use q
@@ -1725,6 +1728,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
 
 
             simp_rw [← Finset.prod_map_toList]
+
             grw [hpq]
             -- TODO - we might be able to make the goal stronger, if we don't actually need the factor of 2 in it
             rw [pow_mul']
