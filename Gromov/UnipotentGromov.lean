@@ -2249,7 +2249,16 @@ lemma exists_gamma_n_unipotent_N' {H: Type*} [DecidableEq H] [Group H] {N': Subg
     clear ih
     obtain ⟨a, n, ha, h_prev⟩ := foo
 
-    obtain ⟨z_a, z_n, h_z_a, h_z_unipotent⟩ := exists_gamma_n_unipotent_center_N' (N' := N') (N'_nilpotent) (hN') (gamma^a) sorry
+    obtain ⟨z_a, z_n, h_z_a, h_z_unipotent⟩ := exists_gamma_n_unipotent_center_N' (N' := N') (N'_nilpotent) (hN') (gamma^a) (by
+      unfold gamma_conj_bound
+      simp_rw [← mul_aut_iterate]
+      simp_rw [← Function.iterate_mul]
+      simp_rw [← mul_assoc (a := a)]
+      unfold gamma_conj_bound at gamma_conj
+      intro k hk
+      apply gamma_conj
+      positivity
+    )
 
     use a * z_a
     use z_n + n
