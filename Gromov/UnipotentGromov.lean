@@ -1485,10 +1485,14 @@ theorem log_pow_sq_lt_of_lt (M p q K : ℕ) (hp : 0 < p)
     nlinarith [sq_nonneg (u ^ 2 - 2 * D), hu1, hD0, hM0, hu4, h']
   linarith [hsq, hgoal]
 
+def gamma_conj_bound {H: Type*}  [DecidableEq H] [Group H]  {N': Subgroup H} (gamma: MulAut N') := ∀ k: ℕ, (0 < k) →  ∀ g, ∃ p q: ℕ, 0 < p ∧ ∀ b: ℕ, 0 < b → ∀ a: ℕ, (0 < a) → (a < b) → ((Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma)^[k * ↑i] g) x.toList).prod))
+        (Finset.Ico a b).attach.powerset).card ≤ p * (b^q) * (b - a)^q
+
 set_option maxHeartbeats 1000000 in
 set_option synthInstance.maxHeartbeats 40000 in
 --  {G: Type*} [Group G] [DecidableEq G] (H: Subgroup G)
-lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N'):
+lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N')
+  (gamma_conj: gamma_conj_bound gamma):
     ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N', Nat.iterate (fun x => x * ((gamma^[a]) x⁻¹)) n g = 1 := by
 
   classical
@@ -1770,11 +1774,6 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
       apply NeZero.of_pos
       apply Module.finrank_pos
 
-
-
-    have gamma_conj: ∀ k: ℕ, (0 < k) →  ∀ g, ∃ p q: ℕ, 0 < p ∧ ∀ b: ℕ, 0 < b → ∀ a: ℕ, (0 < a) → (a < b) → ((Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma)^[k * ↑i] g) x.toList).prod))
-        (Finset.Ico a b).attach.powerset).card ≤ p * (b^q) * (b - a)^q := by
-      sorry
 
 
     have gamma_lift_conj: ∀ k: ℕ, (0 < k) →  ∀ g, ∃ p q: ℕ, 0 < p ∧ ∀ b: ℕ, 0 < b → ∀ a: ℕ, (0 < a) → (a < b) → (Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma_lift)^[k * ↑i] g) x.toList).prod)
@@ -2118,7 +2117,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
 set_option maxHeartbeats 2000000 in
 set_option synthInstance.maxHeartbeats 160000 in
 /--{G: Type*} [DecidableEq G] [Group G] (H: Subgroup G) [H.Normal]--/
-lemma exists_gamma_n_unipotent_N' {H: Type*} [Group H] {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N'):
+lemma exists_gamma_n_unipotent_N' {H: Type*} [DecidableEq H] [Group H] {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N') (gamma_conj: gamma_conj_bound gamma):
     ∃ a n, a ≠ 0 ∧ ∀ g : N', Nat.iterate (fun x => x * ((gamma^[a]) x⁻¹)) n g = 1 := by
 
 
@@ -2166,7 +2165,7 @@ lemma exists_gamma_n_unipotent_N' {H: Type*} [Group H] {N': Subgroup H} [N'_norm
 
     by_cases top_subsingle: Subsingleton (⊤ : Subgroup (↥N' ⧸ Subgroup.center ↥N'))
     .
-      obtain ⟨z_a, z_n, h_z_a, h_z_unipotent⟩ := exists_gamma_n_unipotent_center_N' (N' := N') (N'_nilpotent) (hN') gamma
+      obtain ⟨z_a, z_n, h_z_a, h_z_unipotent⟩ := exists_gamma_n_unipotent_center_N' (N' := N') (N'_nilpotent) (hN') gamma gamma_conj
 
       use z_a
       use z_n
@@ -2201,12 +2200,12 @@ lemma exists_gamma_n_unipotent_N' {H: Type*} [Group H] {N': Subgroup H} [N'_norm
 
       rw [← Group.fg_iff_subgroup_fg]
       apply Subgroup.fg_of_index_ne_zero
-    ) final_gamma top_subsingle rfl
+    ) final_gamma sorry top_subsingle rfl
 
     clear ih
     obtain ⟨a, n, ha, h_prev⟩ := foo
 
-    obtain ⟨z_a, z_n, h_z_a, h_z_unipotent⟩ := exists_gamma_n_unipotent_center_N' (N' := N') (N'_nilpotent) (hN') (gamma^a)
+    obtain ⟨z_a, z_n, h_z_a, h_z_unipotent⟩ := exists_gamma_n_unipotent_center_N' (N' := N') (N'_nilpotent) (hN') (gamma^a) sorry
 
     use a * z_a
     use z_n + n

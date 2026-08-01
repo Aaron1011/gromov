@@ -5607,10 +5607,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       intro n g
       exact Subtype.ext (conj_val_eq n g).symm
 
-    obtain ⟨α, m, alpha_nonzero, alpha_is_unipotent_conj⟩ := exists_gamma_n_unipotent_N' (N' := N')  N'_nilpotent N'_fg gamma_conj_N' --((MulAut.conj γ).characteristic N')
-
-
-    have gamma_conj_card: ∀ k: ℕ, (0 < k) →  ∀ g, ∃ p q: ℕ, 0 < p ∧ ∀ b: ℕ, 0 < b → ∀ a: ℕ, (0 < a) → (a < b) → ((Finset.image (fun x ↦ (List.map (fun i ↦ (gamma_conj_N')^[k * ↑i] g) x.toList).prod))
+    have gamma_conj_card: ∀ k: ℕ, (0 < k) →  ∀ g, ∃ p q: ℕ, 0 < p ∧ ∀ b: ℕ, 0 < b → ∀ a: ℕ, (0 < a) → (a < b) → ((Finset.image (fun x ↦ (List.map (fun (i: Finset.Ico a b) ↦ (gamma_conj_N')^[k * ↑i] g) x.toList).prod))
         (Finset.Ico a b).attach.powerset).card ≤ p * (b^q) * (b - a)^q := by
 
       have s_poly := hGS.g_growth
@@ -5755,6 +5752,11 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
           . grw [← le_max_left (a := x_list.length)]
             ring
             nlinarith
+
+
+
+    obtain ⟨α, m, alpha_nonzero, alpha_is_unipotent_conj⟩ := exists_gamma_n_unipotent_N' (N' := N')  N'_nilpotent N'_fg gamma_conj_N' gamma_conj_card
+
 
     have alpha_is_unipotent: ∀ g ∈ N', Nat.iterate (fun x => ⁅x, γ.toMul^α⁆) m g.val = 1 := by
       -- One commutator step with `γ^α` is the `N'_val`-image of one step of
