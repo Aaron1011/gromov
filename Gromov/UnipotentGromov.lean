@@ -1644,6 +1644,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     --   simp
     --   sorry
 
+    --have gamma_lift_pow_mem: ∀ k: ℕ, Finset.sum (gamma_lift^{})
 
     have rank_nonzero: NeZero (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion))) := by
       apply NeZero.of_pos
@@ -1672,6 +1673,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
             simp [remap, equiv] at gamma_matrix_mulVec_pow
             simp_rw [← pow_mul]
             simp_rw [gamma_matrix_mulVec_pow]
+            simp_rw [Finset.sum_finset_coe]
             sorry
           . sorry
         --rw [← (Finset.card_image_iff (f := fun (a: Fin (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion))) → ℂ) => ((Module.finBasis ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion)))).repr.symm a)).mpr]
