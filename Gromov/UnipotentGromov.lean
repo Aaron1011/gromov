@@ -1832,9 +1832,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
         ((Subgroup.center ↥N').subtype) (Subgroup.subtype_injective _)
         (fun x => (swap_gamma_lift x).symm) (fun x => rfl) gamma_conj
 
-    have unipotent_gamma_matrix := int_matrix_unipotent (by
-      apply Module.finrank_pos
-    ) (unitOfInvertible gamma_matrix) (by
+    have eigen_norm_one: ∀ (k : Module.End.Eigenvalues (Matrix.toLin' (((unitOfInvertible gamma_matrix).val).map (Int.castRingHom ℂ)))), ‖k.val‖ = 1 := by
       apply int_matrix_poly_growth_eigenvalue
       .
         intro k hk v
@@ -1937,11 +1935,17 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
 
         --rw [← (Finset.card_image_iff (f := fun (a: Fin (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion))) → ℂ) => ((Module.finBasis ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion)))).repr.symm a)).mpr]
         --simp_rw [← pow_mul]
+
+    have unipotent_gamma_matrix := int_matrix_unipotent (by
+      apply Module.finrank_pos
+    ) (unitOfInvertible gamma_matrix) (by
+      apply eigen_norm_one
     )
-    obtain ⟨a, n, a_pos, hm⟩ := unipotent_gamma_matrix
+    obtain ⟨n, hm⟩ := unipotent_gamma_matrix
+    let a := KroneckerPow (unitOfInvertible gamma_matrix) eigen_norm_one
     use a
     use n
-    refine ⟨a_pos, ?_⟩
+    refine ⟨sorry, ?_⟩
     intro g
     apply_fun (fun f => f.toLin (Module.finBasis _ _) (Module.finBasis _ _)) at hm
     rw [LinearMap.ext_iff] at hm
