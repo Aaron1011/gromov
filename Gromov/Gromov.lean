@@ -5258,7 +5258,9 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
   have inhabited_G: Inhabited G := by
     use 1
 
-  -- TODO - figure out how to avoid registering this instance
+  -- NOTE: this IS registered as a local instance, and deliberately shadows `hGS` for the
+  -- unqualified `G`/`S` below (most of the proof works inside `data.G'`).  Where the ambient
+  -- group is meant instead, write `hGS.S` / `hGS.G` explicitly.
   let new_generates: Generates := {
     G := data.G'
     g_group := by infer_instance
@@ -5613,14 +5615,19 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
         (Finset.Ico a b).attach.powerset).card ≤ p * (b - a)^q := by
 
       intro x
-      obtain ⟨x_list, x_list_len, x_list_prod⟩ := word_norm_prod_self x.val.toAdd.val.toMul.val
-      obtain ⟨gamma_list, gamma_list_len, gamma_list_prod⟩ := word_norm_prod_self g
+      obtain ⟨x_list, x_list_len, x_list_prod⟩ :=
+        word_norm_prod_self (hGS := hGS) x.val.toAdd.val.toMul.val
+      obtain ⟨gamma_list, gamma_list_len, gamma_list_prod⟩ :=
+        word_norm_prod_self (hGS := hGS) (Additive.toMul γ).val
       use sorry
       use sorry
       intro a b
       grw [← Finset.card_image_of_injOn (f := fun a => a.val.toAdd.val.toMul.val) (by simp)]
       grw [Finset.card_le_card (t := hGS.S)]
-      sorry
+      -- main goal
+      · sorry
+      -- side goal from `card_le_card`: the image is contained in `hGS.S`
+      · sorry
 
 
     have alpha_is_unipotent: ∀ g ∈ N', Nat.iterate (fun x => ⁅x, γ.toMul^α⁆) m g.val = 1 := by
