@@ -1588,8 +1588,8 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     let fin_dim: Module.Finite ℤ add_quot := by infer_instance
 
     let gamma_add := gamma_lift.toAdditive.toAddMonoidHom.toIntLinearMap
-    let gamma_matrix := gamma_add.toMatrix (Module.finBasis _ _) (Module.finBasis _ _)
     let B := (Module.finBasis ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion)))
+    let gamma_matrix := gamma_add.toMatrix B B
     have quot_fg: AddGroup.FG (Additive (↥(Subgroup.center ↥N') ⧸ torsion)) := by
       infer_instance
     have invertible_gamma: Invertible gamma_matrix := {
@@ -1606,18 +1606,44 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
         simp
     }
 
-    have gamma_matrix_map_mulVec: ∀ v, ((gamma_matrix.map (fun x ↦ (x: ℂ)))).mulVec v ∈ Finset.image (fun s => (fun (x: ℤ) => (x: ℂ)) ∘ (B.repr s)) quot_fg.out.choose  := by
-      intro v
-      simp [gamma_matrix]
-      use 1
+    let dim := Module.finrank ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion))
+    let equiv (v: Fin _ → ℤ) := (Finsupp.linearEquivFunOnFinite ℤ _ (Fin dim)).symm v
+    let remap (v: Fin _ → ℤ) := Finsupp.linearCombination _ B (equiv v)
 
-      refine ⟨?_, ?_⟩
-      .
-        use sorry
-      .
-        ext i
-        simp
-        sorry
+    have gamma_matrix_mulVec: ∀ v: (Fin dim) → ℤ , remap ((gamma_matrix).mulVec (equiv v)) = gamma_lift (remap v) := by
+      intro v
+      unfold gamma_matrix
+      rw [← Module.Basis.repr_linearCombination (v := (equiv v)) (b := B)]
+      rw [LinearMap.toMatrix_mulVec_repr]
+      simp [remap, gamma_add, equiv]
+      rfl
+
+
+    have gamma_matrix_mulVec_pow: ∀ n: ℕ, ∀ v: (Fin dim) → ℤ , remap ((gamma_matrix^n).mulVec (equiv v)) = gamma_lift^[n] (Additive.toMul (remap v)) := by
+      intro n
+      induction n with
+      | zero =>
+        intro v
+        simp [remap, equiv]
+        rfl
+      | succ n ih =>
+        intro v
+        rw [Function.iterate_succ_apply']
+        rw [← ih]
+        rw [← gamma_matrix_mulVec]
+        rw [pow_succ']
+        rw [← Matrix.mulVec_mulVec]
+        rfl
+    -- have gamma_matrix_map_mulVec: ∀ v, B.repr.symm (Finsupp.equivFunOnFinite.symm ((gamma_matrix).mulVec v)) ∈ (Finset.image (fun (i: Fin dim) => (v i • (B i))) Finset.univ)  := by
+    --   intro v
+    --   simp [gamma_matrix]
+    --   rw [← B.repr_sum_self (c := v)]
+    --   rw [LinearMap.toMatrix_mulVec_repr]
+    --   rw [map_sum]
+    --   simp_rw [map_smul]
+    --   simp
+    --   sorry
+
 
     have rank_nonzero: NeZero (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion))) := by
       apply NeZero.of_pos
@@ -1633,9 +1659,24 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
         intro N_1
         use sorry
         simp
+        refine ⟨?_, ?_, ?_⟩
+        . sorry
+        . sorry
+        .
+          rw [← (Finset.card_image_iff (f := fun a => remap (Finsupp.equivFunOnFinite.symm a))).mpr]
+          .
+            rw [Finset.image_image]
+            simp [remap, equiv]
+            rw [Function.comp_def]
+            simp_rw [map_sum]
+            simp [remap, equiv] at gamma_matrix_mulVec_pow
+            simp_rw [← pow_mul]
+            simp_rw [gamma_matrix_mulVec_pow]
+            sorry
+          . sorry
         --rw [← (Finset.card_image_iff (f := fun (a: Fin (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion))) → ℂ) => ((Module.finBasis ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion)))).repr.symm a)).mpr]
         --simp_rw [← pow_mul]
-        sorry
+
       . sorry
       . sorry
     )
