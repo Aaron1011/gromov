@@ -1988,7 +1988,495 @@ lemma laplace_bounded' (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := 
     . simp
   . simp
 
+noncomputable def laplace_range := LinearMap.range (Laplace_linear )
+
+
+
+-- The only measure-zero sets are empty sets, so we can evaluate a MemLp function by evaluating any function
+-- from the equivalence class
+lemma tolp_apply (f: G → ℝ) {p: ENNReal}  (hf: MeasureTheory.MemLp f p) (g: G): (MeasureTheory.MemLp.toLp f hf) g = f g := by
+  have eq_fun := MeasureTheory.AEEqFun.coeFn_mk f (μ := MeasureTheory.volume (α := G)) (by apply MeasureTheory.AEStronglyMeasurable.of_discrete)
+  rw [ae_eq_everywhere] at eq_fun
+  nth_rw 2 [← eq_fun]
+  rfl
+
+lemma tolp_val_apply (f: G → ℝ) {p: ENNReal}  (hf: MeasureTheory.MemLp f p) (g: G): (MeasureTheory.MemLp.toLp f hf).val g = f g := by
+  have eq_fun := MeasureTheory.AEEqFun.coeFn_mk f (μ := MeasureTheory.volume (α := G)) (by apply MeasureTheory.AEStronglyMeasurable.of_discrete)
+  rw [ae_eq_everywhere] at eq_fun
+  nth_rw 2 [← eq_fun]
+  rfl
+
+open scoped RealInnerProductSpace
+lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))): ⟪f, (Laplace  h)⟫ = ⟪(Laplace  f), h⟫ := by
+
+  simp [MeasureTheory.L2.inner_def]
+
+  have my_eq := ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub h (conv_mu_lp2 h))
+
+  --simp only [AddSubgroupClass.coe_sub, ae_eq_everywhere] at my_eq
+
+  -- MeasureTheory.Lp.coeFn_smul
+
+  conv =>
+    lhs
+    arg 2
+    intro g
+    rw [mul_comm]
+    rw [Laplace]
+    rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)]
+    simp
+    rw [mul_sub]
+    rhs
+    equals (f g • (conv_mu_lp2 h)) g =>
+      rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_smul _ _)]
+      simp
+
+  conv =>
+    lhs
+    arg 2
+    intro g
+    rhs
+    unfold conv_mu_lp2
+    rw [← MeasureTheory.MemLp.toLp_const_smul]
+
+  simp_rw [f_conv_mu]
+  simp_rw [Pi.smul_def]
+  simp
+  simp_rw [← mul_assoc]
+  simp_rw [mul_comm]
+  simp_rw [mul_assoc]
+  simp_rw [Finset.mul_sum]
+
+
+  --simp_rw [← smul_eq_mul]
+
+  conv =>
+    lhs
+    arg 2
+    intro g
+    rhs
+    arg 1
+    rhs
+    arg 1
+    intro i
+    --rw [← Finset.mul_sum]
+
+
+  simp_rw [tolp_apply]
+  rw [integral_sub]
+  rw [MeasureTheory.integral_finset_sum]
+  conv =>
+    lhs
+    rhs
+    arg 2
+    intro s
+    rw [← MeasureTheory.integral_mul_left_eq_self (g := s⁻¹)]
+    simp
+  rw [← MeasureTheory.integral_finset_sum]
+  conv =>
+    lhs
+    rhs
+    arg 2
+    intro g
+    rw [← Finset.mul_sum]
+    rw [Finset.sum_bijective (s := S) (t := S) (e := fun s => s⁻¹) (g := fun i => (f (i * g) * (h g))) (by
+      refine ⟨?_, ?_⟩
+      . exact inv_injective
+      . exact inv_surjective
+    ) (by
+      intro a
+      refine ⟨?_, ?_⟩
+      . apply hGS.has_inv a
+      . simpa using (hGS.has_inv a⁻¹)
+    ) (by
+      simp
+    )]
+
+  simp_rw [Finset.mul_sum]
+  rw [← integral_sub]
+  simp_rw [← mul_assoc]
+  simp_rw [← Finset.sum_mul]
+  simp_rw [mul_comm]
+  conv =>
+    lhs
+    arg 2
+    intro a
+    rw [mul_comm]
+    rw [← mul_sub]
+
+
+
+  conv =>
+    rhs
+    arg 2
+    intro g
+    rw [Laplace]
+    rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)]
+    unfold conv_mu_lp2
+    simp [f_conv_mu]
+    rw [tolp_apply]
+    --rw [← MeasureTheory.MemLp.toLp_const_smul]
+
+
+  simp_rw [Finset.mul_sum]
+  .
+    have prod_lp1 := MeasureTheory.MemLp.smul (φ := f) (f := h) (p := 2) (q := 2) (r := 1) (μ := volume) (MeasureTheory.Lp.memLp h) (MeasureTheory.Lp.memLp f)
+    rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
+    exact prod_lp1
+  .
+    apply MeasureTheory.integrable_finset_sum
+    intro s hs
+    apply MeasureTheory.Integrable.const_mul
+    have mem_lp_f_comp: MemLp (f ∘ (fun x => s * x)) 2 := by
+      apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
+      . apply MeasureTheory.Lp.memLp f
+      . exact measurePreserving_mul_left volume s
+
+    have prod_lp1 := MeasureTheory.MemLp.smul (f := h) (p := 2) (q := 2) (r := 1) (μ := volume) (MeasureTheory.Lp.memLp h) mem_lp_f_comp
+    rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
+    exact prod_lp1
+  .
+    intro s hs
+    apply MeasureTheory.Integrable.const_mul
+    have mem_lp_f_comp: MemLp (f ∘ (fun x => s⁻¹ * x)) 2 := by
+      apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
+      . apply MeasureTheory.Lp.memLp f
+      . exact measurePreserving_mul_left volume s⁻¹
+    have prod_lp1 := MeasureTheory.MemLp.smul (f := h) (p := 2) (q := 2) (r := 1) (μ := volume) (MeasureTheory.Lp.memLp h) mem_lp_f_comp
+    rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
+    exact prod_lp1
+  .
+    intro s hs
+    apply MeasureTheory.Integrable.const_mul
+
+    have mem_lp_h_comp: MemLp (h ∘ (fun x => s * x)) 2 := by
+      apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
+      . apply MeasureTheory.Lp.memLp h
+      . exact measurePreserving_mul_left volume s
+
+    have prod_lp1 := MeasureTheory.MemLp.smul (p := 2) (q := 2) (r := 1) (μ := volume) mem_lp_h_comp (MeasureTheory.Lp.memLp f)
+    rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
+    exact prod_lp1
+  .
+    have prod_lp1 := MeasureTheory.MemLp.smul (φ := f) (f := h) (p := 2) (q := 2) (r := 1) (μ := volume) (MeasureTheory.Lp.memLp h) (MeasureTheory.Lp.memLp f)
+    rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
+    exact prod_lp1
+  .
+    apply MeasureTheory.integrable_finset_sum
+    intro s hs
+    apply MeasureTheory.Integrable.const_mul
+
+    have mem_lp_h_comp: MemLp (h ∘ (fun x => s * x)) 2 := by
+      apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
+      . apply MeasureTheory.Lp.memLp h
+      . exact measurePreserving_mul_left volume s
+
+    have prod_lp1 := MeasureTheory.MemLp.smul (p := 2) (q := 2) (r := 1) (μ := volume) mem_lp_h_comp (MeasureTheory.Lp.memLp f)
+    rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
+    exact prod_lp1
+    -- rw [mul_sub]
+    -- rhs
+    -- equals (f g • (conv_mu_lp2 h)) g =>
+    --   rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_smul _ _)]
+    --   sim
+
+
+
+
+lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_range ) := by
+  rw [Submodule.dense_iff_topologicalClosure_eq_top]
+  rw [Submodule.topologicalClosure_eq_top_iff]
+  simp_rw [laplace_range]
+  ext g
+  rw [Submodule.mem_bot]
+  refine ⟨?_, ?_⟩
+  .
+    intro hg
+    rw [Submodule.mem_orthogonal] at hg
+    have inner_laplace_zero: ∀ u: (Lp ℝ 2 volume), ⟪Laplace_linear u, g⟫ = 0 := by
+      intro u
+      specialize hg (Laplace_linear u)
+      simpa using hg
+
+    simp only [Laplace_linear, LinearMap.coe_mk, AddHom.coe_mk] at inner_laplace_zero
+    simp_rw [← laplace_self_adjoint] at inner_laplace_zero
+    simp at inner_laplace_zero
+
+    have eq_zero:= Dense.eq_zero_of_inner_right (E := (Lp ℝ 2 (volume (α := G)))) (𝕜 := ℝ) (by apply dense_univ) (x := (Laplace g))
+    simp at eq_zero
+    specialize eq_zero inner_laplace_zero
+    apply laplace_zero_iff_zero _ eq_zero
+  . intro hg
+    rw [hg]
+    simp
+
+
+
+-- Proposition 3.17.2: "∆ is positive semidefinite" from Vikman
+set_option maxHeartbeats 200000 in
+lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))): 0 ≤ ⟪f, (Laplace  f)⟫ := by
+  unfold Laplace
+  rw [inner_sub_right]
+  rw [real_inner_self_eq_norm_sq]
+  rw [conv_mu_lp2]
+  rw [MeasureTheory.L2.inner_def]
+  simp_rw [tolp_apply]
+  simp_rw [f_conv_mu]
+  simp_rw [← smul_eq_mul]
+  simp_rw [inner_smul_right]
+  simp_rw [inner_sum]
+  rw [integral_const_mul]
+  rw [MeasureTheory.integral_finset_sum]
+
+  -- I couldn't figure how to to handle 'toLp (∑ x ∈ S), so I ended up manipulating the integral to avoid dealing with it
+  have comp_smul_left (i: G) := MeasureTheory.Lp.coeFn_compMeasurePreserving (g := f) (f := fun a => i * a) (μ := volume) (by
+    exact measurePreserving_mul_left volume i
+  )
+  simp_rw [ae_eq_everywhere] at comp_smul_left
+  have congr_comp (i: G) (x: G) := congrFun (comp_smul_left i) x
+  simp only [Function.comp_apply] at congr_comp
+  simp_rw [smul_eq_mul]
+  simp_rw [← congr_comp]
+  simp_rw [← MeasureTheory.L2.inner_def]
+
+  let f_eq_coe: f = f := by rfl
+  nth_rw 1 [← MeasureTheory.Lp.toLp_coeFn (f := f) (hf := Lp.memLp f)] at f_eq_coe
+
+
+  conv =>
+    rhs
+    rhs
+    rhs
+    arg 2
+    intro x
+    rw [← f_eq_coe]
+    rw [MeasureTheory.Lp.toLp_compMeasurePreserving]
+    simp
+
+
+
+    --rw [MeasureTheory.Lp.toLp_compMeasurePreserving]
+
+  -- We've now packed everything back up in an inner product -
+  -- we no longer need to deal with commuting toLp and Finset.sum
+
+
+  --simp [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_compMeasurePreserving _ _)]
+
+  --rw [← MeasureTheory.L2.inner_def]
+
+
+  -- have comp_mul_mem_lp (i: G) (f: MeasureTheory.Lp ℝ 2 (μ := volume)): MemLp (f ∘ (fun x => i * x)) 2 (μ := volume) := by
+  --   apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
+  --   . apply MeasureTheory.Lp.memLp f
+  --   . exact measurePreserving_mul_left volume i
+
+
+  -- conv =>
+  --   rhs
+  --   rhs
+  --   rhs
+  --   arg 2
+  --   equals ∑ x ∈ S, MemLp.toLp (fun i => f (i • x)) (by
+  --     apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
+  --     . apply MeasureTheory.Lp.memLp f
+  --     . exact measurePreserving_mul_right volume x
+  --   ) =>
+
+  --     apply Lp.ext
+  --     rw [ae_eq_everywhere]
+  --     funext a
+  --     --simp
+  --     rw [tolp_apply]
+  --     conv =>
+  --       rhs
+  --     rw [Finsupp.sum_apply'']
+
+  --     rw [eq_comm]
+  --     refine Finset.induction_on S ?_ ?_
+  --     .
+  --       simp only [Finset.sum_empty]
+  --       rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)]
+  --       simp
+  --     .
+  --       intro a s ha sum_eq
+  --       rw [Finset.sum_insert ha]
+  --       rw [Finset.sum_insert ha]
+  --       rw [← sum_eq]
+  --       rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_add _ _)]
+  --       simp
+
+
+
+
+
+  --rw [inner_smul_right]
+  --rw [inner_sum]
+
+  let conv_f_delta_lp (i: G) :=  MemLp.toLp (Conv (f) (delta i⁻¹)) (μ := volume) (p := 2) (by
+    simp_rw [f_conv_delta_helper]
+    apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
+    . apply MeasureTheory.Lp.memLp f
+    . exact measurePreserving_mul_left volume _
+  )
+
+
+  -- conv =>
+  --   rhs
+  --   rhs
+  --   rhs
+  --   arg 2
+  --   intro i
+  --   rhs
+  --   equals conv_f_delta_lp i =>
+  --     unfold conv_f_delta_lp
+  --     simp_rw [f_conv_delta_helper]
+  --     simp
+    -- arg 1
+    -- intro i
+    -- rhs
+    -- equals fun x => (fun i => (MemLp.toLp _  (comp_mul_mem_lp i f)) x) i =>
+    --   funext x
+    --   simp
+    --   rw [tolp_apply]
+    --   simp
+
+  have sum_le := Finset.sum_le_sum (g := fun i => ‖f‖ * ‖conv_f_delta_lp i‖) (f := fun i => ⟪f, conv_f_delta_lp i⟫) (s := S) (by
+    intro s hs
+    have foo := norm_inner_le_norm (x := f) (y := conv_f_delta_lp s) (𝕜 := ℝ)
+    rw [Real.norm_eq_abs] at foo
+    exact real_inner_le_norm f (conv_f_delta_lp s)
+  )
+  rw [← ge_iff_le]
+  conv =>
+    lhs
+    rhs
+    rhs
+    arg 2
+    intro x
+    rhs
+    equals conv_f_delta_lp x =>
+      apply Lp.ext
+      rw [ae_eq_everywhere]
+      funext g
+      rw [tolp_apply]
+      simp [conv_f_delta_lp]
+      rw [tolp_apply]
+      rw [f_conv_delta]
+      simp
+
+
+  calc
+    _ ≥ ‖f‖ ^ 2 - 1 / ↑(#S) * ∑ i ∈ S, ‖f‖ * ‖conv_f_delta_lp i‖ := by
+
+      apply sub_le_sub_left
+      simp
+      gcongr
+    _ ≥ 0 := by
+      unfold conv_f_delta_lp
+      simp_rw [f_conv_delta_helper]
+      conv =>
+        lhs
+        rhs
+        rhs
+        arg 2
+        intro x
+        rhs
+        equals ‖f‖ =>
+          simp
+          rw [← Function.comp_def]
+          rw [MeasureTheory.eLpNorm_comp_measurePreserving (ν := volume)]
+          . simp [norm]
+          . apply MeasureTheory.AEStronglyMeasurable.of_discrete
+          . exact measurePreserving_mul_left volume x
+      simp
+      have s_card_ne_zero: (#S : ℝ) ≠ 0 := by
+        simp
+        have foo := hS
+        simp at foo
+        exact Finset.nonempty_iff_ne_empty.mp foo
+
+      rw [← mul_assoc]
+      simp [s_card_ne_zero]
+      rw [pow_two]
+  .
+    intro s hs
+    simp
+
+    have mem_lp_h_comp: MemLp (f ∘ (fun x => s * x)) 2 := by
+      apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
+      . apply MeasureTheory.Lp.memLp f
+      . exact measurePreserving_mul_left volume s
+
+    have prod_lp1 := MeasureTheory.MemLp.smul (p := 2) (q := 2) (r := 1) (μ := volume) (MeasureTheory.Lp.memLp f) mem_lp_h_comp
+    rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
+    exact prod_lp1
+
+
 noncomputable def Δ := Laplace_linear.mkContinuous _ (laplace_bounded')
+
+lemma Δ_symmetric: Δ.IsSymmetric := by
+  unfold LinearMap.IsSymmetric
+  intro x hx
+  unfold Δ
+  -- TODO - why doesn't this fire automatically?
+  simp [LinearMap.mkContinuous]
+  simp [Laplace_linear]
+  rw [laplace_self_adjoint]
+
+lemma Δ_spectrum_subset: spectrum ℝ Δ ⊆ Set.Icc 0 2 := by
+  intro a ha
+  have restricts := ContinuousLinearMap.IsPositive.spectrumRestricts (f := Δ) (by
+    rw [ContinuousLinearMap.isPositive_def]
+    refine ⟨?_, ?_⟩
+    .
+      apply Δ_symmetric
+    .
+      intro x
+      simp [ContinuousLinearMap.reApplyInnerSelf_apply]
+      unfold Δ
+      simp [LinearMap.mkContinuous]
+      simp [Laplace_linear]
+      rw [← laplace_self_adjoint]
+      apply laplace_positive_semidefinite
+  )
+  simp
+  have a_nonneg: 0 ≤ a := by
+    have zero_eq: (0: ℝ) = (0: NNReal) := by
+      simp
+    rw [zero_eq]
+    apply (SpectrumRestricts.nnreal_le_iff restricts).mp
+    . simp
+    . exact ha
+
+
+  refine ⟨?_, ?_⟩
+  .
+    exact a_nonneg
+  .
+    have norm_le: ‖a‖ ≤ ‖(2: ℝ)‖ := by
+      have foo := spectrum.norm_le_norm_mul_of_mem ha
+
+      simp at foo
+      simp [Δ] at foo
+      grw [← (ContinuousLinearMap.opNorm_le_iff (M := ‖2‖) (f := Δ) ?_).mpr]
+      .
+        have h := spectrum.norm_le_norm_mul_of_mem ha
+        rw [ContinuousLinearMap.one_def] at h
+        grw [ContinuousLinearMap.norm_id_le] at h
+        simpa using h
+      . intro x
+        simp [Δ, LinearMap.mkContinuous, Laplace_linear]
+        have bound := laplace_bounded x
+        simp [enorm] at bound
+        norm_cast at bound
+      . simp
+
+    simp at norm_le
+    rw [abs_of_nonneg] at norm_le
+    . exact norm_le
+    . exact a_nonneg
+
 
 lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ spectrum ℝ Δ := by
   rw [spectrum.zero_mem_iff]
@@ -2164,7 +2652,7 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
 
   let Δ := Laplace_linear.mkContinuous _ (laplace_bounded')
   have Δ_self_adjoint: IsSelfAdjoint Δ := by
-    sorry
+    apply Δ_symmetric.isSelfAdjoint
 
   have spec_inter: spectrum ℝ (Polynomial.aeval Δ P) ∩ Set.Ioo 0 eps ≠ ∅ := by
     by_contra!
@@ -2211,7 +2699,9 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
       simp [ramp, max_def']
       norm_num
       split_ifs
-      . sorry
+      .
+
+        sorry
       . simp [min_def']
         split_ifs
         . sorry
@@ -2797,23 +3287,7 @@ lemma g_n_ne_zero (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): G_n n hn hf
 
 
 
-noncomputable def laplace_range := LinearMap.range (Laplace_linear )
 
-
-
--- The only measure-zero sets are empty sets, so we can evaluate a MemLp function by evaluating any function
--- from the equivalence class
-lemma tolp_apply (f: G → ℝ) {p: ENNReal}  (hf: MeasureTheory.MemLp f p) (g: G): (MeasureTheory.MemLp.toLp f hf) g = f g := by
-  have eq_fun := MeasureTheory.AEEqFun.coeFn_mk f (μ := MeasureTheory.volume (α := G)) (by apply MeasureTheory.AEStronglyMeasurable.of_discrete)
-  rw [ae_eq_everywhere] at eq_fun
-  nth_rw 2 [← eq_fun]
-  rfl
-
-lemma tolp_val_apply (f: G → ℝ) {p: ENNReal}  (hf: MeasureTheory.MemLp f p) (g: G): (MeasureTheory.MemLp.toLp f hf).val g = f g := by
-  have eq_fun := MeasureTheory.AEEqFun.coeFn_mk f (μ := MeasureTheory.volume (α := G)) (by apply MeasureTheory.AEStronglyMeasurable.of_discrete)
-  rw [ae_eq_everywhere] at eq_fun
-  nth_rw 2 [← eq_fun]
-  rfl
 
 --lemma lp_apply (f: Lp ℝ 2 (μ := volume (α := G)):
 
@@ -2835,214 +3309,6 @@ lemma lp_finset_sum {R: Finset G} (f: G → (MeasureTheory.Lp ℝ 2 (μ := volum
     rw [← sum_eq]
     rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_add _ _)]
     simp
-
-
-
-open scoped RealInnerProductSpace
-lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))): ⟪f, (Laplace  h)⟫ = ⟪(Laplace  f), h⟫ := by
-
-  simp [MeasureTheory.L2.inner_def]
-
-  have my_eq := ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub h (conv_mu_lp2 h))
-
-  --simp only [AddSubgroupClass.coe_sub, ae_eq_everywhere] at my_eq
-
-  -- MeasureTheory.Lp.coeFn_smul
-
-  conv =>
-    lhs
-    arg 2
-    intro g
-    rw [mul_comm]
-    rw [Laplace]
-    rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)]
-    simp
-    rw [mul_sub]
-    rhs
-    equals (f g • (conv_mu_lp2 h)) g =>
-      rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_smul _ _)]
-      simp
-
-  conv =>
-    lhs
-    arg 2
-    intro g
-    rhs
-    unfold conv_mu_lp2
-    rw [← MeasureTheory.MemLp.toLp_const_smul]
-
-  simp_rw [f_conv_mu]
-  simp_rw [Pi.smul_def]
-  simp
-  simp_rw [← mul_assoc]
-  simp_rw [mul_comm]
-  simp_rw [mul_assoc]
-  simp_rw [Finset.mul_sum]
-
-
-  --simp_rw [← smul_eq_mul]
-
-  conv =>
-    lhs
-    arg 2
-    intro g
-    rhs
-    arg 1
-    rhs
-    arg 1
-    intro i
-    --rw [← Finset.mul_sum]
-
-
-  simp_rw [tolp_apply]
-  rw [integral_sub]
-  rw [MeasureTheory.integral_finset_sum]
-  conv =>
-    lhs
-    rhs
-    arg 2
-    intro s
-    rw [← MeasureTheory.integral_mul_left_eq_self (g := s⁻¹)]
-    simp
-  rw [← MeasureTheory.integral_finset_sum]
-  conv =>
-    lhs
-    rhs
-    arg 2
-    intro g
-    rw [← Finset.mul_sum]
-    rw [Finset.sum_bijective (s := S) (t := S) (e := fun s => s⁻¹) (g := fun i => (f (i * g) * (h g))) (by
-      refine ⟨?_, ?_⟩
-      . exact inv_injective
-      . exact inv_surjective
-    ) (by
-      intro a
-      refine ⟨?_, ?_⟩
-      . apply hGS.has_inv a
-      . simpa using (hGS.has_inv a⁻¹)
-    ) (by
-      simp
-    )]
-
-  simp_rw [Finset.mul_sum]
-  rw [← integral_sub]
-  simp_rw [← mul_assoc]
-  simp_rw [← Finset.sum_mul]
-  simp_rw [mul_comm]
-  conv =>
-    lhs
-    arg 2
-    intro a
-    rw [mul_comm]
-    rw [← mul_sub]
-
-
-
-  conv =>
-    rhs
-    arg 2
-    intro g
-    rw [Laplace]
-    rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)]
-    unfold conv_mu_lp2
-    simp [f_conv_mu]
-    rw [tolp_apply]
-    --rw [← MeasureTheory.MemLp.toLp_const_smul]
-
-
-  simp_rw [Finset.mul_sum]
-  .
-    have prod_lp1 := MeasureTheory.MemLp.smul (φ := f) (f := h) (p := 2) (q := 2) (r := 1) (μ := volume) (MeasureTheory.Lp.memLp h) (MeasureTheory.Lp.memLp f)
-    rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
-    exact prod_lp1
-  .
-    apply MeasureTheory.integrable_finset_sum
-    intro s hs
-    apply MeasureTheory.Integrable.const_mul
-    have mem_lp_f_comp: MemLp (f ∘ (fun x => s * x)) 2 := by
-      apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
-      . apply MeasureTheory.Lp.memLp f
-      . exact measurePreserving_mul_left volume s
-
-    have prod_lp1 := MeasureTheory.MemLp.smul (f := h) (p := 2) (q := 2) (r := 1) (μ := volume) (MeasureTheory.Lp.memLp h) mem_lp_f_comp
-    rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
-    exact prod_lp1
-  .
-    intro s hs
-    apply MeasureTheory.Integrable.const_mul
-    have mem_lp_f_comp: MemLp (f ∘ (fun x => s⁻¹ * x)) 2 := by
-      apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
-      . apply MeasureTheory.Lp.memLp f
-      . exact measurePreserving_mul_left volume s⁻¹
-    have prod_lp1 := MeasureTheory.MemLp.smul (f := h) (p := 2) (q := 2) (r := 1) (μ := volume) (MeasureTheory.Lp.memLp h) mem_lp_f_comp
-    rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
-    exact prod_lp1
-  .
-    intro s hs
-    apply MeasureTheory.Integrable.const_mul
-
-    have mem_lp_h_comp: MemLp (h ∘ (fun x => s * x)) 2 := by
-      apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
-      . apply MeasureTheory.Lp.memLp h
-      . exact measurePreserving_mul_left volume s
-
-    have prod_lp1 := MeasureTheory.MemLp.smul (p := 2) (q := 2) (r := 1) (μ := volume) mem_lp_h_comp (MeasureTheory.Lp.memLp f)
-    rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
-    exact prod_lp1
-  .
-    have prod_lp1 := MeasureTheory.MemLp.smul (φ := f) (f := h) (p := 2) (q := 2) (r := 1) (μ := volume) (MeasureTheory.Lp.memLp h) (MeasureTheory.Lp.memLp f)
-    rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
-    exact prod_lp1
-  .
-    apply MeasureTheory.integrable_finset_sum
-    intro s hs
-    apply MeasureTheory.Integrable.const_mul
-
-    have mem_lp_h_comp: MemLp (h ∘ (fun x => s * x)) 2 := by
-      apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
-      . apply MeasureTheory.Lp.memLp h
-      . exact measurePreserving_mul_left volume s
-
-    have prod_lp1 := MeasureTheory.MemLp.smul (p := 2) (q := 2) (r := 1) (μ := volume) mem_lp_h_comp (MeasureTheory.Lp.memLp f)
-    rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
-    exact prod_lp1
-    -- rw [mul_sub]
-    -- rhs
-    -- equals (f g • (conv_mu_lp2 h)) g =>
-    --   rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_smul _ _)]
-    --   sim
-
-
-
-
-lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_range ) := by
-  rw [Submodule.dense_iff_topologicalClosure_eq_top]
-  rw [Submodule.topologicalClosure_eq_top_iff]
-  simp_rw [laplace_range]
-  ext g
-  rw [Submodule.mem_bot]
-  refine ⟨?_, ?_⟩
-  .
-    intro hg
-    rw [Submodule.mem_orthogonal] at hg
-    have inner_laplace_zero: ∀ u: (Lp ℝ 2 volume), ⟪Laplace_linear u, g⟫ = 0 := by
-      intro u
-      specialize hg (Laplace_linear u)
-      simpa using hg
-
-    simp only [Laplace_linear, LinearMap.coe_mk, AddHom.coe_mk] at inner_laplace_zero
-    simp_rw [← laplace_self_adjoint] at inner_laplace_zero
-    simp at inner_laplace_zero
-
-    have eq_zero:= Dense.eq_zero_of_inner_right (E := (Lp ℝ 2 (volume (α := G)))) (𝕜 := ℝ) (by apply dense_univ) (x := (Laplace g))
-    simp at eq_zero
-    specialize eq_zero inner_laplace_zero
-    apply laplace_zero_iff_zero _ eq_zero
-  . intro hg
-    rw [hg]
-    simp
-
-
 
 
 
