@@ -5615,19 +5615,51 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
         (Finset.Ico a b).attach.powerset).card ≤ p * (b - a)^q := by
 
       intro x
-      obtain ⟨x_list, x_list_len, x_list_prod⟩ :=
+      obtain ⟨x_list, x_prod, x_list_prod⟩ :=
         word_norm_prod_self (hGS := hGS) x.val.toAdd.val.toMul.val
-      obtain ⟨gamma_list, gamma_list_len, gamma_list_prod⟩ :=
+      obtain ⟨gamma_list, gamma_prod, gamma_list_prod⟩ :=
         word_norm_prod_self (hGS := hGS) (Additive.toMul γ).val
+
+      have s_poly := hGS.g_growth
+      unfold HasPolynomialGrowth at s_poly
+      obtain ⟨q, hq⟩ := s_poly
+      unfold HasPolynomialGrowthD at hq
+      obtain ⟨p, hp⟩ := hq
+
       use sorry
       use sorry
       intro a b
       grw [← Finset.card_image_of_injOn (f := fun a => a.val.toAdd.val.toMul.val) (by simp)]
-      grw [Finset.card_le_card (t := hGS.S)]
-      -- main goal
-      · sorry
+      grw [Finset.card_le_card (t := hGS.S^(max x_list.length gamma_list.length))]
+      ·
+
+        sorry
       -- side goal from `card_le_card`: the image is contained in `hGS.S`
-      · sorry
+      ·
+        intro g hg
+        simp at hg
+        obtain ⟨s, hs, g_eq⟩ := hg
+        simp [ProdS] at x_prod
+        simp [ProdS] at gamma_prod
+        rw [eq_comm] at x_prod
+        rw [eq_comm] at gamma_prod
+        have gamma_eq := Subtype.coe_eq_of_eq_mk gamma_prod
+        apply_fun (fun a => Additive.ofMul a) at gamma_eq
+        rw [ofMul_toMul] at gamma_eq
+
+        have x_eq := Subtype.coe_eq_of_eq_mk x_prod
+        apply_fun (fun a => Additive.ofMul a) at x_eq
+        rw [ofMul_toMul] at x_eq
+        have x_eq := Subtype.coe_eq_of_eq_mk x_eq
+        apply_fun (fun a => Multiplicative.ofAdd a) at x_eq
+        rw [ofAdd_toAdd] at x_eq
+        have x_eq := Subtype.coe_eq_of_eq_mk x_eq
+        simp_rw [x_eq] at g_eq
+        simp_rw [gamma_conj_iter] at g_eq
+        simp at g_eq
+        simp_rw [gamma_eq] at g_eq
+
+        sorry
 
 
     have alpha_is_unipotent: ∀ g ∈ N', Nat.iterate (fun x => ⁅x, γ.toMul^α⁆) m g.val = 1 := by
