@@ -6,6 +6,7 @@ import Gromov.Theorem323
 import Gromov.TendstoTactic
 import Gromov.TendstoNhdsMul
 import Gromov.Convolution
+import Gromov.Complexification
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
@@ -1987,29 +1988,31 @@ lemma laplace_bounded' (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := 
     . simp
   . simp
 
-lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ spectrum ℝ (Laplace_linear ) := by
+noncomputable def Δ := Laplace_linear.mkContinuous _ (laplace_bounded')
+
+lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ spectrum ℝ Δ := by
   rw [spectrum.zero_mem_iff]
   by_contra this
   obtain ⟨f, hf⟩ := this
   -- Copied from https://github.com/leanprover-community/mathlib4/blob/60041760fb96850991084120a9a9b217890cf1f1/Mathlib/Topology/Algebra/Module/Equiv.lean#L760
-  let laplace_equiv: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) ≃ₗ[ℝ] (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) := {
-      toFun := f.val
-      map_add' := by simp
-      map_smul' := by simp
-      invFun := f.inv
-      left_inv := fun x =>
-        show (f.inv * f.val) x = x by
-          rw [f.inv_val]
-          simp
-      right_inv := fun x =>
-        show (f.val * f.inv) x = x by
-          rw [f.val_inv]
-          simp
-      }
-  have laplace_cont := continuous_of_linear_of_bound (C := 2) (𝕜 := ℝ ) (f := f.val) ?_ ?_ ?_
-  let cont_equiv :=  LinearEquiv.toContinuousLinearEquivOfContinuous laplace_equiv laplace_cont
+  -- let laplace_equiv: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) ≃ₗ[ℝ] (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) := {
+  --     toFun := f.val
+  --     map_add' := by simp
+  --     map_smul' := by simp
+  --     invFun := f.inv
+  --     left_inv := fun x =>
+  --       show (f.inv * f.val) x = x by
+  --         rw [f.inv_val]
+  --         simp
+  --     right_inv := fun x =>
+  --       show (f.val * f.inv) x = x by
+  --         rw [f.val_inv]
+  --         simp
+  --     }
+  -- have laplace_cont := continuous_of_linear_of_bound (C := 2) (𝕜 := ℝ ) (f := f.val) ?_ ?_ ?_
+  -- let cont_equiv :=  LinearEquiv.toContinuousLinearEquivOfContinuous laplace_equiv laplace_cont
 
-  have inv_bounded := ContinuousLinearMap.isBoundedLinearMap (𝕜 := ℝ) (cont_equiv.symm.toContinuousLinearMap)
+  have inv_bounded := ContinuousLinearMap.isBoundedLinearMap (𝕜 := ℝ) (f.inv)
 
   have nontrival_lp : Nontrivial ↥(Lp ℝ 2 (volume (α := G))) := by
     rw [nontrivial_iff]
@@ -2032,21 +2035,22 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
     apply_fun (fun f => f 1) at this
     simp at this
 
+  have norm_mul_bound := ContinuousLinearEquiv.one_le_norm_mul_norm_symm (ContinuousLinearEquiv.ofUnit f)
 
-  have norm_mul_bound := ContinuousLinearEquiv.one_le_norm_mul_norm_symm cont_equiv
-
-
-
-  have inv_norm_ge (n: ℕ) : (1 : ENNReal) / (eLpNorm (Laplace_b (F_n n)) 2 (μ := volume (α := G))) ≤ ENNReal.ofReal ‖cont_equiv.symm.toContinuousLinearMap‖ := by
+  have inv_norm_ge (n: ℕ) : (1 : ENNReal) / (eLpNorm (Laplace_b (F_n n)) 2 (μ := volume (α := G))) ≤ ENNReal.ofReal ‖f.inv‖ := by
 
     calc
     _ = (eLpNorm (F_n n) 2 (μ := volume (α := G))) / ((eLpNorm (Laplace_b (F_n n)) 2 (μ := volume (α := G)))) := by
       rw [F_n_norm_eq_one]
-    _ = (eLpNorm (cont_equiv.symm.toFun (cont_equiv.toFun (F_n_lp2 n))) 2) / ((eLpNorm (Laplace_b (F_n n)) 2 (μ := volume (α := G)))) := by
+    _ = (eLpNorm ((f.inv (f.val (F_n_lp2 n)))) 2) / ((eLpNorm (Laplace_b (F_n n)) 2 (μ := volume (α := G)))) := by
       simp [F_n_lp2]
+      simp_rw [← mul_apply_eq_comp]
+      simp
       rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)]
-    _ ≤ ENNReal.ofReal ‖cont_equiv.symm.toContinuousLinearMap‖ := by
-      have other := ContinuousLinearMap.ratio_le_opNorm (f := cont_equiv.symm.toContinuousLinearMap) (x := (((F_n_lp2 n) - conv_mu_lp2 (F_n_lp2 n))))
+    _ ≤ ENNReal.ofReal ‖f.inv‖ := by
+      --rw [← mul_apply_eq_comp]
+      --simp
+      have other := ContinuousLinearMap.ratio_le_opNorm (f := f.inv) (x := (((F_n_lp2 n) - conv_mu_lp2 (F_n_lp2 n))))
       conv at other =>
         lhs
         rw [Lp.norm_def]
@@ -2062,14 +2066,14 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
         rhs
         rhs
         rhs
-        simp [cont_equiv, laplace_equiv]
-        simp [hf, Laplace_linear]
+        simp [hf, Δ, Laplace, Laplace_linear]
       simp [-AddSubgroupClass.coe_sub, -AddSubgroup.coe_sub, Laplace]
       apply_fun ENNReal.ofReal at other
       -- TODO - consider removing @[simp] from 'AddSubgroupClass.coe_sub'
-      simp only [ContinuousLinearEquiv.coe_coe, map_sub, ofReal_norm] at other
-      simp only [F_n_lp2, Laplace_b, conv_mu_lp2]
-      simp_rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)]
+      simp only [map_sub, ofReal_norm] at other
+      simp only [← Units.inv_eq_val_inv]
+      simp only [F_n_lp2, Laplace_b, ← hf, conv_mu_lp2]
+      --simp_rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)]
       by_cases norm_f_eq_zero: ‖F_n_lp2 n - conv_mu_lp2 (F_n_lp2 n)‖ = 0
       . rw [norm_eq_zero] at norm_f_eq_zero
         have foo := laplace_zero_iff_zero (F_n_lp2 n) (by
@@ -2085,23 +2089,17 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
             rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)]
         simp [foo]
         unfold Conv
+        simp
+        have const_zero: (fun (x: G) => (0 : ℝ)) = 0 := by rfl
         conv =>
-          lhs
           pattern MemLp.toLp _ _
           equals 0 =>
-            conv =>
-              arg 1
-              arg 1
-              equals 0 =>
-                exact MeasureTheory.zero_convolution (G := Additive G)
+            simp_rw [ae_eq_everywhere.mp (MeasureTheory.AEEqFun.coeFn_zero)]
+            simp
+            simp_rw [const_zero]
             simp
         simp
-        conv =>
-          arg 1
-          arg 1
-          arg 1
-          equals 0 =>
-            rw [ae_eq_everywhere.mp (MeasureTheory.AEEqFun.coeFn_zero)]
+        simp_rw [ae_eq_everywhere.mp (MeasureTheory.AEEqFun.coeFn_zero)]
         simp
       rw [ENNReal.ofReal_div_of_pos] at other
       .
@@ -2114,6 +2112,9 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
           rw [ae_eq_everywhere.mp (Lp.coeFn_sub _ _)]
           rw [ae_eq_everywhere.mp (Lp.coeFn_sub _ _)] at other
           simp_rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)] at other
+          simp at other
+          simp
+          simp_rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)]
           exact other
         .
           rw [← ae_eq_everywhere.mp (Lp.coeFn_sub _ _)]
@@ -2126,7 +2127,7 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
 
     have foo := F_n_conv_mu_lim f_n_limit
     rw [ENNReal.tendsto_atTop_zero] at foo
-    obtain ⟨n, hn⟩ := foo  ((1: ENNReal) /(2 * ‖cont_equiv.symm.toContinuousLinearMap‖ₑ)) (by
+    obtain ⟨n, hn⟩ := foo  ((1: ENNReal) /(2 * ‖f.inv‖ₑ)) (by
       simp
       rw [ENNReal.mul_eq_top]
       simp
@@ -2142,23 +2143,14 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
     grw [hn] at inv_norm_ge
     simp at inv_norm_ge
 
-    have norm_nonzero :‖cont_equiv.symm.toContinuousLinearMap‖ ≠ 0 := by
+    have norm_nonzero :‖f.inv‖ ≠ 0 := by
       by_contra!
-      simp [this] at norm_mul_bound
-      norm_num at norm_mul_bound
+      simp at this
 
     simp [enorm] at inv_norm_ge
     norm_cast at inv_norm_ge
     rw [two_mul] at inv_norm_ge
     simp at inv_norm_ge
-    apply_fun norm at inv_norm_ge
-    rw [inv_norm_ge] at norm_nonzero
-    simp at norm_nonzero
-  . simp
-  . simp
-  . intro x
-    rw [hf]
-    apply laplace_bounded'
 
 
 
@@ -2170,13 +2162,28 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
 
   let P: Polynomial ℝ := (Polynomial.X^2 - eps • Polynomial.X)
 
-  have spec_inter: spectrum ℝ (Polynomial.aeval Laplace_linear P) ∩ Set.Ioo 0 eps ≠ ∅ := by
+  let Δ := Laplace_linear.mkContinuous _ (laplace_bounded')
+  have Δ_self_adjoint: IsSelfAdjoint Δ := by
+    sorry
+
+  have spec_inter: spectrum ℝ (Polynomial.aeval Δ P) ∩ Set.Ioo 0 eps ≠ ∅ := by
     by_contra!
-    have zero_isolated: spectrum ℝ (Polynomial.aeval Laplace_linear P) ∩ (Set.Ico 0 eps) = {0} := by
+    have zero_isolated: spectrum ℝ (Polynomial.aeval Δ P) ∩ (Set.Ico 0 eps) = {0} := by
       ext a
       simp
       refine ⟨?_, ?_⟩
-      . sorry
+      .
+        intro ha
+        obtain ⟨a_mem_spec, a_range⟩ := ha
+        by_contra a_nonzero
+        have a_mem: a ∈ Set.Ioo 0 eps := by
+          grind
+
+        have a_mem_empty: a ∈ (∅ : Set ℝ) := by
+          rw [← this]
+          grind
+
+        simp at a_mem_empty
       .
         intro ha
         simp [ha]
@@ -2185,13 +2192,50 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
         simp [P]
         use 0
         refine ⟨?_, by norm_num⟩
-        apply laplace_spectrum_contains_zero hf
+        simp [Δ]
+        --apply laplace_spectrum_contains_zero hf
+        sorry
+
+    have zero_mem := laplace_spectrum_contains_zero hf
+    rw [spectrum.mem_iff] at zero_mem
+    simp at zero_mem
+
+    let ramp: ℝ → ℝ := fun x => max 0 (min 1 (x / eps))
+    have ramp_comp: Continuous ramp := by
+      fun_prop
+
+
+    let Q := cfc (1 - ramp) (Cx.mapCLM Δ)
+    have laplace_q: Q = cfc (0: ℝ → ℝ) (Cx.mapCLM Δ) := by
+      unfold Q
+      apply cfc_congr
+      intro x hx
+      simp [ramp, max_def']
+      norm_num
+      split_ifs
+      . sorry
+      . simp [min_def']
+        split_ifs
+        . sorry
+        . simp
+
     sorry
 
 
-  have mem_spec: eps ∈ spectrum ℝ (Polynomial.aeval Laplace_linear P) := by
+  rw [← Set.nonempty_iff_ne_empty] at spec_inter
+  obtain ⟨a, ha⟩ := spec_inter
+  have a_spec := Set.mem_of_mem_inter_left ha
+  simp [P] at a_spec
+  rw [spectrum.mem_iff] at a_spec
+  --rw [LinearMap.isUnit_iff_ker_eq_bot] at a_spec
+  rw [ContinuousLinearMap.isUnit_iff_bijective] at a_spec
+
+
+  have mem_spec: a ∈ spectrum ℝ (Polynomial.aeval Laplace_linear P) := by
     apply spectrum.subset_polynomial_aeval
     simp
+    use a
+
     simp_rw [spectrum.mem_iff]
     sorry
 
