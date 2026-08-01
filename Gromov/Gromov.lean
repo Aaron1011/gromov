@@ -5609,6 +5609,18 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     obtain ⟨α, m, alpha_nonzero, alpha_is_unipotent_conj⟩ := exists_gamma_n_unipotent_N' (N' := N')  N'_nilpotent N'_fg gamma_conj_N' --((MulAut.conj γ).characteristic N')
 
 
+    have gamma_conj_card: ∀ g, ∃ p q: ℕ, ∀ a b: ℕ, (Finset.image (fun x ↦ (List.map (fun i ↦ (gamma_conj_N')^[a * ↑i] g) x.toList).prod)
+        (Finset.Ico a b).attach.powerset).card ≤ p * (b - a)^q := by
+
+      intro x
+      obtain ⟨x_list, x_list_len, x_list_prod⟩ := word_norm_prod_self x.val.toAdd.val.toMul.val
+      obtain ⟨gamma_list, gamma_list_len, gamma_list_prod⟩ := word_norm_prod_self g
+      use sorry
+      use sorry
+      intro a b
+      grw [← Finset.card_image_of_injOn (f := fun a => a.val.toAdd.val.toMul.val) (by simp)]
+      grw [Finset.card_le_card (t := hGS.S)]
+      sorry
 
 
     have alpha_is_unipotent: ∀ g ∈ N', Nat.iterate (fun x => ⁅x, γ.toMul^α⁆) m g.val = 1 := by

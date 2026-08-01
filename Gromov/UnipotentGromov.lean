@@ -1755,7 +1755,8 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     rw [x_mul_gamma_eq]
     simp
     rw [Module.End.coe_pow]
-    rfl
+    --rfl
+    sorry
 
     -- induction n with
     -- | zero =>
