@@ -1610,29 +1610,26 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     let equiv (v: Fin _ → ℤ) := (Finsupp.linearEquivFunOnFinite ℤ _ (Fin dim)).symm v
     let remap (v: Fin _ → ℤ) := Finsupp.linearCombination _ B (equiv v)
 
-    have gamma_matrix_mulVec: ∀ v: (Fin dim) → ℤ , remap ((gamma_matrix).mulVec (equiv v)) = gamma_lift (remap v) := by
+    have gamma_matrix_mulVec: ∀ v: (Fin dim) → ℤ , remap ((gamma_matrix).mulVec (equiv v)) = Additive.ofMul (gamma_lift (Additive.toMul (remap v))) := by
       intro v
       unfold gamma_matrix
       rw [← Module.Basis.repr_linearCombination (v := (equiv v)) (b := B)]
       rw [LinearMap.toMatrix_mulVec_repr]
       simp [remap, gamma_add, equiv]
-      rfl
 
 
-    have gamma_matrix_mulVec_pow: ∀ n: ℕ, ∀ v: (Fin dim) → ℤ , remap ((gamma_matrix^n).mulVec (equiv v)) = gamma_lift^[n] (Additive.toMul (remap v)) := by
+    have gamma_matrix_mulVec_pow: ∀ n: ℕ, ∀ v: (Fin dim) → ℤ , remap ((gamma_matrix^n).mulVec (equiv v)) = Additive.ofMul (gamma_lift^[n] (Additive.toMul (remap v))) := by
       intro n
       induction n with
       | zero =>
         intro v
         simp [remap, equiv]
-        rfl
       | succ n ih =>
         intro v
-        rw [Function.iterate_succ_apply']
-        rw [← ih]
-        rw [← gamma_matrix_mulVec]
-        rw [pow_succ']
-        rw [← Matrix.mulVec_mulVec]
+        rw [Function.iterate_succ_apply', pow_succ', ← Matrix.mulVec_mulVec]
+        rw [show ((gamma_matrix ^ n).mulVec ⇑(equiv v))
+              = ⇑(equiv ((gamma_matrix ^ n).mulVec ⇑(equiv v))) from rfl]
+        rw [gamma_matrix_mulVec, ih]
         rfl
     -- have gamma_matrix_map_mulVec: ∀ v, B.repr.symm (Finsupp.equivFunOnFinite.symm ((gamma_matrix).mulVec v)) ∈ (Finset.image (fun (i: Fin dim) => (v i • (B i))) Finset.univ)  := by
     --   intro v
@@ -1673,7 +1670,9 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
             simp [remap, equiv] at gamma_matrix_mulVec_pow
             simp_rw [← pow_mul]
             simp_rw [gamma_matrix_mulVec_pow]
-            simp_rw [Finset.sum_finset_coe]
+            -- Turn each subsum into `Additive.ofMul` of a product in the group, keeping the
+            -- index set as the subtype `↥(Finset.Ico N_1 N_2)`.
+            simp_rw [← ofMul_prod]
             sorry
           . sorry
         --rw [← (Finset.card_image_iff (f := fun (a: Fin (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion))) → ℂ) => ((Module.finBasis ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion)))).repr.symm a)).mpr]
