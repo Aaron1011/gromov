@@ -1652,7 +1652,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
       apply NeZero.of_pos
       apply Module.finrank_pos
 
-    have gamma_conj: ∀ g, ∀ a b: ℕ, (0 < a) → (a < b) → ∃ p q: ℕ, (Finset.image (fun x ↦ (List.map (fun i ↦ (gamma)^[a * ↑i] g) x.toList).prod)
+    have gamma_conj: ∀ g, ∀ a b: ℕ, (0 < a) → (a < b) → ∃ p q: ℕ, 0 < p ∧ (Finset.image (fun x ↦ (List.map (fun i ↦ (gamma)^[a * ↑i] g) x.toList).prod)
         (Finset.Ico a b).attach.powerset).card ≤ p * (b - a)^q := by
       sorry
 
@@ -1684,7 +1684,9 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
         use q
         refine ⟨?_, ?_, ?_⟩
         . exact p_pos
-        . sorry
+        .
+
+          sorry
         .
           rw [← (Finset.card_image_iff (f := fun a => remap (Finsupp.equivFunOnFinite.symm a))).mpr]
           .
