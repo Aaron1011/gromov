@@ -5610,17 +5610,17 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     obtain ⟨α, m, alpha_nonzero, alpha_is_unipotent_conj⟩ := exists_gamma_n_unipotent_N' (N' := N')  N'_nilpotent N'_fg gamma_conj_N' --((MulAut.conj γ).characteristic N')
 
 
-    have gamma_conj_card: ∀ k: ℕ, (0 < k) →  ∃ q: ℕ, ∀ g, ∀ b: ℕ, 0 < b → ∃ p: ℕ, 0 < p ∧ ∀ a: ℕ, (0 < a) → (a < b) → ((Finset.image (fun x ↦ (List.map (fun i ↦ (gamma_conj_N')^[k * ↑i] g) x.toList).prod))
-        (Finset.Ico a b).attach.powerset).card ≤ p * (b - a)^q := by
+    have gamma_conj_card: ∀ k: ℕ, (0 < k) →  ∀ g, ∃ p q: ℕ, 0 < p ∧ ∀ b: ℕ, 0 < b → ∀ a: ℕ, (0 < a) → (a < b) → ((Finset.image (fun x ↦ (List.map (fun i ↦ (gamma_conj_N')^[k * ↑i] g) x.toList).prod))
+        (Finset.Ico a b).attach.powerset).card ≤ p * (b^q) * (b - a)^q := by
 
       have s_poly := hGS.g_growth
       unfold HasPolynomialGrowth at s_poly
       obtain ⟨q, hq⟩ := s_poly
       unfold HasPolynomialGrowthD at hq
       obtain ⟨p, hp⟩ := hq
-      intro k k_pos
-      use q
-      intro x
+      intro k k_pos x
+
+
       obtain ⟨x_list, x_prod, x_list_prod⟩ :=
         word_norm_prod_self (hGS := hGS) x.val.toAdd.val.toMul.val
       obtain ⟨gamma_list, gamma_prod, gamma_list_prod⟩ :=
@@ -5633,18 +5633,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
       have q_pos: 0 < q := by
         sorry
-
-
-      intro b hb
-      use p * (((max x_list.length gamma_list.length) * (4 * k * b)) ^ q)
-
-      have mul_nozero: 1 ≤  2 * k * b := by
-        rw [mul_assoc]
-        apply one_le_mul
-        . simp
-        . apply one_le_mul
-          . grind
-          . grind
+      use p * (((max x_list.length gamma_list.length) * (4 * k)) ^ q)
+      use q
 
 
       have gamma_len_pos: 1 ≤  gamma_list.length := by
@@ -5668,7 +5658,20 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
             positivity
           . grind
 
-      intro a ha
+
+
+      intro b hb
+      intro a ha hab
+
+      have mul_nozero: 1 ≤  2 * k * b := by
+        rw [mul_assoc]
+        apply one_le_mul
+        . simp
+        . apply one_le_mul
+          . grind
+          . grind
+
+
       grw [← Finset.card_image_of_injOn (f := fun a => a.val.toAdd.val.toMul.val) (by simp)]
       grw [Finset.card_le_card (t := hGS.S^((b - a) * ((max x_list.length gamma_list.length) * (4 * k * b)) ))]
       ·
