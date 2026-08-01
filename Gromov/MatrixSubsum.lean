@@ -675,8 +675,8 @@ lemma exists_vector_component_nonzero {d: ℕ} (v: (Fin d) → ℂ) (hv: v ≠ 0
   simp [this] at hv
 
 lemma int_matrix_poly_growth_eigenvalue {d: ℕ} [NeZero d] (A: (Matrix (Fin d) (Fin d) ℤ)ˣ)
-  (a b : ℕ) (ha: 0 < a)
-  (h_poly: ∀ v: (Fin d) → ℤ, ∀ N_1 : ℕ , ∃ N_2: ℕ, N_1 < N_2 ∧ (4 * ↑b + Real.log ↑a < (Real.log 2) * (N_2 - N_1)^((1 : ℝ) / 2)) ∧ #((Finset.image (fun a => a.sum (fun b => ((((A.val)^(N_1)))^b.val).mulVec (v))) ((Finset.Ico N_1 N_2)).attach.powerset)) ≤ a * (N_2 - N_1)^(2*b)):
+  --(a b : ℕ) (ha: 0 < a)
+  (h_poly: ∀ v: (Fin d) → ℤ, ∃ a b: ℕ, (0 < a) ∧ ∀ N_1 : ℕ , ∃ N_2: ℕ, N_1 < N_2 ∧ (4 * ↑b + Real.log ↑a < (Real.log 2) * (N_2 - N_1)^((1 : ℝ) / 2)) ∧ #((Finset.image (fun a => a.sum (fun b => ((((A.val)^(N_1)))^b.val).mulVec (v))) ((Finset.Ico N_1 N_2)).attach.powerset)) ≤ a * (N_2 - N_1)^(2*b)):
   ∀ k : Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ)).toLin', ‖k.val‖ = 1 := by
 
 
@@ -747,7 +747,10 @@ lemma int_matrix_poly_growth_eigenvalue {d: ℕ} [NeZero d] (A: (Matrix (Fin d) 
 
 
       obtain ⟨N, hN⟩ := foo
-      specialize h_poly (Pi.single q 1) N
+      specialize h_poly (Pi.single q 1)
+      obtain ⟨a, b, ha, h_poly⟩ := h_poly
+      specialize h_poly N
+
       obtain ⟨N_2, N_2_gt, N_2_diff_gt, card_le⟩ := h_poly
       specialize hN N_2
       simp at hN
