@@ -1684,7 +1684,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     ) (unitOfInvertible gamma_matrix) (by
       apply int_matrix_poly_growth_eigenvalue
       .
-        intro v
+        intro k hk v
         -- name the (fixed) group element the iterates are applied to
         set g : ↥(Subgroup.center ↥N') ⧸ torsion :=
           Additive.toMul ((Finsupp.linearCombination ℤ ⇑B)
