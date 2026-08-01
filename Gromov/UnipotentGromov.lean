@@ -1701,6 +1701,47 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
       apply NeZero.of_pos
       apply Module.finrank_pos
 
+
+    have gamma_mem_center:  ∀ g: Subgroup.center N', gamma g ∈ Subgroup.center N' := by
+      intro g
+      have center_char: (Subgroup.center N').Characteristic := by
+        infer_instance
+      rw [Subgroup.characteristic_iff_le_comap] at center_char
+      specialize center_char (gamma) g.prop
+      simp at center_char
+      exact center_char
+
+    have gamma_iter_mem_center: ∀ n, ∀ g: Subgroup.center N', gamma^[n] g ∈ Subgroup.center N' := by
+      intro n
+      induction n with
+      | zero =>
+        simp
+      | succ n ih =>
+        intro g
+        rw [Function.iterate_succ]
+        simp
+        apply ih ⟨_, gamma_mem_center g⟩
+
+
+    have swap_gamma_lift: ∀ g: Subgroup.center N', gamma_lift ↑g = ↑(⟨((gamma) g), by apply gamma_mem_center⟩ : Subgroup.center N') := by
+      intro g
+      simp [gamma_lift, gamma_center]
+      rfl
+
+    have swap_gamma_lift_iter: ∀ n, ∀ g: Subgroup.center N', gamma_lift^[n] ↑g = ↑(⟨((gamma^[n]) g), by apply gamma_iter_mem_center⟩ : Subgroup.center N') := by
+      intro n
+      induction n with
+      | zero =>
+        simp
+      | succ n ih =>
+        intro g
+        rw [Function.iterate_succ']
+        simp only [Function.comp_apply]
+        rw [ih]
+        rw [swap_gamma_lift]
+        simp_rw [Function.iterate_succ']
+        simp
+
     have gamma_conj: ∀ k: ℕ, (0 < k) →  ∀ g, ∃ p q: ℕ, 0 < p ∧ ∀ b: ℕ, 0 < b → ∀ a: ℕ, (0 < a) → (a < b) → ((Finset.image (fun x ↦ (List.map (fun i ↦ (gamma)^[k * ↑i] g) x.toList).prod))
         (Finset.Ico a b).attach.powerset).card ≤ p * (b^q) * (b - a)^q := by
       sorry
@@ -1708,6 +1749,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
 
     have gamma_lift_conj: ∀ k: ℕ, (0 < k) →  ∀ g, ∃ p q: ℕ, 0 < p ∧ ∀ b: ℕ, 0 < b → ∀ a: ℕ, (0 < a) → (a < b) → (Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma_lift)^[k * ↑i] g) x.toList).prod)
         (Finset.Ico a b).attach.powerset).card ≤ p * (b^q) * (b - a)^q := by
+
 
       sorry
 
@@ -1928,47 +1970,9 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
   refine ⟨by positivity, ?_⟩
   intro g hg
 
-  have gamma_mem_center:  ∀ g: Subgroup.center N', gamma g ∈ Subgroup.center N' := by
-    intro g
-    have center_char: (Subgroup.center N').Characteristic := by
-      infer_instance
-    rw [Subgroup.characteristic_iff_le_comap] at center_char
-    specialize center_char (gamma) g.prop
-    simp at center_char
-    exact center_char
-
-  have gamma_iter_mem_center: ∀ n, ∀ g: Subgroup.center N', gamma^[n] g ∈ Subgroup.center N' := by
-    intro n
-    induction n with
-    | zero =>
-      simp
-    | succ n ih =>
-      intro g
-      rw [Function.iterate_succ]
-      simp
-      apply ih ⟨_, gamma_mem_center g⟩
-
 
   specialize h_quot_n (QuotientGroup.mk ⟨g, hg⟩)
 
-  have swap_gamma_lift: ∀ g: Subgroup.center N', gamma_lift ↑g = ↑(⟨((gamma) g), by apply gamma_mem_center⟩ : Subgroup.center N') := by
-    intro g
-    simp [gamma_lift, gamma_center]
-    rfl
-
-  have swap_gamma_lift_iter: ∀ n, ∀ g: Subgroup.center N', gamma_lift^[n] ↑g = ↑(⟨((gamma^[n]) g), by apply gamma_iter_mem_center⟩ : Subgroup.center N') := by
-    intro n
-    induction n with
-    | zero =>
-      simp
-    | succ n ih =>
-      intro g
-      rw [Function.iterate_succ']
-      simp only [Function.comp_apply]
-      rw [ih]
-      rw [swap_gamma_lift]
-      simp_rw [Function.iterate_succ']
-      simp
 
 
   have swap_iter: ∀ n, ∀ g: Subgroup.center N', (fun x ↦ x * (gamma_lift^[quot_pow]) x⁻¹)^[n] g = QuotientGroup.mk ⟨((fun x ↦ x * (gamma^[quot_pow]) x⁻¹)^[n] g), (by
