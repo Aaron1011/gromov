@@ -917,7 +917,7 @@ noncomputable def KroneckerPow_single {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)�
 noncomputable def KroneckerPow {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (eigen_one_complex: ∀ k : Module.End.Eigenvalues ((A.val.map (Int.castRingHom ℂ ))).toLin', ‖k.val‖ = 1) :=
   ∏ (k : Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ )).toLin'), (KroneckerPow_single A k eigen_one_complex)
 
-lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (eigen_one_complex: ∀ k : Module.End.Eigenvalues ((A.val.map (Int.castRingHom ℂ ))).toLin', ‖k.val‖ = 1): ∃ a m, 0 < a ∧ (A.val^a - 1)^m = 0 := by
+lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (eigen_one_complex: ∀ k : Module.End.Eigenvalues ((A.val.map (Int.castRingHom ℂ ))).toLin', ‖k.val‖ = 1): ∃ m, (A.val^(KroneckerPow A eigen_one_complex) - 1)^m = 0 := by
   classical
   let A_C := (A.val.map (Int.castRingHom ℂ ))
 
@@ -1143,11 +1143,9 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
       simp
 
 
-  use n_prod
   have eval_zero := (A_C.toLin'^n_prod).aeval_self_charpoly
   simp [a_f_char_eq] at eval_zero
   use d
-  refine ⟨n_prod_pos, ?_⟩
   simp [A_C] at eval_zero
   apply_fun (fun f => f.toMatrix') at eval_zero
   simp [-EmbeddingLike.map_eq_zero_iff] at eval_zero
