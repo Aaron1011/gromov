@@ -1407,14 +1407,28 @@ lemma toIntLinearMap_id {M : Type*}  [AddCommGroup M]: (AddMonoidHom.id M).toInt
   ext a
   simp
 
-/-- Final step of isolating `K`: eliminates the `Real.log ↑K` still sitting on the left.
+/-- Final step of isolating `K`, reducing the `h_poly` log inequality to a statement in `ℕ`.
 
-`Real.log_natCast_le_rpow_div` at `ε := 1/4` gives `Real.log K ≤ 4 * K ^ (1/4)`; squaring
-therefore contributes only a `K ^ (1/2)` term, which the right-hand `K` dominates.  The
-resulting hypothesis mentions `K` only on the right. -/
-theorem log_pow_sq_lt_of_lt (M p q K : ℕ) (hp : 0 < p) (hK1 : 1 ≤ K)
-    (h : 4 * ((8 * (q:ℝ) + Real.log p) ^ 2 / (Real.log 2) ^ 2) ^ 2 + 2 * (M:ℝ) < (K:ℝ)) :
-    ((4 * (q:ℝ) + (Real.log p + q * Real.log K)) / Real.log 2) ^ 2 + (M:ℝ) < (K:ℝ) := by
+Splits `Real.log ↑(p * K ^ q)` into `Real.log ↑p + q * Real.log ↑K`, then eliminates the
+`Real.log ↑K` using `Real.log_natCast_le_rpow_div` at `ε := 1/4`, which gives
+`Real.log K ≤ 4 * K ^ (1/4)`; squaring therefore contributes only a `K ^ (1/2)` term, which
+the right-hand `K` dominates.  (At `ε := 1/2` the reduction would be unsound for `q ≥ 1`.)
+The hypothesis mentions `K` only on the right, and is an inequality of naturals. -/
+theorem log_pow_sq_lt_of_lt (M p q K : ℕ) (hp : 0 < p)
+    (h : ⌈4 * ((8 * (q:ℝ) + Real.log p) ^ 2 / (Real.log 2) ^ 2) ^ 2⌉₊ + 2 * M < K) :
+    ((4 * (q:ℝ) + Real.log ((p * K ^ q : ℕ) : ℝ)) / Real.log 2) ^ 2 + (M:ℝ) < (K:ℝ) := by
+  have hK1 : 1 ≤ K := by omega
+  have hpr : ((p : ℝ)) ≠ 0 := Nat.cast_ne_zero.mpr hp.ne'
+  have hKr : ((K : ℝ)) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
+  have hsplit : Real.log ((p * K ^ q : ℕ) : ℝ) = Real.log p + q * Real.log K := by
+    push_cast; rw [Real.log_mul hpr (pow_ne_zero _ hKr), Real.log_pow]
+  rw [hsplit]
+  have h' : 4 * ((8 * (q:ℝ) + Real.log p) ^ 2 / (Real.log 2) ^ 2) ^ 2 + 2 * (M:ℝ) < (K:ℝ) := by
+    have hceil := Nat.le_ceil (4 * ((8 * (q:ℝ) + Real.log p) ^ 2 / (Real.log 2) ^ 2) ^ 2)
+    have hcast : ((⌈4 * ((8 * (q:ℝ) + Real.log p) ^ 2 / (Real.log 2) ^ 2) ^ 2⌉₊ + 2 * M : ℕ) : ℝ)
+        < (K:ℝ) := by exact_mod_cast h
+    push_cast at hcast
+    linarith
   have hLpos : 0 < Real.log 2 := Real.log_pos (by norm_num)
   have hK0 : (0:ℝ) < (K:ℝ) := by exact_mod_cast hK1
   have hlogK0 : 0 ≤ Real.log (K:ℝ) := Real.log_nonneg (by exact_mod_cast hK1)
@@ -1442,7 +1456,7 @@ theorem log_pow_sq_lt_of_lt (M p q K : ℕ) (hp : 0 < p) (hK1 : 1 ≤ K)
   set D : ℝ := (8 * (q:ℝ) + Real.log p) ^ 2 / (Real.log 2) ^ 2 with hD
   have hD0 : 0 ≤ D := by rw [hD]; positivity
   have hgoal : D * u ^ 2 + (M:ℝ) < (K:ℝ) := by
-    nlinarith [sq_nonneg (u ^ 2 - 2 * D), hu1, hD0, hM0, hu4, h]
+    nlinarith [sq_nonneg (u ^ 2 - 2 * D), hu1, hD0, hM0, hu4, h']
   linarith [hsq, hgoal]
 
 set_option maxHeartbeats 1000000 in
@@ -1741,19 +1755,12 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
           rw [← Real.sqrt_sq_eq_abs]
           refine Real.sqrt_lt_sqrt (sq_nonneg _) ?_
           rw [lt_sub_iff_add_lt]
-          -- `K` still occurs on the left inside `Real.log ↑(p * K ^ q)`; split that logarithm
-          -- so the only remaining left-hand occurrence is a single `Real.log ↑K`.
-          have hK1 : 1 ≤ K := by sorry
-          have hp : ((p : ℝ)) ≠ 0 := Nat.cast_ne_zero.mpr p_pos.ne'
-          have hKr : ((K : ℝ)) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
-          push_cast
-          rw [Real.log_mul hp (pow_ne_zero _ hKr), Real.log_pow]
-          -- ⊢ ((4 * ↑q + (Real.log ↑p + ↑q * Real.log ↑K)) / Real.log 2) ^ 2
-          --     + ↑⌈Real.logb ‖k‖ 3⌉₊ < ↑K
-          -- Finally remove the `Real.log ↑K`, leaving `K` only on the right.
-          refine log_pow_sq_lt_of_lt _ p q K p_pos hK1 ?_
-          -- ⊢ 4 * ((8 * ↑q + Real.log ↑p) ^ 2 / Real.log 2 ^ 2) ^ 2
-          --     + 2 * ↑⌈Real.logb ‖k‖ 3⌉₊ < ↑K
+          -- `K` still occurs on the left inside `Real.log ↑(p * K ^ q)`.  This splits that
+          -- logarithm and eliminates the resulting `Real.log ↑K`, leaving a goal in `ℕ` with
+          -- `K` alone on the right.
+          refine log_pow_sq_lt_of_lt _ p q K p_pos ?_
+          -- ⊢ ⌈4 * ((8 * ↑q + Real.log ↑p) ^ 2 / Real.log 2 ^ 2) ^ 2⌉₊
+          --     + 2 * ⌈Real.logb ‖k‖ 3⌉₊ < K
           sorry
         .
           rw [← (Finset.card_image_iff (f := fun a => remap (Finsupp.equivFunOnFinite.symm a))).mpr]
