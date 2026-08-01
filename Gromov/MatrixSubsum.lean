@@ -819,6 +819,103 @@ theorem LinearMap.toMatrix'_pow {R : Type*} [CommSemiring R] {m : Type*} [Fintyp
     rw [pow_succ]
     rw [ih]
 
+lemma char_nonzero {d: ℕ} {K: Type*} [Field K] (A: (Matrix (Fin d) (Fin d) K)): A.charpoly ≠ 0 := by
+  by_contra!
+  have monic := A.charpoly_monic
+  simp [this] at monic
+
+lemma eigen_nonzero {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ): ∀ (k : Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ)).toLin'), k.val ≠ 0 := by
+  intro k
+  by_contra!
+  have eigen_zero := LinearMap.hasEigenvalue_zero_tfae ((A.val.map (Int.castRingHom ℂ)).toLin')
+  have det_zero := (eigen_zero.out 0 3).mp
+  have has_k := k.prop
+  conv at has_k =>
+    lhs
+    equals k.val => rfl
+
+
+  specialize det_zero (by
+    simp at this
+    simp [this] at has_k
+    exact has_k
+  )
+  have a_det := Matrix.GeneralLinearGroup.det_ne_zero A
+  simp at det_zero
+  conv at det_zero =>
+    lhs
+    arg 1
+    equals (A.val).map (Int.castRingHom ℂ) =>
+      simp
+  rw [← RingHom.mapMatrix_apply] at det_zero
+  simp at det_zero
+  apply_fun (fun a => (Int.castRingHom ℂ) a) at a_det
+  . conv at a_det =>
+      rhs
+      simp
+    rw [RingHom.map_det] at a_det
+    simp at a_det
+    contradiction
+  . simp
+    exact Int.cast_injective
+
+def KroneckerPow_exists {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (k: Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ)).toLin') (eigen_one_complex: ∀ k : Module.End.Eigenvalues ((A.val.map (Int.castRingHom ℂ ))).toLin', ‖k.val‖ = 1) := Polynomial.pow_eq_one_of_mahlerMeasure_eq_one (by
+  rw [Polynomial.mahlerMeasure_eq_leadingCoeff_mul_prod_roots]
+  rw [Polynomial.Monic.leadingCoeff]
+  .
+    simp
+    apply Multiset.prod_eq_one
+    intro x hx
+    simp at hx
+    obtain ⟨a, ⟨charpoly_nonzero, a_root⟩, x_eq⟩ := hx
+    rw [← x_eq]
+    simp
+    apply le_of_eq
+    apply eigen_one_complex ⟨a, ?_⟩
+    conv =>
+      equals Module.End.HasEigenvalue ((Matrix.toLin' ((A.val).map ⇑(Int.castRingHom ℂ)))) a => rfl
+    rw [Module.End.hasEigenvalue_iff_isRoot_charpoly]
+    simp
+    rw [← Matrix.charpoly_map] at a_root
+    simpa using a_root
+
+  . apply Polynomial.Monic.map
+    apply Matrix.charpoly_monic
+) (by
+  apply eigen_nonzero
+) (by
+  simp
+
+  have k_prop := k.property
+  conv at k_prop =>
+    equals Module.End.HasEigenvalue ((A.val).map ⇑(Int.castRingHom ℂ)).toLin' (↑k) =>
+      rfl
+  rw [Module.End.hasEigenvalue_iff_isRoot_charpoly] at k_prop
+
+  have k_mem_roots: ↑k.val ∈ ((A.val).map ⇑(Int.castRingHom ℂ)).toLin'.charpoly.rootSet ℂ := by
+    simp [Polynomial.mem_rootSet]
+    refine ⟨char_nonzero _, ?_⟩
+    simp at k_prop
+    exact k_prop
+
+
+  refine ⟨?_, ?_⟩
+  .
+    rw [← Matrix.charpoly_map]
+    apply char_nonzero
+  .
+    rw [← Matrix.charpoly_map]
+    rw [Polynomial.mem_rootSet] at k_mem_roots
+    have foo := k_mem_roots.2
+    simp at foo
+    exact foo
+) (z := k) (p := A.val.charpoly)
+
+noncomputable def KroneckerPow_single {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (k: Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ)).toLin') (eigen_one_complex: ∀ k : Module.End.Eigenvalues ((A.val.map (Int.castRingHom ℂ ))).toLin', ‖k.val‖ = 1) :=
+  (KroneckerPow_exists A k eigen_one_complex).choose
+
+noncomputable def KroneckerPow {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (eigen_one_complex: ∀ k : Module.End.Eigenvalues ((A.val.map (Int.castRingHom ℂ ))).toLin', ‖k.val‖ = 1) :=
+  ∏ (k : Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ )).toLin'), (KroneckerPow_single A k eigen_one_complex)
 
 lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (eigen_one_complex: ∀ k : Module.End.Eigenvalues ((A.val.map (Int.castRingHom ℂ ))).toLin', ‖k.val‖ = 1): ∃ a m, 0 < a ∧ (A.val^a - 1)^m = 0 := by
   classical
@@ -928,9 +1025,9 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
     rw [← pow_eq]
     rfl
 
-  let n_prod := ∏ (k : Module.End.Eigenvalues A_C.toLin'), eigen_pow k.val k.prop
+  let n_prod := KroneckerPow A eigen_one_complex
   have n_prod_pos: 0 < n_prod := by
-    simp [n_prod]
+    simp [n_prod, KroneckerPow]
     intro k
     by_contra!
     simp at this
@@ -939,16 +1036,18 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
       have spec :=  (eigen_root_unity ⟨k.val, k.prop⟩).choose_spec
       grind [spec.1]
 
+    simp [KroneckerPow_single] at this
     grind
 
   have eigen_pow_prod_one: ∀ k:  Module.End.Eigenvalues A_C.toLin', k.val^n_prod = 1 := by
     intro k
-    unfold n_prod
-    rw [← Finset.mul_prod_erase (f := fun (a: Module.End.Eigenvalues (Matrix.toLin' A_C)) => eigen_pow a.val a.prop) (a := ⟨k.val, k.prop⟩)]
+    unfold n_prod KroneckerPow
+    rw [← Finset.mul_prod_erase (f := fun (a: Module.End.Eigenvalues (Matrix.toLin' ((A.val).map ⇑(Int.castRingHom ℂ)))) => KroneckerPow_single A a eigen_one_complex) (a := k)]
     .
       rw [pow_mul]
       have pow_self := eigen_pow_self (k := k.val) (hk := k.prop)
-      simp
+      simp [KroneckerPow_single]
+      simp [eigen_pow] at pow_self
       rw [pow_self]
       simp
     . apply Finset.mem_univ
