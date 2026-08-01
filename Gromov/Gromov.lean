@@ -5610,7 +5610,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     obtain ⟨α, m, alpha_nonzero, alpha_is_unipotent_conj⟩ := exists_gamma_n_unipotent_N' (N' := N')  N'_nilpotent N'_fg gamma_conj_N' --((MulAut.conj γ).characteristic N')
 
 
-    have gamma_conj_card: ∀ g, ∃ p q: ℕ, ∀ a b: ℕ, (Finset.image (fun x ↦ (List.map (fun i ↦ (gamma_conj_N')^[a * ↑i] g) x.toList).prod)
+    have gamma_conj_card: ∀ g, ∀ a b: ℕ, (0 < a) → (a < b) → ∃ p q: ℕ, (Finset.image (fun x ↦ (List.map (fun i ↦ (gamma_conj_N')^[a * ↑i] g) x.toList).prod)
         (Finset.Ico a b).attach.powerset).card ≤ p * (b - a)^q := by
 
       intro x
@@ -5625,16 +5625,48 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       unfold HasPolynomialGrowthD at hq
       obtain ⟨p, hp⟩ := hq
 
-      use sorry
-      use sorry
-      intro a b
+      intro a b a_pos hab
+      use p * ((x_list.length + gamma_list.length * (2 * a * b)) ^ q)
+      use q
+
       grw [← Finset.card_image_of_injOn (f := fun a => a.val.toAdd.val.toMul.val) (by simp)]
       grw [Finset.card_le_card (t := hGS.S^((b - a) * (x_list.length + gamma_list.length * (2 * a * b)) ))]
       ·
 
         grw [hp]
-        sorry
-        sorry
+        .
+          rw [mul_pow]
+          ring
+          simp
+        .
+          simp
+          apply one_le_mul
+          . grind
+          .
+            rw [Nat.one_le_iff_ne_zero, ← Nat.pos_iff_ne_zero]
+            have gamma_len_pos: 1 ≤  gamma_list.length := by
+              by_contra!
+              simp at this
+              simp [ProdS, this] at gamma_prod
+              have gamma_eq: γ = 0 := by
+                have gamma_coe := Subtype.coe_eq_of_eq_mk gamma_prod.symm
+                apply_fun (fun a => Additive.ofMul a) at gamma_coe
+                rw [ofMul_toMul] at gamma_coe
+                exact gamma_coe
+              simp [gamma_eq] at hγ
+
+
+
+            have mul_nozero: 1 ≤  2 * a * b := by
+              rw [mul_assoc]
+              apply one_le_mul
+              . simp
+              . apply one_le_mul
+                . grind
+                . grind
+
+
+            positivity
       -- side goal from `card_le_card`: the image is contained in `hGS.S`
       ·
         intro g hg
