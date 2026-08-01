@@ -1407,6 +1407,32 @@ lemma toIntLinearMap_id {M : Type*}  [AddCommGroup M]: (AddMonoidHom.id M).toInt
   ext a
   simp
 
+/-- Compare cardinalities of two images of the same underlying products, pushed through a
+homomorphism `ψ` and through an injective homomorphism `j`.  Used to move a bound proved in
+`↥N'` across to the quotient `↥(Subgroup.center ↥N') ⧸ torsion`. -/
+theorem card_image_listProd_hom_le {C Q N ι : Type*}
+    [Group C] [Group Q] [Group N] [DecidableEq Q] [DecidableEq N]
+    (ψ : C →* Q) (j : C →* N) (hj : Function.Injective j)
+    (P : Finset (Finset ι)) (f : ι → C) :
+    (P.image (fun x => (List.map (fun i => ψ (f i)) x.toList).prod)).card
+      ≤ (P.image (fun x => (List.map (fun i => j (f i)) x.toList).prod)).card := by
+  classical
+  have h1 : ∀ x : Finset ι,
+      (List.map (fun i => ψ (f i)) x.toList).prod = ψ ((List.map f x.toList).prod) := by
+    intro x
+    rw [show (fun i => ψ (f i)) = (ψ : C → Q) ∘ f from rfl, ← List.map_map, List.prod_hom]
+  have h2 : ∀ x : Finset ι,
+      (List.map (fun i => j (f i)) x.toList).prod = j ((List.map f x.toList).prod) := by
+    intro x
+    rw [show (fun i => j (f i)) = (j : C → N) ∘ f from rfl, ← List.map_map, List.prod_hom]
+  simp_rw [h1, h2]
+  rw [show (fun x : Finset ι => ψ ((List.map f x.toList).prod))
+        = ψ ∘ (fun x : Finset ι => (List.map f x.toList).prod) from rfl,
+     show (fun x : Finset ι => j ((List.map f x.toList).prod))
+        = j ∘ (fun x : Finset ι => (List.map f x.toList).prod) from rfl,
+     ← Finset.image_image, ← Finset.image_image, Finset.card_image_of_injective _ hj]
+  exact Finset.card_image_le
+
 /-- Final step of isolating `K`, reducing the `h_poly` log inequality to a statement in `ℕ`.
 
 Splits `Real.log ↑(p * K ^ q)` into `Real.log ↑p + q * Real.log ↑K`, then eliminates the
@@ -1742,7 +1768,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
         simp_rw [Function.iterate_succ']
         simp
 
-    have gamma_conj: ∀ k: ℕ, (0 < k) →  ∀ g, ∃ p q: ℕ, 0 < p ∧ ∀ b: ℕ, 0 < b → ∀ a: ℕ, (0 < a) → (a < b) → ((Finset.image (fun x ↦ (List.map (fun i ↦ (gamma)^[k * ↑i] g) x.toList).prod))
+    have gamma_conj: ∀ k: ℕ, (0 < k) →  ∀ g, ∃ p q: ℕ, 0 < p ∧ ∀ b: ℕ, 0 < b → ∀ a: ℕ, (0 < a) → (a < b) → ((Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma)^[k * ↑i] g) x.toList).prod))
         (Finset.Ico a b).attach.powerset).card ≤ p * (b^q) * (b - a)^q := by
       sorry
 
@@ -1750,8 +1776,24 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     have gamma_lift_conj: ∀ k: ℕ, (0 < k) →  ∀ g, ∃ p q: ℕ, 0 < p ∧ ∀ b: ℕ, 0 < b → ∀ a: ℕ, (0 < a) → (a < b) → (Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma_lift)^[k * ↑i] g) x.toList).prod)
         (Finset.Ico a b).attach.powerset).card ≤ p * (b^q) * (b - a)^q := by
 
-
-      sorry
+      intro k hk g
+      have g_eq: ∀ n: ℕ, (gamma_lift)^[n] g = (gamma_lift)^[n] ↑g.out := by simp
+      simp_rw [g_eq]
+      simp_rw [swap_gamma_lift_iter]
+      obtain ⟨p, q, p_pos, other⟩ := gamma_conj k hk g.out
+      use p
+      use q
+      refine ⟨p_pos, ?_⟩
+      intro b hb a ha hab
+      -- `other` bounds the products taken in `↥N'`; the goal takes them in the quotient.
+      -- Both are images of the same products formed in `↥(Subgroup.center ↥N')`, pushed
+      -- through `QuotientGroup.mk'` and through the injective `Subgroup.subtype`.
+      refine le_trans ?_ (other b hb a ha hab)
+      exact card_image_listProd_hom_le (QuotientGroup.mk' torsion)
+        ((Subgroup.center (↥N')).subtype) (Subgroup.subtype_injective _)
+        ((Finset.Ico a b).attach.powerset)
+        (fun (i : ↥(Finset.Ico a b)) =>
+          ⟨(gamma)^[k * ↑i] ↑(Quotient.out g), gamma_iter_mem_center _ _⟩)
 
     have unipotent_gamma_matrix := int_matrix_unipotent (by
       apply Module.finrank_pos
