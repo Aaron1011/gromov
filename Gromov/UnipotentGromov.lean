@@ -1668,14 +1668,13 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
       apply NeZero.of_pos
       apply Module.finrank_pos
 
-    have gamma_conj: ∀ k: ℕ, (0 < k) →  ∃ q: ℕ, ∀ g, ∀ b: ℕ, 0 < b → ∃ p: ℕ, 0 < p ∧ ∀ a: ℕ, (0 < a) → (a < b) → (Finset.image (fun x ↦ (List.map (fun i ↦ (gamma)^[k * ↑i] g) x.toList).prod)
-        (Finset.Ico a b).attach.powerset).card ≤ p * (b - a)^q := by
+    have gamma_conj: ∀ k: ℕ, (0 < k) →  ∀ g, ∃ p q: ℕ, 0 < p ∧ ∀ b: ℕ, 0 < b → ∀ a: ℕ, (0 < a) → (a < b) → ((Finset.image (fun x ↦ (List.map (fun i ↦ (gamma)^[k * ↑i] g) x.toList).prod))
+        (Finset.Ico a b).attach.powerset).card ≤ p * (b^q) * (b - a)^q := by
       sorry
 
 
-    have gamma_lift_conj: ∀ k: ℕ, (0 < k) →  ∃ q: ℕ, ∀ g, ∀ b: ℕ, 0 < b → ∃ p: ℕ, 0 < p ∧ ∀ a: ℕ, (0 < a) → (a < b) → (Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma_lift)^[k * ↑i] g) x.toList).prod)
-        (Finset.Ico a b).attach.powerset).card ≤ p * (b - a)^q := by
-
+    have gamma_lift_conj: ∀ k: ℕ, (0 < k) →  ∀ g, ∃ p q: ℕ, 0 < p ∧ ∀ b: ℕ, 0 < b → ∀ a: ℕ, (0 < a) → (a < b) → (Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma_lift)^[k * ↑i] g) x.toList).prod)
+        (Finset.Ico a b).attach.powerset).card ≤ p * (b^q) * (b - a)^q := by
 
       sorry
 
@@ -1691,21 +1690,22 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
             ((Finsupp.linearEquivFunOnFinite ℤ ℤ (Fin dim)).symm v)) with hg
 
 
-        obtain ⟨q, hq⟩ := gamma_lift_conj ⌈Real.logb ‖k‖ 3⌉₊ (by simp; sorry)
+        obtain ⟨p, q, p_pos, hq⟩ := gamma_lift_conj ⌈Real.logb ‖k‖ 3⌉₊ (by simp; sorry) g
         --have K: ℕ := ⌈Real.logb ‖k‖ 3⌉₊ + ⌈((4 * ↑q + Real.log ↑p) / Real.log 2) ^ 2⌉₊ + 1
 
         have K : ℕ := sorry
 
 
-        obtain ⟨p, p_pos, hpq⟩ := hq g K sorry
-        specialize hpq ⌈Real.logb ‖k‖ 3⌉₊ sorry sorry
+        have hpq := hq K sorry ⌈Real.logb ‖k‖ 3⌉₊ sorry sorry
 
-        use p
+        use p * K ^ q
         use q
         use K
 
         refine ⟨?_, ?_, ?_, ?_⟩
-        . exact p_pos
+        . apply mul_pos
+          . exact p_pos
+          . sorry
         . sorry
         .
           apply lt_log_two_mul_rpow_half
