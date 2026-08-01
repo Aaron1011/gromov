@@ -1414,6 +1414,11 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N', Nat.iterate (fun x => x * ((gamma^[a]) x⁻¹)) n g = 1 := by
 
   classical
+
+
+  have gamma_conj_card: ∃ p q : ℕ, ∀ a b : ℕ, ∀ g, ∀ s: Finset (Finset.Ico a b), (List.map (fun k => gamma^[k] g) s.toList).prod = 1 := by
+    sorry
+
   let torsion := CommGroup.torsion (Subgroup.center N')
   have center_fg: Group.FG (Subgroup.center N') := by
     rw [Group.fg_iff_subgroup_fg]
@@ -1673,6 +1678,16 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
             -- Turn each subsum into `Additive.ofMul` of a product in the group, keeping the
             -- index set as the subtype `↥(Finset.Ico N_1 N_2)`.
             simp_rw [← ofMul_prod]
+            -- `Additive.ofMul` is a bijection, so it does not affect the cardinality: pull it
+            -- out of the image and discard it.
+            rw [← Function.comp_def Additive.ofMul, ← Finset.image_image,
+              Finset.card_image_of_injective _ (Equiv.injective _)]
+            -- name the (fixed) group element the iterates are applied to
+            set g : ↥(Subgroup.center ↥N') ⧸ torsion :=
+              Additive.toMul ((Finsupp.linearCombination ℤ ⇑B)
+                ((Finsupp.linearEquivFunOnFinite ℤ ℤ (Fin dim)).symm v)) with hg
+
+            simp_rw [← Finset.prod_map_toList]
             sorry
           . sorry
         --rw [← (Finset.card_image_iff (f := fun (a: Fin (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion))) → ℂ) => ((Module.finBasis ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion)))).repr.symm a)).mpr]
