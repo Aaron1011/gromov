@@ -1657,7 +1657,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
       sorry
 
 
-    have gamma_lift_conj: ∀ g, ∀ a b: ℕ, (0 < a) → (a < b) → ∃ p q: ℕ, (Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma_lift)^[a * ↑i] g) x.toList).prod)
+    have gamma_lift_conj: ∀ g, ∀ a b: ℕ, (0 < a) → (a < b) → ∃ p q: ℕ, 0 < p ∧ (Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma_lift)^[a * ↑i] g) x.toList).prod)
         (Finset.Ico a b).attach.powerset).card ≤ p * (b - a)^q := by
 
 
@@ -1677,13 +1677,13 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
 
         intro N_1
         have K: ℕ := sorry
-        obtain ⟨p, q, hpq⟩ := gamma_lift_conj g N_1 K sorry sorry
+        obtain ⟨p, q, p_pos, hpq⟩ := gamma_lift_conj g N_1 K sorry sorry
         use K
         refine ⟨by sorry, ?_⟩
         use p
         use q
         refine ⟨?_, ?_, ?_⟩
-        . sorry
+        . exact p_pos
         . sorry
         .
           rw [← (Finset.card_image_iff (f := fun a => remap (Finsupp.equivFunOnFinite.symm a))).mpr]
@@ -1714,7 +1714,13 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
               simp
             . simp
             . simp
-          . sorry
+          . apply Function.Injective.injOn
+            intro a b hab
+            simp [remap, equiv] at hab
+            rw [Function.Injective.eq_iff (linearIndependent_iff_injective_finsuppLinearCombination.mp ?_)] at hab
+            . simpa using hab
+            . apply Module.Basis.linearIndependent
+
         --rw [← (Finset.card_image_iff (f := fun (a: Fin (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion))) → ℂ) => ((Module.finBasis ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion)))).repr.symm a)).mpr]
         --simp_rw [← pow_mul]
     )
