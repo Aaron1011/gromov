@@ -2739,7 +2739,64 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
             simp [x_mem_zero]
         . simp
 
-    sorry
+
+    simp at laplace_q
+    have one_mem_q_spec: 1 ∈ spectrum ℝ Q := by
+      rw [cfc_map_spectrum (ha := by sorry) (hf := by sorry)]
+      simp [ramp]
+      use 0
+      rw [Cx.spectrum_mapCLM]
+      refine ⟨laplace_spectrum_contains_zero hf, ?_⟩
+      right
+      simp
+
+    have nontrivial_cx: Nontrivial (Cx ↥(Lp ℝ 2 volume (α := G))  →L[ℂ] Cx ↥(Lp ℝ 2 volume (α := G))) := by
+      simp [volume]
+      use 1
+      use 0
+      simp
+      rw [ContinuousLinearMap.ext_iff]
+      simp
+      let hf := (finsupp_lp_top (fun (x: G) => if x = 1 then 1 else 0) (by sorry) 2)
+      rw [← my_haar_eq_count] at hf
+      use (hf.toLp, 0)
+
+      sorry
+
+    have Q_nonzero: Q ≠ 0 := by
+      by_contra!
+      simp [this] at one_mem_q_spec
+
+    apply ContinuousLinearMap.exists_ne_zero at Q_nonzero
+    obtain ⟨x, hx⟩ := Q_nonzero
+    have laplace_q_x: (Cx.mapCLM Δ) (Q x) = 0 := by
+      rw [← ContinuousLinearMap.mul_apply]
+      simp [laplace_q]
+
+    by_cases fst_nonzero: (Q x).fst ≠ 0
+    .
+      simp at laplace_q_x
+      apply_fun (fun a => a.fst) at laplace_q_x
+      simp at laplace_q_x
+      simp [Δ, LinearMap.mkContinuous, Laplace_linear] at laplace_q_x
+      apply laplace_zero_iff_zero at laplace_q_x
+      contradiction
+    .
+      have snd_nonzero: (Q x).snd ≠ 0 := by
+        by_contra!
+        simp at fst_nonzero
+        have Q_zero: (Q x) = 0 := by
+          apply Cx.ext
+          grind
+        contradiction
+
+      -- TODO - deduplicate this
+      simp at laplace_q_x
+      apply_fun (fun a => a.snd) at laplace_q_x
+      simp at laplace_q_x
+      simp [Δ, LinearMap.mkContinuous, Laplace_linear] at laplace_q_x
+      apply laplace_zero_iff_zero at laplace_q_x
+      contradiction
 
 
   rw [← Set.nonempty_iff_ne_empty] at spec_inter
