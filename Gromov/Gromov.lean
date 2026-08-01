@@ -5610,7 +5610,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     obtain ⟨α, m, alpha_nonzero, alpha_is_unipotent_conj⟩ := exists_gamma_n_unipotent_N' (N' := N')  N'_nilpotent N'_fg gamma_conj_N' --((MulAut.conj γ).characteristic N')
 
 
-    have gamma_conj_card: ∀ k: ℕ, (0 < k) →  ∃ q: ℕ, ∀ g, ∀ a b: ℕ, (0 < a) → (a < b) → ∃ p: ℕ, 0 < p ∧ (Finset.image (fun x ↦ (List.map (fun i ↦ (gamma_conj_N')^[k * ↑i] g) x.toList).prod)
+    have gamma_conj_card: ∀ k: ℕ, (0 < k) →  ∃ q: ℕ, ∀ g, ∀ b: ℕ, 0 < b → ∃ p: ℕ, 0 < p ∧ ∀ a: ℕ, (0 < a) → (a < b) → ((Finset.image (fun x ↦ (List.map (fun i ↦ (gamma_conj_N')^[k * ↑i] g) x.toList).prod))
         (Finset.Ico a b).attach.powerset).card ≤ p * (b - a)^q := by
 
       have s_poly := hGS.g_growth
@@ -5635,7 +5635,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
         sorry
 
 
-      intro a b a_pos hab
+      intro b hb
+      use p * ((x_list.length + gamma_list.length * (2 * k * b)) ^ q)
 
       have mul_nozero: 1 ≤  2 * k * b := by
         rw [mul_assoc]
@@ -5657,8 +5658,6 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
           exact gamma_coe
         simp [gamma_eq] at hγ
 
-
-      use p * ((x_list.length + gamma_list.length * (2 * k * b)) ^ q)
       refine ⟨?_, ?_⟩
       .
         apply mul_pos
@@ -5669,7 +5668,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
             positivity
           . grind
 
-
+      intro a ha hab
       grw [← Finset.card_image_of_injOn (f := fun a => a.val.toAdd.val.toMul.val) (by simp)]
       grw [Finset.card_le_card (t := hGS.S^((b - a) * (x_list.length + gamma_list.length * (2 * k * b)) ))]
       ·
