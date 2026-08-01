@@ -1945,7 +1945,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     let a := KroneckerPow (unitOfInvertible gamma_matrix) eigen_norm_one
     use a
     use n
-    refine ⟨sorry, ?_⟩
+    refine ⟨by apply KroneckerPow_pos, ?_⟩
     intro g
     apply_fun (fun f => f.toLin (Module.finBasis _ _) (Module.finBasis _ _)) at hm
     rw [LinearMap.ext_iff] at hm

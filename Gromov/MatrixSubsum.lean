@@ -917,6 +917,19 @@ noncomputable def KroneckerPow_single {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)�
 noncomputable def KroneckerPow {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (eigen_one_complex: ∀ k : Module.End.Eigenvalues ((A.val.map (Int.castRingHom ℂ ))).toLin', ‖k.val‖ = 1) :=
   ∏ (k : Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ )).toLin'), (KroneckerPow_single A k eigen_one_complex)
 
+lemma KroneckerPow_pos {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (eigen_one_complex: ∀ k : Module.End.Eigenvalues ((A.val.map (Int.castRingHom ℂ ))).toLin', ‖k.val‖ = 1):
+    0 < KroneckerPow A eigen_one_complex := by
+  simp [KroneckerPow]
+  intro k
+  by_contra!
+  simp at this
+  have pow_nonzero: KroneckerPow_single A k eigen_one_complex ≠ 0 := by
+    simp [KroneckerPow_single]
+    grind
+
+  simp [KroneckerPow_single] at this
+  grind
+
 lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (eigen_one_complex: ∀ k : Module.End.Eigenvalues ((A.val.map (Int.castRingHom ℂ ))).toLin', ‖k.val‖ = 1): ∃ m, (A.val^(KroneckerPow A eigen_one_complex) - 1)^m = 0 := by
   classical
   let A_C := (A.val.map (Int.castRingHom ℂ ))
