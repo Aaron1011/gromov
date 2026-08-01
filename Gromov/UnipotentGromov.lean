@@ -1407,21 +1407,43 @@ lemma toIntLinearMap_id {M : Type*}  [AddCommGroup M]: (AddMonoidHom.id M).toInt
   ext a
   simp
 
-/-- Isolates `K` on the right of the `h_poly` inequality of
-`int_matrix_poly_growth_eigenvalue`: to prove
-`X < Real.log 2 * (K - N_1) ^ (1/2)` it suffices to prove `N_1 + (X / Real.log 2) ^ 2 < K`.
+/-- Final step of isolating `K`: eliminates the `Real.log ↑K` still sitting on the left.
 
-No hypothesis relating `N_1` and `K` is needed, and none on the sign of `X`: the conclusion
-is *reduced* rather than rewritten to an iff, and `N_1 < K` already follows from the
-premise since `(X / Real.log 2) ^ 2 ≥ 0`. -/
-theorem lt_log_two_mul_rpow_half (N_1 K : ℕ) (X : ℝ)
-    (h : (N_1 : ℝ) + (X / Real.log 2) ^ 2 < (K : ℝ)) :
-    X < Real.log 2 * ((K : ℝ) - (N_1 : ℝ)) ^ ((1 : ℝ) / 2) := by
-  have hc : 0 < Real.log 2 := Real.log_pos (by norm_num)
-  rw [← Real.sqrt_eq_rpow, mul_comm, ← div_lt_iff₀ hc]
-  calc X / Real.log 2 ≤ |X / Real.log 2| := le_abs_self _
-    _ = Real.sqrt ((X / Real.log 2) ^ 2) := (Real.sqrt_sq_eq_abs _).symm
-    _ < Real.sqrt ((K : ℝ) - (N_1 : ℝ)) := Real.sqrt_lt_sqrt (sq_nonneg _) (by linarith)
+`Real.log_natCast_le_rpow_div` at `ε := 1/4` gives `Real.log K ≤ 4 * K ^ (1/4)`; squaring
+therefore contributes only a `K ^ (1/2)` term, which the right-hand `K` dominates.  The
+resulting hypothesis mentions `K` only on the right. -/
+theorem log_pow_sq_lt_of_lt (M p q K : ℕ) (hp : 0 < p) (hK1 : 1 ≤ K)
+    (h : 4 * ((8 * (q:ℝ) + Real.log p) ^ 2 / (Real.log 2) ^ 2) ^ 2 + 2 * (M:ℝ) < (K:ℝ)) :
+    ((4 * (q:ℝ) + (Real.log p + q * Real.log K)) / Real.log 2) ^ 2 + (M:ℝ) < (K:ℝ) := by
+  have hLpos : 0 < Real.log 2 := Real.log_pos (by norm_num)
+  have hK0 : (0:ℝ) < (K:ℝ) := by exact_mod_cast hK1
+  have hlogK0 : 0 ≤ Real.log (K:ℝ) := Real.log_nonneg (by exact_mod_cast hK1)
+  have hlogp0 : 0 ≤ Real.log (p:ℝ) := Real.log_nonneg (by exact_mod_cast hp)
+  have hq0 : (0:ℝ) ≤ (q:ℝ) := Nat.cast_nonneg q
+  have hM0 : (0:ℝ) ≤ (M:ℝ) := Nat.cast_nonneg M
+  set u : ℝ := (K:ℝ) ^ ((1:ℝ)/4) with hu
+  have hu1 : (1:ℝ) ≤ u := by
+    rw [hu]; exact Real.one_le_rpow (by exact_mod_cast hK1) (by norm_num)
+  have hu4 : u ^ 4 = (K:ℝ) := by
+    rw [hu, ← Real.rpow_natCast ((K:ℝ) ^ ((1:ℝ)/4)) 4, ← Real.rpow_mul hK0.le]; norm_num
+  have hlogK : Real.log (K:ℝ) ≤ 4 * u := by
+    calc Real.log (K:ℝ) ≤ (K:ℝ) ^ ((1:ℝ)/4) / ((1:ℝ)/4) :=
+          Real.log_natCast_le_rpow_div K (by norm_num)
+      _ = 4 * u := by rw [hu]; ring
+  have hnum0 : 0 ≤ 4 * (q:ℝ) + (Real.log p + q * Real.log K) := by nlinarith
+  have hnum : 4 * (q:ℝ) + (Real.log p + q * Real.log K) ≤ (8 * (q:ℝ) + Real.log p) * u := by
+    nlinarith
+  have hsq : ((4 * (q:ℝ) + (Real.log p + q * Real.log K)) / Real.log 2) ^ 2
+      ≤ (8 * (q:ℝ) + Real.log p) ^ 2 / (Real.log 2) ^ 2 * u ^ 2 := by
+    have hstep : ((4 * (q:ℝ) + (Real.log p + q * Real.log K)) / Real.log 2) ^ 2
+        ≤ ((8 * (q:ℝ) + Real.log p) * u / Real.log 2) ^ 2 := by gcongr
+    calc _ ≤ ((8 * (q:ℝ) + Real.log p) * u / Real.log 2) ^ 2 := hstep
+      _ = (8 * (q:ℝ) + Real.log p) ^ 2 / (Real.log 2) ^ 2 * u ^ 2 := by field_simp
+  set D : ℝ := (8 * (q:ℝ) + Real.log p) ^ 2 / (Real.log 2) ^ 2 with hD
+  have hD0 : 0 ≤ D := by rw [hD]; positivity
+  have hgoal : D * u ^ 2 + (M:ℝ) < (K:ℝ) := by
+    nlinarith [sq_nonneg (u ^ 2 - 2 * D), hu1, hD0, hM0, hu4, h]
+  linarith [hsq, hgoal]
 
 set_option maxHeartbeats 1000000 in
 set_option synthInstance.maxHeartbeats 40000 in
@@ -1691,9 +1713,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
 
 
         obtain ⟨p, q, p_pos, hq⟩ := gamma_lift_conj ⌈Real.logb ‖k‖ 3⌉₊ (by simp; sorry) g
-        --have K: ℕ := ⌈Real.logb ‖k‖ 3⌉₊ + ⌈((4 * ↑q + Real.log ↑p) / Real.log 2) ^ 2⌉₊ + 1
-
-        have K : ℕ := sorry
+        have K: ℕ := ⌈Real.logb ‖k‖ 3⌉₊ + ⌈((4 * ↑q + Real.log ↑p) / Real.log 2) ^ 2⌉₊ + 1
 
 
         have hpq := hq K sorry ⌈Real.logb ‖k‖ 3⌉₊ sorry sorry
@@ -1705,10 +1725,35 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
         refine ⟨?_, ?_, ?_, ?_⟩
         . apply mul_pos
           . exact p_pos
-          . sorry
+          . apply pow_pos
+            sorry
+
         . sorry
         .
-          apply lt_log_two_mul_rpow_half
+          -- Isolate `K` on the right of
+          --   `X < Real.log 2 * (↑K - ↑⌈Real.logb ‖k‖ 3⌉₊) ^ (1/2)`.
+          -- Divide by `Real.log 2 > 0`, bound the LHS by its absolute value (so no sign
+          -- assumption on `X` is needed), rewrite `|y| = √(y ^ 2)` and use strict
+          -- monotonicity of `√`, then move the subtraction across.  `K` is never unfolded.
+          have hlog2 : 0 < Real.log 2 := Real.log_pos (by norm_num)
+          rw [← Real.sqrt_eq_rpow, ← div_lt_iff₀' hlog2]
+          refine lt_of_le_of_lt (le_abs_self _) ?_
+          rw [← Real.sqrt_sq_eq_abs]
+          refine Real.sqrt_lt_sqrt (sq_nonneg _) ?_
+          rw [lt_sub_iff_add_lt]
+          -- `K` still occurs on the left inside `Real.log ↑(p * K ^ q)`; split that logarithm
+          -- so the only remaining left-hand occurrence is a single `Real.log ↑K`.
+          have hK1 : 1 ≤ K := by sorry
+          have hp : ((p : ℝ)) ≠ 0 := Nat.cast_ne_zero.mpr p_pos.ne'
+          have hKr : ((K : ℝ)) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
+          push_cast
+          rw [Real.log_mul hp (pow_ne_zero _ hKr), Real.log_pow]
+          -- ⊢ ((4 * ↑q + (Real.log ↑p + ↑q * Real.log ↑K)) / Real.log 2) ^ 2
+          --     + ↑⌈Real.logb ‖k‖ 3⌉₊ < ↑K
+          -- Finally remove the `Real.log ↑K`, leaving `K` only on the right.
+          refine log_pow_sq_lt_of_lt _ p q K p_pos hK1 ?_
+          -- ⊢ 4 * ((8 * ↑q + Real.log ↑p) ^ 2 / Real.log 2 ^ 2) ^ 2
+          --     + 2 * ↑⌈Real.logb ‖k‖ 3⌉₊ < ↑K
           sorry
         .
           rw [← (Finset.card_image_iff (f := fun a => remap (Finsupp.equivFunOnFinite.symm a))).mpr]
