@@ -1468,9 +1468,6 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
   classical
 
 
-  have gamma_conj_card: ∃ p q : ℕ, ∀ a b : ℕ, ∀ g, ∀ s: Finset (Finset.Ico a b), (List.map (fun k => gamma^[k] g) s.toList).prod = 1 := by
-    sorry
-
   let torsion := CommGroup.torsion (Subgroup.center N')
   have center_fg: Group.FG (Subgroup.center N') := by
     rw [Group.fg_iff_subgroup_fg]
@@ -1726,11 +1723,26 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
             ((Finsupp.linearEquivFunOnFinite ℤ ℤ (Fin dim)).symm v)) with hg
 
 
-        obtain ⟨p, q, p_pos, hq⟩ := gamma_lift_conj ⌈Real.logb ‖k‖ 3⌉₊ (by simp; sorry) g
-        have K: ℕ := ⌈Real.logb ‖k‖ 3⌉₊ + ⌈((4 * ↑q + Real.log ↑p) / Real.log 2) ^ 2⌉₊ + 1
+        obtain ⟨p, q, p_pos, hq⟩ := gamma_lift_conj ⌈Real.logb ‖k‖ 3⌉₊ (by
+          simp
+          apply Real.logb_pos
+          . grind
+          . grind
+        ) g
+        let K: ℕ := (⌈4 * ((8 * ↑q + Real.log ↑p) ^ 2 / Real.log 2 ^ 2) ^ 2⌉₊ + 2 * ⌈Real.logb ‖k‖ 3⌉₊) + 1
 
 
-        have hpq := hq K sorry ⌈Real.logb ‖k‖ 3⌉₊ sorry sorry
+        have hpq := hq K (by simp [K]) ⌈Real.logb ‖k‖ 3⌉₊ (by
+          simp
+          apply Real.logb_pos
+          . grind
+          . grind
+        ) (by
+          simp [K]
+          rw [two_mul]
+          grw [Nat.le_ceil (a := Real.logb ‖k‖ 3)]
+          grind
+        )
 
         use p * K ^ q
         use q
@@ -1740,9 +1752,12 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
         . apply mul_pos
           . exact p_pos
           . apply pow_pos
-            sorry
+            simp [K]
 
-        . sorry
+        . simp [K]
+          rw [two_mul]
+          grw [Nat.le_ceil (a := Real.logb ‖k‖ 3)]
+          grind
         .
           -- Isolate `K` on the right of
           --   `X < Real.log 2 * (↑K - ↑⌈Real.logb ‖k‖ 3⌉₊) ^ (1/2)`.
@@ -1761,7 +1776,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
           refine log_pow_sq_lt_of_lt _ p q K p_pos ?_
           -- ⊢ ⌈4 * ((8 * ↑q + Real.log ↑p) ^ 2 / Real.log 2 ^ 2) ^ 2⌉₊
           --     + 2 * ⌈Real.logb ‖k‖ 3⌉₊ < K
-          sorry
+          simp [K]
         .
           rw [← (Finset.card_image_iff (f := fun a => remap (Finsupp.equivFunOnFinite.symm a))).mpr]
           .
