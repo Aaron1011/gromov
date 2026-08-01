@@ -2787,7 +2787,10 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
         simp at fst_nonzero
         have Q_zero: (Q x) = 0 := by
           apply Cx.ext
-          grind
+          all_goals {
+            simp
+            grind
+          }
         contradiction
 
       -- TODO - deduplicate this
