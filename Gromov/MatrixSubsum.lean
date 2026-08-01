@@ -545,7 +545,7 @@ lemma matrix_map_eigenvector_component {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)
 -- cast to a complex vector (which can therefore be turned back into an element of G).
 -- This was easier than dealing with the "pick a vector with a component in the eigenvector" approach in the paper
 lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)) (φ : (Fin d) → ℂ) (v: Fin d → ℤ) (v_ne_zero: ‖φ ⬝ᵥ (Int.castRingHom ℂ) ∘ v‖ ≠ 0) (k: ℂ) (hv: (A.map (Int.castRingHom ℂ)).vecMul φ = (k • φ)) (k_gt: 1 < ‖k‖):
-    ∃ N₀, ∀ N, 2^(N - N₀) ≤ #((Finset.image (fun a => a.sum (fun b => (((A^((Nat.ceil (Real.logb ‖k‖ 3)))))^b.val).mulVec v)) ((Finset.Ico N₀ N)).attach.powerset)) := by
+    ∀ N, 2^(N - ((Nat.ceil (Real.logb ‖k‖ 3)))) ≤ #((Finset.image (fun a => a.sum (fun b => (((A^((Nat.ceil (Real.logb ‖k‖ 3)))))^b.val).mulVec v)) ((Finset.Ico ((Nat.ceil (Real.logb ‖k‖ 3))) N)).attach.powerset)) := by
   have mul_v := mul_pow_exact (A.map (Int.castRingHom ℂ)) φ k hv
 
   have pow_le: 3 ≤ ‖k‖^(Nat.ceil (Real.logb ‖k‖ 3)) := by
@@ -559,7 +559,6 @@ lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)) (
     . simp
     . linarith
 
-  use (Nat.ceil (Real.logb ‖k‖ 3))
   intro N
   by_cases N_le: N ≤ Nat.ceil (Real.logb ‖k‖ 3)
   .
@@ -676,7 +675,7 @@ lemma exists_vector_component_nonzero {d: ℕ} (v: (Fin d) → ℂ) (hv: v ≠ 0
 
 lemma int_matrix_poly_growth_eigenvalue {d: ℕ} [NeZero d] (A: (Matrix (Fin d) (Fin d) ℤ)ˣ)
   --(a b : ℕ) (ha: 0 < a)
-  (h_poly: ∀ k: ℂ, 1 < ‖k‖ → ∀ v: (Fin d) → ℤ, ∀ N_1 : ℕ , ∃ N_2: ℕ, N_1 < N_2 ∧ ∃ a b: ℕ, (0 < a) ∧ (4 * ↑b + Real.log ↑a < (Real.log 2) * (N_2 - N_1)^((1 : ℝ) / 2)) ∧ #((Finset.image (fun a => a.sum (fun b => ((((A.val)^((Nat.ceil (Real.logb ‖k‖ 3)))))^b.val).mulVec (v))) ((Finset.Ico N_1 N_2)).attach.powerset)) ≤ a * (N_2 - N_1)^(2*b)):
+  (h_poly: ∀ k: ℂ, 1 < ‖k‖ → ∀ v: (Fin d) → ℤ, ∃ N_2: ℕ, (Nat.ceil (Real.logb ‖k‖ 3)) < N_2 ∧ ∃ a b: ℕ, (0 < a) ∧ (4 * ↑b + Real.log ↑a < (Real.log 2) * (N_2 - (Nat.ceil (Real.logb ‖k‖ 3)))^((1 : ℝ) / 2)) ∧ #((Finset.image (fun a => a.sum (fun b => ((((A.val)^((Nat.ceil (Real.logb ‖k‖ 3)))))^b.val).mulVec (v))) ((Finset.Ico (Nat.ceil (Real.logb ‖k‖ 3)) N_2)).attach.powerset)) ≤ a * (N_2 - (Nat.ceil (Real.logb ‖k‖ 3)))^(2*b)):
   ∀ k : Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ)).toLin', ‖k.val‖ = 1 := by
 
 
@@ -729,7 +728,7 @@ lemma int_matrix_poly_growth_eigenvalue {d: ℕ} [NeZero d] (A: (Matrix (Fin d) 
       -- have map_v := hv.1
       -- simp at map_v
 
-      have foo := int_matrix_exponential_growth (d := d)
+      have hN := int_matrix_exponential_growth (d := d)
         (A.val) v (Pi.single q 1) (by
           simp
           conv =>
@@ -745,9 +744,7 @@ lemma int_matrix_poly_growth_eigenvalue {d: ℕ} [NeZero d] (A: (Matrix (Fin d) 
         one_lt_k
 
 
-
-      obtain ⟨N, hN⟩ := foo
-      specialize h_poly k one_lt_k (Pi.single q 1) N
+      specialize h_poly k one_lt_k (Pi.single q 1)
       obtain ⟨N_2, N_2_gt, ⟨a, b, ha, N_2_diff_gt, card_le⟩⟩ := h_poly
       --obtain ⟨N_2, N_2_gt, N_2_diff_gt, card_le⟩ := h_poly
       -- obtain ⟨a, b, ha, h_poly⟩ := h_poly
@@ -761,7 +758,7 @@ lemma int_matrix_poly_growth_eigenvalue {d: ℕ} [NeZero d] (A: (Matrix (Fin d) 
       rw [Real.log_pow] at hN
       nth_grw 2 [Real.log_natCast_le_rpow_div (ε := (1/2))] at hN
       simp at hN
-      have sub_ne: 0 ≠ (N_2 - N) := by
+      have sub_ne: 0 ≠ (N_2 - ((Nat.ceil (Real.logb ‖k‖ 3)))) := by
         grind
       field_simp at hN
       rw [add_comm] at hN
@@ -771,7 +768,7 @@ lemma int_matrix_poly_growth_eigenvalue {d: ℕ} [NeZero d] (A: (Matrix (Fin d) 
       nth_rw 1 [mul_comm] at hN
       rw [mul_div_assoc] at hN
       rw [← Real.rpow_one_sub'] at hN
-      have le_n_pow: Real.log ↑a / ↑(N_2 - N) ^ ((1: ℝ) / 2) ≤ Real.log a := by
+      have le_n_pow: Real.log ↑a / ↑(N_2 - (Nat.ceil (Real.logb ‖k‖ 3))) ^ ((1: ℝ) / 2) ≤ Real.log a := by
         rw [div_eq_mul_inv]
         apply mul_le_of_le_one_right
         . positivity

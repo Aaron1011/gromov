@@ -1691,15 +1691,14 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
             ((Finsupp.linearEquivFunOnFinite ℤ ℤ (Fin dim)).symm v)) with hg
 
 
-        intro N_1
-        obtain ⟨q, hq⟩ := gamma_lift_conj ⌈Real.logb ‖k‖ 3⌉₊ (by sorry)
-        --have K: ℕ := N_1 + ⌈((4 * ↑q + Real.log ↑p) / Real.log 2) ^ 2⌉₊ + 1
+        obtain ⟨q, hq⟩ := gamma_lift_conj ⌈Real.logb ‖k‖ 3⌉₊ (by simp; sorry)
+        --have K: ℕ := ⌈Real.logb ‖k‖ 3⌉₊ + ⌈((4 * ↑q + Real.log ↑p) / Real.log 2) ^ 2⌉₊ + 1
 
         have K : ℕ := sorry
         use K
 
         obtain ⟨p, p_pos, hpq⟩ := hq g K sorry
-        specialize hpq N_1 sorry sorry
+        specialize hpq ⌈Real.logb ‖k‖ 3⌉₊ sorry sorry
         refine ⟨by sorry, ?_⟩
         use p
         use q

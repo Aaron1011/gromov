@@ -5668,7 +5668,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
             positivity
           . grind
 
-      intro a ha hab
+      intro a ha
       grw [← Finset.card_image_of_injOn (f := fun a => a.val.toAdd.val.toMul.val) (by simp)]
       grw [Finset.card_le_card (t := hGS.S^((b - a) * (x_list.length + gamma_list.length * (2 * k * b)) ))]
       ·
