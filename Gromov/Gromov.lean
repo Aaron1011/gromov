@@ -5610,20 +5610,23 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
     obtain ⟨α, m, alpha_nonzero, alpha_is_unipotent_conj⟩ := exists_gamma_n_unipotent_N' (N' := N')  N'_nilpotent N'_fg gamma_conj_N' --((MulAut.conj γ).characteristic N')
 
 
-    have gamma_conj_card: ∀ g, ∀ a b: ℕ, (0 < a) → (a < b) → ∃ p q: ℕ, 0 < p ∧ (Finset.image (fun x ↦ (List.map (fun i ↦ (gamma_conj_N')^[a * ↑i] g) x.toList).prod)
+    have gamma_conj_card: ∃ q: ℕ, ∀ g, ∀ a b: ℕ, (0 < a) → (a < b) → ∃ p: ℕ, 0 < p ∧ (Finset.image (fun x ↦ (List.map (fun i ↦ (gamma_conj_N')^[a * ↑i] g) x.toList).prod)
         (Finset.Ico a b).attach.powerset).card ≤ p * (b - a)^q := by
-
-      intro x
-      obtain ⟨x_list, x_prod, x_list_prod⟩ :=
-        word_norm_prod_self (hGS := hGS) x.val.toAdd.val.toMul.val
-      obtain ⟨gamma_list, gamma_prod, gamma_list_prod⟩ :=
-        word_norm_prod_self (hGS := hGS) (Additive.toMul γ).val
 
       have s_poly := hGS.g_growth
       unfold HasPolynomialGrowth at s_poly
       obtain ⟨q, hq⟩ := s_poly
       unfold HasPolynomialGrowthD at hq
       obtain ⟨p, hp⟩ := hq
+
+      use q
+      intro x
+      obtain ⟨x_list, x_prod, x_list_prod⟩ :=
+        word_norm_prod_self (hGS := hGS) x.val.toAdd.val.toMul.val
+      obtain ⟨gamma_list, gamma_prod, gamma_list_prod⟩ :=
+        word_norm_prod_self (hGS := hGS) (Additive.toMul γ).val
+
+
 
       have p_pos: 0 < p := by
         sorry
@@ -5656,7 +5659,6 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
 
       use p * ((x_list.length + gamma_list.length * (2 * a * b)) ^ q)
-      use q
       refine ⟨?_, ?_⟩
       .
         apply mul_pos

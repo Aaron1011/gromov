@@ -1407,6 +1407,22 @@ lemma toIntLinearMap_id {M : Type*}  [AddCommGroup M]: (AddMonoidHom.id M).toInt
   ext a
   simp
 
+/-- Isolates `K` on the right of the `h_poly` inequality of
+`int_matrix_poly_growth_eigenvalue`: to prove
+`X < Real.log 2 * (K - N_1) ^ (1/2)` it suffices to prove `N_1 + (X / Real.log 2) ^ 2 < K`.
+
+No hypothesis relating `N_1` and `K` is needed, and none on the sign of `X`: the conclusion
+is *reduced* rather than rewritten to an iff, and `N_1 < K` already follows from the
+premise since `(X / Real.log 2) ^ 2 ≥ 0`. -/
+theorem lt_log_two_mul_rpow_half (N_1 K : ℕ) (X : ℝ)
+    (h : (N_1 : ℝ) + (X / Real.log 2) ^ 2 < (K : ℝ)) :
+    X < Real.log 2 * ((K : ℝ) - (N_1 : ℝ)) ^ ((1 : ℝ) / 2) := by
+  have hc : 0 < Real.log 2 := Real.log_pos (by norm_num)
+  rw [← Real.sqrt_eq_rpow, mul_comm, ← div_lt_iff₀ hc]
+  calc X / Real.log 2 ≤ |X / Real.log 2| := le_abs_self _
+    _ = Real.sqrt ((X / Real.log 2) ^ 2) := (Real.sqrt_sq_eq_abs _).symm
+    _ < Real.sqrt ((K : ℝ) - (N_1 : ℝ)) := Real.sqrt_lt_sqrt (sq_nonneg _) (by linarith)
+
 set_option maxHeartbeats 1000000 in
 set_option synthInstance.maxHeartbeats 40000 in
 --  {G: Type*} [Group G] [DecidableEq G] (H: Subgroup G)
@@ -1652,12 +1668,12 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
       apply NeZero.of_pos
       apply Module.finrank_pos
 
-    have gamma_conj: ∀ g, ∀ a b: ℕ, (0 < a) → (a < b) → ∃ p q: ℕ, 0 < p ∧ (Finset.image (fun x ↦ (List.map (fun i ↦ (gamma)^[a * ↑i] g) x.toList).prod)
+    have gamma_conj: ∃ q: ℕ, ∀ g, ∀ a b: ℕ, (0 < a) → (a < b) → ∃ p: ℕ, 0 < p ∧ (Finset.image (fun x ↦ (List.map (fun i ↦ (gamma)^[a * ↑i] g) x.toList).prod)
         (Finset.Ico a b).attach.powerset).card ≤ p * (b - a)^q := by
       sorry
 
 
-    have gamma_lift_conj: ∀ g, ∀ a b: ℕ, (0 < a) → (a < b) → ∃ p q: ℕ, 0 < p ∧ (Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma_lift)^[a * ↑i] g) x.toList).prod)
+    have gamma_lift_conj: ∃ q: ℕ, ∀ g, ∀ a b: ℕ, (0 < a) → (a < b) → ∃ p: ℕ, 0 < p ∧ (Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma_lift)^[a * ↑i] g) x.toList).prod)
         (Finset.Ico a b).attach.powerset).card ≤ p * (b - a)^q := by
 
 
@@ -1676,8 +1692,10 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
 
 
         intro N_1
-        have K: ℕ := sorry
-        obtain ⟨p, q, p_pos, hpq⟩ := gamma_lift_conj g N_1 K sorry sorry
+        obtain ⟨q, hq⟩ := gamma_lift_conj
+        --have K: ℕ := N_1 + ⌈((4 * ↑q + Real.log ↑p) / Real.log 2) ^ 2⌉₊ + 1
+        have K : ℕ := sorry
+        obtain ⟨p, p_pos, hpq⟩ := hq g N_1 K sorry sorry
         use K
         refine ⟨by sorry, ?_⟩
         use p
@@ -1685,7 +1703,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
         refine ⟨?_, ?_, ?_⟩
         . exact p_pos
         .
-
+          apply lt_log_two_mul_rpow_half
           sorry
         .
           rw [← (Finset.card_image_iff (f := fun a => remap (Finsupp.equivFunOnFinite.symm a))).mpr]
