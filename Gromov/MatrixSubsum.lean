@@ -930,7 +930,7 @@ lemma KroneckerPow_pos {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (eigen_one_c
   simp [KroneckerPow_single] at this
   grind
 
-lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (eigen_one_complex: ∀ k : Module.End.Eigenvalues ((A.val.map (Int.castRingHom ℂ ))).toLin', ‖k.val‖ = 1): ∃ m, (A.val^(KroneckerPow A eigen_one_complex) - 1)^m = 0 := by
+lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (n: ℕ) (hn: 0 < n) (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (eigen_one_complex: ∀ k : Module.End.Eigenvalues ((A.val.map (Int.castRingHom ℂ ))).toLin', ‖k.val‖ = 1): ∃ m, (A.val^(n * KroneckerPow A eigen_one_complex) - 1)^m = 0 := by
   classical
   let A_C := (A.val.map (Int.castRingHom ℂ ))
 
@@ -1052,7 +1052,7 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
     simp [KroneckerPow_single] at this
     grind
 
-  have eigen_pow_prod_one: ∀ k:  Module.End.Eigenvalues A_C.toLin', k.val^n_prod = 1 := by
+  have eigen_pow_prod_one: ∀ k:  Module.End.Eigenvalues A_C.toLin', k.val^(n*n_prod) = 1 := by
     intro k
     unfold n_prod KroneckerPow
     rw [← Finset.mul_prod_erase (f := fun (a: Module.End.Eigenvalues (Matrix.toLin' ((A.val).map ⇑(Int.castRingHom ℂ)))) => KroneckerPow_single A a eigen_one_complex) (a := k)]
@@ -1061,19 +1061,24 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
       have pow_self := eigen_pow_self (k := k.val) (hk := k.prop)
       simp [KroneckerPow_single]
       simp [eigen_pow] at pow_self
+      simp_rw [← pow_mul]
+      rw [← mul_assoc]
+      rw [mul_comm (a := n)]
+      rw [mul_assoc]
+      rw [pow_mul]
       rw [pow_self]
       simp
     . apply Finset.mem_univ
 
-  have pow_eigen: ∀ j: Module.End.Eigenvalues (A_C.toLin'^n_prod), j.val = 1 := by
+  have pow_eigen: ∀ j: Module.End.Eigenvalues (A_C.toLin'^(n*n_prod)), j.val = 1 := by
     intro a
     have a_spec := a.prop
     conv at a_spec =>
-      equals Module.End.HasEigenvalue (A_C.toLin' ^ n_prod) (↑a) => rfl
+      equals Module.End.HasEigenvalue (A_C.toLin' ^ (n*n_prod)) (↑a) => rfl
     rw [Module.End.hasEigenvalue_iff_mem_spectrum] at a_spec
     simp_rw [← Matrix.toLin'_pow] at a_spec
     simp [-Matrix.toLin'_pow] at a_spec
-    rw [spectrum.map_pow_of_pos _ n_prod_pos] at a_spec
+    rw [spectrum.map_pow_of_pos _ (by positivity)] at a_spec
     simp at a_spec
     obtain ⟨k, k_mem, k_pow⟩ := a_spec
     simp [Module.End.UnifEigenvalues.val] at k_pow
@@ -1088,24 +1093,24 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
     rw [← eigen_pow_prod_one (k := ⟨k, k_mem⟩)]
     . simp
 
-  have char_nonzero: (A_C.toLin' ^ n_prod).charpoly ≠ 0 := by
+  have char_nonzero: (A_C.toLin' ^ (n*n_prod)).charpoly ≠ 0 := by
     by_contra!
-    have foo := (A_C.toLin'^n_prod).charpoly_monic
+    have foo := (A_C.toLin'^(n*n_prod)).charpoly_monic
     simp [this] at foo
 
 
 
-  have a_f_char_eq: (A_C.toLin'^n_prod).charpoly = (Polynomial.X - (Polynomial.C 1))^d := by
-    rw [Polynomial.eq_leadingCoeff_mul_of_monic_of_dvd_of_natDegree_le (p := (Polynomial.X - Polynomial.C 1) ^ d) (q :=  (A_C.toLin'^n_prod).charpoly)]
+  have a_f_char_eq: (A_C.toLin'^(n*n_prod)).charpoly = (Polynomial.X - (Polynomial.C 1))^d := by
+    rw [Polynomial.eq_leadingCoeff_mul_of_monic_of_dvd_of_natDegree_le (p := (Polynomial.X - Polynomial.C 1) ^ d) (q :=  (A_C.toLin'^(n*n_prod)).charpoly)]
     .
       rw [Polynomial.Monic.def.mp]
       . simp
-      . exact LinearMap.charpoly_monic (A_C.toLin' ^ n_prod)
+      . exact LinearMap.charpoly_monic (A_C.toLin' ^ (n*n_prod))
     . simp
       apply Polynomial.Monic.pow
       apply Polynomial.monic_X_sub_C
     .
-      have roots_singleton: (A_C.toLin' ^ n_prod).charpoly.roots.toFinset = {1} := by
+      have roots_singleton: (A_C.toLin' ^ (n*n_prod)).charpoly.roots.toFinset = {1} := by
         ext a
         simp only [Multiset.mem_toFinset]
         rw [Polynomial.mem_roots']
@@ -1123,7 +1128,7 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
 
 
           obtain ⟨k, hk⟩ := Module.End.exists_eigenvalue (A_C.toLin')
-          have k_pow_prod: k^n_prod = 1 := by
+          have k_pow_prod: k^(n*n_prod) = 1 := by
             rw [← eigen_pow_prod_one (k := ⟨k, hk⟩)]
             simp
 
@@ -1146,7 +1151,7 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
         .
           apply IsAlgClosed.splits
       . by_contra!
-        have monic := (A_C.toLin'^n_prod).charpoly_monic
+        have monic := (A_C.toLin'^(n*n_prod)).charpoly_monic
         simp [this] at monic
     .
       simp only [Polynomial.natDegree_pow]
@@ -1156,7 +1161,7 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (A: (Matrix (Fin d) (Fin d) ℤ)
       simp
 
 
-  have eval_zero := (A_C.toLin'^n_prod).aeval_self_charpoly
+  have eval_zero := (A_C.toLin'^(n*n_prod)).aeval_self_charpoly
   simp [a_f_char_eq] at eval_zero
   use d
   simp [A_C] at eval_zero
