@@ -1635,6 +1635,49 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     exact t_char
   )
 
+
+
+
+  have gamma_mem_center:  ∀ g: Subgroup.center N', gamma g ∈ Subgroup.center N' := by
+    intro g
+    have center_char: (Subgroup.center N').Characteristic := by
+      infer_instance
+    rw [Subgroup.characteristic_iff_le_comap] at center_char
+    specialize center_char (gamma) g.prop
+    simp at center_char
+    exact center_char
+
+  have gamma_iter_mem_center: ∀ n, ∀ g: Subgroup.center N', gamma^[n] g ∈ Subgroup.center N' := by
+    intro n
+    induction n with
+    | zero =>
+      simp
+    | succ n ih =>
+      intro g
+      rw [Function.iterate_succ]
+      simp
+      apply ih ⟨_, gamma_mem_center g⟩
+
+
+  have swap_gamma_lift: ∀ g: Subgroup.center N', gamma_lift ↑g = ↑(⟨((gamma) g), by apply gamma_mem_center⟩ : Subgroup.center N') := by
+    intro g
+    simp [gamma_lift, gamma_center]
+    rfl
+
+  have swap_gamma_lift_iter: ∀ n, ∀ g: Subgroup.center N', gamma_lift^[n] ↑g = ↑(⟨((gamma^[n]) g), by apply gamma_iter_mem_center⟩ : Subgroup.center N') := by
+    intro n
+    induction n with
+    | zero =>
+      simp
+    | succ n ih =>
+      intro g
+      rw [Function.iterate_succ']
+      simp only [Function.comp_apply]
+      rw [ih]
+      rw [swap_gamma_lift]
+      simp_rw [Function.iterate_succ']
+      simp
+
   have unipotent_on_quot: ∃ a, ∃ n, 0 < a ∧  ∀ g : (Subgroup.center ↥N') ⧸ torsion, Nat.iterate (fun x => x * ((gamma_lift^[a] x⁻¹))) n g = 1 := by
     wlog nontrivial_quot: Nontrivial ((Subgroup.center ↥N') ⧸ torsion)
     .
@@ -1728,45 +1771,6 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
       apply Module.finrank_pos
 
 
-    have gamma_mem_center:  ∀ g: Subgroup.center N', gamma g ∈ Subgroup.center N' := by
-      intro g
-      have center_char: (Subgroup.center N').Characteristic := by
-        infer_instance
-      rw [Subgroup.characteristic_iff_le_comap] at center_char
-      specialize center_char (gamma) g.prop
-      simp at center_char
-      exact center_char
-
-    have gamma_iter_mem_center: ∀ n, ∀ g: Subgroup.center N', gamma^[n] g ∈ Subgroup.center N' := by
-      intro n
-      induction n with
-      | zero =>
-        simp
-      | succ n ih =>
-        intro g
-        rw [Function.iterate_succ]
-        simp
-        apply ih ⟨_, gamma_mem_center g⟩
-
-
-    have swap_gamma_lift: ∀ g: Subgroup.center N', gamma_lift ↑g = ↑(⟨((gamma) g), by apply gamma_mem_center⟩ : Subgroup.center N') := by
-      intro g
-      simp [gamma_lift, gamma_center]
-      rfl
-
-    have swap_gamma_lift_iter: ∀ n, ∀ g: Subgroup.center N', gamma_lift^[n] ↑g = ↑(⟨((gamma^[n]) g), by apply gamma_iter_mem_center⟩ : Subgroup.center N') := by
-      intro n
-      induction n with
-      | zero =>
-        simp
-      | succ n ih =>
-        intro g
-        rw [Function.iterate_succ']
-        simp only [Function.comp_apply]
-        rw [ih]
-        rw [swap_gamma_lift]
-        simp_rw [Function.iterate_succ']
-        simp
 
     have gamma_conj: ∀ k: ℕ, (0 < k) →  ∀ g, ∃ p q: ℕ, 0 < p ∧ ∀ b: ℕ, 0 < b → ∀ a: ℕ, (0 < a) → (a < b) → ((Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma)^[k * ↑i] g) x.toList).prod))
         (Finset.Ico a b).attach.powerset).card ≤ p * (b^q) * (b - a)^q := by
