@@ -1997,8 +1997,10 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     rw [x_mul_gamma_eq]
     simp
     rw [Module.End.coe_pow]
-    --rfl
-    sorry
+    -- collapse the `Matrix.toLin B B (LinearMap.toMatrix B B _)` round-trip, which plain
+    -- `rfl` cannot see through
+    rw [Matrix.toLin_toMatrix]
+    rfl
 
     -- induction n with
     -- | zero =>
