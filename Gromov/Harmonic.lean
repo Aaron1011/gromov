@@ -2192,9 +2192,7 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
         simp [P]
         use 0
         refine ⟨?_, by norm_num⟩
-        simp [Δ]
-        --apply laplace_spectrum_contains_zero hf
-        sorry
+        apply laplace_spectrum_contains_zero hf
 
     have zero_mem := laplace_spectrum_contains_zero hf
     rw [spectrum.mem_iff] at zero_mem
