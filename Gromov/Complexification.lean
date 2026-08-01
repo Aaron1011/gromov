@@ -273,4 +273,61 @@ lemma isSymmetric_mapCLM [CompleteSpace V] {f : V →L[ℝ] V} (hf : IsSelfAdjoi
 lemma isSelfAdjoint_mapCLM [CompleteSpace V] {f : V →L[ℝ] V} (hf : IsSelfAdjoint f) :
     IsSelfAdjoint (mapCLM f) := (isSymmetric_mapCLM hf).isSelfAdjoint
 
+/-!
+### Spectrum
+
+Complexification preserves the spectrum *at real points*: `mapCLM f` is invertible exactly when
+`f` is, because `mapCLM f` acts componentwise and so is bijective exactly when `f` is.
+
+Note this is **not** the same as saying `spectrum ℂ (mapCLM f) = ((↑) '' spectrum ℝ f)`, which is
+false in general: rotation by a quarter turn on `ℝ²` has empty real spectrum but complex spectrum
+`{I, -I}`.  Only the real points of `spectrum ℂ (mapCLM f)` correspond to `spectrum ℝ f`; see
+`ofReal_mem_spectrum_mapCLM_iff`.  For a self-adjoint `f` the complex spectrum is real anyway, so
+in that case nothing is lost.
+-/
+
+@[simp] lemma mapCLM_one : mapCLM (1 : V →L[ℝ] V) = 1 := by ext p <;> rfl
+
+lemma mapCLM_rsmul (r : ℝ) (f : V →L[ℝ] V) : mapCLM (r • f) = r • mapCLM f := by
+  ext p <;> simp
+
+lemma mapCLM_algebraMap (r : ℝ) :
+    mapCLM (algebraMap ℝ (V →L[ℝ] V) r) = algebraMap ℝ (Cx V →L[ℂ] Cx V) r := by
+  rw [Algebra.algebraMap_eq_smul_one, Algebra.algebraMap_eq_smul_one, mapCLM_rsmul, mapCLM_one]
+
+lemma bijective_mapCLM_iff (f : V →L[ℝ] V) :
+    Function.Bijective (mapCLM f) ↔ Function.Bijective f := by
+  constructor
+  · rintro ⟨hinj, hsurj⟩
+    refine ⟨fun x x' h => ?_, fun y => ?_⟩
+    · have : ((x, 0) : Cx V) = ((x', 0) : Cx V) := hinj (by ext; exacts [h, rfl])
+      exact congrArg Cx.fst this
+    · obtain ⟨p, hp⟩ := hsurj ((y, 0) : Cx V)
+      exact ⟨p.fst, congrArg Cx.fst hp⟩
+  · rintro ⟨hinj, hsurj⟩
+    refine ⟨fun p q h => ?_, fun q => ?_⟩
+    · exact Cx.ext (hinj (congrArg Cx.fst h)) (hinj (congrArg Cx.snd h))
+    · obtain ⟨a, ha⟩ := hsurj q.fst
+      obtain ⟨b, hb⟩ := hsurj q.snd
+      exact ⟨((a, b) : Cx V), by ext; exacts [ha, hb]⟩
+
+lemma isUnit_mapCLM_iff [CompleteSpace V] (f : V →L[ℝ] V) : IsUnit (mapCLM f) ↔ IsUnit f := by
+  rw [ContinuousLinearMap.isUnit_iff_bijective, ContinuousLinearMap.isUnit_iff_bijective,
+    bijective_mapCLM_iff]
+
+/-- Complexification preserves the real spectrum.  This is the form the continuous functional
+calculus wants, since `cfc` over `ℝ` is stated in terms of `spectrum ℝ`. -/
+lemma spectrum_mapCLM [CompleteSpace V] (f : V →L[ℝ] V) :
+    spectrum ℝ (mapCLM f) = spectrum ℝ f := by
+  ext r
+  simp only [spectrum.mem_iff]
+  rw [← mapCLM_algebraMap, mapCLM_sub, isUnit_mapCLM_iff]
+
+/-- A real number lies in the complex spectrum of `mapCLM f` exactly when it lies in the real
+spectrum of `f`. -/
+lemma ofReal_mem_spectrum_mapCLM_iff [CompleteSpace V] (f : V →L[ℝ] V) (r : ℝ) :
+    (r : ℂ) ∈ spectrum ℂ (mapCLM f) ↔ r ∈ spectrum ℝ f := by
+  rw [← spectrum_mapCLM f, ← spectrum.algebraMap_mem_iff ℂ]
+  rfl
+
 end Cx

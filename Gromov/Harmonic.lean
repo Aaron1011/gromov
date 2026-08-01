@@ -2642,7 +2642,7 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
 
 
 
-
+set_option maxHeartbeats 600000 in
 lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp ℝ 2 volume (α := G)), ‖Laplace g‖ ≤ (1 : ℝ) / n ∧ ⟪Laplace g, g⟫ = 1 := by
 
   let eps := (1: ℝ) / n
@@ -2654,9 +2654,9 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
   have Δ_self_adjoint: IsSelfAdjoint Δ := by
     apply Δ_symmetric.isSelfAdjoint
 
-  have spec_inter: spectrum ℝ (Polynomial.aeval Δ P) ∩ Set.Ioo 0 eps ≠ ∅ := by
+  have spec_inter: spectrum ℝ Δ ∩ Set.Ioo 0 eps ≠ ∅ := by
     by_contra!
-    have zero_isolated: spectrum ℝ (Polynomial.aeval Δ P) ∩ (Set.Ico 0 eps) = {0} := by
+    have zero_isolated: spectrum ℝ Δ ∩ (Set.Ico 0 eps) = {0} := by
       ext a
       simp
       refine ⟨?_, ?_⟩
@@ -2676,10 +2676,6 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
         intro ha
         simp [ha]
         refine ⟨?_, by simp [eps, hn]⟩
-        apply spectrum.subset_polynomial_aeval
-        simp [P]
-        use 0
-        refine ⟨?_, by norm_num⟩
         apply laplace_spectrum_contains_zero hf
 
     have zero_mem := laplace_spectrum_contains_zero hf
@@ -2692,19 +2688,55 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
 
 
     let Q := cfc (1 - ramp) (Cx.mapCLM Δ)
-    have laplace_q: Q = cfc (0: ℝ → ℝ) (Cx.mapCLM Δ) := by
+    have laplace_q: (Cx.mapCLM Δ) * Q = cfc (0: ℝ → ℝ) (Cx.mapCLM Δ) := by
       unfold Q
+      nth_rw 1 [← cfc_id (a := Cx.mapCLM Δ) ℝ (ha := by sorry)]
+      rw [← cfc_mul (hf := by sorry) (hg := by sorry)]
       apply cfc_congr
       intro x hx
       simp [ramp, max_def']
       norm_num
       split_ifs
       .
-
-        sorry
+        rw [Cx.spectrum_mapCLM] at hx
+        rename_i x_div
+        apply Δ_spectrum_subset at hx
+        simp [eps] at x_div
+        have x_nonpos := nonpos_of_mul_nonpos_left x_div (by simp [hn])
+        left
+        simp at hx
+        grind
       . simp [min_def']
         split_ifs
-        . sorry
+        .
+
+          by_cases x_eq: x = eps
+          . simp [x_eq, eps]
+            field_simp
+            simp
+          .
+            rename_i x_div_le
+            rw [div_le_one₀ (by simp [eps]; grind)] at x_div_le
+            have x_lt: x < eps := by
+              grind
+
+
+
+            have x_mem_zero: x ∈ ({0} : Set ℝ) := by
+              rw [← zero_isolated]
+              simp
+              refine ⟨?_, ?_⟩
+              .
+                rw [Cx.spectrum_mapCLM] at hx
+                exact hx
+              .
+                rw [Cx.spectrum_mapCLM] at hx
+                apply Δ_spectrum_subset at hx
+                simp at hx
+                grind
+
+            simp at x_mem_zero
+            simp [x_mem_zero]
         . simp
 
     sorry
