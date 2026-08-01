@@ -2163,7 +2163,7 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
 
 
 
-lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖Laplace g‖ ≤ (1 : ℝ) / n ∧ ⟪Laplace g, g⟫ = 1 := by
+lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp ℝ 2 volume (α := G)), ‖Laplace g‖ ≤ (1 : ℝ) / n ∧ ⟪Laplace g, g⟫ = 1 := by
 
   let eps := (1: ℝ) / n
   -- selfAdjoint.mem_spectrum_eq_re
@@ -2179,7 +2179,13 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n): ∃ g: (Lp ℝ 2 volume (α := G)), ‖L
       . sorry
       .
         intro ha
-        sorry
+        simp [ha]
+        refine ⟨?_, by simp [eps, hn]⟩
+        apply spectrum.subset_polynomial_aeval
+        simp [P]
+        use 0
+        refine ⟨?_, by norm_num⟩
+        apply laplace_spectrum_contains_zero hf
     sorry
 
 
@@ -2435,7 +2441,7 @@ lemma measure_preserving_op_add: MeasurePreserving (fun (x: G) ↦ Additive.ofMu
 
 
 
-noncomputable def G_n (n: ℕ) (hn: 0 < n) := Classical.choose (laplace_g_n n hn )
+noncomputable def G_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto) := Classical.choose (laplace_g_n n hn hf)
 
 
 lemma lp_summable {p: ℕ} (hp: 0 < p) (f: (Lp ℝ p volume (α := G))): Summable (fun g: G => |(f g)|^p) := by
@@ -2727,23 +2733,23 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
       apply Summable.mul_left
       apply summable_f_mul_translate
 
-lemma g_n_laplace_enorm_le (n: ℕ) (hn: 0 < n): ‖Laplace (G_n n hn)‖ₑ ≤ 1/n := by
-  have g_n_prop := (laplace_g_n n hn).choose_spec
+lemma g_n_laplace_enorm_le (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ‖Laplace (G_n n hn hf)‖ₑ ≤ 1/n := by
+  have g_n_prop := (laplace_g_n n hn hf).choose_spec
   sorry
 
-lemma g_n_laplace_norm_le (n: ℕ) (hn: 0 < n): ‖Laplace (G_n n hn)‖ ≤ 1/n := by
-  have g_n_prop := (laplace_g_n n hn).choose_spec
+lemma g_n_laplace_norm_le (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ‖Laplace (G_n n hn hf)‖ ≤ 1/n := by
+  have g_n_prop := (laplace_g_n n hn hf).choose_spec
   exact g_n_prop.1
 
 open scoped RealInnerProductSpace in
-lemma g_n_conv_norm (n: ℕ) (hn: 0 < n): ⟪Laplace (G_n n hn), (G_n n hn)⟫ = 1 := by
-  have g_n_prop := (laplace_g_n n hn).choose_spec
+lemma g_n_conv_norm (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ⟪Laplace (G_n n hn hf), (G_n n hn hf)⟫ = 1 := by
+  have g_n_prop := (laplace_g_n n hn hf).choose_spec
   exact g_n_prop.2
 
-lemma g_n_ne_zero (n: ℕ) (hn: 0 < n): G_n n hn ≠ 0 := by
+lemma g_n_ne_zero (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): G_n n hn hf ≠ 0 := by
   simp
   by_contra!
-  have g_n_prop := (laplace_g_n n hn).choose_spec
+  have g_n_prop := (laplace_g_n n hn hf).choose_spec
   simp [G_n] at this
   simp [this] at g_n_prop
 
@@ -3007,12 +3013,12 @@ lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_
 
 
 
-lemma g_sub_norm_gt (n: ℕ): ∃ s ∈ S, ‖(G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))‖^2 > 1 := by
+lemma g_sub_norm_gt (hf: f_n_conv_delta_tendsto) (n: ℕ) : ∃ s ∈ S, ‖(G_n (n + 1) (by simp) hf) - (conv_finsupp_lp2 (G_n (n + 1) (by simp) hf) (delta s) (by simp [delta]))‖^2 > 1 := by
   by_contra!
   have card_le := Finset.sum_le_card_nsmul S _ (1 : ℝ) this
-  have sum_norm := (proposition_3_18 (G_n (n + 1) (by simp)) )
-  have g_inner_laplace := MeasureTheory.L2.inner_def (Laplace (G_n (n + 1) (by simp))) (G_n (n + 1) (by simp)) (𝕜 := ℝ) (α := G)
-  have g_n_prop := (Classical.choose_spec (laplace_g_n (n + 1) (by simp))).2
+  have sum_norm := (proposition_3_18 (G_n (n + 1) (by simp) hf) )
+  have g_inner_laplace := MeasureTheory.L2.inner_def (Laplace (G_n (n + 1) (by simp) hf)) (G_n (n + 1) (by simp) hf) (𝕜 := ℝ) (α := G)
+  have g_n_prop := (Classical.choose_spec (laplace_g_n (n + 1) (by simp) hf)).2
   have real_inner : ∀ a b : ℝ, ⟪a, b⟫ = b * a := fun a b => rfl
   rw [integral_eq_eq_sum] at g_inner_laplace
   .
@@ -3041,9 +3047,9 @@ lemma g_sub_norm_gt (n: ℕ): ∃ s ∈ S, ‖(G_n (n + 1) (by simp)) - (conv_fi
     exact g_n_prop
 
 
-lemma g_sub_norm_single_s: ∃ s ∈ S, { n: ℕ | ‖(G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))‖^2 > 1 }.Infinite := by
+lemma g_sub_norm_single_s (hf: f_n_conv_delta_tendsto): ∃ s ∈ S, { n: ℕ | ‖(G_n (n + 1) (by simp) hf) - (conv_finsupp_lp2 (G_n (n + 1) (by simp) hf) (delta s) (by simp [delta]))‖^2 > 1 }.Infinite := by
 
-  have frequent := Filter.Frequently.of_forall (f := Filter.atTop) g_sub_norm_gt
+  have frequent := Filter.Frequently.of_forall (f := Filter.atTop) (g_sub_norm_gt hf)
   simp at frequent
   obtain ⟨s, s_mem, s_frequently⟩ := frequent
   rw [Nat.frequently_atTop_iff_infinite] at s_frequently
@@ -3145,11 +3151,11 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
 
   let H_n (n: ℕ) (s: G): (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) :=
-    (1 / (‖(((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))‖)) •
-      MeasureTheory.Lp.compMeasurePreserving (Inv.inv) (measure_preserving_inv) (((G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp [delta]))))
+    (1 / (‖(((G_n (n + 1) (by simp) f_n_limit) - (conv_finsupp_lp2 (G_n (n + 1) (by simp) f_n_limit) (delta s) (by simp [delta]))))‖)) •
+      MeasureTheory.Lp.compMeasurePreserving (Inv.inv) (measure_preserving_inv) (((G_n (n + 1) (by simp) f_n_limit) - (conv_finsupp_lp2 (G_n (n + 1) (by simp) f_n_limit) (delta s) (by simp [delta]))))
 
-  obtain ⟨s, s_mem_S, s_infinite⟩ := g_sub_norm_single_s
-  let seq := Nat.nth ({n | ‖(G_n (n + 1) (by simp)) - (conv_finsupp_lp2 (G_n (n + 1) (by simp)) (delta s) (by simp))‖ ^ 2 > 1})
+  obtain ⟨s, s_mem_S, s_infinite⟩ := g_sub_norm_single_s f_n_limit
+  let seq := Nat.nth ({n | ‖(G_n (n + 1) (by simp) f_n_limit) - (conv_finsupp_lp2 (G_n (n + 1) (by simp) f_n_limit) (delta s) (by simp))‖ ^ 2 > 1})
   have seq_mono : StrictMono seq := Nat.nth_strictMono s_infinite
 
 
@@ -3177,7 +3183,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     have prev_lt := (seq_mono.lt_iff_lt (a := n) (b := n + 1)).mpr (by simp)
     grind
 
-  have h_n_f_lipschitz: ∀ n: ℕ, LipschitzWith ((2 * #(S))^((2 : ℝ)⁻¹)) (Conv (H_n (seq (n)) s) (G_n ((seq n) + 1) (by simp))) := by
+  have h_n_f_lipschitz: ∀ n: ℕ, LipschitzWith ((2 * #(S))^((2 : ℝ)⁻¹)) (Conv (H_n (seq (n)) s) (G_n ((seq n) + 1) (by simp) f_n_limit)) := by
     intro n
     let G'_n := (G_n ((seq n) + 1) (by simp))
     apply lipschitzWith_discrete
@@ -3187,7 +3193,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     rw [norm_sub_rev]
     have y_eq_inv_inv: y = y⁻¹⁻¹ := by simp
     rw [y_eq_inv_inv]
-    rw [← f_conv_delta (f := Conv (↑↑(H_n (seq (n)) s)) (G_n ((seq n) + 1) (by simp)))]
+    rw [← f_conv_delta (f := Conv (↑↑(H_n (seq (n)) s)) (G_n ((seq n) + 1) (by simp) f_n_limit))]
     rw [← Pi.sub_apply]
     rw [sub_eq_add_neg]
     rw [neg_smul]
@@ -3224,12 +3230,12 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             rw [my_add_haar_eq_count]
             simp [H_n_norm]
 
-            have sum_norm := proposition_3_18 G'_n
-            have g_inner_laplace := MeasureTheory.L2.inner_def (Laplace G'_n) G'_n (𝕜 := ℝ) (α := G)
-            have g_n_prop := (Classical.choose_spec (laplace_g_n (n + 1) (by simp))).2
+            have sum_norm := proposition_3_18 (G'_n f_n_limit)
+            have g_inner_laplace := MeasureTheory.L2.inner_def (Laplace (G'_n f_n_limit)) (G'_n f_n_limit) (𝕜 := ℝ) (α := G)
+            have g_n_prop := (Classical.choose_spec (laplace_g_n (n + 1) (by simp) f_n_limit)).2
             rw [integral_eq_eq_sum] at g_inner_laplace
             replace g_inner_laplace := g_inner_laplace.trans sum_norm
-            rw [g_n_conv_norm] at g_inner_laplace
+            rw [g_n_conv_norm _ _ f_n_limit] at g_inner_laplace
             rw [inv_mul_eq_div] at g_inner_laplace
             rw [eq_div_iff_mul_eq] at g_inner_laplace
 
@@ -3250,7 +3256,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
                 .
                   generalize_proofs p_1 p_2 p_3
                   -- TODO - make this less horrible
-                  grw [Finset.single_le_sum (f := (fun g => ∫⁻ (a : Additive G), ‖(G_n ((seq n) + 1) (by simp)) a + Conv (-↑↑(G_n ((seq n) + 1) (by simp))) (delta g) a‖ₑ ^ 2 ∂Measure.count)) (s := S) (hf := by simp) (h := (by rw [S_eq_Sinv]; simp [hy]))]
+                  grw [Finset.single_le_sum (f := (fun g => ∫⁻ (a : Additive G), ‖(G_n ((seq n) + 1) (by simp) f_n_limit) a + Conv (-↑↑(G_n ((seq n) + 1) (by simp) f_n_limit)) (delta g) a‖ₑ ^ 2 ∂Measure.count)) (s := S) (hf := by simp) (h := (by rw [S_eq_Sinv]; simp [hy]))]
 
 
 
@@ -3279,9 +3285,9 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
                       intro i
                       rw [ENNReal.ofReal_toReal (by
                         simp [f_conv_delta_helper]
-                        have g_norm := MeasureTheory.Lp.eLpNorm_lt_top ((G_n ((seq n) + 1) (by simp)) - (Lp.compMeasurePreserving (fun x => i⁻¹ * x) (by
+                        have g_norm := MeasureTheory.Lp.eLpNorm_lt_top ((G_n ((seq n) + 1) (by simp) f_n_limit) - (Lp.compMeasurePreserving (fun x => i⁻¹ * x) (by
                           apply measurePreserving_mul_left
-                        ) (G_n ((seq n) + 1) (by simp))))
+                        ) (G_n ((seq n) + 1) (by simp) f_n_limit)))
                         rw [ae_eq_everywhere.mp (Lp.coeFn_sub _ _)] at g_norm
                         rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_compMeasurePreserving _ _)] at g_norm
                         simp [eLpNorm, eLpNorm', Lp.compMeasurePreserving] at g_norm
@@ -3303,7 +3309,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
               apply MeasureTheory.Integrable.of_integral_ne_zero
               rw [← g_inner_laplace]
               simp [G'_n]
-              have foo := g_n_conv_norm (seq (n) + 1) (by simp)
+              have foo := g_n_conv_norm (seq (n) + 1) (by simp) f_n_limit
               grind
         .
           exact NNReal.coe_nonneg _
@@ -3344,7 +3350,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
               arg 1
               arg 1
               arg 1
-              equals ↑↑(G_n ((seq (n)) + 1) (by simp)) ∘ Additive.toMul =>
+              equals ↑↑(G_n ((seq (n)) + 1) (by simp) f_n_limit) ∘ Additive.toMul =>
                 rfl
 
             conv =>
@@ -3382,7 +3388,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
 
   -- Now rename Hn ∗Gn such that we have added a constant so that Hn ∗Gn(e) = 0
   let new_seq: ℕ → ℕ := seq
-  let H_G_conv_zero (n: ℕ) (g: G) := ((Conv (H_n ((new_seq n)) s) (G_n ((new_seq n) + 1) (by simp))) g) - (Conv (H_n ((new_seq n)) s) (G_n ((new_seq n) + 1) (by simp)) 1)
+  let H_G_conv_zero (n: ℕ) (g: G) := ((Conv (H_n ((new_seq n)) s) (G_n ((new_seq n) + 1) (by simp) f_n_limit)) g) - (Conv (H_n ((new_seq n)) s) (G_n ((new_seq n) + 1) (by simp) f_n_limit) 1)
 
 
   -- TODO - can the lipschitz constant can be improved?
@@ -3396,13 +3402,13 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     . apply LipschitzWith.const
 
 
-  have H_n_conv_zero_eq: ∀ n: ℕ, (H_G_conv_zero (n) 1) - (H_G_conv_zero (n) s⁻¹) = ‖(G_n ((new_seq n) + 1) (by simp)) - (conv_finsupp_lp2 (((G_n ((new_seq n) + 1) (by simp)))) (delta s) (by simp [delta]))‖ := by
+  have H_n_conv_zero_eq: ∀ n: ℕ, (H_G_conv_zero (n) 1) - (H_G_conv_zero (n) s⁻¹) = ‖(G_n ((new_seq n) + 1) (by simp) f_n_limit) - (conv_finsupp_lp2 (((G_n ((new_seq n) + 1) (by simp) f_n_limit))) (delta s) (by simp [delta]))‖ := by
     intro n
     simp [H_G_conv_zero]
     have s_inv_eq: s⁻¹ = s⁻¹ * 1 := by
       simp
     rw [s_inv_eq]
-    rw [← f_conv_delta  (f := Conv ((H_n ((new_seq n)) s)) ((G_n ((new_seq n) + 1) (by simp))))]
+    rw [← f_conv_delta  (f := Conv ((H_n ((new_seq n)) s)) ((G_n ((new_seq n) + 1) (by simp) f_n_limit)))]
     rw [← Pi.sub_apply]
     rw [sub_eq_add_neg]
     rw [neg_smul]
@@ -3442,7 +3448,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
           intro t
           rhs
           rhs
-          equals (conv_finsupp_lp2 (-(G_n (new_seq n + 1) (by simp))) (delta s) (by simp [delta])) (-t) =>
+          equals (conv_finsupp_lp2 (-(G_n (new_seq n + 1) (by simp) f_n_limit)) (delta s) (by simp [delta])) (-t) =>
             simp [conv_finsupp_lp2]
             simp_rw [tolp_apply]
             norm_cast
@@ -3481,7 +3487,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         conv =>
           lhs
           rhs
-          equals ‖(G_n (new_seq n + 1) (by simp)) - (MemLp.toLp (Conv ((G_n ((new_seq n) + 1) (by simp))) (delta s)) (by
+          equals ‖(G_n (new_seq n + 1) (by simp) f_n_limit) - (MemLp.toLp (Conv ((G_n ((new_seq n) + 1) (by simp) f_n_limit)) (delta s)) (by
               rw [f_conv_delta_helper]
               rw [← Function.comp_def]
               apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
@@ -3717,7 +3723,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             arg 1
             arg 1
             arg 2
-            equals (Laplace_b (G_n ((new_seq (arzela_seq n)) + 1) (by simp))) ∘ Additive.toMul =>
+            equals (Laplace_b (G_n ((new_seq (arzela_seq n)) + 1) (by simp) f_n_limit)) ∘ Additive.toMul =>
               rfl
 
           conv =>
@@ -3752,7 +3758,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
                       show (Measure.count : Measure (Additive G)) = myHaar from my_haar_eq_count.symm]
                   exact h]
             simp [enorm]
-            have g_norm := g_n_laplace_enorm_le (seq (arzela_seq n) + 1) (by simp)
+            have g_norm := g_n_laplace_enorm_le (seq (arzela_seq n) + 1) (by simp) f_n_limit
             rw [MeasureTheory.Lp.enorm_def] at g_norm
             simp only [Laplace] at g_norm
             rw [laplace_b_const]
