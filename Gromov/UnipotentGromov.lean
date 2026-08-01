@@ -1533,7 +1533,7 @@ set_option synthInstance.maxHeartbeats 40000 in
 --  {G: Type*} [Group G] [DecidableEq G] (H: Subgroup G)
 lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N')
   (gamma_conj: gamma_conj_bound gamma):
-    ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N', Nat.iterate (fun x => x * ((gamma^[a]) x⁻¹)) n g = 1 := by
+     ∀ k: ℕ, 0 < k → ∃ a n, a ≠ 0 ∧ ∀ g ∈ Subgroup.center N', Nat.iterate (fun x => x * ((gamma^[a*k]) x⁻¹)) n g = 1 := by
 
   classical
 
@@ -1722,11 +1722,12 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
       simp_rw [Function.iterate_succ']
       simp
 
-  have unipotent_on_quot: ∃ a, ∃ n, 0 < a ∧  ∀ g : (Subgroup.center ↥N') ⧸ torsion, Nat.iterate (fun x => x * ((gamma_lift^[a * orderOf new_gamma_torsion] x⁻¹))) n g = 1 := by
+  have unipotent_on_quot: ∀ p: ℕ, 0 < p → ∃ a, ∃ n, 0 < a ∧  ∀ g : (Subgroup.center ↥N') ⧸ torsion, Nat.iterate (fun x => x * ((gamma_lift^[a * orderOf new_gamma_torsion * p] x⁻¹))) n g = 1 := by
     wlog nontrivial_quot: Nontrivial ((Subgroup.center ↥N') ⧸ torsion)
     .
       clear this
       simp at nontrivial_quot
+      intro p hp
       use 1
       use 1
       simp
@@ -1936,13 +1937,18 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
         --rw [← (Finset.card_image_iff (f := fun (a: Fin (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion))) → ℂ) => ((Module.finBasis ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion)))).repr.symm a)).mpr]
         --simp_rw [← pow_mul]
 
+
+    let a := KroneckerPow (unitOfInvertible gamma_matrix) eigen_norm_one
+    intro p hp
+
     have unipotent_gamma_matrix := int_matrix_unipotent (by
       apply Module.finrank_pos
     ) (unitOfInvertible gamma_matrix) (by
       apply eigen_norm_one
-    ) (n := orderOf new_gamma_torsion) (hn := order_pos)
+    ) (n := p * orderOf new_gamma_torsion) (hn := by positivity)
     obtain ⟨n, hm⟩ := unipotent_gamma_matrix
-    let a := KroneckerPow (unitOfInvertible gamma_matrix) eigen_norm_one
+
+
     use a
     use n
     refine ⟨(by
@@ -1986,11 +1992,12 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     rw [← hm]
     clear hm
 
-    have x_mul_gamma_eq: (fun x => x * (⇑gamma_lift)^[a * orderOf new_gamma_torsion] x⁻¹) = Additive.toMul ∘ (-((MonoidHom.toAdditive gamma_lift.toMonoidHom).toIntLinearMap ^ (a * orderOf new_gamma_torsion) - LinearMap.id)).toFun ∘ (Additive.ofMul) := by
+    have x_mul_gamma_eq: ∀ q: ℕ, (fun x => x * (⇑gamma_lift)^[q] x⁻¹) = Additive.toMul ∘ (-((MonoidHom.toAdditive gamma_lift.toMonoidHom).toIntLinearMap ^ (q) - LinearMap.id)).toFun ∘ (Additive.ofMul) := by
+      intro q
       ext x
       conv =>
         rhs
-        equals Additive.toMul ((-((MonoidHom.toAdditive gamma_lift.toMonoidHom).toIntLinearMap ^ (a * orderOf new_gamma_torsion) - LinearMap.id)).toFun (Additive.ofMul x)) =>
+        equals Additive.toMul ((-((MonoidHom.toAdditive gamma_lift.toMonoidHom).toIntLinearMap ^ (q) - LinearMap.id)).toFun (Additive.ofMul x)) =>
           rfl
       simp
       rw [toIntLinearMap_pow_apply]
@@ -2006,8 +2013,10 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     -- collapse the `Matrix.toLin B B (LinearMap.toMatrix B B _)` round-trip, which plain
     -- `rfl` cannot see through
     rw [Matrix.toLin_toMatrix]
+
     -- TODO - figure out how the order gets swapped
-    simp_rw [mul_comm (a := orderOf new_gamma_torsion)]
+    have mul_eq: a * orderOf new_gamma_torsion * p = p * orderOf new_gamma_torsion * a := by ring
+    simp_rw [mul_eq]
     rfl
 
     -- induction n with
@@ -2040,31 +2049,33 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
 
 
 
+  intro p hp
 
 
-
-  obtain ⟨quot_pow, quot_n, quot_pow_pos, h_quot_n⟩ := unipotent_on_quot
-  use (quot_pow * orderOf new_gamma_torsion)
+  obtain ⟨quot_pow, quot_n, quot_pow_pos, h_quot_n⟩ := unipotent_on_quot p hp
+  use (quot_pow * ( orderOf new_gamma_torsion))
   use quot_n + 1
 
 
 
-  have new_gamma_pow: new_gamma_torsion^[quot_pow * (orderOf new_gamma_torsion)] = id := by
-    rw [mul_comm, Function.iterate_mul]
+
+  refine ⟨by positivity, ?_⟩
+  intro g hg
+
+
+  have new_gamma_pow: new_gamma_torsion^[quot_pow * (orderOf new_gamma_torsion) * p] = id := by
+    rw [mul_comm (a := quot_pow), mul_assoc, Function.iterate_mul]
     rw [mul_aut_iterate]
     simp
 
   have orig_new_gamma_pow := new_gamma_pow
-
-  refine ⟨by positivity, ?_⟩
-  intro g hg
 
 
   specialize h_quot_n (QuotientGroup.mk ⟨g, hg⟩)
 
 
 
-  have swap_iter: ∀ n, ∀ g: Subgroup.center N', (fun x ↦ x * (gamma_lift^[quot_pow * orderOf new_gamma_torsion]) x⁻¹)^[n] g = QuotientGroup.mk ⟨((fun x ↦ x * (gamma^[quot_pow * orderOf new_gamma_torsion]) x⁻¹)^[n] g), (by
+  have swap_iter: ∀ n, ∀ g: Subgroup.center N', (fun x ↦ x * (gamma_lift^[quot_pow * orderOf new_gamma_torsion * p]) x⁻¹)^[n] g = QuotientGroup.mk ⟨((fun x ↦ x * (gamma^[quot_pow * orderOf new_gamma_torsion * p]) x⁻¹)^[n] g), (by
     rw [mul_aut_iterate]
     simp
     induction n generalizing g with
@@ -2072,7 +2083,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
       simp
     | succ n ih =>
       simp
-      have mul_mem_center: (↑g * ((gamma ^ (quot_pow * orderOf new_gamma_torsion )) ↑g)⁻¹) ∈ Subgroup.center N' := by
+      have mul_mem_center: (↑g * ((gamma ^ (quot_pow * orderOf new_gamma_torsion * p )) ↑g)⁻¹) ∈ Subgroup.center N' := by
         apply Subgroup.mul_mem
         . simp
         .
@@ -2080,10 +2091,10 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
           have center_char: (Subgroup.center N').Characteristic := by
             infer_instance
           rw [Subgroup.characteristic_iff_le_comap] at center_char
-          specialize center_char (gamma ^ (quot_pow * orderOf new_gamma_torsion)) g.prop
+          specialize center_char (gamma ^ (quot_pow * orderOf new_gamma_torsion * p)) g.prop
           simpa using center_char
       conv =>
-        pattern (↑g * ((gamma ^ (quot_pow * orderOf new_gamma_torsion)) ↑g)⁻¹)
+        pattern (↑g * ((gamma ^ (quot_pow * orderOf new_gamma_torsion * p)) ↑g)⁻¹)
         equals ↑(⟨_, mul_mem_center⟩ : Subgroup.center N') =>
           rfl
       apply ih
@@ -2103,6 +2114,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
       simp
       rw [swap_gamma_lift_iter]
       rfl
+
 
   rw [swap_iter] at h_quot_n
   rw [QuotientGroup.eq_one_iff] at h_quot_n
@@ -2163,13 +2175,14 @@ set_option maxHeartbeats 2000000 in
 set_option synthInstance.maxHeartbeats 160000 in
 /--{G: Type*} [DecidableEq G] [Group G] (H: Subgroup G) [H.Normal]--/
 lemma exists_gamma_n_unipotent_N' {H: Type*} [DecidableEq H] [Group H] {N': Subgroup H} [N'_normal: N'.Normal] (N'_nilpotent: Group.IsNilpotent N') (hN': Subgroup.FG N') (gamma: MulAut N') (gamma_conj: gamma_conj_bound gamma):
-    ∃ a n, a ≠ 0 ∧ ∀ g : N', Nat.iterate (fun x => x * ((gamma^[a]) x⁻¹)) n g = 1 := by
+    ∀ p: ℕ, 0 < p → ∃ a n, a ≠ 0 ∧ ∀ g : N', Nat.iterate (fun x => x * ((gamma^[a*p]) x⁻¹)) n g = 1 := by
 
 
   -- induction ↥N' using Group.nilpotent_center_quotient_ind (P := P) with
   classical
   by_cases N'_subsingle: Subsingleton N'
   .
+    intro p hp
     use 1
     use 1
     simp
@@ -2177,6 +2190,8 @@ lemma exists_gamma_n_unipotent_N' {H: Type*} [DecidableEq H] [Group H] {N': Subg
     have order := Subsingleton.orderOf_eq (⟨_, ha⟩ : N')
     simp at order
     simp [order, iteratedCommutator]
+    rw [mul_aut_iterate]
+    simp
 
 -- lemma quot_mk_one (H: Type*) [Group H] (P: Subgroup H) [P.Normal] (a: H) (ha: QuotientGroup.mk a = (QuotientGroup.mk' P 1)): a ∈ P := by
 --   simp? at ha
@@ -2210,8 +2225,8 @@ lemma exists_gamma_n_unipotent_N' {H: Type*} [DecidableEq H] [Group H] {N': Subg
 
     by_cases top_subsingle: Subsingleton (⊤ : Subgroup (↥N' ⧸ Subgroup.center ↥N'))
     .
-      obtain ⟨z_a, z_n, h_z_a, h_z_unipotent⟩ := exists_gamma_n_unipotent_center_N' (N' := N') (N'_nilpotent) (hN') gamma gamma_conj
-
+      intro p hp
+      obtain ⟨z_a, z_n, h_z_a, h_z_unipotent⟩ := exists_gamma_n_unipotent_center_N' (N' := N') (N'_nilpotent) (hN') gamma gamma_conj p hp
       use z_a
       use z_n
       refine ⟨h_z_a, ?_⟩
@@ -2223,6 +2238,7 @@ lemma exists_gamma_n_unipotent_N' {H: Type*} [DecidableEq H] [Group H] {N': Subg
         exact {
           allEq := foo
         }
+
 
       apply h_z_unipotent
       simp [center_top]
@@ -2258,7 +2274,8 @@ lemma exists_gamma_n_unipotent_N' {H: Type*} [DecidableEq H] [Group H] {N': Subg
     ) top_subsingle rfl
 
     clear ih
-    obtain ⟨a, n, ha, h_prev⟩ := foo
+    intro p hp
+    obtain ⟨a, n, ha, h_prev⟩ := foo p hp
 
     obtain ⟨z_a, z_n, h_z_a, h_z_unipotent⟩ := exists_gamma_n_unipotent_center_N' (N' := N') (N'_nilpotent) (hN') (gamma^a) (by
       unfold gamma_conj_bound
@@ -2269,7 +2286,7 @@ lemma exists_gamma_n_unipotent_N' {H: Type*} [DecidableEq H] [Group H] {N': Subg
       intro k hk
       apply gamma_conj
       positivity
-    )
+    ) p hp
 
     use a * z_a
     use z_n + n
@@ -2282,7 +2299,7 @@ lemma exists_gamma_n_unipotent_N' {H: Type*} [DecidableEq H] [Group H] {N': Subg
     --rw [QuotientGroup.eq_one_iff] at h_prev
 
     --let foo :=  iteratedCommutatorNormal (H.subtype g) (gamma ^ z_a) (n)
-    specialize h_z_unipotent ((fun x ↦ x * ((gamma^[a*z_a]) (x⁻¹)))^[n] g) ?_
+    specialize h_z_unipotent ((fun x ↦ x * ((gamma^[a*z_a*p]) (x⁻¹)))^[n] g) ?_
     -- specialize h_z_unipotent ⟨⟨((fun x ↦ x * ((gamma^[a*z_a]) (x⁻¹)))^[n] g), (by
     --   clear h_prev
     --   induction n with
@@ -2346,6 +2363,7 @@ lemma exists_gamma_n_unipotent_N' {H: Type*} [DecidableEq H] [Group H] {N': Subg
       --simp [-iterate_map_inv]
       rw [← QuotientGroup.eq_one_iff]
       rw [← coe_iter]
+      exact h_prev
       sorry
       --exact h_prev
       --simpa using h_prev
@@ -2362,6 +2380,7 @@ lemma exists_gamma_n_unipotent_N' {H: Type*} [DecidableEq H] [Group H] {N': Subg
       simp_rw [mul_aut_iterate] at h_z_unipotent
       rw [mul_aut_iterate]
       simp_rw [← pow_mul] at h_z_unipotent
+      simp_rw [← mul_assoc] at h_z_unipotent
       exact h_z_unipotent
 
 
