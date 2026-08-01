@@ -1695,15 +1695,18 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
         --have K: ℕ := ⌈Real.logb ‖k‖ 3⌉₊ + ⌈((4 * ↑q + Real.log ↑p) / Real.log 2) ^ 2⌉₊ + 1
 
         have K : ℕ := sorry
-        use K
+
 
         obtain ⟨p, p_pos, hpq⟩ := hq g K sorry
         specialize hpq ⌈Real.logb ‖k‖ 3⌉₊ sorry sorry
-        refine ⟨by sorry, ?_⟩
+
         use p
         use q
-        refine ⟨?_, ?_, ?_⟩
+        use K
+
+        refine ⟨?_, ?_, ?_, ?_⟩
         . exact p_pos
+        . sorry
         .
           apply lt_log_two_mul_rpow_half
           sorry

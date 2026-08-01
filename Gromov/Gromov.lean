@@ -5636,7 +5636,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
 
       intro b hb
-      use p * ((x_list.length + gamma_list.length * (2 * k * b)) ^ q)
+      use p * (((max x_list.length gamma_list.length) * (4 * k * b)) ^ q)
 
       have mul_nozero: 1 ≤  2 * k * b := by
         rw [mul_assoc]
@@ -5670,7 +5670,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
       intro a ha
       grw [← Finset.card_image_of_injOn (f := fun a => a.val.toAdd.val.toMul.val) (by simp)]
-      grw [Finset.card_le_card (t := hGS.S^((b - a) * (x_list.length + gamma_list.length * (2 * k * b)) ))]
+      grw [Finset.card_le_card (t := hGS.S^((b - a) * ((max x_list.length gamma_list.length) * (4 * k * b)) ))]
       ·
 
         grw [hp]
@@ -5725,7 +5725,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
         grw [word_norm_list_prod_le (hGS := hGS)]
         rw [List.unattach.eq_def (l := s.toList)]
         nth_rw 2 [List.map_map]
-        grw [List.sum_le_sum (g := Function.const _ (x_list.length + gamma_list.length * (2 * k * b)))]
+        grw [List.sum_le_sum (g := Function.const _ ((max x_list.length gamma_list.length) * (4 * k * b)))]
         .
           simp [-le_sup_iff]
           grw [Finset.card_le_univ]
@@ -5744,7 +5744,14 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
           rw [← x_prod, ← x_list_prod]
           grw [m_range.2]
           ring
-          simp
+          have four_eq: 4 = (2 + 2) := by norm_num
+          rw [four_eq, mul_add]
+          apply add_le_add
+          . simp
+            grw [le_max_right (b := gamma_list.length)]
+          . grw [← le_max_left (a := x_list.length)]
+            ring
+            nlinarith
 
     have alpha_is_unipotent: ∀ g ∈ N', Nat.iterate (fun x => ⁅x, γ.toMul^α⁆) m g.val = 1 := by
       -- One commutator step with `γ^α` is the `N'_val`-image of one step of
