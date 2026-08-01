@@ -2751,17 +2751,29 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
       simp
 
     have nontrivial_cx: Nontrivial (Cx ↥(Lp ℝ 2 volume (α := G))  →L[ℂ] Cx ↥(Lp ℝ 2 volume (α := G))) := by
-      simp [volume]
+
       use 1
       use 0
       simp
       rw [ContinuousLinearMap.ext_iff]
       simp
-      let hf := (finsupp_lp_top (fun (x: G) => if x = 1 then 1 else 0) (by sorry) 2)
+      let hf := (finsupp_lp_top (Pi.single 1 1) (by
+        simp
+      ) 2)
       rw [← my_haar_eq_count] at hf
       use (hf.toLp, 0)
-
-      sorry
+      apply_fun (fun a => a.fst)
+      simp
+      rw [MeasureTheory.Lp.ext_iff]
+      have haar_eq_volume: myHaar = volume := by
+        simp [volume]
+      simp_rw [haar_eq_volume]
+      rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)]
+      simp
+      rw [funext_iff]
+      simp
+      use 1
+      simp
 
     have Q_nonzero: Q ≠ 0 := by
       by_contra!
