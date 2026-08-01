@@ -294,6 +294,28 @@ lemma word_norm_mul_le (x y: G): WordNorm (x * y) ≤ WordNorm x + WordNorm y :=
     use l
 
 
+lemma word_norm_pow (x : G) (n: ℕ): WordNorm (x^n) ≤ n * WordNorm x := by
+  induction n with
+  | zero =>
+    simp [word_norm_one]
+  | succ n ih =>
+    rw [pow_succ]
+    grw [word_norm_mul_le]
+    grw [ih]
+    rw [add_mul]
+    simp
+
+
+lemma word_norm_list_prod_le (l: List G): WordNorm (l.prod) ≤ (l.map WordNorm).sum := by
+  induction l with
+  | nil =>
+    simp [word_norm_one]
+  | cons head tail ih =>
+    simp
+    grw [word_norm_mul_le]
+    grw [ih]
+
+
 lemma dist_word_le_mul {x y z : G} (hy: y ∈ S): WordDist x z ≤ (WordDist x (y * z)) + 1 := by
   by_cases x_eq: x = y * z
   . simp [x_eq]

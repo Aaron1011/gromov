@@ -5206,7 +5206,6 @@ lemma set_smul_eq_mul {G: Type*} [Group G] (g: G) (A: Set G): g • A = {g} * A 
   rw [Set.mem_mul]
   simp
 
-
 -- TODO - add an explicit top-level universe parameter to avoid this 'omit hGS' hack
 set_option maxHeartbeats 2500000 in
 omit hGS in
@@ -5633,6 +5632,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
       grw [Finset.card_le_card (t := hGS.S^(max x_list.length gamma_list.length))]
       ·
 
+        grw [hp]
+        sorry
         sorry
       -- side goal from `card_le_card`: the image is contained in `hGS.S`
       ·
@@ -5658,10 +5659,37 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
         simp_rw [gamma_conj_iter] at g_eq
         simp at g_eq
         simp_rw [gamma_eq] at g_eq
+        rw [← g_eq]
+        rw [← closed_ball_eq_S_pow (hGS := hGS)]
+        simp [-le_sup_iff]
+        simp only [dist, WordDist_one]
+        norm_cast
+        simp_rw [Function.comp_def]
+        simp [-le_sup_iff]
+        grw [word_norm_list_prod_le (hGS := hGS)]
+        rw [List.unattach.eq_def (l := s.toList)]
+        nth_rw 2 [List.map_map]
+        grw [List.sum_le_sum (g := Function.const _ (x_list.length + gamma_list.length * (2 * a * b)))]
+        .
+          simp [-le_sup_iff]
+          sorry
+        .
+          intro y hy
+          simp at hy
+          obtain ⟨m, ⟨⟨m_range, m_mem⟩, y_eq⟩⟩ := hy
+          rw [← y_eq]
+          grw [word_norm_mul_le (hGS := hGS)]
+          grw [word_norm_mul_le (hGS := hGS)]
+          rw [← word_norm_inv (hGS := hGS)]
+          grw [word_norm_pow (hGS := hGS)]
+          rw [← gamma_prod, ← gamma_list_prod]
+          simp [N'_val]
+          rw [← x_prod, ← x_list_prod]
+          grw [m_range.2]
+          ring
+          simp
 
-        sorry
-
-
+    stop
     have alpha_is_unipotent: ∀ g ∈ N', Nat.iterate (fun x => ⁅x, γ.toMul^α⁆) m g.val = 1 := by
       -- One commutator step with `γ^α` is the `N'_val`-image of one step of
       -- `x ↦ x * gamma_conj_N'^[α] x⁻¹`, which is the map `exists_gamma_n_unipotent_N'` iterates.
