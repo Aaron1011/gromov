@@ -1657,7 +1657,7 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
       sorry
 
 
-    have gamma_lift_conj: ∀ g, ∀ a b: ℕ, (0 < a) → (a < b) → ∃ p q: ℕ, (Finset.image (fun x ↦ (List.map (fun i ↦ (gamma_lift)^[a * ↑i] g) x.toList).prod)
+    have gamma_lift_conj: ∀ g, ∀ a b: ℕ, (0 < a) → (a < b) → ∃ p q: ℕ, (Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma_lift)^[a * ↑i] g) x.toList).prod)
         (Finset.Ico a b).attach.powerset).card ≤ p * (b - a)^q := by
 
 
@@ -1675,13 +1675,13 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
             ((Finsupp.linearEquivFunOnFinite ℤ ℤ (Fin dim)).symm v)) with hg
 
 
-        obtain ⟨p, q, hpq⟩ := gamma_lift_conj g sorry sorry sorry sorry
+        intro N_1
+        have K: ℕ := sorry
+        obtain ⟨p, q, hpq⟩ := gamma_lift_conj g N_1 K sorry sorry
+        use K
+        refine ⟨by sorry, ?_⟩
         use p
         use q
-        refine ⟨by sorry, ?_⟩
-        intro N_1
-        use sorry
-        simp
         refine ⟨?_, ?_, ?_⟩
         . sorry
         . sorry
@@ -1705,7 +1705,15 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
 
 
             simp_rw [← Finset.prod_map_toList]
-            sorry
+            grw [hpq]
+            -- TODO - we might be able to make the goal stronger, if we don't actually need the factor of 2 in it
+            rw [pow_mul']
+            apply mul_le_mul
+            . simp
+            . apply Nat.le_pow
+              simp
+            . simp
+            . simp
           . sorry
         --rw [← (Finset.card_image_iff (f := fun (a: Fin (Module.finrank ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion))) → ℂ) => ((Module.finBasis ℤ (Additive (↥(Subgroup.center ↥N') ⧸ torsion)))).repr.symm a)).mpr]
         --simp_rw [← pow_mul]
