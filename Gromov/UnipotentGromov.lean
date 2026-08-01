@@ -1433,6 +1433,46 @@ theorem card_image_listProd_hom_le {C Q N ι : Type*}
      ← Finset.image_image, ← Finset.image_image, Finset.card_image_of_injective _ hj]
   exact Finset.card_image_le
 
+/-- Transport a `gamma_conj_bound`-style bound along a common "source" group `C`: out of `C`
+there is an injective `j` into the group `N` where the bound is known, and a surjective `ψ`
+onto the group `Q` where it is wanted, each intertwining the respective self-maps. -/
+theorem conjBound_transport {C Q N : Type*} [Group C] [Group Q] [Group N]
+    [DecidableEq Q] [DecidableEq N]
+    {fC : C → C} {fQ : Q → Q} {fN : N → N}
+    (ψ : C →* Q) (hψ : Function.Surjective ψ) (j : C →* N) (hj : Function.Injective j)
+    (hψcomm : ∀ x, ψ (fC x) = fQ (ψ x)) (hjcomm : ∀ x, j (fC x) = fN (j x))
+    (hbound : ∀ k : ℕ, 0 < k → ∀ g : N, ∃ p q : ℕ, 0 < p ∧ ∀ b : ℕ, 0 < b → ∀ a : ℕ, 0 < a →
+      a < b → (Finset.image
+        (fun x ↦ (List.map (fun (i : ↥(Finset.Ico a b)) ↦ fN^[k * ↑i] g) x.toList).prod)
+        (Finset.Ico a b).attach.powerset).card ≤ p * b ^ q * (b - a) ^ q) :
+    ∀ k : ℕ, 0 < k → ∀ g : Q, ∃ p q : ℕ, 0 < p ∧ ∀ b : ℕ, 0 < b → ∀ a : ℕ, 0 < a →
+      a < b → (Finset.image
+        (fun x ↦ (List.map (fun (i : ↥(Finset.Ico a b)) ↦ fQ^[k * ↑i] g) x.toList).prod)
+        (Finset.Ico a b).attach.powerset).card ≤ p * b ^ q * (b - a) ^ q := by
+  have hiterψ : ∀ (n : ℕ) (x : C), ψ (fC^[n] x) = fQ^[n] (ψ x) := by
+    intro n
+    induction n with
+    | zero => intro x; simp
+    | succ n ih =>
+      intro x
+      rw [Function.iterate_succ_apply, Function.iterate_succ_apply, ih, hψcomm]
+  have hiterj : ∀ (n : ℕ) (x : C), j (fC^[n] x) = fN^[n] (j x) := by
+    intro n
+    induction n with
+    | zero => intro x; simp
+    | succ n ih =>
+      intro x
+      rw [Function.iterate_succ_apply, Function.iterate_succ_apply, ih, hjcomm]
+  intro k hk gQ
+  obtain ⟨gC, rfl⟩ := hψ gQ
+  obtain ⟨p, q, ppos, hb⟩ := hbound k hk (j gC)
+  refine ⟨p, q, ppos, ?_⟩
+  intro b hb' a ha hab
+  refine le_trans ?_ (hb b hb' a ha hab)
+  simp_rw [← hiterψ, ← hiterj]
+  exact card_image_listProd_hom_le ψ j hj ((Finset.Ico a b).attach.powerset)
+    (fun (i : ↥(Finset.Ico a b)) => fC^[k * ↑i] gC)
+
 /-- Final step of isolating `K`, reducing the `h_poly` log inequality to a statement in `ℕ`.
 
 Splits `Real.log ↑(p * K ^ q)` into `Real.log ↑p + q * Real.log ↑K`, then eliminates the
@@ -1779,24 +1819,18 @@ lemma exists_gamma_n_unipotent_center_N' {H: Type*} [DecidableEq H] [Group H] {N
     have gamma_lift_conj: ∀ k: ℕ, (0 < k) →  ∀ g, ∃ p q: ℕ, 0 < p ∧ ∀ b: ℕ, 0 < b → ∀ a: ℕ, (0 < a) → (a < b) → (Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma_lift)^[k * ↑i] g) x.toList).prod)
         (Finset.Ico a b).attach.powerset).card ≤ p * (b^q) * (b - a)^q := by
 
-      intro k hk g
-      have g_eq: ∀ n: ℕ, (gamma_lift)^[n] g = (gamma_lift)^[n] ↑g.out := by simp
-      simp_rw [g_eq]
-      simp_rw [swap_gamma_lift_iter]
-      obtain ⟨p, q, p_pos, other⟩ := gamma_conj k hk g.out
-      use p
-      use q
-      refine ⟨p_pos, ?_⟩
-      intro b hb a ha hab
-      -- `other` bounds the products taken in `↥N'`; the goal takes them in the quotient.
-      -- Both are images of the same products formed in `↥(Subgroup.center ↥N')`, pushed
-      -- through `QuotientGroup.mk'` and through the injective `Subgroup.subtype`.
-      refine le_trans ?_ (other b hb a ha hab)
-      exact card_image_listProd_hom_le (QuotientGroup.mk' torsion)
-        ((Subgroup.center (↥N')).subtype) (Subgroup.subtype_injective _)
-        ((Finset.Ico a b).attach.powerset)
-        (fun (i : ↥(Finset.Ico a b)) =>
-          ⟨(gamma)^[k * ↑i] ↑(Quotient.out g), gamma_iter_mem_center _ _⟩)
+      -- Same shape as the `final_gamma` transport: the products live in
+      -- `↥(Subgroup.center ↥N')`, mapped out injectively by `Subgroup.subtype` (where
+      -- `gamma_conj` gives the bound) and surjectively by `QuotientGroup.mk'` (where it
+      -- is wanted).
+      classical
+      exact conjBound_transport
+        (fC := fun x : ↥(Subgroup.center ↥N') =>
+          (⟨gamma x, gamma_mem_center x⟩ : ↥(Subgroup.center ↥N')))
+        (fQ := ⇑gamma_lift) (fN := ⇑gamma)
+        (QuotientGroup.mk' torsion) (QuotientGroup.mk'_surjective _)
+        ((Subgroup.center ↥N').subtype) (Subgroup.subtype_injective _)
+        (fun x => (swap_gamma_lift x).symm) (fun x => rfl) gamma_conj
 
     have unipotent_gamma_matrix := int_matrix_unipotent (by
       apply Module.finrank_pos
@@ -2200,7 +2234,17 @@ lemma exists_gamma_n_unipotent_N' {H: Type*} [DecidableEq H] [Group H] {N': Subg
 
       rw [← Group.fg_iff_subgroup_fg]
       apply Subgroup.fg_of_index_ne_zero
-    ) final_gamma sorry top_subsingle rfl
+    ) final_gamma (by
+      classical
+      refine conjBound_transport (fC := ⇑gamma) (fQ := ⇑final_gamma) (fN := ⇑gamma)
+        (((Subgroup.topEquiv (G := ↥N' ⧸ Subgroup.center ↥N')).symm.toMonoidHom).comp
+          (QuotientGroup.mk' (Subgroup.center ↥N')))
+        ?_ (MonoidHom.id ↥N') Function.injective_id ?_ (fun x => rfl) gamma_conj
+      · exact (Subgroup.topEquiv (G := ↥N' ⧸ Subgroup.center ↥N')).symm.surjective.comp
+          (QuotientGroup.mk'_surjective _)
+      · intro x
+        simp [final_gamma, aut_transfer, first_map, gamma_quot, QuotientGroup.congr_mk]
+    ) top_subsingle rfl
 
     clear ih
     obtain ⟨a, n, ha, h_prev⟩ := foo
