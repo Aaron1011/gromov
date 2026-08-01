@@ -44,6 +44,8 @@ def snd (p : Cx V) : V := (p : V × V).2
 @[simp] lemma zero_snd : (0 : Cx V).snd = 0 := rfl
 @[simp] lemma neg_fst (p : Cx V) : (-p).fst = -p.fst := rfl
 @[simp] lemma neg_snd (p : Cx V) : (-p).snd = -p.snd := rfl
+@[simp] lemma sub_fst (p q : Cx V) : (p - q).fst = p.fst - q.fst := rfl
+@[simp] lemma sub_snd (p q : Cx V) : (p - q).snd = p.snd - q.snd := rfl
 
 /-- Complex scalar multiplication: `(a + b i) • (x + i y) = (a x - b y) + i (b x + a y)`. -/
 noncomputable instance : SMul ℂ (Cx V) where
@@ -98,6 +100,37 @@ noncomputable def coreC : InnerProductSpace.Core ℂ (Cx V) where
 
 noncomputable instance : NormedAddCommGroup (Cx V) := coreC.toNormedAddCommGroup
 noncomputable instance : InnerProductSpace ℂ (Cx V) := InnerProductSpace.ofCore coreC.toCore
+
+/-!
+### Completeness
+
+`Cx V` carries the `L²` norm of its two components, so it is isometric to `V × V` with the `L²`
+norm and inherits completeness from `V`.  This is what makes `Cx V →L[ℂ] Cx V` a C⋆-algebra, and
+hence what makes Mathlib's continuous functional calculus (`cfc`) available on complexified
+operators: the `ContinuousFunctionalCalculus ℝ _ IsSelfAdjoint` instance is derived from the
+complex one, so it is not available on `V →L[ℝ] V` itself.
+-/
+
+@[simp] lemma norm_sq_eq (p : Cx V) : ‖p‖ ^ 2 = ‖p.fst‖ ^ 2 + ‖p.snd‖ ^ 2 := by
+  rw [norm_sq_eq_re_inner (𝕜 := ℂ)]
+  show (innerC p p).re = _
+  rw [innerC_self_re, real_inner_self_eq_norm_sq, real_inner_self_eq_norm_sq]
+
+lemma norm_eq (p : Cx V) : ‖p‖ = Real.sqrt (‖p.fst‖ ^ 2 + ‖p.snd‖ ^ 2) := by
+  rw [← norm_sq_eq, Real.sqrt_sq (norm_nonneg p)]
+
+/-- The complexification is isometric to `V × V` carrying the `L²` norm. -/
+noncomputable def isometryProdL2 : Cx V ≃ᵢ WithLp 2 (V × V) where
+  toFun p := WithLp.toLp 2 ((p.fst, p.snd) : V × V)
+  invFun q := ((WithLp.ofLp q).1, (WithLp.ofLp q).2)
+  left_inv _ := rfl
+  right_inv _ := rfl
+  isometry_toFun := by
+    refine Isometry.of_dist_eq fun p q => ?_
+    rw [dist_eq_norm, dist_eq_norm, WithLp.prod_norm_eq_of_L2, norm_eq]
+    rfl
+
+instance [CompleteSpace V] : CompleteSpace (Cx V) := isometryProdL2.completeSpace
 
 /-!
 ### Real structure
@@ -161,12 +194,33 @@ lemma mapL_comp (f g : V →L[ℝ] V) : mapL (f.comp g) = (mapL f).comp (mapL g)
 @[simp] lemma mapL_id : mapL (ContinuousLinearMap.id ℝ V) = LinearMap.id := by
   ext p <;> simp
 
-variable [FiniteDimensional ℝ V]
+lemma norm_mapL_le (f : V →L[ℝ] V) (p : Cx V) : ‖mapL f p‖ ≤ ‖f‖ * ‖p‖ := by
+  have h1 : ‖f p.fst‖ ^ 2 + ‖f p.snd‖ ^ 2 ≤ (‖f‖ * ‖p‖) ^ 2 := by
+    have s1 : ‖f p.fst‖ ^ 2 ≤ ‖f‖ ^ 2 * ‖p.fst‖ ^ 2 := by
+      have h := f.le_opNorm p.fst
+      have := norm_nonneg (f p.fst)
+      nlinarith
+    have s2 : ‖f p.snd‖ ^ 2 ≤ ‖f‖ ^ 2 * ‖p.snd‖ ^ 2 := by
+      have h := f.le_opNorm p.snd
+      have := norm_nonneg (f p.snd)
+      nlinarith
+    rw [mul_pow, norm_sq_eq p]
+    linarith
+  calc ‖mapL f p‖ = Real.sqrt (‖f p.fst‖ ^ 2 + ‖f p.snd‖ ^ 2) := by rw [norm_eq]; rfl
+    _ ≤ Real.sqrt ((‖f‖ * ‖p‖) ^ 2) := Real.sqrt_le_sqrt h1
+    _ = ‖f‖ * ‖p‖ := Real.sqrt_sq (by positivity)
 
 /-- Complexification of a continuous real-linear map as a continuous `ℂ`-linear map. -/
-noncomputable def mapCLM (f : V →L[ℝ] V) : Cx V →L[ℂ] Cx V := (mapL f).toContinuousLinearMap
+noncomputable def mapCLM (f : V →L[ℝ] V) : Cx V →L[ℂ] Cx V :=
+  (mapL f).mkContinuous ‖f‖ (norm_mapL_le f)
 
 @[simp] lemma mapCLM_apply (f : V →L[ℝ] V) (p : Cx V) : mapCLM f p = mapL f p := rfl
+
+lemma norm_mapCLM_le (f : V →L[ℝ] V) : ‖mapCLM f‖ ≤ ‖f‖ :=
+  LinearMap.mkContinuous_norm_le _ (norm_nonneg f) _
+
+lemma mapCLM_sub (f g : V →L[ℝ] V) : mapCLM f - mapCLM g = mapCLM (f - g) := by
+  ext p <;> rfl
 
 /-- Complexification as a monoid homomorphism on endomorphisms (composition ↦ composition). -/
 noncomputable def mapCLMHom : (V →L[ℝ] V) →* (Cx V →L[ℂ] Cx V) where
@@ -175,13 +229,11 @@ noncomputable def mapCLMHom : (V →L[ℝ] V) →* (Cx V →L[ℂ] Cx V) where
   map_mul' f g := by ext p <;> simp
 
 lemma mapCLM_continuous : Continuous (mapCLM : (V →L[ℝ] V) → (Cx V →L[ℂ] Cx V)) := by
-  have hlin : IsLinearMap ℝ (mapCLM : (V →L[ℝ] V) → (Cx V →L[ℂ] Cx V)) :=
-    { map_add := fun f g => by ext p <;> simp
-      map_smul := fun r f => by
-        ext p
-        · simp only [ContinuousLinearMap.coe_smul', Pi.smul_apply, mapCLM_apply, mapL_fst, rsmul_fst]
-        · simp only [ContinuousLinearMap.coe_smul', Pi.smul_apply, mapCLM_apply, mapL_snd, rsmul_snd] }
-  exact hlin.mk'.continuous_of_finiteDimensional
+  have h : LipschitzWith 1 (mapCLM : (V →L[ℝ] V) → (Cx V →L[ℂ] Cx V)) := by
+    refine LipschitzWith.of_dist_le_mul fun f g => ?_
+    rw [dist_eq_norm, dist_eq_norm, mapCLM_sub]
+    simpa using norm_mapCLM_le (f - g)
+  exact h.continuous
 
 lemma mapCLM_injective : Function.Injective (mapCLM : (V →L[ℝ] V) → Cx V →L[ℂ] Cx V) := by
   intro f g h
@@ -201,5 +253,24 @@ lemma unitsMapHom_continuous :
   apply Units.continuous_iff.mpr
   exact ⟨mapCLM_continuous.comp Units.continuous_val,
          mapCLM_continuous.comp Units.continuous_coe_inv⟩
+
+/-!
+### Self-adjointness
+
+The complexification of a self-adjoint operator is self-adjoint.  Together with the
+`CompleteSpace (Cx V)` instance above, this is what lets `cfc f (mapCLM Δ) (p := IsSelfAdjoint)`
+elaborate *and* lets the `cfc` API lemmas discharge their `IsSelfAdjoint` side conditions.
+-/
+
+lemma isSymmetric_mapCLM [CompleteSpace V] {f : V →L[ℝ] V} (hf : IsSelfAdjoint f) :
+    (mapCLM f : Cx V →ₗ[ℂ] Cx V).IsSymmetric := by
+  have hs := ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric.mp hf
+  have hs' : ∀ a b : V, inner ℝ (f a) b = inner ℝ a (f b) := fun a b => hs a b
+  intro u v
+  show innerC (mapL f u) v = innerC u (mapL f v)
+  simp only [innerC, mapL_fst, mapL_snd, hs']
+
+lemma isSelfAdjoint_mapCLM [CompleteSpace V] {f : V →L[ℝ] V} (hf : IsSelfAdjoint f) :
+    IsSelfAdjoint (mapCLM f) := (isSymmetric_mapCLM hf).isSelfAdjoint
 
 end Cx
