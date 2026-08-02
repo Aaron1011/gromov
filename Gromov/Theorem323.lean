@@ -133,7 +133,6 @@ set_option maxHeartbeats 9000000 in
 lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.support.Finite):
     ∑' (x: G), ∑ s ∈ S, ((f x * φ x) - (f (s * x) * φ (s * x)))^2 ≤  ∑' (x: G), ∑ s ∈ S, (f x)^2 * (φ (s * x) - φ x)^2  := by
 
-  -- 2⁻¹ * ∑' (x: G), (↑(#S))⁻¹ * ∑ s ∈ S, ((f (x) * φ (x)) - (f (s * x) * φ (s * x)))^2
   conv =>
     lhs
     arg 1
@@ -1831,7 +1830,6 @@ lemma inter_mult_helper (data: GoodScalesData b): InterMult (B_3 data) * #(S ^ (
         grw [Finset.sum_le_sum (g := fun a => if ha: a ∈ X then #(finite_closed_ball (X_inner_nonempty a ha).choose ((R_1 data) / 2)).toFinset else 0)]
         .
           rw [← closed_ball_eq_S_pow]
-          --rw [← Finset.sum_attach]
           rw [Finset.sum_dite]
           rw [← Finset.card_biUnion]
           .
@@ -1969,12 +1967,10 @@ lemma pack_center_helper (data: GoodScalesData b) (x: G): #{ c ∈ (X_j_finite d
   .
     rw [← Finset.card_biUnion]
     .
-      --simp only [Finset.sum_const_zero, add_zero]
       nth_rw 2 [← Finset.card_smul_finset (MulOpposite.op x)]
       apply Finset.card_le_card
       rw [← Finset.coe_subset]
 
-      --rw [← ball_smul_eq_origin]
       intro a ha
       simp at ha
       obtain ⟨p, ⟨p_mem, a_mem⟩⟩ := ha
@@ -2101,9 +2097,7 @@ lemma log_inter_mult_b3 (data: GoodScalesData b): InterMult (B_3 data) ≤ Real.
       .
         have bound := (GoodScales data).first_h_i
         grw [← bound]
-        --grw [log_card_pow_sub_le (b := b) (k := (GoodScales data).i_1 + 1) (j := (GoodScales data).i_1)]
 
-        --apply log_card_pow_sub_le
         apply log_card_pow_sub_le (GoodScales data).i_1_ge (Nat.le_succ _)
         . simp [R_1]
         . rw [pow_succ]
@@ -2159,9 +2153,7 @@ lemma log_pack_center_helper (data: GoodScalesData b) (x: G): #{ c ∈ (X_j_fini
       .
         have bound := (GoodScales data).first_h_i
         grw [← bound]
-        --grw [log_card_pow_sub_le (b := b) (k := (GoodScales data).i_1 + 1) (j := (GoodScales data).i_1)]
 
-        --apply log_card_pow_sub_le
         apply log_card_pow_sub_le (GoodScales data).i_1_ge (Nat.le_succ _)
         . simp [R_1]
         . rw [pow_succ]
@@ -2211,7 +2203,6 @@ lemma log_pack_center_helper (data: GoodScalesData b) (x: G): #{ c ∈ (X_j_fini
 
 -- Lemma 3.25 (b)
 lemma card_B_le_exp_wa (data: GoodScalesData b): #(B_finite data).toFinset < Real.exp (data.w * (a data.d)) := by
-  --rw [← Nat.card_eq_card_finite_toFinset]
   have B_union := Finset.card_biUnion (s := (B_half_finsets data)) (t := id) ?_
   .
     simp at B_union
@@ -2950,7 +2941,6 @@ lemma lemma_3_25_poincare (data: GoodScalesData b) (j: (X_j data)) (f: G → ℝ
 
   have vol_frac_le: ↑(#(B_r (2 * (↑(R_1 data) + 1) - 2))) / ↑(#(B_r ↑(R_1 data))) ≤ Real.exp (a data.d) := by
 
-    --   positivity
 
     rw [← Real.log_le_iff_le_exp]
     . rw [Real.log_div]
@@ -2966,7 +2956,6 @@ lemma lemma_3_25_poincare (data: GoodScalesData b) (j: (X_j data)) (f: G → ℝ
           . simp
           . grind
 
-        --rw [sub_eq, sub_one_eq,card_B_r_eq]
         rw [card_B_r_eq]
         conv =>
           lhs
@@ -2997,23 +2986,19 @@ lemma lemma_3_25_poincare (data: GoodScalesData b) (j: (X_j data)) (f: G → ℝ
       . simp only [B_r, Set.toFinite_toFinset, ne_eq, Nat.cast_eq_zero]
         apply Finset.card_ne_zero_of_mem (a := 1)
         simp [R_1]
-        --norm_cast
       . simp only [B_r, Set.toFinite_toFinset, ne_eq, Nat.cast_eq_zero]
         apply Finset.card_ne_zero_of_mem (a := 1)
         simp [R_1]
-        --norm_cast
     . apply mul_pos
       . simp only [B_r, Set.toFinite_toFinset]
         norm_cast
         rw [Finset.card_pos]
         use 1
         simp [R_1]
-        --norm_cast
       .
         simp [-Set.toFinset_card]
         use 1
         simp [B_r, R_1]
-        --norm_cast
   .
     rw [mul_div_assoc]
     norm_num
@@ -3024,9 +3009,7 @@ lemma lemma_3_25_poincare (data: GoodScalesData b) (j: (X_j data)) (f: G → ℝ
         lhs
         rhs
         equals  ∑ x ∈ B_c_r j (3 * ↑(R_1 data + 1)), deriv_sq f x =>
-          --simp [deriv_sq]
 
-          --simp_rw [← Finset.sum_comp]
           rw [B_c_r_eq_smul]
           rw [← Finset.image_smul]
           rw [Finset.sum_image (by simp)]
@@ -3115,8 +3098,6 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
           rw [← Finset.univ_eq_attach]
           rw [← EuclideanSpace.real_norm_sq_eq]
 
-        -- The summand only depends on `↑j`, so we can drop the `.attach` and only then
-        -- unfold `B_finsets` into a `Finset.image` and push the function call inwards.
         have phi_eq (j : B_finsets data) :
             ((phi data) u).ofLp j = (#(j : Finset G) : ℝ)⁻¹ * ∑ x ∈ (j : Finset G), (u : G → ℝ) x :=
           rfl
@@ -3213,7 +3194,6 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
                 simp
                 rw [set_eq]
 
-              --rw [← Finset.sum_finset_product' (r := {p : (X_j_finite data).toFinset × (finite_closed_ball 1 (2 * (R_2 data))) | True})] -- p | p.1 ∈ (X_j_finite data).toFinset ∧ p.2 = 1
             rw [Finset.sum_attach (f := fun (i: G) => ∑ x ∈ B_c_r (i) (3 * (↑(R_1 data) + 1)), deriv_sq (u.val).toFun x)]
             rw [sum_swap]
 
@@ -3475,7 +3455,6 @@ lemma exists_bounded_doubling_subspace (data: GoodScalesData b): ∃ U: Submodul
     exact Module.Basis.ne_zero v_orthogonal_orig a
   ))
 
-  --let q_r_16_lin_eigen := LinearMap.IsSymmetric.eigenvectorBasis (T := )
   let q_r_16_m := (Q_R_lin V (16 * R)).toMatrix₂ v_orthonormal v_orthonormal
   have q_r_16_m_hermitian: q_r_16_m.IsHermitian := Q_R_lin_hermetian v_orthonormal (16 * R)
 
@@ -4467,7 +4446,6 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
   .
     simp [growth_bound, my_expr]
 
-    -- apply ENNReal.tendsto_ofReal
     norm_cast
     conv =>
       arg 1
@@ -4492,7 +4470,6 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
       unfold HasPolynomialGrowthD at hd
       obtain ⟨a, s_growth⟩ := hd
       simp
-      -- (R' (V := V))
       let R'' := ⌈R'_ large_v.V⌉₊
       rw [← Filter.tendsto_add_atTop_iff_nat R'']
       --  Filter.tendsto_add_atTop_iff_nat
@@ -4552,7 +4529,6 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
           grind
       . poly_tendsto
     .
-      --apply Asymptotics.IsLittleO.tendsto_div_nhds_zero
       unfold HasPolynomialGrowthD at hd
       obtain ⟨a, s_growth⟩ := hd
       apply squeeze_zero_nhdsGT (g := (fun (n: ℝ) => (a * n^d : ℝ) / (n ^ (↑d + 3))) ∘ (fun (n: ℕ) => (n: ℝ)))

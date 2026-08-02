@@ -354,7 +354,6 @@ partial def core : TacticM Unit := withMainContext do
     if α.isConstOf ``Nat then
       let .lam nm dom _ _ := f |
         throwError "poly_tendsto: expected the function to be a lambda, got {f}"
-      -- Reduce to a real-variable limit by abstracting `(↑x : ℝ)`.
       let gStx ← withLocalDeclD nm dom fun n => do
         let body := (f.beta #[n]).headBeta
         let castN ← mkAppOptM ``Nat.cast #[mkConst ``Real, none, n]

@@ -192,7 +192,6 @@ lemma mu_conv_finsupp (m: ℕ): (muConv  m).support.Finite := by
     unfold muConv
     rw [Function.iterate_succ_apply']
 
-    --let other := (fun (g:  Additive Gᵐᵒᵖ) => (g))
     conv =>
       arg 1
       arg 1
@@ -201,8 +200,6 @@ lemma mu_conv_finsupp (m: ℕ): (muConv  m).support.Finite := by
         right
         apply mu_finsupp
       )]
-
-
 
 
       intro g

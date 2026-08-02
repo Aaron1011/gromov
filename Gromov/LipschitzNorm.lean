@@ -38,7 +38,6 @@ lemma lipschiz_norm_zero: LipschitzSemiNorm  (0) = 0 := by
   exact nonpos_iff_eq_zero.mp sinf_le
 
 
-
 #synth IsStrictOrderedRing NNReal
 
 -- TODO - upstream to mathlib
@@ -66,7 +65,6 @@ lemma lipschitz_attains_norm (f: G → ℝ) (hf: IsLipschitz f): LipschitzWith (
     simp
     exact hK
   ) (by simp)
-
 
 
   have between := IsGLB.exists_between (b := (edist (f x) (f y) / edist x y).toNNReal) isglb_sinf (by
@@ -123,7 +121,6 @@ lemma lipschitz_k_le_norm (f: G → ℝ) (k: NNReal) (hf: LipschitzWith k f): (L
   . simp [hf]
 
 
-
 lemma lipschitz_norm_triangle (x y z: G → ℝ) (hx: IsLipschitz x) (hy: IsLipschitz y) (hz: IsLipschitz z): LipschitzSemiNorm (x - z) ≤ LipschitzSemiNorm (x - y) + LipschitzSemiNorm (y - z) := by
   simp [LipschitzSemiNorm]
   conv =>
@@ -176,7 +173,6 @@ lemma lipschitzSemiNorm_neg (f : G → ℝ) : LipschitzSemiNorm (-f) = Lipschitz
   simp only [Set.mem_setOf_eq, lipschitzWith_neg_iff]
 
 
---section lipschitz_norm
 set_option maxHeartbeats 1000000 in
 noncomputable instance LipschitzH_seminorm: SeminormedAddCommGroup (LipschitzH) where
   norm := fun v => LipschitzSemiNorm v
@@ -255,17 +251,7 @@ noncomputable instance LipschitzH_normed: NormedSpace ℝ (LipschitzH) where
     simp [K]
 
 lemma iterated_lipschitz_bound (f: LipschitzH): ∀ g: G, ‖f g‖ ≤ (LipschitzSemiNorm f + ‖f 1‖) * (1 + WordNorm g) := by
-  -- intro g
-  -- by_cases g = 1
-  -- . rename_i g_eq
-  --   simp [g_eq]
-  --   simp [word_norm_one]
-  --   apply le_mul_of_le_of_one_le
-  --   . grind
-  --   . G''_subgroup_finite_index
   intro g
-  --obtain ⟨l, l_prod, l_len⟩ := word_norm_prod_self g
-  --clear l_len
   induction hg: WordNorm g using Nat.strong_induction_on generalizing g with
   | h n ih =>
     obtain ⟨l, l_prod, l_len⟩ := word_norm_prod _ _ hg

@@ -20,68 +20,8 @@ lemma diag_of_eigenspace_span {A: Type*} [Nontrivial A] [AddCommGroup A] [Module
 
 lemma linearmap_comp_eq_mul {P: Type*} [AddCommMonoid P] [Module ℂ P] (a b: P →ₗ[ℂ] P): a.comp b = a * b := rfl
 
--- FALSE - an element could be a sum of elements from p and q
--- lemma ofIsCompl_apply_prop {R : Type*} [Ring R] {E : Type*} [AddCommGroup E] [Module R E] {F : Type*} [AddCommGroup F] [Module R F] {p q : Submodule R E} (h : IsCompl p q) (φ : ↥p →ₗ[R] F) (ψ : ↥q →ₗ[R] F) (f_prop: F → Prop):
---     (∀ f, f_prop ((LinearMap.ofIsCompl h φ ψ) f)) ↔ (∀ p_val, f_prop (φ p_val)) ∧ (∀ q_val, f_prop (ψ q_val)) := by
-
---   refine ⟨?_, ?_⟩
---   .
---     intro all_mem
---     refine ⟨?_, ?_⟩
---     .
---       intro p_val
---       specialize all_mem p_val
---       simpa using all_mem
---     . intro q_val
---       specialize all_mem q_val
---       simpa using all_mem
---   .
---     intro sub_mem
---     intro f
---     by_cases f_mem_p: f ∈ p
---     .
---       have foo := sub_mem.1 ⟨f, f_mem_p⟩
---       have f_eq: f = (⟨f, f_mem_p⟩ : p) := by simp
---       rw [f_eq]
---       rw [LinearMap.ofIsCompl_apply_left]
---       exact foo
---     .
---       rw [isCompl_iff] at h
---       have f_mem_q: f ∈ q := by
---         have mem_top: f ∈ (⊤ : (Submodule R E)) := by simp
---         have bar := h.2
---         rw [codisjoint_iff] at bar
---         rw [← bar] at mem_top
---         rw [Submodule.mem_sup] at mem_top
---         obtain ⟨x, hx, y, hy, f_eq_add⟩ := mem_top
-
-
---       have foo := sub_mem.2 ⟨f, f_mem_q⟩
---       have f_eq: f = (⟨f, f_mem_q⟩ : q) := by simp
---       rw [f_eq]
---       rw [LinearMap.ofIsCompl_apply_right]
---       exact foo
 
 lemma swap_terms_helper {A: Type*} [AddCommGroup A] (a b c d: A): (a + b) + (c + d) = a + c + b + d := by abel
-
-
--- lemma adjoint_eval_congr  {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]  [FiniteDimensional ℂ E] (A B : E →ₗ[ℂ] E) (x : E)
---     (ha: A x = B x): (A.adjoint) x = (B.adjoint) x := by
-
-
---   rw [ext_iff_inner_left (𝕜 := ℂ)]
---   simp_rw [LinearMap.adjoint_inner_right]
---   intro v
-
---   have a_eq := LinearMap.adjoint_inner_left A x
---   have b_eq := LinearMap.adjoint_inner_left B x
-
---   have inner_eq: ∀ y: E, inner ℂ ((LinearMap.adjoint B) y) x = inner ℂ ((LinearMap.adjoint A) y) x := by
---     intro y
---     rw [a_eq]
---     rw [b_eq]
---     rw [ha]
-
 
 
 lemma linearmap_comp_toContinuousLinearMap {P: Type*} [AddCommGroup P] [Module ℂ P] [TopologicalSpace P] [IsTopologicalAddGroup P] [ContinuousSMul ℂ P] [T2Space P]  [FiniteDimensional ℂ P]  (a b: P →ₗ[ℂ] P):
@@ -118,7 +58,6 @@ lemma unitary_preserves_norm (n: ℕ) (h: Matrix.unitaryGroup (Fin n) ℂ) (x: E
   specialize h_unitary x
   simp at h_unitary
   exact h_unitary
-
 
 
 lemma ofIsCompl_adjoint_comp {P: Type*} [NormedAddCommGroup P] [CompleteSpace P] [InnerProductSpace ℂ P] [FiniteDimensional ℂ P]  {p q : Submodule ℂ P} (h : IsCompl p q) (hpq: p ⟂ q) (φ : p →ₗ[ℂ] P) (ψ : q →ₗ[ℂ] P) (hφ: (LinearMap.adjoint φ) ∘ₗ φ = 1) (hφ_map: ∀ x: p, φ x ∈ p) (hψ: (LinearMap.adjoint ψ) ∘ₗ ψ = 1) (hψ_map: ∀ x: q, ψ x ∈ q):
@@ -223,12 +162,6 @@ lemma ofIsCompl_adjoint_comp {P: Type*} [NormedAddCommGroup P] [CompleteSpace P]
     simp
 
 
-
-    -- rw [add_comm]
-    -- --rw [Function.comp_apply]
-    -- simp only [map_add, LinearMap.adjoint_comp, LinearMap.add_apply, LinearMap.coe_comp,
-    --   Function.comp_apply]
-
 lemma ofIsCompl_commute {P: Type*} [NormedAddCommGroup P] [CompleteSpace P] [InnerProductSpace ℂ P] [FiniteDimensional ℂ P]  {p q : Submodule ℂ P} (h : IsCompl p q)
     (φ : p →ₗ[ℂ] P) (ψ : q →ₗ[ℂ] P)
     (a: P →ₗ[ℂ] P) (a_map_p: ∀ x: p, a x ∈ p) (a_map_q: ∀ x: q, a x ∈ q)
@@ -251,7 +184,6 @@ lemma ofIsCompl_commute {P: Type*} [NormedAddCommGroup P] [CompleteSpace P] [Inn
   rw [psi_a_comm]
 
 
-
 structure IsoData {n: ℕ} {G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)} (g: G) where
   a : ℕ
   b: ℕ
@@ -262,58 +194,6 @@ structure IsoData {n: ℕ} {G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)} (g: G
   B: Subgroup (Matrix.unitaryGroup (Fin b) ℂ)
   iso: Subgroup.centralizer {g.val} ≃* A × B
 
--- @[simp]
--- lemma isStarNormal_unitary_coe_toLin {n: ℕ} (f: Matrix.unitaryGroup (Fin n) ℂ)  (v : Module.Basis (Fin n) ℂ (EuclideanSpace ℂ (Fin n))): IsStarNormal (Matrix.toLin v v f) := by
---   apply isStarNormal_of_mem_unitary
-
---   rw [Unitary.mem_iff]
---   refine ⟨?_, ?_⟩
---   .
---     have f_prop := f.property
---     rw [Matrix.mem_unitaryGroup_iff'] at f_prop
---     apply_fun Matrix.toEuclideanLin at f_prop
---     rw [LinearMap.star_eq_adjoint]
---     rw [Matrix.star_eq_conjTranspose] at f_prop
-
---     rw [Matrix.toEuclideanLin_eq_toLin_orthonormal] at f_prop
---     -- TODO - make a better lemma and PR to mathlib
---     rw [Matrix.toLin_mul (v₂ := v)] at f_prop
---     rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal] at f_prop
-
---     conv at f_prop =>
---       lhs
---       equals (f.val.conjTranspose.toEuclideanLin) * (f.val.toEuclideanLin) =>
---         rfl
-
-
---     rw [f_prop]
---     rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
---     rw [LinearMap.ext_iff]
---     intro x
---     simp
-
---   .
---     have f_prop := f.property
---     rw [Matrix.mem_unitaryGroup_iff] at f_prop
---     apply_fun Matrix.toEuclideanLin at f_prop
---     rw [LinearMap.star_eq_adjoint]
---     rw [← Matrix.toEuclideanLin_conjTranspose_eq_adjoint]
---     rw [Matrix.star_eq_conjTranspose] at f_prop
-
---     rw [Matrix.toEuclideanLin_eq_toLin_orthonormal] at f_prop
---     -- TODO - make a better lemma and PR to mathlib
---     rw [Matrix.toLin_mul (v₂ := (EuclideanSpace.basisFun (Fin n) ℂ).toBasis )] at f_prop
---     rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal] at f_prop
---     conv at f_prop =>
---       lhs
---       equals (f.val.toEuclideanLin) * (f.val.conjTranspose.toEuclideanLin) =>
---         rfl
-
---     rw [f_prop]
---     rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
---     rw [LinearMap.ext_iff]
---     intro x
---     simp
 
 -- TODO - cleanup and PR to mathlib
 @[simp]
@@ -380,7 +260,6 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
     Nonempty (IsoData g) := by
 
 
-
   obtain ⟨k, hk⟩ := Module.End.exists_eigenvalue g.val.val.toEuclideanLin
   by_cases gen_eigenspace_top: Module.End.maxGenEigenspace g.val.val.toEuclideanLin k = ⊤
   .
@@ -413,18 +292,6 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
     rw [← iSup_ne_bot_subtype] at span
 
 
-
-
-    -- nth_rw 1 [iSup_subtype] at span
-    -- simp at span
-    -- conv at span =>
-    --   lhs
-    --   rhs
-    --   arg 1
-    --   intro i
-    --   arg 1
-    --   intro hi‖
-
     have comm_g_h (h: Subgroup.centralizer {g.val}): Commute (Matrix.toEuclideanLin g.val.val) (Matrix.toEuclideanLin h.val.val) := by
       have foo := h.property
       rw [Subgroup.mem_centralizer_iff] at foo
@@ -453,15 +320,11 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
     --simp_rw [Module.End.mem_invtSubmodule_iff_forall_mem_of_mem] at other_invariant
 
 
-
-
     let map_first (h: Subgroup.centralizer {g.val}) := h.val.val.toEuclideanLin.restrict (Module.End.mapsTo_genEigenspace_of_comm (f := g.val.val.toEuclideanLin) (g := h.val.val.toEuclideanLin) (by
       apply comm_g_h
     ) k ⊤)
 
-    --let a := LinearMap.toMatrixOrthonormal (stdOrthonormalBasis ℂ _) (map_first 1)
 
-    --let d := Module.finrank ℂ (Module.End.genEigenspace g.val.val.toEuclideanLin k ⊤)
     let d := (Module.finrank ℂ ↥((Module.End.genEigenspace (Matrix.toEuclideanLin g.val.val) k) ⊤))
     let map_first_unitary (h: Subgroup.centralizer {g.val}): Matrix.unitaryGroup (Fin d) ℂ := {
       val := LinearMap.toMatrixOrthonormal (stdOrthonormalBasis ℂ _) (map_first h)
@@ -609,7 +472,6 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
       (p :=  ↑((iSup fun (i : ℂ) ↦ ⨆ (_ : i ≠ k), Module.End.maxGenEigenspace (Matrix.toEuclideanLin g.val.val) i)))
       (q :=  ↑((iSup fun (i : ℂ) ↦ ⨆ (_ : i ≠ k), Module.End.maxGenEigenspace (Matrix.toEuclideanLin g.val.val) i)))
       (by
-        --exact other_invariant h
         intro x hx
         apply LinearMap.mapsTo_biSup_of_mapsTo
         .
@@ -817,7 +679,6 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             congr
 
 
-
         have x_map_eq: x_map = x.val.val.toEuclideanLin := by
           simp [x_map]
           apply LinearMap.ofIsCompl_eq
@@ -887,26 +748,15 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
             rw [Matrix.star_eq_conjTranspose]
             simp_rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
             simp
-            --rw [← linearmap_comp_eq_mul]
             rw [← LinearMap.toMatrix_adjoint]
             simp
 
-
-            --apply_fun (fun f => LinearMap.toContinuousLinearMap f)
-            --simp [-EmbeddingLike.apply_eq_iff_eq]
-            -- conv =>
-            --   lhs
-            --   rw [linearmap_comp_toContinuousLinearMap]
-            --   rw [ContinuousLinearMap.mul_def]
-            --   lhs
-            --   rw [LinearMap.adjoint_toContinuousLinearMap]
 
             conv =>
               rhs
               equals 1 =>
                 ext z
                 simp
-
 
 
             apply ofIsCompl_adjoint_comp
@@ -992,19 +842,9 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
               rw [commute_iff_eq]
               rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
             . simp
-            -- intro z
-            -- apply (Module.End.mem_invtSubmodule_iff_mapsTo _).mp
-            -- sorry
           . intro a b hab
             simpa using hab
-          -- rw [Matrix.toLin_toMatrix]
-          -- simp_rw [← Matrix.toEuclideanLin_eq_toLin_orthonormal]
-          -- rw [LinearMap.ext_iff]
-          -- intro v
-          -- simp [new]
-          -- obtain ⟨x, y, c_eq, _⟩ := Submodule.existsUnique_add_of_isCompl h v
 
-          -- sorry
         )⟩
 
 

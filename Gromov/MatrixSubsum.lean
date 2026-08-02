@@ -41,8 +41,6 @@ lemma interval_sum_le {R: Type*} {d: ℕ} [RCLike R] [ NormSMulClass R (Fin d �
     ∑ i ∈ Finset.Ico a b, ‖φ ⬝ᵥ (A ^ i).mulVec v‖ < ‖φ ⬝ᵥ (A ^ b).mulVec v‖ := by
 
 
-
-
   have mul_pow: ∀ n: ℕ, 3 ^ n * ‖φ ⬝ᵥ v‖ ≤ ‖φ ⬝ᵥ (A ^ n).mulVec v‖ := by
     intro n
     induction n with
@@ -108,14 +106,8 @@ lemma interval_sum_le {R: Type*} {d: ℕ} [RCLike R] [ NormSMulClass R (Fin d �
       simp
       rw [Matrix.dotProduct_mulVec]
       rw [mul_pow_exact A φ k hva]
-      -- ring
-      -- nth_rw 2 [mul_comm]
-      -- rw [← mul_assoc]
       norm_cast
-      -- simp
-      -- rw [mul_assoc]
 
-      --rw [← pow_succ']
       rw [Matrix.dotProduct_mulVec] at ih
       rw [mul_pow_exact A φ k hva] at ih
       apply_fun (fun x => x + ‖k‖ ^ n * ‖v‖) at ih
@@ -131,7 +123,6 @@ lemma interval_sum_le {R: Type*} {d: ℕ} [RCLike R] [ NormSMulClass R (Fin d �
 
         have two_lt_k: (2: ℝ) < ‖k‖:= by
           linarith
-
 
 
         grw [two_lt_k]
@@ -195,35 +186,9 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ):
   simp at not_all_one
 
 
-
   obtain ⟨k, hk, hk_not_one⟩ := not_all_one
-  -- wlog norm_k_gt: ‖k‖ < 1
-  -- .
 
-  --   have foo := this A⁻¹ v k⁻¹ ?_ (by simpa using hk_not_one) ?_
-  --   .
-  --     obtain ⟨j, hj, j_norm⟩ := foo
-  --     use j⁻¹
-  --     refine ⟨?_, ?_⟩
-  --     . sorry
-  --     . simp
 
-  --     exact foo
-  --   .
-
-  --     apply Module.End.HasEigenvalue.exists_hasEigenvector at hk
-  --     obtain ⟨v, hv, v_nonzero⟩ := hk
-  --     simp at hv
-  --     apply Module.End.hasEigenvalue_of_hasEigenvector (x := v)
-  --     rw [Module.End.hasEigenvector_iff]
-  --     simp
-
-  --     sorry
-    -- .
-    --   simp
-    --   rw [inv_lt_one₀]
-    --   . grind
-    --   . grind
   .
 
     --
@@ -324,7 +289,6 @@ lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ):
       rw [cast_det] at det_eq_one
       simp [A_C, Int.castRingHom] at det_eq
       rw [det_eq_one] at det_eq
-      --simp [Int.castRingHom] at roots_prod_le
       rw [← det_eq] at roots_prod_le
       norm_num at roots_prod_le
     . rename_i det_eq_neg_one
@@ -433,7 +397,6 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℂ) (φ v: (Fin d) →
             rw [q_diff_eq] at h_sum
             rw [add_comm] at h_sum
             apply eq_add_neg_of_add_eq at h_sum
-
 
 
             have first_subset: (q \ p) \ {n} ⊆ Finset.Ico N₀ (n) := by
@@ -576,10 +539,6 @@ lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)) (
 
     have sums_eq := subsums_unique ((A.map (Int.castRingHom ℂ))^(⌈Real.logb ‖k‖ 3⌉₊)) φ ((Int.castRingHom ℂ) ∘ v) (Nat.ceil (Real.logb ‖k‖ 3)) N (by
       simpa using v_ne_zero
-      -- refine ⟨?_, by simpa using v_ne_zero⟩
-      -- intro k_zero
-      -- simp [k_zero] at k_gt
-      -- norm_num at k_gt
     ) (k^(Nat.ceil (Real.logb ‖k‖ 3))) (by simp [pow_le]) (by
       rw [mul_v]
     ) (by omega) (a.image Subtype.val) (b.image Subtype.val) ?_ ?_ ?_
@@ -674,10 +633,8 @@ lemma exists_vector_component_nonzero {d: ℕ} (v: (Fin d) → ℂ) (hv: v ≠ 0
   simp [this] at hv
 
 lemma int_matrix_poly_growth_eigenvalue {d: ℕ} [NeZero d] (A: (Matrix (Fin d) (Fin d) ℤ)ˣ)
-  --(a b : ℕ) (ha: 0 < a)
   (h_poly: ∀ k: ℂ, 1 < ‖k‖ → ∀ v: (Fin d) → ℤ, ∃ a b N_2: ℕ, (0 < a) ∧ ((Nat.ceil (Real.logb ‖k‖ 3)) < N_2) ∧ (4 * ↑b + Real.log ↑a < (Real.log 2) * (N_2 - (Nat.ceil (Real.logb ‖k‖ 3)))^((1 : ℝ) / 2)) ∧ #((Finset.image (fun a => a.sum (fun b => ((((A.val)^((Nat.ceil (Real.logb ‖k‖ 3)))))^b.val).mulVec (v))) ((Finset.Ico (Nat.ceil (Real.logb ‖k‖ 3)) N_2)).attach.powerset)) ≤ a * (N_2 - (Nat.ceil (Real.logb ‖k‖ 3)))^(2*b)):
   ∀ k : Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ)).toLin', ‖k.val‖ = 1 := by
-
 
 
     cases int_matrix_eigenvalue A
@@ -720,14 +677,6 @@ lemma int_matrix_poly_growth_eigenvalue {d: ℕ} [NeZero d] (A: (Matrix (Fin d) 
         simp
 
 
-
-
-      -- apply Module.End.HasEigenvalue.exists_hasEigenvector at kh
-      -- obtain ⟨v, hv⟩ := kh
-      -- rw [Module.End.hasEigenvector_iff] at hv
-      -- have map_v := hv.1
-      -- simp at map_v
-
       have hN := int_matrix_exponential_growth (d := d)
         (A.val) v (Pi.single q 1) (by
           simp
@@ -746,8 +695,6 @@ lemma int_matrix_poly_growth_eigenvalue {d: ℕ} [NeZero d] (A: (Matrix (Fin d) 
 
       specialize h_poly k one_lt_k (Pi.single q 1)
       obtain ⟨a, b, N_2, ha, N_2_gt, N_2_diff_gt, card_le⟩ := h_poly
-      --obtain ⟨N_2, N_2_gt, N_2_diff_gt, card_le⟩ := h_poly
-      -- obtain ⟨a, b, ha, h_poly⟩ := h_poly
       specialize hN N_2
       simp at hN
       simp at card_le
@@ -805,8 +752,6 @@ lemma int_matrix_poly_growth_eigenvalue {d: ℕ} [NeZero d] (A: (Matrix (Fin d) 
           . simp
             grind
           . grind
-
-
 
 
 theorem LinearMap.toMatrix'_pow {R : Type*} [CommSemiring R] {m : Type*} [Fintype m] [DecidableEq m] (f : (m → R) →ₗ[R] m → R) (n: ℕ):
@@ -980,7 +925,6 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (n: ℕ) (hn: 0 < n) (A: (Matrix
     rw [Module.End.hasEigenvalue_iff_isRoot_charpoly] at k_prop
 
 
-
     have k_mem_roots: ↑k.val ∈ A_C.toLin'.charpoly.rootSet ℂ := by
       simp at k_prop
       simp [Polynomial.mem_rootSet]
@@ -1028,7 +972,6 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (n: ℕ) (hn: 0 < n) (A: (Matrix
         simp at foo
         simp [A_C] at foo
         exact foo
-
 
 
   let eigen_pow (k: ℂ) (hk: Module.End.HasEigenvalue A_C.toLin' k) := (eigen_root_unity ⟨k, hk⟩).choose
@@ -1097,7 +1040,6 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (n: ℕ) (hn: 0 < n) (A: (Matrix
     by_contra!
     have foo := (A_C.toLin'^(n*n_prod)).charpoly_monic
     simp [this] at foo
-
 
 
   have a_f_char_eq: (A_C.toLin'^(n*n_prod)).charpoly = (Polynomial.X - (Polynomial.C 1))^d := by
@@ -1197,25 +1139,3 @@ def homToComplex  {d: ℕ} (g: ((Fin d) → ℤ) ≃+ ((Fin d) → ℤ)) := (g.t
 
 open scoped Pointwise Finset
 
--- TODO - this is probably wrong
-lemma hom_poly_growth {d: ℕ} [DecidableEq ((AddAut ((Fin d) → ℤ)))] (S: Finset (AddAut ((Fin d) → ℤ))) {p: ℕ}
-  (hS: ∃ a, ∀ n ≥ 1, #(n • S) ≤ a * n^p): False := by
-
-  let S' := S.image (fun g => homToComplex g)
-  sorry
-
-
-  -- rw [← ge_iff_le]
-  -- grw [(Finset.card_le_card (s := Finset.image (fun (n : Set.Ico ((Nat.ceil (Real.logb ‖k‖ 3))) N) => (A.val^(n.val)).mulVec v) Finset.univ) ?_).ge]
-  -- .
-  --   simp
-  --   rw [Finset.card_image_of_injective]
-  --   . simp
-  --   have card_le := Finset.card_le_card_of_injective (f := (fun (n : Set.Ico ((Nat.ceil (Real.logb ‖k‖ 3))) N) => (A.val^(n.val)).mulVec v))
-  --   sorry
-  -- .
-  --   intro a ha
-  --   simp at ha
-  --   simp
-  --   obtain ⟨n, hn, other⟩ := ha
-  --   use ⟨n, by omega⟩

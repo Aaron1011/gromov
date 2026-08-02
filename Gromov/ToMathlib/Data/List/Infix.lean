@@ -14,7 +14,6 @@ lemma list_adjacent_elements {A: Type*} (l: List A) (p: A → Bool) (n : ℕ):
     (∃ l', l' <:+: l ∧ n ≤ l'.length ∧ ∀ a ∈ l', p a) ∨ ((l.length - 1) / n) ≤ (l.countP (fun a => !(p a))):= by
 
 
-
   rw [or_iff_not_imp_left]
   intro no_adjacent_seq
 
@@ -126,8 +125,6 @@ lemma list_adjacent_elements {A: Type*} (l: List A) (p: A → Bool) (n : ℕ):
         have drop_tail_length: l.length - n  ≤ (l.dropWhile p).tail.length := by
           simp
           omega
-          --grw [drop_length]
-          --simp
 
         have ih_drop := ih (l.dropWhile p).tail (by
           simp

@@ -197,7 +197,6 @@ lemma closure_iterate_mulact {T: Type*} [Group T] [DecidableEq T] (a b: T) (n: ‚
         exact y_mem
 
 
-
     induction hx using Subgroup.closure_induction with
     | mem y hy =>
       simp at hy
@@ -298,14 +297,11 @@ lemma closure_iterate_mulact {T: Type*} [Group T] [DecidableEq T] (a b: T) (n: ‚
               simp
               exact conj_in
           | succ p hsucc ih =>
-            --rw [‚Üê Subgroup.inv_mem_iff]
-            --simp
             specialize closed_under_conj_inv _ ih
             simp at ih
             norm_cast
             rw [zpow_negSucc]
             rw [pow_succ]
-            --rw [zpow_add]
             repeat rw [‚Üê mul_assoc] at closed_under_conj_inv
             simp at closed_under_conj_inv
             simp

@@ -39,7 +39,6 @@ lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b  f = 0) (a: G
       field_simp at f_at_l
 
       -- TODO - is there a 'Finset.expect' theorem we can use?
-     -- rw [← Finset.expect_eq_sum_div_card] at f_at_l
      -- TODO - upstream this to mathlib in some form
       have f_s_eq: ∀ s: S, f a = f (s * (l.unattach.prod * a)) := by
         by_contra!
@@ -80,18 +79,6 @@ lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b  f = 0) (a: G
 
 variable {V: Submodule ℝ LipschitzH} [V_finite: FiniteDimensional ℝ V] [Nontrivial V]
 
-
-
--- lemma Q_lin_pos_semi_def (R: ℝ): (Q_R_matrix R (V := V)).PosSemidef := by
---   apply Matrix.PosSemidef.of_dotProduct_mulVec_nonneg (Q_R_lin_hermetian V _)
---   intro x
---   rw [Q_R_matrix]
---   rw [star_dotProduct_toMatrix₂_mulVec, Q_R_lin]
---   simp only [Q_R, DFunLike.coe]
---   apply Finset.sum_nonneg
---   intro g _
---   rw [← pow_two]
---   positivity
 
 lemma v_basis_app_nonzero (k: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)): ∃ g: G, (V_basis V k).val g ≠ 0 := by
   by_contra!
@@ -145,7 +132,6 @@ open scoped Convolution
 open MeasureTheory
 
 
-
 lemma laplace_b_const (k: ℝ): Laplace_b (fun g => k) = 0 := by
   simp [Laplace_b]
   simp [f_conv_mu]
@@ -159,9 +145,6 @@ lemma laplace_b_const (k: ℝ): Laplace_b (fun g => k) = 0 := by
   . simp
     have foo := S_nonempty
     grind
-
-
-
 
 
 -- Linearity lemmas for convolution - this is basically just wrapping the MeasureTheory.ConvolutionExists lemmas,
@@ -217,7 +200,6 @@ lemma smul_conv (f h: G → ℝ) (k: ℝ): Conv f (k • h) = k • Conv f h := 
   ring
 
 
-
 lemma laplace_conv_eq_laplace_right_of_lp2 (f g: G → ℝ) (hfg: ConvExists f g) (hf: MemLp f 2 Measure.count) (hg: MemLp g 2 Measure.count): Laplace_b (Conv f g) = Conv f (Laplace_b g) := by
   simp_rw [Laplace_b]
   rw [conv_assoc_of_lp2]
@@ -251,59 +233,6 @@ lemma laplace_conv_eq_laplace_right_of_lp2 (f g: G → ℝ) (hfg: ConvExists f g
   . exact hg
   . apply mu_finsupp
 
-
-
-    -- let other := ((fun (x: (Additive G)) ↦ ‖g x‖) ⋆[ContinuousLinearMap.mul ℝ ℝ, myHaarAddOpp] fun (x: (Additive G)) ↦ ‖h x‖)
-    -- have finsupp_conv := conv_exists_fin_supp (fun (b: G) => ‖f b‖) (fun b => other (Additive.ofMul b)) ?_
-    -- . apply finsupp_conv x
-    -- . left
-    --   simp
-    --   rw [← Function.comp_def]
-    --   rw [Function.support_comp_eq]
-    --   . apply f_finsupp
-    --   . simp
-
-
--- -- We take advantage of junk values to avoid needing to prove that the convolutions actually exist
--- lemma conv_assoc_le {f g h b: G → ℝ} (x: G) (right_le: ‖Conv f (Conv g h) x‖ ≤ ‖b x‖): ‖Conv (Conv f g) h x‖ ≤ ‖b x‖ := by
---   by_cases f_g_exists: ConvExistsAt f g x
---   .
---     rw [conv_assoc]
---   .
---     conv =>
---       arg 1
---       arg 1
---       arg 1
---       unfold Conv
---     simp [convolution, integral]
---     unfold ConvExistsAt ConvolutionExistsAt at f_g_exists
---     simp [-toMul_sub] at f_g_exists
---     conv at f_g_exists =>
---       arg 1
---       arg 1
---       equals fun t ↦ f (t) * g (((Additive.ofMul x) - (Additive.ofMul t))) =>
---         rfl
-
-
---     conv =>
---       lhs
---       arg 1
---       arg 1
---       intro x
---       arg 2
---       intro y
---       rw [dif_neg (by
---         exact f_g_exists
---       )]
---       arg 2
---       equals (fun (hf: Integrable (fun t ↦ f (t) * g (((Additive.ofMul x) - (Additive.ofMul t))))) ↦ L1.integral (Integrable.toL1 (fun t ↦ f (t) * g (((Additive.ofMul x) - (Additive.ofMul t)))) hf)) =>
---         rfl
-
-
-
---     simp
---     simp [f_g_exists]
---     simp
 
 lemma laplace_conv_eq_laplace_right (f g: G → ℝ) (hfg: ConvExists f g) (g_nonneg: ∀ a: G, 0 ≤ g a) (g_finsupp: g.support.Finite): Laplace_b (Conv f g) = Conv f (Laplace_b g) := by
   simp_rw [Laplace_b]
@@ -349,20 +278,7 @@ lemma laplace_conv_eq_laplace_right (f g: G → ℝ) (hfg: ConvExists f g) (g_no
 #print axioms laplace_conv_eq_laplace_right
 
 
-
-
-
-
-
-
     -- simp_rw [tsum_eq_sum]
-
-    -- simp_rw [conv_eq_sum]
-    -- rw [conv_eq_sum]
-
-    -- nth_rw 3 [mu]
-    -- apply Finite.support_conv
-    -- exact ih
 
 
 lemma f_n_fin_supp (n: ℕ): (f_n  n).support.Finite := by
@@ -380,8 +296,6 @@ lemma f_n_fin_supp (n: ℕ): (f_n  n).support.Finite := by
 -- This is a sum over all n-tuples of elements in S, where each term in is f (s_1 * ... * s_n)
 -- TODO - is there aless horrible way to write in in mathlib?
 def NTupleSum (n: ℕ) (f: G → ℝ): ℝ := ∑ s : (Fin n → S), f ((List.ofFn s).unattach.prod)
---∑ s ∈ (Finset.pi (Finset.range (n + 1))) (fun _ => S), f (List.ofFn (n := n + 1) (fun m => s m.val (by simp))).prod
-
 
 
 -- Proposition 3.12, item 3, in Vikman
@@ -450,7 +364,6 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
             apply conv_exists_fin_supp
             right
             simp [delta]
-
 
 
       simp_rw [f_conv_delta]
@@ -539,7 +452,6 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
           simp at g_eq
           rw [← g_eq] at g_mul_neq
           rw [List.ofFn_succ] at g_mul_neq
-          --rw [ofFn_fir] at g_mul_neq
           norm_cast at g_mul_neq
           conv at g_mul_neq =>
             arg 1
@@ -640,7 +552,6 @@ lemma mu_conv_nonneg (n: ℕ): ∀ g, 0 ≤ muConv  n g := by
       . simp
 
 
-
 lemma f_n_nonneg: ∀ n: ℕ, ∀ g: G,  0 ≤ f_n n g := by
   intro n g
   simp [f_n]
@@ -680,9 +591,6 @@ lemma conv_laplce_norm (n: ℕ) (H_n: ℕ → G → ℝ): eLpNorm ((Laplace_b ((
     exact f_n_fin_supp n
   . apply f_n_nonneg
   . exact f_n_fin_supp n
-
-
-
 
 
 lemma lintegral_g_eq_add (f: G → ENNReal): (∫⁻ (g: G), f g) = (∑' (g : G), f g) := by
@@ -832,9 +740,6 @@ theorem f_n_norm_one (n: ℕ): MeasureTheory.eLpNorm (f_n  n) 1 = 1 := by
     simp
 
 
-
-
-
 -- Proposition 3.15.2 from Vikman
 theorem f_n_sub_conv (n: ℕ): MeasureTheory.eLpNorm ((f_n  n) - (Conv (f_n  n) (mu ))) 1 ≤ ENNReal.ofReal ((2 : ℝ) / ((n + 1) : ℝ)) := by
   unfold f_n
@@ -843,7 +748,6 @@ theorem f_n_sub_conv (n: ℕ): MeasureTheory.eLpNorm ((f_n  n) - (Conv (f_n  n) 
     arg 1
 
 
-  --rw [f_conv_mu]
   conv =>
     lhs
     arg 1
@@ -852,16 +756,12 @@ theorem f_n_sub_conv (n: ℕ): MeasureTheory.eLpNorm ((f_n  n) - (Conv (f_n  n) 
       funext p
       simp
   simp_rw [← smul_eq_mul]
-  --simp_rw [← Finset.smul_sum]
-  --simp_rw [← smul_assoc]
-  --rw [← Pi.smul_def]
   conv =>
     lhs
     arg 1
     rhs
     arg 1
     rw [← Pi.smul_def]
-
 
 
   rw [conv_smul]
@@ -932,7 +832,6 @@ theorem f_n_sub_conv (n: ℕ): MeasureTheory.eLpNorm ((f_n  n) - (Conv (f_n  n) 
             )]
 
 
-
           simp [iy]
 
     simp
@@ -968,7 +867,6 @@ theorem f_n_sub_conv (n: ℕ): MeasureTheory.eLpNorm ((f_n  n) - (Conv (f_n  n) 
   . exact mu_finsupp
 
 
-  -- rw [conv_const_mul]
 #print axioms mu_conv_eq_sum
 #print axioms f_n_norm_one
 #print axioms f_n_sub_conv
@@ -1037,10 +935,8 @@ noncomputable def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (h_seq:
                 equals (fun (n: ℕ) => (2 : ℝ) / ((n) : ℕ)) =>
                   ext n
                   simp
-              --rw [Filter.tendsto_add_atTop_iff_nat (f := fun n => (2 : ℝ) / (n))]
               apply tendsto_const_div_atTop_nhds_zero_nat
             .
-              --apply Filter.tendsto_atTop_add_const_right (f := fun n => eps_seq (seq n))
               apply Filter.Tendsto.comp
               . conv =>
                   arg 1
@@ -1200,8 +1096,6 @@ noncomputable def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (h_seq:
           . simp
 
 
-
-
         . simp
       . intro s hs
         apply tendsto_F
@@ -1226,12 +1120,6 @@ lemma essSup_eq_elpNorm_top (f: G → ℝ): (essSup (fun g => ‖f g‖ₑ) volu
 lemma neg_smul (f: G → ℝ): -f = (-1 : ℝ) • f := by
   simp
 
--- lemma aeqfun_cast (f: G →ₘ[volume] ℝ):  := by
---   have eq_fun := MeasureTheory.AEEqFun.coeFn_mk f (μ := MeasureTheory.volume (α := G)) (by apply MeasureTheory.AEStronglyMeasurable.of_discrete)
---   rw [ae_eq_everywhere] at eq_fun
---   nth_rw 2 [← eq_fun]
---   rfl
-
 
 -- TODO - cleanup and upstream to mathlib
 lemma nat_mono_le {f: ℕ → ℕ} (hf: StrictMono f) (n: ℕ): n ≤ f n := by
@@ -1246,8 +1134,6 @@ lemma nat_mono_le {f: ℕ → ℕ} (hf: StrictMono f) (n: ℕ): n ≤ f n := by
       have foo := hf.add_le_nat 1 k
       grind
     grind
-
-
 
 
 noncomputable def Laplace_linear: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) →ₗ[ℝ] (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) := {
@@ -1306,7 +1192,6 @@ instance volume_finite_compact: IsFiniteMeasureOnCompacts (volume (α := G)) := 
   }
 
 
-
 lemma finsupp_lp_top (f: G → ℝ) (hf: f.support.Finite) (p: ENNReal): MeasureTheory.MemLp f p (Measure.count) := by
   rw [← my_haar_eq_count]
   apply Continuous.memLp_of_hasCompactSupport
@@ -1316,9 +1201,6 @@ lemma finsupp_lp_top (f: G → ℝ) (hf: f.support.Finite) (p: ENNReal): Measure
     rw [isCompact_iff_finite]
     simp [tsupport]
     exact hf
-
-
-
 
 
 noncomputable def F_n (n : ℕ) := Real.sqrt ∘ (f_n  n)
@@ -1346,7 +1228,6 @@ instance volume_mul_right_invariant: (volume (α := G)).IsMulRightInvariant := b
   simp [volume]
   rw [my_haar_eq_count]
   infer_instance
-
 
 
 -- TODO - upstream to mathlib
@@ -1378,7 +1259,6 @@ lemma norm_sub_squared_le (a b : ℝ) (ha: 0 ≤ a) (hb: 0 ≤ b): (a - b)^2 ≤
 
 
 def f_n_conv_delta_tendsto: Prop :=  ∀ s: S, Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0)
-
 
 
 lemma f_conv_delta_helper (f: G → ℝ) (s: G): (Conv  f (delta s)) = fun g => f (s⁻¹ * g) := by
@@ -1624,7 +1504,6 @@ lemma F_n_conv_mu_lim (f_n_limit: f_n_conv_delta_tendsto):
 #synth TopologicalSpace ↥(Lp ℝ 2 volume (α := G))
 
 
-
 lemma laplace_smul (k: ℝ) (f: (Lp ℝ 2 volume (α := G))): Laplace (k • f) = k • (Laplace f) := by
   simp [Laplace, conv_mu_lp2]
   simp_rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_smul _ _)]
@@ -1724,7 +1603,6 @@ lemma inner_laplace_zero (f: (Lp ℝ 2 volume (α := G))) (hf: ⟪Laplace f, f�
   rw [sub_eq_zero] at hf
   rw [eq_comm] at hf
   rw [pow_two] at hf
-  --rw [inner_eq_norm_mul_iff_real] at hf
   rw [hf] at inner_le
   nth_rw 2 [mul_comm] at inner_le
   rw [mul_le_mul_iff_of_pos_left] at inner_le
@@ -1756,7 +1634,6 @@ lemma F_n_norm_eq_one: ∀ n, MeasureTheory.eLpNorm (F_n n) 2 MeasureTheory.volu
   simp_rw [Real.enorm_eq_ofReal_abs] at norm_one
   simp [f_n_nonneg, abs_of_nonneg] at norm_one
   simp [norm_one]
-
 
 
 lemma harmonic_abs_max_implies_const (f: G → ℝ) (hf: Laplace_b  f = 0) (a: G) (h_max: ∀ g: G, |f g| ≤ |f a|): f = fun _ => f a := by
@@ -1913,7 +1790,6 @@ lemma laplace_bounded (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G
   simp_rw [← Pi.smul_def]
   rw [MeasureTheory.MemLp.toLp_const_smul]
   rw [enorm_smul]
-  --rw [MeasureTheory.eLpNorm_const_smul]
   conv =>
     lhs
     rhs
@@ -1975,7 +1851,6 @@ lemma laplace_bounded (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G
     . apply AEMeasurable.of_discrete
 
 
-
 lemma laplace_bounded' (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): ‖(Laplace  f)‖ ≤ 2 * ‖f‖ := by
   have bounded := laplace_bounded f
   rw [← ofReal_norm_eq_enorm] at bounded
@@ -1989,7 +1864,6 @@ lemma laplace_bounded' (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := 
   . simp
 
 noncomputable def laplace_range := LinearMap.range (Laplace_linear )
-
 
 
 -- The only measure-zero sets are empty sets, so we can evaluate a MemLp function by evaluating any function
@@ -2013,7 +1887,6 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
 
   have my_eq := ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub h (conv_mu_lp2 h))
 
-  --simp only [AddSubgroupClass.coe_sub, ae_eq_everywhere] at my_eq
 
   -- MeasureTheory.Lp.coeFn_smul
 
@@ -2048,8 +1921,6 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
   simp_rw [Finset.mul_sum]
 
 
-  --simp_rw [← smul_eq_mul]
-
   conv =>
     lhs
     arg 2
@@ -2059,7 +1930,6 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
     rhs
     arg 1
     intro i
-    --rw [← Finset.mul_sum]
 
 
   simp_rw [tolp_apply]
@@ -2105,7 +1975,6 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
     rw [← mul_sub]
 
 
-
   conv =>
     rhs
     arg 2
@@ -2115,7 +1984,6 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
     unfold conv_mu_lp2
     simp [f_conv_mu]
     rw [tolp_apply]
-    --rw [← MeasureTheory.MemLp.toLp_const_smul]
 
 
   simp_rw [Finset.mul_sum]
@@ -2174,13 +2042,6 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
     have prod_lp1 := MeasureTheory.MemLp.smul (p := 2) (q := 2) (r := 1) (μ := volume) mem_lp_h_comp (MeasureTheory.Lp.memLp f)
     rw [MeasureTheory.memLp_one_iff_integrable] at prod_lp1
     exact prod_lp1
-    -- rw [mul_sub]
-    -- rhs
-    -- equals (f g • (conv_mu_lp2 h)) g =>
-    --   rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_smul _ _)]
-    --   sim
-
-
 
 
 lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_range ) := by
@@ -2209,7 +2070,6 @@ lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_
   . intro hg
     rw [hg]
     simp
-
 
 
 -- Proposition 3.17.2: "∆ is positive semidefinite" from Vikman
@@ -2254,64 +2114,9 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
     simp
 
 
-
-    --rw [MeasureTheory.Lp.toLp_compMeasurePreserving]
-
   -- We've now packed everything back up in an inner product -
   -- we no longer need to deal with commuting toLp and Finset.sum
 
-
-  --simp [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_compMeasurePreserving _ _)]
-
-  --rw [← MeasureTheory.L2.inner_def]
-
-
-  -- have comp_mul_mem_lp (i: G) (f: MeasureTheory.Lp ℝ 2 (μ := volume)): MemLp (f ∘ (fun x => i * x)) 2 (μ := volume) := by
-  --   apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
-  --   . apply MeasureTheory.Lp.memLp f
-  --   . exact measurePreserving_mul_left volume i
-
-
-  -- conv =>
-  --   rhs
-  --   rhs
-  --   rhs
-  --   arg 2
-  --   equals ∑ x ∈ S, MemLp.toLp (fun i => f (i • x)) (by
-  --     apply MeasureTheory.MemLp.comp_measurePreserving (ν := volume)
-  --     . apply MeasureTheory.Lp.memLp f
-  --     . exact measurePreserving_mul_right volume x
-  --   ) =>
-
-  --     apply Lp.ext
-  --     rw [ae_eq_everywhere]
-  --     funext a
-  --     --simp
-  --     rw [tolp_apply]
-  --     conv =>
-  --       rhs
-  --     rw [Finsupp.sum_apply'']
-
-  --     rw [eq_comm]
-  --     refine Finset.induction_on S ?_ ?_
-  --     .
-  --       simp only [Finset.sum_empty]
-  --       rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)]
-  --       simp
-  --     .
-  --       intro a s ha sum_eq
-  --       rw [Finset.sum_insert ha]
-  --       rw [Finset.sum_insert ha]
-  --       rw [← sum_eq]
-  --       rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_add _ _)]
-  --       simp
-
-
-
-
-
-  --rw [inner_smul_right]
-  --rw [inner_sum]
 
   let conv_f_delta_lp (i: G) :=  MemLp.toLp (Conv (f) (delta i⁻¹)) (μ := volume) (p := 2) (by
     simp_rw [f_conv_delta_helper]
@@ -2320,26 +2125,6 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
     . exact measurePreserving_mul_left volume _
   )
 
-
-  -- conv =>
-  --   rhs
-  --   rhs
-  --   rhs
-  --   arg 2
-  --   intro i
-  --   rhs
-  --   equals conv_f_delta_lp i =>
-  --     unfold conv_f_delta_lp
-  --     simp_rw [f_conv_delta_helper]
-  --     simp
-    -- arg 1
-    -- intro i
-    -- rhs
-    -- equals fun x => (fun i => (MemLp.toLp _  (comp_mul_mem_lp i f)) x) i =>
-    --   funext x
-    --   simp
-    --   rw [tolp_apply]
-    --   simp
 
   have sum_le := Finset.sum_le_sum (g := fun i => ‖f‖ * ‖conv_f_delta_lp i‖) (f := fun i => ⟪f, conv_f_delta_lp i⟫) (s := S) (by
     intro s hs
@@ -2482,23 +2267,6 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
   rw [spectrum.zero_mem_iff]
   by_contra this
   obtain ⟨f, hf⟩ := this
-  -- Copied from https://github.com/leanprover-community/mathlib4/blob/60041760fb96850991084120a9a9b217890cf1f1/Mathlib/Topology/Algebra/Module/Equiv.lean#L760
-  -- let laplace_equiv: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) ≃ₗ[ℝ] (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) := {
-  --     toFun := f.val
-  --     map_add' := by simp
-  --     map_smul' := by simp
-  --     invFun := f.inv
-  --     left_inv := fun x =>
-  --       show (f.inv * f.val) x = x by
-  --         rw [f.inv_val]
-  --         simp
-  --     right_inv := fun x =>
-  --       show (f.val * f.inv) x = x by
-  --         rw [f.val_inv]
-  --         simp
-  --     }
-  -- have laplace_cont := continuous_of_linear_of_bound (C := 2) (𝕜 := ℝ ) (f := f.val) ?_ ?_ ?_
-  -- let cont_equiv :=  LinearEquiv.toContinuousLinearEquivOfContinuous laplace_equiv laplace_cont
 
   have inv_bounded := ContinuousLinearMap.isBoundedLinearMap (𝕜 := ℝ) (f.inv)
 
@@ -2536,15 +2304,10 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
       simp
       rw [ae_eq_everywhere.mp (MemLp.coeFn_toLp _)]
     _ ≤ ENNReal.ofReal ‖f.inv‖ := by
-      --rw [← mul_apply_eq_comp]
-      --simp
       have other := ContinuousLinearMap.ratio_le_opNorm (f := f.inv) (x := (((F_n_lp2 n) - conv_mu_lp2 (F_n_lp2 n))))
       conv at other =>
         lhs
         rw [Lp.norm_def]
-        --rw [ContinuousLinearMap.map_sub]
-        --rw [ae_eq_everywhere.mp (Lp.coeFn_sub _ _)]
-
 
 
       conv =>
@@ -2641,7 +2404,6 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
     simp at inv_norm_ge
 
 
-
 set_option maxHeartbeats 600000 in
 lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp ℝ 2 volume (α := G)), ‖Laplace g‖ ≤ (1 : ℝ) / n ∧ ⟪Laplace g, g⟫ = 1 := by
 
@@ -2723,7 +2485,6 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
             rw [div_le_one₀ (by simp [eps]; positivity)] at x_div_le
             have x_lt: x < eps := by
               grind
-
 
 
             have x_mem_zero: x ∈ ({0} : Set ℝ) := by
@@ -2904,252 +2665,16 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
     use P.eval a
 
 
-
-  -- let g := cfc (fun (x: ℝ) => a) (Cx.mapCLM Δ)
-
-  -- have norm_g_le: ‖g‖ < eps := by
-  --   apply norm_cfc_lt
-  --   . simp [eps, hn]
-  --   . intro x hx
-  --     simp
-  --     simp at ha
-  --     grind
-
   -- -- simp [P] at a_spec
   -- -- rw [spectrum.mem_iff] at a_spec
   -- -- --rw [LinearMap.isUnit_iff_ker_eq_bot] at a_spec
   -- -- rw [ContinuousLinearMap.isUnit_iff_bijective] at a_spec
 
 
-  -- use g.fst
-
-
-
-
-
-
   -- This whole proof is completely wrong - it needs to use the spectral theorem
-
-  -- have ball_open: IsOpen (Metric.ball (0 : Lp ℝ 2 volume (α := G)) (1 / n)) := by
-  --   exact Metric.isOpen_ball
-
-
-  -- have punctured_ball_open: IsOpen ((Metric.ball (0 : Lp ℝ 2 volume (α := G)) (1 / n)) \ {0})  := by
-  --   apply IsOpen.sdiff
-  --   . exact ball_open
-  --   .
-  --     rw [← Metric.closedBall_zero]
-  --     apply Metric.isClosed_closedBall
-
-  -- have dense := laplace_range_dense
-  -- rw [dense_iff_inter_open] at dense
-
-  -- let lp_point: (Lp ℝ 2 volume (α := G)) := MemLp.toLp (fun (g: G) => if g = 1 then (1 : ℝ) / ((n + 1)^2) else 0) (by
-  --   simp [MemLp]
-  --   refine ⟨by apply AEStronglyMeasurable.of_discrete, ?_⟩
-  --   simp [eLpNorm, eLpNorm']
-  --   rw [lintegral_g_eq_add]
-  --   rw [tsum_eq_sum (s := {1})]
-  --   . simp
-  --     rw [Real.enorm_eq_ofReal_abs]
-  --     norm_cast
-  --     simp
-  --     apply ENNReal.rpow_lt_top_of_nonneg
-  --     . simp
-  --     .
-  --       apply ENNReal.pow_ne_top
-  --       apply ENNReal.ofReal_ne_top
-  --   . intro b hb
-  --     simp at hb
-  --     simp [hb]
-  -- )
-
-  -- have lp_point_norm: ‖lp_point‖ < (n: ℝ)⁻¹ := by
-  --   simp [lp_point, eLpNorm, eLpNorm']
-  --   rw [lintegral_g_eq_add]
-  --   simp_rw [Real.enorm_eq_ofReal_abs]
-  --   conv =>
-  --     lhs
-  --     arg 1
-  --     lhs
-  --     arg 1
-  --     intro g
-  --     rw [← ENNReal.ofReal_pow (by simp)]
-  --   rw [tsum_eq_sum (s := {1})]
-  --   .
-  --     simp
-  --     rw [ENNReal.ofReal_rpow_of_nonneg]
-  --     rw [ENNReal.toReal_ofReal]
-  --     .
-  --       rw [← Real.rpow_neg_one]
-  --       rw [← Real.rpow_mul]
-  --       rw [← Real.rpow_natCast]
-  --       rw [← Real.rpow_mul]
-  --       rw [← Real.rpow_natCast]
-  --       rw [← Real.rpow_mul]
-  --       field_simp
-  --       simp
-  --       rw [Real.rpow_neg]
-  --       rw [mul_inv_lt_iff₀']
-  --       field_simp
-  --       norm_cast
-  --       rw [pow_two]
-  --       ring
-  --       norm_cast
-  --       rw [mul_two]
-  --       . omega
-  --       .
-  --         norm_cast
-  --         positivity
-  --       . norm_cast
-  --         omega
-  --       . norm_cast
-  --         linarith
-  --       . norm_cast
-  --         positivity
-  --       . norm_cast
-  --         positivity
-  --     . positivity
-  --     . positivity
-  --     . simp
-  --   . intro b hb
-  --     simp at hb
-  --     simp [hb]
-
-  -- use (Real.sqrt ⟪Laplace lp_point, lp_point⟫)⁻¹ • lp_point
-  -- refine ⟨?_, ?_⟩
-  -- .
-  --   rw [laplace_smul]
-  --   rw [norm_smul]
-  --   simp only [norm_inv, Real.norm_eq_abs, one_div]
-  --   grw [laplace_bounded']
-  --   grw [lp_point_norm]
-  --   rw [inv_mul_le_iff₀]
-  --   .
-  --     rw [← Real.norm_eq_abs]
-  --     rw [Real.norm_of_nonneg (by apply Real.sqrt_nonneg)]
-  --     simp_rw [Laplace]
-  --     simp_rw [inner_sub_left, conv_mu_lp2]
-  --     simp_rw [f_conv_mu]
-  --     s orry
-  --     --grw [real_inner_le_norm]
-  --   . s orry
-
-
-  -- -- Show that the punctured open ball is nonempty, so a dense set has a nonempty intersection with it
-  -- have mem_ball := dense _ punctured_ball_open (by
-  --   simp
-  --   use lp_point
-  --   simp
-  --   refine ⟨?_, ?_⟩
-  --   . simp [lp_point, eLpNorm, eLpNorm']
-  --     rw [lintegral_g_eq_add]
-  --     simp_rw [Real.enorm_eq_ofReal_abs]
-  --     conv =>
-  --       lhs
-  --       arg 1
-  --       lhs
-  --       arg 1
-  --       intro g
-  --       rw [← ENNReal.ofReal_pow (by simp)]
-  --     rw [tsum_eq_sum (s := {1})]
-  --     .
-  --       simp
-  --       rw [ENNReal.ofReal_rpow_of_nonneg]
-  --       rw [ENNReal.toReal_ofReal]
-  --       .
-  --         rw [← Real.rpow_neg_one]
-  --         rw [← Real.rpow_mul]
-  --         rw [← Real.rpow_natCast]
-  --         rw [← Real.rpow_mul]
-  --         rw [← Real.rpow_natCast]
-  --         rw [← Real.rpow_mul]
-  --         field_simp
-  --         simp
-  --         rw [Real.rpow_neg]
-  --         rw [mul_inv_lt_iff₀']
-  --         norm_num
-  --         norm_cast
-  --         rw [pow_two]
-  --         ring
-  --         norm_cast
-  --         rw [mul_two]
-  --         . omega
-  --         .
-  --           norm_cast
-  --           positivity
-  --         . norm_cast
-  --           simp
-  --         . norm_cast
-  --           linarith
-  --         . norm_cast
-  --           positivity
-  --         . norm_cast
-  --           positivity
-  --       . positivity
-  --       . positivity
-  --       . simp
-  --     . intro b hb
-  --       simp at hb
-  --       simp [hb]
-  --   . by_contra!
-  --     rw [MeasureTheory.Lp.ext_iff] at this
-  --     rw [ae_eq_everywhere] at this
-  --     have eval_one := congrFun this (1 : G)
-  --     rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)] at eval_one
-  --     rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)] at eval_one
-  --     simp at eval_one
-  --     linarith
-  -- )
-  -- simp only [Set.Nonempty] at mem_ball
-  -- obtain ⟨g, gh⟩ := mem_ball
-  -- simp at gh
-  -- have g_norm := gh.1
-  -- have g_range := gh.2
-  -- simp only [laplace_range] at g_range
-  -- simp only [LinearMap.mem_range] at g_range
-  -- obtain ⟨a, ha⟩ := g_range
-  -- s orry
-
-  -- by_cases inner_laplace_nonneg: 0 ≤ ⟪Laplace a, a⟫
-  -- .
-  --   --use (Real.sqrt ⟪Laplace a, a⟫)⁻¹ • a
-  --   --simp [Laplace_linear] at ha
-  --   field_simp at g_norm
-  --   refine ⟨?_, ?_⟩
-  --   .
-  --     rw [laplace_smul]
-  --     rw [norm_smul]
-  --     simp
-  --     rw [norm_eq_sqrt_real_inner]
-  --     rw [ha]
-  --     rw [← norm_eq_sqrt_real_inner]
-
-  --     simp
-  --     rw [inner_smul_left]
-  --     rw [inner_smul_right]
-  --     field_simp
-  --     simp [Laplace]
-  --   .
-  --     rw [laplace_smul]
-  --     rw [inner_smul_left]
-  --     rw [inner_smul_right]
-  --     field_simp
-  --     apply div_self
-  --     rw [Real.sqrt_ne_zero]
-  --     . by_contra!
-  --       apply inner_laplace_zero at this
-  --       rw [this] at ha
-  --       have g_nonzero := g_norm.2
-  --       rw [eq_comm] at ha
-  --       contradiction
-  --     . exact inner_laplace_nonneg
-  -- . s orry
 
 
 #print axioms laplace_g_n
-
-
 
 
 lemma measure_preserving_inv: MeasurePreserving Inv.inv ((MeasureTheory.volume (α := G))) (MeasureTheory.volume (α := G)) := {
@@ -3166,9 +2691,6 @@ lemma measure_preserving_unop_tomul: MeasurePreserving (fun (x: Additive (G)) �
 
 lemma measure_preserving_op_add: MeasurePreserving (fun (x: G) ↦ Additive.ofMul (x)) volume myHaarAddOpp := by
   apply MeasureTheory.MeasurePreserving.id
-
-
-
 
 
 noncomputable def G_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto) := Classical.choose (laplace_g_n n hn hf)
@@ -3260,7 +2782,6 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
     intro g
     lhs
     rw [← inv_mul_cancel_left₀ (a := 2) (by simp) (f g)]
-
 
 
   simp_rw [mul_assoc]
@@ -3392,12 +2913,6 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
     arg 2
     intro s
     rw [← MeasureTheory.eLpNorm_comp_measurePreserving (f := fun x => s⁻¹ * x) (ν := volume) (by apply AEStronglyMeasurable.of_discrete) (by apply measurePreserving_mul_left)]
-    -- TODO - why does doing this result in a weird metavariable outside of conv?
-    --pattern _ ∘ _
-    --equals fun g => f (s⁻¹ * g) =>
-    --  funext a
-    --  simp
-
 
 
   simp_rw [Function.comp_def]
@@ -3488,16 +3003,9 @@ lemma g_n_ne_zero (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): G_n n hn hf
   simp [this] at g_n_prop
 
 
-
-
-
---lemma lp_apply (f: Lp ℝ 2 (μ := volume (α := G)):
-
-
 -- Note - this might only true because our measure is equivalen to the counting measure,
 -- so a.e. is the same thing as everywhere.
 lemma lp_finset_sum {R: Finset G} (f: G → (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))) (g: G): (∑ s ∈ R, (f s) g) = ((∑ s ∈ R, f s) : (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))) g := by
-  -- have foo := Finset.sum_induction (p := fun (m: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))) => m g = (∑ s ∈ S, f s g)) (s := S)
   rw [eq_comm]
   refine Finset.induction_on R ?_ ?_
   .
@@ -3513,14 +3021,9 @@ lemma lp_finset_sum {R: Finset G} (f: G → (MeasureTheory.Lp ℝ 2 (μ := volum
     simp
 
 
-
-
-
-
 #print sorries proposition_3_18
 #print axioms proposition_3_18
 #print axioms laplace_range_dense
-
 
 
 lemma g_sub_norm_gt (hf: f_n_conv_delta_tendsto) (n: ℕ) : ∃ s ∈ S, ‖(G_n (n + 1) (by simp) hf) - (conv_finsupp_lp2 (G_n (n + 1) (by simp) hf) (delta s) (by simp [delta]))‖^2 > 1 := by
@@ -3601,7 +3104,6 @@ lemma lipschitzWith_discrete {K: Type*} [RCLike K] (f: G → K) {C: NNReal} (hf:
   simp [dist, WordDist, l_len]
 
 
-
 lemma f_mul_mu_summable (f: G → ℝ) (g: G) (s: G):
   Summable fun a ↦
     (f ((Additive.toMul a))) * (if s = ((((Additive.toMul a))⁻¹ * g)) then 1 else 0) := by
@@ -3616,7 +3118,6 @@ lemma f_mul_mu_summable (f: G → ℝ) (g: G) (s: G):
     simp [opAdd]
     rw [ha]
     simp
-
 
 
 -- Proposition 1.5
@@ -3657,7 +3158,6 @@ lemma laplace_b_sub (f g: G → ℝ): Laplace_b (f - g) = Laplace_b f - Laplace_
 set_option maxRecDepth 100000 in
 set_option maxHeartbeats 1000000 in
 lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH , ∀ z: ℝ, F ≠ ConstLipschitzH z := by
-
 
 
   let H_n (n: ℕ) (s: G): (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) :=
@@ -3749,8 +3249,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             rw [inv_mul_eq_div] at g_inner_laplace
             rw [eq_div_iff_mul_eq] at g_inner_laplace
 
-            --simp at g_inner_laplace
-            --simp_rw [mul_comm] at g_inner_laplace
             .
               simp [eLpNorm, eLpNorm']
               simp [-AddSubgroupClass.coe_sub, -AddSubgroup.coe_sub, MeasureTheory.Lp.norm_def, eLpNorm, eLpNorm', conv_finsupp_lp2] at g_inner_laplace
@@ -3767,7 +3265,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
                   generalize_proofs p_1 p_2 p_3
                   -- TODO - make this less horrible
                   grw [Finset.single_le_sum (f := (fun g => ∫⁻ (a : Additive G), ‖(G_n ((seq n) + 1) (by simp) f_n_limit) a + Conv (-↑↑(G_n ((seq n) + 1) (by simp) f_n_limit)) (delta g) a‖ₑ ^ 2 ∂Measure.count)) (s := S) (hf := by simp) (h := (by rw [S_eq_Sinv]; simp [hy]))]
-
 
 
                   simp_rw [← ENNReal.rpow_natCast] at g_inner_laplace
@@ -4073,10 +3570,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     . simp [delta]
 
 
-
-  --let F := fun (n : ℕ) (g: G) => (Conv (H_n (seq n) s) (f_n (seq n)))
-  --have F_tendsto: Filter.Tendsto F Filter.atTop
-
   have compact_with_fixed_g (g: G): IsCompact (closure ( (Set.range (fun n => H_G_conv_zero n g)))) := by
 
     apply Bornology.IsBounded.isCompact_closure
@@ -4342,7 +3835,6 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
   grind
 
 
-
 -- Case two of Theorem 3.6
 set_option maxHeartbeats 2000000 in
 lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0))): ∃ F: LipschitzH , ∀ z: ℝ, F ≠ ConstLipschitzH z := by
@@ -4354,7 +3846,6 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     intro n
     simp [H_n]
     simp [MeasureTheory.eLpNormEssSup]
-    --rw [essSup_eq_sInf]
     simp [MeasureTheory.volume]
     rw [my_haar_eq_count]
     simp
@@ -4663,8 +4154,6 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
       . simp [dist]
 
 
-
-
   have compact_closure_f: IsCompact (closure ( (Set.range (fun n => (Conv (H_n n) (f_n n)))))) := by
     rw [Pi.isCompact_closure_iff]
     intro g
@@ -4711,7 +4200,6 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
     . exact StrictMono.tendsto_atTop seq_mono
   ) F H_n conv_h_n_lipschitz tendsto_F H_n_norm
   use F_lipschitzh
-  --use F_lipschitzh
   intro z
   have not_conv_tendsto_zero: ¬Filter.Tendsto (fun n => ENNReal.ofReal |Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) 1 - Conv (H_n (eps_seq (seq n))) (f_n (eps_seq (seq n))) (↑s)⁻¹|) Filter.atTop (nhds 0) := by
     rw [Filter.not_tendsto_iff_exists_frequently_notMem]
@@ -4752,8 +4240,6 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
   simp [nontrivial_harmonic_common] at app_s_inv_eq
   contradiction
 
---#print sorries nontrivial_harmonic_case_one
---#print sorries nontrivial_harmonic_case_two
 
 #synth OrderTopology ENNReal
 
@@ -4771,32 +4257,3 @@ theorem exists_nontrivial_harmonic: ∃ F: LipschitzH , ∀ z: ℝ, F ≠ ConstL
 
 instance new_nonempty_basis: Nonempty ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V) := Module.Basis.index_nonempty (Module.Basis.ofVectorSpace _ _)
 
-
--- lemma hermitian_det_pow_le (R: ℝ) (hR: (v_r_all_nonzero V).choose ≤ R): (Q_R_matrix R (V := V)).det ^ ((1: ℝ) / Module.finrank ℝ V) ≤ (Q_R_matrix R (V := V)).trace := by
---   rw [(Q_R_lin_hermetian V R).det_eq_prod_eigenvalues, (Q_R_lin_hermetian V R).trace_eq_sum_eigenvalues]
---   have am_gm :=  Real.geom_mean_le_arith_mean (ι := ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)) (s := Finset.univ)
---     (w := fun i => 1)
---     (z := fun i => (Q_R_lin_hermetian V R).eigenvalues i)
---     (by intro i hi; positivity)
---     (by
---       simp
---       rw [← Module.finrank_eq_card_basis (Module.Basis.ofVectorSpace ℝ V)]
---       rw [Module.finrank_pos_iff_of_free]
---       infer_instance
---     )
---     (by
---       intro i _
---       apply (Q_R_matrix_pos_def V R hR).posSemidef.eigenvalues_nonneg
---     )
---   simp at am_gm
---   simp
---   rw [← Module.finrank_eq_card_basis (Module.Basis.ofVectorSpace ℝ V)] at am_gm
---   grw [am_gm]
---   apply div_le_self
---   .
---     apply Finset.sum_nonneg
---     intro i _
---     apply (Q_R_matrix_pos_def V R hR).posSemidef.eigenvalues_nonneg
---   . simp
---     apply Submodule.nontrivial_iff_ne_bot.mp
---     infer_instance

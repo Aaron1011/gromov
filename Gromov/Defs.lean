@@ -46,7 +46,6 @@ include hGS
 
 instance G_group: Group G := hGS.g_group
 instance G_dec_eq: DecidableEq G := hGS.g_eq
--- [hGS': Generates (S := S')] [hS': Nonempty S]
 
 
 lemma s_union_sinv : S ∪ S⁻¹ = S := by
@@ -75,7 +74,6 @@ instance G_FG: Group.FG G := {
     simp at foo
     exact foo
 }
-
 
 
 lemma mem_closure (x: G): x ∈ closure (S : Set G) := by
@@ -436,16 +434,6 @@ lemma WordDist_one (x: G): WordDist x 1 = WordNorm x := by
   rw [← word_norm_inv]
 
 
--- noncomputable instance WordNorm.instSemiNormedGroup: SeminormedGroup G where
---   norm := fun g => WordNorm g
---   dist_eq := by
---     intro x y
---     simp [dist, WordDist]
---     sorry
-
-
-
---def WordMetricSpace := MetricSpace.ofDistTopology ()
 noncomputable instance WordDist.instMeasurableSpace: MeasurableSpace G := borel G
 
 noncomputable instance WordDist.instMeasureableSpaceOpp: MeasurableSpace (Additive G) := borel (Additive G)
@@ -483,10 +471,6 @@ instance: IsTopologicalGroup G where
   continuous_mul := continuous_of_discreteTopology
   continuous_inv := continuous_of_discreteTopology
 
-
--- instance IsTopologicalGroupAddOpp: IsTopologicalAddGroup (Additive G) where
---   continuous_add := continuous_of_discreteTopology
---   continuous_neg := continuous_of_discreteTopology
 
 -- Define Haar measure so that singleton sets have measure 1 -
 -- I think this is what we want in order to be able to nicely convert integrals to sums
@@ -554,9 +538,6 @@ lemma singleton_pairwise_disjoint {T: Type*} (s: Set (T)) : s.PairwiseDisjoint S
   unfold Set.singleton at hab
   simp at hab
   exact hab.symm
-
-
-
 
 
 -- Use the fact that we have the discrete topology
@@ -667,8 +648,6 @@ instance my_add_haar_right_invariant: (myHaarAddOpp.IsAddRightInvariant (G := Ad
   infer_instance
 
 
-
-
 -- With the counting measure, A.E is the same as everywgere
 lemma count_ae_everywhere (p: G → Prop): (∀ᵐ g ∂(MeasureTheory.Measure.count), p g) = ∀ a: G, p a := by
   rw [MeasureTheory.ae_iff]
@@ -721,9 +700,6 @@ instance myNegInvariant: MeasureTheory.Measure.IsNegInvariant (myHaarAddOpp) := 
     rw [my_add_haar_eq_count]
     simp only [MeasureTheory.Measure.neg_eq_self]
 }
-
-
-
 
 
 -- Definition 3.5 in Vikman - a harmonic function on G
@@ -908,7 +884,6 @@ instance lipschitzSmulZ: SMul ℤ (LipschitzH) := {
 }
 
 
-
 @[simp]
 lemma lipschitz_neg_tofun (f: LipschitzH): (-f).toFun = -(f.toFun) := by
   rfl
@@ -949,47 +924,9 @@ instance LipschitzH.addMonoid [Generates ] : AddMonoid (LipschitzH) := {
 }
 
 
-
--- -- See https://github.com/leanprover-community/mathlib4/blob/6c6e0180f0d3dc9f47f85532f48d268d8656789a/Mathlib/Topology/ContinuousMap/Bounded/Normed.lean#L194-L196
--- instance lipschitzHAddCommGroup: AddCommGroup (LipschitzH) := by
---   apply DFunLike.coe_injective.addCommGroup
---   .
---     ext g
---     simp [DFunLike.coe]
---     unfold Zero.toOfNat0
---     simp [Zero.zero]
---   .
---     intro x y
---     simp [DFunLike.coe]
---     ext g
---     simp [DFunLike.coe]
---   . intro f
---     ext g
---     simp [DFunLike.coe]
---     simp [negLipschitzH]
---   .
---     intro f h
---     ext g
---     simp [DFunLike.coe]
---     conv =>
---       lhs
---       dsimp [HSub.hSub]
---     simp [subLipschithZ]
---     simp [DFunLike.coe]
---     simp [negLipschitzH]
---     rw [sub_eq_add_neg]
---   . intro f
---     intro n
---     simp [DFunLike.coe]
---     dsimp [HSMul.hSMul]
---     dsimp [SMul.smul]
-
-
-
 instance LipschitzH.instAddCommMonoid: AddCommMonoid (LipschitzH) := {
   LipschitzH.addMonoid with add_comm := fun _ _ => ext fun _ => add_comm _ _
 }
-
 
 
 instance LipschitzH.instAddCommGroup: AddCommGroup (LipschitzH) := {
@@ -1025,11 +962,6 @@ instance LipschitzH.instAddCommGroup: AddCommGroup (LipschitzH) := {
     push_cast
     ring
 }
-
-
--- V is the vector space
--- abbrev V := Module ℝ (LipschitzH)
-
 
 
 @[simp]
@@ -1154,7 +1086,6 @@ lemma finite_closed_ball (x: G) (r: ℝ): Set.Finite (Metric.closedBall x r) := 
 )
 
 
-
 -- TODO - I don't think we can use this, as `MeasureTheory.convolution' would require our group to be commutative
 -- (via `NormedAddCommGroup`)
 open scoped Convolution
@@ -1171,7 +1102,6 @@ open MeasureTheory
 -- However, this makes it much easier to prove properties about this via the `MeasureTheory.ConvolutionExists` API
 noncomputable def Conv (f g: G → ℝ) (x: G) : ℝ :=
   (MeasureTheory.convolution (G := Additive G) f g (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp x)
-
 
 
 def ConvExists (f g: G → ℝ) := MeasureTheory.ConvolutionExists (G := Additive G) (fun x => f x.toMul) (fun x => g x.toMul) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp
@@ -1358,7 +1288,6 @@ lemma f_conv_mu (f: G → ℝ): (Conv  f (mu )) = fun g => ((1 : ℝ) / (#(S) : 
     simp_rw [Finset.mul_sum]
     rw [Summable.tsum_finsetSum]
     .
-      --rw [Finset.sum_comm]
       have delta_conv := f_conv_delta  f g
       conv at delta_conv =>
         intro x
@@ -1369,7 +1298,6 @@ lemma f_conv_mu (f: G → ℝ): (Conv  f (mu )) = fun g => ((1 : ℝ) / (#(S) : 
         )]
 
       simp_rw [mul_comm, mul_assoc]
-      --simp_rw [← mul_tsum]
       conv =>
         lhs
         rhs
@@ -1399,7 +1327,6 @@ lemma f_conv_mu (f: G → ℝ): (Conv  f (mu )) = fun g => ((1 : ℝ) / (#(S) : 
             simp at hz
             rw [← hz.1]
             simp
-          --apply f_mul_mu_summable
         ))]
         rw [delta_conv x]
 
@@ -1437,7 +1364,6 @@ lemma f_conv_mu (f: G → ℝ): (Conv  f (mu )) = fun g => ((1 : ℝ) / (#(S) : 
             simp at hz
             rw [← hz.1]
             simp
-          --apply f_mul_mu_summable
         .
           simp [card_zero]
   . apply conv_exists_fin_supp
@@ -1445,18 +1371,12 @@ lemma f_conv_mu (f: G → ℝ): (Conv  f (mu )) = fun g => ((1 : ℝ) / (#(S) : 
     apply mu_finsupp
 
 
-
-
 noncomputable def conv_mu_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := MeasureTheory.MemLp.toLp (Conv f (mu )) (by
   rw [MeasureTheory.MemLp]
   refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩
   simp [MeasureTheory.eLpNorm, MeasureTheory.eLpNorm']
   rw [f_conv_mu]
-  --apply ENNReal.rpow_lt_top_of_nonneg
-  --. simp
-  --.
   simp_rw [Finset.mul_sum]
-  --  (1 : ℝ) / (#(S) : ℝ) * f (a * s)
   have other := MeasureTheory.memLp_finset_sum (μ := MeasureTheory.volume (α := G)) (s := S) (p := 2) (f := fun s a => ((1 : ℝ) / (#(S) : ℝ)) * f (s * a)) (by
     intro s hs
     simp
@@ -1494,22 +1414,6 @@ noncomputable instance fintype_closedBall (x: G) (r: ℝ): Fintype ↑(Metric.cl
 
 -- Graphs and Discrete Direchlet Spaces
 -- https://www.math.uni-potsdam.de/fileadmin/user_upload/Prof-GraphTh/Keller/KellerLenzWojciechowski_GraphsAndDiscreteDirichletSpaces_wu_version.pdf
-
-
--- Lemma 12.2 in Keller (Graphs and Discrete Dirichlet Spaces), specialized to harmonic functions: L(u) = 0
---lemma laplace_harmonic_cutoff (f φ : G → ℝ) (x): ∑ x ∈ Metric.ball 1 (2 * r), ∑ s ∈ S, |(f x) - f (s * x)|^2
-
-
--- lemma s_sinv_split_one: S = (S \ {1}) ∪ (S⁻¹ \ {1}) ∪ {1} := by
---   rw [← s_union_sinv]
---   ext a
---   by_cases a_eq_one: a = 1
---   .
---     simp [a_eq_one]
---     apply hGS.one_mem
---   .
---     simp [a_eq_one]
---     grind
 
 
 def ConstF: Submodule ℝ (LipschitzH) := {
@@ -1554,17 +1458,6 @@ instance isometricGMul: IsIsometricSMul (MulOpposite G) (G) where
     simp [WordDist]
 
 
--- instance isometricGMul: IsIsometricSMul G G where
---   isometry_smul := by
---     intro g
---     simp [Isometry]
---     intro a b
---     simp [edist]
---     simp [PseudoMetricSpace.edist]
---     simp [WordDist]
---     group
-
-
 def gAct (g: G) (v: LipschitzH ): LipschitzH  := {
   toFun := fun x => v (x * g)
   lipschitz := by
@@ -1593,7 +1486,6 @@ lemma gAct_mul (g h : G) (f: LipschitzH ): gAct (g * h) f = gAct g (gAct h f) :=
   ext x
   simp [DFunLike.coe]
   rw [← mul_assoc]
-
 
 
 def gAct_const (g: G) (z: ℝ): gAct g (ConstLipschitzH z) = ConstLipschitzH z := by
@@ -1631,7 +1523,6 @@ def gActW (g: G): W → W := Quotient.lift (fun f => Submodule.Quotient.mk (gAct
   rw [add_comm]
   rfl
 )
-
 
 
 -- Defintion 3.14 from Vikman
@@ -1689,7 +1580,6 @@ lemma closed_ball_eq_S_pow (R: ℕ): (finite_closed_ball 1 R).toFinset = S ^ R :
 
 lemma card_closed_ball_eq (R: ℕ): #((finite_closed_ball 1 R).toFinset) = #(S ^ R) := by
   rw [closed_ball_eq_S_pow]
-
 
 
 -- Proposition 1.5 helper (moved from Harmonic.lean)
@@ -1903,7 +1793,6 @@ lemma laplace_sum_swap_helper {f g: G → ℝ} (hgf: f.support.Finite ∨ g.supp
         . apply hg
         . intro x hx
           simp
-
 
 
 lemma laplace_prod_harmonic (f φ : G → ℝ)  (hf: Laplace_b  f = 0) (x: G): Laplace_b (f * φ) x = ((1 : ℝ) / (#(S) : ℝ)) * ∑ s ∈ S, f (s * x) * ((φ (x) - φ (s * x))) := by

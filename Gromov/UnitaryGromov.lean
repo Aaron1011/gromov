@@ -4,7 +4,6 @@ import Gromov.ToMathlib.GroupTheory.Closure
 import Gromov.ToMathlib.Analysis.Matrix.Norm
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
---open scoped ComplexInnerProductSpace
 
 
 set_option linter.style.longLine false
@@ -33,7 +32,6 @@ lemma weak_mem_closure_prod_list {G: Type*} [Group G] (S: Set G) (x: G) (hx: x �
   simp [prod_eq]
 
 
-
 -- Proof of proposition 2.18
 -- Note - we additionaly assume that the generating set contains 1, as this us use a simpler
 -- definition of polynomial growth (since S^n ⊆ S^(n+1))
@@ -47,10 +45,8 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
   (S_symm: S = S⁻¹)
   (S_one: 1 ∈ S)
   (S_generates: Subgroup.closure (S : Set G) = ⊤)
-  --(S'_generates: Subgroup.closure (S' : Set G) = ⊤)
   (s_poly: ∀ n ≥ 1, #(S ^ n) ≤ a * n ^ d):
   ∃ b: ℕ, 1 ≤ b ∧ ∀ n ≥ 1, #(S' ^ n) ≤ b * n^d := by
-
 
 
   by_cases g_nontrivial: Nontrivial G
@@ -74,7 +70,6 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
         simp at S_generates
 
 
-
       have S'_one: S' ⊆ {1} := by
         intro s' hs'
         have bad_prod := max_len_zero (S'_prod ⟨s', hs'⟩) s' hs' rfl
@@ -91,7 +86,6 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
         grw [Finset.card_le_card (t := {1})]
         simp
         apply S'_one
-
 
 
       use 1
@@ -144,7 +138,6 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
             simp [all_lists]
             use a
             use a'
-
 
 
           let foo := Fin.append (fun i => l[i].val) (fun (i: Fin (max_len - l.length)) => 1)
@@ -201,162 +194,6 @@ lemma poly_growth_equiv {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
 
 #print axioms poly_growth_equiv
 
--- lemma poly_growth_equiv_non_symm {G: Type*} [DecidableEq G] [Group G] (a d: ℕ)
---   (a_pos: 0 < a)
---   (S S': Finset G)
---   (S_one: 1 ∈ S)
---   (S_generates: Subgroup.closure S.toSet = ⊤)
---   --(S'_generates: Subgroup.closure S'.toSet = ⊤)
---   (s_poly: ∀ n ≥ 1, #(S ^ n) ≤ a * n ^ d):
---   ∃ b: ℕ, 1 ≤ b ∧ ∀ n ≥ 1, #(S' ^ n) ≤ b * n^d := by
-
-
-
---   by_cases g_nontrivial: Nontrivial G
---   .
---     let S'_prod := fun (s: S') => (weak_mem_closure_prod_list S s.val (by
---       simp [S_generates]
---     )).choose
-
---     let all_lists := (Finset.image S'_prod Finset.univ)
---     let max_len := all_lists.sup (fun l => l.length)
---     by_cases max_len_zero: max_len = 0
---     .
---       unfold max_len at max_len_zero
---       simp at max_len_zero
---       simp [all_lists] at max_len_zero
---       have S_nonempty : S.Nonempty := by
---         by_contra!
---         simp at this
---         rw [this] at S_generates
---         simp at S_generates
-
-
-
---       have S'_one: S' ⊆ {1} := by
---         intro s' hs'
---         have bad_prod := max_len_zero (S'_prod ⟨s', hs'⟩) s' hs' rfl
---         simp [S'_prod] at bad_prod
---         have s'_prod := (weak_mem_closure_prod_list S s' (by
---           simp [S_generates]
---         )).choose_spec
---         rw [bad_prod] at s'_prod
---         simp at s'_prod
---         rw [← s'_prod]
---         simp
-
---       have S'_le: #(S') ≤ 1 := by
---         grw [Finset.card_le_card (t := {1})]
---         simp
---         apply S'_one
-
-
-
---       use 1
---       refine ⟨by simp, ?_⟩
---       intro n hn
---       simp
---       grw [Finset.card_pow_le]
---       grw [S'_le]
---       simp
---       exact Nat.one_le_pow d n hn
-
---     .
---       have start_pos_nonzero: 1 ≤ max_len := by omega
---       use a * (max_len ^ d)
---       refine ⟨?_, ?_⟩
---       .
---         rw [Nat.one_le_iff_ne_zero]
---         apply Nat.mul_ne_zero
---         . omega
---         .
---           rw [← Nat.pos_iff_ne_zero]
---           apply Nat.pow_pos
---           omega
---       intro n hn
-
-
---       grw [Finset.card_le_card (t := (S ^ max_len ∪ (S⁻¹ ^ max_len)) ^ n)]
-
---       .
---         rw [← pow_mul]
---         grw [s_poly _ (by exact Right.one_le_mul start_pos_nonzero hn)]
---         rw [mul_pow]
---         rw [← mul_assoc]
---       .
---         intro s' hs'
-
---         have S'_subset_s_pow: S' ⊆ (S ^ max_len) ∪ (S⁻¹ ^ max_len) := by
---           intro a a'
-
-
---           let exists_list := (weak_mem_closure_prod_list S a (by
---             simp [S_generates]
---           ))
---           let l := exists_list.choose
---           have l_prop := exists_list.choose_spec
-
---           have len_le_max: l.length ≤ max_len := by
---             unfold max_len
---             apply le_sup
---             simp [all_lists]
---             use a
---             use a'
-
-
-
---           let foo := Fin.append (fun i => l[i].val) (fun (i: Fin (max_len - l.length)) => 1)
---           rw [Finset.mem_pow]
---           use (fun i => ⟨(foo ⟨i.val, by omega⟩), by (
---             unfold foo
---             simp
---             unfold Fin.append
---             unfold Fin.addCases
---             simp
---             split_ifs
---             .
---               rename_i i_lt
---               have l_i_prop := l[i].property
---               nth_rw 2 [S_symm] at l_i_prop
---               simp at l_i_prop
---               exact l_i_prop
---             . apply S_one
---           )⟩)
---           conv =>
---             rhs
---             rw [← l_prop]
---           unfold foo
---           simp
---           have add_sub: max_len = l.length + (max_len - l.length)  := by omega
---           rw [List.ofFn_congr add_sub]
---           simp
---           rfl
-
---         have pow_subset := Finset.pow_subset_pow S'_subset_s_pow (m := n) (n := n) (by
---           have S_subset: S^1 ⊆ S^max_len := by
---             apply Finset.pow_subset_pow
---             . simp
---             . apply S_one
---             . omega
-
---           simp at S_subset
---           apply Finset.mem_union_left
---           exact S_subset S_one
---         ) (by omega)
-
---         exact pow_subset hs'
---   .
---     rw [← not_subsingleton_iff_nontrivial] at g_nontrivial
---     simp at g_nontrivial
---     use 1
---     refine ⟨by simp, ?_⟩
---     intro n hn
---     simp
---     grw [Finset.card_pow_le]
---     grw [Finset.card_le_one_of_subsingleton]
---     simp
---     exact Nat.one_le_pow d n hn
-
 
 -- Lemma 3.29 (Shrinking Conjugators)
 lemma shrinking_conjugators (n : ℕ) (g h : Matrix.unitaryGroup (Fin n) ℂ) :
@@ -392,7 +229,6 @@ lemma shrinking_conjugators (n : ℕ) (g h : Matrix.unitaryGroup (Fin n) ℂ) :
 def G' (n : ℕ) (ε : ℝ) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) : Subgroup G :=
   Subgroup.closure (Metric.ball (1 : G) ε)
 
---instance unitary_matrix_measure_space : MeasurableSpace (Matrix.unitaryGroup (Fin 2) ℂ) := borel _
 
 lemma unitary_implies_det (n : ℕ) (m : Matrix (Fin n) (Fin n) ℂ) :
     m ∈ Matrix.unitaryGroup (Fin n) ℂ → ‖m.det‖ = 1 := by
@@ -448,18 +284,9 @@ lemma diag_mem_unitary (c : ℂ) (hc : ‖c‖ = 1) (n : ℕ) :
 lemma small_dist_matrix (n : ℕ) (hn : 2 ≤ n) :
     ∃ C : ℝ, 0 < C ∧ (∀ h : Matrix (Fin n) (Fin n) ℂ, h.det = 1 → ∀ c : ℂ, ‖c‖ = 1 → h = diag_unitary c n → (‖h - 1‖ < C) → c = 1) := by
 
-  -- by_cases n_eq_one : n = 1
-  -- . use 1
-  --   intro ε eps_lt h h_det c hc h_mul h_dist
-  --   simp [diag_unitary] at h_mul
-
-  --   have fin_sin_subsingleton : Subsingleton (Fin n) := by
-  --     rw [n_eq_one]
-  --     exact Fin.subsingleton_one
 
   have nezero_n : NeZero n := ⟨by omega⟩
   let dists := (fun (x : ℂ) => (‖x - 1‖ : ℝ)) '' ((Units.val '' (rootsOfUnity n ℂ).carrier \ {1}))
-  --let dists := (fun x => ‖x - (1 : ℂ)‖) '' (Units.val '' (rootsOfUnity n ℂ).carrier \ {1})
 
   -- TODO - why can't we combine these into a single line?
   have foo := Set.Finite.exists_minimal (s := dists) ?_ ?_
@@ -561,7 +388,6 @@ lemma small_dist_matrix (n : ℕ) (hn : 2 ≤ n) :
     apply Set.Finite.image
     apply Set.Finite.diff
     apply Set.Finite.image
-
 
 
     have finite_roots : Finite ↥(rootsOfUnity n ℂ) := by infer_instance
@@ -825,9 +651,6 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
       simp [-Subtype.forall, I_sets] at I_prop
       apply (I_prop.1 i_mem)
 
-    --have g_hsmul : HSMul G (Set G) (Set G) := by
-    --  infer_instance
-
 
     have cosets_cover : (⋃ i ∈ I.toFinset.attach, (((⟨i.val, i_mem_G i.val (Set.mem_toFinset.mp i.property)⟩ : G) • (((G' n ε G)) : Set G)) : (Set G))) = (Set.univ : Set G) := by
       have balls_inter_cover : G.carrier ⊆ ⋃ g ∈ I, ((Metric.ball g ε) ∩ G.carrier) := by
@@ -997,7 +820,6 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
         intro h
         equals ⟪h.val.val x, h.val.val x⟫ =>
           simp
-        --rw [← inner_self_eq_norm_sq]
       conv =>
         rhs
         arg 1
@@ -1114,7 +936,6 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
     let V_equiv_fresh : V ≃L[ℂ] (FreshInnerProduct V) := ContinuousLinearEquiv.ofFinrankEq ?_
     have V_map_equiv := ContinuousLinearEquiv.arrowCongr V_equiv V_equiv
     have first := V_equiv.toLinearEquiv
-    --have V_linear_arrow_congr := LinearEquiv.arrowCongr V_equiv.toLinearEquiv V_equiv.toLinearEquiv
     let V_fresh_arrow := ContinuousLinearEquiv.arrowCongr V_equiv_fresh V_equiv_fresh
 
     let new_H_matrix := ContinuousLinearMap.toLinearMap '' (Units.val '' H.carrier)
@@ -1130,10 +951,6 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
     let H_matrix := (LinearMap.toMatrix V_basis.toBasis V_basis.toBasis) '' new_H_coe
 
 
-    --let H_matrix := LinearMap.toMatrix' '' (ContinuousLinearMap.toLinearMap '' (V_map_equiv '' (V_fresh_arrow '' (Units.val '' H.carrier))))
-
-
-    --let H_matrix := LinearMap.toMatrix' '' (ContinuousLinearMap.toLinearMap '' (V_fresh_arrow '' (V_map_equiv '' (Units.val '' H.carrier))))
     have H_mem_unitary : ∀ h ∈ H_matrix, h ∈ Matrix.unitaryGroup (Fin (Module.finrank ℂ (FreshInnerProduct V))) ℂ := by
       intro h h_mem
       simp [H_matrix, new_H_coe, new_H_matrix] at h_mem
@@ -1159,7 +976,6 @@ lemma new_weyl_unitarian_trick {V : Type*} [NormedAddCommGroup V] [InnerProductS
         rw [Matrix.star_eq_conjTranspose, ← LinearMap.toMatrix_adjoint, ← LinearMap.toMatrix_comp,
           adj, LinearMap.toMatrix_id]
       exact hmat
-
 
 
     let H_matrix_subgroup : Subgroup (Matrix.unitaryGroup (Fin (Module.finrank ℂ V)) ℂ) := {
@@ -1442,7 +1258,6 @@ theorem theorem_3_8_h_n_left_S (data: HnData) (prev: Theorem3_8_Data data): ∃ 
       · simp at norm_le
 
 
-        --rw [comm_eq_z] at norm_le
         let C := (small_dist_matrix data.d data.hd).choose
 
         have H_eps_lt_C : H_n_eps data.hd < C := by
@@ -1731,12 +1546,6 @@ lemma norm_sub_swap (n: ℕ) (a b: Matrix (Fin n) (Fin n) ℂ): ‖a - b‖ = �
   rw [norm_neg]
 
 
-
-
-  --rw [my_sub] at my_pow
-
-
-
 noncomputable def f (a: ℝ) (x: ℝ): ℝ := 1 + (2*x - 1)*a - (1 + a)^x
 
 lemma f_one_eq_zero (a: ℝ): f a 1 = 0 := by
@@ -1879,14 +1688,11 @@ lemma f_pos_on (a: ℝ) (ha: 0 < 1 + a) (a_pos: 0 < a) (a_lt: a < 1)  (a_lt_log:
 #print axioms f_pos_on
 
 
-
 lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnData) (m_lt: m < (1/2) / ‖(theorem_3_8_h_n data n).g.val.val - 1‖) : ‖((theorem_3_8_h_n data n).g.val.val^m) - 1‖ ≥ ‖((theorem_3_8_h_n data n).g.val).val - 1‖ := by
 
-  --rw [SubgroupClass.coe_zpow]
   push_cast
   -- TODO: figure out how to get 'SubgroupClass.coe_zpow' to fire for Matrix.unitaryGroup
 
-  --have my_coe := unitary.coe_zpow (R := Matrix (Fin data.d) (Fin data.d) ℂ) (U := (theorem_3_8_h_n data n).val.val) (z := m)
   conv =>
     lhs
     arg 1
@@ -1918,7 +1724,6 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnD
   --grw [norm_sum_le]
 
 
-
   have nonempty_d: Nonempty (Fin data.d) := by
     have data_pos := data.hd
     exact Fin.pos_iff_nonempty.mp (by linarith)
@@ -1933,12 +1738,6 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnD
   apply sub_eq_of_eq_add at my_pow
   norm_cast at my_pow
   rw [← m_eq] at my_pow
-  -- conv at my_pow =>
-  --   rhs
-  --   arg 2
-  --   intro x
-  --   rw [← norm_pow]
-  -- simp_rw [norm_pow] at my_pow
   grw [norm_sum_le]
 
   grw [Finset.sum_le_sum (g := fun i => ‖((theorem_3_8_h_n data n).g.val.val - 1)‖ ^ (i + 1 + 1) * (m.choose (i + 1 + 1)))]
@@ -2018,8 +1817,6 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnD
   . intro i hi
     grw [norm_mul_le]
     grw [norm_pow_le]
-    --rw [← Matrix.diagonal_natCast']
-    -- TODO - separate this into a lemma about Matrix.l2_opNorm for a diagonal matrix
     nth_rw 2 [Matrix.l2_opNorm_def]
     grw [ContinuousLinearMap.opNorm_le_bound (M := m.choose (i + 1 + 1))]
     . simp
@@ -2035,20 +1832,9 @@ lemma H_n_single_pow_lower_bound {n : ℕ} {m : ℕ} (m_gt: 1 ≤ m) (data : HnD
 
 #synth DivisionMonoid (Matrix.unitaryGroup (Fin 2) ℂ)
 
--- --@[norm_cast]
--- theorem new_coe_inv {R: Type*} [DivInvMonoid R] [StarMul R] (U : unitary R) : ↑U⁻¹ = (U⁻¹ : R) := by
---   eq_inv_of_mul_eq_one_right <| unitary.coe_mul_star_self _
-
--- @[norm_cast]
--- theorem new_coe_zpow {R: Type*} [DivInvMonoid R] [StarMul R] (U : unitary R) (z : ℤ) : ↑(U ^ z) = (U : R) ^ z := by
---   cases z
---   · simp [SubmonoidClass.coe_pow]
---   · simp [new_coe_inv]
 
 #synth DivInvMonoid (Matrix (Fin 2) (Fin 2) ℂ)
 
-  -- have my_bound := f_pos_on ‖((theorem_3_8_h_n data n).val.val.val - 1)‖ ?_ ?_ ?_ ?_
-  -- simp [f] at my_bound
 
 -- TODO: upstream to mathlib
 lemma list_ofFn_drop {M: Type*} (a k: ℕ) (f: Fin (k + a) → M): (List.ofFn f).drop a = List.ofFn (fun (i: Fin k) => f ⟨a + i, by omega⟩) := by
@@ -2076,8 +1862,6 @@ lemma words_distinct {m : ℕ} (k: Fin m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 
  (pows_j_lt_k: (pows_j k) < (pows_i k)):
   (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data (i)).g^(pows_i i))).prod ≠ (List.ofFn (fun (i : Fin (m)) => (theorem_3_8_h_n data (i)).g^(pows_j i))).prod := by
 
-  --have find := Fin.isSome_find_iff.mpr pows_ne
-  --let k := (Fin.find (fun i => pows_i i ≠ pows_j i)).get find
 
   by_contra!
 
@@ -2132,35 +1916,6 @@ lemma words_distinct {m : ℕ} (k: Fin m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 
     )]
 
 
-  -- have tail_eq: (List.drop (↑k) (List.ofFn fun i ↦ (theorem_3_8_h_n data ↑i).val ^ pows_i i)).prod = (List.drop (↑k) (List.ofFn fun i ↦ (theorem_3_8_h_n data ↑i).val ^ pows_j i)).prod := by
-  --   nth_rw 2 [List.ofFn_congr (n := m - k + k) (by
-  --     omega
-  --   )]
-  --   rw [List.ofFn_congr (n := m - k + k) (by
-  --     omega
-  --   )]
-  --   rw [list_ofFn_drop]
-  --   rw [list_ofFn_drop]
-  --   apply congr (rfl)
-  --   ext i g
-  --   by_cases i_lt_m: i < (m - k)
-  --   .
-  --     simp [i_lt_m]
-  --     rw [pows_lt_eq]
-  --     rw [Fin.lt_iff_val_lt_val]
-  --   simp
-  --   conv =>
-  --     lhs
-  --     rhs
-  --     intro h
-  --     rw [pows_lt_eq _ (by simp)]
-  --   rw [pows_lt_eq]
-
-
-
-  --simp at cancel_lhs
-
-
   rw [mul_right_inj] at this
   nth_rw 2 [List.ofFn_congr (n := m - k + k) (by
     omega
@@ -2194,8 +1949,6 @@ lemma words_distinct {m : ℕ} (k: Fin m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 
   ring_nf at rhs_le
   rw [← this] at rhs_le
 
-
-    --rw [list_ofFn_drop]
 
   -- Fin (5)
   -- Fin (5 + 0)
@@ -2311,7 +2064,6 @@ lemma words_distinct {m : ℕ} (k: Fin m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 
     . simp [-SubmonoidClass.coe_list_prod]
 
 
-
   rw [ge_iff_le] at lhs_ge
 
   have one_tenth_lt:  1 / 10 * ‖(theorem_3_8_h_n data ↑k).g.val.val - 1‖ < (9 / 10) * ‖(theorem_3_8_h_n data ↑k).g.val.val - 1‖ := by
@@ -2322,8 +2074,6 @@ lemma words_distinct {m : ℕ} (k: Fin m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 
       have ne_zero := (theorem_3_8_h_n data ↑k).g_dist_nonzero
       positivity
     . norm_num
-
-
 
 
   have add_swap (a b : ℕ): 1 + a + b = 1 + b + a := by
@@ -2352,22 +2102,13 @@ lemma words_distinct {m : ℕ} (k: Fin m) (c : ℝ) (c_pos : 0 < c) (c_lt : c < 
 
   norm_cast at rhs_le
   norm_cast at one_tenth_lt
-  --have new_le := lt_of_lt_of_le one_tenth_lt rhs_le
   grw [rhs_le] at one_tenth_lt
   simp at one_tenth_lt
-
-
-
-
-
-
 
 
 #print axioms words_distinct
 
 -- ContinuousLinearMap.norm_id
-
-
 
 
 instance matrix_norm_one_class (n: ℕ) [hd: Nonempty (Fin n)] : NormOneClass (Matrix (Fin n) (Fin n) ℂ) where
@@ -2402,8 +2143,6 @@ lemma list_prod_pow_new {T: Type*} [Group T] (m: ℕ) (elems: Fin m → T) (pows
     simpa [Fin.init] using prod_eq
 
 
-
-
 -- This lemma is in terms of elements of G - we use this to build up our statement in terms of elements of the finite generate set S
 lemma H_n_pows_mem_ball_G {m : ℕ}
   (m_gt: 0 < m) (data : HnData) (pows : Fin m → ℕ)
@@ -2425,13 +2164,10 @@ lemma H_n_pows_mem_ball_G {m : ℕ}
       simp
 
 
-
-  --rw [← nested_prod]
   rw [Set.mem_pow]
   -- We have an upper bound for the list, so pad out the list with '1's to reach the upper bound
   let base_list := (fun (i: Fin (nested_list.flatten.length)) => nested_list.flatten[i])
   let full_list := Fin.append base_list (fun (i: Fin (m * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) - nested_list.flatten.length)) => 1)
-  --let full_list_new := nested_list.flatten ++ (List.replicate (2 * (Nat.floor (c * ε⁻¹)) * (2 ^ m) - nested_list.flatten.length) 1)
 
   have len_le_upper: nested_list.flatten.length ≤ (m * (Nat.floor (c * (H_n_eps data.hd)⁻¹))) := by
     simp [nested_list, replicate_pow]
@@ -2440,7 +2176,6 @@ lemma H_n_pows_mem_ball_G {m : ℕ}
     . simp
     . intro x _
       apply pows_le
-
 
 
   use (fun i => full_list (i.cast (by omega)))
@@ -2454,7 +2189,6 @@ lemma H_n_pows_mem_ball_G {m : ℕ}
         apply congr (rfl)
         ext i g
         simp
-
 
 
     simp only [full_list, base_list]
@@ -2563,7 +2297,6 @@ lemma theorem_3_8_h_n_list_length_initial_upper_bound  (data: HnData) (m: ℕ): 
       . norm_num
 
 
-
 -- The c' constant from Vikman
 def c' := 3
 
@@ -2592,7 +2325,6 @@ lemma H_n_pows_mem_ball_S {m : ℕ}
 
   -- A list with the same product as g_list, but expressed in terms of elements of S
   let g_as_s_list := (List.ofFn (fun (i: Fin m) => List.replicate (pows i) (theorem_3_8_h_n_list data i))).flatten.flatten
-
 
 
   have g_as_list_prod_eq_pow: g_as_s_list.unattach.prod = (List.ofFn (fun (i: Fin m) => (List.replicate (pows i) (theorem_3_8_h_n_list data i)).flatten.unattach.prod)).unattach.prod := by
@@ -2674,10 +2406,8 @@ lemma H_n_pows_mem_ball_S {m : ℕ}
   let padded_list := Fin.append (fun (i: Fin (g_as_s_list.length)) => g_as_s_list[i]) (fun (i: Fin (((c' * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m)) - g_as_s_list.length))) => ⟨1, data.S_one⟩)
 
 
-
   refine ⟨?_, rfl⟩
   .
-    --use g_list
     use (fun i => padded_list (i.cast (by omega)))
     conv =>
       lhs
@@ -2714,7 +2444,6 @@ lemma H_n_ball_S_card {m : ℕ}
   (c_pos: 0 < c)
   (c_lt: c < 1 / 40):
   (⌊c * (H_n_eps data.hd)⁻¹⌋₊)^m ≤  #(data.S_finite.toFinset ^ ( c' * (Nat.floor (c * (H_n_eps data.hd)⁻¹)) * m * (2 ^ m))) := by
-
 
 
   let my_set: Finset (Fin m → Fin (⌊c * (H_n_eps data.hd)⁻¹⌋₊)) := Finset.univ
@@ -2807,7 +2536,6 @@ lemma H_n_contradiction (data : HnData)
   (c_mul_pos: 1 ≤ c * (H_n_eps data.hd)⁻¹)
   (eps_div_lt: (H_n_eps data.hd) < c / (Real.exp (4 + ↑data.S_poly_deg * Real.log 2) + 1))
   : False := by
-
 
 
   let m: ℕ := max (max (⌈1 + |(↑data.S_poly_deg - Real.log ↑data.S_poly_const)|⌉₊) (1 + ⌈((Real.log ↑data.S_poly_const + ↑data.S_poly_deg * Real.log (↑c' * ↑⌊c * (H_n_eps data.hd)⁻¹⌋₊)) /
@@ -3020,42 +2748,6 @@ lemma bad_h_n_norm_const_bound (data : HnData) (n: ℕ): ‖(theorem_3_8_h_n dat
     norm_num
 
 
-    -- have foo := H_n_eps_pos data.hd
-
-    -- by_cases n_eq_zero: n = 0
-    -- .
-    --   simp [n_eq_zero]
-    --   simp [theorem_3_8_h_n]
-    --   grw [data.S_dist _ (by simp)]
-    --   .
-    --     simp [matrix_l2_norm_one]
-    --     grw [H_n_eps_lt]
-    --     norm_num
-
-
-    -- have n_sub_eq: n = n - 1 + 1 := by
-    --   omega
-    -- rw [n_sub_eq]
-    -- grw [H_n_upper_bound_iter]
-    -- ring_nf
-    -- rw [← le_div_iff₀]
-    -- .
-    --   rw [div_eq_mul_inv]
-    --   rw [mul_assoc]
-    --   norm_num
-    --   -- TODO - we get a terrible error message without the simp:
-    --   -- "Tactic `grewrite` failed: ‖↑↑↑(theorem_3_8_h_n data n)‖ ≤ 4 * 2 ^ n is not a relation"
-    --   simp at ih
-    --   grw [ih]
-    --   ring_nf
-
-
-    -- .
-    --   simp
-
---#print axioms h_n_norm_const_bound
-
-
 lemma H_n_eps_pow_lt_self (data: HnData) (n: ℕ) (hn: 0 < n): (H_n_eps data.hd) ^ n ≤ H_n_eps data.hd := by
   by_cases hn_eq_one: n = 1
   . simp [hn_eq_one]
@@ -3064,7 +2756,6 @@ lemma H_n_eps_pow_lt_self (data: HnData) (n: ℕ) (hn: 0 < n): (H_n_eps data.hd)
   .
     linarith [H_n_eps_lt data.hd]
   . omega
-
 
 
 -- Note that the right-hand side of the bound doesn't end up using 'c'
@@ -3154,19 +2845,6 @@ lemma bad_H_n_prod_exp_bound {m : ℕ}
       . grind
 
 
--- lemma S_ball_card_bound (data: HnData) (m: ℕ) (ε: ℝ)
---   (c: ℝ)
---   (c_pos: 0 < c)
---   (c_lt: c < 1 / 40)
---   (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ))
--- : (1 + c * (H_n_eps data.hd)⁻¹)^m ≤ #((G' n ε G).carrier ^ (2 * m * (2 ^ m)) ) := by
-
-
---   simp
-
-
-
-
 lemma mem_list_choose {T: Type*} (p: List T → Prop) {h: ∃ l, p l} {x: T} (hx: x ∈ h.choose): ∃ l, x ∈ l ∧ p l := by
   use h.choose
   refine ⟨hx, h.choose_spec⟩
@@ -3175,7 +2853,6 @@ lemma mem_list_choose {T: Type*} (p: List T → Prop) {h: ∃ l, p l} {x: T} (hx
 open scoped Pointwise
 
 -- TODO - figure out why this causes a diamond when we use 'open Classical'
-
 
 
 -- Theorem 3.8, case with only trivial elements in the center
@@ -3226,11 +2903,6 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       dsimp [S'']
       apply S'_finite
 
-    -- have S''_union_S''inv: S'' ∪ S''⁻¹ = S'' := by
-    --   dsimp [S'']
-    --   simp [-Set.union_singleton]
-    --   rw [Set.union_assoc]
-    --   apply Set.subset_union_left
 
     have S''_eq_S''inv: S'' = S''⁻¹ := by
       unfold S''
@@ -3372,14 +3044,7 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       rw [Set.union_comm]
 
     have S_generates: Subgroup.closure S = (G' n (H_n_eps hn) G) := by
-      -- apply_fun (Subgroup.map (G' n (H_n_eps hn) G).subtype) at S''_generates
-      -- conv at S''_generates =>
-      --   rhs
-      --   equals (G' n (H_n_eps hn) G) =>
-      --     ext a
-      --     simp
 
-      -- rw [← S''_generates]
       ext a
       unfold S
       rw [Subgroup.closure_union]
@@ -3478,7 +3143,6 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         simpa using b_mem
 
 
-
     have nontrivial_h: ∃ h: S, ∀ z: ℂ,  h.val.val.val ≠ z • 1 := by
       by_contra!
 
@@ -3543,20 +3207,10 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
       unfold S at S_finite
       exact Set.toFinite pre_S
 
-    -- have pre_S_inv_finite: pre_S⁻¹.Finite := by
-    --   unfold S at S_finite
-    --   exact Set.finite_inv.mpr pre_S_finite
 
     have one_finite: ({(1 : G)} : Set G).Finite := by
       simp
 
-    -- have fintype_S: Fintype ↑S' := by
-    --   refine Set.Finite.fintype ?_
-    --   exact S'_finite
-
-    -- have fintype_S_inv: Fintype ↑(S'⁻¹) := by
-    --   refine Set.Finite.fintype ?_
-    --   exact Set.finite_inv.mpr S'_finite
 
     have poly_pos := S_poly_data.S_poly_const_pos
 
@@ -3598,7 +3252,6 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
               use ⟨y, y_mem⟩
               simp [s_to_map]
               exact y_eq
-
 
 
         specialize hb r hr
@@ -3860,8 +3513,6 @@ lemma central_trivial_virtually_abelian (n : ℕ) (hn : 2 ≤ n) (G : Subgroup (
         intro s hs
         rw [Finset.mem_coe] at hs
         rw [Finset.mem_coe]
-        --rw [Finset.coe_image]
-        --rw [Finset.coe_image] at hs
         rw [Finset.mem_image] at hs
         obtain ⟨x, x_mem, s_eq⟩ := hs
         rw [Finset.mem_image]
@@ -4050,8 +3701,6 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
       obtain ⟨data⟩ := centralizer_iso G g g_not_multiple_I
 
 
-
-
       -- The abelian subgroup of G_i.
       -- TODO - we need to construct a generating set for the smaller subgroup
       -- TODO - is there existing API for this in mathlib?
@@ -4159,8 +3808,6 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
       let iso := Subgroup.map data.iso.symm.toMonoidHom
 
-      -- Page 48 : Let Gᵢ := πᵢ⁻¹(πᵢ(G)′) = {g ∈ G : πᵢ(g) ∈ πᵢ(G)′}
-      --let G_1 := Subgroup.comap new_A_map (Subgroup.map new_A_map.range.subtype first_subgroup)
       let G_1 := (Subgroup.comap new_A_map.rangeRestrict first_subgroup)
       let G_2 := (Subgroup.comap new_B_map.rangeRestrict second_subgroup)
 
@@ -4360,8 +4007,6 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
               right_assoc := by intros; group
             }
         )
-        -- We view G' as a subgroup of the unitary group
-        --have G'_virtual := central_implies_virtually_abelian n hn (Subgroup.map G.subtype (G' n ε G))
         obtain ⟨N, N_comm, N_finite_index⟩ := G'_virtual
 
         have G'_iso := Subgroup.equivMapOfInjective (G' n ε G) G.subtype (by simp)
@@ -4375,7 +4020,6 @@ lemma compact_lie_virtually_abelian (n : ℕ) (hn : n ≠ 0) (G : Subgroup (Matr
 
 
       ·
-
 
 
         simp at hn

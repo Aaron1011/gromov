@@ -15,9 +15,6 @@ lemma prod_lex_has_unbounded {f: ℕ → Lex (ℕ × ℕ)} (hf: StrictMono f):
   simp at fst_max
   obtain ⟨fst_max, h_fst_max⟩ := fst_max
   replace h_fst_max : (f fst_max).1 = sSup (Set.range (Prod.fst ∘ f)) := h_fst_max
-  -- have snd_max := Nat.sSup_mem (s := Set.range (Prod.snd ∘ f)) (by apply Set.range_nonempty) snd_bounded
-  -- simp at snd_max
-  -- obtain ⟨snd_max, h_snd_max⟩ := snd_max
 
   have f_gt := hf (a := fst_max) (b := 1 + fst_max) (by omega)
 
