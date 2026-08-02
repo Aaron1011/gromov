@@ -3465,7 +3465,11 @@ lemma proposition_3_18 (f: (Lp ℝ 2 volume (α := G))): (∑' g: G, (f g) * (La
 
 lemma g_n_laplace_enorm_le (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ‖Laplace (G_n n hn hf)‖ₑ ≤ 1/n := by
   have g_n_prop := (laplace_g_n n hn hf).choose_spec
-  sorry
+  rw [← ofReal_norm]
+  rw [show ((1 : ENNReal)/(n : ENNReal)) = ENNReal.ofReal (1/(n:ℝ)) by
+    rw [ENNReal.ofReal_div_of_pos (by exact_mod_cast hn), ENNReal.ofReal_one,
+      ENNReal.ofReal_natCast]]
+  exact ENNReal.ofReal_le_ofReal g_n_prop.1
 
 lemma g_n_laplace_norm_le (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ‖Laplace (G_n n hn hf)‖ ≤ 1/n := by
   have g_n_prop := (laplace_g_n n hn hf).choose_spec
