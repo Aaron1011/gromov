@@ -80,47 +80,6 @@ lemma harmonic_maximum_implies_const (f: G → ℝ) (hf: Laplace_b  f = 0) (a: G
 variable {V: Submodule ℝ LipschitzH} [V_finite: FiniteDimensional ℝ V] [Nontrivial V]
 
 
-lemma v_basis_app_nonzero (k: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V)): ∃ g: G, (V_basis V k).val g ≠ 0 := by
-  by_contra!
-  rw [← funext_iff] at this
-  have nonzero := Module.Basis.ne_zero (V_basis V) k
-  conv at this =>
-    rhs
-    equals 0 =>
-      ext a
-      simp
-  simp at nonzero
-  have k_zero: V_basis V k = 0 := by
-    apply_fun Subtype.val
-    .
-      apply_fun DFunLike.coe
-      .
-        exact this
-      . intro a b hab
-        ext g
-        rw [funext_iff] at hab
-        specialize hab g
-        simp at hab
-        exact hab
-    . simp
-  contradiction
-
-lemma v_basis_r: ∃ R: ℝ, ∀ k: ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V), ∃ g ∈ Metric.closedBall 1 R, (V_basis V k).val g ≠ 0 := by
-  use ((Finset.image ((fun (k: (Module.Basis.ofVectorSpaceIndex ℝ ↥V)) => (WordNorm (v_basis_app_nonzero k).choose : ℝ))) Finset.univ)).max' ?_
-  .
-    intro k
-    use (v_basis_app_nonzero k).choose
-    refine ⟨?_, ?_⟩
-    .
-      simp
-      apply Finset.le_max'
-      simp only [Finset.mem_image, Finset.mem_univ, true_and]
-      use k
-      simp [dist, WordDist_one]
-    . apply (v_basis_app_nonzero k).choose_spec
-  .
-    simp
-
 open scoped Finset
 open scoped Pointwise
 
@@ -408,9 +367,6 @@ theorem mu_conv_eq_sum (m: ℕ): muConv m = fun g => (((1 : ℝ) / (#(S) : ℝ))
             have p_lt_n_plus := p.prop
             have p_val_neq: p.val ≠ n + 1 := by omega
 
-            have cast_succ_ne: p.castSucc.val ≠ n + 1 := by
-              simp
-              omega
 
             have snd_eq := congrFun hab (⟨p + 1, by omega⟩)
             by_cases p_eq_zero: p = 0
@@ -1122,17 +1078,14 @@ lemma neg_smul (f: G → ℝ): -f = (-1 : ℝ) • f := by
 
 
 -- TODO - cleanup and upstream to mathlib
+omit hGS in
 lemma nat_mono_le {f: ℕ → ℕ} (hf: StrictMono f) (n: ℕ): n ≤ f n := by
   induction n with
   | zero =>
     simp
   | succ k ih =>
     have k_le := hf (a := k) (b := k + 1) (by simp)
-    have succ_le : k + 1 ≤ (f k) + 1 := by grind
 
-    have succ_le_f: (f k) + 1 ≤ f (k + 1) := by
-      have foo := hf.add_le_nat 1 k
-      grind
     grind
 
 
@@ -1224,13 +1177,7 @@ instance volume_mul_left_invariant: (volume (α := G)).IsMulLeftInvariant := by
   rw [my_haar_eq_count]
   infer_instance
 
-instance volume_mul_right_invariant: (volume (α := G)).IsMulRightInvariant := by
-  simp [volume]
-  rw [my_haar_eq_count]
-  infer_instance
-
-
--- TODO - upstream to mathlib
+omit hGS in
 lemma abs_sub_le_abs_add (a b: ℝ) (ha: 0 ≤ a) (hb: 0 ≤ b): |a - b| ≤ |a + b| := by
   rw [abs_sub_le_iff]
   refine ⟨?_, ?_⟩
@@ -1249,7 +1196,6 @@ lemma norm_sub_squared_le (a b : ℝ) (ha: 0 ≤ a) (hb: 0 ≤ b): (a - b)^2 ≤
   rw [sq_sub_sq]
   rw [abs_mul]
   nth_rw 2 [mul_comm]
-  have foo := abs_sub_le_abs_add a b ha hb
   -- TODO - why doesn't grw work here?
   apply mul_le_mul
   . simp
@@ -1337,7 +1283,6 @@ lemma F_n_conv_mu_lim (f_n_limit: f_n_conv_delta_tendsto):
     simp_rw [← Finset.sum_sub_distrib]
     rw [ENNReal.toReal_zero]
 
-    have f_n_norm := f_n_sub_conv
 
     apply squeeze_zero (g := fun n => (1 / ↑(#S : ℝ)) • ∑ x ∈ S, (eLpNorm ((F_n_lp2 n).val.cast - (fun (g: G) => (F_n_lp2 n) (x * g))) 2 volume).toReal)
     . simp
@@ -1863,29 +1808,18 @@ lemma laplace_bounded' (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := 
     . simp
   . simp
 
-noncomputable def laplace_range := LinearMap.range (Laplace_linear )
-
-
--- The only measure-zero sets are empty sets, so we can evaluate a MemLp function by evaluating any function
--- from the equivalence class
 lemma tolp_apply (f: G → ℝ) {p: ENNReal}  (hf: MeasureTheory.MemLp f p) (g: G): (MeasureTheory.MemLp.toLp f hf) g = f g := by
   have eq_fun := MeasureTheory.AEEqFun.coeFn_mk f (μ := MeasureTheory.volume (α := G)) (by apply MeasureTheory.AEStronglyMeasurable.of_discrete)
   rw [ae_eq_everywhere] at eq_fun
   nth_rw 2 [← eq_fun]
   rfl
 
-lemma tolp_val_apply (f: G → ℝ) {p: ENNReal}  (hf: MeasureTheory.MemLp f p) (g: G): (MeasureTheory.MemLp.toLp f hf).val g = f g := by
-  have eq_fun := MeasureTheory.AEEqFun.coeFn_mk f (μ := MeasureTheory.volume (α := G)) (by apply MeasureTheory.AEStronglyMeasurable.of_discrete)
-  rw [ae_eq_everywhere] at eq_fun
-  nth_rw 2 [← eq_fun]
-  rfl
 
 open scoped RealInnerProductSpace
 lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))): ⟪f, (Laplace  h)⟫ = ⟪(Laplace  f), h⟫ := by
 
   simp [MeasureTheory.L2.inner_def]
 
-  have my_eq := ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub h (conv_mu_lp2 h))
 
 
   -- MeasureTheory.Lp.coeFn_smul
@@ -2044,35 +1978,6 @@ lemma laplace_self_adjoint (f h: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)
     exact prod_lp1
 
 
-lemma laplace_range_dense: Dense (X := ↥(Lp ℝ 2 volume (α := G))) (laplace_range ) := by
-  rw [Submodule.dense_iff_topologicalClosure_eq_top]
-  rw [Submodule.topologicalClosure_eq_top_iff]
-  simp_rw [laplace_range]
-  ext g
-  rw [Submodule.mem_bot]
-  refine ⟨?_, ?_⟩
-  .
-    intro hg
-    rw [Submodule.mem_orthogonal] at hg
-    have inner_laplace_zero: ∀ u: (Lp ℝ 2 volume), ⟪Laplace_linear u, g⟫ = 0 := by
-      intro u
-      specialize hg (Laplace_linear u)
-      simpa using hg
-
-    simp only [Laplace_linear, LinearMap.coe_mk, AddHom.coe_mk] at inner_laplace_zero
-    simp_rw [← laplace_self_adjoint] at inner_laplace_zero
-    simp at inner_laplace_zero
-
-    have eq_zero:= Dense.eq_zero_of_inner_right (E := (Lp ℝ 2 (volume (α := G)))) (𝕜 := ℝ) (by apply dense_univ) (x := (Laplace g))
-    simp at eq_zero
-    specialize eq_zero inner_laplace_zero
-    apply laplace_zero_iff_zero _ eq_zero
-  . intro hg
-    rw [hg]
-    simp
-
-
--- Proposition 3.17.2: "∆ is positive semidefinite" from Vikman
 set_option maxHeartbeats 200000 in
 lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))): 0 ≤ ⟪f, (Laplace  f)⟫ := by
   unfold Laplace
@@ -2413,8 +2318,6 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
   let P: Polynomial ℝ := (Polynomial.X^2 - eps • Polynomial.X)
 
   let Δ := Laplace_linear.mkContinuous _ (laplace_bounded')
-  have Δ_self_adjoint: IsSelfAdjoint Δ := by
-    apply Δ_symmetric.isSelfAdjoint
 
   have spec_inter: spectrum ℝ Δ ∩ Set.Ioo 0 eps ≠ ∅ := by
     by_contra!
@@ -2445,8 +2348,6 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
     simp at zero_mem
 
     let ramp: ℝ → ℝ := fun x => max 0 (min 1 (x / eps))
-    have ramp_comp: Continuous ramp := by
-      fun_prop
 
     have self_adjoint_cx_del: IsSelfAdjoint (Cx.mapCLM Δ) := by
       apply Cx.isSelfAdjoint_mapCLM
@@ -2689,9 +2590,6 @@ lemma measure_preserving_inv: MeasurePreserving Inv.inv ((MeasureTheory.volume (
 lemma measure_preserving_unop_tomul: MeasurePreserving (fun (x: Additive (G)) ↦ (Additive.toMul x)) myHaarAddOpp volume := by
   apply MeasureTheory.MeasurePreserving.id
 
-lemma measure_preserving_op_add: MeasurePreserving (fun (x: G) ↦ Additive.ofMul (x)) volume myHaarAddOpp := by
-  apply MeasureTheory.MeasurePreserving.id
-
 
 noncomputable def G_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto) := Classical.choose (laplace_g_n n hn hf)
 
@@ -2706,9 +2604,6 @@ lemma lp_summable {p: ℕ} (hp: 0 < p) (f: (Lp ℝ p volume (α := G))): Summabl
   rw [Ne] at f_norm
   rw [ENNReal.rpow_eq_top_iff] at f_norm
   simp at f_norm
-  have not_ofreal: ¬((ENNReal.ofReal p).toReal ≤ 0) := by
-    simp
-    linarith
   simp [not_le] at f_norm
   simp_rw [Real.enorm_eq_ofReal_abs] at f_norm
   conv at f_norm =>
@@ -2986,44 +2881,15 @@ lemma g_n_laplace_enorm_le (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): �
       ENNReal.ofReal_natCast]]
   exact ENNReal.ofReal_le_ofReal g_n_prop.1
 
-lemma g_n_laplace_norm_le (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ‖Laplace (G_n n hn hf)‖ ≤ 1/n := by
-  have g_n_prop := (laplace_g_n n hn hf).choose_spec
-  exact g_n_prop.1
 
 open scoped RealInnerProductSpace in
 lemma g_n_conv_norm (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ⟪Laplace (G_n n hn hf), (G_n n hn hf)⟫ = 1 := by
   have g_n_prop := (laplace_g_n n hn hf).choose_spec
   exact g_n_prop.2
 
-lemma g_n_ne_zero (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): G_n n hn hf ≠ 0 := by
-  simp
-  by_contra!
-  have g_n_prop := (laplace_g_n n hn hf).choose_spec
-  simp [G_n] at this
-  simp [this] at g_n_prop
-
-
--- Note - this might only true because our measure is equivalen to the counting measure,
--- so a.e. is the same thing as everywhere.
-lemma lp_finset_sum {R: Finset G} (f: G → (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))) (g: G): (∑ s ∈ R, (f s) g) = ((∑ s ∈ R, f s) : (MeasureTheory.Lp ℝ 2 (μ := volume (α := G)))) g := by
-  rw [eq_comm]
-  refine Finset.induction_on R ?_ ?_
-  .
-    simp only [Finset.sum_empty]
-    rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_zero _ _ _)]
-    simp
-  .
-    intro a s ha sum_eq
-    rw [Finset.sum_insert ha]
-    rw [Finset.sum_insert ha]
-    rw [← sum_eq]
-    rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_add _ _)]
-    simp
-
 
 #print sorries proposition_3_18
 #print axioms proposition_3_18
-#print axioms laplace_range_dense
 
 
 lemma g_sub_norm_gt (hf: f_n_conv_delta_tendsto) (n: ℕ) : ∃ s ∈ S, ‖(G_n (n + 1) (by simp) hf) - (conv_finsupp_lp2 (G_n (n + 1) (by simp) hf) (delta s) (by simp [delta]))‖^2 > 1 := by
@@ -3051,7 +2917,6 @@ lemma g_sub_norm_gt (hf: f_n_conv_delta_tendsto) (n: ℕ) : ∃ s ∈ S, ‖(G_n
       grind
     .
       simp
-      have foo := S_nonempty
       grind
 
   .
@@ -3102,32 +2967,6 @@ lemma lipschitzWith_discrete {K: Type*} [RCLike K] (f: G → K) {C: NNReal} (hf:
   rw [dist_comm]
   grw [mul_prod]
   simp [dist, WordDist, l_len]
-
-
-lemma f_mul_mu_summable (f: G → ℝ) (g: G) (s: G):
-  Summable fun a ↦
-    (f ((Additive.toMul a))) * (if s = ((((Additive.toMul a))⁻¹ * g)) then 1 else 0) := by
-  apply summable_of_hasFiniteSupport
-  change (Function.support _).Finite
-  simp only [one_div, Function.support_mul, Function.support_inv]
-  apply Set.Finite.inter_of_right
-  apply Set.Finite.subset (s := {(opAdd (g * s⁻¹))})
-  . simp
-  . intro a ha
-    simp at ha
-    simp [opAdd]
-    rw [ha]
-    simp
-
-
--- Proposition 1.5
-lemma laplace_sum_swap (f g: G → ℝ) (hfg: f.support.Finite ∨ g.support.Finite): ∑' (x: G), (f x) * (Laplace_b g) x = ∑' (x: G), ((Laplace_b f ) x) * (g x) := by
-  rw [laplace_sum_swap_helper hfg]
-  simp_rw [mul_comm _ ( g _)]
-  rw [laplace_sum_swap_helper hfg.symm]
-  simp_rw [mul_comm]
-
-#print axioms laplace_sum_swap
 
 
 lemma conv_neg_left (f g: G → ℝ): Conv (-f) g = -(Conv f g) := by
@@ -4180,10 +4019,6 @@ lemma nontrivial_harmonic_case_two (f_n_limit: ∃ s: S, ¬(Filter.Tendsto (fun 
 
   -- Along this sequence, the evauation of 'Conv H_n f_n' at is leq to 1,
   -- so it's in a compact set
-  have locally_bounded_at_g: ∀ g: G, ∀ n, Conv (H_n (eps_seq n)) (f_n (eps_seq n)) g ∈ Metric.closedBall 0 1 := by
-    intro g n
-    simp
-    apply abs_conv_le_one
 
 
   have h_n_pointwise_converge := IsCompact.tendsto_subseq compact_closure_f (x := fun n => (Conv (H_n (eps_seq n)) (f_n (eps_seq n)))) (by
@@ -4253,7 +4088,4 @@ theorem exists_nontrivial_harmonic: ∃ F: LipschitzH , ∀ z: ℝ, F ≠ ConstL
       intro s
       exact f_n_limit s.val s.property
     )
-
-
-instance new_nonempty_basis: Nonempty ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V) := Module.Basis.index_nonempty (Module.Basis.ofVectorSpace _ _)
 

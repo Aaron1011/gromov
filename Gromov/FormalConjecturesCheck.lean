@@ -122,7 +122,6 @@ lemma coe_normGen_pow (S : Set G) (hS : S.Finite) (n : ℕ) :
         have hne : l ≠ [] := by rintro rfl; simp at hlen
         have hsplit : l.dropLast ++ [l.getLast hne] = l := List.dropLast_append_getLast hne
         have hdrop : l.dropLast.length ≤ n := by
-          have h1 : l.length ≠ 0 := by simpa using hne
           rw [List.length_dropLast]
           omega
         refine ⟨l.dropLast.prod, ⟨l.dropLast, hdrop, fun s hs => hmem s ?_, rfl⟩,
@@ -176,6 +175,7 @@ theorem gromov_forward (G : Type*) [Group G] (h : HasPolynomialGrowth G) :
 /-- The forward direction with the reference statement's exact signature, including the
 `[Group.FG G]` hypothesis.  That hypothesis is redundant here: `HasPolynomialGrowth G` already
 supplies a finite generating set, so `gromov_forward` proves the same conclusion without it. -/
+@[nolint unusedArguments]
 theorem gromov_forward_fg (G : Type*) [Group G] [Group.FG G] (h : HasPolynomialGrowth G) :
     Group.IsVirtuallyNilpotent G :=
   gromov_forward G h

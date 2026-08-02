@@ -135,23 +135,6 @@ lemma interval_sum_le {R: Type*} {d: ℕ} [RCLike R] [ NormSMulClass R (Fin d �
 #print axioms interval_sum_le
 
 
-theorem hasEigenvalue_of_isRoot_min  {R : Type*} {M : Type*} [CommRing R] [AddCommGroup M] [Module R M] {f : Module.End R M} {μ : R} [IsDomain R] [Module.Finite R M] (h : (minpoly R f).IsRoot μ) : f.HasEigenvalue μ := by
-  obtain ⟨q, hq⟩ := Polynomial.dvd_iff_isRoot.mpr h
-  obtain ⟨v, hv⟩ : ∃ v : M, q.aeval f v ≠ 0 := by
-    by_contra! h_contra
-    have := minpoly.min R f
-      ((Polynomial.monic_X_sub_C μ).of_mul_monic_left (hq ▸ minpoly.monic (Algebra.IsIntegral.isIntegral f)))
-      (LinearMap.ext h_contra)
-    rw [hq, Polynomial.degree_mul, Polynomial.degree_X_sub_C, Polynomial.degree_eq_natDegree] at this
-    · norm_cast at this; grind
-    · rintro rfl
-      exact minpoly.ne_zero (Algebra.IsIntegral.isIntegral f) (mul_zero (Polynomial.X - Polynomial.C μ) ▸ hq)
-  refine Module.End.hasEigenvalue_of_hasEigenvector (Module.End.hasEigenvector_iff.mpr ⟨?_, hv⟩)
-  apply_fun (fun a => (Polynomial.aeval f) a) at hq
-  simp
-  simpa [sub_eq_zero, hq] using congr($(minpoly.aeval R f) v)
-
--- TODO - upstream to mathlib
 theorem hasEigenvalue_of_isRoot_charpoly  {R : Type*} {M : Type*} [CommRing R] [AddCommGroup M] [Module R M] {f : Module.End R M} {μ : R} [IsDomain R] [Module.Finite R M] [Module.Free R M] (h : (f.charpoly).IsRoot μ) : f.HasEigenvalue μ := by
   simp at h
   rw [LinearMap.eval_charpoly] at h
@@ -168,16 +151,6 @@ theorem hasEigenvalue_of_isRoot_charpoly  {R : Type*} {M : Type*} [CommRing R] [
   refine ⟨v_mem, v_nonzero⟩
 
 -- TODO - upstream to mathlib
-def complexOfIntHom: ℤ →+* ℂ := {
-  toFun := fun z => (z: ℂ),
-  map_zero' := by simp,
-  map_one' := by simp,
-  map_add' := by intros; simp,
-  map_mul' := by intros; simp
-}
-
--- TODO - this can probably be generalized to any matrix with a determinant of +/- 1,
--- and then upstreamed to mathlib
 lemma int_matrix_eigenvalue {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ):
     (∀ (k : ℂ), Module.End.HasEigenvalue ((A.val.map (Int.castRingHom ℂ)).toLin') k → ‖k‖ = 1) ∨ (∃ (k: ℂ), (Module.End.HasEigenvalue ((A.val.map (Int.castRingHom ℂ)).toLin') k) ∧ 1 < ‖k‖) := by
 
@@ -380,7 +353,6 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℂ) (φ v: (Fin d) →
           clear n_mem_or n_neither
           simp [n_mem_p] at n_both
 
-          have q_n_diff : q \ {n} = q := by grind
           have n_q_diff: {n} \ q = {n} := by grind
           have data := poly_cancel A v p q hpq
           have h_sum := data.h_prime
@@ -451,62 +423,7 @@ lemma subsums_unique {d: ℕ} (A: Matrix (Fin d) (Fin d) ℂ) (φ v: (Fin d) →
 
 #print axioms subsums_unique
 
-lemma euclidean_vector_repr (n : ℕ) (x : EuclideanSpace ℂ (Fin n)) :
-    ∑ i, x i • EuclideanSpace.single i (1:ℂ) = x := by
-  simpa [EuclideanSpace.basisFun_apply, EuclideanSpace.basisFun_repr] using
-    (EuclideanSpace.basisFun (Fin n) ℂ).sum_repr x
 
-lemma matrix_map_eigenvector_component {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)) (v: EuclideanSpace ℂ (Fin d)) (v_norm: ‖v‖ = 1) (k: ℂ) (hv: (A.map (Int.castRingHom ℂ)).mulVec v = k • v) (k_gt: d < ‖k‖):
-    ∃ i: Fin d, 1 ≤ ‖(WithLp.toLp 2 ((A.map (Int.castRingHom ℂ)).mulVec (EuclideanSpace.single i 1)))‖ := by
-
-  have v_norm_one := v_norm
-  apply_fun (fun a => WithLp.toLp 2 a) at hv
-  by_contra!
-
-  let B := EuclideanSpace.basisFun (Fin d) ℂ
-  nth_rw 1 [← euclidean_vector_repr (x := v)] at hv
-  simp at hv
-  rw [Matrix.mulVec_sum] at hv
-  apply_fun (fun c => ‖c‖) at hv
-  rw [norm_smul] at hv
-  apply_fun (fun a => a^2) at v_norm
-  rw [EuclideanSpace.norm_sq_eq] at v_norm
-  simp at v_norm
-
-  simp [v_norm_one] at hv
-  apply ge_of_eq at hv
-  grw [norm_sum_le] at hv
-  simp_rw [Matrix.mulVec_smul] at hv
-  simp at hv
-  simp_rw [norm_smul] at hv
-
-
-  have single_le (x: Fin d) := Finset.single_le_sum (f := fun a => ‖v.ofLp a‖^2) (s := Finset.univ) (by intro i hi; positivity) (a := x)
-  grw [v_norm] at single_le
-  conv at single_le =>
-    intro x hx
-    rw [sq_le_one_iff₀ (by simp)]
-
-
-  grw [Finset.sum_le_sum (g := fun x => ‖WithLp.toLp 2 ((A.map fun x ↦ (x: ℂ)).col x)‖)] at hv
-  .
-
-
-    simp at this
-    grw [Finset.sum_le_card_nsmul (n := (1 : ℝ))] at hv
-    . simp at hv
-      grind
-    . intro i hi
-      grw [this]
-  . intro i hi
-    grw [single_le i hi]
-    simp
-
-
--- We diverge from the paper, and use an approach suggested by Claude: a left eigenvector `φ` is used instead of a right eigenvector,
--- and we keep the right-multiplication acting on some arbitrary non-eigenvector `v`. This lets the caller choose 'v' to be an integer vector
--- cast to a complex vector (which can therefore be turned back into an element of G).
--- This was easier than dealing with the "pick a vector with a component in the eigenvector" approach in the paper
 lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)) (φ : (Fin d) → ℂ) (v: Fin d → ℤ) (v_ne_zero: ‖φ ⬝ᵥ (Int.castRingHom ℂ) ∘ v‖ ≠ 0) (k: ℂ) (hv: (A.map (Int.castRingHom ℂ)).vecMul φ = (k • φ)) (k_gt: 1 < ‖k‖):
     ∀ N, 2^(N - ((Nat.ceil (Real.logb ‖k‖ 3)))) ≤ #((Finset.image (fun a => a.sum (fun b => (((A^((Nat.ceil (Real.logb ‖k‖ 3)))))^b.val).mulVec v)) ((Finset.Ico ((Nat.ceil (Real.logb ‖k‖ 3))) N)).attach.powerset)) := by
   have mul_v := mul_pow_exact (A.map (Int.castRingHom ℂ)) φ k hv
@@ -578,53 +495,6 @@ lemma int_matrix_exponential_growth {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)) (
       rw [hab]
 #print axioms int_matrix_exponential_growth
 
-
-lemma map_preserves_eigen {F: Type*} {d: ℕ} [Field F] [FiniteDimensional F ((Fin d → F))] {d: ℕ} (A: (Matrix (Fin d) (Fin d) F)) (f: F →+* ℂ): ∀ k: Module.End.Eigenvalues A.toLin', Module.End.HasEigenvalue (A.map f).toLin' (f k) := by
-  intro k
-  have hk := k.prop
-  obtain ⟨v, hv⟩ := Module.End.HasEigenvalue.exists_hasEigenvector hk
-  have v_spec := hv
-  rw [Module.End.hasEigenvector_iff] at v_spec
-  apply Module.End.HasEigenvector.apply_eq_smul at hv
-  let map_vec := fun (j: (Fin d) → F) => (fun (i: Fin d) => f (j i))
-  apply_fun map_vec at hv
-  simp [map_vec] at hv
-  rw [funext_iff] at hv
-  simp_rw [RingHom.map_mulVec] at hv
-  apply Module.End.hasEigenvalue_of_hasEigenvector (x := f ∘ v)
-  rw [Module.End.hasEigenvector_iff]
-  simp
-  refine ⟨?_, ?_⟩
-  . ext j
-    rw [hv]
-    simp
-    left
-    rfl
-  .
-    rw [funext_iff]
-    simp_rw [Function.comp_apply, Pi.zero_apply, map_eq_zero]
-    rw [← funext_iff]
-    exact v_spec.2
-
-
-lemma exists_basis_map_nonzero  {d: ℕ}  (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) [NeZero d]: ∃ a, A.val.mulVec (Pi.single a 1) ≠ 0 := by
-  by_contra!
-
-  let B := Pi.basisFun ℤ (Fin d)
-  have A_zero: A.val = 0 := by
-    rw [Matrix.ext_iff_mulVec]
-    intro v
-    rw [← B.sum_repr (u := v)]
-    rw [Matrix.mulVec_sum]
-    simp_rw [Matrix.mulVec_smul]
-    unfold B
-    simp_rw [Pi.basisFun_apply]
-    simp only [Pi.basisFun_repr]
-    simp_rw [this]
-    simp
-
-  have a_prop := A.ne_zero
-  contradiction
 
 lemma exists_vector_component_nonzero {d: ℕ} (v: (Fin d) → ℂ) (hv: v ≠ 0): ∃ i, v i ≠ 0 := by
   by_contra!
@@ -868,9 +738,6 @@ lemma KroneckerPow_pos {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (eigen_one_c
   intro k
   by_contra!
   simp at this
-  have pow_nonzero: KroneckerPow_single A k eigen_one_complex ≠ 0 := by
-    simp [KroneckerPow_single]
-    grind
 
   simp [KroneckerPow_single] at this
   grind
@@ -987,10 +854,6 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (n: ℕ) (hn: 0 < n) (A: (Matrix
     intro k
     by_contra!
     simp at this
-    have k_pow := eigen_pow_self k.val k.prop
-    have pow_nonzero: eigen_pow k.val k.prop ≠ 0 := by
-      have spec :=  (eigen_root_unity ⟨k.val, k.prop⟩).choose_spec
-      grind [spec.1]
 
     simp [KroneckerPow_single] at this
     grind
@@ -1032,7 +895,6 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (n: ℕ) (hn: 0 < n) (A: (Matrix
     rw [← k_pow]
     rw [← Matrix.spectrum_toLin'] at k_mem
     rw [← Module.End.hasEigenvalue_iff_mem_spectrum] at k_mem
-    have k_norm := eigen_one_complex ⟨k, k_mem⟩
     rw [← eigen_pow_prod_one (k := ⟨k, k_mem⟩)]
     . simp
 
@@ -1135,7 +997,6 @@ lemma int_matrix_unipotent {d: ℕ} (hd: 0 < d) (n: ℕ) (hn: 0 < n) (A: (Matrix
 #print axioms int_matrix_unipotent
 #print axioms int_matrix_poly_growth_eigenvalue
 
-def homToComplex  {d: ℕ} (g: ((Fin d) → ℤ) ≃+ ((Fin d) → ℤ)) := (g.toAddMonoidHom.toIntLinearMap).toMatrix'.map complexOfIntHom
 
 open scoped Pointwise Finset
 

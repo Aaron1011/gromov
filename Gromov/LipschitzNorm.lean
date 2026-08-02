@@ -43,7 +43,6 @@ lemma lipschiz_norm_zero: LipschitzSemiNorm  (0) = 0 := by
 -- TODO - upstream to mathlib
 lemma lipschitz_attains_norm (f: G → ℝ) (hf: IsLipschitz f): LipschitzWith (LipschitzSemiNorm f) f := by
   by_contra!
-  have orig_this := this
   simp [LipschitzWith] at this
   obtain ⟨x, y, hdist⟩ := this
   have edist_ne_zero: edist x y ≠ 0 := by
@@ -112,13 +111,6 @@ lemma lipschitz_attains_norm (f: G → ℝ) (hf: IsLipschitz f): LipschitzWith (
       exact fun a ↦ edist_ne_zero (congrArg ENNReal.ofNNReal a)
   . rw [edist_nndist] at edist_ne_zero
     exact fun a ↦ edist_ne_zero (congrArg ENNReal.ofNNReal a)
-
-
-lemma lipschitz_k_le_norm (f: G → ℝ) (k: NNReal) (hf: LipschitzWith k f): (LipschitzSemiNorm f) ≤ k := by
-  simp [LipschitzSemiNorm]
-  apply csInf_le
-  . simp
-  . simp [hf]
 
 
 lemma lipschitz_norm_triangle (x y z: G → ℝ) (hx: IsLipschitz x) (hy: IsLipschitz y) (hz: IsLipschitz z): LipschitzSemiNorm (x - z) ≤ LipschitzSemiNorm (x - y) + LipschitzSemiNorm (y - z) := by

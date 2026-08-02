@@ -140,7 +140,6 @@ lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.suppor
     arg 2
     intro s
     rw [pow_two]
-  have S_card := S_card_ne_zero_re
   apply le_of_mul_le_mul_left (a := 2⁻¹ * (↑(#S) : ℝ)⁻¹) (a0 := by simp [S_nonempty])
   rw [mul_assoc]
   rw [← tsum_mul_left]
@@ -555,7 +554,6 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
               .
                 by_cases norm_x_eq: WordNorm x = 4 * r
                 .
-                  have s_x_eq: WordNorm (s * x) = 1 + 4 *r := by grind
                   have not_le: ¬(WordNorm (s * x) ≤ (2 *r) + 1) := by grind
                   have not_le_four: ¬(WordNorm (s * x) ≤ (4 *r)) := by grind
                   have x_le: (WordNorm (x) ≤ (4 *r)) := by grind
@@ -646,7 +644,6 @@ lemma harmonic_r2_inequality (f : G → ℝ) (hf : Laplace_b f = 0) (r: ℕ) (hr
           . rfl
           . intro s hs
             simp [φ]
-            have hx_orig := hx
             simp [dist, WordDist_one] at hx
             norm_cast at hx
             have hx_le : WordNorm x ≤ 2 * r + 1 := by grind
@@ -766,8 +763,6 @@ noncomputable def Q_R_lin (V: Submodule ℝ LipschitzH) (R: ℝ): V →ₗ⋆[�
     ring
 }
 
-lemma Q_R_lin_apply (V: Submodule ℝ LipschitzH) (R: ℝ) (u v: V): Q_R_lin V R u v = Q_R R u v := by
-  rfl
 
 noncomputable def Q_R_lin_plain (V: Submodule ℝ LipschitzH) (R: ℝ): V →ₗ[ℝ] V →ₗ[ℝ] ℝ := {
   toFun := fun u => {
@@ -990,18 +985,6 @@ lemma Q_R_matrix_pos_def {ι : Type*} [Fintype ι] [DecidableEq ι] {V: Submodul
 #print sorries Q_R_matrix_pos_def
 
 -- TODO - generalize and upstream
-theorem LipschitzWith.sum {ι : Type*} {α : Type*} {E : Type*}
-    [PseudoEMetricSpace α] [SeminormedAddCommGroup E]
-    {s : Finset ι} {f : ι → α → E} {K : ι → NNReal}
-    (hf : ∀ i ∈ s, LipschitzWith (K i) (f i)) :
-    LipschitzWith (∑ i ∈ s, K i) (fun x ↦ ∑ i ∈ s, f i x) := by
-  classical
-  induction s using Finset.induction with
-  | empty => simpa using LipschitzWith.const (α := α) (0 : E)
-  | insert a s ha ih =>
-    simp only [Finset.sum_insert ha]
-    exact (hf a (Finset.mem_insert_self a s)).add
-      (ih (fun i hi => hf i (Finset.mem_insert_of_mem hi)))
 
 section V_variable
 
@@ -1010,6 +993,7 @@ variable {V: Submodule ℝ LipschitzH} [V_finite: FiniteDimensional ℝ V] [Nont
 instance nonempty_basis: Nonempty ↑(Module.Basis.ofVectorSpaceIndex ℝ ↥V) := Module.Basis.index_nonempty (Module.Basis.ofVectorSpace _ _)
 
 -- TODO - generalize and upstream
+omit hGS in
 lemma euclidean_of_lp_le {ι : Type*} [Fintype ι] (x: EuclideanSpace ℝ ι) (i: ι):
     |x.ofLp i| ≤ ‖x‖ := by
 
@@ -1040,15 +1024,19 @@ noncomputable def max_lipschitz {ι : Type*} [Finite ι] [Nonempty ι] (b : Modu
 noncomputable def max_origin {ι : Type*} [Finite ι] [Nonempty ι] (b : Module.Basis ι ℝ ↥V) : ℝ :=
   v_origin_norm b (Finite.exists_max (v_origin_norm b)).choose
 
+omit V_finite [Nontrivial ↥V] in
 lemma le_max_lipschitz {ι : Type*} [Finite ι] [Nonempty ι] (b : Module.Basis ι ℝ ↥V) (i) : v_lipschitz_constant b i ≤ max_lipschitz b :=
   (Finite.exists_max (v_lipschitz_constant b)).choose_spec i
 
+omit V_finite [Nontrivial ↥V] in
 lemma le_max_origin {ι : Type*} [Finite ι] [Nonempty ι] (b : Module.Basis ι ℝ ↥V) (i) : v_origin_norm b i ≤ max_origin b :=
   (Finite.exists_max (v_origin_norm b)).choose_spec i
 
+omit V_finite [Nontrivial ↥V] in
 lemma max_lipschitz_nonneg {ι : Type*} [Finite ι] [Nonempty ι] (b : Module.Basis ι ℝ ↥V) : 0 ≤ max_lipschitz b := by
   unfold max_lipschitz v_lipschitz_constant; positivity
 
+omit V_finite [Nontrivial ↥V] in
 lemma max_origin_nonneg {ι : Type*} [Finite ι] [Nonempty ι] (b : Module.Basis ι ℝ ↥V) : 0 ≤ max_origin b := by
   unfold max_origin v_origin_norm; positivity
 
@@ -1057,6 +1045,7 @@ separate, in the statement of `det_bound`). -/
 noncomputable def det_bound_const {ι : Type*} [Finite ι] [Nonempty ι] (b : Module.Basis ι ℝ ↥V) : ℝ :=
   ((Module.finrank ℝ ↥V) * max_lipschitz b + (Module.finrank ℝ ↥V) * max_origin b) ^ 2
 
+omit V_finite [Nontrivial ↥V] in
 lemma det_bound_const_nonneg {ι : Type*} [Finite ι] [Nonempty ι] (b : Module.Basis ι ℝ ↥V) : 0 ≤ det_bound_const b := by
   simp [det_bound_const]
   positivity
@@ -1249,6 +1238,7 @@ private noncomputable def R' := R'_ V
 
 noncomputable def Q_R_single (R : ℝ) (u: G → ℝ): ℝ := ∑ g ∈ Metric.closedBall 1 R, (u g)^2
 
+omit v_wrapper_inst in
 lemma Q_R_single_eq (R: ℝ) (u : G → ℝ): Q_R_single R u = Q_R R u u := by
   unfold Q_R_single Q_R
   simp_rw [pow_two]
@@ -1259,6 +1249,7 @@ private noncomputable def dim (V: Type*) [AddCommMonoid V] [Module ℝ V] : ℝ 
 
 private noncomputable def i₀ : ℕ := Nat.clog 16 ⌈R'⌉₊
 
+omit [Nonempty ι] in
 lemma Q_R_matrix_pos_def_i₀ (b : Module.Basis ι ℝ V) (R: ℝ) (hR: 16 ^ (i₀) ≤ R): (Q_R_matrix b R).PosDef := by
   apply Q_R_matrix_pos_def
   simp [i₀] at hR
@@ -1276,6 +1267,7 @@ private noncomputable def h (b : Module.Basis ι ℝ V) (i: ℕ): ℝ := Real.lo
 
 -- Matrix.le_iff
 
+omit [Nonempty ι] in
 lemma f_monotone_on (bas : Module.Basis ι ℝ V): MonotoneOn (f bas) (Set.Ici ⌈R'⌉₊) := by
   intro x hx y hy hxy
   unfold f
@@ -1452,8 +1444,6 @@ lemma exists_j_0_for_h (b : Module.Basis ι ℝ V) (w d: ℕ) (hw: 0 < w) (hd: 0
   )
   -- TODO - why can't grind just solve this?
   specialize h_negative_start (i₀ + 3 * w * max ⌈positive_start⌉₊ negative_start) (by
-    have le_max: negative_start ≤ max ⌈positive_start⌉₊ negative_start := by
-      simp
     conv =>
       lhs
       equals 0 + negative_start => simp
@@ -1750,6 +1740,7 @@ lemma B_half_disjoint (data: GoodScalesData b): (B_half data).PairwiseDisjoint i
 noncomputable def InterMult_f  (S: Set (Set G)) := (fun A => (Set.encard A).toNat) '' { A: Set (Set G) | A ⊆ S ∧ ⋂₀ A ≠ ∅ }
 noncomputable def InterMult (S: Set (Set G)) := sSup (InterMult_f S)
 
+omit v_wrapper_inst in
 lemma smul_origin_ball_subset (a: G) (r: ℝ): (MulOpposite.op a) • Metric.closedBall 1 r ⊆ Metric.closedBall a r := by
   intro x hx
   simp
@@ -1761,6 +1752,7 @@ lemma smul_origin_ball_subset (a: G) (r: ℝ): (MulOpposite.op a) • Metric.clo
   simp [dist, WordDist] at hy
   exact hy
 
+omit v_wrapper_inst in
 lemma ball_subset_smul_origin (a: G) (r: ℝ): Metric.closedBall a r ⊆ (MulOpposite.op a) • Metric.closedBall 1 r := by
   intro x hx
   simp at hx
@@ -1952,6 +1944,7 @@ lemma inter_mult_helper (data: GoodScalesData b): InterMult (B_3 data) * #(S ^ (
 noncomputable def B_r (r: ℝ) := (finite_closed_ball 1 r).toFinset
 noncomputable def B_c_r (g: G) (r: ℝ) := (finite_closed_ball g r).toFinset
 
+omit v_wrapper_inst in
 lemma B_c_r_eq_smul (a: G) (r: ℝ): B_c_r a r = (MulOpposite.op a) • B_r r := by
   rw [B_c_r, B_r]
   rw [← Finset.coe_inj]
@@ -2309,7 +2302,6 @@ lemma card_B_le_exp_wa (data: GoodScalesData b): #(B_finite data).toFinset < Rea
         lhs
         equals #(finite_closed_ball 1 ↑((R_1 data) / 2)).toFinset =>
           simp
-          have b_finite := finite_closed_ball 1 ↑((R_1 data) / 2)
           rw [Set.ncard_eq_toFinset_card']
           simp [R_1]
       rw [card_closed_ball_eq]
@@ -2335,12 +2327,14 @@ noncomputable def deriv_sq_R (f: G → ℝ) (x: G) := ∑ s ∈ S, (f (x * s) - 
 
 -- Reindexing `s ↦ s⁻¹` over the symmetric generating set `S` turns a right-gradient of
 -- `f ∘ (·⁻¹)` into a left-gradient of `f` at the inverted point.
+omit v_wrapper_inst in
 lemma deriv_sq_R_inv_comp (f: G → ℝ) (x: G):
     deriv_sq_R (fun y => f y⁻¹) x = deriv_sq f x⁻¹ := by
   unfold deriv_sq_R deriv_sq
   apply Finset.sum_nbij' (i := fun s => s⁻¹) (j := fun s => s⁻¹) <;>
     simp +contextual [hGS.has_inv, mul_inv_rev]
 
+omit v_wrapper_inst in
 lemma three_term_cs (a b: ℝ) (n: Type*) {s: Finset n} (f: n → ℝ): a + (∑ x ∈ s, f x) + b ≤ √(a^2 + (∑ x ∈ s, (f x)^2) + b^2) * √(2 + #(s)) := by
   conv =>
     lhs
@@ -2352,6 +2346,7 @@ lemma three_term_cs (a b: ℝ) (n: Type*) {s: Finset n} (f: n → ℝ): a + (∑
   simp
   grind
 
+omit v_wrapper_inst in
 lemma ball_x_one_subset (x: G): (Metric.closedBall x 1) ⊆ ((x) • S) ∪ ((MulOpposite.op x • S))  := by
   intro a ha
   simp
@@ -2388,6 +2383,7 @@ lemma ball_x_one_subset (x: G): (Metric.closedBall x 1) ⊆ ((x) • S) ∪ ((Mu
       simp
     .
       simp [l_prod]
+omit v_wrapper_inst in
 lemma le_of_sub_eq (a b c: ℝ) (ha: a = b - c) (hc: 0 ≤ c): a ≤ b := by
   grind
 
@@ -2865,6 +2861,7 @@ lemma poincare_inequality (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)), |f x
 #print axioms poincare_inequality
 
 -- `B_r` is centred at `1`, so it is closed under inversion (`word_norm_inv`).
+omit v_wrapper_inst in
 lemma mem_B_r_inv (r: ℝ) (x: G): x⁻¹ ∈ B_r r ↔ x ∈ B_r r := by
   simp [B_r, dist, WordDist_one, ← word_norm_inv]
 
@@ -2894,6 +2891,7 @@ lemma poincare_inequality_left (R: ℕ) (f: G → ℝ): ∑ x ∈ (B_r (R - 1)),
 
 #print axioms poincare_inequality_left
 
+omit v_wrapper_inst in
 lemma card_B_r_eq (R: ℕ): #(B_r R) = #(S ^ R) := by
   rw [← card_closed_ball_eq]
   simp [B_r]
@@ -2945,16 +2943,7 @@ lemma lemma_3_25_poincare (data: GoodScalesData b) (j: (X_j data)) (f: G → ℝ
     rw [← Real.log_le_iff_le_exp]
     . rw [Real.log_div]
       .
-        have sub_eq: 2 * (R_1 data: ℝ) - 2 = ↑(2*(R_1 data) - 2) := by
-          rw [Nat.cast_sub]
-          .
-            simp
-          . grind
 
-        have sub_one_eq: (R_1 data: ℝ) - 1 = ↑(R_1 data - 1) := by
-          rw [Nat.cast_sub]
-          . simp
-          . grind
 
         rw [card_B_r_eq]
         conv =>
@@ -3268,6 +3257,7 @@ lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (
 
 -- Lemma 3.27
 
+omit [Nonempty ι] in
 /-- The determinant of `Q_R_matrix` at two bases of `V` differs by a positive constant that is
 **uniform in the scale `R`**. Hence the determinant *ratio* between two scales — and so the
 `h`-difference used to select good scales — is basis-independent. -/
@@ -3282,6 +3272,7 @@ lemma Q_R_matrix_det_basis_change {index : Type*} [Fintype index] [DecidableEq i
     simp only [Q_R_matrix]; ext i j; simp [Q_R_lin, Q_R_lin_plain]
   rw [h2, h1, hB]
 
+omit [Nonempty ι] in
 lemma growth_bound_basis_change (d: ℕ) {index: Type*} [Fintype index] [DecidableEq index] (b_1: Module.Basis ι ℝ V) (b_2: Module.Basis index ℝ V) (h_growth: growth_bound b_1 d) : growth_bound b_2 d := by
   -- the two bases index the same space, so their index types are canonically equivalent
   let equiv : ι ≃ index := b_1.indexEquiv b_2
@@ -4362,7 +4353,6 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ v_data: V_Wrapper, grow
       exact (Submodule.submoduleOfEquivOfLe U_sub_v).finrank_eq
 
   grw [phi_u_inj]
-  have foo := card_B_le_exp_wa data
   have card_eq: #(B_finite data).toFinset = #(B_finsets data) := by
     have hR1 : (0:ℝ) ≤ ↑(R_1 data) := Nat.cast_nonneg _
     have hcoe := (X_j_finite data).coe_toFinset
@@ -4488,7 +4478,6 @@ instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
           grind
         )).det_pos
         norm_cast at det_pos
-        have hrr : 0 < R + R'' := by omega
         positivity
       .
         apply Filter.Eventually.of_forall

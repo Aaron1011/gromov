@@ -8,9 +8,6 @@ lemma diag_of_eigenspace_span {A: Type*} [Nontrivial A] [AddCommGroup A] [Module
   intro x
   simp
 
-  have has_eigenvalue: Module.End.HasEigenvalue g k := by
-    rw [Module.End.hasEigenvalue_iff, hg]
-    simp only [ne_eq, top_ne_bot, not_false_eq_true]
 
   have x_mem: x ∈ Module.End.eigenspace g k := by
     simp [hg]
@@ -19,9 +16,6 @@ lemma diag_of_eigenspace_span {A: Type*} [Nontrivial A] [AddCommGroup A] [Module
   exact x_mem
 
 lemma linearmap_comp_eq_mul {P: Type*} [AddCommMonoid P] [Module ℂ P] (a b: P →ₗ[ℂ] P): a.comp b = a * b := rfl
-
-
-lemma swap_terms_helper {A: Type*} [AddCommGroup A] (a b c d: A): (a + b) + (c + d) = a + c + b + d := by abel
 
 
 lemma linearmap_comp_toContinuousLinearMap {P: Type*} [AddCommGroup P] [Module ℂ P] [TopologicalSpace P] [IsTopologicalAddGroup P] [ContinuousSMul ℂ P] [T2Space P]  [FiniteDimensional ℂ P]  (a b: P →ₗ[ℂ] P):

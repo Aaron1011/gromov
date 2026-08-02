@@ -53,8 +53,6 @@ lemma closure_iterate_mulact {T: Type*} [Group T] [DecidableEq T] (a b: T) (n: ‚
             simp
             repeat rw [‚Üê mul_assoc]
         .
-          have n_minus_eq: n - 1 + 1 = n := by
-            omega
           simp at m_lt_n_sub
           have m_eq_n_minus: m = (|n|) - 1 := by
             omega
@@ -117,7 +115,6 @@ lemma closure_iterate_mulact {T: Type*} [Group T] [DecidableEq T] (a b: T) (n: ‚
             refine ‚ü®?_, ?_‚ü©
             .
               simp at m_lt_n_sub
-              have ‚ü®m_gt, other‚ü© := hm
               omega
 
             .
@@ -145,8 +142,6 @@ lemma closure_iterate_mulact {T: Type*} [Group T] [DecidableEq T] (a b: T) (n: ‚
             rw [sub_eq_add_neg]
 
         .
-          have n_minus_eq: n - 1 + 1 = n := by
-            omega
           simp at m_lt_n_sub
           have m_eq_n_minus: m = (-|n|) + 1 := by
             omega

@@ -33,7 +33,6 @@ lemma eigenvalue_adjoint {A: Type*} [NormedAddCommGroup A] [InnerProductSpace �
   -- TODO - figure out a way to re-use 'spectrum.map_star'
   have hf_cont := hf
   rw [star_normal_toContinuousLinearMap] at hf_cont
-  have ker_adjoint := ContinuousLinearMap.IsStarNormal.ker_adjoint_eq_ker hf_cont
   rw [Module.End.hasEigenvector_iff]
   rw [Module.End.hasEigenvector_iff]
   have ker_toContinuousLinearMap : ∀ X : A →ₗ[ℂ] A,

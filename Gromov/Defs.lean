@@ -99,6 +99,7 @@ lemma mem_S_prod_list (x: G): ∃ l: List S, ProdS x l := by
   unfold List.unattach
   simp [prod_eq]
 
+omit hGS in
 lemma list_tail_unattach (T: Type*)  {p : T → Prop} (l: List { x : T // p x}): l.tail.unattach = l.unattach.tail := by
   unfold List.unattach
   simp
@@ -168,8 +169,6 @@ lemma WordDist_comm (x y: G): WordDist  x y = WordDist  y x := by
   exact Nat.le_antisymm le_right le_left
 
 lemma WordDist_triangle (x y z: G): WordDist  x z ≤ WordDist  x y + WordDist  y z := by
-  have eq_through_y: z * x⁻¹ = z  * y * y⁻¹ * x⁻¹ := by
-    simp
 
   unfold WordDist
   obtain ⟨l_x_y, x_y_prod, x_y_len⟩ := word_norm_prod_self  (y * x⁻¹)
@@ -280,7 +279,6 @@ lemma word_norm_mul_le (x y: G): WordNorm (x * y) ≤ WordNorm x + WordNorm y :=
       simp [ProdS] at x_l_prod y_l_prod
       simp [x_l_prod, y_l_prod]
 
-    have prod_len := word_norm_le (x * y) (x_l ++ y_l) concat_prod
     grw [hn (x_l ++ y_l).length (x_l ++ y_l) rfl concat_prod]
     simp
     grind
@@ -369,20 +367,6 @@ noncomputable instance WordDist.instMetricSpace: MetricSpace G where
 
 -- TODO - is there an easier way to transfer all of the theorems/instances from `G` to `Additive G`?
 
-noncomputable instance WordDist.instPseudoMetricSpaceAddOpp: PseudoMetricSpace (Additive G) where
-  dist x y := dist x.toMul y.toMul
-  dist_self x := by
-    apply PseudoMetricSpace.dist_self
-  dist_comm x y := by
-    apply PseudoMetricSpace.dist_comm
-  dist_triangle x y z := by
-    apply PseudoMetricSpace.dist_triangle
-
-noncomputable instance WordDist.instMetricSpaceAddOpp: MetricSpace (Additive G) where
-  eq_of_dist_eq_zero := by
-    intro x y hxy
-    have := MetricSpace.eq_of_dist_eq_zero (x := x.toMul) (y := y.toMul) hxy
-    exact this
 
 lemma word_norm_inv_le (x: G): WordNorm x ≤ WordNorm x⁻¹ := by
   simp [WordNorm]
@@ -532,6 +516,7 @@ instance countable_add_G: Countable (Additive G) := by
   exact inferInstanceAs (Countable G)
 
 
+omit hGS in
 lemma singleton_pairwise_disjoint {T: Type*} (s: Set (T)) : s.PairwiseDisjoint Set.singleton := by
   refine Set.pairwiseDisjoint_iff.mpr ?_
   intro a ha b hb hab
@@ -639,10 +624,6 @@ lemma my_haar_eq_count: (myHaar) = MeasureTheory.Measure.count := by
       simp
 
 
-instance my_add_haar_left_invariant: (myHaarAddOpp.IsAddLeftInvariant (G := Additive (G))) := by
-  rw [my_add_haar_eq_count]
-  infer_instance
-
 instance my_add_haar_right_invariant: (myHaarAddOpp.IsAddRightInvariant (G := Additive (G))) := by
   rw [my_add_haar_eq_count]
   infer_instance
@@ -707,9 +688,6 @@ instance myNegInvariant: MeasureTheory.Measure.IsNegInvariant (myHaarAddOpp) := 
 -- This is needed to make it match up with the result of MeasureTheory.convolution
 -- TODO - can we combine these
 def Harmonic (f: G → ℝ): Prop := ∀ x: G, f x = ((1 : ℝ) / #(S)) * ∑ s ∈ S, f (s * x)
-def HarmonicR (f: G → ℝ): Prop := ∀ x: G, f x = ((1 : ℝ) / #(S)) * ∑ s ∈ S, f (s * x)
-
--- A Lipschitz harmonic function from section 3.2 of Vikman
 structure LipschitzH [Generates ] where
   -- The underlying function
   toFun: G → ℝ
@@ -734,6 +712,7 @@ so no diamonds arise. Same idiom as `GL_W_DecidableEq` in `Gromov.lean`. -/
 noncomputable instance LipschitzH_DecidableEq: DecidableEq (LipschitzH) :=
   Classical.typeDecidableEq _
 
+omit hGS in
 @[ext]
 theorem LipschitzH.ext [Generates ] {f g: LipschitzH} (h: ∀ x, f.toFun x = g.toFun x): f = g := DFunLike.ext _ _ h
 
@@ -759,6 +738,7 @@ instance LipschitzH.add [Generates ] : Add (LipschitzH) := {
 
 
 -- TODO - mark this as a simp lemma
+omit hGS in
 @[simp]
 lemma LipschitzH_apply [Generates ] (f: LipschitzH) (x: G): f x = f.toFun x := rfl
 
@@ -772,12 +752,6 @@ lemma S_card_ne_zero_re: (#(S) : ℝ) ≠ 0 := by
   simp only [nonempty_subtype] at foo
   exact Finset.nonempty_iff_ne_empty.mp foo
 
-lemma S_card_ne_zero: (#(S) : ℂ) ≠ 0 := by
-  norm_cast
-  simp
-  have foo := hS
-  simp only [nonempty_subtype] at foo
-  exact Finset.nonempty_iff_ne_empty.mp foo
 
 def ConstLipschitzH (z: ℝ) : LipschitzH := {
   toFun := fun x => z
@@ -793,9 +767,6 @@ def ConstLipschitzH (z: ℝ) : LipschitzH := {
     field_simp
 }
 
-lemma ConstLipschitzH_apply (z : ℝ) (g: G): (ConstLipschitzH z) g = z := by
-  unfold ConstLipschitzH
-  rfl
 
 instance LipschitzH.zero [Generates ] : Zero (LipschitzH) := {
   zero := {
@@ -805,17 +776,6 @@ instance LipschitzH.zero [Generates ] : Zero (LipschitzH) := {
       exact LipschitzWith.const 0
     harmonic := by simp [Harmonic]
   }
-}
-
-def LipschitzH.const (k: ℝ) : LipschitzH := {
-  toFun := fun x => k
-  lipschitz := by
-    use 0
-    exact LipschitzWith.const _
-  harmonic := by
-    simp [Harmonic]
-    have foo := S_card_ne_zero_re
-    field_simp [foo]
 }
 
 
@@ -877,10 +837,6 @@ instance negLipschitzH: Neg (LipschitzH) := {
 -- TODO - is there an existing instance we should be using here?
 instance subLipschithZ: Sub (LipschitzH) := {
   sub := fun f g => f + -g
-}
-
-instance lipschitzSmulZ: SMul ℤ (LipschitzH) := {
-  smul := fun n f => (n : ℝ) • f
 }
 
 
@@ -1106,10 +1062,6 @@ noncomputable def Conv (f g: G → ℝ) (x: G) : ℝ :=
 
 def ConvExists (f g: G → ℝ) := MeasureTheory.ConvolutionExists (G := Additive G) (fun x => f x.toMul) (fun x => g x.toMul) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp
 
-def ConvExistsAt (f g: G → ℝ) (x: G) := MeasureTheory.ConvolutionExistsAt (G := Additive G) (fun x => f x.toMul) (fun x => g x.toMul) x (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp
-
-
--- Defintion 3.11 in Vikman: The function 'μ',  not to be confused with a measure on a measure space
 noncomputable def mu: G → ℝ := ((1 : ℝ) / (#(S) : ℝ)) • ∑ s ∈ S, Pi.single s (1 : ℝ)
 
 -- Definition 3.11 in Vikman - the m-fold convolution of μ with itself
@@ -1408,7 +1360,6 @@ noncomputable def Laplace (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α 
 
 
 -- TODO - make this Finite to avoid a non-compuatable Fintype instance
-noncomputable instance fintype_ball (x: G) (r: ℝ): Fintype ↑(Metric.ball x r) := Set.Finite.fintype (finite_ball _ _)
 noncomputable instance fintype_closedBall (x: G) (r: ℝ): Fintype ↑(Metric.closedBall x r) := Set.Finite.fintype (finite_closed_ball _ _)
 
 
@@ -1501,32 +1452,6 @@ abbrev W := (LipschitzH) ⧸ ConstF
 
 #synth Module ℝ (W)
 
-def gActW (g: G): W → W := Quotient.lift (fun f => Submodule.Quotient.mk (gAct g f)) (by
-  intro f h hfh
-  rw [Submodule.Quotient.eq']
-  replace hfh := ConstF.quotientRel_def.mp hfh
-  dsimp [gAct]
-  simp [HAdd.hAdd]
-  dsimp [Add.add]
-  simp [ConstF] at hfh
-  obtain ⟨z, hz⟩ := hfh
-  simp [ConstLipschitzH] at hz
-  show ∃ y, ConstLipschitzH y = _
-  use -z
-  ext a
-  apply_fun LipschitzH.toFun at hz
-  have app_eq := congrFun hz (a * g)
-  simp at app_eq
-  rw [app_eq]
-  simp
-  rw [sub_eq_add_neg]
-  rw [add_comm]
-  rfl
-)
-
-
--- Defintion 3.14 from Vikman
--- We offset by one to avoid the need to carry around a '0 < n' hypothesis everywgere
 noncomputable def f_n (n: ℕ) (g: G): ℝ := ((1: ℝ) / ((n + 1): ℝ)) * ∑ m: Fin (n + 1), muConv  (m.val) g
 
 lemma closed_ball_eq_S_pow (R: ℕ): (finite_closed_ball 1 R).toFinset = S ^ R := by

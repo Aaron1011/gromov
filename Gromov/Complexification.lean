@@ -34,17 +34,28 @@ def fst (p : Cx V) : V := (p : V × V).1
 /-- Imaginary part of an element of the complexification. -/
 def snd (p : Cx V) : V := (p : V × V).2
 
+omit [InnerProductSpace ℝ V] in
 @[simp] lemma fst_mk (a b : V) : fst ((a, b) : Cx V) = a := rfl
+omit [InnerProductSpace ℝ V] in
 @[simp] lemma snd_mk (a b : V) : snd ((a, b) : Cx V) = b := rfl
+omit [InnerProductSpace ℝ V] in
 @[ext] lemma ext {p q : Cx V} (h1 : p.fst = q.fst) (h2 : p.snd = q.snd) : p = q := Prod.ext h1 h2
 
+omit [InnerProductSpace ℝ V] in
 @[simp] lemma add_fst (p q : Cx V) : (p + q).fst = p.fst + q.fst := rfl
+omit [InnerProductSpace ℝ V] in
 @[simp] lemma add_snd (p q : Cx V) : (p + q).snd = p.snd + q.snd := rfl
+omit [InnerProductSpace ℝ V] in
 @[simp] lemma zero_fst : (0 : Cx V).fst = 0 := rfl
+omit [InnerProductSpace ℝ V] in
 @[simp] lemma zero_snd : (0 : Cx V).snd = 0 := rfl
+omit [InnerProductSpace ℝ V] in
 @[simp] lemma neg_fst (p : Cx V) : (-p).fst = -p.fst := rfl
+omit [InnerProductSpace ℝ V] in
 @[simp] lemma neg_snd (p : Cx V) : (-p).snd = -p.snd := rfl
+omit [InnerProductSpace ℝ V] in
 @[simp] lemma sub_fst (p q : Cx V) : (p - q).fst = p.fst - q.fst := rfl
+omit [InnerProductSpace ℝ V] in
 @[simp] lemma sub_snd (p q : Cx V) : (p - q).snd = p.snd - q.snd := rfl
 
 /-- Complex scalar multiplication: `(a + b i) • (x + i y) = (a x - b y) + i (b x + a y)`. -/
@@ -188,8 +199,6 @@ noncomputable def mapL (f : V →L[ℝ] V) : Cx V →ₗ[ℂ] Cx V where
 @[simp] lemma mapL_fst (f : V →L[ℝ] V) (p : Cx V) : (mapL f p).fst = f p.fst := rfl
 @[simp] lemma mapL_snd (f : V →L[ℝ] V) (p : Cx V) : (mapL f p).snd = f p.snd := rfl
 
-lemma mapL_comp (f g : V →L[ℝ] V) : mapL (f.comp g) = (mapL f).comp (mapL g) := by
-  ext p <;> simp
 
 @[simp] lemma mapL_id : mapL (ContinuousLinearMap.id ℝ V) = LinearMap.id := by
   ext p <;> simp
@@ -323,11 +332,5 @@ lemma spectrum_mapCLM [CompleteSpace V] (f : V →L[ℝ] V) :
   simp only [spectrum.mem_iff]
   rw [← mapCLM_algebraMap, mapCLM_sub, isUnit_mapCLM_iff]
 
-/-- A real number lies in the complex spectrum of `mapCLM f` exactly when it lies in the real
-spectrum of `f`. -/
-lemma ofReal_mem_spectrum_mapCLM_iff [CompleteSpace V] (f : V →L[ℝ] V) (r : ℝ) :
-    (r : ℂ) ∈ spectrum ℂ (mapCLM f) ↔ r ∈ spectrum ℝ f := by
-  rw [← spectrum_mapCLM f, ← spectrum.algebraMap_mem_iff ℂ]
-  rfl
 
 end Cx
