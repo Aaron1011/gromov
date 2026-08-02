@@ -1,5 +1,6 @@
 import Gromov.Gromov
 import Gromov.PolyTendstoTest
+import Gromov.FormalConjecturesCheck
 
 /-!
 # Gromov's theorem on groups of polynomial growth
