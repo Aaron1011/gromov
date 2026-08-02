@@ -2848,7 +2848,20 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
     obtain ⟨x, hx, x_inner⟩ := not_pos
     simp [ContinuousLinearMap.reApplyInnerSelf, P] at x_inner
     have laplace_inner_nonzero: √⟪Laplace ⟨x, hx⟩, ⟨x, hx⟩⟫ ≠ 0 := by
-      sorry
+      rw [Real.sqrt_ne_zero']
+      by_contra!
+      --
+      have nonneg := laplace_positive_semidefinite ⟨x, hx⟩
+      rw [laplace_self_adjoint] at nonneg
+      have foo := inner_laplace_zero ⟨x, hx⟩ (by
+        grind
+      )
+      simp [Δ, LinearMap.mkContinuous, Laplace_linear] at x_inner
+      simp [foo] at x_inner
+      apply laplace_zero_iff_zero at foo
+      simp [foo] at x_inner
+
+
     use ((√⟪Laplace ⟨x, hx⟩, ⟨x, hx⟩⟫)⁻¹) • ⟨x, hx⟩
     rw [inner_sub_left] at x_inner
     refine ⟨?_, ?_⟩
