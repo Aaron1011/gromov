@@ -2645,7 +2645,7 @@ lemma laplace_spectrum_contains_zero (f_n_limit: f_n_conv_delta_tendsto): 0 ∈ 
 set_option maxHeartbeats 600000 in
 lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp ℝ 2 volume (α := G)), ‖Laplace g‖ ≤ (1 : ℝ) / n ∧ ⟪Laplace g, g⟫ = 1 := by
 
-  let eps := (1: ℝ) / n
+  let eps := ((1: ℝ) / n)^2
   -- selfAdjoint.mem_spectrum_eq_re
 
   let P: Polynomial ℝ := (Polynomial.X^2 - eps • Polynomial.X)
@@ -2716,7 +2716,7 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
             simp
           .
             rename_i x_div_le
-            rw [div_le_one₀ (by simp [eps]; grind)] at x_div_le
+            rw [div_le_one₀ (by simp [eps]; positivity)] at x_div_le
             have x_lt: x < eps := by
               grind
 
@@ -2816,24 +2816,101 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
 
   rw [← Set.nonempty_iff_ne_empty] at spec_inter
   obtain ⟨a, ha⟩ := spec_inter
+
+
   have a_spec := Set.mem_of_mem_inter_left ha
-  simp [P] at a_spec
-  rw [spectrum.mem_iff] at a_spec
-  --rw [LinearMap.isUnit_iff_ker_eq_bot] at a_spec
-  rw [ContinuousLinearMap.isUnit_iff_bijective] at a_spec
+  have a_lt := Set.mem_of_mem_inter_right ha
 
 
-  have mem_spec: a ∈ spectrum ℝ (Polynomial.aeval Laplace_linear P) := by
+  have mem_spec: P.eval a ∈ spectrum ℝ (Polynomial.aeval Δ P) := by
     apply spectrum.subset_polynomial_aeval
     simp
     use a
 
-    simp_rw [spectrum.mem_iff]
-    sorry
+  have p_a_neg: P.eval a < 0 := by
+    simp [P]
+    simp at ha
+    nlinarith
+
+  have eval_symm: (((Polynomial.aeval Δ) P)).IsSymmetric := by
+    simp [P]
+    apply LinearMap.IsSymmetric.sub
+    . apply LinearMap.IsSymmetric.pow
+      apply Δ_symmetric
+    . apply LinearMap.IsSymmetric.smul
+      . simp
+      . apply Δ_symmetric
+
+
+  have not_pos := ContinuousLinearMap.IsPositive.spectrumRestricts (f := (Polynomial.aeval Δ P)).mt ?_
+  .
+    simp [ContinuousLinearMap.IsPositive, eval_symm] at not_pos
+    obtain ⟨x, hx, x_inner⟩ := not_pos
+    simp [ContinuousLinearMap.reApplyInnerSelf, P] at x_inner
+    have laplace_inner_nonzero: √⟪Laplace ⟨x, hx⟩, ⟨x, hx⟩⟫ ≠ 0 := by
+      sorry
+    use ((√⟪Laplace ⟨x, hx⟩, ⟨x, hx⟩⟫)⁻¹) • ⟨x, hx⟩
+    rw [inner_sub_left] at x_inner
+    refine ⟨?_, ?_⟩
+    .
+      rw [norm_eq_sqrt_real_inner]
+      simp [Δ, LinearMap.mkContinuous, Laplace_linear] at x_inner
+      rw [← laplace_self_adjoint] at x_inner
+      simp [inner_smul_left] at x_inner
+      simp
+      rw [laplace_smul]
+      rw [norm_smul]
+      simp
+      rw [← Real.lt_sqrt] at x_inner
+      . grw [x_inner]
+        rw [Real.sqrt_mul]
+        ring
+        rw [abs_of_nonneg]
+        .
+          field_simp
+          simp [eps]
+          grind
+        . simp
+        . simp [eps]
+      . simp
+
+    .
+      rw [laplace_smul]
+      rw [inner_smul_left, inner_smul_right]
+      simp
+      field_simp
+      rw [Real.sq_sqrt]
+      rw [← laplace_self_adjoint]
+      apply laplace_positive_semidefinite
+  . rw [SpectrumRestricts.nnreal_iff]
+    simp
+    use P.eval a
 
 
 
-  sorry
+  -- let g := cfc (fun (x: ℝ) => a) (Cx.mapCLM Δ)
+
+  -- have norm_g_le: ‖g‖ < eps := by
+  --   apply norm_cfc_lt
+  --   . simp [eps, hn]
+  --   . intro x hx
+  --     simp
+  --     simp at ha
+  --     grind
+
+  -- -- simp [P] at a_spec
+  -- -- rw [spectrum.mem_iff] at a_spec
+  -- -- --rw [LinearMap.isUnit_iff_ker_eq_bot] at a_spec
+  -- -- rw [ContinuousLinearMap.isUnit_iff_bijective] at a_spec
+
+
+  -- use g.fst
+
+
+
+
+
+
   -- This whole proof is completely wrong - it needs to use the spectral theorem
 
   -- have ball_open: IsOpen (Metric.ball (0 : Lp ℝ 2 volume (α := G)) (1 / n)) := by
