@@ -1247,7 +1247,8 @@ lemma fg_of_subgroup_fg_comm {A : Type*} [CommGroup A] [Group.FG A] (H : Subgrou
   rw [Submodule.fg_iff_addSubgroup_fg] at h
   simpa using h
 
-lemma fg_extension {A: Type*} [DecidableEq A] [Group A] (N: Subgroup A) [DecidableEq (A ⧸ N)] [N.Normal] (hN: N.FG) (hQ: Group.FG (A ⧸ N)): Group.FG A := by
+lemma fg_extension {A: Type*} [Group A] (N: Subgroup A) [N.Normal] (hN: N.FG) (hQ: Group.FG (A ⧸ N)): Group.FG A := by
+  classical
   obtain ⟨S_Q, hS_Q⟩ := hQ
   obtain ⟨S_N, hS_N⟩ := hN
   let SQ_out := Finset.image (fun (a: (A ⧸ N)) => a.out) S_Q
@@ -1293,6 +1294,19 @@ lemma fg_extension {A: Type*} [DecidableEq A] [Group A] (N: Subgroup A) [Decidab
 
   . simp
 
+lemma fg_domain_of_ker_range {A B: Type*} [Group A] [Group B] (f : A →* B) (hA: Subgroup.FG f.ker) (hB: Subgroup.FG f.range): Group.FG A := by
+  have new_fg := fg_extension (f.ker) hA
+  apply new_fg
+  have equiv := QuotientGroup.quotientKerEquivRange f
+  rw [← Group.fg_iff_subgroup_fg] at hB
+  apply Group.fg_of_surjective (f := equiv.symm.toMonoidHom)
+  simp
+  exact MulEquiv.surjective equiv.symm
+
+lemma Group.FG.of_mulEquiv {G H : Type*} [Group G] [Group H] (e : G ≃* H) (h : Group.FG G) :
+    Group.FG H :=
+  haveI := h
+  Group.fg_of_surjective (f := e.toMonoidHom) e.surjective
 
 set_option maxHeartbeats 5000000 in
 lemma fg_of_subgroup_fg_nilpotent {A: Type*} [DecidableEq A] [Group A] [Group.IsNilpotent A] (A_fg: Group.FG A) (H: Subgroup A): H.FG := by
@@ -1368,9 +1382,22 @@ lemma fg_of_subgroup_fg_nilpotent {A: Type*} [DecidableEq A] [Group A] [Group.Is
       rw [← Group.fg_iff_subgroup_fg] at n_fg
       apply fg_of_subgroup_fg_comm
 
-    have h_quot_fg := ih (Subgroup.map (QuotientGroup.mk' _) H)
-    have h_equiv :=  QuotientGroup.quotientInfEquivProdNormalQuotient H ((⊤ : Subgroup A).lowerCentralSeries n)
-    sorry
+
+    rw [← Group.fg_iff_subgroup_fg]
+    apply fg_domain_of_ker_range ((QuotientGroup.mk' ((⊤: Subgroup A).lowerCentralSeries n)).comp H.subtype)
+    .
+      -- The kernel is `N.subgroupOf H = (H ⊓ N).subgroupOf H`, which is the same abstract group as
+      -- `(H ⊓ N).subgroupOf N` — the version we proved FG using that `N` is abelian.
+      rw [← MonoidHom.comap_ker, QuotientGroup.ker_mk', Subgroup.comap_subtype,
+        ← Subgroup.inf_subgroupOf_left, ← Group.fg_iff_subgroup_fg]
+      exact Group.FG.of_mulEquiv
+        ((Subgroup.subgroupOfEquivOfLe inf_le_right).trans
+          (Subgroup.subgroupOfEquivOfLe inf_le_left).symm)
+        ((Group.fg_iff_subgroup_fg _).mpr h_inf_fg)
+    .
+      -- The range is the image of `H` in `A ⧸ Cⁿ A`, which is FG by the induction hypothesis.
+      rw [MonoidHom.range_comp, Subgroup.range_subtype]
+      exact ih (Subgroup.map (QuotientGroup.mk' _) H)
 
 lemma iterate_const (A: Type*) (k: A) (n: ℕ): (fun _ => k)^[n] k = k := by
   induction n with
