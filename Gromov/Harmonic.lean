@@ -2686,12 +2686,16 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
     have ramp_comp: Continuous ramp := by
       fun_prop
 
+    have self_adjoint_cx_del: IsSelfAdjoint (Cx.mapCLM Δ) := by
+      apply Cx.isSelfAdjoint_mapCLM
+      apply Δ_symmetric.isSelfAdjoint
+
 
     let Q := cfc (1 - ramp) (Cx.mapCLM Δ)
     have laplace_q: (Cx.mapCLM Δ) * Q = cfc (0: ℝ → ℝ) (Cx.mapCLM Δ) := by
       unfold Q
-      nth_rw 1 [← cfc_id (a := Cx.mapCLM Δ) ℝ (ha := by sorry)]
-      rw [← cfc_mul (hf := by sorry) (hg := by sorry)]
+      nth_rw 1 [← cfc_id (a := Cx.mapCLM Δ) ℝ]
+      rw [← cfc_mul (hf := by exact continuousOn_id) (hg := by fun_prop)]
       apply cfc_congr
       intro x hx
       simp [ramp, max_def']
@@ -2742,7 +2746,7 @@ lemma laplace_g_n (n: ℕ) (hn: 0 < n) (hf: f_n_conv_delta_tendsto): ∃ g: (Lp 
 
     simp at laplace_q
     have one_mem_q_spec: 1 ∈ spectrum ℝ Q := by
-      rw [cfc_map_spectrum (ha := by sorry) (hf := by sorry)]
+      rw [cfc_map_spectrum (hf := by fun_prop)]
       simp [ramp]
       use 0
       rw [Cx.spectrum_mapCLM]
