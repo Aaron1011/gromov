@@ -1247,12 +1247,52 @@ lemma fg_of_subgroup_fg_comm {A : Type*} [CommGroup A] [Group.FG A] (H : Subgrou
   rw [Submodule.fg_iff_addSubgroup_fg] at h
   simpa using h
 
-lemma fg_extension {A: Type*} [Group A] (N: Subgroup A) [N.Normal] (hN: N.FG) (hQ: Group.FG (A ⧸ N)): Group.FG A := by
+lemma fg_extension {A: Type*} [DecidableEq A] [Group A] (N: Subgroup A) [DecidableEq (A ⧸ N)] [N.Normal] (hN: N.FG) (hQ: Group.FG (A ⧸ N)): Group.FG A := by
   obtain ⟨S_Q, hS_Q⟩ := hQ
   obtain ⟨S_N, hS_N⟩ := hN
+  let SQ_out := Finset.image (fun (a: (A ⧸ N)) => a.out) S_Q
+  have SQ_eq: S_Q = Finset.image (QuotientGroup.mk' _) SQ_out := by
+    simp [SQ_out]
+    ext a
+    simp
 
+  rw [Group.fg_def, Subgroup.fg_iff]
+  rw [SQ_eq] at hS_Q
+  use S_N ∪ SQ_out
+  refine ⟨?_, ?_⟩
+  .
+    simp [SQ_out]
+    rw [Subgroup.closure_union]
+    simp [hS_N]
+    ext a
+    simp
+    by_cases mem_N: a ∈ N
+    . apply Subgroup.mem_sup_left
+      exact mem_N
+    .
+      let a_map: (A ⧸ N) := a
+      have a_mem_top: a_map ∈ (⊤ : Subgroup (A ⧸ N)) := by
+        simp
 
-  sorry
+      rw [← hS_Q] at a_mem_top
+      simp only [Finset.coe_image] at a_mem_top
+      rw [← MonoidHom.map_closure] at a_mem_top
+      simp at a_mem_top
+      obtain ⟨k, hk⟩ := a_mem_top
+      simp [SQ_out] at hk
+      simp [a_map] at hk
+      have a_eq := hk.2
+      rw [QuotientGroup.eq] at a_eq
+      rw [← Subgroup.mul_mem_cancel_left (x := k⁻¹)]
+      .
+        apply Subgroup.mem_sup_left
+        exact a_eq
+      . apply Subgroup.mem_sup_right
+        simp
+        exact hk.1
+
+  . simp
+
 
 set_option maxHeartbeats 5000000 in
 lemma fg_of_subgroup_fg_nilpotent {A: Type*} [DecidableEq A] [Group A] [Group.IsNilpotent A] (A_fg: Group.FG A) (H: Subgroup A): H.FG := by
