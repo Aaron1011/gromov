@@ -23,14 +23,6 @@ open Subgroup Pointwise Finset
 open scoped Pointwise Finset
 open scoped commutatorElement IsMulCommutative
 
-set_option maxSynthPendingDepth 1
-
--- The `open scoped IsMulCommutative` above activates a low-priority
--- `Group + IsMulCommutative ⇒ CommGroup` instance.  Combined with Mathlib's
--- build-wide `maxSynthPendingDepth 3`, synthesizing the group structure of
--- `↥(Matrix.unitaryGroup (Fin n) ℂ)` blows up the instance search.  Reverting
--- to the historical default depth keeps that synthesis fast.
-set_option maxSynthPendingDepth 1
 
 -- Like 'mem_closure_prod_list', but without requring that the generating set be symmetric
 lemma weak_mem_closure_prod_list {G: Type*} [Group G] (S: Set G) (x: G) (hx: x ∈ Subgroup.closure S): ∃ l: List (↑(S ∪ S⁻¹)), l.unattach.prod = x := by

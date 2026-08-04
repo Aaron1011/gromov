@@ -22,7 +22,6 @@ open Subgroup Pointwise Finset
 open scoped Pointwise Finset
 open scoped commutatorElement IsMulCommutative
 
-set_option maxSynthPendingDepth 1
 
 set_option synthInstance.maxHeartbeats 100000 in
 set_option maxHeartbeats 2000000 in

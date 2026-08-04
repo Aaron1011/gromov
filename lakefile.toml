@@ -2,11 +2,10 @@ name = "gromov"
 defaultTargets = ["Gromov"]
 
 # Mirrors `mathlibLeanOptions` in mathlib's own lakefile: these files were developed inside
-# mathlib and elaborate differently without them (`maxSynthPendingDepth` in particular).
+# mathlib and elaborate differently without them.
 [leanOptions]
 pp.unicode.fun = true
 autoImplicit = false
-maxSynthPendingDepth = 3
 
 [[require]]
 name = "mathlib"

@@ -367,7 +367,8 @@ def isembedding_units_val := Units.isEmbedding_val_mk' (M := (W →L[ℝ] W)) (f
 --borelize (W →L[ℝ] W)ˣ
 
 
-#synth ContinuousMul (W →L[ℝ] W)
+-- (dropped `#synth ContinuousMul (W →L[ℝ] W)`: a leftover diagnostic that only
+-- resolves at a raised `maxSynthPendingDepth`, and nothing in the development needs it)
 
 
 #synth NormedAddCommGroup (W)

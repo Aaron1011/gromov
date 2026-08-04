@@ -81,8 +81,10 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ v_data: V_Wrapper, grow
 
   let phi_u := (phi data).domRestrict (U.submoduleOf v_data.V)
   have phi_u_inj: Function.Injective phi_u := by
-    rw [← LinearMap.ker_eq_bot]
-    rw [LinearMap.ker_eq_bot']
+    -- `phi_u` lands in a nested linear-map type; naming `f` explicitly avoids a
+    -- metavariable whose instance would need a deeper `synthPending` than the default.
+    rw [← LinearMap.ker_eq_bot (f := phi_u)]
+    rw [LinearMap.ker_eq_bot' (f := phi_u)]
     intro u hu
 
     have u_le := lemma_3_26_a data u

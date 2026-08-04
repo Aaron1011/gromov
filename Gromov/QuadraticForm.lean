@@ -121,7 +121,10 @@ lemma Q_R_lin_sub_pos_semi_def (V : Submodule ℝ LipschitzH) (R_1 R_2: ℝ) (hr
   rw [LinearMap.isPosSemidef_def]
   refine ⟨?_, ?_⟩
   .
-    rw [sub_eq_add_neg]
+    -- `Q_R_lin` lands in a nested linear-map type `V →ₗ⋆[ℝ] V →ₗ[ℝ] ℝ`; giving
+    -- `sub_eq_add_neg` its arguments explicitly avoids a metavariable whose `Sub`
+    -- instance would need a deeper `synthPending` than the default depth allows.
+    rw [sub_eq_add_neg (Q_R_lin V R_2) (Q_R_lin V R_1)]
     apply LinearMap.IsSymm.add
     . apply Q_R_lin_symm
     .

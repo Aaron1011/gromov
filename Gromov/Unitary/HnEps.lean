@@ -21,7 +21,6 @@ open Subgroup Pointwise Finset
 open scoped Pointwise Finset
 open scoped commutatorElement IsMulCommutative
 
-set_option maxSynthPendingDepth 1
 
 open scoped Pointwise Finset
 

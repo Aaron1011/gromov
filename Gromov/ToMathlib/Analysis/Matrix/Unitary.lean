@@ -12,6 +12,13 @@ direct sum of the eigenspaces of that element.
 
 public section
 
+-- `centralizer_iso` needs `maxSynthPendingDepth 3`. Its proof rewrites with
+-- `LinearMap.adjoint_toContinuousLinearMap` (and friends) at four points, each time leaving
+-- the linear map and its space as metavariables whose instances need two levels of nested
+-- `synthPending`; Lean's default depth is 1. The principled fix is to supply those arguments
+-- explicitly, but that means threading them through a 660-line proof, so the depth is raised
+-- here instead. This is the only place in the project that still needs it.
+set_option maxSynthPendingDepth 3 in
 set_option maxHeartbeats 4000000 in
 set_option synthInstance.maxHeartbeats 100000 in
 lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) (g_not: ∀ z: ℂ, g.val.val ≠ z • 1):
