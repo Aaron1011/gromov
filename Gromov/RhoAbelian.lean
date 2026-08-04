@@ -34,6 +34,10 @@ set_option maxHeartbeats 9000000
 
 open scoped RealInnerProductSpace in
 attribute [-simp] Subgroup.map_toSubmonoid in
+-- `rho_g_contains_abelian` needs `maxSynthPendingDepth 3`: synthesizing
+-- `ContinuousMul (W →L[ℝ] W)` (and the `IsCompact` rewrite that follows from it) takes two
+-- levels of nested `synthPending`, and Lean's default is 1.
+set_option maxSynthPendingDepth 3 in
 set_option maxHeartbeats 2000000 in
 set_option synthInstance.maxHeartbeats 600000 in
 --set_option trace.Meta.synthInstance true in

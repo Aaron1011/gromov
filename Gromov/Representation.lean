@@ -367,8 +367,10 @@ def isembedding_units_val := Units.isEmbedding_val_mk' (M := (W →L[ℝ] W)) (f
 --borelize (W →L[ℝ] W)ˣ
 
 
--- (dropped `#synth ContinuousMul (W →L[ℝ] W)`: a leftover diagnostic that only
--- resolves at a raised `maxSynthPendingDepth`, and nothing in the development needs it)
+-- (dropped a `#synth ContinuousMul (W →L[ℝ] W)` diagnostic here: it only resolves at a
+-- raised `maxSynthPendingDepth`. The instance itself *is* needed -- see
+-- `rho_g_contains_abelian`, which raises the depth for exactly this reason -- but a bare
+-- `#synth` is not worth carrying a build-wide option for.)
 
 
 #synth NormedAddCommGroup (W)
