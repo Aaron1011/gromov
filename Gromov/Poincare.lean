@@ -1,11 +1,15 @@
-import Mathlib
-import Gromov.Packing
+module
+
+public import Mathlib
+public import Gromov.Packing
 
 /-!
 # The Poincaré inequality
 
 `poincare_inequality` and the packing-averaged form `lemma_3_25_poincare`.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

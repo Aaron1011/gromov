@@ -1,10 +1,14 @@
-import Mathlib
+module
+
+public import Mathlib
 
 /-!
 # Infixes of lists
 
 General-purpose material extracted from the Gromov development, destined for mathlib.
 -/
+
+@[expose] public section
 
 open scoped Finset
 

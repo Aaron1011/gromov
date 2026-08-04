@@ -1,10 +1,14 @@
-import Mathlib
+module
+
+public import Mathlib
 
 /-!
 # Positive semidefinite matrices
 
 General-purpose material extracted from the Gromov development, destined for mathlib.
 -/
+
+@[expose] public section
 
 -- TODO - generalize and upstream
 -- Based on https://math.stackexchange.com/questions/1101184/show-that-if-x-succeq-y-then-detx-ge-dety

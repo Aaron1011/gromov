@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.Unipotent.GammaN
+module
+
+public import Mathlib
+public import Gromov.Unipotent.GammaN
 
 /-!
 # Triviality of the unipotent commutator
@@ -8,6 +10,8 @@ import Gromov.Unipotent.GammaN
 
 Root of the `Gromov.Unipotent` hierarchy.
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 set_option linter.style.commandStart false

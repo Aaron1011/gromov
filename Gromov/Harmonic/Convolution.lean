@@ -1,12 +1,14 @@
-import Mathlib
-import Gromov.Vendor.Carleson
-import Gromov.Defs
-import Gromov.LipschitzNorm
-import Gromov.Theorem323
-import Gromov.TendstoTactic
-import Gromov.TendstoNhdsMul
-import Gromov.Convolution
-import Gromov.Complexification
+module
+
+public import Mathlib
+public import Gromov.Vendor.Carleson
+public import Gromov.Defs
+public import Gromov.LipschitzNorm
+public import Gromov.Theorem323
+public import Gromov.TendstoTactic
+public import Gromov.TendstoNhdsMul
+public import Gromov.Convolution
+public import Gromov.Complexification
 
 /-!
 # Convolution and the Laplacian
@@ -14,6 +16,8 @@ import Gromov.Complexification
 Basic compatibility of the discrete Laplacian with convolution: additivity, scalar
 multiplication, and `laplace_conv_eq_laplace_right`.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

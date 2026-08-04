@@ -1,11 +1,15 @@
-import Mathlib
-import Gromov.Harmonic.Proposition318
+module
+
+public import Mathlib
+public import Gromov.Harmonic.Proposition318
 
 /-!
 # Existence of a nontrivial harmonic function: first case
 
 `nontrivial_harmonic_case_one`.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

@@ -1,11 +1,15 @@
-import Mathlib.Analysis.Polynomial.Basic
-import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
-import Mathlib.Analysis.Asymptotics.Lemmas
-import Mathlib.Order.Filter.AtTopBot.Archimedean
-import Mathlib.Tactic.ComputeDegree
-import Mathlib.Tactic.NormNum
-import Mathlib.Tactic.Ring
+module
 
+public import Mathlib.Analysis.Polynomial.Basic
+public import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
+public import Mathlib.Analysis.Asymptotics.Lemmas
+public import Mathlib.Order.Filter.AtTopBot.Archimedean
+public import Mathlib.Tactic.ComputeDegree
+public import Mathlib.Tactic.NormNum
+public import Mathlib.Tactic.Ring
+
+
+@[expose] public section
 set_option linter.style.longLine false
 
 /-!
@@ -75,6 +79,8 @@ theorem tendsto_shift_comp' {g : ℝ → ℝ} (c : ℝ)
     (h : Tendsto g atTop (nhds 0)) :
     Tendsto (fun x : ℝ => g (c + x)) atTop (nhds 0) :=
   h.comp (tendsto_atTop_add_const_left atTop c tendsto_id)
+
+public meta section
 
 open Lean Elab Term Tactic Meta
 
@@ -379,5 +385,7 @@ for polynomial-like `N`, `D` with `deg N < deg D`, over `ℕ` or `ℝ`. Supports
 `ℕ` exponents (e.g. `x ^ (d + 3)`) as long as the denominator is a single monomial,
 in which case the degree comparisons are discharged by `omega`. -/
 elab "poly_tendsto" : tactic => core
+
+end
 
 end PolyTendsto

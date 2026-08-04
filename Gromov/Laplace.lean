@@ -1,19 +1,23 @@
-import Mathlib
-import Gromov.ToMathlib.GroupTheory.CosetCover
-import Gromov.Complexification
-import Gromov.Defs
-import Gromov.Harmonic
-import Gromov.UnitaryGromov
-import Gromov.UnipotentGromov
-import Gromov.NilpotentFinite
-import Gromov.ToMathlib.GroupTheory.Closure
-import Gromov.ToMathlib.Data.ENNReal.Basic
-import Gromov.ToMathlib.Data.List.Finite
-import Gromov.ToMathlib.Algebra.Group.Pointwise.Finset
+module
+
+public import Mathlib
+public import Gromov.ToMathlib.GroupTheory.CosetCover
+public import Gromov.Complexification
+public import Gromov.Defs
+public import Gromov.Harmonic
+public import Gromov.UnitaryGromov
+public import Gromov.UnipotentGromov
+public import Gromov.NilpotentFinite
+public import Gromov.ToMathlib.GroupTheory.Closure
+public import Gromov.ToMathlib.Data.ENNReal.Basic
+public import Gromov.ToMathlib.Data.List.Finite
+public import Gromov.ToMathlib.Algebra.Group.Pointwise.Finset
 
 /-!
 # The discrete Laplacian on `Lp 2`
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false

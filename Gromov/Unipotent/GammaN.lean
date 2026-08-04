@@ -1,11 +1,15 @@
-import Mathlib
-import Gromov.Unipotent.FG
+module
+
+public import Mathlib
+public import Gromov.Unipotent.FG
 
 /-!
 # Existence of a unipotent `γ_n`
 
 `exists_gamma_n_unipotent_center_N'` and `exists_gamma_n_unipotent_N'`.
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 set_option linter.style.commandStart false

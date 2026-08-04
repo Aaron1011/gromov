@@ -1,12 +1,16 @@
-import Mathlib
-import Gromov.ToMathlib.LinearAlgebra.Matrix.PosDef
-import Gromov.ToMathlib.LinearAlgebra.Matrix.ToMatrix
+module
+
+public import Mathlib
+public import Gromov.ToMathlib.LinearAlgebra.Matrix.PosDef
+public import Gromov.ToMathlib.LinearAlgebra.Matrix.ToMatrix
 
 /-!
 # Determinants of matrices of bilinear forms
 
 General-purpose material extracted from the Gromov development, destined for mathlib.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

@@ -1,4 +1,6 @@
-import Mathlib
+module
+
+public import Mathlib
 
 /-!
 # Subset sums of matrix powers
@@ -6,6 +8,8 @@ import Mathlib
 The `DerivedSets` machinery and the estimate `subsums_unique`: distinct subsets of `[a,b)` give
 distinct sums of `Aᵏ • v` when `A` has an eigenvalue of norm `≥ 3`.
 -/
+
+@[expose] public section
 
 open scoped Finset
 open scoped Pointwise

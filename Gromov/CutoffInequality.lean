@@ -1,17 +1,21 @@
-import Mathlib
-import Gromov.Defs
-import Gromov.LipschitzNorm
-import Gromov.TendstoTactic
-import Gromov.TendstoNhdsMul
-import Gromov.ToMathlib.LinearAlgebra.Matrix.PosDef
-import Gromov.ToMathlib.LinearAlgebra.Matrix.ToMatrix
-import Gromov.ToMathlib.LinearAlgebra.Matrix.Det
+module
+
+public import Mathlib
+public import Gromov.Defs
+public import Gromov.LipschitzNorm
+public import Gromov.TendstoTactic
+public import Gromov.TendstoNhdsMul
+public import Gromov.ToMathlib.LinearAlgebra.Matrix.PosDef
+public import Gromov.ToMathlib.LinearAlgebra.Matrix.ToMatrix
+public import Gromov.ToMathlib.LinearAlgebra.Matrix.Det
 
 /-!
 # The cutoff inequality
 
 `cutoff_inequality`, the discrete integration-by-parts estimate underlying Theorem 3.23.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

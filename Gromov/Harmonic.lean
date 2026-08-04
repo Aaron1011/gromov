@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.Harmonic.CaseOne
+module
+
+public import Mathlib
+public import Gromov.Harmonic.CaseOne
 
 /-!
 # Existence of a nontrivial harmonic function
@@ -8,6 +10,8 @@ import Gromov.Harmonic.CaseOne
 
 Root of the `Gromov.Harmonic` hierarchy.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

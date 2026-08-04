@@ -1,4 +1,6 @@
-import Mathlib
+module
+
+public import Mathlib
 
 /-!
 # The `Generates` class and the word metric
@@ -7,6 +9,8 @@ The `Generates` class packaging a finitely generated group with a symmetric gene
 definition of polynomial growth, and the word norm / word metric on `G` with its `MetricSpace`
 instance.
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false

@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.Defs.Measure
+module
+
+public import Mathlib
+public import Gromov.Defs.Measure
 
 /-!
 # Lipschitz harmonic functions
@@ -7,6 +9,8 @@ import Gromov.Defs.Measure
 The type `LipschitzH` of Lipschitz harmonic functions on `G`, its additive and vector space
 structure, and finiteness of balls.
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false

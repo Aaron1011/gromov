@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.Unitary.WeylTrick
+module
+
+public import Mathlib
+public import Gromov.Unitary.WeylTrick
 
 /-!
 # The sets `H_n` and their upper bounds
@@ -7,6 +9,8 @@ import Gromov.Unitary.WeylTrick
 The `HnEpsData` bundle of standing hypotheses, the sets `H_n eps`, and upper bounds on products
 of their elements.
 -/
+
+@[expose] public section
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 

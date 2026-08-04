@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.Unitary.Basic
+module
+
+public import Mathlib
+public import Gromov.Unitary.Basic
 
 /-!
 # Volume packing in the unitary group
@@ -7,6 +9,8 @@ import Gromov.Unitary.Basic
 `volume_packing`, bounding how many almost-orthogonal translates fit in a ball, together with
 the auxiliary inner product `FreshInnerProduct`.
 -/
+
+@[expose] public section
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 

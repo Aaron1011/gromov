@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.Unipotent.Commutator
+module
+
+public import Mathlib
+public import Gromov.Unipotent.Commutator
 
 /-!
 # Finite generation of subgroups
@@ -7,6 +9,8 @@ import Gromov.Unipotent.Commutator
 That subgroups of finitely generated abelian and nilpotent groups are finitely generated, plus
 the supporting transfer lemmas along homomorphisms.
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 set_option linter.style.commandStart false

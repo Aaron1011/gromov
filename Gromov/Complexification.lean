@@ -1,4 +1,6 @@
-import Mathlib
+module
+
+public import Mathlib
 
 /-!
 # Complexification of a real inner product space
@@ -17,6 +19,8 @@ This is the device that lets the Gromov development keep its Lipschitz harmonic 
 real-valued while still feeding the (irreducibly complex) compact-Lie / unitary-trick step:
 the real representation is complexified here, just before the unitary machinery is invoked.
 -/
+
+@[expose] public section
 
 open scoped ComplexConjugate
 

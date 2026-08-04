@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.BoundedDoubling
+module
+
+public import Mathlib
+public import Gromov.BoundedDoubling
 
 /-!
 # Theorem 3.23
@@ -10,6 +12,8 @@ functions.
 Root of the Theorem 3.23 hierarchy: importing it pulls in the cutoff inequality, the quadratic
 form, the packing argument and the Poincaré inequality.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

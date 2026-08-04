@@ -1,4 +1,6 @@
-import Mathlib
+module
+
+public import Mathlib
 
 /-!
 # Right coset covers by a constant subgroup
@@ -8,6 +10,8 @@ Right-handed analogues of the `leftCoset_cover_const` results in
 
 Upstreaming status: ready modulo style (line lengths, `simp` squeezing).
 -/
+
+@[expose] public section
 
 open scoped Pointwise
 

@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.Harmonic.SelfAdjoint
+module
+
+public import Mathlib
+public import Gromov.Harmonic.SelfAdjoint
 
 /-!
 # Proposition 3.18
@@ -7,6 +9,8 @@ import Gromov.Harmonic.SelfAdjoint
 `proposition_3_18` and the auxiliary functions `G_n` used to produce an almost-harmonic
 sequence.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

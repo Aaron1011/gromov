@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.Harmonic.LaplaceLinear
+module
+
+public import Mathlib
+public import Gromov.Harmonic.LaplaceLinear
 
 /-!
 # Self-adjointness and the spectrum of the Laplacian
@@ -7,6 +9,8 @@ import Gromov.Harmonic.LaplaceLinear
 `laplace_self_adjoint`, `laplace_positive_semidefinite`, and that `0` lies in the spectrum of
 `Δ`.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

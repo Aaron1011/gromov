@@ -3,8 +3,10 @@ Copyright (c) 2024 Aaron Hill. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Hill
 -/
-import Mathlib
-import Gromov.Defs
+module
+
+public import Mathlib
+public import Gromov.Defs
 
 /-!
 # The Lipschitz seminorm on `LipschitzH`
@@ -16,6 +18,8 @@ lemmas about it, and the resulting `SeminormedAddCommGroup` / `NormedSpace` inst
 Note that we only implement `SeminormedAddCommGroup` for `LipschitzH`, so this is only really a
 seminormed space. The quotient space `W := LipschitzH ⧸ ConstF` is an actual normed space.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

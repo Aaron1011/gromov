@@ -1,11 +1,15 @@
-import Mathlib
-import Gromov.Lemma326
+module
+
+public import Mathlib
+public import Gromov.Lemma326
 
 /-!
 # A subspace with bounded doubling
 
 `exists_bounded_doubling_subspace`, the main output of the `V_Wrapper` section.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

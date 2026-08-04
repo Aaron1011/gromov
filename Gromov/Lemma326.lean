@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.Poincare
+module
+
+public import Mathlib
+public import Gromov.Poincare
 
 /-!
 # Lemma 3.26 and basis changes
@@ -7,6 +9,8 @@ import Gromov.Poincare
 `lemma_3_26_a` together with the behaviour of `Q_R_matrix` and `growth_bound` under a change of
 basis.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

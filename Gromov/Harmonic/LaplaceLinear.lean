@@ -1,11 +1,15 @@
-import Mathlib
-import Gromov.Harmonic.MuConv
+module
+
+public import Mathlib
+public import Gromov.Harmonic.MuConv
 
 /-!
 # The Laplacian as a linear map on `L²`
 
 `Laplace_linear`, the normalised functions `F_n`, and the limit `F_n_conv_mu_lim`.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

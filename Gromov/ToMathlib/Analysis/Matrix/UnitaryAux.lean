@@ -1,11 +1,15 @@
-import Mathlib
-import Gromov.ToMathlib.Analysis.Matrix.StarNormalEigen
+module
+
+public import Mathlib
+public import Gromov.ToMathlib.Analysis.Matrix.StarNormalEigen
 
 /-!
 # Unitary matrices: helper lemmas
 
 General-purpose material extracted from the Gromov development, destined for mathlib.
 -/
+
+@[expose] public section
 
 lemma diag_of_eigenspace_span {A: Type*} [Nontrivial A] [AddCommGroup A] [Module ℂ A] (g: A →ₗ[ℂ] A) (k: ℂ) (hg: Module.End.eigenspace g k = ⊤):
   g = k • 1 := by

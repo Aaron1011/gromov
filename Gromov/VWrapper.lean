@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.QuadraticForm
+module
+
+public import Mathlib
+public import Gromov.QuadraticForm
 
 /-!
 # The bundled subspace `V_Wrapper` and good scales
@@ -7,6 +9,8 @@ import Gromov.QuadraticForm
 The `V_Wrapper` class bundling the standing hypotheses on `V`, and the scale functions `f`, `h`
 used to locate a scale at which the growth of `V` is almost multiplicative.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

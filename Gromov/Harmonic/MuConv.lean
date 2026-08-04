@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.Harmonic.Convolution
+module
+
+public import Mathlib
+public import Gromov.Harmonic.Convolution
 
 /-!
 # Iterated convolution with `mu`
@@ -7,6 +9,8 @@ import Gromov.Harmonic.Convolution
 `mu_conv_eq_sum` expressing `muConv` as a sum over tuples, its nonnegativity and `L¹` norm, and
 the telescoping identity `f_n_sub_conv`.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

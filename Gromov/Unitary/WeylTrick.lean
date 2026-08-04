@@ -1,11 +1,15 @@
-import Mathlib
-import Gromov.Unitary.Packing
+module
+
+public import Mathlib
+public import Gromov.Unitary.Packing
 
 /-!
 # The unitarian trick
 
 `new_weyl_unitarian_trick`: a bounded subgroup of `GL` is conjugate into the unitary group.
 -/
+
+@[expose] public section
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 

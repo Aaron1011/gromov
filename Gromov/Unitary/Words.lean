@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.Unitary.HnLowerBound
+module
+
+public import Mathlib
+public import Gromov.Unitary.HnLowerBound
 
 /-!
 # Distinct words in `H_n`
@@ -7,6 +9,8 @@ import Gromov.Unitary.HnLowerBound
 `words_distinct` and the resulting cardinality bound `H_n_ball_S_card` for balls in the word
 metric.
 -/
+
+@[expose] public section
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 

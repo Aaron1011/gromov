@@ -1,10 +1,14 @@
-import Mathlib
+module
+
+public import Mathlib
 
 /-!
 # Subgroup closures
 
 General-purpose material extracted from the Gromov development, destined for mathlib.
 -/
+
+@[expose] public section
 
 open scoped Pointwise Finset
 

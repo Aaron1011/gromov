@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.ToMathlib.Analysis.Matrix.UnitaryAux
+module
+
+public import Mathlib
+public import Gromov.ToMathlib.Analysis.Matrix.UnitaryAux
 
 /-!
 # The centralizer of a non-scalar unitary matrix
@@ -7,6 +9,8 @@ import Gromov.ToMathlib.Analysis.Matrix.UnitaryAux
 `centralizer_iso`: a subgroup of the unitary group containing a non-scalar element splits as a
 direct sum of the eigenspaces of that element.
 -/
+
+@[expose] public section
 
 set_option maxHeartbeats 4000000 in
 set_option synthInstance.maxHeartbeats 100000 in

@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.ThreeTwoGrowth
+module
+
+public import Mathlib
+public import Gromov.ThreeTwoGrowth
 
 /-!
 # The sets `S_n` generate the kernel
@@ -7,6 +9,8 @@ import Gromov.ThreeTwoGrowth
 `e_i_and_gamma_generates_G`, `three_two_gamma_m_generates` and the finite generation of the
 kernel of `φ`.
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false

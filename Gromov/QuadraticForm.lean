@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.HarmonicR2
+module
+
+public import Mathlib
+public import Gromov.HarmonicR2
 
 /-!
 # The quadratic form `Q_R` and its determinant bound
@@ -7,6 +9,8 @@ import Gromov.HarmonicR2
 The quadratic form `Q_R` on `LipschitzH`, its matrix `Q_R_matrix`, positive-definiteness, and
 the determinant bound `det_bound` for a fixed finite-dimensional subspace `V`.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

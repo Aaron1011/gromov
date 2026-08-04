@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.GrowthZero
+module
+
+public import Mathlib
+public import Gromov.GrowthZero
 
 /-!
 # Gromov's theorem on groups of polynomial growth
@@ -7,6 +9,8 @@ import Gromov.GrowthZero
 `theorem_3_1`, the inductive step, and the main result `main_gromov_theorem`: a finitely
 generated group of polynomial growth is virtually nilpotent.
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false

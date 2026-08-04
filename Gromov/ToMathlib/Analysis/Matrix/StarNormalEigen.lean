@@ -10,8 +10,12 @@ The following was proved by Aristotle:
     f.maxGenEigenspace k = f.eigenspace k
 -/
 
-import Mathlib
+module
 
+public import Mathlib
+
+
+@[expose] public section
 lemma star_normal_toContinuousLinearMap {A: Type*} [NormedAddCommGroup A] [InnerProductSpace ℂ A] [FiniteDimensional ℂ A]  (f: A →ₗ[ℂ] A):
     IsStarNormal f ↔ IsStarNormal (LinearMap.toContinuousLinearMap f) := by
 

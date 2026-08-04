@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.VWrapper
+module
+
+public import Mathlib
+public import Gromov.VWrapper
 
 /-!
 # Ball packing at a good scale
@@ -7,6 +9,8 @@ import Gromov.VWrapper
 The packing sets `B`, `B_half`, `B_3` at a good scale, their finiteness and disjointness, and
 the intersection-multiplicity bound `card_B_le_exp_wa`.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

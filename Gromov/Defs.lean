@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.Defs.Convolution
+module
+
+public import Mathlib
+public import Gromov.Defs.Convolution
 
 /-!
 # The discrete Laplacian and the `G`-action
@@ -10,6 +12,8 @@ The Laplacian `Laplace_b` / `Laplace`, the constant functions `ConstF`, the quot
 Root of the `Gromov.Defs` hierarchy: importing it pulls in the word metric, the measure
 structure, `LipschitzH` and the convolution API.
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false

@@ -1,11 +1,15 @@
-import Mathlib
-import Gromov.Theorem38
+module
+
+public import Mathlib
+public import Gromov.Theorem38
 
 /-!
 # `rho_g` contains a finite-index abelian subgroup
 
 `rho_g_contains_abelian`, the bundled input `Theorem3_1_Input`, and the infinite-image case.
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false

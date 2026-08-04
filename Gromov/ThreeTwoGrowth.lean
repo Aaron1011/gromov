@@ -1,11 +1,15 @@
-import Mathlib
-import Gromov.Theorem31Input
+module
+
+public import Mathlib
+public import Gromov.Theorem31Input
 
 /-!
 # Polynomial growth of the sets `S_n`
 
 `new_three_two_poly_growth` and `three_poly_poly_growth_all_s_n`.
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false

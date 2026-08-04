@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.Defs.LipschitzH
+module
+
+public import Mathlib
+public import Gromov.Defs.LipschitzH
 
 /-!
 # Convolution on `G`
@@ -7,6 +9,8 @@ import Gromov.Defs.LipschitzH
 The convolution `Conv`, the measure `mu` and its iterates `muConv`, and the `Lp` packaging
 `conv_mu_lp2`.
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false

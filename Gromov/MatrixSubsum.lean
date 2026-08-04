@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.MatrixSubsum.Subsums
+module
+
+public import Mathlib
+public import Gromov.MatrixSubsum.Subsums
 
 /-!
 # Eigenvalues of integer matrices and unipotence
@@ -9,6 +11,8 @@ therefore unipotent after passing to a power.
 
 Root of the `Gromov.MatrixSubsum` hierarchy.
 -/
+
+@[expose] public section
 
 open scoped Finset
 open scoped Pointwise

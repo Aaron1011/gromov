@@ -1,4 +1,6 @@
-import Mathlib
+module
+
+public import Mathlib
 
 /-!
 # Products of one-sided limits
@@ -7,6 +9,8 @@ Staging ground for `Filter.TendstoNhdsWithinIoi.mul`, the two-function analogue 
 `Filter.TendstoNhdsWithinIoi.const_mul` / `Filter.TendstoNhdsWithinIoi.mul_const` lemmas in
 `Mathlib.Topology.Algebra.Monoid`. Intended to be upstreamed into that file later.
 -/
+
+@[expose] public section
 
 open Filter Topology Set
 

@@ -1,4 +1,6 @@
-import Gromov.Gromov
+module
+
+public import Gromov.Gromov
 
 /-!
 # Cross-check of `main_gromov_theorem` against the `formal-conjectures` statement
@@ -27,6 +29,8 @@ The two statements measure growth differently -- balls `CayleyBall S n` of words
 in `S ∪ S⁻¹` there, versus `S ^ n` for a symmetric `S ∋ 1` here -- so the bridge is
 `coe_normGen_pow`, which says the two agree once the generating set is normalized.
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 

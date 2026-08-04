@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.Representation
+module
+
+public import Mathlib
+public import Gromov.Representation
 
 /-!
 # Theorem 3.8
@@ -7,6 +9,8 @@ import Gromov.Representation
 `theorem_3_8` and its real form: a group of polynomial growth admits a nontrivial
 finite-dimensional representation.
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false

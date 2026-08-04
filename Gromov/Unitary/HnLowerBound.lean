@@ -1,11 +1,15 @@
-import Mathlib
-import Gromov.Unitary.HnEps
+module
+
+public import Mathlib
+public import Gromov.Unitary.HnEps
 
 /-!
 # A lower bound for powers in `H_n`
 
 The real auxiliary function `f` and the resulting lower bound `H_n_single_pow_lower_bound`.
 -/
+
+@[expose] public section
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 

@@ -1,11 +1,15 @@
-import Mathlib
-import Gromov.Unitary.Words
+module
+
+public import Mathlib
+public import Gromov.Unitary.Words
 
 /-!
 # The centrally trivial case
 
 `H_n_contradiction` and `central_trivial_virtually_abelian`.
 -/
+
+@[expose] public section
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 

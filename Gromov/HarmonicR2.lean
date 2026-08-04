@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.CutoffInequality
+module
+
+public import Mathlib
+public import Gromov.CutoffInequality
 
 /-!
 # The harmonic `R²` inequality
@@ -7,6 +9,8 @@ import Gromov.CutoffInequality
 `harmonic_r2_inequality`, bounding a harmonic function on a ball of radius `R` by its values on
 a ball of radius `2R`.
 -/
+
+@[expose] public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

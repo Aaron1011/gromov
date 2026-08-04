@@ -1,10 +1,12 @@
-import Mathlib
-import Gromov.MatrixSubsum
-import Gromov.AbelianFg
-import Gromov.ToMathlib.GroupTheory.Closure
-import Gromov.ToMathlib.GroupTheory.Nilpotent
-import Gromov.ToMathlib.Data.List.Infix
-import Gromov.ToMathlib.Order.Prod.Lex
+module
+
+public import Mathlib
+public import Gromov.MatrixSubsum
+public import Gromov.AbelianFg
+public import Gromov.ToMathlib.GroupTheory.Closure
+public import Gromov.ToMathlib.GroupTheory.Nilpotent
+public import Gromov.ToMathlib.Data.List.Infix
+public import Gromov.ToMathlib.Order.Prod.Lex
 
 /-!
 # Iterated commutators and the lower central series
@@ -12,6 +14,8 @@ import Gromov.ToMathlib.Order.Prod.Lex
 `iteratedCommutator`, the generating sets `iterate_comm_set`, and
 `lower_central_generates_succ`.
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 set_option linter.style.commandStart false

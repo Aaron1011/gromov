@@ -1,11 +1,15 @@
-import Mathlib
-import Gromov.ThreeTwoGenerates
+module
+
+public import Mathlib
+public import Gromov.ThreeTwoGenerates
 
 /-!
 # Polynomial growth of the kernel, and growth exponent zero
 
 `three_two_kernel_poly_growth`, and that a group of growth exponent zero is finite.
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false

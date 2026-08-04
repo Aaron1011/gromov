@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.Defs.WordMetric
+module
+
+public import Mathlib
+public import Gromov.Defs.WordMetric
 
 /-!
 # Topology, measurability and Haar measure on `G`
@@ -7,6 +9,8 @@ import Gromov.Defs.WordMetric
 `G` is discrete, so its Haar measure is the counting measure. This file records the Borel and
 measure-space instances and the resulting a.e.-triviality lemmas.
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false

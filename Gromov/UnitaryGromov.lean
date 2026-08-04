@@ -1,5 +1,7 @@
-import Mathlib
-import Gromov.Unitary.CentralTrivial
+module
+
+public import Mathlib
+public import Gromov.Unitary.CentralTrivial
 
 /-!
 # Compact Lie subgroups of polynomial growth are virtually abelian
@@ -8,6 +10,8 @@ import Gromov.Unitary.CentralTrivial
 
 Root of the `Gromov.Unitary` hierarchy.
 -/
+
+@[expose] public section
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 

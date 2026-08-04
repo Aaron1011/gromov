@@ -1,7 +1,9 @@
-import Mathlib
-import Gromov.ToMathlib.Analysis.Matrix.Unitary
-import Gromov.ToMathlib.GroupTheory.Closure
-import Gromov.ToMathlib.Analysis.Matrix.Norm
+module
+
+public import Mathlib
+public import Gromov.ToMathlib.Analysis.Matrix.Unitary
+public import Gromov.ToMathlib.GroupTheory.Closure
+public import Gromov.ToMathlib.Analysis.Matrix.Norm
 
 /-!
 # Subgroups of the unitary group
@@ -9,6 +11,8 @@ import Gromov.ToMathlib.Analysis.Matrix.Norm
 Properness and compactness of the unitary group, the transfer of polynomial growth along a
 group isomorphism, and the distance estimate `small_dist_matrix`.
 -/
+
+@[expose] public section
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 

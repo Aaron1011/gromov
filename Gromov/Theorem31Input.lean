@@ -1,11 +1,15 @@
-import Mathlib
-import Gromov.RhoAbelian
+module
+
+public import Mathlib
+public import Gromov.RhoAbelian
 
 /-!
 # Constructing a `Theorem3_1_Input`
 
 The finite-image case `rho_g_case_finite` and `exists_theorem_3_1_input`.
 -/
+
+@[expose] public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false
