@@ -32,7 +32,7 @@ namespace Measure
 
 -- This is a generalization of `IsHaarMeasure.isInvInvariant_of_regular`, using the same proof.
 /-- Any regular bi-invariant Haar measure is invariant under inversion. -/
-@[to_additive "Any regular bi-invariant additive Haar measure is invariant under negation."]
+@[to_additive /-- Any regular bi-invariant additive Haar measure is invariant under negation. -/]
 instance (priority := 100) IsHaarMeasure.isInvInvariant_of_isMulRightInvariant (μ : Measure G)
     [μ.IsHaarMeasure] [LocallyCompactSpace G] [μ.IsMulRightInvariant] [μ.Regular] :
     IsInvInvariant μ := by

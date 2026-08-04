@@ -11,7 +11,7 @@ maxSynthPendingDepth = 3
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
-rev = "c07d30b9c8f8fbb23fa6b01ee064d7dcc37d1d6f"
+rev = "a6180e1994004a7c705114bcbebaf5fff4b8384d"
 
 [[lean_lib]]
 name = "Gromov"
