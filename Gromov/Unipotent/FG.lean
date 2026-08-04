@@ -10,7 +10,7 @@ That subgroups of finitely generated abelian and nilpotent groups are finitely g
 the supporting transfer lemmas along homomorphisms.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.longLine false
 set_option linter.style.commandStart false
@@ -206,6 +206,7 @@ lemma normal_comm_mem {G: Type*} [Group G] {N: Subgroup G} (N_normal: N.Normal) 
 
 
 -- TODO - cleanup and upstream to mathlib
+@[expose]
 instance torsion_characteristic {G: Type*} [CommGroup G]: (CommGroup.torsion G).Characteristic := by
   rw [Subgroup.characteristic_iff_le_map]
   intro f g hg
@@ -220,6 +221,7 @@ instance torsion_characteristic {G: Type*} [CommGroup G]: (CommGroup.torsion G).
 -- TODO - generalize and upstream to mathlib
 
 
+@[expose]
 instance subgroup_map_finite {A B: Type*} [Group A] [Group B] (f: A →* B) (G: Subgroup A) [Finite G]: Finite (Subgroup.map f G) := by
   have foo: (Subgroup.map f G) ≃ (Set.image f G.carrier) := {
     toFun := fun a => a

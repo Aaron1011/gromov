@@ -10,7 +10,7 @@ public import Gromov.ThreeTwoGrowth
 kernel of `φ`.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false
@@ -39,6 +39,7 @@ open Additive
 
 attribute [local implicit_reducible] Additive Multiplicative
 
+@[expose]
 def e_i_with_gamma (φ: (Additive G) →+ ℤ) (γ : G) (s: S): Additive G := (ofMul s.val) + ((-1 : ℤ) • (φ (ofMul s.val))) • (ofMul (γ))
 
 
@@ -928,6 +929,7 @@ lemma three_two_ker_fg  (d: ℕ) (hd: d >= 1) (hG: HasPolynomialGrowthD S d ) (�
 
 
 -- Extract a generatating set for the kernel of φ
+@[expose]
 noncomputable def S_n_ker_phi  {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (φ: (Additive G) →+ ℤ) (γ: G) (hγ : φ γ = 1) (n: ℕ)  : Finset φ.ker := (three_two_S_n S φ γ n).attach.image (fun x => ⟨x.val, (by
 obtain ⟨y, hy, hyx⟩ := (three_two_S_n_subset_ker S φ γ hγ n) x.property
 rw [← hyx]

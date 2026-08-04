@@ -10,7 +10,7 @@ public import Gromov.Harmonic.LaplaceLinear
 `Δ`.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
@@ -683,6 +683,7 @@ lemma laplace_positive_semidefinite (f: (MeasureTheory.Lp ℝ 2 (μ := volume (�
     exact prod_lp1
 
 
+@[expose]
 noncomputable def Δ := Laplace_linear.mkContinuous _ (laplace_bounded')
 
 lemma Δ_symmetric: Δ.IsSymmetric := by

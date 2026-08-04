@@ -10,7 +10,7 @@ Staging ground for `Filter.TendstoNhdsWithinIoi.mul`, the two-function analogue 
 `Mathlib.Topology.Algebra.Monoid`. Intended to be upstreamed into that file later.
 -/
 
-@[expose] public section
+public section
 
 open Filter Topology Set
 

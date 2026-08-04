@@ -13,7 +13,7 @@ Root of the Theorem 3.23 hierarchy: importing it pulls in the cutoff inequality,
 form, the packing argument and the Poincaré inequality.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
@@ -285,6 +285,7 @@ open scoped Topology
 -- TODO - do we really need the double by_contra here?
 -- Theorem 3.19
 set_option maxHeartbeats 2500000 in
+@[expose]
 instance Lipschitz_finite_dimensional: FiniteDimensional ℝ LipschitzH := by
   classical
   by_contra!

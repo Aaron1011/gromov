@@ -9,7 +9,7 @@ public import Gromov.Unitary.Words
 `H_n_contradiction` and `central_trivial_virtually_abelian`.
 -/
 
-@[expose] public section
+public section
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 

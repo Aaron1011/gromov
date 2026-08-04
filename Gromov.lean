@@ -13,4 +13,4 @@ Every file in `Gromov/` is reachable from here; the scratch and superseded files
 sit alongside them have been removed.
 -/
 
-@[expose] public section
+public section

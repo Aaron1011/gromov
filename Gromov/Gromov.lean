@@ -10,7 +10,7 @@ public import Gromov.GrowthZero
 generated group of polynomial growth is virtually nilpotent.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false

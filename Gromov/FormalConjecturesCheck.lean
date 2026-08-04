@@ -30,7 +30,7 @@ in `S ∪ S⁻¹` there, versus `S ^ n` for a symmetric `S ∋ 1` here -- so the
 `coe_normGen_pow`, which says the two agree once the generating set is normalized.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.longLine false
 
@@ -44,16 +44,19 @@ variable {G : Type*} [Group G]
 
 /-- The `CayleyBall` is the ball of radius `n` in the Cayley graph of a group `G` with generating
 set `S`. -/
+@[expose]
 def CayleyBall (S : Set G) (n : ℕ) : Set G :=
   {g : G | ∃ (l : List G), l.length ≤ n ∧ (∀ s ∈ l, s ∈ S ∨ s⁻¹ ∈ S) ∧ l.prod = g}
 
 /-- The `GrowthFunction` of a group `G` with respect to a set `S` counts the number of group
 elements that can be reached by words of length at most `n` in `S`. -/
+@[expose]
 noncomputable def GrowthFunction (S : Set G) (n : ℕ) : ℕ :=
   (CayleyBall S n).ncard
 
 /-- A group has polynomial growth if there exists a finite generating set whose growth function is
 bounded above by a polynomial. -/
+@[expose]
 def HasPolynomialGrowth (G : Type*) [Group G] : Prop :=
   ∃ (S : Set G), Set.Finite S ∧ Subgroup.closure S = ⊤ ∧
     ∃ (C : ℝ) (d : ℕ), C > 0 ∧
@@ -65,6 +68,7 @@ variable [DecidableEq G]
 
 /-- `S ∪ S⁻¹ ∪ {1}` as a `Finset`: the symmetric, `1`-containing generating set that
 `Generates` requires. -/
+@[expose]
 noncomputable def normGen (S : Set G) (hS : S.Finite) : Finset G :=
   insert 1 (hS.toFinset ∪ hS.toFinset⁻¹)
 

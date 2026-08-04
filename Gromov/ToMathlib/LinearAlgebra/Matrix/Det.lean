@@ -10,7 +10,7 @@ public import Gromov.ToMathlib.LinearAlgebra.Matrix.ToMatrix
 General-purpose material extracted from the Gromov development, destined for mathlib.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

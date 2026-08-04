@@ -17,7 +17,7 @@ Basic compatibility of the discrete Laplacian with convolution: additivity, scal
 multiplication, and `laplace_conv_eq_laplace_right`.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
@@ -265,6 +265,7 @@ lemma f_n_fin_supp (n: ℕ): (f_n  n).support.Finite := by
 -- The expression 'Σ s_1, ..., s_n ∈ S, f(s_1 * ... * s_n)'
 -- This is a sum over all n-tuples of elements in S, where each term in is f (s_1 * ... * s_n)
 -- TODO - is there aless horrible way to write in in mathlib?
+@[expose]
 def NTupleSum (n: ℕ) (f: G → ℝ): ℝ := ∑ s : (Fin n → S), f ((List.ofFn s).unattach.prod)
 
 

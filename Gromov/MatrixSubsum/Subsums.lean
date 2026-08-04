@@ -9,7 +9,7 @@ The `DerivedSets` machinery and the estimate `subsums_unique`: distinct subsets 
 distinct sums of `Aᵏ • v` when `A` has an eigenvalue of norm `≥ 3`.
 -/
 
-@[expose] public section
+public section
 
 open scoped Finset
 open scoped Pointwise
@@ -19,6 +19,7 @@ structure DerivedSets {R: Type*} [NormedCommRing R] {n: ℕ} (A: Matrix (Fin n) 
   supp_disj: Disjoint (p \ q) (q \ p)
 
 
+@[expose]
 def poly_cancel  {R: Type*} [NormedCommRing R] {n: ℕ} (A: Matrix (Fin n) (Fin n) R) (v: (Fin n) → R) (p q : Finset ℕ) (hpq: p.sum (fun k => A^k • v) = q.sum (fun k => A^k • v)) : DerivedSets A v p q := ({
   h_prime := by
     have p_inter_subset : p ∩ q ⊆ q := by

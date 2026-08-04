@@ -10,7 +10,7 @@ The `V_Wrapper` class bundling the standing hypotheses on `V`, and the scale fun
 used to locate a scale at which the growth of `V` is almost multiplicative.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
@@ -55,8 +55,10 @@ include v_wrapper_inst
 
 variable {ι : Type*} [Fintype ι] [DecidableEq ι] [Nonempty ι]
 
+@[expose]
 noncomputable def R' := R'_ V
 
+@[expose]
 noncomputable def Q_R_single (R : ℝ) (u: G → ℝ): ℝ := ∑ g ∈ Metric.closedBall 1 R, (u g)^2
 
 omit v_wrapper_inst in
@@ -66,8 +68,10 @@ lemma Q_R_single_eq (R: ℝ) (u : G → ℝ): Q_R_single R u = Q_R R u u := by
 
 -- Finding good scales:
 
+@[expose]
 noncomputable def dim (V: Type*) [AddCommMonoid V] [Module ℝ V] : ℝ := Module.finrank ℝ V
 
+@[expose]
 noncomputable def i₀ : ℕ := Nat.clog 16 ⌈R'⌉₊
 
 omit [Nonempty ι] in
@@ -83,7 +87,9 @@ lemma Q_R_matrix_pos_def_i₀ (b : Module.Basis ι ℝ V) (R: ℝ) (hR: 16 ^ (i�
   unfold R' at hR
   grw [hR]
 
+@[expose]
 noncomputable def f (b : Module.Basis ι ℝ V) (R: ℕ): ℝ := #(S ^ R) * (Q_R_matrix b R).det ^ (dim V)⁻¹
+@[expose]
 noncomputable def h (b : Module.Basis ι ℝ V) (i: ℕ): ℝ := Real.log (f b (16 ^ i))
 
 -- Matrix.le_iff
@@ -216,6 +222,7 @@ lemma growth_implies_lim_h (b : Module.Basis ι ℝ V) (d: ℕ) (h_growth: growt
 
 #print axioms growth_implies_lim_h
 
+@[expose]
 noncomputable def a (d: ℕ) := 4 * d * Real.log 16
 
 lemma exists_j_0_for_h (b : Module.Basis ι ℝ V) (w d: ℕ) (hw: 0 < w) (hd: 0 < d) (h_growth: growth_bound b d): ∃ j_0: ℕ, h b (i₀ + 3 * w * (j_0 + 1)) - h b (i₀ + 3 * w * j_0) < w * (a d) := by

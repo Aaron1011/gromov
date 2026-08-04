@@ -8,7 +8,7 @@ public import Mathlib
 General-purpose material extracted from the Gromov development, destined for mathlib.
 -/
 
-@[expose] public section
+public section
 
 -- TODO - generalize and upstream
 -- Based on https://math.stackexchange.com/questions/1101184/show-that-if-x-succeq-y-then-detx-ge-dety

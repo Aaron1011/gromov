@@ -12,7 +12,7 @@ therefore unipotent after passing to a power.
 Root of the `Gromov.MatrixSubsum` hierarchy.
 -/
 
-@[expose] public section
+public section
 
 open scoped Finset
 open scoped Pointwise
@@ -195,6 +195,7 @@ lemma eigen_nonzero {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ): ∀ (k : Modul
   . simp
     exact Int.cast_injective
 
+@[expose]
 def KroneckerPow_exists {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (k: Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ)).toLin') (eigen_one_complex: ∀ k : Module.End.Eigenvalues ((A.val.map (Int.castRingHom ℂ ))).toLin', ‖k.val‖ = 1) := Polynomial.pow_eq_one_of_mahlerMeasure_eq_one (by
   rw [Polynomial.mahlerMeasure_eq_leadingCoeff_mul_prod_roots]
   rw [Polynomial.Monic.leadingCoeff]
@@ -247,9 +248,11 @@ def KroneckerPow_exists {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (k: Module.
     exact foo
 ) (z := k) (p := A.val.charpoly)
 
+@[expose]
 noncomputable def KroneckerPow_single {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (k: Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ)).toLin') (eigen_one_complex: ∀ k : Module.End.Eigenvalues ((A.val.map (Int.castRingHom ℂ ))).toLin', ‖k.val‖ = 1) :=
   (KroneckerPow_exists A k eigen_one_complex).choose
 
+@[expose]
 noncomputable def KroneckerPow {d: ℕ} (A: (Matrix (Fin d) (Fin d) ℤ)ˣ) (eigen_one_complex: ∀ k : Module.End.Eigenvalues ((A.val.map (Int.castRingHom ℂ ))).toLin', ‖k.val‖ = 1) :=
   ∏ (k : Module.End.Eigenvalues (A.val.map (Int.castRingHom ℂ )).toLin'), (KroneckerPow_single A k eigen_one_complex)
 

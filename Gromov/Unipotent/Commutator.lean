@@ -15,7 +15,7 @@ public import Gromov.ToMathlib.Order.Prod.Lex
 `lower_central_generates_succ`.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.longLine false
 set_option linter.style.commandStart false
@@ -23,9 +23,11 @@ set_option linter.style.cdot false
 
 open scoped commutatorElement IsMulCommutative Pointwise
 
+@[expose]
 def iteratedCommutator {T: Type*} [Group T] (base right: T) (n: ℕ) := Nat.iterate (fun x => ⁅x, right⁆) n base
 
 
+@[expose]
 def iterate_comm_set {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (n: ℕ): Finset G :=
   match n with
   | 0 => S

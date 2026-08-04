@@ -10,7 +10,7 @@ public import Gromov.Harmonic.SelfAdjoint
 sequence.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
@@ -313,6 +313,7 @@ lemma measure_preserving_unop_tomul: MeasurePreserving (fun (x: Additive (G)) â†
   apply MeasureTheory.MeasurePreserving.id
 
 
+@[expose]
 noncomputable def G_n (n: â„•) (hn: 0 < n) (hf: f_n_conv_delta_tendsto) := Classical.choose (laplace_g_n n hn hf)
 
 

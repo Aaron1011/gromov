@@ -9,7 +9,7 @@ public import Gromov.Unitary.HnEps
 The real auxiliary function `f` and the resulting lower bound `H_n_single_pow_lower_bound`.
 -/
 
-@[expose] public section
+public section
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 
@@ -32,6 +32,7 @@ lemma norm_sub_swap (n: ℕ) (a b: Matrix (Fin n) (Fin n) ℂ): ‖a - b‖ = �
   rw [norm_neg]
 
 
+@[expose]
 noncomputable def f (a: ℝ) (x: ℝ): ℝ := 1 + (2*x - 1)*a - (1 + a)^x
 
 omit h_n_eps_data in

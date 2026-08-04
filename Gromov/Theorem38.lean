@@ -10,7 +10,7 @@ public import Gromov.Representation
 finite-dimensional representation.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false
@@ -198,11 +198,13 @@ lemma theorem_3_8 {V: Type*} [NormedAddCommGroup V] [InnerProductSpace ℂ V] [F
         intro a b hab
         simpa using hab
 
+@[expose]
 instance rho_g_FG: Group.FG (rho_g) := by
   unfold rho_g
   apply Group.fg_range
 
 -- TODO - deduplicate with 'map_S_Data'
+@[expose]
 def map_range_S_data {G H: Type*} [Group G] [Group H] [DecidableEq G] [DecidableEq H] {f: G →* H} (S_data: SPolyData (T := G) ⊤): SPolyData f.range := {
   S := (f.rangeRestrict.comp (Subgroup.topEquiv.toMonoidHom)) '' S_data.S
   S_finite := by
@@ -235,6 +237,7 @@ def map_range_S_data {G H: Type*} [Group G] [Group H] [DecidableEq G] [Decidable
     . exact S_data.S_finite
 }
 
+@[expose]
 def map_equiv_S_data {A B: Type*} [Group A] [Group B] [DecidableEq A] [DecidableEq B] {G: Subgroup A} {H: Subgroup B} (f: G ≃* H) (S_data: SPolyData G): SPolyData H := {
   S := f.toMonoidHom '' S_data.S
   S_finite := by

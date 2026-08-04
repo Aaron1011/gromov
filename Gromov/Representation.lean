@@ -21,7 +21,7 @@ The space `W = LipschitzH ⧸ ConstF`, the representation `GRep` / `GRepW` of `G
 fact that it preserves the quotient norm.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false
@@ -82,6 +82,7 @@ lemma constf_eq_null: (ConstF : Set (LipschitzH)) = nullAddSubgroup (LipschitzH)
     simp
     apply lipschitz_zero
 
+@[expose]
 instance const_isClosed: IsClosed (ConstF : Set (LipschitzH)) := by
   rw [constf_eq_null]
   exact isClosed_nullAddSubgroup
@@ -111,6 +112,7 @@ abbrev GL_W := (W →L[ℝ] W)ˣ
 
 -- Homeomorph.isCompact_preimage
 
+@[expose]
 instance proper_linear_w: ProperSpace (((W →L[ℝ] W))) := FiniteDimensional.proper_rclike ℝ (((W →L[ℝ] W)))
 
 
@@ -121,6 +123,7 @@ instance proper_linear_w: ProperSpace (((W →L[ℝ] W))) := FiniteDimensional.p
 #synth ProperSpace (((W →L[ℝ] W)))
 
 
+@[expose]
 def GRep: Representation ℝ G (LipschitzH)  := {
   toFun := fun g => {
     toFun := gAct g
@@ -147,6 +150,7 @@ def GRep: Representation ℝ G (LipschitzH)  := {
 --attribute [-instance] QuotientModule.Quotient.topologicalSpace
 
 -- We start with a map from G into the space of (not necessarily invertible) linear maps from W to W
+@[expose]
 def GRepW_non_invertible: Representation ℝ G (W) := Representation.quotient (GRep) ConstF (by
   intro g
   intro f hf
@@ -162,6 +166,7 @@ def GRepW_non_invertible: Representation ℝ G (W) := Representation.quotient (G
 )
 
 -- We then build a map from G into the group of invertible linear maps from W to W
+@[expose]
 noncomputable def GRepW_base := Representation.asGroupHom GRepW_non_invertible
 
 
@@ -224,6 +229,7 @@ lemma GRep_preserves_norm (g: G) (f: LipschitzH): ‖(GRep g) f‖ = ‖f‖ := 
 
 
 -- Takes in an invertible linear map from W to W, and produces a *continuous* linear map from W to W
+@[expose]
 noncomputable def GRepW: (W →ₗ[ℝ] W)ˣ →* (W →L[ℝ] W)ˣ := {
   toFun := fun f => {
     val := LinearMap.toContinuousLinearMap f.val
@@ -311,9 +317,11 @@ lemma GRepW_norm_le (g: G): ‖(GRepW (GRepW_base g)).val‖ ≤ 1 := by
 set_option synthInstance.maxHeartbeats 500000
 
 
+@[expose]
 noncomputable def rho_g := (GRepW_base).range
 
 
+@[expose]
 def isembedding_units_val := Units.isEmbedding_val_mk' (M := (W →L[ℝ] W)) (f := ContinuousLinearMap.inverse) (by
   intro x hx
   have foo := ContDiffAt.continuousAt (ContinuousLinearMap.IsInvertible.contDiffAt_map_inverse (e := x) (n := 0) (by
@@ -377,10 +385,12 @@ def isembedding_units_val := Units.isEmbedding_val_mk' (M := (W →L[ℝ] W)) (f
 
 
 --attribute [-instance] QuotientModule.Quotient.topologicalSpace
+@[expose]
 def FreshTopology (V: Type*) := V
 instance (V: Type*) [base_group: Group V]: Group (FreshTopology V) := base_group
 instance (V: Type*) [base_comm: AddCommGroup V]: AddCommGroup (FreshTopology V) := base_comm
 instance (V: Type*) [AddCommGroup V] [base_module: Module ℝ V]: Module ℝ (FreshTopology V) := base_module
+@[expose]
 instance (V: Type*) [AddCommGroup V] [Module ℝ V]  [base_finite: FiniteDimensional ℝ V]: FiniteDimensional ℝ (FreshTopology V) := base_finite
 
 
@@ -388,6 +398,7 @@ instance (V: Type*) [AddCommGroup V] [Module ℝ V]  [base_finite: FiniteDimensi
 
 #synth AddCommMonoid (W)
 
+@[expose]
 instance T2_W: T2Space (W) := TopologicalSpace.t2Space_of_metrizableSpace
 
 #synth T2Space (W)
@@ -396,6 +407,7 @@ instance T2_W: T2Space (W) := TopologicalSpace.t2Space_of_metrizableSpace
 #synth TopologicalSpace (W →L[ℝ] W)
 #synth FiniteDimensional ℝ (W →L[ℝ] W)
 
+@[expose]
 noncomputable def G_SPolyData {d: ℕ} (h_poly: HasPolynomialGrowthD hGS.S d): SPolyData (T := G) ⊤ := {
   S := Subgroup.topEquiv.symm.toMonoidHom '' hGS.S
   S_finite := by

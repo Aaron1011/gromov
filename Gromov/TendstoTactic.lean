@@ -9,7 +9,7 @@ public import Mathlib.Tactic.NormNum
 public import Mathlib.Tactic.Ring
 
 
-@[expose] public section
+public section
 set_option linter.style.longLine false
 
 /-!
@@ -89,6 +89,7 @@ open Lean Elab Term Tactic Meta
 /-- Reify the real-valued expression `e` (in the free variable `x : ℝ`) into syntax
 for a `Polynomial ℝ`, together with a syntactic upper bound on its degree.
 Fails on symbolic exponents and on division. -/
+@[expose]
 partial def reifyPoly (x : Expr) (e : Expr) : TermElabM (Syntax.Term × ℕ) := do
   if e == x then
     return (← `((Polynomial.X : Polynomial ℝ)), 1)
@@ -128,12 +129,14 @@ structure Mon where
   expLit : Nat := 0
   expSyms : List Syntax.Term := []
 
+@[expose]
 def Mon.mul (a b : Mon) : Mon where
   neg := a.neg != b.neg
   coeffs := a.coeffs ++ b.coeffs
   expLit := a.expLit + b.expLit
   expSyms := a.expSyms ++ b.expSyms
 
+@[expose]
 def monsMul (as bs : List Mon) : TermElabM (List Mon) := do
   let r := as.flatMap fun a => bs.map a.mul
   if r.length > 64 then
@@ -141,16 +144,19 @@ def monsMul (as bs : List Mon) : TermElabM (List Mon) := do
   return r
 
 /-- Is this monomial list the constant `1` (trivial denominator)? -/
+@[expose]
 def monsTrivial : List Mon → Bool
   | [m] => !m.neg && m.coeffs.isEmpty && m.expLit == 0 && m.expSyms.isEmpty
   | _ => false
 
+@[expose]
 def Mon.negate (m : Mon) : Mon := { m with neg := !m.neg }
 
 /-- Reify a real-valued expression in `x` as a formal rational function:
 a pair (numerator monomials, denominator monomials). All rewriting steps used
 here are unconditional field identities (no nonvanishing hypotheses needed),
 so the final equality check can be discharged by `ring`. -/
+@[expose]
 partial def reifyRat (x : Expr) (e : Expr) : TermElabM (List Mon × List Mon) := do
   if e == x then
     return ([{ expLit := 1 }], [{}])
@@ -196,6 +202,7 @@ partial def reifyRat (x : Expr) (e : Expr) : TermElabM (List Mon × List Mon) :=
   | _ => throwError "poly_tendsto: unsupported subexpression {e}"
 
 /-- Exponent of a monomial as a `ℕ`-valued term. -/
+@[expose]
 def Mon.expTerm (m : Mon) : TermElabM Syntax.Term := do
   match m.expSyms with
   | [] => pure (quote m.expLit)
@@ -208,6 +215,7 @@ def Mon.expTerm (m : Mon) : TermElabM Syntax.Term := do
     return t
 
 /-- Coefficient of a monomial as an `ℝ`-valued term. -/
+@[expose]
 def Mon.coeffTerm (m : Mon) : TermElabM Syntax.Term := do
   let base ← match m.coeffs with
     | [] => `((1 : ℝ))
@@ -220,6 +228,7 @@ def Mon.coeffTerm (m : Mon) : TermElabM Syntax.Term := do
 
 /-- Build a proof term of `(fun x => Σᵢ cᵢ * x ^ eᵢ) =o[atTop] (fun x => x ^ eDen)`,
 with each `eᵢ < eDen` discharged by `omega`. -/
+@[expose]
 def buildLittleO (numMons : List Mon) (eDen : Syntax.Term) : TermElabM Syntax.Term := do
   let mkMonTerm (m : Mon) : TermElabM Syntax.Term := do
     let c ← m.coeffTerm
@@ -238,6 +247,7 @@ def buildLittleO (numMons : List Mon) (eDen : Syntax.Term) : TermElabM Syntax.Te
 
 /-- Collect subterms of `e` of the form `x + c` or `c + x` with `c` free of `x`.
 Used to detect a "shifted variable" that all occurrences of `x` live inside. -/
+@[expose]
 partial def shiftCandidates (xv : Expr) (e : Expr) : Array Expr :=
   let sub := match e with
     | .app f a => shiftCandidates xv f ++ shiftCandidates xv a
@@ -261,6 +271,7 @@ partial def shiftCandidates (xv : Expr) (e : Expr) : Array Expr :=
 If the direct proof paths fail, look for a shifted variable `x + c` covering all
 occurrences of `x`, reduce to a limit in the shifted variable, and retry
 (at most `fuel` times). -/
+@[expose]
 partial def realCase (f : Expr) (fuel : Nat := 2) : TacticM Unit := do
   let s ← saveState
   try
@@ -347,6 +358,7 @@ where
     evalTactic (← `(tactic| (try beta_reduce); ring))
 
 /-- Core loop: dispatch on the domain of the function in the `Tendsto` goal. -/
+@[expose]
 partial def core : TacticM Unit := withMainContext do
   -- Normalize `Function.comp` and casts first.
   evalTactic (← `(tactic| try simp only [Function.comp_def]))

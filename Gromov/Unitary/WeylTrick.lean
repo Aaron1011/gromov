@@ -9,7 +9,7 @@ public import Gromov.Unitary.Packing
 `new_weyl_unitarian_trick`: a bounded subgroup of `GL` is conjugate into the unitary group.
 -/
 
-@[expose] public section
+public section
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 

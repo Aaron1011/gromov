@@ -10,7 +10,7 @@ public import Gromov.Unitary.HnLowerBound
 metric.
 -/
 
-@[expose] public section
+public section
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 
@@ -368,6 +368,7 @@ lemma H_n_pows_mem_ball_G {m : ℕ}
 #print axioms H_n_pows_mem_ball_G
 
 -- Unfold the commutators from theorem_3_8_h_n as a list of elements
+@[expose]
 noncomputable def theorem_3_8_h_n_list (data: HnData) (m: ℕ): List (data.S) :=
   match m with
   | 0 => [data.h]
@@ -453,6 +454,7 @@ lemma theorem_3_8_h_n_list_length_initial_upper_bound  (data: HnData) (m: ℕ): 
 
 
 -- The c' constant from Vikman
+@[expose]
 def c' := 3
 
 -- TODO - figure out how to merge this with 'theorem_3_8_h_n_list_length_initial_upper_bound'

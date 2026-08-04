@@ -10,7 +10,7 @@ The `HnEpsData` bundle of standing hypotheses, the sets `H_n eps`, and upper bou
 of their elements.
 -/
 
-@[expose] public section
+public section
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 
@@ -44,6 +44,7 @@ namespace HnEpsData
 variable [h_n_eps_data: HnEpsData]
 
 -- A sufficiently small epsilon to use for the h_n elements in Theorem 3.8 (independent of the choice of n)
+@[expose]
 noncomputable def H_n_eps {d : ℕ} (hd : 2 ≤ d): ℝ := min (((1 : ℝ) / 60)) (min (((1 : ℝ) / 60) / ((Real.exp (4 + h_n_eps_data.degree * Real.log 2) + 1))) ((small_dist_matrix d hd).choose / 2))
 
 -- H_n_eps is less than 1/2
@@ -199,6 +200,7 @@ theorem theorem_3_8_h_n_left_S (data: HnData) (prev: Theorem3_8_Data data): ∃ 
 -- 'h' is our initial element - we define ε in terms of ‖h - 1‖, so that we can obtain the proper bound
 -- for the commutators in the inductive case
 set_option maxHeartbeats 500000 in
+@[expose]
 noncomputable def theorem_3_8_h_n (data : HnData) (n : ℕ): Theorem3_8_Data data := match hn : n with
   | 0 => {
     g := data.h,

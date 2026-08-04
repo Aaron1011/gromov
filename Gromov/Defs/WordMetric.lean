@@ -7,10 +7,11 @@ public import Mathlib
 
 The `Generates` class packaging a finitely generated group with a symmetric generating set, the
 definition of polynomial growth, and the word norm / word metric on `G` with its `MetricSpace`
+@[expose]
 instance.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false
@@ -24,8 +25,8 @@ open scoped commutatorElement
 
 -- Based on https://github.com/YaelDillies/LeanCamCombi/blob/b6312bee17293272af6bdcdb47b3ffe98fca46a4/LeanCamCombi/GrowthInGroups/Lecture1.lean#L41
 -- and the Vikman paper
-def HasPolynomialGrowthD {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (d: ℕ): Prop := ∃ a: ℕ, ∀ n ≥ 1, #(S ^ n) ≤ a * n ^ d
-def HasPolynomialGrowth  {G: Type*} [Group G] [DecidableEq G] (S: Finset G): Prop := ∃ d, HasPolynomialGrowthD S d
+@[expose] def HasPolynomialGrowthD {G: Type*} [Group G] [DecidableEq G] (S: Finset G) (d: ℕ): Prop := ∃ a: ℕ, ∀ n ≥ 1, #(S ^ n) ≤ a * n ^ d
+@[expose] def HasPolynomialGrowth  {G: Type*} [Group G] [DecidableEq G] (S: Finset G): Prop := ∃ d, HasPolynomialGrowthD S d
 
 
 -- TODO - I don't really understand why `S` needs to be an `outParam`?
@@ -74,6 +75,7 @@ lemma S_eq_Sinv: S = S⁻¹ := by
     simp only [inv_inv] at a_inv
     exact a_inv
 
+@[expose]
 instance G_FG: Group.FG G := {
   out := by
     unfold Subgroup.FG
@@ -90,7 +92,7 @@ lemma mem_closure (x: G): x ∈ closure (S : Set G) := by
   simp [hg]
 
 -- Predicate stating that an element of G equals a product of elements of S
-def ProdS (x: G) (l: List S): Prop := l.unattach.prod = x
+@[expose] def ProdS (x: G) (l: List S): Prop := l.unattach.prod = x
 
 -- Each element of G can be written as a product of elements of S in at least one way
 lemma mem_S_prod_list (x: G): ∃ l: List S, ProdS x l := by
@@ -112,6 +114,7 @@ lemma list_tail_unattach (T: Type*)  {p : T → Prop} (l: List { x : T // p x}):
   unfold List.unattach
   simp
 
+@[expose]
 noncomputable def WordNorm (g: G) := sInf {n: ℕ | ∃ l: List S, l.length = n ∧ ProdS g l}
 
 lemma word_norm_prod (g: G) (n: ℕ) (hgn: WordNorm g = n): ∃ l: List S, ProdS g l ∧ l.length = n := by
@@ -138,7 +141,7 @@ lemma word_norm_le (g: G) (l: List S) (hgl: ProdS g l): WordNorm  g ≤ l.length
   use l
 
 -- TODO - this probably needs to be swapped to make 'gAct' work
-noncomputable def WordDist (x y: G) := WordNorm  (y * x⁻¹)
+@[expose] noncomputable def WordDist (x y: G) := WordNorm  (y * x⁻¹)
 
 lemma WordDist_self (x: G): WordDist  x x = 0 := by
   unfold WordDist

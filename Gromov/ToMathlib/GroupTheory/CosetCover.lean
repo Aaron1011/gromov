@@ -11,7 +11,7 @@ Right-handed analogues of the `leftCoset_cover_const` results in
 Upstreaming status: ready modulo style (line lengths, `simp` squeezing).
 -/
 
-@[expose] public section
+public section
 
 open scoped Pointwise
 

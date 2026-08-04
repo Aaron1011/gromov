@@ -10,7 +10,7 @@ The packing sets `B`, `B_half`, `B_3` at a good scale, their finiteness and disj
 the intersection-multiplicity bound `card_B_le_exp_wa`.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
@@ -50,16 +50,18 @@ structure GoodScalesData (b : Module.Basis ι ℝ V) where
   w_gt: 4 < w
   h_growth: growth_bound b d
 
+@[expose]
 noncomputable def GoodScales (data: GoodScalesData b) := Classical.choice (lemma_3_24 b data.w data.d data.hw data.hd data.h_growth)
 
-noncomputable def R_1 (data: GoodScalesData b) := 2 * 16^(GoodScales data).i_1
-noncomputable def R_2 (data: GoodScalesData b) := 16^(GoodScales data).i_2
+@[expose] noncomputable def R_1 (data: GoodScalesData b) := 2 * 16^(GoodScales data).i_1
+@[expose] noncomputable def R_2 (data: GoodScalesData b) := 16^(GoodScales data).i_2
 
 -- TODO - does it matter than 'Metric.maximalSeparatedSet' uses 'R_1 < dist' instead of 'R_1 <= dist' ?
-def X_j (data: GoodScalesData b) := Metric.maximalSeparatedSet (R_1 data) ((Metric.closedBall (1: G) (R_2 data)))
+@[expose] def X_j (data: GoodScalesData b) := Metric.maximalSeparatedSet (R_1 data) ((Metric.closedBall (1: G) (R_2 data)))
 -- A collection of disjoint balls that cover the ball R_2
-def B (data: GoodScalesData b) := (fun a => Metric.closedBall a (R_1 data)) '' (X_j data)
-def B_half (data: GoodScalesData b) := (fun a => Metric.closedBall a (R_1 data / 2)) '' (X_j data)
+@[expose] def B (data: GoodScalesData b) := (fun a => Metric.closedBall a (R_1 data)) '' (X_j data)
+@[expose] def B_half (data: GoodScalesData b) := (fun a => Metric.closedBall a (R_1 data / 2)) '' (X_j data)
+@[expose]
 def B_3 (data: GoodScalesData b) := (fun a => Metric.closedBall a (3 * (R_1 data + 1))) '' (X_j data)
 
 lemma X_j_finite (data: GoodScalesData b): (X_j data).Finite := by
@@ -176,7 +178,9 @@ lemma B_half_disjoint (data: GoodScalesData b): (B_half data).PairwiseDisjoint i
 
 -- Intersection multiplicity. See https://www.math.ucdavis.edu/~kapovich/EPR/kapovich_drutu.pdf page 24 for the definition
 -- (search for 'multiplicity')
+@[expose]
 noncomputable def InterMult_f  (S: Set (Set G)) := (fun A => (Set.encard A).toNat) '' { A: Set (Set G) | A ⊆ S ∧ ⋂₀ A ≠ ∅ }
+@[expose]
 noncomputable def InterMult (S: Set (Set G)) := sSup (InterMult_f S)
 
 omit v_wrapper_inst in
@@ -217,9 +221,10 @@ lemma B_half_finite (data: GoodScalesData b): (B_half data).Finite := by
   apply Set.Finite.subset ?_ (Metric.maximalSeparatedSet_subset)
   apply finite_closed_ball
 
-noncomputable def B_finsets (data: GoodScalesData b): Finset (Finset G) := Finset.image ((fun a => (finite_closed_ball a (R_1 data )).toFinset)) (X_j_finite data).toFinset
+@[expose] noncomputable def B_finsets (data: GoodScalesData b): Finset (Finset G) := Finset.image ((fun a => (finite_closed_ball a (R_1 data )).toFinset)) (X_j_finite data).toFinset
 
 -- TODO - combine this with 'B_half'
+@[expose]
 noncomputable def B_half_finsets (data: GoodScalesData b): Finset (Finset G) := Finset.image ((fun a => (finite_closed_ball a (R_1 data / 2)).toFinset)) (X_j_finite data).toFinset
 
 lemma B_3_finite (data: GoodScalesData b): (B_3 data).Finite := by
@@ -380,8 +385,8 @@ lemma inter_mult_helper (data: GoodScalesData b): InterMult (B_3 data) * #(S ^ (
     . rw [Set.nonempty_iff_ne_empty]
       grind
 
-noncomputable def B_r (r: ℝ) := (finite_closed_ball 1 r).toFinset
-noncomputable def B_c_r (g: G) (r: ℝ) := (finite_closed_ball g r).toFinset
+@[expose] noncomputable def B_r (r: ℝ) := (finite_closed_ball 1 r).toFinset
+@[expose] noncomputable def B_c_r (g: G) (r: ℝ) := (finite_closed_ball g r).toFinset
 
 omit v_wrapper_inst in
 lemma B_c_r_eq_smul (a: G) (r: ℝ): B_c_r a r = (MulOpposite.op a) • B_r r := by

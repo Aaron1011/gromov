@@ -11,7 +11,7 @@ public import Gromov.Unitary.CentralTrivial
 Root of the `Gromov.Unitary` hierarchy.
 -/
 
-@[expose] public section
+public section
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 
@@ -439,6 +439,7 @@ decreasing_by
     grind
 #print axioms compact_lie_virtually_abelian
 
+@[expose]
 def map_S_data {G H: Type*} [Group G] [Group H] [DecidableEq G] [DecidableEq H] (A: Subgroup G) {f: G →* H} (S_data: SPolyData A): SPolyData (Subgroup.map f A) := {
   S := f.subgroupMap A '' S_data.S
   S_finite := by

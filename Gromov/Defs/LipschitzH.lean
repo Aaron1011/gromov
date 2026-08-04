@@ -10,7 +10,7 @@ The type `LipschitzH` of Lipschitz harmonic functions on `G`, its additive and v
 structure, and finiteness of balls.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false
@@ -28,7 +28,7 @@ open Generates
 variable [hGS: Generates]
 include hGS
 
-def Harmonic (f: G → ℝ): Prop := ∀ x: G, f x = ((1 : ℝ) / #(S)) * ∑ s ∈ S, f (s * x)
+@[expose] def Harmonic (f: G → ℝ): Prop := ∀ x: G, f x = ((1 : ℝ) / #(S)) * ∑ s ∈ S, f (s * x)
 structure LipschitzH [Generates ] where
   -- The underlying function
   toFun: G → ℝ
@@ -37,7 +37,7 @@ structure LipschitzH [Generates ] where
   -- The function is harmonic
   harmonic: Harmonic  toFun
 
-def IsLipschitz (f: G → ℝ) := ∃ C, LipschitzWith C f
+@[expose] def IsLipschitz (f: G → ℝ) := ∃ C, LipschitzWith C f
 
 instance: FunLike (LipschitzH) G ℝ where
   coe := LipschitzH.toFun
@@ -94,7 +94,7 @@ lemma S_card_ne_zero_re: (#(S) : ℝ) ≠ 0 := by
   exact Finset.nonempty_iff_ne_empty.mp foo
 
 
-def ConstLipschitzH (z: ℝ) : LipschitzH := {
+@[expose] def ConstLipschitzH (z: ℝ) : LipschitzH := {
   toFun := fun x => z
   lipschitz := by
     use 0

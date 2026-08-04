@@ -9,7 +9,7 @@ public import Gromov.Lemma326
 `exists_bounded_doubling_subspace`, the main output of the `V_Wrapper` section.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

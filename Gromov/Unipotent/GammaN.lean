@@ -9,7 +9,7 @@ public import Gromov.Unipotent.FG
 `exists_gamma_n_unipotent_center_N'` and `exists_gamma_n_unipotent_N'`.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.longLine false
 set_option linter.style.commandStart false
@@ -108,6 +108,7 @@ theorem log_pow_sq_lt_of_lt (M p q K : ℕ) (hp : 0 < p)
     nlinarith [sq_nonneg (u ^ 2 - 2 * D), hu1, hD0, hM0, hu4, h']
   linarith [hsq, hgoal]
 
+@[expose]
 def gamma_conj_bound {H: Type*}  [DecidableEq H] [Group H]  {N': Subgroup H} (gamma: MulAut N') := ∀ k: ℕ, (0 < k) →  ∀ g, ∃ p q: ℕ, 0 < p ∧ ∀ b: ℕ, 0 < b → ∀ a: ℕ, (0 < a) → (a < b) → ((Finset.image (fun x ↦ (List.map (fun (i:  ↥(Finset.Ico a b)) ↦ (gamma)^[k * ↑i] g) x.toList).prod))
         (Finset.Ico a b).attach.powerset).card ≤ p * (b^q) * (b - a)^q
 

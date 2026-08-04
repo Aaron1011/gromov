@@ -10,7 +10,7 @@ public import Gromov.ToMathlib.Analysis.Matrix.UnitaryAux
 direct sum of the eigenspaces of that element.
 -/
 
-@[expose] public section
+public section
 
 set_option maxHeartbeats 4000000 in
 set_option synthInstance.maxHeartbeats 100000 in

@@ -9,7 +9,7 @@ public import Gromov.Harmonic.MuConv
 `Laplace_linear`, the normalised functions `F_n`, and the limit `F_n_conv_mu_lim`.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
@@ -29,6 +29,7 @@ open scoped Convolution
 open MeasureTheory
 
 set_option maxHeartbeats 60000 in
+@[expose]
 noncomputable def nontrivial_harmonic_common (k: ℕ) (seq: ℕ → ℕ) (h_seq: Filter.Tendsto seq Filter.atTop Filter.atTop) (F: G → ℝ) (H_n: ℕ → G → ℝ) (h_conv_lipschitz: ∀ n, LipschitzWith k (Conv (H_n n) (f_n n)))
 (tendsto_F: Filter.Tendsto ((fun n ↦ Conv (H_n (seq n)) (f_n (seq n)))) Filter.atTop (nhds F))
 (H_n_norm: ∀ n: ℕ, MeasureTheory.eLpNorm (H_n n) (p := ⊤) MeasureTheory.volume = 1): LipschitzH := by
@@ -275,6 +276,7 @@ lemma essSup_eq_elpNorm_top (f: G → ℝ): (essSup (fun g => ‖f g‖ₑ) volu
   rfl
 
 
+@[expose]
 noncomputable def Laplace_linear: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) →ₗ[ℝ] (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) := {
   toFun := Laplace
   map_add' := by
@@ -320,6 +322,7 @@ noncomputable def Laplace_linear: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G
 }
 
 
+@[expose]
 instance volume_finite_compact: IsFiniteMeasureOnCompacts (volume (α := G)) := by
   simp [volume]
   rw [my_haar_eq_count]
@@ -342,7 +345,9 @@ lemma finsupp_lp_top (f: G → ℝ) (hf: f.support.Finite) (p: ENNReal): Measure
     exact hf
 
 
+@[expose]
 noncomputable def F_n (n : ℕ) := Real.sqrt ∘ (f_n  n)
+@[expose]
 noncomputable def F_n_lp2 (n : ℕ) := MeasureTheory.MemLp.toLp (F_n  n) (by
   simp [volume]
   rw [my_haar_eq_count]
@@ -358,6 +363,7 @@ noncomputable def F_n_lp2 (n : ℕ) := MeasureTheory.MemLp.toLp (F_n  n) (by
 ) (μ := volume (α := G)) (p := 2)
 
 
+@[expose]
 instance volume_mul_left_invariant: (volume (α := G)).IsMulLeftInvariant := by
   simp [volume]
   rw [my_haar_eq_count]
@@ -390,6 +396,7 @@ lemma norm_sub_squared_le (a b : ℝ) (ha: 0 ≤ a) (hb: 0 ≤ b): (a - b)^2 ≤
   . simp
 
 
+@[expose]
 def f_n_conv_delta_tendsto: Prop :=  ∀ s: S, Filter.Tendsto (fun n: ℕ => MeasureTheory.eLpNorm (f_n n - (Conv (f_n n) (delta s.val))) 1 MeasureTheory.volume) Filter.atTop (nhds 0)
 
 

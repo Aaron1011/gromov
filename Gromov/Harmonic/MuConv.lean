@@ -10,7 +10,7 @@ public import Gromov.Harmonic.Convolution
 the telescoping identity `f_n_sub_conv`.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

@@ -10,7 +10,7 @@ public import Gromov.Unitary.Basic
 the auxiliary inner product `FreshInnerProduct`.
 -/
 
-@[expose] public section
+public section
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 
@@ -347,6 +347,7 @@ lemma volume_packing (n : ℕ) (hn : 0 < n) (ε : ℝ) (hε : 0 < ε) :
 #print axioms volume_packing
 
 
+@[expose]
 def FreshInnerProduct (V : Type*) := V
 
 instance (V : Type*) [base_comm : AddCommGroup V]: AddCommGroup (FreshInnerProduct V) := base_comm

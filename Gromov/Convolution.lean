@@ -12,7 +12,7 @@ public import Gromov.TendstoNhdsMul
 # Convolution on a finitely generated group
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
@@ -280,6 +280,7 @@ lemma conv_sum {T: Type*} (H: Finset T) (f: T → G → ℝ) (h: G → ℝ) (h_f
 
 -- The convolution of an Lp2 function with a finitely-supported function is LP2
 --set_option maxHeartbeats 1000000 in
+@[expose]
 noncomputable def conv_finsupp_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))) (g : G → ℝ) (hg : g.support.Finite): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := MeasureTheory.MemLp.toLp (Conv f g) (by
   simp [MemLp]
   refine ⟨by apply AEStronglyMeasurable.of_discrete, ?_⟩

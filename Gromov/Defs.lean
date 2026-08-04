@@ -13,7 +13,7 @@ Root of the `Gromov.Defs` hierarchy: importing it pulls in the word metric, the 
 structure, `LipschitzH` and the convolution API.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false
@@ -34,8 +34,8 @@ include hGS
 open scoped Convolution
 open MeasureTheory
 
-noncomputable def Laplace_b (f: G → ℝ): G → ℝ := f - (Conv f (mu ))
-noncomputable def Laplace (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := f - (conv_mu_lp2 f)
+@[expose] noncomputable def Laplace_b (f: G → ℝ): G → ℝ := f - (Conv f (mu ))
+@[expose] noncomputable def Laplace (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := f - (conv_mu_lp2 f)
 
 
 -- TODO - make this Finite to avoid a non-compuatable Fintype instance
@@ -46,6 +46,7 @@ noncomputable instance fintype_closedBall (x: G) (r: ℝ): Fintype ↑(Metric.cl
 -- https://www.math.uni-potsdam.de/fileadmin/user_upload/Prof-GraphTh/Keller/KellerLenzWojciechowski_GraphsAndDiscreteDirichletSpaces_wu_version.pdf
 
 
+@[expose]
 def ConstF: Submodule ℝ (LipschitzH) := {
   carrier := Set.range ConstLipschitzH
   add_mem' := by
@@ -78,6 +79,7 @@ def ConstF: Submodule ℝ (LipschitzH) := {
     simp [ConstLipschitzH]
 }
 
+@[expose]
 instance isometricGMul: IsIsometricSMul (MulOpposite G) (G) where
   isometry_smul := by
     intro g
@@ -88,6 +90,7 @@ instance isometricGMul: IsIsometricSMul (MulOpposite G) (G) where
     simp [WordDist]
 
 
+@[expose]
 def gAct (g: G) (v: LipschitzH ): LipschitzH  := {
   toFun := fun x => v (x * g)
   lipschitz := by
@@ -118,6 +121,7 @@ lemma gAct_mul (g h : G) (f: LipschitzH ): gAct (g * h) f = gAct g (gAct h f) :=
   rw [← mul_assoc]
 
 
+@[expose]
 def gAct_const (g: G) (z: ℝ): gAct g (ConstLipschitzH z) = ConstLipschitzH z := by
   unfold gAct
   unfold ConstLipschitzH
@@ -131,6 +135,7 @@ abbrev W := (LipschitzH) ⧸ ConstF
 
 #synth Module ℝ (W)
 
+@[expose]
 noncomputable def f_n (n: ℕ) (g: G): ℝ := ((1: ℝ) / ((n + 1): ℝ)) * ∑ m: Fin (n + 1), muConv  (m.val) g
 
 lemma closed_ball_eq_S_pow (R: ℕ): (finite_closed_ball 1 R).toFinset = S ^ R := by

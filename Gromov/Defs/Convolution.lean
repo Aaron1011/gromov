@@ -10,7 +10,7 @@ The convolution `Conv`, the measure `mu` and its iterates `muConv`, and the `Lp`
 `conv_mu_lp2`.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false
@@ -41,16 +41,17 @@ open MeasureTheory
 
 -- Note - there's some defeq abuse going on here, as we're passing in 'f' and 'g' directly (they take in G, not 'Additive G')
 -- However, this makes it much easier to prove properties about this via the `MeasureTheory.ConvolutionExists` API
-noncomputable def Conv (f g: G → ℝ) (x: G) : ℝ :=
+@[expose] noncomputable def Conv (f g: G → ℝ) (x: G) : ℝ :=
   (MeasureTheory.convolution (G := Additive G) f g (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp x)
 
 
-def ConvExists (f g: G → ℝ) := MeasureTheory.ConvolutionExists (G := Additive G) (fun x => f x.toMul) (fun x => g x.toMul) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp
+@[expose] def ConvExists (f g: G → ℝ) := MeasureTheory.ConvolutionExists (G := Additive G) (fun x => f x.toMul) (fun x => g x.toMul) (ContinuousLinearMap.mul ℝ ℝ) myHaarAddOpp
 
+@[expose]
 noncomputable def mu: G → ℝ := ((1 : ℝ) / (#(S) : ℝ)) • ∑ s ∈ S, Pi.single s (1 : ℝ)
 
 -- Definition 3.11 in Vikman - the m-fold convolution of μ with itself
-noncomputable def muConv (n: ℕ): G → ℝ := (Nat.iterate (fun f => Conv  f (mu )) n) (mu )
+@[expose] noncomputable def muConv (n: ℕ): G → ℝ := (Nat.iterate (fun f => Conv  f (mu )) n) (mu )
 
 
 -- TODO - this is left over from when I used MulOpposite
@@ -308,6 +309,7 @@ lemma f_conv_mu (f: G → ℝ): (Conv  f (mu )) = fun g => ((1 : ℝ) / (#(S) : 
     apply mu_finsupp
 
 
+@[expose]
 noncomputable def conv_mu_lp2 (f: (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G)))): (MeasureTheory.Lp ℝ 2 (MeasureTheory.volume (α := G))) := MeasureTheory.MemLp.toLp (Conv f (mu )) (by
   rw [MeasureTheory.MemLp]
   refine ⟨MeasureTheory.AEStronglyMeasurable.of_discrete, ?_⟩

@@ -11,7 +11,7 @@ public import Gromov.Harmonic.CaseOne
 Root of the `Gromov.Harmonic` hierarchy.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

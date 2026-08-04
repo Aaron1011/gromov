@@ -11,7 +11,7 @@ public import Gromov.Unipotent.GammaN
 Root of the `Gromov.Unipotent` hierarchy.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.longLine false
 set_option linter.style.commandStart false

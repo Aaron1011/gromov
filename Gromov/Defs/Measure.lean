@@ -10,7 +10,7 @@ public import Gromov.Defs.WordMetric
 measure-space instances and the resulting a.e.-triviality lemmas.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false
@@ -32,10 +32,12 @@ noncomputable instance WordDist.instMeasurableSpace: MeasurableSpace G := borel 
 
 noncomputable instance WordDist.instMeasureableSpaceOpp: MeasurableSpace (Additive G) := borel (Additive G)
 
+@[expose]
 noncomputable instance WordDist.instBorelSpace: BorelSpace G where
   measurable_eq := rfl
 
 
+@[expose]
 noncomputable instance WordDist.instBorelSpaceAddOpp: BorelSpace (Additive G) where
   measurable_eq := rfl
 
@@ -51,16 +53,20 @@ lemma singleton_open (x: G): IsOpen {x} := by
   rw [dist_zero] at hy
   exact hy
 
+@[expose]
 instance discreteTopology: DiscreteTopology G := by
   rw [discreteTopology_iff_isOpen_singleton]
   exact singleton_open
 
+@[expose]
 instance : ContinuousMul G where
   continuous_mul := continuous_of_discreteTopology
 
+@[expose]
 instance : ContinuousInv G where
   continuous_inv := continuous_of_discreteTopology
 
+@[expose]
 instance: IsTopologicalGroup G where
   continuous_mul := continuous_of_discreteTopology
   continuous_inv := continuous_of_discreteTopology
@@ -68,6 +74,7 @@ instance: IsTopologicalGroup G where
 
 -- Define Haar measure so that singleton sets have measure 1 -
 -- I think this is what we want in order to be able to nicely convert integrals to sums
+@[expose]
 noncomputable def haarSingleton: TopologicalSpace.PositiveCompacts G := {
   carrier := {1}
   isCompact' := by
@@ -91,6 +98,7 @@ noncomputable instance WordDist.measureSpace: MeasureTheory.MeasureSpace G := {
   volume := myHaar
 }
 
+@[expose]
 noncomputable def addHaarSingleton: TopologicalSpace.PositiveCompacts (Additive G) := {
   carrier := {0}
   isCompact' := by
@@ -111,6 +119,7 @@ lemma singleton_carrier: (addHaarSingleton.carrier) = ({0} : (Set (Additive G)))
 noncomputable abbrev myHaarAddOpp := MeasureTheory.Measure.addHaarMeasure (G := Additive G) addHaarSingleton
 
 
+@[expose]
 instance countable_G: Countable G := by
   apply Function.Surjective.countable (f := fun (x: List S) => x.unattach.prod)
   intro g
@@ -122,6 +131,7 @@ instance countable_G: Countable G := by
 
 
 -- TODO - use the fact that G is finitely generated
+@[expose]
 instance countable_add_G: Countable (Additive G) := by
   exact inferInstanceAs (Countable G)
 
@@ -234,6 +244,7 @@ lemma my_haar_eq_count: (myHaar) = MeasureTheory.Measure.count := by
       simp
 
 
+@[expose]
 instance my_add_haar_right_invariant: (myHaarAddOpp.IsAddRightInvariant (G := Additive (G))) := by
   rw [my_add_haar_eq_count]
   infer_instance
@@ -286,6 +297,7 @@ lemma ae_eq_everywhere {f g: G → ℝ}: (f =ᶠ[MeasureTheory.ae MeasureTheory.
 
 -- Use the fact that our measure is the counting measure (since we have the discrete topology),
 -- and negating a finite set of points in an additive group leaves the cardinality unchanged
+@[expose]
 instance myNegInvariant: MeasureTheory.Measure.IsNegInvariant (myHaarAddOpp) := {
   neg_eq_self := by
     rw [my_add_haar_eq_count]

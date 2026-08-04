@@ -10,7 +10,7 @@ public import Gromov.Poincare
 basis.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
@@ -40,7 +40,9 @@ variable {ι : Type*} [Fintype ι] [DecidableEq ι] [Nonempty ι]
 
 variable {b : Module.Basis ι ℝ V}
 
+@[expose]
 noncomputable def J (data: GoodScalesData b) := #((X_j_finite data).toFinset)
+@[expose]
 noncomputable def phi (data: GoodScalesData b): V →ₗ[ℝ] EuclideanSpace ℝ (B_finsets data) := {
   toFun := fun u => WithLp.toLp 2 (fun (j: B_finsets data) => ((#j.val : ℝ)⁻¹) * ∑ x ∈ j.val, u.val x)
   map_add' := by
@@ -58,7 +60,7 @@ noncomputable def phi (data: GoodScalesData b): V →ₗ[ℝ] EuclideanSpace ℝ
     ring
 }
 
-def C: ℝ := 32 * (#S)
+@[expose] def C: ℝ := 32 * (#S)
 
 set_option maxHeartbeats 2500000 in
 lemma lemma_3_26_a (data: GoodScalesData b) (u: V): Q_R (R_2 data) u u ≤ 2 * (#(S^(R_1 data ))) * ‖(phi data u)‖^2 + C * (Real.exp ((2 * a data.d))) * (R_1 data + 1)^2 * (∑ x ∈ B_r (8 * R_2 data), deriv_sq u x)  := by

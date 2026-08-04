@@ -3,7 +3,7 @@ module
 public import Mathlib
 
 
-@[expose] public section
+public section
 open scoped commutatorElement
 
 

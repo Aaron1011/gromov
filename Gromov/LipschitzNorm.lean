@@ -19,7 +19,7 @@ Note that we only implement `SeminormedAddCommGroup` for `LipschitzH`, so this i
 seminormed space. The quotient space `W := LipschitzH ⧸ ConstF` is an actual normed space.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
@@ -31,6 +31,7 @@ open Generates
 variable [hGS: Generates]
 include hGS
 
+@[expose]
 noncomputable def LipschitzSemiNorm (f: G → ℝ): NNReal := sInf { k: NNReal | LipschitzWith k f }
 
 lemma lipschiz_norm_zero: LipschitzSemiNorm  (0) = 0 := by

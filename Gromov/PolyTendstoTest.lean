@@ -3,7 +3,7 @@ module
 public import Gromov.TendstoTactic
 
 
-@[expose] public section
+public section
 -- Tests for the poly_tendsto tactic (see Gromov/TendstoTactic.lean)
 example : Filter.Tendsto
     (fun x : ℕ ↦ (1 + (↑x + 1) * 2 + (↑x + 1) ^ 2) / (↑x + 1) ^ 3 : ℕ → ℝ)

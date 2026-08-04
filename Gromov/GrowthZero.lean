@@ -9,7 +9,7 @@ public import Gromov.ThreeTwoGenerates
 `three_two_kernel_poly_growth`, and that a group of growth exponent zero is finite.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false
@@ -56,6 +56,7 @@ lemma one_mem_S  {G: Type*} [Group G] [DecidableEq G] {n: ℕ} (data: Theorem3_1
 -- hypothesis and the `S` field so that `g_growth := new_g_growth` is definitionally
 -- trivial (avoids an expensive `whnf` on the two separately-elaborated `Finset`s).
 omit hGS in
+@[expose]
 noncomputable def ker_S {G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G)
     (hGS: GeneratesWithParam data.G') (γ: data.G') (hγ: data.φ γ = 1) (n: ℕ) :
     Finset (Multiplicative data.φ.ker) :=
@@ -64,6 +65,7 @@ noncomputable def ker_S {G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_I
 
 -- TODO - figure out how to make this a 'let' without adding it to typeclass search
 omit hGS in
+@[expose]
 noncomputable def ker_generates {n: ℕ} {G: Type*} [Group G] [DecidableEq G] (data: Theorem3_1_Input G) (hGS: GeneratesWithParam data.G') (γ: data.G') (hγ: data.φ γ = 1)
   (ker_infinite: Infinite (Multiplicative data.φ.ker))
   (ker_generates: AddSubgroup.closure (Additive.ofMul '' (three_two_S_n hGS.S data.φ γ (n))) = data.φ.ker)

@@ -17,7 +17,7 @@ public import Gromov.ToMathlib.Algebra.Group.Pointwise.Finset
 # The discrete Laplacian on `Lp 2`
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.longLine false
 set_option linter.style.cdot false

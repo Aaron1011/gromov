@@ -12,7 +12,7 @@ Properness and compactness of the unitary group, the transfer of polynomial grow
 group isomorphism, and the distance estimate `small_dist_matrix`.
 -/
 
-@[expose] public section
+public section
 
 open scoped Matrix.Norms.L2Operator ComplexInnerProductSpace
 
@@ -232,6 +232,7 @@ lemma shrinking_conjugators (n : ℕ) (g h : Matrix.unitaryGroup (Fin n) ℂ) :
       linarith [Matrix.l2_opNorm_mul (g.val - 1) (h.val - 1),
                 Matrix.l2_opNorm_mul (h.val - 1) (g.val - 1)]
 
+@[expose]
 def G' (n : ℕ) (ε : ℝ) (G : Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) : Subgroup G :=
   Subgroup.closure (Metric.ball (1 : G) ε)
 
@@ -249,6 +250,7 @@ lemma unitary_closed (n : ℕ) : IsClosed (Matrix.unitaryGroup (Fin n) ℂ).carr
   · simp
 
 
+@[expose]
 instance unitary_proper (n : ℕ) : ProperSpace ↥(Matrix.unitaryGroup (Fin n) ℂ) := by
   apply ProperSpace.of_isClosed
   apply unitary_closed
@@ -256,6 +258,7 @@ instance unitary_proper (n : ℕ) : ProperSpace ↥(Matrix.unitaryGroup (Fin n) 
 #synth Nontrivial (Matrix (Fin 1) (Fin 1) ℂ)
 
 
+@[expose]
 instance compact_unitary (n : ℕ) [Nonempty (Fin n)] :
     CompactSpace ↥(Matrix.unitaryGroup (Fin n) ℂ) := by
   rw [Metric.compactSpace_iff_isBounded_univ, Metric.isBounded_iff]

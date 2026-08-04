@@ -15,7 +15,7 @@ public import Gromov.ToMathlib.LinearAlgebra.Matrix.Det
 `cutoff_inequality`, the discrete integration-by-parts estimate underlying Theorem 3.23.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
@@ -41,7 +41,7 @@ include hGS
 -- the balls `B_c_r j r = B_r r * j` are right translates and no `MulOpposite` leaks into the
 -- convolution terms. `deriv_sq` is invariant under right translation:
 -- `deriv_sq (f ∘ (· * j)) x = deriv_sq f (x * j)`, which is what Lemma 3.25 (c) needs.
-noncomputable def deriv_sq (f: G → ℝ) (x: G) := ∑ s ∈ S, (f (s * x) - f x)^2
+@[expose] noncomputable def deriv_sq (f: G → ℝ) (x: G) := ∑ s ∈ S, (f (s * x) - f x)^2
 
 set_option maxHeartbeats 9000000 in
 lemma cutoff_inequality (f φ : G → ℝ) (hf: Laplace_b f = 0) (hφ: φ.support.Finite):

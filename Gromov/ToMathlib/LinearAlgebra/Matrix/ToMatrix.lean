@@ -8,7 +8,7 @@ public import Mathlib
 General-purpose material extracted from the Gromov development, destined for mathlib.
 -/
 
-@[expose] public section
+public section
 
 /-- Reindexing both bases of a `LinearMap.toMatrix₂` by an equiv turns it into a `submatrix`. -/
 theorem LinearMap.toMatrix₂_reindex {R M ι κ : Type*} [CommSemiring R] [AddCommMonoid M]

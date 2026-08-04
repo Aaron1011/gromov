@@ -10,7 +10,7 @@ public import Gromov.CutoffInequality
 a ball of radius `2R`.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false

@@ -9,7 +9,7 @@ public import Gromov.Packing
 `poincare_inequality` and the packing-averaged form `lemma_3_25_poincare`.
 -/
 
-@[expose] public section
+public section
 
 set_option linter.style.cdot false
 set_option linter.style.whitespace false
@@ -39,9 +39,11 @@ variable {ι : Type*} [Fintype ι] [DecidableEq ι] [Nonempty ι]
 
 variable {b : Module.Basis ι ℝ V}
 
+@[expose]
 noncomputable def f_avg (R: ℝ) (f : G → ℝ) := (#((finite_closed_ball 1 R).toFinset) : ℝ)⁻¹ * ∑ y ∈ (finite_closed_ball 1 R).toFinset, f y
-noncomputable def f_avg_c (g: G) (R: ℝ) (f : G → ℝ) := (#((finite_closed_ball 1 R).toFinset) : ℝ)⁻¹ * ∑ y ∈ B_c_r g R, f y
+@[expose] noncomputable def f_avg_c (g: G) (R: ℝ) (f : G → ℝ) := (#((finite_closed_ball 1 R).toFinset) : ℝ)⁻¹ * ∑ y ∈ B_c_r g R, f y
 
+@[expose]
 noncomputable def deriv_sq_R (f: G → ℝ) (x: G) := ∑ s ∈ S, (f (x * s) - f x)^2
 
 -- Reindexing `s ↦ s⁻¹` over the symmetric generating set `S` turns a right-gradient of

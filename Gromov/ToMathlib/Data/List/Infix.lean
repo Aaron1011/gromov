@@ -8,7 +8,7 @@ public import Mathlib
 General-purpose material extracted from the Gromov development, destined for mathlib.
 -/
 
-@[expose] public section
+public section
 
 open scoped Finset
 

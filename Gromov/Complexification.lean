@@ -20,11 +20,12 @@ real-valued while still feeding the (irreducibly complex) compact-Lie / unitary-
 the real representation is complexified here, just before the unitary machinery is invoked.
 -/
 
-@[expose] public section
+public section
 
 open scoped ComplexConjugate
 
 /-- The complexification of a real vector space `V`, realised as pairs `(x, y) ≃ x + i y`. -/
+@[expose]
 def Cx (V : Type*) := V × V
 
 namespace Cx
@@ -34,8 +35,10 @@ variable {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
 instance : AddCommGroup (Cx V) := inferInstanceAs (AddCommGroup (V × V))
 
 /-- Real part of an element of the complexification. -/
+@[expose]
 def fst (p : Cx V) : V := (p : V × V).1
 /-- Imaginary part of an element of the complexification. -/
+@[expose]
 def snd (p : Cx V) : V := (p : V × V).2
 
 omit [InnerProductSpace ℝ V] in
@@ -78,6 +81,7 @@ noncomputable instance : Module ℂ (Cx V) where
   zero_smul p := by ext <;> simp
 
 /-- The Hermitian form on the complexification, conjugate-linear in the first argument. -/
+@[expose]
 noncomputable def innerC (u v : Cx V) : ℂ :=
   ((inner ℝ u.fst v.fst + inner ℝ u.snd v.snd : ℝ) : ℂ)
     + Complex.I * (((inner ℝ u.fst v.snd - inner ℝ u.snd v.fst : ℝ) : ℂ))
@@ -88,6 +92,7 @@ lemma innerC_self_re (u : Cx V) :
     Complex.I_im, Complex.ofReal_im, zero_mul, mul_zero, sub_zero, add_zero]
 
 /-- The inner product space core on the complexification. -/
+@[expose]
 noncomputable def coreC : InnerProductSpace.Core ℂ (Cx V) where
   inner := innerC
   conj_inner_symm u v := by unfold innerC; simp [Complex.ext_iff, real_inner_comm]
@@ -135,6 +140,7 @@ lemma norm_eq (p : Cx V) : ‖p‖ = Real.sqrt (‖p.fst‖ ^ 2 + ‖p.snd‖ ^ 
   rw [← norm_sq_eq, Real.sqrt_sq (norm_nonneg p)]
 
 /-- The complexification is isometric to `V × V` carrying the `L²` norm. -/
+@[expose]
 noncomputable def isometryProdL2 : Cx V ≃ᵢ WithLp 2 (V × V) where
   toFun p := WithLp.toLp 2 ((p.fst, p.snd) : V × V)
   invFun q := ((WithLp.ofLp q).1, (WithLp.ofLp q).2)
@@ -145,6 +151,7 @@ noncomputable def isometryProdL2 : Cx V ≃ᵢ WithLp 2 (V × V) where
     rw [dist_eq_norm, dist_eq_norm, WithLp.prod_norm_eq_of_L2, norm_eq]
     rfl
 
+@[expose]
 instance [CompleteSpace V] : CompleteSpace (Cx V) := isometryProdL2.completeSpace
 
 /-!
@@ -154,6 +161,7 @@ The real module / normed structure is the restriction of scalars of the complex 
 `NormedSpace.complexToReal`.  The real scalar action is `r • p = (r : ℂ) • p`, componentwise.
 -/
 
+@[expose]
 instance : IsScalarTower ℝ ℂ (Cx V) := IsScalarTower.of_algebraMap_smul fun _ _ => rfl
 
 lemma rsmul_eq (r : ℝ) (p : Cx V) : r • p = (r : ℂ) • p := by
@@ -167,6 +175,7 @@ lemma rsmul_eq (r : ℝ) (p : Cx V) : r • p = (r : ℂ) • p := by
   simp only [csmul_snd, Complex.ofReal_re, Complex.ofReal_im, zero_smul, zero_add]
 
 /-- The complexification, as an `ℝ`-linear space, is `V × V`. -/
+@[expose]
 def toProdₗ : Cx V ≃ₗ[ℝ] V × V where
   toFun p := (p.fst, p.snd)
   map_add' p q := by simp
@@ -175,9 +184,11 @@ def toProdₗ : Cx V ≃ₗ[ℝ] V × V where
   left_inv p := by ext <;> rfl
   right_inv q := by ext <;> rfl
 
+@[expose]
 instance [FiniteDimensional ℝ V] : FiniteDimensional ℝ (Cx V) :=
   toProdₗ.symm.finiteDimensional
 
+@[expose]
 instance [FiniteDimensional ℝ V] : FiniteDimensional ℂ (Cx V) :=
   Module.Finite.of_restrictScalars_finite ℝ ℂ (Cx V)
 
@@ -195,6 +206,7 @@ instance [FiniteDimensional ℝ V] : FiniteDimensional ℂ (Cx V) :=
 
 /-- Complexification of a continuous real-linear map as a `ℂ`-linear map, acting componentwise
 on `(x, y) ≃ x + i y`. -/
+@[expose]
 noncomputable def mapL (f : V →L[ℝ] V) : Cx V →ₗ[ℂ] Cx V where
   toFun p := (show V × V from (f p.fst, f p.snd))
   map_add' p q := by ext <;> simp [map_add] <;> rfl
@@ -224,6 +236,7 @@ lemma norm_mapL_le (f : V →L[ℝ] V) (p : Cx V) : ‖mapL f p‖ ≤ ‖f‖ *
     _ = ‖f‖ * ‖p‖ := Real.sqrt_sq (by positivity)
 
 /-- Complexification of a continuous real-linear map as a continuous `ℂ`-linear map. -/
+@[expose]
 noncomputable def mapCLM (f : V →L[ℝ] V) : Cx V →L[ℂ] Cx V :=
   (mapL f).mkContinuous ‖f‖ (norm_mapL_le f)
 
@@ -236,6 +249,7 @@ lemma mapCLM_sub (f g : V →L[ℝ] V) : mapCLM f - mapCLM g = mapCLM (f - g) :=
   ext p <;> rfl
 
 /-- Complexification as a monoid homomorphism on endomorphisms (composition ↦ composition). -/
+@[expose]
 noncomputable def mapCLMHom : (V →L[ℝ] V) →* (Cx V →L[ℂ] Cx V) where
   toFun := mapCLM
   map_one' := by ext p <;> simp
@@ -255,6 +269,7 @@ lemma mapCLM_injective : Function.Injective (mapCLM : (V →L[ℝ] V) → Cx V �
   exact hx
 
 /-- Complexification as an injective group homomorphism on units. -/
+@[expose]
 noncomputable def unitsMapHom : (V →L[ℝ] V)ˣ →* (Cx V →L[ℂ] Cx V)ˣ := Units.map mapCLMHom
 
 lemma unitsMapHom_injective :
