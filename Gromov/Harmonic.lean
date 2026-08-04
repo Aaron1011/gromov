@@ -1073,21 +1073,6 @@ lemma counting_le_essSup (f: G → ℝ): ∀ g : G, ‖f g‖ₑ ≤ essSup  (fu
 lemma essSup_eq_elpNorm_top (f: G → ℝ): (essSup (fun g => ‖f g‖ₑ) volume) = (eLpNorm f ⊤ volume) := by
   rfl
 
-lemma neg_smul (f: G → ℝ): -f = (-1 : ℝ) • f := by
-  simp
-
-
--- TODO - cleanup and upstream to mathlib
-omit hGS in
-lemma nat_mono_le {f: ℕ → ℕ} (hf: StrictMono f) (n: ℕ): n ≤ f n := by
-  induction n with
-  | zero =>
-    simp
-  | succ k ih =>
-    have k_le := hf (a := k) (b := k + 1) (by simp)
-
-    grind
-
 
 noncomputable def Laplace_linear: (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) →ₗ[ℝ] (MeasureTheory.Lp ℝ 2 (μ := volume (α := G))) := {
   toFun := Laplace
@@ -3045,7 +3030,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     rw [← f_conv_delta (f := Conv (↑↑(H_n (seq (n)) s)) (G_n ((seq n) + 1) (by simp) f_n_limit))]
     rw [← Pi.sub_apply]
     rw [sub_eq_add_neg]
-    rw [neg_smul]
+    rw [← neg_one_smul ℝ]
     rw [← conv_smul]
     rw [ ← smul_conv]
     rw [conv_assoc_of_lp2]
@@ -3114,7 +3099,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
                   simp_rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_sub _ _)] at g_inner_laplace
                   simp_rw [ae_eq_everywhere.mp (MeasureTheory.MemLp.coeFn_toLp _)] at g_inner_laplace
                   simp at g_inner_laplace
-                  rw [neg_smul]
+                  rw [← neg_one_smul ℝ]
                   simp_rw [conv_smul]
                   simp
                   simp_rw [← sub_eq_add_neg]
@@ -3184,7 +3169,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         .
           refine ⟨by apply AEStronglyMeasurable.of_discrete, ?_⟩
           rw [← my_add_haar_eq_count]
-          rw [neg_smul]
+          rw [← neg_one_smul ℝ]
           rw [conv_smul]
           simp
           rw [← Pi.neg_def]
@@ -3257,7 +3242,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
     rw [← f_conv_delta  (f := Conv ((H_n ((new_seq n)) s)) ((G_n ((new_seq n) + 1) (by simp) f_n_limit)))]
     rw [← Pi.sub_apply]
     rw [sub_eq_add_neg]
-    rw [neg_smul]
+    rw [← neg_one_smul ℝ]
     rw [← conv_smul]
     rw [ ← smul_conv]
     rw [conv_assoc_of_lp2]
@@ -3303,7 +3288,7 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
         simp [conv_finsupp_lp2]
         norm_cast
         simp_rw [ae_eq_everywhere.mp (MeasureTheory.Lp.coeFn_neg _)]
-        simp_rw [neg_smul]
+        simp_rw [← neg_one_smul (R := ℝ) (M := G → ℝ)]
         simp_rw [conv_smul]
         simp
         rw [MeasureTheory.MemLp.toLp_neg (by
@@ -3618,10 +3603,10 @@ lemma nontrivial_harmonic_case_one (f_n_limit: ∀ s: S, (Filter.Tendsto (fun n:
             norm_cast
             have seq_le_n : n ≤ seq (arzela_seq n) := by
               have n_arzela : n ≤ arzela_seq n := by
-                apply nat_mono_le arzela_seq_mono
+                apply StrictMono.le_apply arzela_seq_mono
               apply LE.le.trans n_arzela
 
-              apply nat_mono_le seq_mono
+              apply StrictMono.le_apply seq_mono
 
             omega
 

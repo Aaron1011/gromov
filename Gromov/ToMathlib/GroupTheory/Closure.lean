@@ -314,92 +314,21 @@ lemma closure_iterate_mulact {T: Type*} [Group T] [DecidableEq T] (a b: T) (n: �
 
 #print axioms closure_iterate_mulact
 
--- TODO - replace this with Subgroup.coe_mul_of_left_le_normalizer_right
-lemma subgroup_coe_sup_invariant {G: Type*} [Group G] {A B: Subgroup G} (hab: ∀ b ∈ B, ∀ a ∈ A, (b * a * b⁻¹) ∈ A): ↑((A ⊔ B) : Subgroup G) = (A: Set G) * (B: Set G) := by
-  ext a
-  simp
-  refine ⟨?_, ?_⟩
-  .
-    intro ha
-    rw [Subgroup.sup_eq_closure] at ha
-    induction ha using Subgroup.closure_induction with
-    | mem x hx =>
-      cases hx
-      . rename_i x_mem_a
-        conv =>
-          arg 2
-          equals x * 1 => simp
-        apply Set.mul_mem_mul
-        . exact x_mem_a
-        . simp
-      .
-        rename_i x_mem_b
-        conv =>
-          arg 2
-          equals 1 * x => simp
-        apply Set.mul_mem_mul
-        . simp
-        . simpa using x_mem_b
-    | one =>
-      conv =>
-        arg 2
-        equals 1 * 1 => simp
-      apply Set.mul_mem_mul
-      . simp
-      . simp
-    | mul x y hx hy x_mem y_mem =>
-      rw [Set.mem_mul] at x_mem y_mem
-      obtain ⟨b, b_mem, c, c_mem, x_eq⟩ := x_mem
-      obtain ⟨d, d_mem, e, e_mem, y_eq⟩ := y_mem
+namespace Subgroup
 
-      rw [← x_eq, ← y_eq]
-      rw [mul_assoc]
-      nth_rw 2 [← mul_assoc]
-      conv =>
-        arg 2
-        equals (b * (c * d * c⁻¹)) * (c * e) =>
-          group
+/-- If every element of `B` conjugates `A` into itself, then `B` normalizes `A`.
 
-      apply Set.mul_mem_mul
-      . simp
-        apply Subgroup.mul_mem
-        . simpa using b_mem
-        .
-          apply hab
-          . simpa using c_mem
-          . simpa using d_mem
-      .
-        simp
-        apply Subgroup.mul_mem
-        . simpa using c_mem
-        . simpa using e_mem
-    | inv x hx other =>
-      rw [← Set.mem_inv]
-      simp [-Set.mem_inv]
-      rw [Set.mem_mul] at other
-      obtain ⟨a, ha, b, hb, x_eq⟩ := other
-      rw [← x_eq]
-      conv =>
-        arg 2
-        equals b * (b⁻¹ * a * b) =>
-          group
+Together with `Subgroup.coe_mul_of_right_le_normalizer_left` this gives
+`↑(A ⊔ B) = ↑A * ↑B`. -/
+@[to_additive /-- If every element of `B` conjugates `A` into itself, then `B` normalizes `A`. -/]
+theorem le_normalizer_of_conj_mem {G : Type*} [Group G] {A B : Subgroup G}
+    (hab : ∀ b ∈ B, ∀ a ∈ A, b * a * b⁻¹ ∈ A) : B ≤ normalizer A := by
+  intro b hb
+  rw [mem_normalizer_iff]
+  refine fun n => ⟨hab b hb n, fun h => ?_⟩
+  simpa [mul_assoc] using hab b⁻¹ (inv_mem hb) _ h
 
-      apply Set.mul_mem_mul
-      . exact hb
-      .
-        have foo := hab b⁻¹ (by simpa using hb) a ha
-        simpa using foo
-  . intro ha
-    rw [Set.mem_mul] at ha
-    obtain ⟨x, hx, y, hy, hxy⟩ := ha
-    rw [Subgroup.sup_eq_closure]
-    rw [Subgroup.closure_union]
-    rw [← hxy]
-    apply Subgroup.mul_mem_sup
-    . apply Subgroup.mem_closure_of_mem
-      exact hx
-    . apply Subgroup.mem_closure_of_mem
-      exact hy
+end Subgroup
 
 lemma closure_set_union_normal {G: Type*} [Group G] (S: Set G) (N: Subgroup G) (hN: N.Normal) {x: G} (hx: x ∈ Subgroup.closure (S ∪ N)):
   ∃ a: N, ∃ l: List ↑(S ∪ S⁻¹), x = l.unattach.prod * a := by

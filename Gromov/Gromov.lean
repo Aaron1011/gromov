@@ -1,6 +1,5 @@
 import Mathlib
 import Gromov.ToMathlib.GroupTheory.CosetCover
-import Gromov.ToMathlib.GroupTheory.FiniteAbelian.Basic
 import Gromov.Complexification
 import Gromov.Defs
 import Gromov.Harmonic
@@ -1298,7 +1297,7 @@ lemma g_hom_abelian {T: Type*} [Group T] (A: Subgroup G) (A_finite_index: A.Fini
 
 
   -- TODO - figure out how to make instance inference work here
-  obtain ⟨i, j, i_fin, j_fin, p, p_prime, e, exists_iso⟩ := @CommGroup.equiv_free_prod_directSum_zmod H (haveI := H_abeliean; { (inferInstance : Group H) with mul_comm := mul_comm' }) (H_FG)
+  obtain ⟨i, j, i_fin, j_fin, p, p_prime, e, exists_iso⟩ := @CommGroup.equiv_free_prod_prod_multiplicative_zmod H (haveI := H_abeliean; { (inferInstance : Group H) with mul_comm := mul_comm' }) (H_FG)
   have iso := Classical.choice exists_iso
 
   have j_nonempty: Nonempty j := by
@@ -4689,7 +4688,8 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
           rw [sup_comm] at g_prop
 
 
-          rw [subgroup_coe_sup_invariant map_N'_invariant_gamma_one] at g_prop
+          rw [Subgroup.coe_mul_of_right_le_normalizer_left _ _
+            (Subgroup.le_normalizer_of_conj_mem map_N'_invariant_gamma_one)] at g_prop
           rw [Set.mem_mul] at g_prop
           obtain ⟨b, hb, a, ha, g_eq⟩ := g_prop
           simp at ha
@@ -4716,10 +4716,10 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
                 simp_rw [Set.insert_eq, Subgroup.closure_union]
                 rw [← SetLike.mem_coe]
                 rw [sup_comm]
-                rw [subgroup_coe_sup_invariant (by
+                rw [Subgroup.coe_mul_of_right_le_normalizer_left _ _ (Subgroup.le_normalizer_of_conj_mem (by
                   simp_rw [← MonoidHom.map_closure]
                   apply map_N'_invariant_gamma
-                )]
+                ))]
                 apply Set.mul_mem_mul
                 .
                   simp
@@ -4757,10 +4757,10 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               rw [sup_comm]
               rw [← SetLike.mem_coe]
 
-              rw [subgroup_coe_sup_invariant (by
+              rw [Subgroup.coe_mul_of_right_le_normalizer_left _ _ (Subgroup.le_normalizer_of_conj_mem (by
                 simp_rw [← MonoidHom.map_closure]
                 apply map_N'_invariant_gamma_one
-              )]
+              ))]
               apply Set.mul_mem_mul
               .
                 simp
@@ -4786,12 +4786,12 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
             arg 1
             intro hi
             rw [sup_comm]
-            rw [subgroup_coe_sup_invariant (by
+            rw [Subgroup.coe_mul_of_right_le_normalizer_left _ _ (Subgroup.le_normalizer_of_conj_mem (by
               intro gamma_pow h_gamma_pow n hn
               simp_rw [← MonoidHom.map_closure] at hn
               simp_rw [← MonoidHom.map_closure]
               apply map_N'_invariant_gamma_one _ h_gamma_pow _ hn
-            )]
+            ))]
             rw [set_smul_eq_mul]
             rw [← mul_assoc]
             rw [← set_smul_eq_mul]
@@ -4866,7 +4866,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
               ext a
               simp
 
-          rw [← subgroup_coe_sup_invariant]
+          rw [← Subgroup.coe_mul_of_right_le_normalizer_left _ _]
           .
             simp
             rw [eq_top_iff]
@@ -4915,6 +4915,7 @@ lemma theorem_3_1.{u} [hGS: Generates.{u}] (data: Theorem3_1_Input G) (d: ℕ) (
 
               simp [hγ]
           .
+            apply Subgroup.le_normalizer_of_conj_mem
             intro b hb a ha
             rw [Subgroup.mem_closure_singleton] at hb
             obtain ⟨n, b_eq⟩ := hb

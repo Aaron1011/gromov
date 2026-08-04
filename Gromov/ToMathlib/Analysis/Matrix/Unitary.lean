@@ -15,7 +15,6 @@ lemma diag_of_eigenspace_span {A: Type*} [Nontrivial A] [AddCommGroup A] [Module
   rw [Module.End.mem_eigenspace_iff] at x_mem
   exact x_mem
 
-lemma linearmap_comp_eq_mul {P: Type*} [AddCommMonoid P] [Module ℂ P] (a b: P →ₗ[ℂ] P): a.comp b = a * b := rfl
 
 
 lemma linearmap_comp_toContinuousLinearMap {P: Type*} [AddCommGroup P] [Module ℂ P] [TopologicalSpace P] [IsTopologicalAddGroup P] [ContinuousSMul ℂ P] [T2Space P]  [FiniteDimensional ℂ P]  (a b: P →ₗ[ℂ] P):
@@ -292,9 +291,9 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
       rw [commute_iff_eq]
       simp at foo
       rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
-      rw [← linearmap_comp_eq_mul]
+      rw [Module.End.mul_eq_comp]
       rw [← Matrix.toLin_mul]
-      rw [← linearmap_comp_eq_mul]
+      rw [Module.End.mul_eq_comp]
       rw [← Matrix.toLin_mul]
       apply_fun (fun f => f.val) at foo
       simp at foo
@@ -375,7 +374,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         simp [-EmbeddingLike.apply_eq_iff_eq]
         conv =>
           lhs
-          rw [← linearmap_comp_eq_mul]
+          rw [Module.End.mul_eq_comp]
           rw [linearmap_comp_toContinuousLinearMap]
           rw [ContinuousLinearMap.mul_def]
           lhs
@@ -530,7 +529,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         simp [-EmbeddingLike.apply_eq_iff_eq]
         conv =>
           lhs
-          rw [← linearmap_comp_eq_mul]
+          rw [Module.End.mul_eq_comp]
           rw [linearmap_comp_toContinuousLinearMap]
           rw [ContinuousLinearMap.mul_def]
           lhs

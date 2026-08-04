@@ -1,6 +1,5 @@
 import Mathlib
 import Gromov.ToMathlib.GroupTheory.CosetCover
-import Gromov.ToMathlib.GroupTheory.FiniteAbelian.Basic
 import Gromov.Complexification
 import Gromov.Defs
 import Gromov.Harmonic

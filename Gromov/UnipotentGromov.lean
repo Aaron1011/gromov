@@ -1,5 +1,4 @@
 import Mathlib
-import Gromov.ToMathlib.GroupTheory.FiniteAbelian.Basic
 import Gromov.MatrixSubsum
 import Gromov.AbelianFg
 import Gromov.ToMathlib.GroupTheory.Closure
