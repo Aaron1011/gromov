@@ -12,13 +12,12 @@ direct sum of the eigenspaces of that element.
 
 public section
 
--- `centralizer_iso` needs `maxSynthPendingDepth 3`. Its proof rewrites with
--- `LinearMap.adjoint_toContinuousLinearMap` (and friends) at four points, each time leaving
--- the linear map and its space as metavariables whose instances need two levels of nested
--- `synthPending`; Lean's default depth is 1. The principled fix is to supply those arguments
--- explicitly, but that means threading them through a 660-line proof, so the depth is raised
--- here instead. This is the only place in the project that still needs it.
-set_option maxSynthPendingDepth 3 in
+-- The rewrites below name their scalar field, source and target explicitly. Left implicit,
+-- each would leave a metavariable whose instances sit across a diamond on these spaces
+-- (`Submodule`'s subtype/`addCommGroup`/`module` vs the `NormedAddCommGroup`/
+-- `InnerProductSpace` structures), which only reconciles at a raised `maxSynthPendingDepth`.
+-- Note the two rewrites in each block act on *different* spaces: the restricted eigenspace
+-- and the ambient `EuclideanSpace ℂ (Fin n)`.
 set_option maxHeartbeats 4000000 in
 set_option synthInstance.maxHeartbeats 100000 in
 lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup (Fin n) ℂ)) (g: G) (g_not: ∀ z: ℂ, g.val.val ≠ z • 1):
@@ -92,7 +91,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
 
     let d := (Module.finrank ℂ ↥((Module.End.genEigenspace (Matrix.toEuclideanLin g.val.val) k) ⊤))
     let map_first_unitary (h: Subgroup.centralizer {g.val}): Matrix.unitaryGroup (Fin d) ℂ := {
-      val := LinearMap.toMatrixOrthonormal (stdOrthonormalBasis ℂ _) (map_first h)
+      val := LinearMap.toMatrixOrthonormal (stdOrthonormalBasis ℂ ↥((Module.End.genEigenspace (Matrix.toEuclideanLin g.val.val) k) ⊤)) (map_first h)
       property := by
 
 
@@ -150,7 +149,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
           rw [linearmap_comp_toContinuousLinearMap]
           rw [ContinuousLinearMap.mul_def]
           lhs
-          rw [LinearMap.adjoint_toContinuousLinearMap]
+          rw [LinearMap.adjoint_toContinuousLinearMap (𝕜 := ℂ) (E := ↥((Module.End.genEigenspace (Matrix.toEuclideanLin g.val.val) k) ⊤)) (F := ↥((Module.End.genEigenspace (Matrix.toEuclideanLin g.val.val) k) ⊤))]
 
         conv =>
           rhs
@@ -177,7 +176,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
           rw [linearmap_comp_toContinuousLinearMap]
           rw [ContinuousLinearMap.mul_def]
           lhs
-          rw [LinearMap.adjoint_toContinuousLinearMap]
+          rw [LinearMap.adjoint_toContinuousLinearMap (𝕜 := ℂ) (E := EuclideanSpace ℂ (Fin n)) (F := EuclideanSpace ℂ (Fin n))]
 
         conv at h_unitary =>
           rhs
@@ -248,7 +247,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
 
 
     let map_second_unitary (h: Subgroup.centralizer {g.val}): Matrix.unitaryGroup _ ℂ := {
-      val := LinearMap.toMatrixOrthonormal (stdOrthonormalBasis ℂ _) (map_second h)
+      val := LinearMap.toMatrixOrthonormal (stdOrthonormalBasis ℂ ↥((iSup fun (i : ℂ) ↦ ⨆ (_ : i ≠ k), Module.End.maxGenEigenspace (Matrix.toEuclideanLin g.val.val) i))) (map_second h)
       property := by
         -- TODO - deduplicate this with 'map_first_unitary'
         rw [Matrix.mem_unitaryGroup_iff']
@@ -305,7 +304,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
           rw [linearmap_comp_toContinuousLinearMap]
           rw [ContinuousLinearMap.mul_def]
           lhs
-          rw [LinearMap.adjoint_toContinuousLinearMap]
+          rw [LinearMap.adjoint_toContinuousLinearMap (𝕜 := ℂ) (E := ↥((iSup fun (i : ℂ) ↦ ⨆ (_ : i ≠ k), Module.End.maxGenEigenspace (Matrix.toEuclideanLin g.val.val) i))) (F := ↥((iSup fun (i : ℂ) ↦ ⨆ (_ : i ≠ k), Module.End.maxGenEigenspace (Matrix.toEuclideanLin g.val.val) i)))]
 
         conv =>
           rhs
@@ -333,7 +332,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
           rw [linearmap_comp_toContinuousLinearMap]
           rw [ContinuousLinearMap.mul_def]
           lhs
-          rw [LinearMap.adjoint_toContinuousLinearMap]
+          rw [LinearMap.adjoint_toContinuousLinearMap (𝕜 := ℂ) (E := EuclideanSpace ℂ (Fin n)) (F := EuclideanSpace ℂ (Fin n))]
 
         conv at h_unitary =>
           rhs
@@ -487,7 +486,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
           map_smul' := by simp
         }
 
-        have map_first_x_unitary: (ContinuousLinearMap.adjoint map_first_x_new.toContinuousLinearMap).comp map_first_x_new.toContinuousLinearMap = 1 := by
+        have map_first_x_unitary: (ContinuousLinearMap.adjoint (𝕜 := ℂ) (E := ↥((Module.End.genEigenspace (Matrix.toEuclideanLin g.val.val) k) ⊤)) (F := EuclideanSpace ℂ (Fin n)) map_first_x_new.toContinuousLinearMap).comp map_first_x_new.toContinuousLinearMap = 1 := by
           rw [← ContinuousLinearMap.norm_map_iff_adjoint_comp_self]
           intro z
           simp [map_first_x_new, map_first]
@@ -496,7 +495,7 @@ lemma centralizer_iso {n: ℕ} [hn: NeZero n] (G: Subgroup (Matrix.unitaryGroup 
         apply_fun (fun f => f.toLinearMap) at map_first_x_unitary
         simp at map_first_x_unitary
 
-        have map_second_y_unitary: (ContinuousLinearMap.adjoint map_second_y_new.toContinuousLinearMap).comp map_second_y_new.toContinuousLinearMap = 1 := by
+        have map_second_y_unitary: (ContinuousLinearMap.adjoint (𝕜 := ℂ) (E := ↥((iSup fun (i : ℂ) ↦ ⨆ (_ : i ≠ k), Module.End.maxGenEigenspace (Matrix.toEuclideanLin g.val.val) i))) (F := EuclideanSpace ℂ (Fin n)) map_second_y_new.toContinuousLinearMap).comp map_second_y_new.toContinuousLinearMap = 1 := by
           rw [← ContinuousLinearMap.norm_map_iff_adjoint_comp_self]
           intro z
           simp [map_second_y_new, map_second]
