@@ -34,10 +34,6 @@ set_option maxHeartbeats 9000000
 
 open scoped RealInnerProductSpace in
 attribute [-simp] Subgroup.map_toSubmonoid in
--- `rho_g_contains_abelian` needs `maxSynthPendingDepth 3`: synthesizing
--- `ContinuousMul (W →L[ℝ] W)` (and the `IsCompact` rewrite that follows from it) takes two
--- levels of nested `synthPending`, and Lean's default is 1.
-set_option maxSynthPendingDepth 3 in
 set_option maxHeartbeats 2000000 in
 set_option synthInstance.maxHeartbeats 600000 in
 --set_option trace.Meta.synthInstance true in
@@ -195,8 +191,11 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
   unfold rho_g
 
 
-  have continuous_mul: ContinuousMul ((W) →L[ℝ] (W)) := by
-    infer_instance
+  -- Naming the type keeps this out of the instance diamond on `W →L[ℝ] W`
+  -- (`PseudoMetricSpace…toTopologicalSpace` vs `ContinuousLinearMap.topologicalSpace`),
+  -- which `infer_instance` can only bridge at a raised `maxSynthPendingDepth`.
+  have continuous_mul: ContinuousMul ((W) →L[ℝ] (W)) :=
+    (NonUnitalSeminormedRing.toIsTopologicalRing (α := (W) →L[ℝ] (W))).toContinuousMul
 
   have is_topological: IsTopologicalGroup ((W) →L[ℝ] (W))ˣ := by
     infer_instance
@@ -292,7 +291,7 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
     refine { isCompact_univ := ?_ }
     rw [Subtype.isCompact_iff]
     rw [Topology.IsEmbedding.isCompact_iff (f := Units.val) ?_]
-    . rw [Metric.isCompact_iff_isClosed_bounded]
+    . rw [Metric.isCompact_iff_isClosed_bounded (α := (W) →L[ℝ] (W))]
       refine ⟨?_, ?_⟩
       . apply IsSeqClosed.isClosed
         by_contra!
@@ -414,7 +413,7 @@ lemma rho_g_contains_abelian {d: ℕ} (hd: HasPolynomialGrowthD S d) : ∃ M: Su
             lhs
             equals dist (a.val) (ContinuousLinearMap.id _ _) =>
               rfl
-          grw [dist_le_norm_add_norm]
+          grw [dist_le_norm_add_norm (a.val) (ContinuousLinearMap.id ℝ W)]
           grw [ContinuousLinearMap.norm_id_le]
           rw [← rep_g_eq_a]
           grw [GRepW_norm_le]

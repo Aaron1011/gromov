@@ -147,7 +147,6 @@ def GRep: Representation ℝ G (LipschitzH)  := {
 }
 
 
---attribute [-instance] QuotientModule.Quotient.topologicalSpace
 
 -- We start with a map from G into the space of (not necessarily invertible) linear maps from W to W
 @[expose]
@@ -378,16 +377,9 @@ def isembedding_units_val := Units.isEmbedding_val_mk' (M := (W →L[ℝ] W)) (f
 #synth FiniteDimensional ℝ (W)
 
 
--- WRONG?: We want the topology to come from our metric space 'GL_W_psuedoMetric', not from the units
-
--- We actualy want the topology to be the induced topology from the space of (not necessarily invertible) linear maps from W to W
---attribute [-instance] Units.instTopologicalSpaceUnits
-
-
 #synth TopologicalSpace (W)
 
 
---attribute [-instance] QuotientModule.Quotient.topologicalSpace
 @[expose]
 def FreshTopology (V: Type*) := V
 instance (V: Type*) [base_group: Group V]: Group (FreshTopology V) := base_group

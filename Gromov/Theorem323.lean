@@ -30,12 +30,6 @@ open Generates
 variable [hGS: Generates]
 include hGS
 
--- `theorem_3_23` needs `maxSynthPendingDepth 3`. `phi_u`'s type carries
--- `(U.submoduleOf _).addCommMonoid`, whereas `LinearMap.ker_eq_bot` expects
--- `AddCommGroup.toAddCommMonoid`; reconciling the two needs two levels of nested
--- `synthPending` and Lean's default is 1. Supplying `f` explicitly does not help -- it
--- forces those instances to unify eagerly, which fails outright.
-set_option maxSynthPendingDepth 3 in
 set_option maxHeartbeats 2500000 in
 lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ v_data: V_Wrapper, growth_bound (V_basis v_data.V) d → (Module.finrank ℝ v_data.V) < C := by
   let w := ⌈Real.logb 16 ((16^4) * #(S) * Real.exp (4 * a (d)))⌉₊
@@ -87,8 +81,13 @@ lemma theorem_3_23 (d: ℕ) (hd: 0 < d): ∃ C: ℕ, ∀ v_data: V_Wrapper, grow
 
   let phi_u := (phi data).domRestrict (U.submoduleOf v_data.V)
   have phi_u_inj: Function.Injective phi_u := by
-    rw [← LinearMap.ker_eq_bot]
-    rw [LinearMap.ker_eq_bot']
+    -- Pinning the module types keeps this rewrite out of the instance diamond on
+    -- `↥(U.submoduleOf _)` (`Submodule…addCommMonoid` vs `AddCommGroup.toAddCommMonoid`),
+    -- which otherwise only reconciles at a raised `maxSynthPendingDepth`.
+    rw [← LinearMap.ker_eq_bot (M := ↥(U.submoduleOf v_data.V))
+          (M₂ := EuclideanSpace ℝ ↥(B_finsets data))]
+    rw [LinearMap.ker_eq_bot' (M := ↥(U.submoduleOf v_data.V))
+          (M₂ := EuclideanSpace ℝ ↥(B_finsets data))]
     intro u hu
 
     have u_le := lemma_3_26_a data u
